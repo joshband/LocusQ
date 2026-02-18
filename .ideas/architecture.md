@@ -467,3 +467,139 @@ For each EmitterSlot in SceneGraph:
 - VBAP (custom implementation, well-documented algorithm)
 - Room calibration (JUCE DSP FFT + custom analysis)
 - Keyframe system (custom)
+
+---
+
+## Extended Architecture: Output Format Expansion (Phase 2.7–2.10)
+
+### 8. Output Format Manager (`OutputFormatManager`)
+
+Manages the final output stage, routing the spatialized audio to the correct format.
+
+**Supported Formats:**
+| Format | Channels | Use Case |
+|--------|----------|----------|
+| Quad | 4 | Primary: 4 physical speakers |
+| Stereo | 2 | Monitoring: stereo fold-down with width control |
+| Binaural | 2 | Headphones: HRTF-based 3D rendering |
+| 5.1.2 | 8 | AVR: surround with height pair |
+| 7.1.4 | 12 | Atmos bed: full immersive speaker layout |
+
+**Processing Chain:**
+```
+[SpatialRenderer 4-ch output]
+     ↓
+[OutputFormatManager]
+     ├── Quad → direct output
+     ├── Stereo → StereoDownmixer (configurable width)
+     ├── Binaural → BinauralRenderer (HRTF convolution)
+     ├── 5.1.2 → SpeakerLayout remap + height VBAP
+     └── 7.1.4 → SpeakerLayout remap + full 3D VBAP
+```
+
+### 9. Binaural Renderer (`BinauralRenderer`)
+
+HRTF-based binaural rendering for headphone monitoring.
+
+**Architecture:**
+- Loads HRTF dataset (MIT KEMAR, SADIE II, or custom SOFA file)
+- Per-emitter: selects nearest HRTF filter pair based on azimuth/elevation
+- Crossfades between adjacent HRTF filters during movement (overlap-add)
+- Low-latency partitioned convolution (128-sample partitions)
+
+**HRTF Datasets (free, no licensing):**
+- MIT KEMAR (compact, well-tested, 710 positions)
+- SADIE II (high-resolution, 2114 positions, CC BY 4.0)
+- Custom SOFA file support for personalized HRTFs
+
+### 10. Head Tracking Bridge (`HeadTrackingBridge`)
+
+Abstract interface for head orientation input from spatial audio headphones.
+
+**Apple Spatial Audio (AirPods Pro 2/3):**
+```
+AirPods → Bluetooth LE → CoreMotion CMHeadphoneMotionManager
+    → quaternion orientation → HeadTrackingBridge
+    → listener rotation in SceneGraph
+    → inverse rotation applied to all emitter positions before VBAP
+```
+- Requires: macOS 12+, `CoreMotion.framework`, `AVFoundation.framework`
+- AirPods Pro provides 6DOF head tracking at ~100Hz
+- LocusQ applies inverse head rotation so sound field stays world-locked
+
+**Sony WH-1000XM5 (360 Reality Audio):**
+- Sony 360 Reality Audio SDK (developer enrollment required)
+- BLE head tracking data → orientation quaternion
+- Same inverse rotation approach as Apple path
+
+**Fallback Mode:**
+- Manual head orientation parameters (`rend_head_yaw`, `rend_head_pitch`)
+- Useful for non-tracked headphones or manual spatial adjustment
+
+### 11. Immersive Speaker Layouts (`SpeakerLayout`)
+
+Extends VBAP from 2D quad to full 3D speaker configurations.
+
+**Speaker Configurations:**
+```
+SpeakerLayout
+├── Quad (4 speakers, ear-level, 2D VBAP)
+├── 5.1 (6 channels: L R C LFE Ls Rs)
+├── 5.1.2 (8 channels: 5.1 + Ltm Rtm height pair)
+├── 7.1.4 (12 channels: L R C LFE Lss Rss Lrs Rrs Ltf Rtf Ltb Rtb)
+└── Custom (user-defined positions via Room Profile)
+```
+
+**3D VBAP:**
+- Speakers form a convex hull triangulated into triangles
+- For each emitter: find enclosing triangle, calculate barycentric gain weights
+- Height speakers naturally integrated into triangulation
+
+**Atmos Compatibility (no Dolby license required):**
+- LocusQ outputs multi-channel audio in standard channel-bed format
+- DAW Atmos renderers (Logic Pro, Nuendo, Reaper) accept channel-bed input
+- Object metadata (position per sample) can be exported as ADM/BWF for offline
+- No Dolby encoder license needed — LocusQ is a spatial positioning tool, not a codec
+
+### 12. QA Harness (`joshband/audio-dsp-qa-harness`)
+
+Automated testing framework integrated into CI pipeline.
+
+**Test Categories:**
+```
+tests/
+├── spatial/          # VBAP gain verification, distance model accuracy
+├── calibration/      # IR analysis against synthetic rooms
+├── physics/          # Deterministic simulation snapshots
+├── performance/      # CPU benchmarks at 8/16/32 emitters
+├── regression/       # Audio output snapshot comparison
+├── format/           # Output format switching, channel routing
+└── integration/      # Multi-instance scene graph, state save/load
+```
+
+**Integration:**
+- CMake adds test targets linked against QA harness
+- `ctest` runs full suite
+- GitHub Actions CI on push/PR
+- Performance baseline stored in repo, regression alerts on > 10% CPU increase
+
+---
+
+## Extended Dependencies
+
+### Phase 2.7 Dependencies
+- **HRTF dataset** — MIT KEMAR or SADIE II (free, bundled as binary data)
+- **libmysofa** (optional, header-only) — SOFA file reader for custom HRTFs
+
+### Phase 2.8 Dependencies
+- **No additional dependencies** — Speaker layout extension uses existing VBAP math
+- **ADM/BWF export** — Custom implementation, no external library needed
+
+### Phase 2.9 Dependencies
+- **Apple:** `CoreMotion.framework`, `AVFoundation.framework` (macOS system frameworks)
+- **Sony:** Sony 360 Reality Audio SDK (developer program enrollment)
+- **Platform guards:** Conditional compilation via CMake `if(APPLE)` / `if(WIN32)`
+
+### Phase 2.10 Dependencies
+- **joshband/audio-dsp-qa-harness** — Git submodule under `_tools/`
+- **CMake test framework** — `enable_testing()` + `add_test()`

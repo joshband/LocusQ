@@ -183,6 +183,118 @@ Given the extreme complexity, LocusQ requires strict phased implementation with 
 
 ---
 
+## Phase 2.7: Output Format Expansion (Headphones, Stereo, Binaural)
+**Goal:** Support headphone monitoring, stereo-only output, and binaural rendering.
+
+### Tasks
+- [ ] `OutputFormatManager.h/cpp` — Manages output mode: Quad / Stereo / Binaural / 5.1.2 / 7.1.4
+- [ ] `BinauralRenderer.h/cpp` — HRTF convolution engine for headphone output
+  - MIT KEMAR or SADIE II free HRTF dataset (embedded or loadable)
+  - Per-emitter HRTF pair selection based on azimuth/elevation
+  - Crossfade between HRTF filters during movement
+- [ ] `StereoDownmixer.h/cpp` — Quad-to-stereo fold-down with adjustable width
+- [ ] `rend_output_format` parameter — Choice: Quad / Stereo / Binaural / 5.1.2 / 7.1.4
+- [ ] `rend_hrtf_set` parameter — Choice of HRTF dataset
+- [ ] Channel configuration update — `isBusesLayoutSupported()` adapts to output format
+- [ ] WebView UI — Output format selector in Renderer rail
+
+### Acceptance Criteria
+- [ ] Stereo output produces a convincing spatial image on headphones
+- [ ] Binaural HRTF accurately places sounds in perceived 3D space
+- [ ] Switching between Quad and Binaural preserves spatial intent
+- [ ] No clicks or artifacts during format switching
+
+### Estimated Class Count: 3
+`OutputFormatManager`, `BinauralRenderer`, `StereoDownmixer`
+
+---
+
+## Phase 2.8: Immersive Format Support (5.1.2, 7.1.4, Atmos Bed)
+**Goal:** Extend spatialization to height-enabled speaker layouts and Dolby Atmos-compatible output.
+
+### Tasks
+- [ ] `SpeakerLayout.h/cpp` — Configurable speaker layout definitions (Quad, 5.1, 5.1.2, 7.1.4)
+- [ ] VBAP extension — 3D VBAP with triangulated speaker triplets for height layouts
+- [ ] `AtmosBedRenderer.h/cpp` — Outputs channel-bed audio compatible with DAW Atmos renderers
+  - Outputs positioned audio as multi-channel bed (no Dolby license required)
+  - Compatible with Logic Pro Atmos, Nuendo, Reaper ATMOS plugin
+- [ ] ADM metadata export — Optional BWF/ADM object position metadata for offline render
+- [ ] Layout calibration — Extend calibration to support > 4 speakers
+- [ ] `rend_speaker_layout` parameter — Choice of speaker configuration
+
+### Acceptance Criteria
+- [ ] 5.1.2 output correctly places sounds with height information
+- [ ] 7.1.4 output distributes full 3D spatial field
+- [ ] Audio routed through Logic Pro / Reaper Atmos renderer produces correct spatialization
+- [ ] No Dolby licensing required for channel-bed output path
+
+### Notes
+- Dolby Atmos Renderer SDK licensing ($$$) is **not required** for channel-bed output
+- Object-based Atmos (`.atmos` master) requires Dolby Production Suite — this is a DAW-side tool
+- LocusQ outputs correctly positioned channel-bed audio; the DAW's Atmos renderer handles encoding
+
+### Estimated Class Count: 3
+`SpeakerLayout`, `AtmosBedRenderer`, `ADMExporter`
+
+---
+
+## Phase 2.9: Headphone Spatial Audio SDK Integration
+**Goal:** Support Apple Spatial Audio (AirPods Pro) and Sony 360 Reality Audio headphone tracking.
+
+### Tasks
+- [ ] `HeadTrackingBridge.h/cpp` — Abstract interface for head tracking data input
+- [ ] `AppleSpatialAudioBridge.h/cpp` — macOS/iOS: CoreAudio `AUSpatialMixer` or `PHASEEngine` integration
+  - Reads head orientation from AirPods Pro 2/3 via CoreMotion
+  - Adjusts listener orientation in scene graph based on head tracking
+  - Outputs Spatial Audio compatible channel layout
+- [ ] `Sony360RABridge.h/cpp` — Sony 360 Reality Audio SDK integration (if SDK available)
+  - Reads head tracking data from WH-1000XM5 via Bluetooth LE
+  - Maps to listener orientation in scene graph
+- [ ] Platform gating — Apple bridge only built on macOS; Sony bridge cross-platform
+- [ ] `rend_headtracking` parameter — Toggle: Off / Apple / Sony / Generic
+- [ ] `rend_headtracking_smoothing` parameter — Smoothing time for head movement
+- [ ] CMake platform guards — Conditional compilation per platform
+
+### Acceptance Criteria
+- [ ] AirPods Pro head rotation is reflected in spatialization in real-time
+- [ ] Sound field stays stable when head turns (world-locked)
+- [ ] Smooth interpolation prevents artifacts during rapid head movement
+- [ ] Graceful degradation when no head tracking device is connected
+
+### Platform Requirements
+- Apple Spatial Audio: macOS 12+, CoreAudio, CoreMotion frameworks
+- Sony 360 RA: Sony 360 Reality Audio SDK (availability TBD)
+- Fallback: Manual head orientation parameter for non-tracked headphones
+
+### Estimated Class Count: 3
+`HeadTrackingBridge`, `AppleSpatialAudioBridge`, `Sony360RABridge`
+
+---
+
+## Phase 2.10: QA Harness Integration
+**Goal:** Integrate joshband/audio-dsp-qa-harness for automated DSP validation and regression testing.
+
+### Tasks
+- [ ] Add `audio-dsp-qa-harness` as submodule or CMake dependency
+- [ ] `tests/` directory — Automated test suite using QA harness
+- [ ] Test fixtures — Pre-defined scene configurations (single emitter, multi-emitter, physics)
+- [ ] Spatial accuracy tests — Verify VBAP gain coefficients against known positions
+- [ ] Latency measurement — Round-trip latency through Emitter → SceneGraph → Renderer chain
+- [ ] CPU profiling tests — Automated benchmarks for Draft/Final mode at 8/16/32 emitters
+- [ ] Regression suite — Capture audio output snapshots, diff against baseline
+- [ ] CI integration — GitHub Actions workflow runs harness on push
+- [ ] Room calibration validation — Test IR analysis against synthetic IRs with known properties
+
+### Acceptance Criteria
+- [ ] `ctest` runs full suite and reports pass/fail
+- [ ] Spatial panning tests verify correct speaker gains within 1% tolerance
+- [ ] Performance regression detected if CPU exceeds baseline by > 10%
+- [ ] CI pipeline runs on push, blocks merge on failure
+
+### Estimated Class Count: 0 (test-only, no production classes)
+
+---
+
 ## Risk Assessment
 
 ### Critical Risk (must solve or project fails)
@@ -206,19 +318,22 @@ Given the extreme complexity, LocusQ requires strict phased implementation with 
 
 ---
 
-## Total Estimated Classes: ~23
+## Total Estimated Classes: ~32
 
-| Category | Classes | Count |
-|----------|---------|-------|
-| Plugin Shell | PluginProcessor, PluginEditor | 2 |
-| Scene Graph | SceneGraph, EmitterSlot, RoomProfile | 3 |
-| Calibration | TestSignalGenerator, IRCapture, RoomAnalyzer, RoomProfileSerializer | 4 |
-| Physics | PhysicsEngine, PhysicsBody | 2 |
-| Spatialization | SpatialRenderer, VBAPPanner, DistanceAttenuator, AirAbsorption | 4 |
-| Room Acoustics | EarlyReflections, FDNReverb | 2 |
-| Advanced DSP | DopplerProcessor, DirectivityFilter, SpreadProcessor | 3 |
-| Animation | KeyframeTimeline, KeyframeTrack, KeyframeInterpolator | 3 |
-| **Total** | | **23** |
+| Category | Classes | Count | Phase |
+|----------|---------|-------|-------|
+| Plugin Shell | PluginProcessor, PluginEditor | 2 | 2.1 |
+| Scene Graph | SceneGraph, EmitterSlot, RoomProfile | 3 | 2.1 |
+| Spatialization | SpatialRenderer, VBAPPanner, DistanceAttenuator, AirAbsorption | 4 | 2.2 |
+| Calibration | TestSignalGenerator, IRCapture, RoomAnalyzer, RoomProfileSerializer | 4 | 2.3 |
+| Physics | PhysicsEngine, PhysicsBody | 2 | 2.4 |
+| Room Acoustics | EarlyReflections, FDNReverb | 2 | 2.5 |
+| Advanced DSP | DopplerProcessor, DirectivityFilter, SpreadProcessor | 3 | 2.5 |
+| Animation | KeyframeTimeline, KeyframeTrack, KeyframeInterpolator | 3 | 2.6 |
+| Output Formats | OutputFormatManager, BinauralRenderer, StereoDownmixer | 3 | 2.7 |
+| Immersive | SpeakerLayout, AtmosBedRenderer, ADMExporter | 3 | 2.8 |
+| Head Tracking | HeadTrackingBridge, AppleSpatialAudioBridge, Sony360RABridge | 3 | 2.9 |
+| **Total** | | **32** |
 
 ---
 
