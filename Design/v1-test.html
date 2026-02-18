@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocusQ - Design Preview v1</title>
+  <style>
+    /* ===== RESET & ROOT ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0A0A0A;
+      --surface: #141414;
+      --surface-elevated: #1E1E1E;
+      --border: #2A2A2A;
+      --gold: #D4A847;
+      --gold-bright: #E8C464;
+      --gold-dim: #8B7234;
+      --text-primary: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-dim: #666666;
+      --text-warning: #AA4444;
+      --text-success: #44AA66;
+      --wireframe: #E0E0E0;
+      --grid-color: #1A1A1A;
+      --rail-width: 280px;
+      --header-height: 40px;
+      --timeline-height: 120px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      width: 1200px;
+      height: 800px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* ===== MODE HEADER ===== */
+    .header {
+      height: var(--header-height);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0;
+      position: relative;
+      margin-left: 12px;
+    }
+
+    .mode-tab {
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      border: none;
+      background: none;
+      position: relative;
+      transition: color 200ms;
+    }
+
+    .mode-tab.active {
+      color: var(--text-primary);
+    }
+
+    .mode-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 1px;
+    }
+
+    .mode-tab:hover:not(.active) {
+      color: var(--text-secondary);
+    }
+
+    .header-spacer { flex: 1; }
+
+    .room-profile {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .room-profile .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .room-profile .dot.none { background: var(--text-warning); }
+    .room-profile .dot.loaded { background: var(--text-success); }
+
+    .quality-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .quality-badge.draft {
+      border: 1px solid var(--text-dim);
+      color: var(--text-secondary);
+      background: transparent;
+    }
+
+    .quality-badge.final {
+      border: 1px solid var(--gold);
+      color: #0A0A0A;
+      background: var(--gold);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ===== VIEWPORT AREA ===== */
+    .viewport-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    #viewport-canvas {
+      flex: 1;
+      display: block;
+    }
+
+    .view-buttons {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .view-btn {
+      width: 28px;
+      height: 28px;
+      background: rgba(20, 20, 20, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 150ms;
+    }
+
+    .view-btn:hover { color: var(--text-primary); border-color: var(--text-dim); }
+    .view-btn.active { color: var(--gold); border-color: var(--gold-dim); }
+
+    .viewport-overlay {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    /* ===== KEYFRAME TIMELINE ===== */
+    .timeline {
+      height: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+      transition: height 200ms ease-out;
+    }
+
+    .timeline.visible {
+      height: var(--timeline-height);
+    }
+
+    .timeline-header {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-transport {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .transport-btn {
+      width: 20px;
+      height: 20px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 9px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .transport-btn:hover { color: var(--text-primary); }
+
+    .timeline-time {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timeline-toggle-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .timeline-lanes {
+      padding: 4px 12px;
+    }
+
+    .timeline-lane {
+      display: flex;
+      align-items: center;
+      height: 20px;
+      gap: 8px;
+    }
+
+    .lane-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      width: 60px;
+      text-align: right;
+    }
+
+    .lane-track {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      position: relative;
+      border-radius: 1px;
+    }
+
+    .keyframe-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      top: -3px;
+      transform: translateX(-4px);
+      cursor: pointer;
+    }
+
+    .keyframe-dot:hover {
+      background: var(--gold-bright);
+      transform: translateX(-4px) scale(1.3);
+    }
+
+    /* ===== CONTROL RAIL ===== */
+    .rail {
+      width: var(--rail-width);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex-shrink: 0;
+      transition: width 200ms ease-out, opacity 200ms;
+    }
+
+    .rail.collapsed {
+      width: 0;
+      opacity: 0;
+      border: none;
+    }
+
+    .rail-toggle {
+      position: absolute;
+      right: var(--rail-width);
+      top: calc(var(--header-height) + 8px);
+      width: 20px;
+      height: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+      color: var(--text-dim);
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: right 200ms ease-out;
+    }
+
+    .rail-toggle.collapsed-toggle {
+      right: 0;
+      border-right: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .rail-mode-label {
+      padding: 12px 12px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section {
+      padding: 0 12px 12px;
+    }
+
+    .section-header {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 12px 0 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 28px;
+      padding: 0 0;
+    }
+
+    .control-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .control-value {
+      font-size: 12px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .control-unit {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    /* Knob visual */
+    .knob-mini {
+      width: 32px;
+      height: 32px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .knob-mini svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .knob-track {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .knob-value-arc {
+      fill: none;
+      stroke: var(--text-primary);
+      stroke-width: 3;
+      stroke-linecap: round;
+      transition: stroke 150ms;
+    }
+
+    .knob-mini:hover .knob-value-arc,
+    .knob-mini.active .knob-value-arc {
+      stroke: var(--gold);
+    }
+
+    /* Toggle */
+    .toggle {
+      width: 28px;
+      height: 14px;
+      border-radius: 7px;
+      background: var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background 150ms;
+    }
+
+    .toggle.on {
+      background: var(--gold);
+    }
+
+    .toggle-thumb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: all 150ms;
+    }
+
+    .toggle.on .toggle-thumb {
+      left: 16px;
+      background: var(--text-primary);
+    }
+
+    /* Dropdown */
+    .dropdown {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-primary);
+      cursor: pointer;
+      min-width: 80px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L4 4L7 1' stroke='%23666666' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 22px;
+    }
+
+    .dropdown:focus {
+      outline: none;
+      border-color: var(--gold-dim);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--gold);
+      color: #0A0A0A;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 150ms;
+    }
+
+    .btn-primary:hover { background: var(--gold-bright); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .btn-secondary:hover { border-color: var(--text-dim); }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      padding-top: 8px;
+    }
+
+    .btn-row .btn-secondary { flex: 1; text-align: center; }
+
+    /* Scene list */
+    .scene-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 150ms;
+    }
+
+    .scene-item:hover { background: var(--surface-elevated); }
+
+    .scene-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .scene-name {
+      flex: 1;
+      font-size: 11px;
+      color: var(--text-primary);
+    }
+
+    .scene-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .scene-action-btn {
+      font-size: 9px;
+      color: var(--text-dim);
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      padding: 2px 5px;
+      cursor: pointer;
+    }
+
+    .scene-action-btn:hover {
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* Status indicators */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 0;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    .status-dot.complete { background: var(--text-success); }
+    .status-dot.active { background: var(--gold); animation: pulse 1s ease infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .status-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Text input */
+    .text-input {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-primary);
+      font-family: var(--font);
+      width: 100%;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: var(--gold-dim);
+    }
+
+    /* Rail mode panels */
+    .rail-panel {
+      display: none;
+    }
+
+    .rail-panel.active {
+      display: block;
+    }
+
+    /* Scrollbar styling */
+    .rail::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .rail::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .rail::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .rail::-webkit-scrollbar-thumb:hover {
+      background: var(--text-dim);
+    }
+
+    /* Timeline toggle tab (when collapsed) */
+    .timeline-tab {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: var(--rail-width);
+      height: 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 9px;
+      color: var(--text-dim);
+      cursor: pointer;
+      line-height: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .timeline-tab.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <div class="header">
+    <div class="logo">LOCUSQ</div>
+    <div class="mode-tabs">
+      <button class="mode-tab" data-mode="calibrate">Calibrate</button>
+      <button class="mode-tab active" data-mode="emitter">Emitter</button>
+      <button class="mode-tab" data-mode="renderer">Renderer</button>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="room-profile">
+      <span class="dot loaded"></span>
+      <span style="color: var(--text-secondary); font-size: 11px;">Studio A - Quad</span>
+    </div>
+    <div class="quality-badge draft" id="quality-badge">DRAFT</div>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+
+    <!-- VIEWPORT AREA -->
+    <div class="viewport-area">
+      <canvas id="viewport-canvas"></canvas>
+
+      <div class="view-buttons">
+        <button class="view-btn active" data-view="perspective" title="Perspective">P</button>
+        <button class="view-btn" data-view="top" title="Top Down">T</button>
+        <button class="view-btn" data-view="front" title="Front">F</button>
+        <button class="view-btn" data-view="side" title="Side">S</button>
+      </div>
+
+      <div class="viewport-overlay" id="viewport-info">
+        Emitter Mode &middot; 3 objects &middot; Physics: Off
+      </div>
+
+      <!-- KEYFRAME TIMELINE -->
+      <div class="timeline visible" id="timeline">
+        <div class="timeline-header">
+          <div class="timeline-transport">
+            <button class="transport-btn">&#9664;</button>
+            <button class="transport-btn">&#9632;</button>
+            <button class="transport-btn">&#9654;</button>
+          </div>
+          <span class="timeline-time">00:04.200 / 00:32.000</span>
+          <div class="header-spacer"></div>
+          <div class="timeline-toggle-label">Loop <div class="toggle" style="margin-left: 4px;"><div class="toggle-thumb"></div></div></div>
+          <div class="timeline-toggle-label">Sync <div class="toggle on" style="margin-left: 4px;"><div class="toggle-thumb"></div></div></div>
+        </div>
+        <div class="timeline-lanes">
+          <div class="timeline-lane">
+            <span class="lane-label">Azimuth</span>
+            <div class="lane-track">
+              <div class="keyframe-dot" style="left: 10%;"></div>
+              <div class="keyframe-dot" style="left: 35%;"></div>
+              <div class="keyframe-dot" style="left: 70%;"></div>
+              <div class="keyframe-dot" style="left: 92%;"></div>
+            </div>
+          </div>
+          <div class="timeline-lane">
+            <span class="lane-label">Elevation</span>
+            <div class="lane-track">
+              <div class="keyframe-dot" style="left: 10%;"></div>
+              <div class="keyframe-dot" style="left: 55%;"></div>
+            </div>
+          </div>
+          <div class="timeline-lane">
+            <span class="lane-label">Distance</span>
+            <div class="lane-track">
+              <div class="keyframe-dot" style="left: 10%;"></div>
+              <div class="keyframe-dot" style="left: 60%;"></div>
+              <div class="keyframe-dot" style="left: 85%;"></div>
+            </div>
+          </div>
+          <div class="timeline-lane">
+            <span class="lane-label">Size</span>
+            <div class="lane-track"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL RAIL -->
+    <div class="rail" id="rail">
+
+      <!-- ===== CALIBRATE PANEL ===== -->
+      <div class="rail-panel" data-panel="calibrate">
+        <div class="rail-mode-label">Calibration</div>
+
+        <div class="section">
+          <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 12px;">
+            <span style="font-size: 12px; color: var(--text-primary);">Step 1 of 4</span>
+            <span style="display: flex; gap: 4px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--gold);"></span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--border);"></span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--border);"></span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--border);"></span>
+            </span>
+          </div>
+
+          <div class="section-header" style="border-top: none;">Speaker Setup</div>
+          <div class="control-row">
+            <span class="control-label">Config</span>
+            <select class="dropdown"><option>4x Mono</option><option>2x Stereo</option></select>
+          </div>
+          <div class="control-row"><span class="control-label">SPK1 Out</span><select class="dropdown"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+          <div class="control-row"><span class="control-label">SPK2 Out</span><select class="dropdown"><option selected>2</option><option>1</option><option>3</option><option>4</option></select></div>
+          <div class="control-row"><span class="control-label">SPK3 Out</span><select class="dropdown"><option selected>3</option><option>1</option><option>2</option><option>4</option></select></div>
+          <div class="control-row"><span class="control-label">SPK4 Out</span><select class="dropdown"><option selected>4</option><option>1</option><option>2</option><option>3</option></select></div>
+
+          <div class="section-header">Mic Input</div>
+          <div class="control-row"><span class="control-label">Channel</span><select class="dropdown"><option>1</option><option>2</option></select></div>
+
+          <div class="section-header">Test Signal</div>
+          <div class="control-row"><span class="control-label">Type</span><select class="dropdown"><option>Sweep</option><option>Pink</option><option>White</option><option>Impulse</option></select></div>
+          <div class="control-row">
+            <span class="control-label">Level</span>
+            <span class="control-value">-20.0 <span class="control-unit">dBFS</span></span>
+          </div>
+
+          <div style="padding-top: 12px;">
+            <button class="btn-primary">START MEASURE</button>
+          </div>
+
+          <div style="padding-top: 12px;">
+            <div class="status-row"><span class="status-dot"></span><span class="status-text">SPK1: Not measured</span></div>
+            <div class="status-row"><span class="status-dot"></span><span class="status-text">SPK2: Not measured</span></div>
+            <div class="status-row"><span class="status-dot"></span><span class="status-text">SPK3: Not measured</span></div>
+            <div class="status-row"><span class="status-dot"></span><span class="status-text">SPK4: Not measured</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EMITTER PANEL ===== -->
+      <div class="rail-panel active" data-panel="emitter">
+        <div class="rail-mode-label">Emitter</div>
+
+        <div class="section">
+          <div class="control-row">
+            <span class="control-label">Label</span>
+            <input class="text-input" style="width: 140px;" value="My Synth" />
+          </div>
+          <div class="control-row">
+            <span class="control-label">Color</span>
+            <span style="width: 16px; height: 16px; border-radius: 50%; background: #FF6B6B; cursor: pointer;"></span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Position</div>
+          <div class="control-row"><span class="control-label">Mode</span><select class="dropdown"><option>Spherical</option><option>Cartesian</option></select></div>
+          <div class="control-row"><span class="control-label">Azimuth</span><span class="control-value">-45.0<span class="control-unit">&deg;</span></span></div>
+          <div class="control-row"><span class="control-label">Elevation</span><span class="control-value">0.0<span class="control-unit">&deg;</span></span></div>
+          <div class="control-row"><span class="control-label">Distance</span><span class="control-value">2.5<span class="control-unit">m</span></span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Size</div>
+          <div class="control-row">
+            <span class="control-label">Link</span>
+            <div class="toggle on"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="control-row"><span class="control-label">Scale</span><span class="control-value">0.5<span class="control-unit">m</span></span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Audio</div>
+          <div class="control-row"><span class="control-label">Gain</span><span class="control-value">0.0<span class="control-unit">dB</span></span></div>
+          <div class="control-row"><span class="control-label">Spread</span><span class="control-value">0.0</span></div>
+          <div class="control-row"><span class="control-label">Directivity</span><span class="control-value">0.5</span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+            Physics
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+          <div style="opacity: 0.4;">
+            <div class="control-row"><span class="control-label">Mass</span><span class="control-value">1.0<span class="control-unit">kg</span></span></div>
+            <div class="control-row"><span class="control-label">Drag</span><span class="control-value">0.5</span></div>
+            <div class="control-row"><span class="control-label">Elasticity</span><span class="control-value">0.7</span></div>
+            <div class="control-row"><span class="control-label">Gravity</span><span class="control-value">0.0<span class="control-unit">m/s&sup2;</span></span></div>
+            <div class="btn-row">
+              <button class="btn-secondary" disabled>THROW</button>
+              <button class="btn-secondary" disabled>RESET</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+            Animation
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+          <div style="opacity: 0.4;">
+            <div class="control-row"><span class="control-label">Source</span><select class="dropdown" disabled><option>DAW</option><option>Internal</option></select></div>
+            <div class="control-row">
+              <span class="control-label">Loop</span>
+              <div class="toggle"><div class="toggle-thumb"></div></div>
+            </div>
+            <div class="control-row"><span class="control-label">Speed</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RENDERER PANEL ===== -->
+      <div class="rail-panel" data-panel="renderer">
+        <div class="rail-mode-label">Renderer</div>
+
+        <div class="section">
+          <div class="section-header" style="border-top: none;">Scene</div>
+          <div class="scene-item">
+            <span class="scene-dot" style="background: #FF6B6B;"></span>
+            <span class="scene-name">My Synth</span>
+            <div class="scene-actions">
+              <button class="scene-action-btn">S</button>
+              <button class="scene-action-btn">M</button>
+            </div>
+          </div>
+          <div class="scene-item">
+            <span class="scene-dot" style="background: #4ECDC4;"></span>
+            <span class="scene-name">Bass</span>
+            <div class="scene-actions">
+              <button class="scene-action-btn">S</button>
+              <button class="scene-action-btn">M</button>
+            </div>
+          </div>
+          <div class="scene-item">
+            <span class="scene-dot" style="background: #45B7D1;"></span>
+            <span class="scene-name">Vocals</span>
+            <div class="scene-actions">
+              <button class="scene-action-btn">S</button>
+              <button class="scene-action-btn">M</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Master</div>
+          <div class="control-row"><span class="control-label">Gain</span><span class="control-value">0.0<span class="control-unit">dB</span></span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Speakers</div>
+          <div class="control-row"><span class="control-label">SPK1</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK2</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK3</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK4</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Spatialization</div>
+          <div class="control-row"><span class="control-label">Distance</span><select class="dropdown"><option>Inverse&sup2;</option><option>Linear</option><option>Logarithmic</option></select></div>
+          <div class="control-row"><span class="control-label">Ref Dist</span><span class="control-value">1.0<span class="control-unit">m</span></span></div>
+          <div class="control-row">
+            <span class="control-label">Doppler</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="control-row">
+            <span class="control-label">Air Absorb</span>
+            <div class="toggle on"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Room</div>
+          <div class="control-row">
+            <span class="control-label">Enable</span>
+            <div class="toggle on"><div class="toggle-thumb"></div></div>
+          </div>
+          <div class="control-row"><span class="control-label">Mix</span><span class="control-value">0.3</span></div>
+          <div class="control-row"><span class="control-label">Size</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
+          <div class="control-row"><span class="control-label">Damping</span><span class="control-value">0.5</span></div>
+          <div class="control-row">
+            <span class="control-label">ER Only</span>
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Physics (Global)</div>
+          <div class="control-row"><span class="control-label">Rate</span><select class="dropdown"><option>30 Hz</option><option selected>60 Hz</option><option>120 Hz</option><option>240 Hz</option></select></div>
+          <div class="control-row">
+            <span class="control-label">Walls</span>
+            <div class="toggle on"><div class="toggle-thumb"></div></div>
+          </div>
+          <div style="padding-top: 8px;">
+            <button class="btn-secondary" style="width: 100%;">PAUSE ALL</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== THREE.JS (CDN for preview) ===== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // ===== APP STATE =====
+    let currentMode = 'emitter';
+    let railCollapsed = false;
+
+    // ===== THREE.JS SETUP =====
+    const canvas = document.getElementById('viewport-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0A0A0A);
+
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+    camera.position.set(5, 4, 5);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    // ===== ROOM WIREFRAME =====
+    const roomW = 6, roomD = 4, roomH = 3;
+    const roomGeo = new THREE.BoxGeometry(roomW, roomH, roomD);
+    const roomEdges = new THREE.EdgesGeometry(roomGeo);
+    const roomLines = new THREE.LineSegments(roomEdges, new THREE.LineBasicMaterial({
+      color: 0xE0E0E0, transparent: true, opacity: 0.3
+    }));
+    roomLines.position.y = roomH / 2;
+    scene.add(roomLines);
+
+    // ===== FLOOR GRID =====
+    const gridHelper = new THREE.GridHelper(roomW, roomW * 2, 0x2A2A2A, 0x1A1A1A);
+    scene.add(gridHelper);
+
+    // ===== SPEAKERS =====
+    const speakerPositions = [
+      new THREE.Vector3(-roomW/2 + 0.3, 1.2, -roomD/2 + 0.3),  // FL
+      new THREE.Vector3( roomW/2 - 0.3, 1.2, -roomD/2 + 0.3),  // FR
+      new THREE.Vector3( roomW/2 - 0.3, 1.2,  roomD/2 - 0.3),  // BR
+      new THREE.Vector3(-roomW/2 + 0.3, 1.2,  roomD/2 - 0.3),  // BL
+    ];
+
+    const speakerLabels = ['SPK1', 'SPK2', 'SPK3', 'SPK4'];
+    const speakers = [];
+
+    speakerPositions.forEach((pos, i) => {
+      const geo = new THREE.OctahedronGeometry(0.15);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xE0E0E0, wireframe: true });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pos);
+      scene.add(mesh);
+      speakers.push(mesh);
+    });
+
+    // ===== LISTENER =====
+    const listenerGeo = new THREE.BufferGeometry();
+    const lSize = 0.15;
+    const listenerVerts = new Float32Array([
+      -lSize,0,0, lSize,0,0,  0,0,-lSize, 0,0,lSize,  0,-lSize,0, 0,lSize,0
+    ]);
+    listenerGeo.setAttribute('position', new THREE.BufferAttribute(listenerVerts, 3));
+    const listenerCross = new THREE.LineSegments(listenerGeo, new THREE.LineBasicMaterial({ color: 0x666666 }));
+    listenerCross.position.set(0, 0.01, 0);
+    scene.add(listenerCross);
+
+    // ===== EMITTER OBJECTS =====
+    const emitterPalette = [
+      0xFF6B6B, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFFEAA7, 0xDDA0DD, 0x98D8C8, 0xF7DC6F,
+      0xBB8FCE, 0x85C1E9, 0xF0B27A, 0x82E0AA, 0xF1948A, 0xAED6F1, 0xD2B4DE, 0xA3E4D7
+    ];
+
+    const emitters = [
+      { label: 'My Synth', color: 0, pos: new THREE.Vector3(-1.5, 1.2, -0.5), size: 0.5 },
+      { label: 'Bass', color: 1, pos: new THREE.Vector3(1.0, 0.8, 0.8), size: 0.7 },
+      { label: 'Vocals', color: 2, pos: new THREE.Vector3(0.0, 1.5, -1.2), size: 0.4 },
+    ];
+
+    const emitterMeshes = [];
+    emitters.forEach((em, i) => {
+      const geo = new THREE.SphereGeometry(em.size / 2, 12, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: emitterPalette[em.color],
+        wireframe: true,
+        transparent: true,
+        opacity: i === 0 ? 1.0 : 0.5
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(em.pos);
+      scene.add(mesh);
+      emitterMeshes.push(mesh);
+    });
+
+    // ===== SELECTION RING (on first emitter) =====
+    const ringGeo = new THREE.RingGeometry(0.28, 0.3, 32);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xD4A847, side: THREE.DoubleSide, transparent: true, opacity: 0.8
+    });
+    const selectionRing = new THREE.Mesh(ringGeo, ringMat);
+    selectionRing.position.copy(emitters[0].pos);
+    selectionRing.rotation.x = -Math.PI / 2;
+    scene.add(selectionRing);
+
+    // ===== MOTION TRAIL (emitter 0) =====
+    const trailPoints = [];
+    for (let t = 0; t < 50; t++) {
+      const angle = (t / 50) * Math.PI * 0.5;
+      trailPoints.push(new THREE.Vector3(
+        emitters[0].pos.x - Math.sin(angle) * 1.2,
+        emitters[0].pos.y + (t / 50) * 0.3,
+        emitters[0].pos.z - Math.cos(angle) * 0.8 + 0.8
+      ));
+    }
+    const trailGeo = new THREE.BufferGeometry().setFromPoints(trailPoints);
+    const trailMat = new THREE.LineBasicMaterial({
+      color: emitterPalette[0], transparent: true, opacity: 0.4
+    });
+    const trail = new THREE.Line(trailGeo, trailMat);
+    scene.add(trail);
+
+    // ===== SIMPLE ORBIT CONTROLS =====
+    let isDragging = false;
+    let isRightDrag = false;
+    let prevMouse = { x: 0, y: 0 };
+    let spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
+    let target = new THREE.Vector3(0, 1, 0);
+
+    function updateCamera() {
+      camera.position.x = target.x + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+      camera.position.y = target.y + spherical.radius * Math.cos(spherical.phi);
+      camera.position.z = target.z + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      isRightDrag = e.button === 2;
+      prevMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevMouse.x;
+      const dy = e.clientY - prevMouse.y;
+
+      if (isRightDrag) {
+        const panSpeed = 0.005 * spherical.radius;
+        const right = new THREE.Vector3();
+        right.crossVectors(camera.up, new THREE.Vector3().subVectors(target, camera.position)).normalize();
+        const up = camera.up.clone();
+        target.add(right.multiplyScalar(dx * panSpeed));
+        target.add(up.multiplyScalar(-dy * panSpeed));
+      } else {
+        spherical.theta -= dx * 0.005;
+        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
+      }
+      prevMouse = { x: e.clientX, y: e.clientY };
+      updateCamera();
+    });
+
+    canvas.addEventListener('mouseup', () => { isDragging = false; });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    canvas.addEventListener('wheel', (e) => {
+      spherical.radius *= 1 + e.deltaY * 0.001;
+      spherical.radius = Math.max(2, Math.min(20, spherical.radius));
+      updateCamera();
+    });
+
+    // ===== RESIZE =====
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const w = rect.width;
+      const timelineEl = document.getElementById('timeline');
+      const timelineH = timelineEl.classList.contains('visible') ? 120 : 0;
+      const h = rect.height - timelineH;
+      canvas.width = w * window.devicePixelRatio;
+      canvas.height = h * window.devicePixelRatio;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    // ===== ANIMATE =====
+    let time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.016;
+
+      // Subtle float on selection ring
+      selectionRing.position.y = emitters[0].pos.y + Math.sin(time * 2) * 0.02;
+
+      renderer.render(scene, camera);
+    }
+
+    // ===== MODE SWITCHING =====
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const mode = tab.dataset.mode;
+        currentMode = mode;
+
+        // Switch rail panels
+        document.querySelectorAll('.rail-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector(`[data-panel="${mode}"]`).classList.add('active');
+
+        // Timeline visibility
+        const timeline = document.getElementById('timeline');
+        if (mode === 'emitter') {
+          timeline.classList.add('visible');
+        } else {
+          timeline.classList.remove('visible');
+        }
+
+        // Viewport info
+        const infoText = {
+          calibrate: 'Calibrate Mode \u00b7 Room Profile Setup',
+          emitter: 'Emitter Mode \u00b7 3 objects \u00b7 Physics: Off',
+          renderer: 'Renderer Mode \u00b7 3 emitters \u00b7 Draft'
+        };
+        document.getElementById('viewport-info').textContent = infoText[mode];
+
+        // Update emitter visibility per mode
+        emitterMeshes.forEach((mesh, i) => {
+          if (mode === 'calibrate') {
+            mesh.visible = false;
+          } else {
+            mesh.visible = true;
+            mesh.material.opacity = (mode === 'emitter' && i !== 0) ? 0.3 : 0.7;
+          }
+        });
+        selectionRing.visible = mode === 'emitter';
+        trail.visible = mode !== 'calibrate';
+
+        // Room opacity per mode
+        roomLines.material.opacity = mode === 'calibrate' ? 0.15 : 0.3;
+
+        // Speaker glow in calibrate
+        speakers.forEach(s => {
+          s.material.color.setHex(mode === 'calibrate' ? 0xD4A847 : 0xE0E0E0);
+        });
+
+        setTimeout(resize, 10);
+      });
+    });
+
+    // ===== QUALITY BADGE TOGGLE =====
+    document.getElementById('quality-badge').addEventListener('click', function() {
+      if (this.classList.contains('draft')) {
+        this.classList.remove('draft');
+        this.classList.add('final');
+        this.textContent = 'FINAL';
+      } else {
+        this.classList.remove('final');
+        this.classList.add('draft');
+        this.textContent = 'DRAFT';
+      }
+    });
+
+    // ===== TOGGLE SWITCHES =====
+    document.querySelectorAll('.toggle').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        toggle.classList.toggle('on');
+      });
+    });
+
+    // ===== VIEW BUTTONS =====
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const view = btn.dataset.view;
+        switch(view) {
+          case 'perspective':
+            spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
+            break;
+          case 'top':
+            spherical = { theta: 0, phi: 0.1, radius: 8 };
+            break;
+          case 'front':
+            spherical = { theta: 0, phi: Math.PI / 2, radius: 8 };
+            break;
+          case 'side':
+            spherical = { theta: Math.PI / 2, phi: Math.PI / 2, radius: 8 };
+            break;
+        }
+        updateCamera();
+      });
+    });
+
+    // ===== INIT =====
+    resize();
+    animate();
+    window.addEventListener('resize', resize);
+  </script>
+</body>
+</html>

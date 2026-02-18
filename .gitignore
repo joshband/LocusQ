@@ -1,0 +1,46 @@
+# Build
+build/
+cmake-build-*/
+out/
+
+# IDE
+.vs/
+.vscode/
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# JUCE
+JuceLibraryCode/
+
+# Binaries
+*.vst3
+*.component
+*.lv2
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+
+# Distribution
+dist/
+
+# Dependencies (fetched by CMake)
+_tools/JUCE/
+
+# Temp
+*.log
+*.tmp

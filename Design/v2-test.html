@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocusQ - Design Preview v2</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0A0A0A;
+      --surface: #141414;
+      --surface-elevated: #1E1E1E;
+      --border: #2A2A2A;
+      --gold: #D4A847;
+      --gold-bright: #E8C464;
+      --gold-dim: #8B7234;
+      --text-primary: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-dim: #666666;
+      --text-warning: #AA4444;
+      --text-success: #44AA66;
+      --wireframe: #E0E0E0;
+      --rail-width: 280px;
+      --header-height: 40px;
+      --timeline-height: 120px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      width: 1200px;
+      height: 800px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      height: var(--header-height);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+    }
+
+    .mode-tabs { display: flex; position: relative; margin-left: 8px; }
+
+    .mode-tab {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      border: none;
+      background: none;
+      position: relative;
+      transition: color 200ms;
+    }
+
+    .mode-tab.active { color: var(--text-primary); }
+    .mode-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 14px; right: 14px;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 1px;
+    }
+    .mode-tab:hover:not(.active) { color: var(--text-secondary); }
+
+    .header-spacer { flex: 1; }
+
+    /* v2: Scene Status Pill */
+    .scene-status {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9px;
+      border: 1px solid rgba(170,170,170,0.2);
+      color: var(--text-secondary);
+      transition: all 200ms;
+    }
+
+    .scene-status.physics {
+      color: var(--gold);
+      border-color: rgba(212,168,71,0.3);
+      animation: statusPulse 1s ease infinite;
+    }
+
+    .scene-status.measuring {
+      color: var(--gold);
+      border-color: rgba(212,168,71,0.3);
+      animation: statusPulse 1s ease infinite;
+    }
+
+    .scene-status.ready {
+      color: var(--text-success);
+      border-color: rgba(68,170,102,0.3);
+    }
+
+    .scene-status.noprofile {
+      color: var(--text-warning);
+      border-color: rgba(170,68,68,0.3);
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { border-color: rgba(212,168,71,0.15); }
+      50% { border-color: rgba(212,168,71,0.35); }
+    }
+
+    .room-profile {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .room-profile .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .room-profile .dot.loaded { background: var(--text-success); }
+
+    .quality-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .quality-badge.draft {
+      border: 1px solid var(--text-dim);
+      color: var(--text-secondary);
+      background: transparent;
+    }
+
+    .quality-badge.final {
+      border: 1px solid var(--gold);
+      color: #0A0A0A;
+      background: var(--gold);
+    }
+
+    /* ===== MAIN ===== */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    .viewport-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    #viewport-canvas { flex: 1; display: block; }
+
+    .view-buttons {
+      position: absolute; top: 8px; left: 8px;
+      display: flex; gap: 4px;
+    }
+
+    .view-btn {
+      width: 28px; height: 28px;
+      background: rgba(20,20,20,0.8);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      font-size: 10px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 150ms;
+    }
+    .view-btn:hover { color: var(--text-primary); border-color: var(--text-dim); }
+    .view-btn.active { color: var(--gold); border-color: var(--gold-dim); }
+
+    .viewport-overlay {
+      position: absolute; bottom: 12px; left: 12px;
+      font-size: 11px; color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline {
+      height: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+      transition: height 200ms ease-out;
+    }
+    .timeline.visible { height: var(--timeline-height); }
+
+    .timeline-header {
+      height: 28px;
+      display: flex; align-items: center;
+      padding: 0 12px; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-transport { display: flex; gap: 4px; align-items: center; }
+
+    .transport-btn {
+      width: 20px; height: 20px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text-dim);
+      font-size: 9px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .transport-btn:hover { color: var(--text-primary); }
+
+    .timeline-time {
+      font-size: 11px; font-weight: 500;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timeline-toggle-label {
+      font-size: 10px; color: var(--text-dim);
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .timeline-lanes { padding: 4px 12px; }
+
+    .timeline-lane {
+      display: flex; align-items: center;
+      height: 20px; gap: 8px;
+      cursor: pointer;
+      border-radius: 3px;
+      padding: 0 4px;
+      transition: background 100ms;
+    }
+    .timeline-lane:hover { background: rgba(42,42,42,0.5); }
+    .timeline-lane.selected { background: rgba(212,168,71,0.08); }
+
+    .lane-label {
+      font-size: 10px; color: var(--text-dim);
+      width: 60px; text-align: right;
+      transition: color 150ms;
+    }
+    .timeline-lane.selected .lane-label { color: var(--gold); }
+
+    .lane-track {
+      flex: 1; height: 2px;
+      background: var(--border);
+      position: relative; border-radius: 1px;
+    }
+
+    .keyframe-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      top: -3px;
+      transform: translateX(-4px);
+      cursor: pointer;
+    }
+    .keyframe-dot:hover {
+      background: var(--gold-bright);
+      transform: translateX(-4px) scale(1.3);
+    }
+
+    /* ===== RAIL ===== */
+    .rail {
+      width: var(--rail-width);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto; overflow-x: hidden;
+      flex-shrink: 0;
+    }
+
+    .rail::-webkit-scrollbar { width: 4px; }
+    .rail::-webkit-scrollbar-track { background: transparent; }
+    .rail::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .rail-mode-label {
+      padding: 12px 12px 8px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .section { padding: 0 12px 12px; }
+
+    .section-header {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 12px 0 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .control-row {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      height: 28px;
+    }
+
+    .control-label { font-size: 11px; color: var(--text-secondary); }
+
+    .control-value {
+      font-size: 12px; font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .control-unit { font-size: 10px; color: var(--text-dim); }
+
+    /* Toggle */
+    .toggle {
+      width: 28px; height: 14px;
+      border-radius: 7px;
+      background: var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background 150ms;
+    }
+    .toggle.on { background: var(--gold); }
+    .toggle-thumb {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      position: absolute;
+      top: 2px; left: 2px;
+      transition: all 150ms;
+    }
+    .toggle.on .toggle-thumb { left: 16px; background: var(--text-primary); }
+
+    /* Dropdown */
+    .dropdown {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-primary);
+      cursor: pointer;
+      min-width: 80px;
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: var(--font);
+      background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L4 4L7 1' stroke='%23666666' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 22px;
+    }
+    .dropdown:focus { outline: none; border-color: var(--gold-dim); }
+
+    .dropdown.wide { min-width: 120px; }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--gold); color: #0A0A0A;
+      border: none; border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer; width: 100%;
+      font-family: var(--font);
+      transition: background 150ms;
+    }
+    .btn-primary:hover { background: var(--gold-bright); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 11px; font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 150ms;
+    }
+    .btn-secondary:hover { border-color: var(--text-dim); }
+
+    .btn-row { display: flex; gap: 8px; padding-top: 8px; }
+    .btn-row .btn-secondary { flex: 1; text-align: center; }
+
+    /* Scene list */
+    .scene-item {
+      display: flex; align-items: center;
+      gap: 8px; padding: 6px 8px;
+      border-radius: 4px; cursor: pointer;
+      transition: background 150ms;
+    }
+    .scene-item:hover { background: var(--surface-elevated); }
+
+    .scene-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .scene-name { flex: 1; font-size: 11px; color: var(--text-primary); }
+
+    .scene-action-btn {
+      font-size: 9px; color: var(--text-dim);
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      padding: 2px 5px; cursor: pointer;
+    }
+    .scene-action-btn:hover { border-color: var(--border); color: var(--text-secondary); }
+
+    /* Status indicators */
+    .status-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-dim);
+    }
+    .status-dot.complete { background: var(--text-success); }
+    .status-dot.active { background: var(--gold); animation: pulse 1s ease infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .status-text { font-size: 11px; color: var(--text-secondary); }
+
+    /* Text input */
+    .text-input {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-primary);
+      font-family: var(--font);
+      width: 100%;
+    }
+    .text-input:focus { outline: none; border-color: var(--gold-dim); }
+
+    /* v2: Disclosure / Collapsible */
+    .disclosure {
+      font-size: 10px;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 8px 0;
+      display: flex; align-items: center; gap: 6px;
+      transition: color 150ms;
+    }
+    .disclosure:hover { color: var(--text-secondary); }
+    .disclosure-arrow {
+      font-size: 8px;
+      transition: transform 150ms;
+      display: inline-block;
+    }
+    .disclosure-arrow.open { transform: rotate(90deg); }
+    .disclosure-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 200ms ease-out;
+    }
+    .disclosure-content.open { max-height: 300px; }
+
+    /* v2: Capture Meter (Calibrate) */
+    .capture-meter {
+      height: 40px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+      margin: 8px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .capture-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: var(--gold);
+      opacity: 0.5;
+      transition: height 80ms;
+    }
+    .capture-label {
+      position: absolute;
+      top: 4px; left: 8px;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
+    }
+
+    /* Rail panels */
+    .rail-panel { display: none; }
+    .rail-panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">LOCUSQ</div>
+    <div class="mode-tabs">
+      <button class="mode-tab" data-mode="calibrate">Calibrate</button>
+      <button class="mode-tab active" data-mode="emitter">Emitter</button>
+      <button class="mode-tab" data-mode="renderer">Renderer</button>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="scene-status" id="scene-status">STABLE</div>
+    <div class="room-profile">
+      <span class="dot loaded"></span>
+      <span style="color: var(--text-secondary); font-size: 11px;">Studio A - Quad</span>
+    </div>
+    <div class="quality-badge draft" id="quality-badge">DRAFT</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="viewport-area">
+      <canvas id="viewport-canvas"></canvas>
+
+      <div class="view-buttons">
+        <button class="view-btn active" data-view="perspective" title="Perspective">P</button>
+        <button class="view-btn" data-view="top" title="Top Down">T</button>
+        <button class="view-btn" data-view="front" title="Front">F</button>
+        <button class="view-btn" data-view="side" title="Side">S</button>
+      </div>
+
+      <div class="viewport-overlay" id="viewport-info">Emitter Mode &middot; 3 objects &middot; Physics: Off</div>
+
+      <!-- TIMELINE -->
+      <div class="timeline visible" id="timeline">
+        <div class="timeline-header">
+          <div class="timeline-transport">
+            <button class="transport-btn">&#9664;</button>
+            <button class="transport-btn">&#9632;</button>
+            <button class="transport-btn">&#9654;</button>
+          </div>
+          <span class="timeline-time">00:04.200 / 00:32.000</span>
+          <div class="header-spacer"></div>
+          <div class="timeline-toggle-label">Loop <div class="toggle" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+          <div class="timeline-toggle-label">Sync <div class="toggle on" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+        </div>
+        <div class="timeline-lanes">
+          <div class="timeline-lane selected" data-lane="azimuth">
+            <span class="lane-label">Azimuth</span>
+            <div class="lane-track">
+              <div class="keyframe-dot" style="left:10%;"></div>
+              <div class="keyframe-dot" style="left:35%;"></div>
+              <div class="keyframe-dot" style="left:70%;"></div>
+              <div class="keyframe-dot" style="left:92%;"></div>
+            </div>
+          </div>
+          <div class="timeline-lane" data-lane="elevation">
+            <span class="lane-label">Elevation</span>
+            <div class="lane-track">
+              <div class="keyframe-dot" style="left:10%;"></div>
+              <div class="keyframe-dot" style="left:55%;"></div>
+            </div>
+          </div>
+          <div class="timeline-lane" data-lane="distance">
+            <span class="lane-label">Distance</span>
+            <div class="lane-track">
+              <div class="keyframe-dot" style="left:10%;"></div>
+              <div class="keyframe-dot" style="left:60%;"></div>
+              <div class="keyframe-dot" style="left:85%;"></div>
+            </div>
+          </div>
+          <div class="timeline-lane" data-lane="size">
+            <span class="lane-label">Size</span>
+            <div class="lane-track"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAIL -->
+    <div class="rail" id="rail">
+
+      <!-- CALIBRATE -->
+      <div class="rail-panel" data-panel="calibrate">
+        <div class="rail-mode-label">Calibration</div>
+        <div class="section">
+          <div style="display:flex; align-items:center; gap:8px; padding-bottom:12px;">
+            <span style="font-size:12px; color:var(--text-primary);">Step 1 of 4</span>
+            <span style="display:flex; gap:4px;">
+              <span style="width:8px; height:8px; border-radius:50%; background:var(--gold);"></span>
+              <span style="width:8px; height:8px; border-radius:50%; background:var(--border);"></span>
+              <span style="width:8px; height:8px; border-radius:50%; background:var(--border);"></span>
+              <span style="width:8px; height:8px; border-radius:50%; background:var(--border);"></span>
+            </span>
+          </div>
+
+          <div class="section-header" style="border-top:none;">Speaker Setup</div>
+          <div class="control-row"><span class="control-label">Config</span><select class="dropdown"><option>4x Mono</option><option>2x Stereo</option></select></div>
+          <div class="control-row"><span class="control-label">SPK1 Out</span><select class="dropdown"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+          <div class="control-row"><span class="control-label">SPK2 Out</span><select class="dropdown"><option selected>2</option></select></div>
+          <div class="control-row"><span class="control-label">SPK3 Out</span><select class="dropdown"><option selected>3</option></select></div>
+          <div class="control-row"><span class="control-label">SPK4 Out</span><select class="dropdown"><option selected>4</option></select></div>
+
+          <div class="section-header">Mic Input</div>
+          <div class="control-row"><span class="control-label">Channel</span><select class="dropdown"><option>1</option><option>2</option></select></div>
+
+          <!-- v2: Capture Meter -->
+          <div class="capture-meter" id="capture-meter" style="display:none;">
+            <div class="capture-bar" id="capture-bar" style="height:0%;"></div>
+            <span class="capture-label">Capturing...</span>
+          </div>
+
+          <div class="section-header">Test Signal</div>
+          <div class="control-row"><span class="control-label">Type</span><select class="dropdown"><option>Sweep</option><option>Pink</option><option>White</option><option>Impulse</option></select></div>
+          <div class="control-row"><span class="control-label">Level</span><span class="control-value">-20.0 <span class="control-unit">dBFS</span></span></div>
+
+          <div style="padding-top:12px;">
+            <button class="btn-primary" id="cal-start-btn">START MEASURE</button>
+          </div>
+
+          <div style="padding-top:12px;" id="cal-status">
+            <div class="status-row"><span class="status-dot" id="spk1-dot"></span><span class="status-text">SPK1: Not measured</span></div>
+            <div class="status-row"><span class="status-dot" id="spk2-dot"></span><span class="status-text">SPK2: Not measured</span></div>
+            <div class="status-row"><span class="status-dot" id="spk3-dot"></span><span class="status-text">SPK3: Not measured</span></div>
+            <div class="status-row"><span class="status-dot" id="spk4-dot"></span><span class="status-text">SPK4: Not measured</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMITTER -->
+      <div class="rail-panel active" data-panel="emitter">
+        <div class="rail-mode-label">Emitter</div>
+        <div class="section">
+          <div class="control-row"><span class="control-label">Label</span><input class="text-input" style="width:140px;" value="My Synth" /></div>
+          <div class="control-row"><span class="control-label">Color</span><span style="width:16px; height:16px; border-radius:50%; background:#D4736F; cursor:pointer;"></span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Position</div>
+          <div class="control-row"><span class="control-label">Mode</span><select class="dropdown"><option>Spherical</option><option>Cartesian</option></select></div>
+          <div class="control-row"><span class="control-label">Azimuth</span><span class="control-value">-45.0<span class="control-unit">&deg;</span></span></div>
+          <div class="control-row"><span class="control-label">Elevation</span><span class="control-value">0.0<span class="control-unit">&deg;</span></span></div>
+          <div class="control-row"><span class="control-label">Distance</span><span class="control-value">2.5<span class="control-unit">m</span></span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Size</div>
+          <div class="control-row"><span class="control-label">Link</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="control-row"><span class="control-label">Scale</span><span class="control-value">0.5<span class="control-unit">m</span></span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Audio</div>
+          <div class="control-row"><span class="control-label">Gain</span><span class="control-value">0.0<span class="control-unit">dB</span></span></div>
+          <div class="control-row"><span class="control-label">Spread</span><span class="control-value">0.0</span></div>
+          <div class="control-row"><span class="control-label">Directivity</span><span class="control-value">0.5</span></div>
+        </div>
+
+        <!-- v2: Physics Preset-First -->
+        <div class="section">
+          <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+            Physics
+            <select class="dropdown wide" id="physics-preset">
+              <option value="off">Off</option>
+              <option value="bounce">Bounce</option>
+              <option value="float">Float</option>
+              <option value="orbit">Orbit</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div id="physics-active" style="display:none;">
+            <div class="control-row"><span class="control-label">Intensity</span><span class="control-value">0.5</span></div>
+            <div class="btn-row">
+              <button class="btn-secondary">THROW</button>
+              <button class="btn-secondary">RESET</button>
+            </div>
+            <div class="disclosure" id="physics-disclosure">
+              <span class="disclosure-arrow" id="physics-arrow">&#9654;</span>
+              Advanced
+            </div>
+            <div class="disclosure-content" id="physics-advanced">
+              <div class="control-row"><span class="control-label">Mass</span><span class="control-value">1.0<span class="control-unit">kg</span></span></div>
+              <div class="control-row"><span class="control-label">Drag</span><span class="control-value">0.5</span></div>
+              <div class="control-row"><span class="control-label">Elasticity</span><span class="control-value">0.7</span></div>
+              <div class="control-row"><span class="control-label">Gravity</span><span class="control-value">9.8<span class="control-unit">m/s&sup2;</span></span></div>
+              <div class="control-row"><span class="control-label">Friction</span><span class="control-value">0.3</span></div>
+              <div class="control-row"><span class="control-label">Direction</span><select class="dropdown"><option>Down</option><option>Up</option><option>Center</option></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+            Animation
+            <div class="toggle"><div class="toggle-thumb"></div></div>
+          </div>
+          <div style="opacity:0.4;">
+            <div class="control-row"><span class="control-label">Source</span><select class="dropdown" disabled><option>DAW</option></select></div>
+            <div class="control-row"><span class="control-label">Loop</span><div class="toggle"><div class="toggle-thumb"></div></div></div>
+            <div class="control-row"><span class="control-label">Speed</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RENDERER -->
+      <div class="rail-panel" data-panel="renderer">
+        <div class="rail-mode-label">Renderer</div>
+        <div class="section">
+          <div class="section-header" style="border-top:none;">Scene</div>
+          <div class="scene-item"><span class="scene-dot" style="background:#D4736F;"></span><span class="scene-name">My Synth</span><div class="scene-actions"><button class="scene-action-btn">S</button><button class="scene-action-btn">M</button></div></div>
+          <div class="scene-item"><span class="scene-dot" style="background:#5BBAB3;"></span><span class="scene-name">Bass</span><div class="scene-actions"><button class="scene-action-btn">S</button><button class="scene-action-btn">M</button></div></div>
+          <div class="scene-item"><span class="scene-dot" style="background:#5AADC0;"></span><span class="scene-name">Vocals</span><div class="scene-actions"><button class="scene-action-btn">S</button><button class="scene-action-btn">M</button></div></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Master</div>
+          <div class="control-row"><span class="control-label">Gain</span><span class="control-value">0.0<span class="control-unit">dB</span></span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Speakers</div>
+          <div class="control-row"><span class="control-label">SPK1</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK2</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK3</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK4</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Spatialization</div>
+          <div class="control-row"><span class="control-label">Distance</span><select class="dropdown"><option>Inverse&sup2;</option><option>Linear</option><option>Log</option></select></div>
+          <div class="control-row"><span class="control-label">Ref Dist</span><span class="control-value">1.0<span class="control-unit">m</span></span></div>
+          <div class="control-row"><span class="control-label">Doppler</span><div class="toggle"><div class="toggle-thumb"></div></div></div>
+          <div class="control-row"><span class="control-label">Air Absorb</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Room</div>
+          <div class="control-row"><span class="control-label">Enable</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div class="control-row"><span class="control-label">Mix</span><span class="control-value">0.3</span></div>
+          <div class="control-row"><span class="control-label">Size</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
+          <div class="control-row"><span class="control-label">Damping</span><span class="control-value">0.5</span></div>
+          <div class="control-row"><span class="control-label">ER Only</span><div class="toggle"><div class="toggle-thumb"></div></div></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Physics (Global)</div>
+          <div class="control-row"><span class="control-label">Rate</span><select class="dropdown"><option>30 Hz</option><option selected>60 Hz</option><option>120 Hz</option><option>240 Hz</option></select></div>
+          <div class="control-row"><span class="control-label">Walls</span><div class="toggle on"><div class="toggle-thumb"></div></div></div>
+          <div style="padding-top:8px;"><button class="btn-secondary" style="width:100%;">PAUSE ALL</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THREE.JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // ===== STATE =====
+    let currentMode = 'emitter';
+    let selectedLane = 'azimuth';
+    let calMeasuring = false;
+    let calSpeakerIndex = -1;
+
+    // ===== v2 DESATURATED PALETTE =====
+    const emitterPalette = [
+      0xD4736F, 0x5BBAB3, 0x5AADC0, 0x8DBEA7, 0xD8CFA0, 0xBF9ABD, 0x8CC5B7, 0xCCBA6E,
+      0xA487B5, 0x7AAFC9, 0xC9A07A, 0x7DC49A, 0xC98A84, 0x96BAD0, 0xB3A0BF, 0x8EC8BD
+    ];
+
+    // ===== THREE SETUP =====
+    const canvas = document.getElementById('viewport-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0A0A0A);
+
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+    const rendererGL = new THREE.WebGLRenderer({ canvas, antialias: true });
+    rendererGL.setPixelRatio(window.devicePixelRatio);
+
+    // ===== ROOM =====
+    const roomW = 6, roomD = 4, roomH = 3;
+    const roomGeo = new THREE.BoxGeometry(roomW, roomH, roomD);
+    const roomEdges = new THREE.EdgesGeometry(roomGeo);
+    const roomMat = new THREE.LineBasicMaterial({ color: 0xE0E0E0, transparent: true, opacity: 0.3 });
+    const roomLines = new THREE.LineSegments(roomEdges, roomMat);
+    roomLines.position.y = roomH / 2;
+    scene.add(roomLines);
+
+    const gridHelper = new THREE.GridHelper(roomW, roomW * 2, 0x2A2A2A, 0x1A1A1A);
+    scene.add(gridHelper);
+
+    // ===== SPEAKERS =====
+    const spkPos = [
+      new THREE.Vector3(-roomW/2+0.3, 1.2, -roomD/2+0.3),
+      new THREE.Vector3( roomW/2-0.3, 1.2, -roomD/2+0.3),
+      new THREE.Vector3( roomW/2-0.3, 1.2,  roomD/2-0.3),
+      new THREE.Vector3(-roomW/2+0.3, 1.2,  roomD/2-0.3),
+    ];
+
+    const speakers = [];
+    const speakerMeters = [];
+
+    spkPos.forEach((pos) => {
+      const geo = new THREE.OctahedronGeometry(0.15);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xE0E0E0, wireframe: true });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(pos);
+      scene.add(mesh);
+      speakers.push(mesh);
+
+      // v2: Energy meter bar
+      const mGeo = new THREE.BoxGeometry(0.04, 0.01, 0.04);
+      const mMat = new THREE.MeshBasicMaterial({ color: 0xE0E0E0, transparent: true, opacity: 0.4 });
+      const mMesh = new THREE.Mesh(mGeo, mMat);
+      mMesh.position.set(pos.x + 0.25, pos.y, pos.z);
+      scene.add(mMesh);
+      speakerMeters.push({ mesh: mMesh, level: 0, target: 0 });
+    });
+
+    // ===== LISTENER =====
+    const lSize = 0.15;
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+      -lSize,0,0, lSize,0,0, 0,0,-lSize, 0,0,lSize, 0,-lSize,0, 0,lSize,0
+    ]), 3));
+    scene.add(new THREE.LineSegments(lGeo, new THREE.LineBasicMaterial({ color: 0x666666 })));
+
+    // ===== EMITTERS =====
+    const emitters = [
+      { label: 'My Synth', color: 0, pos: new THREE.Vector3(-1.5, 1.2, -0.5), size: 0.5 },
+      { label: 'Bass', color: 1, pos: new THREE.Vector3(1.0, 0.8, 0.8), size: 0.7 },
+      { label: 'Vocals', color: 2, pos: new THREE.Vector3(0.0, 1.5, -1.2), size: 0.4 },
+    ];
+
+    const emitterMeshes = [];
+    emitters.forEach((em, i) => {
+      const geo = new THREE.SphereGeometry(em.size / 2, 12, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: emitterPalette[em.color], wireframe: true,
+        transparent: true, opacity: i === 0 ? 1.0 : 0.5
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(em.pos);
+      scene.add(mesh);
+      emitterMeshes.push(mesh);
+    });
+
+    // Selection ring
+    const ringGeo = new THREE.RingGeometry(0.28, 0.3, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xD4A847, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
+    const selectionRing = new THREE.Mesh(ringGeo, ringMat);
+    selectionRing.position.copy(emitters[0].pos);
+    selectionRing.rotation.x = -Math.PI / 2;
+    scene.add(selectionRing);
+
+    // Motion trail
+    const trailPts = [];
+    for (let t = 0; t < 50; t++) {
+      const a = (t / 50) * Math.PI * 0.5;
+      trailPts.push(new THREE.Vector3(
+        emitters[0].pos.x - Math.sin(a) * 1.2,
+        emitters[0].pos.y + (t / 50) * 0.3,
+        emitters[0].pos.z - Math.cos(a) * 0.8 + 0.8
+      ));
+    }
+    const trail = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(trailPts),
+      new THREE.LineBasicMaterial({ color: emitterPalette[0], transparent: true, opacity: 0.35 })
+    );
+    scene.add(trail);
+
+    // ===== v2: LANE HIGHLIGHT GEOMETRY =====
+    // Azimuth arc (horizontal ring at emitter height)
+    const azArcPts = [];
+    for (let i = 0; i <= 64; i++) {
+      const a = (i / 64) * Math.PI * 2;
+      azArcPts.push(new THREE.Vector3(Math.cos(a) * 2.5, 0, Math.sin(a) * 2.5));
+    }
+    const azArc = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(azArcPts),
+      new THREE.LineBasicMaterial({ color: 0xD4A847, transparent: true, opacity: 0.0 })
+    );
+    azArc.position.y = emitters[0].pos.y;
+    scene.add(azArc);
+
+    // Distance ring (on floor)
+    const distRingGeo = new THREE.RingGeometry(2.48, 2.52, 64);
+    const distRing = new THREE.Mesh(distRingGeo, new THREE.MeshBasicMaterial({
+      color: 0xD4A847, side: THREE.DoubleSide, transparent: true, opacity: 0.0
+    }));
+    distRing.rotation.x = -Math.PI / 2;
+    distRing.position.y = 0.01;
+    scene.add(distRing);
+
+    // Elevation arc (vertical)
+    const elArcPts = [];
+    for (let i = 0; i <= 32; i++) {
+      const a = -Math.PI / 2 + (i / 32) * Math.PI;
+      elArcPts.push(new THREE.Vector3(Math.cos(a) * 2.5, Math.sin(a) * 2.5 + 1.2, 0));
+    }
+    const elArc = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(elArcPts),
+      new THREE.LineBasicMaterial({ color: 0xD4A847, transparent: true, opacity: 0.0 })
+    );
+    scene.add(elArc);
+
+    let highlightTargets = { azimuth: 0.25, elevation: 0, distance: 0, size: 0 };
+    let highlightCurrent = { azimuth: 0, elevation: 0, distance: 0, size: 0 };
+
+    function setLaneHighlight(lane) {
+      highlightTargets = { azimuth: 0, elevation: 0, distance: 0, size: 0 };
+      if (lane) highlightTargets[lane] = lane === 'distance' ? 0.15 : 0.25;
+    }
+    setLaneHighlight('azimuth');
+
+    // ===== v2: CALIBRATION RINGS =====
+    const calRings = [];
+
+    function spawnCalRing(speakerIdx) {
+      const pos = spkPos[speakerIdx];
+      const rGeo = new THREE.RingGeometry(0.18, 0.22, 48);
+      const rMat = new THREE.MeshBasicMaterial({
+        color: 0xD4A847, side: THREE.DoubleSide, transparent: true, opacity: 0.6
+      });
+      const ring = new THREE.Mesh(rGeo, rMat);
+      ring.position.set(pos.x, pos.y, pos.z);
+      ring.rotation.x = -Math.PI / 2;
+      ring.userData = { birth: performance.now(), duration: 2000, startScale: 1, endScale: 12 };
+      scene.add(ring);
+      calRings.push(ring);
+    }
+
+    // Room solved flash state
+    let roomFlashStart = 0;
+
+    function flashRoomSolved() {
+      roomFlashStart = performance.now();
+    }
+
+    // ===== ORBIT CONTROLS =====
+    let isDragging = false, isRight = false;
+    let prevMouse = { x: 0, y: 0 };
+    let spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
+    let target = new THREE.Vector3(0, 1, 0);
+
+    function updateCamera() {
+      camera.position.x = target.x + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+      camera.position.y = target.y + spherical.radius * Math.cos(spherical.phi);
+      camera.position.z = target.z + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+      camera.lookAt(target);
+    }
+    updateCamera();
+
+    canvas.addEventListener('mousedown', e => { isDragging = true; isRight = e.button === 2; prevMouse = { x: e.clientX, y: e.clientY }; });
+    canvas.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevMouse.x, dy = e.clientY - prevMouse.y;
+      if (isRight) {
+        const ps = 0.005 * spherical.radius;
+        const r = new THREE.Vector3().crossVectors(camera.up, new THREE.Vector3().subVectors(target, camera.position)).normalize();
+        target.add(r.multiplyScalar(dx * ps));
+        target.add(camera.up.clone().multiplyScalar(-dy * ps));
+      } else {
+        spherical.theta -= dx * 0.005;
+        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
+      }
+      prevMouse = { x: e.clientX, y: e.clientY };
+      updateCamera();
+    });
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('wheel', e => {
+      spherical.radius *= 1 + e.deltaY * 0.001;
+      spherical.radius = Math.max(2, Math.min(20, spherical.radius));
+      updateCamera();
+    });
+
+    // ===== RESIZE =====
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const tlEl = document.getElementById('timeline');
+      const tlH = tlEl.classList.contains('visible') ? 120 : 0;
+      const w = rect.width, h = rect.height - tlH;
+      canvas.width = w * devicePixelRatio;
+      canvas.height = h * devicePixelRatio;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      rendererGL.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    // ===== ANIMATE =====
+    let time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      time += 0.016;
+
+      // Selection ring float
+      selectionRing.position.y = emitters[0].pos.y + Math.sin(time * 2) * 0.02;
+
+      // v2: Speaker energy meters (simulated)
+      speakerMeters.forEach((m, i) => {
+        if (currentMode === 'renderer' || currentMode === 'emitter') {
+          m.target = 0.15 + Math.sin(time * 3 + i * 1.7) * 0.12 + Math.random() * 0.03;
+        } else if (currentMode === 'calibrate' && calMeasuring && i === calSpeakerIndex) {
+          m.target = 0.4 + Math.sin(time * 8) * 0.2;
+        } else {
+          m.target = 0;
+        }
+        m.level += (m.target - m.level) * 0.15;
+        m.mesh.scale.y = Math.max(0.5, m.level * 40);
+        m.mesh.position.y = spkPos[i].y + m.level * 0.2;
+
+        // Color lerp: white → gold at high levels
+        const t = Math.min(1, Math.max(0, (m.level - 0.2) / 0.3));
+        m.mesh.material.color.setHex(t > 0.5 ? 0xD4A847 : 0xE0E0E0);
+        m.mesh.material.opacity = 0.4 + m.level * 0.6;
+      });
+
+      // v2: Lane highlight transitions
+      for (const key in highlightCurrent) {
+        highlightCurrent[key] += (highlightTargets[key] - highlightCurrent[key]) * 0.12;
+      }
+      azArc.material.opacity = highlightCurrent.azimuth;
+      distRing.material.opacity = highlightCurrent.distance;
+      elArc.material.opacity = highlightCurrent.elevation;
+
+      // Size pulse on emitter when size lane selected
+      if (highlightTargets.size > 0) {
+        emitterMeshes[0].material.opacity = 0.6 + Math.sin(time * Math.PI) * 0.4;
+      } else if (currentMode === 'emitter') {
+        emitterMeshes[0].material.opacity = 1.0;
+      }
+
+      // v2: Calibration expanding rings
+      for (let i = calRings.length - 1; i >= 0; i--) {
+        const ring = calRings[i];
+        const elapsed = now - ring.userData.birth;
+        const progress = elapsed / ring.userData.duration;
+        if (progress > 1) {
+          scene.remove(ring);
+          calRings.splice(i, 1);
+          continue;
+        }
+        const scale = ring.userData.startScale + progress * (ring.userData.endScale - ring.userData.startScale);
+        ring.scale.set(scale, scale, scale);
+        ring.material.opacity = 0.6 * (1 - progress);
+      }
+
+      // v2: Room solved flash
+      if (roomFlashStart > 0) {
+        const fe = (now - roomFlashStart) / 300;
+        if (fe > 1) {
+          roomFlashStart = 0;
+          roomMat.color.setHex(0xE0E0E0);
+          roomMat.opacity = 0.3;
+        } else {
+          roomMat.color.setHex(0xD4A847);
+          roomMat.opacity = fe < 0.5 ? fe * 1.2 : (1 - fe) * 1.2;
+        }
+      }
+
+      rendererGL.render(scene, camera);
+    }
+
+    // ===== MODE SWITCHING =====
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const mode = tab.dataset.mode;
+        currentMode = mode;
+
+        document.querySelectorAll('.rail-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector(`[data-panel="${mode}"]`).classList.add('active');
+
+        const tl = document.getElementById('timeline');
+        if (mode === 'emitter') { tl.classList.add('visible'); } else { tl.classList.remove('visible'); }
+
+        const info = {
+          calibrate: 'Calibrate Mode \u00b7 Room Profile Setup',
+          emitter: 'Emitter Mode \u00b7 3 objects \u00b7 Physics: Off',
+          renderer: 'Renderer Mode \u00b7 3 emitters \u00b7 Draft'
+        };
+        document.getElementById('viewport-info').textContent = info[mode];
+
+        // Scene status
+        const ss = document.getElementById('scene-status');
+        ss.className = 'scene-status';
+        if (mode === 'calibrate') { ss.textContent = 'NO PROFILE'; ss.classList.add('noprofile'); }
+        else if (mode === 'renderer') { ss.textContent = 'READY'; ss.classList.add('ready'); }
+        else { ss.textContent = 'STABLE'; }
+
+        emitterMeshes.forEach((mesh, i) => {
+          mesh.visible = mode !== 'calibrate';
+          mesh.material.opacity = (mode === 'emitter' && i !== 0) ? 0.3 : 0.7;
+        });
+        selectionRing.visible = mode === 'emitter';
+        trail.visible = mode !== 'calibrate';
+        roomMat.opacity = mode === 'calibrate' ? 0.15 : 0.3;
+        speakers.forEach(s => s.material.color.setHex(mode === 'calibrate' ? 0xD4A847 : 0xE0E0E0));
+
+        // Hide lane highlights in non-emitter modes
+        if (mode !== 'emitter') setLaneHighlight(null);
+        else setLaneHighlight(selectedLane);
+
+        setTimeout(resize, 10);
+      });
+    });
+
+    // ===== QUALITY BADGE =====
+    document.getElementById('quality-badge').addEventListener('click', function() {
+      this.classList.toggle('draft');
+      this.classList.toggle('final');
+      this.textContent = this.classList.contains('final') ? 'FINAL' : 'DRAFT';
+    });
+
+    // ===== TOGGLES =====
+    document.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', () => t.classList.toggle('on')));
+
+    // ===== VIEW BUTTONS =====
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const views = {
+          perspective: { theta: Math.PI/4, phi: Math.PI/4, radius: 8 },
+          top: { theta: 0, phi: 0.1, radius: 8 },
+          front: { theta: 0, phi: Math.PI/2, radius: 8 },
+          side: { theta: Math.PI/2, phi: Math.PI/2, radius: 8 }
+        };
+        Object.assign(spherical, views[btn.dataset.view]);
+        updateCamera();
+      });
+    });
+
+    // ===== v2: PHYSICS PRESET TOGGLE =====
+    document.getElementById('physics-preset').addEventListener('change', function() {
+      const active = document.getElementById('physics-active');
+      const ss = document.getElementById('scene-status');
+      if (this.value === 'off') {
+        active.style.display = 'none';
+        ss.className = 'scene-status';
+        ss.textContent = 'STABLE';
+        document.getElementById('viewport-info').textContent = 'Emitter Mode \u00b7 3 objects \u00b7 Physics: Off';
+      } else {
+        active.style.display = 'block';
+        ss.className = 'scene-status physics';
+        ss.textContent = 'PHYSICS';
+        document.getElementById('viewport-info').textContent = 'Emitter Mode \u00b7 3 objects \u00b7 Physics: ' + this.value.charAt(0).toUpperCase() + this.value.slice(1);
+      }
+    });
+
+    // ===== v2: PHYSICS ADVANCED DISCLOSURE =====
+    document.getElementById('physics-disclosure').addEventListener('click', () => {
+      const content = document.getElementById('physics-advanced');
+      const arrow = document.getElementById('physics-arrow');
+      content.classList.toggle('open');
+      arrow.classList.toggle('open');
+    });
+
+    // ===== v2: TIMELINE LANE SELECTION =====
+    document.querySelectorAll('.timeline-lane').forEach(lane => {
+      lane.addEventListener('click', () => {
+        document.querySelectorAll('.timeline-lane').forEach(l => l.classList.remove('selected'));
+        lane.classList.add('selected');
+        selectedLane = lane.dataset.lane;
+        setLaneHighlight(selectedLane);
+      });
+    });
+
+    // ===== v2: CALIBRATION DEMO =====
+    document.getElementById('cal-start-btn').addEventListener('click', function() {
+      if (calMeasuring) return;
+      calMeasuring = true;
+      calSpeakerIndex = 0;
+      this.textContent = 'MEASURING...';
+      this.style.opacity = '0.6';
+      document.getElementById('capture-meter').style.display = 'block';
+
+      const ss = document.getElementById('scene-status');
+      ss.className = 'scene-status measuring';
+      ss.textContent = 'MEASURING';
+
+      // Simulate mic input
+      const capBar = document.getElementById('capture-bar');
+      const capInterval = setInterval(() => {
+        capBar.style.height = (10 + Math.random() * 60) + '%';
+      }, 80);
+
+      function measureSpeaker(idx) {
+        if (idx >= 4) {
+          clearInterval(capInterval);
+          calMeasuring = false;
+          calSpeakerIndex = -1;
+          document.getElementById('cal-start-btn').textContent = 'START MEASURE';
+          document.getElementById('cal-start-btn').style.opacity = '1';
+          document.getElementById('capture-meter').style.display = 'none';
+          capBar.style.height = '0%';
+          ss.className = 'scene-status ready';
+          ss.textContent = 'READY';
+          flashRoomSolved();
+          return;
+        }
+        calSpeakerIndex = idx;
+        const dots = ['spk1-dot', 'spk2-dot', 'spk3-dot', 'spk4-dot'];
+        document.getElementById(dots[idx]).classList.add('active');
+        speakers[idx].material.color.setHex(0xD4A847);
+        spawnCalRing(idx);
+
+        setTimeout(() => {
+          document.getElementById(dots[idx]).classList.remove('active');
+          document.getElementById(dots[idx]).classList.add('complete');
+          speakers[idx].material.color.setHex(0x44AA66);
+          measureSpeaker(idx + 1);
+        }, 1500);
+      }
+      measureSpeaker(0);
+    });
+
+    // ===== INIT =====
+    resize();
+    animate();
+    window.addEventListener('resize', resize);
+  </script>
+</body>
+</html>
