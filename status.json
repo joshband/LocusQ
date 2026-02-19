@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-19T20:31:15Z",
+  "last_modified": "2026-02-19T20:48:43Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -185,6 +185,18 @@
       "status": "complete",
       "completed_at": "2026-02-19T20:27:42Z",
       "notes": "Expanded snapshot migration QA matrix coverage across mono/stereo/quad runtime layouts by adding explicit metadata-forcing modes (mono/stereo/quad + legacy strip), new mismatch scenarios, and dedicated 1ch/2ch/4ch suite passes."
+    },
+    {
+      "phase": "testing_non_manual_acceptance_matrix_rerun",
+      "status": "complete",
+      "completed_at": "2026-02-19T20:35:11Z",
+      "notes": "Harness sanity and host validation passed, but non-manual acceptance matrix failed due reproducible phase 2.5 room-depth signal-present regression; phase 2.8 stereo/quad suites also emitted attenuation-level warnings."
+    },
+    {
+      "phase": "testing_non_manual_acceptance_matrix_post_25_fix",
+      "status": "complete",
+      "completed_at": "2026-02-19T20:41:49Z",
+      "notes": "Post-fix non-manual acceptance matrix rerun is clear of hard failures after restoring phase 2.5 room-depth signal margin; only known phase 2.8 stereo/quad attenuation soft warnings remain."
     }
   ],
   "validation": {
@@ -206,31 +218,31 @@
       "passed": true,
       "total_tests": 45,
       "failed_tests": 0,
-      "ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_full_acceptance_rerun_20260219T044525Z.log",
-      "last_run": "2026-02-19T04:49:13Z"
+      "ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
+      "last_run": "2026-02-19T20:41:49Z"
     },
     "qa_suite_results": {
       "passed": true,
-      "suite_id": "locusq_phase_2_6_acceptance_suite",
-      "total_scenarios": 3,
-      "passed_scenarios": 3,
+      "suite_id": "locusq_phase_2_5_acceptance_suite",
+      "total_scenarios": 9,
+      "passed_scenarios": 9,
       "warned_scenarios": 0,
       "failed_scenarios": 0,
       "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
-      "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_phase_2_6_acceptance_suite.log",
-      "last_run": "2026-02-19T05:58:54Z"
+      "qa_run_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
+      "last_run": "2026-02-19T20:41:49Z"
     },
     "pluginval_results": {
       "passed": true,
       "failed": false,
       "strictness_level": 5,
       "exit_code": 0,
-      "plugin_path": "plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3",
-      "output_log": "plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log",
-      "error_log": "plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6.log",
-      "output_summary": "Deterministic pluginval automation seed 0x2a331c6 now passes after mitigation; pre-fix repro and lldb backtrace captured for traceability.",
+      "plugin_path": "plugins/LocusQ/build/LocusQ_artefacts/Release/VST3/LocusQ.vst3",
+      "output_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
+      "error_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
+      "output_summary": "Strictness-5 in-process pluginval run passed during post-fix non-manual acceptance matrix rerun.",
       "environment_blocked": false,
-      "last_successful_run": "2026-02-19T19:15:05Z",
+      "last_successful_run": "2026-02-19T20:41:49Z",
       "environment_note": "In restricted/headless contexts, pluginval may abort in AppKit/HIServices before plugin load; classify as environment_blocked when observed.",
       "blocked_run_artifacts": {
         "note": "plugins/LocusQ/TestEvidence/pluginval_blocked_note.txt",
@@ -435,7 +447,7 @@
         "plugins/LocusQ/TestEvidence/build-summary.md",
         "plugins/LocusQ/TestEvidence/validation-trend.md"
       ],
-      "last_sync": "2026-02-19T20:31:15Z"
+      "last_sync": "2026-02-19T20:48:43Z"
     },
     "implementation_phase_2_7d_started": true,
     "implementation_phase_2_7d_tasks_complete": true,
@@ -568,7 +580,32 @@
     "implementation_phase_2_11b_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log",
     "implementation_phase_2_11b_mono_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log",
     "implementation_phase_2_11b_stereo_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log",
-    "implementation_phase_2_11b_quad_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log"
+    "implementation_phase_2_11b_quad_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log",
+    "test_non_manual_acceptance_matrix_rerun_results": {
+      "overall_status": "fail",
+      "run_id": "test_non_manual_acceptance_matrix_rerun_20260219T202424Z",
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "status_tsv": "plugins/LocusQ/TestEvidence/test_non_manual_acceptance_matrix_rerun_20260219T202424Z_status.tsv",
+      "test_summary": "plugins/LocusQ/TestEvidence/test-summary.md",
+      "trend_log": "plugins/LocusQ/TestEvidence/validation-trend.md",
+      "blocking_regression": "locusq_25_room_depth_no_coloring signal_present rms=-81.8862 dBFS < -80.0 dBFS",
+      "warning_deltas": [
+        "phase_2_8_stereo_distance_attenuation_warn",
+        "phase_2_8_quad_distance_attenuation_warn"
+      ],
+      "last_run": "2026-02-19T20:35:11Z"
+    },
+    "test_non_manual_acceptance_matrix_post_25_fix_results": {
+      "overall_status": "pass_with_warning",
+      "run_id": "test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z",
+      "status_tsv": "plugins/LocusQ/TestEvidence/test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z_status.tsv",
+      "resolved_regression": "locusq_25_room_depth_no_coloring signal_present restored to rms=-78.2862 dBFS (min -80.0 dBFS)",
+      "remaining_warnings": [
+        "phase_2_8_stereo_distance_attenuation_warn",
+        "phase_2_8_quad_distance_attenuation_warn"
+      ],
+      "last_run": "2026-02-19T20:41:49Z"
+    }
   },
   "framework_selection": {
     "decision": "webview",
@@ -724,7 +761,33 @@
       "mono_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log",
       "stereo_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log",
       "quad_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log"
-    }
+    },
+    "harness_configure_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/harness_configure_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "harness_build_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/harness_build_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "harness_ctest_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "locusq_reconfigure_clean_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_reconfigure_clean_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "locusq_reconfigure_policy_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_reconfigure_policy_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "plugin_build_vst3_standalone_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_plugin_build_vst3_standalone_final_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_5_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_5_suite_recheck_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_suite_recheck_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_5_room_depth_recheck_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_25_room_depth_no_coloring_recheck_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_6_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_full_system_48k512_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_48k512_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_high_emitter_48k512_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_8_mono_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_8_output_layout_mono_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_8_stereo_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_8_output_layout_stereo_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_8_quad_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_8_output_layout_quad_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_9_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_9_renderer_cpu_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_11_suite_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "qa_phase_2_11_legacy_quad4_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "pluginval_test_non_manual_acceptance_matrix_rerun_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_test_non_manual_acceptance_matrix_rerun_20260219T202424Z_stdout.log",
+    "pluginval_test_non_manual_acceptance_matrix_rerun_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_test_non_manual_acceptance_matrix_rerun_20260219T202424Z_stderr.log",
+    "pluginval_test_non_manual_acceptance_matrix_rerun_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_test_non_manual_acceptance_matrix_rerun_20260219T202424Z_exit_code.txt",
+    "standalone_test_non_manual_acceptance_matrix_rerun_log": "plugins/LocusQ/TestEvidence/standalone_test_non_manual_acceptance_matrix_rerun_20260219T202424Z.log",
+    "test_non_manual_acceptance_matrix_rerun_status_tsv": "plugins/LocusQ/TestEvidence/test_non_manual_acceptance_matrix_rerun_20260219T202424Z_status.tsv",
+    "test_non_manual_acceptance_matrix_post_25_fix_status_tsv": "plugins/LocusQ/TestEvidence/test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z_status.tsv",
+    "qa_phase_2_5_suite_test_non_manual_acceptance_matrix_post_25_fix_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
+    "pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log"
   },
   "distribution": {
     "platforms": [
