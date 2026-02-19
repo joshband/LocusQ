@@ -1,0 +1,97 @@
+[2026-02-19T05:33:05Z] STEP: harness_ctest
+CMD: ctest --test-dir /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test --output-on-failure
+Test project /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test
+      Start  1: qa_scenario_e2e_tests
+ 1/45 Test  #1: qa_scenario_e2e_tests ...............   Passed    0.14 sec
+      Start  2: standalone_runner_unit_test
+ 2/45 Test  #2: standalone_runner_unit_test .........   Passed    0.01 sec
+      Start  3: invariant_evaluator_unit_test
+ 3/45 Test  #3: invariant_evaluator_unit_test .......   Passed    0.01 sec
+      Start  4: midi_edge_cases_test
+ 4/45 Test  #4: midi_edge_cases_test ................   Passed    0.03 sec
+      Start  5: test_suite_test
+ 5/45 Test  #5: test_suite_test .....................   Passed    0.13 sec
+      Start  6: parallel_test_suite_executor_test
+ 6/45 Test  #6: parallel_test_suite_executor_test ...   Passed    0.01 sec
+      Start  7: parameter_variation_test
+ 7/45 Test  #7: parameter_variation_test ............   Passed    0.01 sec
+      Start  8: multi_pass_test
+ 8/45 Test  #8: multi_pass_test .....................   Passed    0.01 sec
+      Start  9: memory_safety_and_precision_test
+ 9/45 Test  #9: memory_safety_and_precision_test ....   Passed    0.01 sec
+      Start 10: audio_analyzer_test
+10/45 Test #10: audio_analyzer_test .................   Passed    0.01 sec
+      Start 11: audio_metrics_extended_test
+11/45 Test #11: audio_metrics_extended_test .........   Passed    0.01 sec
+      Start 12: reverb_metrics_test
+12/45 Test #12: reverb_metrics_test .................   Passed    0.01 sec
+      Start 13: spatial_metrics_test
+13/45 Test #13: spatial_metrics_test ................   Passed    0.05 sec
+      Start 14: midi_pattern_validator_test
+14/45 Test #14: midi_pattern_validator_test .........   Passed    0.01 sec
+      Start 15: performance_profiler_test
+15/45 Test #15: performance_profiler_test ...........   Passed    0.03 sec
+      Start 16: performance_invariant_test
+16/45 Test #16: performance_invariant_test ..........   Passed    0.01 sec
+      Start 17: metric_evaluator_test
+17/45 Test #17: metric_evaluator_test ...............   Passed    0.04 sec
+      Start 18: threshold_parsing_test
+18/45 Test #18: threshold_parsing_test ..............   Passed    0.01 sec
+      Start 19: default_invariants_test
+19/45 Test #19: default_invariants_test .............   Passed    0.01 sec
+      Start 20: threshold_suggester_test
+20/45 Test #20: threshold_suggester_test ............   Passed    0.01 sec
+      Start 21: stimulus_registry_test
+21/45 Test #21: stimulus_registry_test ..............   Passed    0.02 sec
+      Start 22: piano_guitar_stimulus_test
+22/45 Test #22: piano_guitar_stimulus_test ..........   Passed    0.07 sec
+      Start 23: piano_model_stimulus_test
+23/45 Test #23: piano_model_stimulus_test ...........   Passed    0.49 sec
+      Start 24: room_simulation_stimulus_test
+24/45 Test #24: room_simulation_stimulus_test .......   Passed    3.03 sec
+      Start 25: capability_api_test
+25/45 Test #25: capability_api_test .................   Passed    0.01 sec
+      Start 26: contract_validation_test
+26/45 Test #26: contract_validation_test ............   Passed    0.01 sec
+      Start 27: error_handling_test
+27/45 Test #27: error_handling_test .................   Passed    0.01 sec
+      Start 28: numeric_precision_extended_test
+28/45 Test #28: numeric_precision_extended_test .....   Passed    0.01 sec
+      Start 29: phase18_integration_test
+29/45 Test #29: phase18_integration_test ............   Passed    0.01 sec
+      Start 30: midi_invariant_integration_test
+30/45 Test #30: midi_invariant_integration_test .....   Passed    0.01 sec
+      Start 31: preset_scanner_test
+31/45 Test #31: preset_scanner_test .................   Passed    0.01 sec
+      Start 32: metrics_exporter_test
+32/45 Test #32: metrics_exporter_test ...............   Passed    0.01 sec
+      Start 33: suite_discovery_and_export_test
+33/45 Test #33: suite_discovery_and_export_test .....   Passed    0.01 sec
+      Start 34: frequency_response_test
+34/45 Test #34: frequency_response_test .............   Passed    0.04 sec
+      Start 35: spectrogram_test
+35/45 Test #35: spectrogram_test ....................   Passed    0.13 sec
+      Start 36: room_simulator_test
+36/45 Test #36: room_simulator_test .................   Passed    0.48 sec
+      Start 37: effect_type_classifier_test
+37/45 Test #37: effect_type_classifier_test .........   Passed    1.07 sec
+      Start 38: scenario_validation_test
+38/45 Test #38: scenario_validation_test ............   Passed    0.01 sec
+      Start 39: parameter_defaults_and_sweep_test
+39/45 Test #39: parameter_defaults_and_sweep_test ...   Passed    0.01 sec
+      Start 40: multi_config_and_seed_test
+40/45 Test #40: multi_config_and_seed_test ..........   Passed    0.01 sec
+      Start 41: routing_introspection_test
+41/45 Test #41: routing_introspection_test ..........   Passed    0.01 sec
+      Start 42: parameter_automation_test
+42/45 Test #42: parameter_automation_test ...........   Passed    0.01 sec
+      Start 43: stimulus_matrix_test
+43/45 Test #43: stimulus_matrix_test ................   Passed    0.06 sec
+      Start 44: threshold_preset_test
+44/45 Test #44: threshold_preset_test ...............   Passed    0.01 sec
+      Start 45: window_template_test
+45/45 Test #45: window_template_test ................   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 45
+
+Total Test time (real) =   6.04 sec

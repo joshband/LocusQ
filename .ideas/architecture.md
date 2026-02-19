@@ -1,3 +1,9 @@
+Title: LocusQ DSP Architecture Specification
+Document Type: Architecture Specification
+Author: APC Codex
+Created Date: 2026-02-17
+Last Modified Date: 2026-02-19
+
 # LocusQ - DSP Architecture Specification
 
 **Version:** v0.1 (Planning)
@@ -39,6 +45,25 @@ LocusQ is a single VST3 binary containing three operational modes that share a c
 
 ---
 
+## Decision Alignment (2026-02-19)
+
+This architecture is aligned to the planning decision package:
+
+- `Documentation/adr/ADR-0002-routing-model-v1.md`
+- `Documentation/adr/ADR-0003-automation-authority-precedence.md`
+- `Documentation/adr/ADR-0004-v1-ai-deferral.md`
+- `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+- `Documentation/scene-state-contract.md`
+
+Key implications:
+
+1. v1 routing remains single-process `SceneGraph` with metadata as canonical shared state and ephemeral same-block audio fast path.
+2. Authority precedence is explicit: DAW/APVTS base -> internal timeline rest pose (when enabled) -> physics additive offset.
+3. AI orchestration is out of v1 critical path.
+4. Phase closeout requires synchronized updates to status/evidence/readme/changelog surfaces.
+
+---
+
 ## Core Components
 
 ### 1. Plugin Shell (`PluginProcessor` / `PluginEditor`)
@@ -77,7 +102,7 @@ SceneGraph (singleton, one per DAW process)
 │   ├── velocity: Vec3 (for doppler)
 │   ├── label: char[32]
 │   ├── color: uint8
-│   ├── audioBuffer: float* (pointer to emitter's current audio block)
+│   ├── audioBuffer: float* (ephemeral emitter block pointer; v1 fast path)
 │   ├── bufferSize: int
 │   └── sampleRate: double
 ├── RendererRegistered: bool
@@ -88,11 +113,14 @@ SceneGraph (singleton, one per DAW process)
 └── GlobalClock: uint64 (sample counter for sync)
 ```
 
+Per ADR-0002, metadata fields in each emitter slot are the canonical shared state. `audioBuffer` is an optional same-block fast path and never the cross-block source of truth.
+
 **Thread Safety Strategy:**
 - Each `EmitterSlot` uses a **double-buffer with atomic swap**. Emitter writes to back buffer, atomically swaps pointer. Renderer reads front buffer. No locks on audio thread.
 - Registration/deregistration (instance creation/destruction) uses a **spinlock** — rare operation, acceptable.
 - `RoomProfile` is read-only after loading; written only by Calibrate mode on a background thread with atomic pointer swap.
 - `audioBuffer` pointers are only valid during the current `processBlock` call. Renderer must consume within the same audio callback cycle.
+- If fast-path assumptions are invalid in a host/runtime context, behavior must degrade safely and be captured by host-edge validation evidence.
 
 **Instance Discovery:**
 - On construction, each plugin instance calls `SceneGraph::getInstance()` (Meyer's singleton, process-local).
@@ -260,7 +288,7 @@ After all emitters:
 
 ### 6. Keyframe Animation System (`KeyframeTimeline`)
 
-Internal animation engine for spatial automation beyond DAW automation.
+Internal animation engine that complements DAW automation under the ADR-0003 precedence contract.
 
 **Data Model:**
 ```
@@ -281,7 +309,7 @@ KeyframeTimeline
 **Evaluation:**
 - On each `processBlock`, advance internal clock (optionally synced to DAW transport)
 - Evaluate all active keyframe tracks at current time
-- Output values override or blend with physics (physics = offset from keyframed position)
+- Authority precedence is deterministic (ADR-0003): DAW/APVTS base -> internal timeline rest pose (when enabled) -> physics additive offset.
 
 ### 7. UI Layer (WebView + Three.js)
 
@@ -331,6 +359,51 @@ KeyframeTimeline
 - User drags object in 3D viewport → JS sends new position via `window.__JUCE__` bridge
 - Parameter changes in control panel → bridge call to `setParameterValue`
 - Keyframe edits → serialized keyframe data sent to C++ timeline
+
+### UI Runtime Resilience Contract (2026-02-19 Recovery Update)
+
+To prevent "static UI" failure modes in-host, UI runtime must follow a deterministic bootstrap contract:
+
+```
+BOOT_START
+  -> DOM_READY
+  -> BRIDGE_READY
+  -> CONTROL_BINDINGS_READY
+  -> VIEWPORT_READY (optional)
+  -> RUNNING
+```
+
+Rules:
+
+1. `CONTROL_BINDINGS_READY` must not depend on `VIEWPORT_READY`.
+2. Viewport failures must downgrade to `RUNNING_DEGRADED` with visible diagnostics, not abort initialization.
+3. Any fatal bridge error must surface a typed error in UI overlay and test evidence logs.
+
+### Command / Acknowledgment Path (UI <-> C++)
+
+Each interactive control must use a command path with acknowledgment:
+
+1. UI emits command (`set mode`, `toggle mute`, `set position`, `start calibration`, `set keyframe`).
+2. C++ validates and applies command.
+3. C++ returns explicit ack (`ok`, `rejected`, `error`) with reason code.
+4. UI reflects committed state from canonical snapshot (not optimistic-only local state).
+
+This removes silent no-op behavior when bridge calls fail or are dropped.
+
+### Interaction Ownership Model
+
+1. Control rail owns parameter intent (APVTS-facing).
+2. Viewport owns spatial manipulation intent (selection/move/orbit intent).
+3. Canonical state remains C++ (`PluginProcessor` + SceneGraph contract); WebView renders snapshots.
+4. UI local state is cache only and must reconcile to snapshot after every ack or periodic refresh.
+
+### Additional Invariants for Host Interactivity
+
+1. Tabs, toggles, dropdowns, text edits, and timeline actions remain interactive even if WebGL is unavailable.
+2. Mode switching updates both UI shell and processor mode parameter in bounded time.
+3. Emitter selection/movement updates APVTS + SceneGraph consistently (no one-way visual-only updates).
+4. Calibration controls (`start/abort`) must drive live state rows and progress meters from native status events.
+5. Renderer overlays (counts, perf values, quality badge) must be sourced from native snapshots only.
 
 ---
 
@@ -470,136 +543,29 @@ For each EmitterSlot in SceneGraph:
 
 ---
 
-## Extended Architecture: Output Format Expansion (Phase 2.7–2.10)
+## As-Built Delta (2026-02-18)
 
-### 8. Output Format Manager (`OutputFormatManager`)
+Implementation has progressed beyond this planning draft.
 
-Manages the final output stage, routing the spatialized audio to the correct format.
+### Landed through Phase 2.3
+- Scene graph integration and tri-mode processor path are live.
+- Spatial renderer support classes are present (`VBAPPanner`, `DistanceAttenuator`, `AirAbsorption`, `SpatialRenderer`).
+- Room calibration support classes are present (`TestSignalGenerator`, `IRCapture`, `RoomAnalyzer`, `RoomProfileSerializer`, `CalibrationEngine`).
+- WebView UI bridge now exposes calibration start/abort/status plumbing.
 
-**Supported Formats:**
-| Format | Channels | Use Case |
-|--------|----------|----------|
-| Quad | 4 | Primary: 4 physical speakers |
-| Stereo | 2 | Monitoring: stereo fold-down with width control |
-| Binaural | 2 | Headphones: HRTF-based 3D rendering |
-| 5.1.2 | 8 | AVR: surround with height pair |
-| 7.1.4 | 12 | Atmos bed: full immersive speaker layout |
+### QA integration corrections
+- LocusQ scenario stimuli were normalized to canonical harness IDs/variants.
+- `locusq_qa` runner factory was corrected to honor wrapped DUT factories from the scenario executor, restoring proper stimulus injection and scenario parameter application.
 
-**Processing Chain:**
-```
-[SpatialRenderer 4-ch output]
-     ↓
-[OutputFormatManager]
-     ├── Quad → direct output
-     ├── Stereo → StereoDownmixer (configurable width)
-     ├── Binaural → BinauralRenderer (HRTF convolution)
-     ├── 5.1.2 → SpeakerLayout remap + height VBAP
-     └── 7.1.4 → SpeakerLayout remap + full 3D VBAP
-```
+### Validation snapshot
+- Harness ctest: 45/45 pass.
+- LocusQ smoke suite: 4/4 pass.
+- pluginval: GUI-context success evidence retained; restricted/headless context remains AppKit/HIServices-blocked before plugin load.
 
-### 9. Binaural Renderer (`BinauralRenderer`)
+## Normative References
 
-HRTF-based binaural rendering for headphone monitoring.
-
-**Architecture:**
-- Loads HRTF dataset (MIT KEMAR, SADIE II, or custom SOFA file)
-- Per-emitter: selects nearest HRTF filter pair based on azimuth/elevation
-- Crossfades between adjacent HRTF filters during movement (overlap-add)
-- Low-latency partitioned convolution (128-sample partitions)
-
-**HRTF Datasets (free, no licensing):**
-- MIT KEMAR (compact, well-tested, 710 positions)
-- SADIE II (high-resolution, 2114 positions, CC BY 4.0)
-- Custom SOFA file support for personalized HRTFs
-
-### 10. Head Tracking Bridge (`HeadTrackingBridge`)
-
-Abstract interface for head orientation input from spatial audio headphones.
-
-**Apple Spatial Audio (AirPods Pro 2/3):**
-```
-AirPods → Bluetooth LE → CoreMotion CMHeadphoneMotionManager
-    → quaternion orientation → HeadTrackingBridge
-    → listener rotation in SceneGraph
-    → inverse rotation applied to all emitter positions before VBAP
-```
-- Requires: macOS 12+, `CoreMotion.framework`, `AVFoundation.framework`
-- AirPods Pro provides 6DOF head tracking at ~100Hz
-- LocusQ applies inverse head rotation so sound field stays world-locked
-
-**Sony WH-1000XM5 (360 Reality Audio):**
-- Sony 360 Reality Audio SDK (developer enrollment required)
-- BLE head tracking data → orientation quaternion
-- Same inverse rotation approach as Apple path
-
-**Fallback Mode:**
-- Manual head orientation parameters (`rend_head_yaw`, `rend_head_pitch`)
-- Useful for non-tracked headphones or manual spatial adjustment
-
-### 11. Immersive Speaker Layouts (`SpeakerLayout`)
-
-Extends VBAP from 2D quad to full 3D speaker configurations.
-
-**Speaker Configurations:**
-```
-SpeakerLayout
-├── Quad (4 speakers, ear-level, 2D VBAP)
-├── 5.1 (6 channels: L R C LFE Ls Rs)
-├── 5.1.2 (8 channels: 5.1 + Ltm Rtm height pair)
-├── 7.1.4 (12 channels: L R C LFE Lss Rss Lrs Rrs Ltf Rtf Ltb Rtb)
-└── Custom (user-defined positions via Room Profile)
-```
-
-**3D VBAP:**
-- Speakers form a convex hull triangulated into triangles
-- For each emitter: find enclosing triangle, calculate barycentric gain weights
-- Height speakers naturally integrated into triangulation
-
-**Atmos Compatibility (no Dolby license required):**
-- LocusQ outputs multi-channel audio in standard channel-bed format
-- DAW Atmos renderers (Logic Pro, Nuendo, Reaper) accept channel-bed input
-- Object metadata (position per sample) can be exported as ADM/BWF for offline
-- No Dolby encoder license needed — LocusQ is a spatial positioning tool, not a codec
-
-### 12. QA Harness (`joshband/audio-dsp-qa-harness`)
-
-Automated testing framework integrated into CI pipeline.
-
-**Test Categories:**
-```
-tests/
-├── spatial/          # VBAP gain verification, distance model accuracy
-├── calibration/      # IR analysis against synthetic rooms
-├── physics/          # Deterministic simulation snapshots
-├── performance/      # CPU benchmarks at 8/16/32 emitters
-├── regression/       # Audio output snapshot comparison
-├── format/           # Output format switching, channel routing
-└── integration/      # Multi-instance scene graph, state save/load
-```
-
-**Integration:**
-- CMake adds test targets linked against QA harness
-- `ctest` runs full suite
-- GitHub Actions CI on push/PR
-- Performance baseline stored in repo, regression alerts on > 10% CPU increase
-
----
-
-## Extended Dependencies
-
-### Phase 2.7 Dependencies
-- **HRTF dataset** — MIT KEMAR or SADIE II (free, bundled as binary data)
-- **libmysofa** (optional, header-only) — SOFA file reader for custom HRTFs
-
-### Phase 2.8 Dependencies
-- **No additional dependencies** — Speaker layout extension uses existing VBAP math
-- **ADM/BWF export** — Custom implementation, no external library needed
-
-### Phase 2.9 Dependencies
-- **Apple:** `CoreMotion.framework`, `AVFoundation.framework` (macOS system frameworks)
-- **Sony:** Sony 360 Reality Audio SDK (developer program enrollment)
-- **Platform guards:** Conditional compilation via CMake `if(APPLE)` / `if(WIN32)`
-
-### Phase 2.10 Dependencies
-- **joshband/audio-dsp-qa-harness** — Git submodule under `_tools/`
-- **CMake test framework** — `enable_testing()` + `add_test()`
+- `Documentation/scene-state-contract.md`
+- `Documentation/invariants.md`
+- `Documentation/adr/ADR-0002-routing-model-v1.md`
+- `Documentation/adr/ADR-0003-automation-authority-precedence.md`
+- `Documentation/adr/ADR-0004-v1-ai-deferral.md`

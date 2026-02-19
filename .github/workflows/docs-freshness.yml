@@ -1,0 +1,20 @@
+name: Docs Freshness
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  docs-freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run docs freshness gate
+        run: |
+          chmod +x ./scripts/validate-docs-freshness.sh
+          ./scripts/validate-docs-freshness.sh

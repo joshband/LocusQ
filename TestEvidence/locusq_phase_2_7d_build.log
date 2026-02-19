@@ -1,0 +1,883 @@
+[  2%] Generating juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData1.cpp, juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData2.cpp, juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData3.cpp, juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData4.cpp, juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData5.cpp, juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData.h
+[  6%] Built target LocusQ_vst3_helper
+[ 13%] Building CXX object CMakeFiles/LocusQ_WebUI.dir/juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData3.cpp.o
+[ 13%] Building CXX object CMakeFiles/LocusQ_WebUI.dir/juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData1.cpp.o
+[ 13%] Building CXX object CMakeFiles/LocusQ_WebUI.dir/juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData4.cpp.o
+[ 15%] Building CXX object CMakeFiles/LocusQ_WebUI.dir/juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData2.cpp.o
+[ 18%] Building CXX object CMakeFiles/LocusQ_WebUI.dir/juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData5.cpp.o
+[ 20%] Linking CXX static library libLocusQ_WebUI.a
+[ 20%] Built target LocusQ_WebUI
+[ 25%] Building CXX object CMakeFiles/LocusQ.dir/Source/PluginProcessor.cpp.o
+[ 25%] Building CXX object CMakeFiles/LocusQ.dir/Source/PluginEditor.cpp.o
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:7:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:70:17: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+7:
+   70 |         b/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:70:17: ufferwarning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+s[writeI   70 |         buffers[writdx] = data;eIdx] = data;
+      |         ~~~~~~~ ^~~~~~~~
+
+      |         ~~~~~~~ ^~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:77:34:/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:77:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   77 |         return buffers[readIndex.load (std::m   77 |     emory_order_acquire)];
+      |                ~~~~~~~ ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    return buffers[readIndex.load (std::memory_order_acquire)];
+      |                ~~~~~~~ ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:132:32: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             if (! slotOccupied[i])
+      |                   ~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:132:32/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:134:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  134 |                 slotOccupied[i] = true;
+      |                 ~~~~~~~~~~~~ ^
+  132 |             if (! slotOccupied[i])
+      |                   ~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:139:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:134:  139 |   30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+              s  134 |                 slotOccupied[i] = true;
+      |                 ~~~~~~~~~~~~ ^
+lots[i].write (d);
+      |                 ~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:139:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  139 |                 slots[i]./Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:153:15: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+write (d);
+      |                 ~~~~~ ^
+  153 |         slots[slotId].write (d);
+      |         ~~~~~ ^~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:154:15: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:153:15: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  154 |         slots[slotId].clearAudioBuffer();
+      |         ~~~~~ ^~~~~~
+  153 |   /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:155:22:      slots[slotId].write (d);
+      |         ~~~~~ ^~~~~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:154:15: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  155 |         slotOccupi  154ed[slo |       tId] = false;
+      |         ~~~~~~~~~~~~ ^~~~~~
+  slots[slotId].clearAudioBuffer();
+      |         ~~~~~ ^~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:179:50:/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:155:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  155 |         slotOccupied[slotId] = false;
+      |         ~~~~~~~~~~~~ ^~~~~~
+  179 |     EmitterSlot& getSlot (int id) { retur/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:179:50:n slots[id]; }
+      |                                            ~~~~~ ^~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  179 |     Emitt/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:erS180:lot&62:  getSlot warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+(int  180 |     const E id) { rmittereturn slots[id]; }
+      |                                            ~~~~~ ^~
+Slot& getSlot (int /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:180:62: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+id) const { return slots[id]; }
+      |                                                        ~~~~~ ^~
+  180 |     const EmitterSlot& getSlot (int id) const { return slots[id]; }
+      |                                                        ~~~~~ ^~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:181:60: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  181/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:181:60: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ |     bool isSlotActive (int id) const { return slotOccupied[id]; }
+      |                                               ~~~~~~~~~~~~ ^~
+  181 |     bool isSlotActive (int id) const { return slotOccupied[id]; }
+      |                                               ~~~~~~~~~~~~ ^~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:8:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:6:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:43:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   43 |             speakerIn file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:8:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:6:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:43:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+Angl   43es[i] = anglesDeg[i];
+      |             ~~~~~~~~~~~~~ ^
+ |             speakerAngles[i] = anglesDeg[i];
+      |             ~~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:43:42: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+43:42: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   43 |             speakerAngles[i] = anglesDeg[i];
+      |                                ~~~~~~~~~ ^
+   43 |             speakerAngles[i] = anglesDeg[i];
+      |                                ~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:44:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:44:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+
+   44 |             float rad = anglesDeg[i] * degToRad;
+      |                         ~~~~~~~~~ ^
+   44 |             float r/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:45:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ad = anglesDeg[i] * degToRad;
+      |                         ~~~~~~~~~ ^
+   45 |             speakerX[i/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:] = st45:d::sin (rad);
+      |             ~~~~~~~~ ^
+22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   45 |             speakerX[i] =/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:46:22: std::si warning: n (implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   46 |             spearakerY[i] = std::cos (d);
+      | rad);
+      |             ~~~~~~~~ ^
+            ~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:46:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   46 |             speakerY[i] = std::cos (rad);
+      |             ~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:75:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   75 |                 result.gains[i] = g;
+      |                 ~~~~~~       ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:75:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   75 |                 result.gains[i] = g;
+      |                 ~~~~~~       ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:88:69: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   88 |         float gA = pairInvMatrix[pairIdx/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:88:69: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+][   88 |         float gA = pairInvMatrix[pairIdx][00] * s] * srcX + pairInvMatrix[pairIdx][1] * srcY;
+      |                                                       ~~~~~~~~~~~~~ ^~~~~~~
+rcX + pairInvMatrix[pairIdx][1] * srcY;
+      | /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:                                                      ~~~~~~~~~~~~~ ^~~~~~~
+88/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:88:34:34: warning: : warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   88implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ |         float gA = pairInvMatrix[pairIdx][0] * srcX + pairInvMatrix[pairIdx][1] * srcY;
+      |                    ~~~~~~~~~~~~~ ^~~~~~~
+   88 |         /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:89:69float gA = pairInvMatri: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+x[pairIdx][0] *   89 |         flo srcX + pairInvMatrat gB = pairInvMatrix[pairIdx][2] * six[pairIdx][1] * srcY;
+      |                    ~~~~~~~~~~~~~ ^~~~~~~
+rcX + pairInvMatrix[pairIdx][3] * srcY;
+      |                                                       ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:89:69: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:89:34:    89warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   89 |       |        float    float  gB = gB = ppairairInvMatrix[pairIdx]InvMat[2] *rix[ sparcX + irIdx][2] * pairInvMsratricXx[pairIdx][3] * srcY;
+ +      |  pairI                   ~~~~~~~~~~~~~ ^~~~~~~
+nvMatrix[pairIdx][3] * srcY;
+      |                                                       ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:89:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:103:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   89 |         float gB = pairInvMatrix[pairIdx][2] * srcX + pairInvMatrix[pairIdx][3] * srcY;
+      |                    ~~~~~~~~~~~~~ ^~~~~~~
+  103 |         result.gains[spkA] = gA;
+      |         ~~~~~~       ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:103:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:104:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  103 |     104 |               result.gains[spkA] result.gains[spkB] = gB;
+      |         ~~~~~~       ^~~~
+= gA;
+      |         ~~~~~~       ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:104:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  104 |         result.gains[spkB] = gB;
+      |         ~~~~~~       ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:124:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  124 |             result.gains[i] = result.gains[i]/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:124:26: warning:  *implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ horizontalWeight
+      |             ~~~~~~       ^
+  124/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:124:44: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ |             result.gains[i] = result.gains[i] * horizontalWeight
+      |             ~~~~~~       ^
+  124/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:124:44 |      : warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+       result.gains[i]   124 |    = re  su    lt.gains   result.gains[i] = result.[i] * horgains[i]izontalW * horeight
+      |                               ~~~~~~       ^
+izontalWeight
+      |                               ~~~~~~       ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:146:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  146 |     /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:146:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+    float a = speakerX[spkA], b = speakerY[spkA];
+      |                   ~~~~~~~~ ^~~~
+  146 |      /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:146:48:   float a = speakerX[spkA], b = speakerY[spkA];
+      |                   ~~~~~~~~ ^~~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:146:48: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  146 |         float a = speakerX[spkA], b = speakerY[spkA];
+      |                                       ~~~~~~~~ ^~~~
+  146 |      /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:147:28:   float a = speakerX[spkA], b = speakerY[spkA];
+      |                                       ~~~~~~~~ ^~~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:147:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  147 |         float c = speakerX[spkB], d = speakerY[spkB];
+      |                   ~~~~~~~~ ^~~~
+  147 |  /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:147:48: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+       float c = speakerX[spkB], d =  147 |         float c = speakerX[spkB], d = speakerY[spkB];
+      |                                       ~~~~~~~~ ^~~~
+ speakerY[spkB];
+      |                   ~~~~~~~~ ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:147:48: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  147 |       /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:153:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+    float c = speakerX[spkB], d = speakerY[spkB];
+      |                                       ~~~~~~~~ ^~~~
+153 |             pairInvMatrix[pairIdx] = { 1.0f, /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:153:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+0.0f, 0.0f, 1.0f };
+      |             ~~~~~~~~~~~~~ ^~~~~~~
+  153 |           /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:158:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  pairInv  158 |   Matrix[pa      pairIdx]irInvMatrix[pairIdx][0] =  d * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+ = { 1.0f, 0.0f, 0.0f, 1.0f };
+      |             ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:159:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  159/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:158:23: |         pairInvMatrix[pairIdx][1] = -b * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:160:23:  158 |         pairInvMatrix[pairIdx][0] =  d * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  160 |         pairInvMatrix[pairIdx][2] = -c * in/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:159:23: warning: vDimplicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+et  159 |         pairInvMatrix[pairIdx][1] = -b * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:160:23: warning: /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:161:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  160 |    161 |         pairInvMatrix[pairIdx][3] =  a * invD       pet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+airInvMatrix[pairIdx][2] = -c/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:170:72: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ * invDe  170 |     t;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+     /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:161:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]   if (isAngleBetween (azDeg, speakerAngles[i], speakerAngles[j]))
+      |                                                          ~~~~~~~~~~~~~ ^
+
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h  161 |         pairInvMatrix[pairIdx][3] =  a * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+:170:54: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  170 |             if (i/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:170:72: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+sAngleBetween (az  170 | Deg, speake     rAngle       ifs[i], spea (isAngleBetkerAngles[j]))
+ween (azDeg, speakerAngle      |                                        ~~~~~~~~~~~~~ ^
+s[i], speakerAngles[/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:179:j]))
+      |                                                          ~~~~~~~~~~~~~ ^
+71: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:170:54: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  179 |              170 |             if (isAn fgleBetloat d = stdween (azDeg,::abs (angleDifference  speakerAngles[i], speakerAngles[j]))
+      |                                        ~~~~~~~~~~~~~ ^
+(azDeg, speakerAng/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:179:71: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+les[i]));
+      |                                                         ~~~~~~~~~~~~~ ^
+  179 |             float d = std::abs (angleDifference (azDeg, speakerAngles[i]));
+      |                                                         ~~~~~~~~~~~~~ ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:8:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:60:31: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:8:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:60:31: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   60 |             speakerDelayLines[spk].resize (MAX_DELAY_SAMPLES, 0.0f);
+      |             ~~~~~~~~~~~~~~~~~ ^~~
+   60 |          /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:61:27:   s warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+peakerDelayLines[spk].resize (MAX_DELAY_SAMPLES, 0.0f);
+      |             ~~~~~~~~~~~~~~~~~ ^~~
+   61 |             delayWritePos[spk] = 0;
+      |             ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:61:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   61 |             delayWritePos[spk] = 0;
+      |             ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:254:33: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:254:  254 |   33: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+       254 |             smoothedSpeakerTrim[speakerIdx].setTar    getV smoothedSpeakerTrim[speakerIdx].setTargetValue (
+      |             ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+alue (
+      |             ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:266:37: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  266 |    /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:266:37: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+         if (speakerDelaySamples[speakerIdx] == boundedSamples)
+      |                 ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+  266 |        /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:269:     if (speakerDelaySamples[speakerIdx] == boundedSamples)
+      |                 ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+33: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:269:33: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  269 |             speakerDelaySamples[speakerIdx] = boundedSamples;
+      |             ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+  269 |             speakerDelaySamples[speakerIdx] = boundedSamples;
+      |             ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:331:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  331 |                 emitterAbsorption[slotIdx].updateForDistance /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:331:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+(distance);
+      |                 ~~~~~~~~~~~~~~~~~ ^~~~~~~
+  331 |       /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:332:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+          emitterAbsorption[slotIdx].up  332 |       da  teForDistance (d        emitterAbsorption[slotIdx].prisocessBloctance)k (tem;
+      | pMonoBuf                ~~~~~~~~~~~~~~~~~ ^~~~~~~
+fer.data(), samp/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:332:35:lesToProcess);
+      |                 ~~~~~~~~~~~~~~~~~ ^~~~~~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  332 |                 emitterAbsorption[slotIdx].processBlock (tempMonoBuffer.data(), samplesToProcess);
+      |                 ~~~~~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:85: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  358 |                     smoothedSpeakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distG/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:ain)358:;
+      |                                                                        ~~~~~~~~~~~~ ^~~
+85: /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:51: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  358 |                 358 |                         smoothedSpeakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distGain);
+      |                                                                        ~~~~~~~~~~~~ ^~~
+  smo/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:51: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+othedSpeakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distGain);
+      |                     ~~~~~~~~~~~~~~~~~~~~          ^~~
+  358 |                     smoothedSp/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:42: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+eakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distGain)  358 | ;
+         |                     ~~~~~~~~~~~~~~~~~~~~          ^~~
+        /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:  358:42:        warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  358smoothedS |     peakerGa              ins[slo  tIsmoothedSpeakerGains[slotIdx][spk].sedx][spk].stTargetValue (etspeakTarerGains[spk] * distGain);
+      |                     ~~~~~~~~~~~~~~~~~~~~ ^~~~~~~
+getValue (speakerGains[spk] * distGain);
+      |                     ~~~~~~~~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:370:62: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  370 |              /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:370   :62  :       gain = swarning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+moothedS  370 |           peakerG              gain = smootains[slotIdhedSpx]ea[spk].gkerGains[sletNotIdx][spk].getNextValue();
+      |                                ~~~~~~~~~~~~~~~~~~~~          ^~~
+extVa/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:370:53: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+lue();
+      |                                ~~~~~~~~~~~~~~~~~~~~          ^~~
+  370 | /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:370:53: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+                  370 |                           g    ain =  gain = smoothedSpeakerGains[slotIdx][spk].getNextValue();
+      |                                ~~~~~~~~~~~~~~~~~~~~ ^~~~~~~
+ smoothedSpeak/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:372:45erGains[slotIdx][spk].: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+getNex  372 |      tV  alue();
+      |                                ~~~~~~~~~~~~~~~~~~~~ ^~~~~~~
+                 gain = speake/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:372:45:rGains[spk] * di warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+stGain;
+      |                                ~~~~~~~~~~~~ ^~~
+  372 |                         gain = spe/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:ak391:erGa45: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]ins[spk]
+  391 |             in * distGain;
+      |                                ~~~~~~~~~~~~ ^~~
+t delay = speakerDelaySamples[spk];
+      |                         ~~~~~~~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:391:45: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  391 |             int delay = speakerDelaySamples[spk/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:398:79: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+];
+      |                         ~~~~~~~~~~~~~~~~~~~ ^~~
+  398 |                    /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:398:79: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ sp  398 |                     speakerDelayLines[spk][static_cast<size_t> (delayWritePos[spk])] = channelDeakerDeata[i]layL;
+      |                                                                 ~~~~~~~~~~~~~ ^~~
+ines[spk][static_cast<size_t> (delayWritePos[spk])] = channelData[i];
+      |                                                                 ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:398:39: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+:398:39: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  398 |                     speakerDelayLines[spk][static_cast<size_t> (delayWritePos[spk])] = channelData[i];
+      |                     ~~~~~~~~~~~~~~~~~ ^~~
+  398 |       /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:400:49: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+              speakerDelayLines[spk][static_cast<size_t> (delayWritePos[spk])] = channelData[i];
+      |                     ~~~~~~~~~~~~~~~~~ ^~~
+  400 |         /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:400:49: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+            int readPos = del  400 | ayWritePos[                    int readPos = delayWritePos[spk] - delay;
+      |                                   ~~~~~~~~~~~~~ ^~~
+spk] - delay;
+      |                                   ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:403:56: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  403 |         /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:403:56: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+           403 |     channel      Data             [i] = speakerDelayLines[spk][static_cast<size_t> (rchannelData[ieadP] = os)];
+      |                                      ~~~~~~~~~~~~~~~~~ ^~~
+speakerDel/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:405:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ayLines[spk][static_cast<size_t> (readPos)];
+      |                                      ~~~~~~~~~~~~~~~~~ ^~~
+  405 |                     delayWritePos[spk] = (delayWritePos[spk] + 1) % MAX_DELAY_SAMPLES;
+      |                     ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:405:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:405:57: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  405 |                     delayWritePos[spk] = (delayWritePos[spk] + 1) % MAX_DELAY_SAMPLES;
+      |                     ~~~~~~~~~~~~~ ^~~
+  405 |                     delayWritePos[spk] = (delayWritePos[spk] + 1) % MAX_DELAY_SAMPLES;
+      |                                           ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:405:57: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  405 | /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:411:55: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+    411 |                 channelData[i] *= smoothedSpeakerTrim[spk].getNextValue();
+      |                                   ~~~~~~~~~~~~~~~~~~~ ^~~
+                  delayWritePos[spk] = (delayWritePos[spk] + 1) % MAX_DELAY_SAMPLES;
+      |                                           ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:411:55: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  411 |                 channelData[i] *= smoothedSpeakerTrim[spk].getNextValue();
+      |                                   ~~~~~~~~~~~~~~~~~~~ ^~~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:3:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:110:30: warning: implicit conversion changes signedness: 'const int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  110 |         sweepBuffer_.resize (N);
+      |                      ~~~~~~  ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:115:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  115 |             sweepBuffer_[n] = static_cast<float> (std::sin (phase));
+      |             ~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:122:32: warning: implicit conversion changes signedness: 'const int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  122 |         inverseFiIn file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1lter_.resize (N);
+      |                        ~~~~~~  ^:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:
+9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:3:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:110:30: warning: implicit conversion changes signedness: 'const int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  110 |         sweepBuffer_.resize (N);
+      |                      ~~~~~~  ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:127:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  127 |             inverseFilter_[n] = sweepBuffer/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:115:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+_[N - 1 - n] * env;
+      |             ~~~~~~~~~~~~~~ ^
+  115 | /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:127:52: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+            sweepBuffer_[n] = static_cast<float> (std::sin (phase));
+      |             ~~~~~~~~~~~~ ^
+  127 |       /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:122      invers:32eFilte: warning: implicit conversion changes signedness: 'const int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+r_[n]  122 = sweepBuffer_[N - 1 - |    n] *      inverseFi env;
+      |                                 ~~~~~~~~~~~~ ~~~~~~^~~
+lter_.resize (N);
+      |                        ~~~~~~  ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:127:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  127 |             inverseFilter_[n] = sweepBuffer_[N - 1 - n] * env;
+      |             ~~~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:127:52: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  127 |             inverseFilter_[n] = sweepBuffer_[N - 1 - n] * env;
+      |                                 ~~~~~~~~~~~~ ~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:145:50: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  145 |             output[i] = sweepBuffer_[playbackPos_++] * levelGain_;
+      |                         ~~~~~~~~~~~~ ~~~~~~~~~~~~^~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:145:50: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  145 |             output[i] = sweepBuffer_[playbackPos_++] * levelGain_;
+      |                         ~~~~~~~~~~~~ ~~~~~~~~~~~~^~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:4:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:130:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  130 |             float re1 = recFFT[2 * k],     im1 = recFFT[2 * k + 1];
+      |                         ~~~~~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:130:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  130 |             float re1 = recFFT[2 * k],     im1 = recFFT[2 * k + 1];
+      |                                                  ~~~~~~ ~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:131:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  131 |             float re2 = invFIn file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:4:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:130:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+FT[2 * k],       130 |    im2 = invFFT[2 * k          float re1 = recFFT[2 * k],     im1 = recFFT[2 * k + 1];
+      |                         ~~~~~~ ~~^~~
++ 1];
+      |                         ~~~~~~ ~~^~~/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:130:63:
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h  130 |             float re1 = recFFT[2 *:131:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ k],     im1 = recFFT[2 * k + 1];
+      |                                                  ~~~~~~ ~~~~~~^~~
+  131 |             fl/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:131oa:34t : warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+re2   131 |             float re2 = invFFT[2 * k],     im2 == invFFT[2 * k] invFF,     im2 = invFFT[2 * k + 1];
+      |                                                  ~~~~~~ ~~~~~~^~~
+T[2 * /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:132:22:k + 1];
+      |                         ~~~~~~ ~~^~~
+ warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:131:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             r  131ecFFT[ |             float re2 * 2 = k]     invFFT[2 * k],     im2 = invFFT[2 * k + 1];
+      |                                                  ~~~~~~ ~~~~~~^~~
+= re1 * re2 - im1/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:132:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             recFFT[2 * k]     = re1 * re2 - im1 * im2 * im2;
+      ;
+      |             ~~~~~~ ~~^~~
+|             ~~~~~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:133:26/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:133:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  133 |             recFFT[2 * k + 1] = re1 * im  133 |             recFFT[2 * k + 1] = re1 * im2 + im1 * re2;
+      |             ~~~~~~ ~~~~~~^~~
+2 + im1 * re2;
+      |             ~~~~~~ ~~~~~~^~~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:5:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:79:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   79 |     In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:5:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:79:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+        if (std::abs (ir[n]) >= thr)
+      |                           ~~ ^
+   79 |             if (std::abs (ir[n]) >= thr)
+      |                           ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:96:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   96 |         for (int i = start; i < end/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:96:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+; ++i) sumSq += ir[i] * ir[i];
+      |                                                            ~~ ^
+   96/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:96:55: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ |         for (int i = start;    96 |         for (int i = start; i < end; ++i) sumSq += ir[i] * ir[i];
+      |                                                    ~~ ^
+i < end; ++i) sumSq += ir[i] * ir[i];
+      |                                                            ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:96:55: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   96 |         for (int i = start; i < end; ++i) sumSq += ir[i] * ir[i];
+      |                                                    ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:131:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:131:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  131  131 |   |             float           f re  = fftData[2 * bin];
+      |                         ~~~~~~~ ~~^~~~~
+loat re /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:132:41: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ = fftData[2 * bin];
+      |                         ~~~~~~~ ~~^~~~~
+  132 |     /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:        float im  = fftData[2 * bin + 1];
+      |                         ~~~~~~~ ~~~~~~~~^~~
+132:41: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             float im  = fftData[2 * bin + 1];
+      |                         ~~~~~~~ ~~~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:161:61: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  161 |             directPeak = std::max (dir/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:161:61: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ectPeak, std::abs (ir[n]));
+      |                                                          ~~ ^
+  161 |             directPeak = std::max (directPeak, std::abs (ir[n]));
+      |                                                          ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:171:36: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  171 |             float a = std::abs (ir[n]);
+      |                                 ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:171:36: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:173:64: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+171 |             float a = std::abs (ir[n]);
+      |                                 ~~ ^
+  173 |          /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:173:64:   if warning:  (a > std::implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+abs (ir[n - 1  173]) && a > |             if (a > std::abs (ir[n - 1]) && a > std::abs (ir[n + 1]))
+      |                                                           ~~ ~~^~~
+ std::abs (ir[n + 1]))
+      |                                                           ~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:173/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:173:36:36: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  173  173 |             if (a > std::abs (i |    r[n     - 1]) && a > std::abs (ir[n + 1]))
+      |                               ~~ ~~^~~
+     if (a > std::abs (ir[n - 1]) && a > std::abs (ir[n + 1]))
+      |                               ~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:203:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  203 |             running += ir[n] * ir[n];
+      |                                ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:203:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  203 |             run/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:203:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ning += ir[n] * ir[n];
+      |                        ~~ ^
+  203 |       /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:204:17: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+      running   204 |           += ir[n] * ir[  edc[n]   = n];
+      |                                ~~ ^
+running / totalEnergy;
+      |             ~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:203:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  203 |             running += i/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:211:71: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+r[n] * ir[n];
+      |                        ~~ ^
+  211 |      /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:204:17:       warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+ float db = juce::Decibels::gainToDecib  204 |             edc[n]   = running / totalEnergy;
+      |             ~~~ ^
+els (std::sqrt (edc[n] + 1e-12f));
+      |                                                                   ~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:211:71: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  211 |             float db = juce::Decibels::gainToDecibels (std::sqrt (edc[n] + 1e-12f));
+      |                                                                   ~~~ ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:6:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:70:40: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   70 |             const auto& s = p.speakers[i];
+      |                             ~          ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:6:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:70:40: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   70 |             const auto& s = p.speakers[i];
+      |                             ~          ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:107:19: warning: variable 'lp' set but not used [-Wunused-but-set-variable]
+  107 |         if (auto* lp = root->getProperty ("listenerPos").getDynamicObject())
+      |                   ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:107:19: warning: variable 'lp' set but not used [-Wunused-but-set-variable]
+  107 |         if (auto* lp = root->getProperty ("listenerPos").getDynamicObject())
+      |                   ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:115:38: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  115 |                 auto& s = p.speakers[i];
+      |                           ~          ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:115:38: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  115 |                 auto& s = p.speakers[i];
+      |                           ~          ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginEditor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:268:68: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  268 |                         auto& spkProfile = resultProfile_.speakers[spk];
+      |                                            ~~~~~~~~~~~~~~          ^~~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:268:68: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  268 |                     /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:301:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]    a
+ut  301 |                 o& sp    kProf       ile = resultProfile_.speakers[spk];
+      |                                            ~~~~~~~~~~~~~~          ^~~
+           resultProfile_.speakers[i].distance / 343.0f);
+      |                                       ~~~~~~~~~~~~~~          ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:301:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  301 |                                       resultProfile_.speakers[i].distance / 343.0f);
+      |                                       ~~~~~~~~~~~~~~          ^
+88 warnings generated.
+88 warnings generated.
+[ 27%] Linking CXX static library LocusQ_artefacts/libLocusQ_SharedCode.a
+[ 70%] Built target LocusQ
+[ 72%] Linking CXX CFBundle shared module LocusQ_artefacts/VST3/LocusQ.vst3/Contents/MacOS/LocusQ
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3: code has no resources but signature indicates they must be present
+-- Replacing invalid signature with ad-hoc signature
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3: replacing existing signature
+removing moduleinfo.json
+creating /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/build/LocusQ_artefacts//VST3/LocusQ.vst3
+[100%] Built target LocusQ_VST3
+[  4%] Building CXX object CMakeFiles/locusq_qa.dir/Source/PluginProcessor.cpp.o
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:7:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:70:17: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   70 |         buffers[writeIdx] = data;
+      |         ~~~~~~~ ^~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:77:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   77 |         return buffers[readIndex.load (std::memory_order_acquire)];
+      |                ~~~~~~~ ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:132:32: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             if (! slotOccupied[i])
+      |                   ~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:134:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  134 |                 slotOccupied[i] = true;
+      |                 ~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:139:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  139 |                 slots[i].write (d);
+      |                 ~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:153:15: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  153 |         slots[slotId].write (d);
+      |         ~~~~~ ^~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:154:15: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  154 |         slots[slotId].clearAudioBuffer();
+      |         ~~~~~ ^~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:155:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  155 |         slotOccupied[slotId] = false;
+      |         ~~~~~~~~~~~~ ^~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:179:50: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  179 |     EmitterSlot& getSlot (int id) { return slots[id]; }
+      |                                            ~~~~~ ^~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:180:62: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  180 |     const EmitterSlot& getSlot (int id) const { return slots[id]; }
+      |                                                        ~~~~~ ^~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SceneGraph.h:181:60: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  181 |     bool isSlotActive (int id) const { return slotOccupied[id]; }
+      |                                               ~~~~~~~~~~~~ ^~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:8:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:6:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:43:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   43 |             speakerAngles[i] = anglesDeg[i];
+      |             ~~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:43:42: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   43 |             speakerAngles[i] = anglesDeg[i];
+      |                                ~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:44:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   44 |             float rad = anglesDeg[i] * degToRad;
+      |                         ~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:45:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   45 |             speakerX[i] = std::sin (rad);
+      |             ~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:46:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   46 |             speakerY[i] = std::cos (rad);
+      |             ~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:75:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   75 |                 result.gains[i] = g;
+      |                 ~~~~~~       ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:88:69: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   88 |         float gA = pairInvMatrix[pairIdx][0] * srcX + pairInvMatrix[pairIdx][1] * srcY;
+      |                                                       ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:88:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   88 |         float gA = pairInvMatrix[pairIdx][0] * srcX + pairInvMatrix[pairIdx][1] * srcY;
+      |                    ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:89:69: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   89 |         float gB = pairInvMatrix[pairIdx][2] * srcX + pairInvMatrix[pairIdx][3] * srcY;
+      |                                                       ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:89:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   89 |         float gB = pairInvMatrix[pairIdx][2] * srcX + pairInvMatrix[pairIdx][3] * srcY;
+      |                    ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:103:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  103 |         result.gains[spkA] = gA;
+      |         ~~~~~~       ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:104:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  104 |         result.gains[spkB] = gB;
+      |         ~~~~~~       ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:124:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  124 |             result.gains[i] = result.gains[i] * horizontalWeight
+      |             ~~~~~~       ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:124:44: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  124 |             result.gains[i] = result.gains[i] * horizontalWeight
+      |                               ~~~~~~       ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:146:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  146 |         float a = speakerX[spkA], b = speakerY[spkA];
+      |                   ~~~~~~~~ ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:146:48: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  146 |         float a = speakerX[spkA], b = speakerY[spkA];
+      |                                       ~~~~~~~~ ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:147:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  147 |         float c = speakerX[spkB], d = speakerY[spkB];
+      |                   ~~~~~~~~ ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:147:48: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  147 |         float c = speakerX[spkB], d = speakerY[spkB];
+      |                                       ~~~~~~~~ ^~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:153:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  153 |             pairInvMatrix[pairIdx] = { 1.0f, 0.0f, 0.0f, 1.0f };
+      |             ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:158:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  158 |         pairInvMatrix[pairIdx][0] =  d * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:159:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  159 |         pairInvMatrix[pairIdx][1] = -b * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:160:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  160 |         pairInvMatrix[pairIdx][2] = -c * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:161:23: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  161 |         pairInvMatrix[pairIdx][3] =  a * invDet;
+      |         ~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:170:72: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  170 |             if (isAngleBetween (azDeg, speakerAngles[i], speakerAngles[j]))
+      |                                                          ~~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:170:54: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  170 |             if (isAngleBetween (azDeg, speakerAngles[i], speakerAngles[j]))
+      |                                        ~~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/VBAPPanner.h:179:71: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  179 |             float d = std::abs (angleDifference (azDeg, speakerAngles[i]));
+      |                                                         ~~~~~~~~~~~~~ ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:8:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:60:31: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   60 |             speakerDelayLines[spk].resize (MAX_DELAY_SAMPLES, 0.0f);
+      |             ~~~~~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:61:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   61 |             delayWritePos[spk] = 0;
+      |             ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:254:33: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  254 |             smoothedSpeakerTrim[speakerIdx].setTargetValue (
+      |             ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:266:37: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  266 |             if (speakerDelaySamples[speakerIdx] == boundedSamples)
+      |                 ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:269:33: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  269 |             speakerDelaySamples[speakerIdx] = boundedSamples;
+      |             ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:331:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  331 |                 emitterAbsorption[slotIdx].updateForDistance (distance);
+      |                 ~~~~~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:332:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  332 |                 emitterAbsorption[slotIdx].processBlock (tempMonoBuffer.data(), samplesToProcess);
+      |                 ~~~~~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:85: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  358 |                     smoothedSpeakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distGain);
+      |                                                                        ~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:51: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  358 |                     smoothedSpeakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distGain);
+      |                     ~~~~~~~~~~~~~~~~~~~~          ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:358:42: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  358 |                     smoothedSpeakerGains[slotIdx][spk].setTargetValue (speakerGains[spk] * distGain);
+      |                     ~~~~~~~~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:370:62: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  370 |                         gain = smoothedSpeakerGains[slotIdx][spk].getNextValue();
+      |                                ~~~~~~~~~~~~~~~~~~~~          ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:370:53: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  370 |                         gain = smoothedSpeakerGains[slotIdx][spk].getNextValue();
+      |                                ~~~~~~~~~~~~~~~~~~~~ ^~~~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:372:45: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  372 |                         gain = speakerGains[spk] * distGain;
+      |                                ~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:391:45: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  391 |             int delay = speakerDelaySamples[spk];
+      |                         ~~~~~~~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:398:79: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  398 |                     speakerDelayLines[spk][static_cast<size_t> (delayWritePos[spk])] = channelData[i];
+      |                                                                 ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:398:39: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  398 |                     speakerDelayLines[spk][static_cast<size_t> (delayWritePos[spk])] = channelData[i];
+      |                     ~~~~~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:400:49: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  400 |                     int readPos = delayWritePos[spk] - delay;
+      |                                   ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:403:56: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  403 |                     channelData[i] = speakerDelayLines[spk][static_cast<size_t> (readPos)];
+      |                                      ~~~~~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:405:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  405 |                     delayWritePos[spk] = (delayWritePos[spk] + 1) % MAX_DELAY_SAMPLES;
+      |                     ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:405:57: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  405 |                     delayWritePos[spk] = (delayWritePos[spk] + 1) % MAX_DELAY_SAMPLES;
+      |                                           ~~~~~~~~~~~~~ ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/SpatialRenderer.h:411:55: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  411 |                 channelData[i] *= smoothedSpeakerTrim[spk].getNextValue();
+      |                                   ~~~~~~~~~~~~~~~~~~~ ^~~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:3:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:110:30: warning: implicit conversion changes signedness: 'const int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  110 |         sweepBuffer_.resize (N);
+      |                      ~~~~~~  ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:115:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  115 |             sweepBuffer_[n] = static_cast<float> (std::sin (phase));
+      |             ~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:122:32: warning: implicit conversion changes signedness: 'const int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  122 |         inverseFilter_.resize (N);
+      |                        ~~~~~~  ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:127:28: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  127 |             inverseFilter_[n] = sweepBuffer_[N - 1 - n] * env;
+      |             ~~~~~~~~~~~~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:127:52: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  127 |             inverseFilter_[n] = sweepBuffer_[N - 1 - n] * env;
+      |                                 ~~~~~~~~~~~~ ~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/TestSignalGenerator.h:145:50: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  145 |             output[i] = sweepBuffer_[playbackPos_++] * levelGain_;
+      |                         ~~~~~~~~~~~~ ~~~~~~~~~~~~^~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:4:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:130:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  130 |             float re1 = recFFT[2 * k],     im1 = recFFT[2 * k + 1];
+      |                         ~~~~~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:130:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  130 |             float re1 = recFFT[2 * k],     im1 = recFFT[2 * k + 1];
+      |                                                  ~~~~~~ ~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:131:34: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  131 |             float re2 = invFFT[2 * k],     im2 = invFFT[2 * k + 1];
+      |                         ~~~~~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:131:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  131 |             float re2 = invFFT[2 * k],     im2 = invFFT[2 * k + 1];
+      |                                                  ~~~~~~ ~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:132:22: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             recFFT[2 * k]     = re1 * re2 - im1 * im2;
+      |             ~~~~~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/IRCapture.h:133:26: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  133 |             recFFT[2 * k + 1] = re1 * im2 + im1 * re2;
+      |             ~~~~~~ ~~~~~~^~~
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:5:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:79:30: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   79 |             if (std::abs (ir[n]) >= thr)
+      |                           ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:96:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   96 |         for (int i = start; i < end; ++i) sumSq += ir[i] * ir[i];
+      |                                                            ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:96:55: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   96 |         for (int i = start; i < end; ++i) sumSq += ir[i] * ir[i];
+      |                                                    ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:131:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  131 |             float re  = fftData[2 * bin];
+      |                         ~~~~~~~ ~~^~~~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:132:41: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  132 |             float im  = fftData[2 * bin + 1];
+      |                         ~~~~~~~ ~~~~~~~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:161:61: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  161 |             directPeak = std::max (directPeak, std::abs (ir[n]));
+      |                                                          ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:171:36: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  171 |             float a = std::abs (ir[n]);
+      |                                 ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:173:64: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  173 |             if (a > std::abs (ir[n - 1]) && a > std::abs (ir[n + 1]))
+      |                                                           ~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:173:36: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  173 |             if (a > std::abs (ir[n - 1]) && a > std::abs (ir[n + 1]))
+      |                               ~~ ~~^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:203:35: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  203 |             running += ir[n] * ir[n];
+      |                                ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:203:27: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  203 |             running += ir[n] * ir[n];
+      |                        ~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:204:17: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  204 |             edc[n]   = running / totalEnergy;
+      |             ~~~ ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomAnalyzer.h:211:71: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  211 |             float db = juce::Decibels::gainToDecibels (std::sqrt (edc[n] + 1e-12f));
+      |                                                                   ~~~ ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:6:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:70:40: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+   70 |             const auto& s = p.speakers[i];
+      |                             ~          ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:107:19: warning: variable 'lp' set but not used [-Wunused-but-set-variable]
+  107 |         if (auto* lp = root->getProperty ("listenerPos").getDynamicObject())
+      |                   ^
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/RoomProfileSerializer.h:115:38: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  115 |                 auto& s = p.speakers[i];
+      |                           ~          ^
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.cpp:1:
+In file included from /Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/PluginProcessor.h:9:
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:268:68: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  268 |                         auto& spkProfile = resultProfile_.speakers[spk];
+      |                                            ~~~~~~~~~~~~~~          ^~~
+/Users/artbox/Documents/Repos/audio-plugin-coder/plugins/LocusQ/Source/CalibrationEngine.h:301:63: warning: implicit conversion changes signedness: 'int' to 'size_type' (aka 'unsigned long') [-Wsign-conversion]
+  301 |                                       resultProfile_.speakers[i].distance / 343.0f);
+      |                                       ~~~~~~~~~~~~~~          ^
+88 warnings generated.
+[  8%] Linking CXX executable locusq_qa_artefacts/locusq_qa
+ld: warning: ignoring duplicate libraries: '/Users/artbox/.local/lib/libqa_core.a'
+[100%] Built target locusq_qa
+exit_code=0

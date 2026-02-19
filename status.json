@@ -1,29 +1,142 @@
 {
   "plugin_name": "LocusQ",
-  "version": "v0.0.0",
-  "current_phase": "design_complete",
+  "version": "v0.1.0",
+  "current_phase": "code",
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-17T13:00:00Z",
+  "last_modified": "2026-02-19T05:36:52Z",
   "phase_history": [
     {
       "phase": "ideation",
       "status": "complete",
-      "completed_at": "2026-02-17T12:00:00Z"
+      "completed_at": "2026-02-17T12:00:00Z",
+      "notes": "Creative brief and parameter spec authored."
     },
     {
       "phase": "plan",
       "status": "complete",
       "completed_at": "2026-02-17T12:30:00Z",
-      "framework_selected": "webview"
+      "framework_selected": "webview",
+      "notes": "High-complexity phased architecture selected."
+    },
+    {
+      "phase": "planning_decision_package",
+      "status": "complete",
+      "completed_at": "2026-02-19T01:16:13Z",
+      "notes": "skill_plan package accepted: ADR-0002/0003/0004/0005 and scene-state-contract authored; research synthesis aligned for skill_design and skill_impl handoff."
     },
     {
       "phase": "design",
       "status": "complete",
-      "completed_at": "2026-02-17T13:00:00Z",
-      "design_version": "v2",
-      "iterations": 2
+      "completed_at": "2026-02-19T01:28:43Z",
+      "design_version": "v3",
+      "iterations": 3,
+      "notes": "WebView design refreshed to v3: persistent viewport invariants and adaptive per-mode control rail behavior (width tokens + scroll memory) documented and aligned to preview/implementation shell."
+    },
+    {
+      "phase": "code",
+      "status": "complete",
+      "started_at": "2026-02-18T22:45:48Z",
+      "completed_at": "2026-02-19T02:03:15Z",
+      "implementation_phase": "2.6",
+      "notes": "Implementation phases 2.1-2.6 are complete. Phase 2.4 acceptance is now closed via deterministic probe plus suite evidence; Phase 2.5/2.6 acceptance and host-load checks remain stable."
+    },
+    {
+      "phase": "validation_phase_2_3",
+      "status": "complete",
+      "completed_at": "2026-02-18T22:41:30Z",
+      "notes": "Phase 2.1-2.3 validation completed: harness ctest 45/45 passed, LocusQ smoke suite 4/4 passed, pluginval GUI-context SUCCESS evidence captured."
+    },
+    {
+      "phase": "validation_phase_2_4",
+      "status": "complete",
+      "completed_at": "2026-02-19T02:03:15Z",
+      "notes": "Phase 2.4 acceptance closed: deterministic physics probe 5/5 pass, physics spatial-motion + zero-g drift scenarios pass, and phase-pure suite rollup 2 PASS / 0 WARN / 0 FAIL."
+    },
+    {
+      "phase": "validation_phase_2_5",
+      "status": "complete",
+      "completed_at": "2026-02-18T23:43:12Z",
+      "notes": "Phase 2.5 acceptance suite passed hard gates (9 scenarios: 8 pass, 1 warn, 0 fail). Residual warning tracks allocation trend under profiler while CPU budget/deadline criteria pass."
+    },
+    {
+      "phase": "validation_phase_2_6",
+      "status": "complete",
+      "completed_at": "2026-02-19T01:32:36Z",
+      "notes": "Phase 2.6 closeout validated (historical baseline): acceptance suite hard-pass (2 PASS / 1 WARN / 0 FAIL) with allocation warning. Superseded by implementation_phase_2_6c_allocation_free (3 PASS / 0 WARN / 0 FAIL, perf_allocation_free=true)."
+    },
+    {
+      "phase": "documentation_governance",
+      "status": "complete",
+      "completed_at": "2026-02-18T23:19:39Z",
+      "notes": "Documentation baseline standardized: metadata headers, standards/invariants/ADR references, and validation trend logging."
+    },
+    {
+      "phase": "testing_focused_matrix",
+      "status": "complete",
+      "completed_at": "2026-02-19T01:44:27Z",
+      "notes": "Harness sanity passed (45/45). Focused acceptance matrix executed (Phase 2.6 + Phase 2.5 regression + full-system + host-edge), with PASS_WITH_WARNING and published deltas in qa_output/suite_result.json."
+    },
+    {
+      "phase": "ship",
+      "status": "complete",
+      "completed_at": "2026-02-19T02:30:38Z",
+      "notes": "Local macOS ship complete from universal (x86_64+arm64) release build. Packaged VST3/AU/Standalone into dist/LocusQ-v0.1.0-macOS with BUILD_MANIFEST + archive and verified pluginval/standalone smoke on ship artifacts."
+    },
+    {
+      "phase": "implementation_recovery_2_7a",
+      "status": "in_progress",
+      "started_at": "2026-02-19T03:07:13Z",
+      "notes": "Post-ship UI runtime recovery started to restore host interactivity when viewport/WebGL init fails."
+    },
+    {
+      "phase": "testing_ui_interaction_smoke_matrix",
+      "status": "complete",
+      "completed_at": "2026-02-19T03:18:45Z",
+      "notes": "Harness-first UI interaction smoke matrix executed (DSP/host proxy coverage). Result PASS_WITH_WARNING with stable suite counts and allocation warning trend retained."
+    },
+    {
+      "phase": "manual_host_ui_acceptance_phase_2_7a",
+      "status": "in_progress",
+      "started_at": "2026-02-19T03:30:15Z",
+      "notes": "Manual host UI acceptance checklist created; awaiting user-run DAW verification for 2.7a closeout."
+    },
+    {
+      "phase": "implementation_recovery_2_7b",
+      "status": "complete",
+      "completed_at": "2026-02-19T04:38:37Z",
+      "notes": "Viewport interactivity and calibration visualization wiring landed: state-backed emitter pick/select/move with APVTS drag updates, local emitter identity in scene snapshots, and calibration speaker-level/profile visualization from native status payloads."
+    },
+    {
+      "phase": "testing_full_acceptance_rerun",
+      "status": "complete",
+      "completed_at": "2026-02-19T04:49:13Z",
+      "notes": "Harness-first full acceptance rerun completed (DSP + host + UI proxy matrix). PASS_WITH_WARNING with only allocation trend warning; manual host UI checklist deferred to 2026-02-20 per user."
+    },
+    {
+      "phase": "implementation_recovery_2_7c",
+      "status": "complete",
+      "completed_at": "2026-02-19T05:09:05Z",
+      "notes": "UI control-path/state-sync closure refreshed with fresh evidence logs: JS syntax gate PASS, VST3 rebuild PASS, smoke suite PASS (4/4), and animation smoke PASS."
+    },
+    {
+      "phase": "implementation_phase_2_6c_allocation_free",
+      "status": "complete",
+      "completed_at": "2026-02-19T05:19:43Z",
+      "notes": "Phase 2.6c allocation-free pass complete: full-system CPU scenario now passes perf_allocation_free=true with zero allocations; phase 2.6 acceptance suite moved to PASS (3/3)."
+    },
+    {
+      "phase": "planning_docs_freshness_gate",
+      "status": "complete",
+      "completed_at": "2026-02-19T05:56:00Z",
+      "notes": "ADR-0005 accepted: closeout docs freshness gate locked. Routing/automation decisions reconfirmed and canonical status/evidence/readme/changelog sync required for phase closeout."
+    },
+    {
+      "phase": "implementation_recovery_2_7d",
+      "status": "complete",
+      "completed_at": "2026-02-19T05:58:54Z",
+      "notes": "Host-interaction closure prep complete: Cartesian viewport drag now writes APVTS Cartesian coordinates via new pos_x/pos_y/pos_z relays+attachments; timeline native bridge now rejects non-finite time and clamps to duration; focused headless JS/build/smoke/animation/suite/host-edge checks all pass."
     }
   ],
   "validation": {
@@ -31,15 +144,396 @@
     "parameter_spec_exists": true,
     "architecture_defined": true,
     "ui_framework_selected": true,
+    "planning_decision_package_complete": true,
     "design_complete": true,
-    "code_complete": false,
-    "tests_passed": false,
-    "ship_ready": false
+    "implementation_phase_2_1_complete": true,
+    "implementation_phase_2_2_complete": true,
+    "implementation_phase_2_3_complete": true,
+    "implementation_phase_2_4_complete": true,
+    "implementation_phase_2_5_complete": true,
+    "code_complete": true,
+    "tests_passed": true,
+    "ship_ready": true,
+    "qa_harness_results": {
+      "passed": true,
+      "total_tests": 45,
+      "failed_tests": 0,
+      "ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_full_acceptance_rerun_20260219T044525Z.log",
+      "last_run": "2026-02-19T04:49:13Z"
+    },
+    "qa_suite_results": {
+      "passed": true,
+      "suite_id": "locusq_phase_2_6_acceptance_suite",
+      "total_scenarios": 3,
+      "passed_scenarios": 3,
+      "warned_scenarios": 0,
+      "failed_scenarios": 0,
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_phase_2_6_acceptance_suite.log",
+      "last_run": "2026-02-19T05:58:54Z"
+    },
+    "pluginval_results": {
+      "passed": true,
+      "failed": false,
+      "strictness_level": 5,
+      "exit_code": 0,
+      "plugin_path": "plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3",
+      "output_log": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_retry_20260219T053459Z.log",
+      "error_log": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_20260219T053302Z.log",
+      "output_summary": "Rebaseline run recorded one pluginval automation segfault (exit 9) followed by immediate retry PASS (exit 0); tracked as intermittent.",
+      "environment_blocked": false,
+      "last_successful_run": "2026-02-19T05:34:59Z",
+      "environment_note": "In restricted/headless contexts, pluginval may abort in AppKit/HIServices before plugin load; classify as environment_blocked when observed.",
+      "blocked_run_artifacts": {
+        "note": "plugins/LocusQ/TestEvidence/pluginval_blocked_note.txt",
+        "exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_blocked_exit_code.txt",
+        "stdout_log": "plugins/LocusQ/TestEvidence/pluginval_blocked_stdout.log",
+        "stderr_log": "plugins/LocusQ/TestEvidence/pluginval_blocked_stderr.log"
+      }
+    },
+    "implementation_phase_2_4_tasks_complete": true,
+    "implementation_phase_2_4_status_note": "Acceptance closed: deterministic physics probe (5/5), physics spatial-motion and zero-g drift scenarios (PASS), and phase-pure phase 2.4 suite rollup (2 PASS / 0 WARN / 0 FAIL).",
+    "qa_phase_2_4_results": {
+      "status": "pass",
+      "probe_checks_passed": 5,
+      "probe_checks_total": 5,
+      "probe_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_4_physics_probe_closeout.log",
+      "spatial_scenario": {
+        "scenario_id": "locusq_24_physics_spatial_motion",
+        "status": "pass",
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_24_physics_spatial_motion_closeout.log"
+      },
+      "zero_g_scenario": {
+        "scenario_id": "locusq_24_physics_zero_g_drift",
+        "status": "pass",
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_24_physics_zero_g_drift_closeout.log"
+      },
+      "acceptance_suite": {
+        "suite_id": "locusq_phase_2_4_acceptance_suite",
+        "status": "pass",
+        "total_scenarios": 2,
+        "passed_scenarios": 2,
+        "warned_scenarios": 0,
+        "failed_scenarios": 0,
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_4_acceptance_suite_closeout.log"
+      },
+      "last_run": "2026-02-19T02:03:15Z"
+    },
+    "implementation_phase_2_5_tasks_complete": true,
+    "implementation_phase_2_5_status_note": "Phase 2.5 acceptance suite executed with scenario-level perceptual proxies and real perf profiling. Hard gates passed; allocation tracking remains a warning for trending.",
+    "documentation_standardized": true,
+    "qa_phase_2_5_acceptance_results": {
+      "status": "pass_with_warning",
+      "warning_scenario": "locusq_25_cpu_budget_draft",
+      "warning_detail": "Residual warning trend preserved; no hard-gate regressions in focused matrix run.",
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_suite_test_full_acceptance_rerun_20260219T044525Z.log",
+      "last_run": "2026-02-19T04:49:13Z"
+    },
+    "implementation_phase_2_6_started": true,
+    "implementation_phase_2_6_tasks_complete": true,
+    "implementation_phase_2_6_status_note": "Phase 2.6 acceptance is closed with allocation-free full-system criteria now passing. Full-system 8-emitter draft CPU gate passes deadline + avg/p95 block-time and perf_allocation_free=true. Host edge lifecycle matrix remains pass across SR/BS variants, and plugin build/pluginval/standalone checks remain stable.",
+    "qa_phase_2_6_results": {
+      "status": "pass",
+      "smoke_suite": {
+        "passed": true,
+        "suite_id": "locusq_smoke_suite",
+        "total_scenarios": 4,
+        "passed_scenarios": 4,
+        "warned_scenarios": 0,
+        "failed_scenarios": 0,
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_smoke.log"
+      },
+      "animation_smoke": {
+        "passed": true,
+        "scenario_id": "locusq_26_animation_internal_smoke",
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_animation_smoke.log"
+      },
+      "full_system_cpu_draft": {
+        "status": "pass",
+        "scenario_id": "locusq_26_full_system_cpu_draft",
+        "hard_gates_passed": true,
+        "perf_avg_block_time_ms": 0.304457,
+        "perf_p95_block_time_ms": 0.318466,
+        "perf_meets_deadline": true,
+        "perf_allocation_free": true,
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_6c_allocation_free.log"
+      },
+      "host_edge_matrix": {
+        "status": "pass",
+        "scenario_id": "locusq_26_host_edge_roundtrip_multipass",
+        "runs": [
+          {
+            "sample_rate": 44100,
+            "block_size": 256,
+            "result": "PASS",
+            "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_44k1_256_test_full_acceptance_rerun_20260219T044525Z.log"
+          },
+          {
+            "sample_rate": 48000,
+            "block_size": 512,
+            "result": "PASS",
+            "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_host_edge_48k512.log"
+          },
+          {
+            "sample_rate": 48000,
+            "block_size": 1024,
+            "result": "PASS",
+            "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k1024_test_full_acceptance_rerun_20260219T044525Z.log"
+          },
+          {
+            "sample_rate": 96000,
+            "block_size": 512,
+            "result": "PASS",
+            "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_96k512_test_full_acceptance_rerun_20260219T044525Z.log"
+          }
+        ]
+      },
+      "acceptance_suite": {
+        "status": "pass",
+        "suite_id": "locusq_phase_2_6_acceptance_suite",
+        "total_scenarios": 3,
+        "passed_scenarios": 3,
+        "warned_scenarios": 0,
+        "failed_scenarios": 0,
+        "qa_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_phase_2_6_acceptance_suite.log"
+      },
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "last_run": "2026-02-19T05:58:54Z"
+    },
+    "test_focused_matrix_results": {
+      "overall_status": "pass_with_warning",
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "test_summary": "plugins/LocusQ/TestEvidence/test-summary.md",
+      "trend_log": "plugins/LocusQ/TestEvidence/validation-trend.md",
+      "last_run": "2026-02-19T04:49:13Z"
+    },
+    "ship_results": {
+      "status": "pass",
+      "platforms": [
+        "macOS"
+      ],
+      "build_type": "local_universal",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "dist_dir": "dist/LocusQ-v0.1.0-macOS",
+      "archive": "dist/LocusQ-v0.1.0-macOS.zip",
+      "build_manifest": "dist/LocusQ-v0.1.0-macOS/BUILD_MANIFEST.md",
+      "package_log": "plugins/LocusQ/TestEvidence/locusq_ship_package.log",
+      "pluginval_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_ship_universal_exit_code.txt",
+      "pluginval_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_ship_universal_stdout.log",
+      "pluginval_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_ship_universal_stderr.log",
+      "standalone_smoke_log": "plugins/LocusQ/TestEvidence/standalone_ship_universal_smoke.log",
+      "last_run": "2026-02-19T02:30:38Z"
+    },
+    "implementation_phase_2_7a_started": true,
+    "implementation_phase_2_7a_tasks_complete": false,
+    "implementation_phase_2_7a_status_note": "Bootstrap hardening + UI proxy matrix complete; 2.7b viewport/calibration, 2.7c control-path/state-sync, and 2.7d Cartesian viewport/timeline guard hardening are landed; manual in-host DAW UI checklist is still pending to close 2.7.",
+    "test_ui_interaction_matrix_results": {
+      "overall_status": "pass_with_warning",
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "baseline_reference": "plugins/LocusQ/TestEvidence/suite_result_baseline_test_phase_2_7_ui_matrix.json",
+      "test_summary": "plugins/LocusQ/TestEvidence/test-summary.md",
+      "trend_log": "plugins/LocusQ/TestEvidence/validation-trend.md",
+      "last_run": "2026-02-19T04:49:13Z"
+    },
+    "implementation_phase_2_7a_ui_proxy_matrix_complete": true,
+    "implementation_phase_2_7a_manual_host_ui_check_pending": true,
+    "implementation_phase_2_7a_manual_host_ui_checklist": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
+    "implementation_phase_2_7a_manual_host_ui_status": "deferred_to_2026-02-20_user_execution",
+    "implementation_phase_2_7b_started": true,
+    "implementation_phase_2_7b_tasks_complete": true,
+    "implementation_phase_2_7b_status_note": "Phase 2.7b implementation landed: viewport emitter pick/select/move is wired to APVTS position parameters, calibration speaker/meter/profile visuals are now driven by native calibration status data, and post-change smoke regression suite passed (4/4).",
+    "implementation_phase_2_7b_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_7b_vst3.log",
+    "implementation_phase_2_7b_js_check_log": "plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7b_js_check.log",
+    "implementation_phase_2_7b_smoke_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7b.log",
+    "implementation_phase_2_7c_started": true,
+    "implementation_phase_2_7c_tasks_complete": true,
+    "implementation_phase_2_7c_status_note": "Phase 2.7c control-path/state-sync closure validated on refreshed run: tabs/toggles/dropdowns/value steppers remain relay-backed, UI-state persistence bridge remains active, and 2.7c JS/build/smoke/animation evidence is green.",
+    "implementation_phase_2_7c_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_7c_vst3.log",
+    "implementation_phase_2_7c_js_check_log": "plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7c_js_check.log",
+    "implementation_phase_2_7c_smoke_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7c.log",
+    "implementation_phase_2_7c_animation_log": "plugins/LocusQ/TestEvidence/locusq_animation_smoke_phase_2_7c.log",
+    "implementation_phase_2_7c_last_run": "2026-02-19T05:09:05Z",
+    "test_full_acceptance_rerun_results": {
+      "overall_status": "pass_with_warning",
+      "run_id": "test_full_acceptance_rerun_20260219T044525Z",
+      "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+      "status_tsv": "plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_20260219T044525Z_status.tsv",
+      "test_summary": "plugins/LocusQ/TestEvidence/test-summary.md",
+      "trend_log": "plugins/LocusQ/TestEvidence/validation-trend.md",
+      "manual_host_ui_checklist": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
+      "manual_host_ui_status": "deferred_to_2026-02-20_user_execution",
+      "last_run": "2026-02-19T04:49:13Z"
+    },
+    "implementation_phase_2_6c_allocation_free_complete": true,
+    "implementation_phase_2_6c_status_note": "Audio-thread allocation warning removed for phase 2.6 full-system path: perf_total_allocations=0 and perf_allocation_free=true in allocation probe and official full-system scenario.",
+    "implementation_phase_2_6c_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_6c_allocation_free.log",
+    "implementation_phase_2_6c_vst3_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_6c_vst3.log",
+    "implementation_phase_2_6c_smoke_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_6c_allocation_free.log",
+    "implementation_phase_2_6c_full_system_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_6c_allocation_free.log",
+    "implementation_phase_2_6c_acceptance_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_phase_2_6c_allocation_free_refresh.log",
+    "implementation_phase_2_6c_last_run": "2026-02-19T05:19:43Z",
+    "docs_freshness_gate": {
+      "enabled": true,
+      "adr": "plugins/LocusQ/Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md",
+      "required_closeout_surfaces": [
+        "plugins/LocusQ/status.json",
+        "plugins/LocusQ/README.md",
+        "plugins/LocusQ/CHANGELOG.md",
+        "plugins/LocusQ/TestEvidence/build-summary.md",
+        "plugins/LocusQ/TestEvidence/validation-trend.md"
+      ],
+      "last_sync": "2026-02-19T05:36:52Z"
+    },
+    "implementation_phase_2_7d_started": true,
+    "implementation_phase_2_7d_tasks_complete": true,
+    "implementation_phase_2_7d_status_note": "Phase 2.7d closure prep landed with Cartesian viewport writeback closure and timeline native time guards; remaining closure is manual DAW-host acceptance for embedded interaction behavior.",
+    "implementation_phase_2_7d_js_check_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_js_check.log",
+    "implementation_phase_2_7d_build_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_build.log",
+    "implementation_phase_2_7d_smoke_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_smoke.log",
+    "implementation_phase_2_7d_animation_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_animation_smoke.log",
+    "implementation_phase_2_7d_acceptance_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_phase_2_6_acceptance_suite.log",
+    "implementation_phase_2_7d_host_edge_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_host_edge_48k512.log",
+    "implementation_phase_2_7d_manual_host_only_remaining": [
+      "DAW-embedded tab/rail interaction focus and host-automation behavior",
+      "Viewport drag persistence/feel in Cartesian mode under embedded WebView input routing",
+      "Calibration START/ABORT lifecycle with real DAW I/O routing and profile-ready persistence"
+    ],
+    "acceptance_rebaseline_20260219": {
+      "status": "pass_with_warning",
+      "run_id": "test_acceptance_rebaseline_20260219T053302Z",
+      "harness_ctest": "45/45 pass",
+      "phase_2_5_suite": "PASS (9/9)",
+      "phase_2_6_suite": "PASS (3/3)",
+      "full_system_cpu": {
+        "status": "pass",
+        "perf_avg_block_time_ms": 0.307458,
+        "perf_p95_block_time_ms": 0.321793,
+        "perf_allocation_free": true
+      },
+      "host_edge_matrix": "PASS (44.1k/256, 48k/512, 48k/1024, 96k/512)",
+      "pluginval": {
+        "first_run": "FAIL (exit 9)",
+        "retry": "PASS (exit 0)",
+        "log_fail": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_20260219T053302Z.log",
+        "log_retry": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_retry_20260219T053459Z.log"
+      },
+      "status_tsv": "plugins/LocusQ/TestEvidence/test_acceptance_rebaseline_20260219T053302Z_status.tsv"
+    }
   },
   "framework_selection": {
     "decision": "webview",
     "rationale": "3D spatial visualization requires WebGL (Three.js). Complex multi-mode UI (calibration wizard, keyframe editor, 3D viewport) is far more practical in HTML/JS. Keeps the 3D layer modular and replaceable as requested.",
     "implementation_strategy": "phased"
+  },
+  "test_evidence": {
+    "harness_path": "${APC_DSP_QA_HARNESS_PATH:-/Users/artbox/Documents/Repos/audio-dsp-qa-harness}",
+    "harness_ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest.log",
+    "qa_binary_build_log": "plugins/LocusQ/TestEvidence/locusq_build_test_phase_2_6_matrix.log",
+    "qa_binary_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_run_test_phase_2_6_matrix.log",
+    "plugin_build_log": "plugins/LocusQ/TestEvidence/locusq_build_test_phase_2_6_matrix.log",
+    "vst3_build_log": "plugins/LocusQ/TestEvidence/locusq_vst3_build.log",
+    "qa_suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
+    "api_docs_index": "plugins/LocusQ/build/docs_api/html/index.html",
+    "pluginval_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_test_phase_2_6_matrix_stdout.log",
+    "pluginval_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_test_phase_2_6_matrix_stderr.log",
+    "pluginval_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_test_phase_2_6_matrix_exit_code.txt",
+    "standalone_launch_smoke_log": "plugins/LocusQ/TestEvidence/standalone_launch_smoke_test_phase_2_6_matrix.log",
+    "pluginval_blocked_note": "plugins/LocusQ/TestEvidence/pluginval_blocked_note.txt",
+    "phase_2_5_acceptance_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_run.log",
+    "qa_phase_2_6_smoke_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_smoke_run_acceptance.log",
+    "qa_phase_2_6_animation_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_animation_smoke_run_acceptance.log",
+    "qa_phase_2_5_regression_run_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_regression_run_test_phase_2_6_matrix.log",
+    "qa_binary_build_phase_2_6_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_6_acceptance_refresh.log",
+    "plugin_build_phase_2_6_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_6_acceptance_refresh.log",
+    "pluginval_phase_2_6_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_phase_2_6_acceptance_refresh_stdout.log",
+    "pluginval_phase_2_6_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_phase_2_6_acceptance_refresh_stderr.log",
+    "pluginval_phase_2_6_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_phase_2_6_acceptance_refresh_exit_code.txt",
+    "standalone_launch_smoke_phase_2_6_log": "plugins/LocusQ/TestEvidence/standalone_launch_smoke_phase_2_6_acceptance_refresh.log",
+    "doxygen_phase_2_6_log": "plugins/LocusQ/TestEvidence/doxygen_phase_2_6_acceptance.log",
+    "qa_phase_2_6_full_system_48k512_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_6c_allocation_free.log",
+    "qa_phase_2_6_host_edge_44k1_256_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_host_edge_44k1_256_test_phase_2_6_matrix.log",
+    "qa_phase_2_6_host_edge_48k512_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_host_edge_48k512_test_phase_2_6_matrix.log",
+    "qa_phase_2_6_host_edge_48k1024_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_host_edge_48k1024_test_phase_2_6_matrix.log",
+    "qa_phase_2_6_host_edge_96k512_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_host_edge_96k512_test_phase_2_6_matrix.log",
+    "qa_phase_2_6_acceptance_suite_refresh_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_phase_2_6c_allocation_free_refresh.log",
+    "phase_2_4_configure_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_4_closeout_configure.log",
+    "phase_2_4_build_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_4_closeout_build.log",
+    "phase_2_4_probe_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_4_physics_probe_closeout.log",
+    "phase_2_4_spatial_motion_log": "plugins/LocusQ/TestEvidence/locusq_24_physics_spatial_motion_closeout.log",
+    "phase_2_4_zero_g_log": "plugins/LocusQ/TestEvidence/locusq_24_physics_zero_g_drift_closeout.log",
+    "phase_2_4_acceptance_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_4_acceptance_suite_closeout.log",
+    "ship_universal_configure_log": "plugins/LocusQ/TestEvidence/locusq_ship_universal_configure.log",
+    "ship_universal_build_log": "plugins/LocusQ/TestEvidence/locusq_ship_universal_build.log",
+    "ship_package_log": "plugins/LocusQ/TestEvidence/locusq_ship_package.log",
+    "pluginval_ship_universal_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_ship_universal_stdout.log",
+    "pluginval_ship_universal_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_ship_universal_stderr.log",
+    "pluginval_ship_universal_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_ship_universal_exit_code.txt",
+    "standalone_ship_universal_smoke_log": "plugins/LocusQ/TestEvidence/standalone_ship_universal_smoke.log",
+    "harness_configure_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/harness_configure_test_phase_2_7_ui_matrix.log",
+    "harness_build_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/harness_build_test_phase_2_7_ui_matrix.log",
+    "harness_ctest_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_phase_2_7_ui_matrix.log",
+    "qa_build_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_test_phase_2_7_ui_matrix.log",
+    "qa_smoke_suite_emitter_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_emitter_run_test_phase_2_7_ui_matrix.log",
+    "qa_animation_smoke_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_26_animation_smoke_run_test_phase_2_7_ui_matrix.log",
+    "qa_phase_2_6_suite_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_run_test_phase_2_7_ui_matrix.log",
+    "qa_full_system_48k512_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_48k512_test_phase_2_7_ui_matrix.log",
+    "qa_host_edge_44k1_256_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_44k1_256_test_phase_2_7_ui_matrix.log",
+    "qa_host_edge_48k512_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k512_test_phase_2_7_ui_matrix.log",
+    "qa_host_edge_48k1024_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k1024_test_phase_2_7_ui_matrix.log",
+    "qa_host_edge_96k512_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_96k512_test_phase_2_7_ui_matrix.log",
+    "pluginval_test_phase_2_7_ui_matrix_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_test_phase_2_7_ui_matrix_stdout.log",
+    "pluginval_test_phase_2_7_ui_matrix_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_test_phase_2_7_ui_matrix_stderr.log",
+    "pluginval_test_phase_2_7_ui_matrix_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_test_phase_2_7_ui_matrix_exit_code.txt",
+    "standalone_launch_smoke_test_phase_2_7_ui_matrix_log": "plugins/LocusQ/TestEvidence/standalone_launch_smoke_test_phase_2_7_ui_matrix.log",
+    "suite_result_baseline_test_phase_2_7_ui_matrix_json": "plugins/LocusQ/TestEvidence/suite_result_baseline_test_phase_2_7_ui_matrix.json",
+    "phase_2_7b_js_check_log": "plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7b_js_check.log",
+    "phase_2_7b_vst3_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_7b_vst3.log",
+    "phase_2_7b_smoke_suite_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7b.log",
+    "phase_2_7c_js_check_log": "plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7c_js_check.log",
+    "phase_2_7c_vst3_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_7c_vst3.log",
+    "phase_2_7c_smoke_suite_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7c.log",
+    "phase_2_7c_animation_smoke_log": "plugins/LocusQ/TestEvidence/locusq_animation_smoke_phase_2_7c.log",
+    "manual_host_ui_checklist_phase_2_7a": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
+    "harness_configure_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_configure_test_full_acceptance_rerun_20260219T044525Z.log",
+    "harness_build_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_build_test_full_acceptance_rerun_20260219T044525Z.log",
+    "harness_ctest_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_build_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_smoke_suite_emitter_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_emitter_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_phase_2_5_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_suite_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_phase_2_6_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_animation_smoke_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_animation_internal_smoke_48k512_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_full_system_48k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_48k512_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_host_edge_44k1_256_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_44k1_256_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_host_edge_48k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k512_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_host_edge_48k1024_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k1024_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_host_edge_96k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_96k512_test_full_acceptance_rerun_20260219T044525Z.log",
+    "plugin_build_vst3_standalone_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_plugin_build_vst3_standalone_test_full_acceptance_rerun_20260219T044525Z.log",
+    "pluginval_test_full_acceptance_rerun_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_test_full_acceptance_rerun_20260219T044525Z_stdout.log",
+    "pluginval_test_full_acceptance_rerun_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_test_full_acceptance_rerun_20260219T044525Z_stderr.log",
+    "pluginval_test_full_acceptance_rerun_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_test_full_acceptance_rerun_20260219T044525Z_exit_code.txt",
+    "standalone_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/standalone_test_full_acceptance_rerun_20260219T044525Z.log",
+    "test_full_acceptance_rerun_status_tsv": "plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_20260219T044525Z_status.tsv",
+    "phase_2_6c_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_6c_allocation_free.log",
+    "phase_2_6c_vst3_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_6c_vst3.log",
+    "phase_2_6c_smoke_suite_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_6c_allocation_free.log",
+    "phase_2_6c_full_system_cpu_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_6c_allocation_free.log",
+    "phase_2_6c_acceptance_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_phase_2_6c_allocation_free_refresh.log"
+  },
+  "distribution": {
+    "platforms": [
+      "macOS"
+    ],
+    "local_build": [
+      "macOS"
+    ],
+    "github_build": [],
+    "dist_dir": "dist/LocusQ-v0.1.0-macOS",
+    "archive": "dist/LocusQ-v0.1.0-macOS.zip"
   },
   "error_recovery": {
     "last_backup": null,

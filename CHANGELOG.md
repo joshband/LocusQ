@@ -1,0 +1,199 @@
+Title: LocusQ Changelog
+Document Type: Changelog
+Author: APC Codex
+Created Date: 2026-02-19
+Last Modified Date: 2026-02-19
+
+# Changelog
+
+All notable changes to LocusQ are documented here.
+
+## [Unreleased]
+
+### Added
+
+- Phase 2.4 acceptance closure tooling:
+  - `qa/physics_probe_main.cpp` deterministic physics probe target
+  - `qa/scenarios/locusq_24_physics_spatial_motion.json`
+  - `qa/scenarios/locusq_24_physics_zero_g_drift.json`
+  - `qa/scenarios/locusq_phase_2_4_acceptance_suite.json`
+- Phase 2.6 timeline editor interaction surface in WebView:
+  - add/move/delete keyframes
+  - per-keyframe curve cycling
+  - timeline transport controls (rewind/stop/play bridge)
+- Native bridge APIs for timeline and presets:
+  - `locusqGetKeyframeTimeline`
+  - `locusqSetKeyframeTimeline`
+  - `locusqSetTimelineTime`
+  - `locusqListEmitterPresets`
+  - `locusqSaveEmitterPreset`
+  - `locusqLoadEmitterPreset`
+- Emitter preset JSON persistence for parameter + timeline state.
+- UI-visible perf telemetry (`perfBlockMs`, `perfEmitterMs`, `perfRendererMs`) sourced from processor EMA metrics.
+- Root project docs for this plugin:
+  - `README.md`
+  - `CHANGELOG.md`
+- Planning decision package artifacts:
+  - `Documentation/adr/ADR-0002-routing-model-v1.md`
+  - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
+  - `Documentation/adr/ADR-0004-v1-ai-deferral.md`
+  - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+  - `Documentation/scene-state-contract.md`
+  - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md` (skill-plan-ready execution matrix)
+- Design v3 artifact set for persistent viewport + adaptive control rail enforcement:
+  - `Design/v3-ui-spec.md`
+  - `Design/v3-style-guide.md`
+  - `Design/v3-test.html`
+  - `Design/index.html`
+  - `Design/HANDOFF.md`
+- Shipping distribution artifacts:
+  - `dist/LocusQ-v0.1.0-macOS/`
+  - `dist/LocusQ-v0.1.0-macOS.zip`
+  - `dist/LocusQ-v0.1.0-macOS/BUILD_MANIFEST.md`
+  - `plugins/LocusQ/TestEvidence/locusq_ship_universal_configure.log`
+  - `plugins/LocusQ/TestEvidence/locusq_ship_universal_build.log`
+  - `plugins/LocusQ/TestEvidence/locusq_ship_package.log`
+- Manual host UI acceptance checklist artifact:
+  - `plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+- Phase 2.7b validation artifacts:
+  - `plugins/LocusQ/TestEvidence/locusq_build_phase_2_7b_vst3.log`
+  - `plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7b_js_check.log`
+- Phase 2.7c native UI-state bridge APIs:
+  - `locusqGetUiState`
+  - `locusqSetUiState`
+- Phase 2.7c validation artifacts:
+  - `plugins/LocusQ/TestEvidence/locusq_build_phase_2_7c_vst3.log`
+  - `plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7c_js_check.log`
+  - `plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7c.log`
+
+### Changed
+
+- Phase 2.4 acceptance state promoted from partial to complete across:
+  - `status.json`
+  - `.ideas/plan.md`
+  - `Documentation/implementation-traceability.md`
+  - `README.md`
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+- Phase records and traceability updated from "Phase 2.6 start" to "Phase 2.6 acceptance/tuning" in:
+  - `status.json`
+  - `.ideas/plan.md`
+  - `Documentation/implementation-traceability.md`
+- Research synthesis execution matrix updated to current resolved/open state with command sequencing for design/impl/test handoff:
+  - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
+- WebView UI shell updated to enforce mode-adaptive rail behavior without viewport reset:
+  - `Source/ui/public/index.html`
+  - `Source/ui/public/js/index.js`
+- Phase 2.6 acceptance closeout evidence refreshed with full-system CPU and host edge matrix logs in:
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+- Phase and status surfaces aligned to reflect closed Phase 2.6 acceptance gates:
+  - `status.json`
+  - `.ideas/plan.md`
+  - `README.md`
+  - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
+- `/test` focused acceptance matrix evidence and machine-readable suite output published:
+  - `qa_output/suite_result.json`
+  - `TestEvidence/test-summary.md`
+  - `TestEvidence/validation-trend.md`
+  - `status.json`
+- State advanced to shipping completion for local macOS universal release:
+  - `status.json`
+  - `README.md`
+- WebView runtime bootstrap hardened for post-ship host interactivity recovery:
+  - `Source/ui/public/js/index.js`
+  - Startup now keeps control wiring active even when viewport/WebGL init fails
+  - Added guarded DOM/viewport access paths to prevent early init aborts in host
+- `/test` UI interaction smoke matrix (harness-first) executed and published:
+  - `qa_output/suite_result.json`
+  - `TestEvidence/test-summary.md`
+  - `TestEvidence/validation-trend.md`
+  - `status.json`
+  - `.ideas/plan.md`
+  - `README.md`
+- Manual host UI acceptance handoff prepared for 2.7a closeout:
+  - `status.json`
+  - `.ideas/plan.md`
+  - `README.md`
+- Phase 2.7b viewport + calibration interaction wiring implemented:
+  - `Source/ui/public/js/index.js`
+  - `Source/ui/public/index.html`
+  - `Source/PluginProcessor.cpp`
+  - Added scene payload `localEmitterId` and calibration payload (`speakerLevels`, `profileValid`) to drive state-backed viewport selection/movement and calibration visualization.
+  - Replaced cosmetic calibration speaker/meter visuals with native-status-driven behavior.
+  - Updated phase/document state surfaces:
+    - `status.json`
+    - `.ideas/plan.md`
+    - `README.md`
+- Phase 2.7c control-path closure implemented:
+  - `Source/ui/public/js/index.js`
+  - `Source/PluginEditor.h`
+  - `Source/PluginEditor.cpp`
+  - `Source/PluginProcessor.h`
+  - `Source/PluginProcessor.cpp`
+  - Connected previously visual-only rail/header controls to APVTS relays/attachments.
+  - Added persisted native UI state for emitter label + physics preset (`locusq_ui_state_json`).
+  - Preserved emitter label through audio-thread publish path and host save/load snapshots.
+- Phase closeout documentation gate formalized and synchronized:
+  - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+  - `Documentation/standards.md`
+  - `Documentation/README.md`
+  - `scripts/validate-docs-freshness.sh`
+  - `status.json`
+  - `.ideas/plan.md`
+  - `README.md`
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+- Phase 2.6c allocation-free closeout documentation aligned:
+  - `status.json`
+  - `.ideas/plan.md`
+  - `README.md`
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+  - `Documentation/implementation-traceability.md`
+- Phase 2.7d host-interaction closure prep aligned:
+  - `Source/PluginEditor.h`
+  - `Source/PluginEditor.cpp`
+  - `Source/PluginProcessor.cpp`
+  - `Source/ui/public/js/index.js`
+  - `README.md` (plain-language + v1 completion checklist)
+- CI QA hardening updates:
+  - `.github/workflows/qa_harness.yml` (stronger result gating + expanded mac host-edge/full-system runs)
+  - `.github/workflows/docs-freshness.yml`
+  - `scripts/validate-docs-freshness.sh`
+
+### Validation Snapshot (2026-02-19 UTC)
+
+- `phase_2_4_physics_probe`: `PASS` (`5/5` checks)
+- `locusq_24_physics_spatial_motion`: `PASS`
+- `locusq_24_physics_zero_g_drift`: `PASS`
+- `locusq_phase_2_4_acceptance_suite`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+- `locusq_phase_2_6_acceptance_suite`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+- `locusq_26_full_system_cpu_draft`: `PASS` (`perf_avg_block_time_ms=0.304457`, `perf_p95_block_time_ms=0.318466`, `perf_meets_deadline=true`, `perf_allocation_free=true`)
+- `locusq_26_host_edge_roundtrip_multipass`: `PASS` across `44.1k/256`, `48k/512`, `48k/1024`, `96k/512`
+- `LocusQ_VST3` and `LocusQ_Standalone` build: `PASS`
+- `pluginval` strictness 5 in-process: one rebaseline run `FAIL` (segfault in automation), immediate retry `PASS` (exit code 0)
+- Standalone launch smoke: `PASS`
+- Universal ship build (`x86_64 arm64`) and macOS package archive: `PASS`
+- `pluginval` on universal ship VST3: `PASS` (exit code `0`)
+- Standalone smoke on universal ship app: `PASS`
+- Focused matrix refresh deltas published in `qa_output/suite_result.json`:
+  - suite deltas unchanged (`Phase 2.6` and `Phase 2.5` acceptance counts)
+  - full-system CPU delta: `perf_avg_block_time_ms +0.006446`, `perf_p95_block_time_ms +0.003414`
+- UI interaction smoke matrix refresh published in `qa_output/suite_result.json`:
+  - `locusq_smoke_suite` (Emitter adapter): `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+  - `locusq_26_animation_internal_smoke`: `PASS`
+  - `locusq_phase_2_6_acceptance_suite`: superseded by Phase 2.6c refresh (`3 PASS / 0 WARN / 0 FAIL`)
+  - full-system CPU delta (Phase 2.6c closeout): `perf_avg_block_time_ms -0.123656`, `perf_p95_block_time_ms -0.131328`
+- Phase 2.7b validation snapshot:
+  - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
+  - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 -j 8`: `PASS`
+  - `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+- Phase 2.7c validation snapshot:
+  - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
+  - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 -j 8`: `PASS`
+  - `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+- Phase 2.7d validation snapshot:
+  - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
+  - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
+  - `locusq_smoke_suite`, `locusq_26_animation_internal_smoke`, `locusq_phase_2_6_acceptance_suite`, host-edge `48k/512`: `PASS`

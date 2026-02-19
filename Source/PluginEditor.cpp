@@ -11,42 +11,10 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
     //==========================================================================
     // CRITICAL: CREATION ORDER
     // 1. Relays already created (member initialization)
-    // 2. Create attachments BEFORE WebView
-    // 3. Create WebBrowserComponent
-    // 4. addAndMakeVisible LAST
+    // 2. Create WebBrowserComponent
+    // 3. addAndMakeVisible
+    // 4. Create attachments AFTER WebView
     //==========================================================================
-
-    // Create parameter attachments
-    modeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("mode"), modeRelay);
-    bypassAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("bypass"), bypassRelay);
-
-    azimuthAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("pos_azimuth"), azimuthRelay);
-    elevationAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("pos_elevation"), elevationRelay);
-    distanceAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("pos_distance"), distanceRelay);
-
-    emitGainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("emit_gain"), emitGainRelay);
-    spreadAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("emit_spread"), spreadRelay);
-    directivityAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("emit_directivity"), directivityRelay);
-    muteAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("emit_mute"), muteRelay);
-    soloAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("emit_solo"), soloRelay);
-
-    physEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("phys_enable"), physEnableRelay);
-
-    masterGainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("rend_master_gain"), masterGainRelay);
-    qualityAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
-        *audioProcessor.apvts.getParameter ("rend_quality"), qualityRelay);
 
     // Create WebBrowserComponent with platform-aware backend
     DBG ("LocusQ: Creating WebView");
@@ -58,23 +26,251 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
                     .withUserDataFolder (juce::File::getSpecialLocation (
                         juce::File::SpecialLocationType::tempDirectory)))
             .withNativeIntegrationEnabled()
+            .withNativeFunction ("locusqStartCalibration",
+                                 [this] (const juce::Array<juce::var>& args,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                     completion (audioProcessor.startCalibrationFromUI (options));
+                                 })
+            .withNativeFunction ("locusqAbortCalibration",
+                                 [this] (const juce::Array<juce::var>&,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     audioProcessor.abortCalibrationFromUI();
+                                     completion (true);
+                                 })
+            .withNativeFunction ("locusqGetKeyframeTimeline",
+                                 [this] (const juce::Array<juce::var>&,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     completion (audioProcessor.getKeyframeTimelineForUI());
+                                 })
+            .withNativeFunction ("locusqSetKeyframeTimeline",
+                                 [this] (const juce::Array<juce::var>& args,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     if (args.isEmpty())
+                                     {
+                                         completion (false);
+                                         return;
+                                     }
+
+                                     completion (audioProcessor.setKeyframeTimelineFromUI (args[0]));
+                                 })
+            .withNativeFunction ("locusqSetTimelineTime",
+                                 [this] (const juce::Array<juce::var>& args,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     if (args.isEmpty())
+                                     {
+                                         completion (false);
+                                         return;
+                                     }
+
+                                     completion (audioProcessor.setTimelineCurrentTimeFromUI (static_cast<double> (args[0])));
+                                 })
+            .withNativeFunction ("locusqListEmitterPresets",
+                                 [this] (const juce::Array<juce::var>&,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     completion (audioProcessor.listEmitterPresetsFromUI());
+                                 })
+            .withNativeFunction ("locusqSaveEmitterPreset",
+                                 [this] (const juce::Array<juce::var>& args,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                     completion (audioProcessor.saveEmitterPresetFromUI (options));
+                                 })
+            .withNativeFunction ("locusqLoadEmitterPreset",
+                                 [this] (const juce::Array<juce::var>& args,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                     completion (audioProcessor.loadEmitterPresetFromUI (options));
+                                 })
+            .withNativeFunction ("locusqGetUiState",
+                                 [this] (const juce::Array<juce::var>&,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     completion (audioProcessor.getUIStateFromUI());
+                                 })
+            .withNativeFunction ("locusqSetUiState",
+                                 [this] (const juce::Array<juce::var>& args,
+                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                                 {
+                                     if (args.isEmpty())
+                                     {
+                                         completion (false);
+                                         return;
+                                     }
+
+                                     completion (audioProcessor.setUIStateFromUI (args[0]));
+                                 })
             .withResourceProvider ([this] (const auto& url) { return getResource (url); })
             .withOptionsFrom (modeRelay)
             .withOptionsFrom (bypassRelay)
+            .withOptionsFrom (calSpkConfigRelay)
+            .withOptionsFrom (calMicChannelRelay)
+            .withOptionsFrom (calSpk1OutRelay)
+            .withOptionsFrom (calSpk2OutRelay)
+            .withOptionsFrom (calSpk3OutRelay)
+            .withOptionsFrom (calSpk4OutRelay)
+            .withOptionsFrom (calTestLevelRelay)
+            .withOptionsFrom (calTestTypeRelay)
             .withOptionsFrom (azimuthRelay)
             .withOptionsFrom (elevationRelay)
             .withOptionsFrom (distanceRelay)
+            .withOptionsFrom (posXRelay)
+            .withOptionsFrom (posYRelay)
+            .withOptionsFrom (posZRelay)
+            .withOptionsFrom (coordModeRelay)
+            .withOptionsFrom (sizeLinkRelay)
+            .withOptionsFrom (sizeUniformRelay)
             .withOptionsFrom (emitGainRelay)
             .withOptionsFrom (spreadRelay)
             .withOptionsFrom (directivityRelay)
             .withOptionsFrom (muteRelay)
             .withOptionsFrom (soloRelay)
+            .withOptionsFrom (emitColorRelay)
             .withOptionsFrom (physEnableRelay)
+            .withOptionsFrom (physMassRelay)
+            .withOptionsFrom (physDragRelay)
+            .withOptionsFrom (physElasticityRelay)
+            .withOptionsFrom (physGravityRelay)
+            .withOptionsFrom (physGravityDirRelay)
+            .withOptionsFrom (physFrictionRelay)
+            .withOptionsFrom (physThrowRelay)
+            .withOptionsFrom (physResetRelay)
+            .withOptionsFrom (animEnableRelay)
+            .withOptionsFrom (animModeRelay)
+            .withOptionsFrom (animLoopRelay)
+            .withOptionsFrom (animSpeedRelay)
+            .withOptionsFrom (animSyncRelay)
             .withOptionsFrom (masterGainRelay)
-            .withOptionsFrom (qualityRelay));
+            .withOptionsFrom (qualityRelay)
+            .withOptionsFrom (distanceModelRelay)
+            .withOptionsFrom (dopplerRelay)
+            .withOptionsFrom (airAbsorbRelay)
+            .withOptionsFrom (roomEnableRelay)
+            .withOptionsFrom (roomErOnlyRelay)
+            .withOptionsFrom (physRateRelay)
+            .withOptionsFrom (physWallsRelay)
+            .withOptionsFrom (physPauseRelay)
+            .withOptionsFrom (vizModeRelay));
 
     addAndMakeVisible (*webView);
     webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
+
+    // Create parameter attachments after WebView is alive
+    modeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("mode"), modeRelay);
+    bypassAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("bypass"), bypassRelay);
+
+    calSpkConfigAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_spk_config"), calSpkConfigRelay);
+    calMicChannelAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_mic_channel"), calMicChannelRelay);
+    calSpk1OutAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_spk1_out"), calSpk1OutRelay);
+    calSpk2OutAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_spk2_out"), calSpk2OutRelay);
+    calSpk3OutAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_spk3_out"), calSpk3OutRelay);
+    calSpk4OutAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_spk4_out"), calSpk4OutRelay);
+    calTestLevelAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_test_level"), calTestLevelRelay);
+    calTestTypeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_test_type"), calTestTypeRelay);
+
+    azimuthAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_azimuth"), azimuthRelay);
+    elevationAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_elevation"), elevationRelay);
+    distanceAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_distance"), distanceRelay);
+    posXAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_x"), posXRelay);
+    posYAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_y"), posYRelay);
+    posZAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_z"), posZRelay);
+    coordModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("pos_coord_mode"), coordModeRelay);
+
+    sizeLinkAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("size_link"), sizeLinkRelay);
+    sizeUniformAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("size_uniform"), sizeUniformRelay);
+
+    emitGainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_gain"), emitGainRelay);
+    spreadAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_spread"), spreadRelay);
+    directivityAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_directivity"), directivityRelay);
+    muteAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_mute"), muteRelay);
+    soloAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_solo"), soloRelay);
+    emitColorAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_color"), emitColorRelay);
+
+    physEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_enable"), physEnableRelay);
+    physMassAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_mass"), physMassRelay);
+    physDragAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_drag"), physDragRelay);
+    physElasticityAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_elasticity"), physElasticityRelay);
+    physGravityAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_gravity"), physGravityRelay);
+    physGravityDirAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_gravity_dir"), physGravityDirRelay);
+    physFrictionAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_friction"), physFrictionRelay);
+    physThrowAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_throw"), physThrowRelay);
+    physResetAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_reset"), physResetRelay);
+
+    animEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("anim_enable"), animEnableRelay);
+    animModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("anim_mode"), animModeRelay);
+    animLoopAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("anim_loop"), animLoopRelay);
+    animSpeedAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("anim_speed"), animSpeedRelay);
+    animSyncAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("anim_sync"), animSyncRelay);
+
+    masterGainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_master_gain"), masterGainRelay);
+    qualityAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_quality"), qualityRelay);
+    distanceModelAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_distance_model"), distanceModelRelay);
+    dopplerAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_doppler"), dopplerRelay);
+    airAbsorbAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_air_absorb"), airAbsorbRelay);
+    roomEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_room_enable"), roomEnableRelay);
+    roomErOnlyAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_room_er_only"), roomErOnlyRelay);
+    physRateAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_phys_rate"), physRateRelay);
+    physWallsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_phys_walls"), physWallsRelay);
+    physPauseAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_phys_pause"), physPauseRelay);
+    vizModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_mode"), vizModeRelay);
 
     // Start timer for scene state updates (~30fps)
     startTimerHz (30);
@@ -109,6 +305,10 @@ void LocusQAudioProcessorEditor::timerCallback()
     auto json = audioProcessor.getSceneStateJSON();
     webView->evaluateJavascript (
         "if(typeof updateSceneState==='function')updateSceneState(" + json + ");");
+
+    auto calibrationJSON = juce::JSON::toString (audioProcessor.getCalibrationStatus());
+    webView->evaluateJavascript (
+        "if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(" + calibrationJSON + ");");
 }
 
 //==============================================================================

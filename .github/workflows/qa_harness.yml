@@ -1,0 +1,200 @@
+name: LocusQ QA Harness
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: locusq-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa-critical:
+    name: QA Critical (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout JUCE
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          path: JUCE
+
+      - name: Checkout QA harness
+        uses: actions/checkout@v4
+        with:
+          repository: Noizefield/audio-dsp-qa-harness
+          path: audio-dsp-qa-harness
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libx11-xcb-dev \
+            libfreetype6-dev \
+            libfontconfig1-dev
+
+      - name: Configure QA build
+        run: |
+          cmake -S . -B build-qa \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_LOCUSQ_QA=ON \
+            -DQA_HARNESS_DIR="${GITHUB_WORKSPACE}/audio-dsp-qa-harness" \
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE"
+
+      - name: Build QA target
+        run: cmake --build build-qa --target locusq_qa -j 4
+
+      - name: Run critical QA suites
+        run: |
+          ./build-qa/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json | tee qa_output/ci_smoke_suite.log
+          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json | tee qa_output/ci_phase_2_6_acceptance_suite.log
+          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json | tee qa_output/ci_phase_2_5_regression_suite.log
+          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 96000 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_96k.log
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 44100 --block-size 256 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_44k1_256.log
+            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_48k_512.log
+            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 1024 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_48k_1024.log
+            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 96000 --block-size 512 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_96k_512.log
+            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_phase_2_6_full_system_48k_512.log
+          fi
+
+      - name: Verify QA result statuses
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          bad = []
+          seen = 0
+          for result in pathlib.Path("qa_output").rglob("result.json"):
+              seen += 1
+              try:
+                  payload = json.loads(result.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  bad.append((str(result), f"PARSE_ERROR:{exc}"))
+                  continue
+              status = str(payload.get("status", "")).upper()
+              if status in ("FAIL", "ERROR"):
+                  bad.append((str(result), status))
+          if seen == 0:
+              print("No scenario result.json files found under qa_output.")
+              sys.exit(1)
+          if bad:
+              print("Found failing QA scenario results:")
+              for path, status in bad:
+                  print(f"  {status}: {path}")
+              sys.exit(1)
+          print("All scenario result.json statuses are PASS/WARN/SKIP.")
+          PY
+
+      - name: Publish CI summary
+        if: always()
+        run: |
+          bash audio-dsp-qa-harness/scripts/publish_ci_summary.sh qa_output/locusq_spatial/report/ci_summary.md || true
+          bash audio-dsp-qa-harness/scripts/publish_ci_summary.sh qa_output/locusq_emitter/report/ci_summary.md || true
+
+      - name: Upload QA artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusq-qa-critical-${{ matrix.os }}
+          path: |
+            qa_output/
+            build-qa/locusq_qa_artefacts/
+            build-qa/CMakeCache.txt
+          retention-days: 14
+
+  qa-perf-trend:
+    name: QA Perf Trend (Ubuntu)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout JUCE
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          path: JUCE
+
+      - name: Checkout QA harness
+        uses: actions/checkout@v4
+        with:
+          repository: Noizefield/audio-dsp-qa-harness
+          path: audio-dsp-qa-harness
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libx11-xcb-dev \
+            libfreetype6-dev \
+            libfontconfig1-dev
+
+      - name: Configure QA build
+        run: |
+          cmake -S . -B build-qa \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_LOCUSQ_QA=ON \
+            -DQA_HARNESS_DIR="${GITHUB_WORKSPACE}/audio-dsp-qa-harness" \
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE"
+
+      - name: Build QA target
+        run: cmake --build build-qa --target locusq_qa -j 4
+
+      - name: Run performance trend scenarios
+        run: |
+          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --profile --profile-iterations 2000 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_perf_phase_2_6_full_system.log
+          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --profile --profile-iterations 2000 qa/scenarios/locusq_25_cpu_budget_draft.json | tee qa_output/ci_perf_phase_2_5_cpu.log
+
+      - name: Publish CI summary
+        if: always()
+        run: |
+          bash audio-dsp-qa-harness/scripts/publish_ci_summary.sh qa_output/locusq_spatial/report/ci_summary.md || true
+
+      - name: Upload perf artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusq-qa-perf-trend
+          path: |
+            qa_output/
+            build-qa/locusq_qa_artefacts/
+          retention-days: 14
