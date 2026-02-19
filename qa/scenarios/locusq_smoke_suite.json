@@ -1,0 +1,15 @@
+{
+  "id": "locusq_smoke_suite",
+  "name": "LocusQ Smoke Test Suite",
+  "description": "Fast validation of LocusQ Phase 2.2 DSP. Covers emitter passthrough, renderer output, RT safety, and basic spatialization.",
+  "scenario_ids": [
+    "locusq_emitter_passthrough",
+    "locusq_renderer_spatial_output",
+    "locusq_rt_safety_emitter",
+    "locusq_renderer_no_clipping"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "smoke"
+  }
+}

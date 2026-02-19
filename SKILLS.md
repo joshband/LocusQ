@@ -1,3 +1,9 @@
+Title: APC Skills Index
+Document Type: Skill Index
+Author: APC Codex
+Created Date: 2026-02-18
+Last Modified Date: 2026-02-18
+
 # SKILLS.md
 
 ## Purpose
@@ -27,6 +33,7 @@ For any phase execution:
 ## Specialist Skills
 | Skill | File | Use When |
 |---|---|---|
+| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation standardization, metadata compliance, ADR hygiene, traceability upkeep |
 | `juce-webview-windows` | `.codex/skills/skill_design_webview/SKILL.md` | WebView implementation details or WebView crash/order hardening |
 | `skill_testing` | `.codex/skills/skill_testing/SKILL.md` | Detailed harness-first testing and plugin validation workflows |
 | `skill_troubleshooting` | `.codex/skills/skill_troubleshooting/SKILL.md` | Build/runtime failures, recurring errors, issue capture |
@@ -72,4 +79,5 @@ When adding or changing a skill:
 1. Update this `SKILLS.md` entry.
 2. Keep matching workflow references current in `.codex/workflows/`.
 3. Keep `AGENTS.md` routing aligned if command behavior changes.
-4. If phase/routing contracts change, update `AGENT_RULE.md` and run `./scripts/sync-agent-contract.sh`.
+4. If phase/routing contracts change, update `AGENT_RULE.md` and run `pwsh ./scripts/sync-agent-contract.ps1`.
+5. For parity-managed files, update corresponding `.codex` and `.claude` entries and run `pwsh ./scripts/sync-agent-contract.ps1`.

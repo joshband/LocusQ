@@ -103,6 +103,17 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-19T05:58:50Z | `2.7d` animation smoke | `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_animation_internal_smoke.json` | PASS (`perf_avg_block_time_ms=0.0534585`, deadline pass) |
 | 2026-02-19T05:58:52Z | `2.7d` Phase 2.6 acceptance suite | `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
 | 2026-02-19T05:58:54Z | `2.7d` host-edge roundtrip check (`48k/512`) | `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 48000 --block-size 512` | PASS |
+| 2026-02-19T19:12:25Z | `pluginval` flake probe (`5` repeats) | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3` | PASS (`5/5`) |
+| 2026-02-19T19:12:42Z | `pluginval` long probe (random seeds) | repeated `pluginval` runs (`20` cap) | FAIL on run `9` (`exit 9`, segfault) |
+| 2026-02-19T19:13:53Z | `pluginval` deterministic repro seed | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3` | FAIL (`exit 9`) |
+| 2026-02-19T19:14:00Z | `pluginval` crash backtrace capture | `lldb --batch ... --random-seed 0x2a331c6 ...` | FAIL (top frame `SpatialRenderer::process`) |
+| 2026-02-19T19:14:20Z | pluginval mitigation build | `cmake --build build --target LocusQ_VST3 locusq_qa -j 8` | PASS |
+| 2026-02-19T19:15:05Z | `pluginval` deterministic seed after fix | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3` | PASS |
+| 2026-02-19T19:15:44Z | `pluginval` post-fix stability probe | `10x pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3` | PASS (`10/10`) |
+| 2026-02-19T19:16:06Z | post-fix QA regression refresh | `locusq_smoke_suite + locusq_phase_2_6_acceptance_suite + locusq_phase_2_5_acceptance_suite + host_edge(48k/512) + full_system(48k/512)` | PASS |
+| 2026-02-19T19:21:22Z | continue checkpoint build | `cmake --build build --target LocusQ_VST3 locusq_qa -j 8` | PASS |
+| 2026-02-19T19:21:36Z | continue checkpoint smoke suite | `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json` | PASS (`4 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:22:04Z | continue checkpoint docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

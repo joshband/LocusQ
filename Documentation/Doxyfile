@@ -1,0 +1,26 @@
+PROJECT_NAME           = "LocusQ"
+PROJECT_BRIEF          = "Quadraphonic 3D Spatial Audio Tool"
+OUTPUT_DIRECTORY       = build/docs_api
+CREATE_SUBDIRS         = NO
+
+INPUT                  = Source \
+                         Documentation/invariants.md \
+                         Documentation/implementation-traceability.md
+FILE_PATTERNS          = *.h *.cpp *.md
+RECURSIVE              = YES
+EXCLUDE                = build qa_output
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO

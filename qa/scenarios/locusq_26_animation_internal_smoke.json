@@ -1,0 +1,86 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_26_animation_internal_smoke",
+  "name": "LocusQ 2.6 Internal Animation Smoke",
+  "category": "spatial",
+  "description": "Phase 2.6 smoke: internal timeline playback with loop+sync enabled should remain stable and deadline-safe.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.35,
+      "duration_seconds": 3.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.5,
+    "pos_elevation": 0.5,
+    "pos_distance": 0.15,
+    "emit_gain": 0.5,
+    "emit_spread": 0.2,
+    "emit_directivity": 0.5,
+    "anim_enable": 1.0,
+    "anim_mode": 1.0,
+    "anim_loop": 1.0,
+    "anim_speed": 0.1919,
+    "anim_sync": 1.0,
+    "phys_enable": 1.0,
+    "phys_drag": 0.1,
+    "phys_gravity": 0.5,
+    "rend_master_gain": 0.5,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 3.0
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -80.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail"
+    },
+    "avg_block_time": {
+      "metric": "perf_avg_block_time_ms",
+      "threshold": {
+        "max": 2.0
+      },
+      "severity": "soft_warn"
+    }
+  },
+
+  "pass_criteria": "All hard fail invariants pass."
+}
+

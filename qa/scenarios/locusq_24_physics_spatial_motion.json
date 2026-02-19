@@ -1,0 +1,92 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_24_physics_spatial_motion",
+  "name": "LocusQ 2.4 Physics Spatial Motion",
+  "category": "spatial",
+  "description": "Phase 2.4 acceptance proxy: physics-driven emitter motion must modulate spatial output without non-finite or discontinuity artifacts.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 523.25,
+      "end_hz": 523.25,
+      "amplitude": 0.35,
+      "duration_seconds": 4.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.72,
+    "pos_elevation": 0.5,
+    "pos_distance": 0.10,
+    "emit_gain": 0.5,
+    "emit_spread": 0.0,
+    "emit_directivity": 0.0,
+    "phys_enable": 1.0,
+    "phys_vel_x": 0.62,
+    "phys_vel_y": 0.54,
+    "phys_vel_z": 0.50,
+    "phys_drag": 0.10,
+    "phys_gravity": 0.50,
+    "phys_throw": 1.0,
+    "rend_master_gain": 0.5,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "analysis_windows": {
+    "motion_window": {
+      "type": "time_range",
+      "start_seconds": 0.25,
+      "end_seconds": 4.0,
+      "description": "Post-throw motion window"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "motion_window",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "motion_window",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "no_clicks_from_physics_updates": {
+      "metric": "discontinuity_count",
+      "window": "motion_window",
+      "threshold": {
+        "max_count": 10,
+        "detection_threshold_db": 9.0
+      },
+      "severity": "hard_fail"
+    },
+    "physics_motion_modulates_spatial_output": {
+      "metric": "flux_rate",
+      "window": "motion_window",
+      "threshold": {
+        "min": 0.00001,
+        "max": 10.0
+      },
+      "severity": "hard_fail"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

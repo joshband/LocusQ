@@ -1,3 +1,9 @@
+Title: Claude Operating Contract
+Document Type: Agent Contract
+Author: APC Codex
+Created Date: 2026-02-18
+Last Modified Date: 2026-02-18
+
 # CLAUDE.md
 
 ## Purpose
@@ -51,6 +57,11 @@ For workflow execution, always load in this order:
 - `webview`: generate WebView-compatible UI paths and integration.
 - `pending`: block framework-specific implementation until planning resolves it.
 
+## Spec/Invariant/ADR Discipline
+- Treat `.ideas/architecture.md`, `.ideas/parameter-spec.md`, `.ideas/plan.md`, `Documentation/invariants.md`, and `Documentation/adr/*.md` as normative references for implementation decisions.
+- Do not ship code that conflicts with documented invariants or ADR decisions.
+- If a change must override an invariant/ADR, record the decision in a new ADR before closing the task.
+
 ## Expected Project Layout
 Per plugin, keep work inside:
 - `plugins/[PluginName]/.ideas/`
@@ -91,4 +102,7 @@ For simple tasks, use one short paragraph or up to three bullets.
 ## Documentation Hygiene
 - Keep this file aligned with `AGENTS.md` and `.codex/workflows/*`.
 - When workflow/skill behavior changes, update this file in the same change set.
-- Keep rule parity through `AGENT_RULE.md` and run `./scripts/sync-agent-contract.sh` after contract edits.
+- Keep rule parity through `AGENT_RULE.md` and run `pwsh ./scripts/sync-agent-contract.ps1` after contract edits.
+- Keep parity-managed APC workflow/skill files synced through the same script across both `.codex` and `.claude`.
+- Enforce markdown metadata (`Title`, `Document Type`, `Author`, `Created Date`, `Last Modified Date`) for human-authored docs in root, `.codex/`, `.claude/`, `.ideas/`, `Design/`, `Documentation/`, and `TestEvidence/`.
+- Track validation snapshots/trends in `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.

@@ -1,0 +1,69 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_25_room_size_large",
+  "name": "LocusQ 2.5 Room Size Large",
+  "category": "spatial",
+  "description": "Phase 2.5 acceptance proxy: large-room setting should sustain a measurable long decay.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.40,
+      "duration_seconds": 3.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.5,
+    "pos_elevation": 0.5,
+    "pos_distance": 0.08,
+    "emit_gain": 0.5,
+    "rend_master_gain": 0.5,
+    "rend_air_absorb": 0.0,
+    "rend_room_enable": 1.0,
+    "rend_room_mix": 0.50,
+    "rend_room_size": 1.0,
+    "rend_room_damping": 0.35,
+    "rend_room_er_only": 0.0,
+    "rend_quality": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.15,
+      "end_seconds": 3.0,
+      "description": "Large-room rendered output"
+    }
+  },
+
+  "expected_invariants": {
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "large_room_rt60": {
+      "metric": "rt60",
+      "window": "full",
+      "threshold": {
+        "min": 0.01,
+        "max": 8.0
+      },
+      "severity": "soft_warn",
+      "description": "Large room should preserve measurable decay"
+    }
+  },
+
+  "pass_criteria": "Hard fail invariants must pass."
+}

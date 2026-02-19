@@ -1,0 +1,10 @@
+Running scenario: qa/scenarios/locusq_26_full_system_cpu_draft.json [Spatial adapter]
+
+Status: PASS
+  perf_allocation_free: PASS (value=1)
+  perf_avg_block_time_ms: PASS (value=0.290432)
+  perf_meets_deadline: PASS (value=1)
+  peak_level: PASS (value=-49.0874)
+  non_finite: PASS (value=0)
+  perf_p95_block_time_ms: PASS (value=0.311125)
+  rms_energy: PASS (value=-66.7274)

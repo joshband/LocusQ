@@ -1,0 +1,14 @@
+{
+  "id": "locusq_phase_2_6_acceptance_suite",
+  "name": "LocusQ Phase 2.6 Acceptance Suite",
+  "description": "Acceptance suite for Phase 2.6 timeline/polish closure: animation stability, full-system CPU gate, and host lifecycle edge-case resilience.",
+  "scenario_ids": [
+    "locusq_26_animation_internal_smoke",
+    "locusq_26_full_system_cpu_draft",
+    "locusq_26_host_edge_roundtrip_multipass"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_6_acceptance"
+  }
+}

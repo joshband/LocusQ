@@ -1,0 +1,98 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_renderer_distance_attenuation",
+  "name": "LocusQ Renderer Distance Attenuation",
+  "category": "spatial",
+  "description": "Validates that the renderer attenuates output as distance increases. Compares near (2m) vs far (20m) positioning. Tests DistanceAttenuator integration in Phase 2.2.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQSpatialAdapter. Run twice with different distance parameters and compare RMS."
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.8,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.5,
+    "1": 0.5,
+    "2": 0.04,
+    "3": 0.5,
+    "4": 0.0,
+    "5": 0.5,
+    "6": 0.0,
+    "7": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.1,
+      "end_seconds": 2.0,
+      "description": "Full rendered output at near distance"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present_near": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -80.0
+      },
+      "severity": "hard_fail",
+      "description": "Near-distance emitter must produce audible output"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "No NaN or Inf regardless of distance"
+    },
+    "level_in_range": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -30.0,
+        "max": -3.0
+      },
+      "severity": "soft_warn",
+      "description": "Near-distance (2m) output should have reasonable level"
+    }
+  },
+
+  "parameter_sweeps": [
+    {
+      "parameter_index": 2,
+      "parameter_name": "pos_distance",
+      "values_normalized": [0.04, 0.2, 0.4, 0.8],
+      "expected_metric": "rms_energy",
+      "expected_direction": "decreasing",
+      "severity": "soft_warn",
+      "description": "RMS should decrease as distance increases (inverse square law)"
+    }
+  ],
+
+  "use_cases": [
+    "Verify DistanceAttenuator reduces gain with distance",
+    "Confirm inverse square law model produces correct falloff",
+    "Test that far emitters are audibly quieter than near emitters"
+  ],
+
+  "pass_criteria": "Hard fail invariants must pass. Parameter sweep direction should be decreasing.",
+  "example_failures": [
+    "signal_present=false at any distance → distance attenuation too aggressive",
+    "rms_db not decreasing with distance → DistanceAttenuator not applying gain"
+  ]
+}

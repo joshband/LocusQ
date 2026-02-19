@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-19T05:36:52Z",
+  "last_modified": "2026-02-19T19:18:59Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -137,6 +137,12 @@
       "status": "complete",
       "completed_at": "2026-02-19T05:58:54Z",
       "notes": "Host-interaction closure prep complete: Cartesian viewport drag now writes APVTS Cartesian coordinates via new pos_x/pos_y/pos_z relays+attachments; timeline native bridge now rejects non-finite time and clamps to duration; focused headless JS/build/smoke/animation/suite/host-edge checks all pass."
+    },
+    {
+      "phase": "implementation_recovery_2_7e_pluginval_automation_guard",
+      "status": "complete",
+      "completed_at": "2026-02-19T19:18:59Z",
+      "notes": "Pluginval automation segfault mitigation landed: mode-transition scene registration sync and safer emitter unregister semantics remove stale emitter audio-pointer reads; deterministic seed 0x2a331c6 now passes."
     }
   ],
   "validation": {
@@ -178,11 +184,11 @@
       "strictness_level": 5,
       "exit_code": 0,
       "plugin_path": "plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3",
-      "output_log": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_retry_20260219T053459Z.log",
-      "error_log": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_20260219T053302Z.log",
-      "output_summary": "Rebaseline run recorded one pluginval automation segfault (exit 9) followed by immediate retry PASS (exit 0); tracked as intermittent.",
+      "output_log": "plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log",
+      "error_log": "plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6.log",
+      "output_summary": "Deterministic pluginval automation seed 0x2a331c6 now passes after mitigation; pre-fix repro and lldb backtrace captured for traceability.",
       "environment_blocked": false,
-      "last_successful_run": "2026-02-19T05:34:59Z",
+      "last_successful_run": "2026-02-19T19:15:05Z",
       "environment_note": "In restricted/headless contexts, pluginval may abort in AppKit/HIServices before plugin load; classify as environment_blocked when observed.",
       "blocked_run_artifacts": {
         "note": "plugins/LocusQ/TestEvidence/pluginval_blocked_note.txt",
@@ -387,11 +393,11 @@
         "plugins/LocusQ/TestEvidence/build-summary.md",
         "plugins/LocusQ/TestEvidence/validation-trend.md"
       ],
-      "last_sync": "2026-02-19T05:36:52Z"
+      "last_sync": "2026-02-19T19:18:59Z"
     },
     "implementation_phase_2_7d_started": true,
     "implementation_phase_2_7d_tasks_complete": true,
-    "implementation_phase_2_7d_status_note": "Phase 2.7d closure prep landed with Cartesian viewport writeback closure and timeline native time guards; remaining closure is manual DAW-host acceptance for embedded interaction behavior.",
+    "implementation_phase_2_7d_status_note": "Phase 2.7d control-path closure remains validated; 2.7e added pluginval automation guard (mode-transition registration sync) and deterministic seed repro now passes.",
     "implementation_phase_2_7d_js_check_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_js_check.log",
     "implementation_phase_2_7d_build_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_build.log",
     "implementation_phase_2_7d_smoke_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_7d_smoke.log",
@@ -423,6 +429,26 @@
         "log_retry": "plugins/LocusQ/TestEvidence/pluginval_test_acceptance_rebaseline_retry_20260219T053459Z.log"
       },
       "status_tsv": "plugins/LocusQ/TestEvidence/test_acceptance_rebaseline_20260219T053302Z_status.tsv"
+    },
+    "pluginval_automation_fix_20260219": {
+      "status": "pass",
+      "repro_seed": "0x2a331c6",
+      "pre_fix": {
+        "status": "fail",
+        "exit_code": 9,
+        "log": "plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6.log",
+        "lldb_backtrace_log": "plugins/LocusQ/TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log"
+      },
+      "post_fix": {
+        "status": "pass",
+        "exit_code": 0,
+        "log": "plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log"
+      },
+      "stability_probe": {
+        "status": "pass",
+        "runs": 10,
+        "summary": "plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv"
+      }
     }
   },
   "framework_selection": {

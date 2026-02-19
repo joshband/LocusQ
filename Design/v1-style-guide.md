@@ -1,3 +1,9 @@
+Title: LocusQ Style Guide v1
+Document Type: Style Guide
+Author: APC Codex
+Created Date: 2026-02-17
+Last Modified Date: 2026-02-18
+
 # LocusQ - Style Guide v1
 
 **Theme:** Studio Instrument / Premium / Clean

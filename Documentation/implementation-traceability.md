@@ -25,6 +25,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.6 (acceptance/tuning): Keyframe timeline editor interactions, preset persistence, and perf telemetry surfacing
 - Phase 2.7b: Viewport emitter selection/movement path and calibration visualization state wiring
 - Phase 2.7c: UI control wiring/state sync closure (tabs, toggles, dropdowns, text input persistence, transport/keyframe roundtrip)
+- Phase 2.7e: Pluginval automation stability guard for mode-transition scene registration
 - Reference: `.ideas/plan.md`
 
 ## Phase 2.4 Parameter Mapping
@@ -174,6 +175,18 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Suite rollup: `qa/scenarios/locusq_phase_2_6_acceptance_suite.json`
   - Run artifact: `TestEvidence/locusq_phase_2_6_acceptance_suite_phase_2_6c_allocation_free_refresh.log`
   - Outcome: suite pass (`3 PASS / 0 WARN / 0 FAIL`).
+
+## Phase 2.7e Pluginval Stability Guard Coverage
+
+- Registration consistency guard:
+  - `Source/PluginProcessor.cpp` (`syncSceneGraphRegistrationForMode`) now owns role-registration transitions and is called from both `prepareToPlay` and `processBlock`.
+  - `Source/PluginProcessor.h` declares `syncSceneGraphRegistrationForMode` as private processor lifecycle guard state.
+  - `Source/SceneGraph.h` (`unregisterEmitter`) now no-ops safely for already-free slots and only decrements active counters when occupied.
+- Deterministic regression proof:
+  - Repro before fix: `TestEvidence/pluginval_repro_seed_0x2a331c6.log` (`FAIL`, segfault under automation churn).
+  - Crash capture: `TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log` (top frame in `SpatialRenderer::process`).
+  - Deterministic pass after fix: `TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log` (`PASS`).
+  - Stability probe: `TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv` (`10/10 PASS`).
 
 ## Notes
 

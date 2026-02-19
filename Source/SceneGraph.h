@@ -18,12 +18,15 @@ struct Vec3
 //==============================================================================
 struct SpeakerProfile
 {
-    Vec3 position;
+    static constexpr int NUM_FREQ_BINS = 256;   // log-spaced 20Hz–20kHz
+
+    Vec3  position;
     float distance       = 2.0f;    // meters
     float angle          = 0.0f;    // degrees
     float height         = 1.2f;    // meters
-    float delayComp      = 0.0f;    // ms
-    float gainTrim       = 0.0f;    // dB
+    float delayComp      = 0.0f;    // ms (time-of-arrival compensation)
+    float gainTrim       = 0.0f;    // dB (level trim to match reference)
+    float frequencyResponse[NUM_FREQ_BINS] = {}; // dB deviation per log-spaced bin
 };
 
 struct RoomProfile
@@ -145,12 +148,15 @@ public:
     {
         if (slotId < 0 || slotId >= MAX_EMITTERS) return;
         juce::SpinLock::ScopedLockType lock (registrationLock);
+        if (! slotOccupied[slotId])
+            return;
+
         EmitterData d;
         d.active = false;
         slots[slotId].write (d);
         slots[slotId].clearAudioBuffer();
         slotOccupied[slotId] = false;
-        --activeEmitterCount;
+        activeEmitterCount.store (juce::jmax (0, activeEmitterCount.load() - 1));
     }
 
     //--------------------------------------------------------------------------
@@ -203,6 +209,38 @@ public:
         return globalSampleCounter.load (std::memory_order_relaxed);
     }
 
+    //--------------------------------------------------------------------------
+    // Global physics controls (written by renderer, read by emitters)
+    void setPhysicsRateIndex (int index)
+    {
+        physicsRateIndex.store (juce::jlimit (0, 3, index), std::memory_order_release);
+    }
+
+    int getPhysicsRateIndex() const
+    {
+        return physicsRateIndex.load (std::memory_order_acquire);
+    }
+
+    void setPhysicsPaused (bool paused)
+    {
+        physicsPaused.store (paused, std::memory_order_release);
+    }
+
+    bool isPhysicsPaused() const
+    {
+        return physicsPaused.load (std::memory_order_acquire);
+    }
+
+    void setPhysicsWallCollisionEnabled (bool enabled)
+    {
+        physicsWallCollisionEnabled.store (enabled, std::memory_order_release);
+    }
+
+    bool isPhysicsWallCollisionEnabled() const
+    {
+        return physicsWallCollisionEnabled.load (std::memory_order_acquire);
+    }
+
 private:
     SceneGraph() = default;
     ~SceneGraph() = default;
@@ -218,6 +256,10 @@ private:
     std::shared_ptr<RoomProfile> currentRoomProfile = std::make_shared<RoomProfile>();
 
     std::atomic<uint64_t> globalSampleCounter { 0 };
+
+    std::atomic<int> physicsRateIndex { 1 }; // 0=30,1=60,2=120,3=240 Hz
+    std::atomic<bool> physicsPaused { false };
+    std::atomic<bool> physicsWallCollisionEnabled { true };
 
     juce::SpinLock registrationLock;
 };

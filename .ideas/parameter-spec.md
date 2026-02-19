@@ -1,3 +1,9 @@
+Title: LocusQ Parameter Specification
+Document Type: Parameter Specification
+Author: APC Codex
+Created Date: 2026-02-17
+Last Modified Date: 2026-02-19
+
 # LocusQ - Parameter Specification
 
 **Version:** v0.1 (Ideation)
@@ -194,7 +200,17 @@
 
 1. **Automation:** All Float/Enum/Bool parameters are DAW-automatable except those marked [internal].
 2. **Coordinate sync:** When `pos_coord_mode` is Spherical, Cartesian values are derived (and vice versa). Only the primary set is automatable.
-3. **Physics vs Keyframe:** When both `phys_enable` and `anim_enable` are On, physics forces are additive to the keyframed position (keyframes become the "rest position").
-4. **Inter-instance communication:** Emitter parameters marked with `emit_id` are published to the shared scene graph. The Renderer reads all active emitters each audio callback.
+3. **Authority precedence (ADR-0003):** DAW/APVTS base state is authoritative; when enabled, internal timeline defines rest pose for animated tracks; physics applies additive offset on top of that rest pose.
+4. **Inter-instance routing (ADR-0002):** Emitter metadata is canonical shared state in `SceneGraph`; v1 renderer path may consume ephemeral same-block emitter audio pointers as fast path.
 5. **Room Profile dependency:** Emitter and Renderer modes will show a warning and pass audio through unprocessed if no Room Profile is loaded.
-6. **Future expansion:** Flocking, swarm, fluid dynamics, and material properties will add parameters in v2. The parameter ID scheme leaves room for `phys_flock_*`, `phys_fluid_*`, `phys_mat_*` prefixes.
+6. **AI scope gate (ADR-0004):** AI orchestration is deferred from v1 critical path and planned only for post-v1 phases.
+7. **Future expansion:** Flocking, swarm, fluid dynamics, and material properties will add parameters in v2. The parameter ID scheme leaves room for `phys_flock_*`, `phys_fluid_*`, `phys_mat_*` prefixes.
+
+---
+
+## As-Built Note (2026-02-18)
+
+- Parameter plumbing for phases up through 2.3 is implemented in `Source/PluginProcessor.cpp` APVTS layout and active processor paths.
+- Calibration workflow controls are bridged to UI runtime via native calls and status polling.
+- QA scenario stimulus references have been updated to current harness canonical stimulus contracts (for example `noise/white`, `sweep/linear_sine`).
+- Status/evidence tracking for these validations is now recorded in `plugins/LocusQ/status.json` and `plugins/LocusQ/TestEvidence/`.

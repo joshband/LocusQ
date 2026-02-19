@@ -1,0 +1,20 @@
+{
+  "id": "locusq_phase_2_5_acceptance_suite",
+  "name": "LocusQ Phase 2.5 Acceptance Suite",
+  "description": "Acceptance/tuning suite for Phase 2.5 perceptual-proxy and CPU-budget criteria.",
+  "scenario_ids": [
+    "locusq_25_room_depth_no_coloring",
+    "locusq_25_room_size_small",
+    "locusq_25_room_size_large",
+    "locusq_25_directivity_focus",
+    "locusq_25_spread_diffuse",
+    "locusq_25_doppler_motion",
+    "locusq_25_quality_draft_reference",
+    "locusq_25_quality_final_reference",
+    "locusq_25_cpu_budget_draft"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_5_acceptance"
+  }
+}

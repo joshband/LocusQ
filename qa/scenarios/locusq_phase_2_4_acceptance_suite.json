@@ -1,0 +1,13 @@
+{
+  "id": "locusq_phase_2_4_acceptance_suite",
+  "name": "LocusQ Phase 2.4 Acceptance Suite",
+  "description": "Acceptance suite for Phase 2.4 physics engine closure criteria.",
+  "scenario_ids": [
+    "locusq_24_physics_spatial_motion",
+    "locusq_24_physics_zero_g_drift"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_4_acceptance"
+  }
+}

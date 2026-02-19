@@ -1,3 +1,9 @@
+Title: LocusQ Creative Brief
+Document Type: Creative Brief
+Author: APC Codex
+Created Date: 2026-02-17
+Last Modified Date: 2026-02-19
+
 # LocusQ - Creative Brief
 
 **Alternate Name:** AetherQuad (reserved)
@@ -79,6 +85,25 @@ Advanced physics behaviors beyond basic throw/bounce:
 - **DAW:** Any VST3 host (Ableton, Reaper, Bitwig, etc.)
 - **Framework:** JUCE 8, WebView UI path, C++ DSP
 
+## V1 Scope Contract (2026-02-19)
+
+### In Scope (Must Ship In V1)
+
+1. Single plugin binary with three modes: Calibrate, Emitter, Renderer.
+2. Deterministic quad spatial core: panning, distance attenuation, spread/directivity, room chain, quality tiers.
+3. Room calibration v1 for delay/trim and usable Room Profile persistence.
+4. Physics v1 (deterministic throw/bounce/drag/gravity) integrated with spatial motion.
+5. Internal keyframe timeline and transport-aware behavior with documented authority precedence.
+6. Full-system acceptance evidence for CPU/deadline and host edge-case stability.
+
+### Out of Scope (Deferred Post-V1)
+
+1. AI orchestration and autonomous scene mutation.
+2. Neural acoustic modeling / neural IR generation.
+3. Advanced output formats and binaural/HRTF expansion beyond current v1 plan.
+4. Cross-emitter complex interaction systems (flocking/swarm/fluid) beyond preset-level motion behavior.
+5. Sensor-driven calibration dependencies (for example LiDAR) as shipping requirements.
+
 ## Competitive Landscape
 
 | Tool | Difference from LocusQ |
@@ -97,3 +122,4 @@ Advanced physics behaviors beyond basic throw/bounce:
 4. Physics-driven motion (throw, bounce, gravity, drag) feels musical and controllable
 5. 3D visualization is responsive, clear, and accurately represents the spatial field
 6. Keyframe animation exports/imports and syncs with DAW transport
+7. In-host UI interaction is fully functional (tabs, controls, timeline, calibration actions) with explicit degraded-mode behavior if viewport initialization fails

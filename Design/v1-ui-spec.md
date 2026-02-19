@@ -1,3 +1,9 @@
+Title: LocusQ UI Specification v1
+Document Type: UI Specification
+Author: APC Codex
+Created Date: 2026-02-17
+Last Modified Date: 2026-02-18
+
 # LocusQ - UI Specification v1
 
 **Window:** 1200 x 800px (fixed)

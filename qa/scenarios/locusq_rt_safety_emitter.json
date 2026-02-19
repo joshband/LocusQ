@@ -1,0 +1,70 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_rt_safety_emitter",
+  "name": "LocusQ RT Safety — Emitter Mode",
+  "category": "performance",
+  "description": "Validates real-time safety in Emitter mode processBlock(). No heap allocations, meets deadline. Critical for JUCE plugin RT compliance.",
+
+  "capability_requirements": {
+    "required_effect_types": [],
+    "required_behaviors": [],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQEmitterAdapter"
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.5,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.5,
+    "1": 0.0,
+    "2": 0.5,
+    "3": 0.5,
+    "4": 0.1
+  },
+
+  "expected_invariants": {
+    "allocation_free": {
+      "metric": "perf_allocation_free",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "No heap allocations in Emitter processBlock() — real-time safety requirement"
+    },
+    "meets_deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Emitter processBlock() must complete within audio buffer deadline"
+    },
+    "avg_block_time": {
+      "metric": "perf_avg_block_time_ms",
+      "threshold": {
+        "max": 2.0
+      },
+      "severity": "soft_warn",
+      "description": "Emitter passthrough should be very fast (< 2ms per block)"
+    }
+  },
+
+  "use_cases": [
+    "CI gate: block RT-unsafe code from reaching main branch",
+    "Verify SceneGraph write (atomic swap) is allocation-free",
+    "Confirm publishEmitterState() doesn't allocate"
+  ],
+
+  "pass_criteria": "Both hard_fail invariants must pass (allocation_free and meets_deadline).",
+  "example_failures": [
+    "perf_allocation_free=false → heap allocation in publishEmitterState() or SceneGraph write",
+    "perf_meets_deadline=false → blocking operation in emitter processBlock()"
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_25_cpu_budget_draft",
+  "name": "LocusQ 2.5 CPU Budget (Draft)",
+  "category": "performance",
+  "description": "Phase 2.5 acceptance gate: Draft renderer chain must satisfy RT-safety and CPU-budget constraints.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.40,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.45,
+    "pos_elevation": 0.5,
+    "pos_distance": 0.08,
+    "emit_gain": 0.5,
+    "emit_spread": 0.6,
+    "emit_directivity": 0.7,
+    "rend_master_gain": 0.5,
+    "rend_quality": 0.0,
+    "rend_room_enable": 1.0,
+    "rend_room_mix": 0.45,
+    "rend_room_size": 0.40,
+    "rend_room_damping": 0.45,
+    "rend_room_er_only": 0.0,
+    "rend_doppler": 1.0,
+    "rend_doppler_scale": 0.8,
+    "rend_air_absorb": 1.0,
+    "phys_enable": 1.0,
+    "phys_drag": 0.2,
+    "phys_gravity": 0.5,
+    "phys_vel_x": 0.9,
+    "phys_vel_y": 0.5,
+    "phys_vel_z": 0.5,
+    "phys_throw": 1.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 2.0,
+      "description": "CPU budget validation window"
+    }
+  },
+
+  "expected_invariants": {
+    "allocation_free": {
+      "metric": "perf_allocation_free",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "soft_warn",
+      "description": "No heap allocation inside processBlock()"
+    },
+    "meets_deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Must remain within block deadline"
+    },
+    "avg_block_time": {
+      "metric": "perf_avg_block_time_ms",
+      "threshold": {
+        "max": 1.6
+      },
+      "severity": "hard_fail",
+      "description": "Approximate 15% CPU budget at 48k/512 (10.67ms deadline)"
+    },
+    "p95_block_time": {
+      "metric": "perf_p95_block_time_ms",
+      "threshold": {
+        "max": 2.4
+      },
+      "severity": "soft_warn"
+    },
+    "total_allocations_trend": {
+      "metric": "perf_total_allocations",
+      "threshold": {
+        "max": 5000
+      },
+      "severity": "soft_warn",
+      "description": "Track allocation trend even when allocation_free gate is warning-only"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

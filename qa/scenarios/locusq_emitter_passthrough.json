@@ -1,0 +1,95 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_emitter_passthrough",
+  "name": "LocusQ Emitter Passthrough",
+  "category": "utility",
+  "description": "Validates that Emitter mode passes audio through unchanged (signal present, no NaN/Inf, no clipping). Tests Phase 2.1 emitter audio routing.",
+
+  "capability_requirements": {
+    "required_effect_types": ["UTILITY"],
+    "required_behaviors": [],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQEmitterAdapter"
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 440.0,
+      "end_hz": 440.0,
+      "amplitude": 0.5,
+      "duration_seconds": 1.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.5,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.5,
+    "4": 0.5
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.0,
+      "end_seconds": 1.0,
+      "description": "Full signal"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -80.0
+      },
+      "severity": "hard_fail",
+      "description": "Emitter must pass audio through — output cannot be silence"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Output must not contain NaN or Inf samples"
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Emitter output should not clip with nominal input"
+    },
+    "rms_level": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -10.0,
+        "max": -5.0
+      },
+      "severity": "soft_warn",
+      "description": "Output level should be close to input level (0 dB gain)"
+    }
+  },
+
+  "use_cases": [
+    "Verify emitter audio passthrough is intact",
+    "Catch accidental silence or level changes",
+    "Confirm SceneGraph audio buffer pointer registration works"
+  ],
+
+  "pass_criteria": "All hard_fail invariants must pass.",
+  "example_failures": [
+    "signal_present=false → processBlock cleared the buffer in Emitter mode",
+    "non_finite → NaN propagated through emitter processing",
+    "clipping → gain applied incorrectly in emitter mode"
+  ]
+}

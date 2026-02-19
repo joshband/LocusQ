@@ -500,3 +500,118 @@ Artifacts:
 - `plugins/LocusQ/TestEvidence/locusq_phase_2_7d_animation_smoke.log`
 - `plugins/LocusQ/TestEvidence/locusq_phase_2_7d_phase_2_6_acceptance_suite.log`
 - `plugins/LocusQ/TestEvidence/locusq_phase_2_7d_host_edge_48k512.log`
+
+## Pluginval Automation Segfault Mitigation Snapshot (UTC 2026-02-19)
+
+31. Reproduce pluginval automation crash with deterministic seed
+
+```sh
+/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3
+```
+
+Result: `FAIL` (`exit 9`, `Segmentation fault: 11`)
+
+32. Capture crash backtrace (`lldb`, same seed)
+
+```sh
+lldb --batch -o "run" -k "thread backtrace all" -- /Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3
+```
+
+Result: `FAIL`, crash in `SpatialRenderer::process` while reading emitter audio during automation.
+
+33. Implement mitigation and rebuild
+
+```sh
+cmake --build build --target LocusQ_VST3 locusq_qa -j 8
+```
+
+Result: `PASS`
+
+Mitigation summary:
+- Added `syncSceneGraphRegistrationForMode()` in processor runtime.
+- Mode transitions now proactively unregister incompatible scene roles (Emitter/Renderer) before processing.
+- Hardened `SceneGraph::unregisterEmitter()` against double-unregister state drift.
+
+34. Re-run deterministic seed after fix
+
+```sh
+/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3
+```
+
+Result: `PASS` (`exit 0`)
+
+35. Post-fix stability probe
+
+```sh
+for i in $(seq 1 10); do /Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3; done
+```
+
+Result: `PASS` (`10/10`)
+
+36. Post-fix QA regression refresh
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json
+./build/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json
+./build/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_full_system_cpu_draft.json
+```
+
+Result: `PASS`
+- `locusq_smoke_suite`: `PASS`
+- `locusq_phase_2_6_acceptance_suite`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+- `locusq_phase_2_5_acceptance_suite`: `PASS` (`9 PASS / 0 WARN / 0 FAIL`)
+- `locusq_26_host_edge_roundtrip_multipass` (`48k/512`): `PASS`
+- `locusq_26_full_system_cpu_draft` (`48k/512`): `PASS` (`perf_allocation_free=true`)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6.log`
+- `plugins/LocusQ/TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log`
+- `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run1.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run2.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run3.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run4.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run5.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run6.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run7.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run8.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run9.log`
+- `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_run10.log`
+- `plugins/LocusQ/TestEvidence/locusq_smoke_suite_pluginval_fix_20260219T191606Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_pluginval_fix_20260219T191606Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_suite_pluginval_fix_20260219T191606Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k512_pluginval_fix_20260219T191606Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_26_full_system_48k512_pluginval_fix_20260219T191606Z.log`
+
+## Continue Checkpoint Snapshot (UTC 2026-02-19)
+
+37. Rebuild core plugin + QA target
+
+```sh
+cmake --build build --target LocusQ_VST3 locusq_qa -j 8
+```
+
+Result: `PASS`
+
+38. Smoke suite rerun (Emitter adapter)
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+
+39. Docs freshness gate check
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_build_continue_20260219T192122Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_smoke_continue_20260219T192136Z.log`

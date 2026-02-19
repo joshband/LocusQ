@@ -23,7 +23,10 @@
       --text-warning: #AA4444;
       --text-success: #44AA66;
       --wireframe: #E0E0E0;
-      --rail-width: 280px;
+      --rail-width-calibrate: 320px;
+      --rail-width-emitter: 280px;
+      --rail-width-renderer: 304px;
+      --rail-width: var(--rail-width-emitter);
       --header-height: 40px;
       --timeline-height: 120px;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -39,6 +42,9 @@
       flex-direction: column;
       user-select: none;
     }
+    body.mode-calibrate { --rail-width: var(--rail-width-calibrate); }
+    body.mode-emitter { --rail-width: var(--rail-width-emitter); }
+    body.mode-renderer { --rail-width: var(--rail-width-renderer); }
 
     /* ===== HEADER ===== */
     .header {
@@ -90,6 +96,16 @@
     .scene-status.measuring { color: var(--gold); border-color: rgba(212,168,71,0.3); animation: statusPulse 1s ease infinite; }
     .scene-status.ready { color: var(--text-success); border-color: rgba(68,170,102,0.3); }
     .scene-status.noprofile { color: var(--text-warning); border-color: rgba(170,68,68,0.3); }
+    .viewport-lock {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border: 1px solid rgba(102,102,102,0.25);
+      border-radius: 9px;
+      padding: 3px 8px;
+    }
 
     @keyframes statusPulse {
       0%, 100% { border-color: rgba(212,168,71,0.15); }
@@ -174,7 +190,7 @@
     .timeline-lanes { padding: 4px 12px; }
     .timeline-lane {
       display: flex; align-items: center;
-      height: 20px; gap: 8px;
+      height: 24px; gap: 8px;
       cursor: pointer; border-radius: 3px;
       padding: 0 4px; transition: background 100ms;
     }
@@ -189,20 +205,56 @@
     .timeline-lane.selected .lane-label { color: var(--gold); }
 
     .lane-track {
-      flex: 1; height: 2px;
-      background: var(--border);
-      position: relative; border-radius: 1px;
+      flex: 1;
+      height: 14px;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(0,0,0,0.0)),
+        linear-gradient(to right, rgba(200,200,200,0.05), rgba(200,200,200,0.02));
+      border: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      border-radius: 2px;
     }
     .keyframe-dot {
       position: absolute;
-      width: 8px; height: 8px;
+      width: 10px; height: 10px;
       background: var(--gold); border-radius: 50%;
-      top: -3px; transform: translateX(-4px);
+      transform: translate(-5px, -5px);
       cursor: pointer;
+      border: 1px solid rgba(12, 12, 12, 0.8);
+      box-shadow: 0 0 0 1px rgba(212,168,71,0.35);
+      z-index: 2;
     }
     .keyframe-dot:hover {
       background: var(--gold-bright);
-      transform: translateX(-4px) scale(1.3);
+      transform: translate(-5px, -5px) scale(1.15);
+    }
+    .keyframe-dot.dragging {
+      transform: translate(-5px, -5px) scale(1.2);
+      box-shadow: 0 0 0 1px rgba(212,168,71,0.8);
+      z-index: 4;
+    }
+    .timeline-playhead {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(212,168,71,0.85);
+      box-shadow: 0 0 6px rgba(212,168,71,0.5);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .curve-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 9px;
+      padding: 0 6px;
+      letter-spacing: 0.2px;
     }
 
     /* ===== RAIL ===== */
@@ -212,6 +264,7 @@
       border-left: 1px solid var(--border);
       overflow-y: auto; overflow-x: hidden;
       flex-shrink: 0;
+      transition: width 180ms ease;
     }
     .rail::-webkit-scrollbar { width: 4px; }
     .rail::-webkit-scrollbar-track { background: transparent; }
@@ -308,9 +361,11 @@
       display: flex; align-items: center;
       gap: 8px; padding: 6px 8px;
       border-radius: 4px; cursor: pointer;
+      border: 1px solid transparent;
       transition: background 150ms;
     }
     .scene-item:hover { background: var(--surface-elevated); }
+    .scene-item.selected { background: rgba(212,168,71,0.10); border-color: rgba(212,168,71,0.28); }
     .scene-dot { width: 8px; height: 8px; border-radius: 50%; }
     .scene-name { flex: 1; font-size: 11px; color: var(--text-primary); }
     .scene-action-btn {
@@ -373,7 +428,7 @@
     .status-text { font-size: 11px; color: var(--text-secondary); }
   </style>
 </head>
-<body>
+<body class="mode-emitter">
 
   <!-- HEADER -->
   <div class="header">
@@ -385,6 +440,7 @@
     </div>
     <div class="header-spacer"></div>
     <div class="scene-status" id="scene-status">STABLE</div>
+    <div class="viewport-lock" id="viewport-lock">VIEWPORT LOCK</div>
     <div class="room-profile">
       <span class="dot none" id="room-dot"></span>
       <span style="color: var(--text-secondary); font-size: 11px;" id="room-label">No Profile</span>
@@ -410,31 +466,35 @@
       <div class="timeline visible" id="timeline">
         <div class="timeline-header">
           <div class="timeline-transport">
-            <button class="transport-btn">&#9664;</button>
-            <button class="transport-btn">&#9632;</button>
-            <button class="transport-btn">&#9654;</button>
+            <button class="transport-btn" id="timeline-rewind-btn" title="Rewind 250ms">&#9664;</button>
+            <button class="transport-btn" id="timeline-stop-btn" title="Stop and reset">&#9632;</button>
+            <button class="transport-btn" id="timeline-play-btn" title="Enable animation">&#9654;</button>
           </div>
-          <span class="timeline-time">00:00.000</span>
+          <span class="timeline-time" id="timeline-time">00:00.000</span>
           <div class="header-spacer"></div>
-          <div class="timeline-toggle-label">Loop <div class="toggle" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
-          <div class="timeline-toggle-label">Sync <div class="toggle on" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+          <div class="timeline-toggle-label">Loop <div class="toggle" id="toggle-timeline-loop" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+          <div class="timeline-toggle-label">Sync <div class="toggle on" id="toggle-timeline-sync" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
         </div>
         <div class="timeline-lanes">
           <div class="timeline-lane selected" data-lane="azimuth">
             <span class="lane-label">Azimuth</span>
             <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-azimuth">ease</span>
           </div>
           <div class="timeline-lane" data-lane="elevation">
             <span class="lane-label">Elevation</span>
             <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-elevation">ease</span>
           </div>
           <div class="timeline-lane" data-lane="distance">
             <span class="lane-label">Distance</span>
             <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-distance">ease</span>
           </div>
           <div class="timeline-lane" data-lane="size">
             <span class="lane-label">Size</span>
             <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-size">step</span>
           </div>
         </div>
       </div>
@@ -549,6 +609,21 @@
             <div class="control-row"><span class="control-label">Source</span><select class="dropdown" id="anim-source" disabled><option>DAW</option><option>Internal</option></select></div>
             <div class="control-row"><span class="control-label">Loop</span><div class="toggle" id="toggle-anim-loop"><div class="toggle-thumb"></div></div></div>
             <div class="control-row"><span class="control-label">Speed</span><span class="control-value" id="val-anim-speed">1.0<span class="control-unit">x</span></span></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Spatial Preset</div>
+          <div class="control-row">
+            <span class="control-label">Preset</span>
+            <select class="dropdown wide" id="preset-select"></select>
+          </div>
+          <div class="btn-row">
+            <button class="btn-secondary" id="preset-save-btn">SAVE</button>
+            <button class="btn-secondary" id="preset-load-btn">LOAD</button>
+          </div>
+          <div class="control-row">
+            <span class="control-value" id="preset-status">No presets loaded</span>
           </div>
         </div>
       </div>

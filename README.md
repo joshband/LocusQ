@@ -26,6 +26,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - [x] macOS build/package path complete for VST3/AU/Standalone (universal build).
 - [x] Phase 2.6 full-system allocation-free closeout achieved.
 - [x] UI control-path recovery implemented through 2.7d (code-side/headless checks passing).
+- [x] Pluginval automation-segfault mitigation landed and validated (seeded repro now passes; 10-run stability pass).
 - [x] Documentation freshness gate enabled (ADR-0005 + CI/script checks).
 - [ ] Complete manual host UI checklist (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
 - [ ] Run final `/test` acceptance rerun (DSP + host + UI matrix) and publish deltas.
@@ -46,6 +47,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Phase 2.7b implementation: viewport emitter pick/select/move now updates APVTS position state; calibration speaker/meter/profile visuals now consume native status payloads
 - Phase 2.7c implementation: tabs/toggles/dropdowns/value steppers now route through relays/attachments, and `emit-label` / physics preset memory persists through native UI-state bridge
 - Phase 2.7d implementation: Cartesian viewport drag is now APVTS-backed (`pos_x/pos_y/pos_z` relay/attachment wiring + drag writeback sync), and native timeline time input is finite/clamped on bridge entry
+- Pluginval automation guard: mode-transition registration sync prevents stale emitter audio pointer reads during aggressive mode automation.
 - Phase 2.7 UI interaction smoke matrix (`/test`): `PASS_WITH_WARNING` with trend deltas published
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 
@@ -73,7 +75,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Host edge matrix (`locusq_26_host_edge_roundtrip_multipass`): `PASS` across `44.1k/256`, `48k/512`, `48k/1024`, `96k/512`
 - Plugin build (`LocusQ_VST3`, `LocusQ_Standalone`): `PASS`
 - `pluginval` strictness 5 (in-process, skip GUI): `PASS` (exit code 0)
-- Rebaseline note: one pluginval run hit an automation segfault (`exit 9`), immediate retry passed (`exit 0`); tracked as intermittent.
+- pluginval automation regression seed (`0x2a331c6`) now passes after fix; 10-run post-fix stability check passed (`10/10`).
 - Standalone launch smoke: `PASS`
 - Post-2.7b smoke regression suite (`locusq_smoke_suite`): `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
 - Post-2.7c smoke regression suite (`locusq_smoke_suite`): `PASS` (`4 PASS / 0 WARN / 0 FAIL`)

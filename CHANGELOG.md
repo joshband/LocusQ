@@ -157,6 +157,11 @@ All notable changes to LocusQ are documented here.
   - `Source/PluginProcessor.cpp`
   - `Source/ui/public/js/index.js`
   - `README.md` (plain-language + v1 completion checklist)
+- Pluginval automation crash mitigation aligned:
+  - `Source/PluginProcessor.cpp`
+  - `Source/PluginProcessor.h`
+  - `Source/SceneGraph.h`
+  - Added mode-transition scene registration sync to prevent stale emitter-slot audio reads under aggressive mode automation.
 - CI QA hardening updates:
   - `.github/workflows/qa_harness.yml` (stronger result gating + expanded mac host-edge/full-system runs)
   - `.github/workflows/docs-freshness.yml`
@@ -172,7 +177,7 @@ All notable changes to LocusQ are documented here.
 - `locusq_26_full_system_cpu_draft`: `PASS` (`perf_avg_block_time_ms=0.304457`, `perf_p95_block_time_ms=0.318466`, `perf_meets_deadline=true`, `perf_allocation_free=true`)
 - `locusq_26_host_edge_roundtrip_multipass`: `PASS` across `44.1k/256`, `48k/512`, `48k/1024`, `96k/512`
 - `LocusQ_VST3` and `LocusQ_Standalone` build: `PASS`
-- `pluginval` strictness 5 in-process: one rebaseline run `FAIL` (segfault in automation), immediate retry `PASS` (exit code 0)
+- `pluginval` strictness 5 in-process: deterministic automation-segfault seed (`0x2a331c6`) now `PASS` after mitigation; post-fix stability probe `10/10 PASS`
 - Standalone launch smoke: `PASS`
 - Universal ship build (`x86_64 arm64`) and macOS package archive: `PASS`
 - `pluginval` on universal ship VST3: `PASS` (exit code `0`)
@@ -197,3 +202,8 @@ All notable changes to LocusQ are documented here.
   - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
   - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
   - `locusq_smoke_suite`, `locusq_26_animation_internal_smoke`, `locusq_phase_2_6_acceptance_suite`, host-edge `48k/512`: `PASS`
+- Pluginval automation mitigation validation snapshot:
+  - repro before fix: `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6.log` (`FAIL`, segfault)
+  - crash backtrace: `plugins/LocusQ/TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log` (top frame `SpatialRenderer::process`)
+  - deterministic repro after fix: `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log` (`PASS`)
+  - stability probe: `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv` (`10/10 PASS`)

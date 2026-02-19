@@ -112,26 +112,21 @@ LocusQAudioProcessor::~LocusQAudioProcessor()
 }
 
 //==============================================================================
-void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void LocusQAudioProcessor::syncSceneGraphRegistrationForMode (LocusQMode mode)
 {
-    currentSampleRate = sampleRate;
+    if (mode != LocusQMode::Emitter && emitterSlotId >= 0)
     {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-        keyframeTimeline.prepare (sampleRate);
-        initialiseDefaultKeyframeTimeline();
+        sceneGraph.unregisterEmitter (emitterSlotId);
+        emitterSlotId = -1;
+        lastPhysThrowGate = false;
+        lastPhysResetGate = false;
     }
 
-    // Prepare physics engine (Phase 2.4)
-    physicsEngine.prepare (sampleRate);
-
-    // Prepare spatial renderer (Phase 2.2)
-    spatialRenderer.prepare (sampleRate, samplesPerBlock);
-
-    // Prepare calibration engine (Phase 2.3)
-    calibrationEngine.prepare (sampleRate, samplesPerBlock);
-
-    // Register with scene graph if not already
-    auto mode = getCurrentMode();
+    if (mode != LocusQMode::Renderer && rendererRegistered)
+    {
+        sceneGraph.unregisterRenderer();
+        rendererRegistered = false;
+    }
 
     if (mode == LocusQMode::Emitter && emitterSlotId < 0)
     {
@@ -150,6 +145,28 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
         rendererRegistered = sceneGraph.registerRenderer();
         DBG ("LocusQ: Registered renderer: " + juce::String (rendererRegistered ? "OK" : "FAILED (already exists)"));
     }
+}
+
+//==============================================================================
+void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    currentSampleRate = sampleRate;
+    {
+        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+        keyframeTimeline.prepare (sampleRate);
+        initialiseDefaultKeyframeTimeline();
+    }
+
+    // Prepare physics engine (Phase 2.4)
+    physicsEngine.prepare (sampleRate);
+
+    // Prepare spatial renderer (Phase 2.2)
+    spatialRenderer.prepare (sampleRate, samplesPerBlock);
+
+    // Prepare calibration engine (Phase 2.3)
+    calibrationEngine.prepare (sampleRate, samplesPerBlock);
+
+    syncSceneGraphRegistrationForMode (getCurrentMode());
 }
 
 void LocusQAudioProcessor::releaseResources()
@@ -203,6 +220,7 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         return;
 
     auto mode = getCurrentMode();
+    syncSceneGraphRegistrationForMode (mode);
 
     switch (mode)
     {
@@ -220,10 +238,6 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         case LocusQMode::Emitter:
         {
-            // Register if not yet registered
-            if (emitterSlotId < 0)
-                emitterSlotId = sceneGraph.registerEmitter();
-
             if (emitterSlotId >= 0)
             {
                 // Publish audio buffer pointer for renderer to consume
@@ -246,10 +260,6 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         case LocusQMode::Renderer:
         {
-            // Register if not yet registered
-            if (! rendererRegistered)
-                rendererRegistered = sceneGraph.registerRenderer();
-
             // Publish global physics controls for emitters
             sceneGraph.setPhysicsRateIndex (
                 static_cast<int> (apvts.getRawParameterValue ("rend_phys_rate")->load()));

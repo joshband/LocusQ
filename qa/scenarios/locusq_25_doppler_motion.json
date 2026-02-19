@@ -1,0 +1,85 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_25_doppler_motion",
+  "name": "LocusQ 2.5 Doppler Motion",
+  "category": "spatial",
+  "description": "Phase 2.5 acceptance proxy: doppler-enabled moving emitter should introduce measurable spectral motion.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 440.0,
+      "end_hz": 440.0,
+      "amplitude": 0.35,
+      "duration_seconds": 4.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.5,
+    "pos_elevation": 0.5,
+    "pos_distance": 0.10,
+    "emit_gain": 0.5,
+    "emit_spread": 0.0,
+    "emit_directivity": 0.0,
+    "phys_enable": 1.0,
+    "phys_vel_x": 1.0,
+    "phys_vel_y": 0.5,
+    "phys_vel_z": 0.5,
+    "phys_drag": 0.0,
+    "phys_gravity": 0.5,
+    "phys_throw": 1.0,
+    "rend_master_gain": 0.5,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 1.0,
+    "rend_doppler_scale": 1.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.20,
+      "end_seconds": 4.0,
+      "description": "Post-throw doppler output"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -80.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "doppler_motion_flux": {
+      "metric": "flux_rate",
+      "window": "full",
+      "threshold": {
+        "min": 0.00001,
+        "max": 10.0
+      },
+      "severity": "soft_warn",
+      "description": "Doppler motion should create non-zero spectral flux"
+    }
+  },
+
+  "pass_criteria": "Hard fail invariants must pass."
+}

@@ -1,0 +1,86 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_renderer_no_clipping",
+  "name": "LocusQ Renderer No Clipping",
+  "category": "spatial",
+  "description": "Validates renderer output does not clip with white noise at -6 dBFS and unity gain settings. Tests gain accumulation correctness in SpatialRenderer.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQSpatialAdapter"
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.5,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.5,
+    "1": 0.5,
+    "2": 0.04,
+    "3": 0.5,
+    "4": 0.0,
+    "5": 0.5,
+    "6": 0.0,
+    "7": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.1,
+      "end_seconds": 2.0,
+      "description": "Full rendered output"
+    }
+  },
+
+  "expected_invariants": {
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Renderer output must not clip with nominal input"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "No NaN or Inf in renderer output"
+    },
+    "no_dc_offset": {
+      "metric": "dc_offset",
+      "window": "full",
+      "threshold": {
+        "max": 0.01
+      },
+      "severity": "soft_warn",
+      "description": "Renderer output should not have significant DC offset"
+    }
+  },
+
+  "use_cases": [
+    "Verify VBAP gain normalization keeps output bounded",
+    "Catch gain accumulation bugs when multiple emitters are active",
+    "Validate distance attenuation prevents gain overshoot"
+  ],
+
+  "pass_criteria": "Both hard_fail invariants must pass.",
+  "example_failures": [
+    "clipping → VBAP gains not normalized to unit power",
+    "non_finite → division by zero in distance attenuation at distance=0",
+    "dc_offset → one-pole filter state not reset properly"
+  ]
+}

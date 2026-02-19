@@ -1,3 +1,9 @@
+Title: APC Agent Rule Contract
+Document Type: Rule
+Author: APC Codex
+Created Date: 2026-02-18
+Last Modified Date: 2026-02-18
+
 # AGENT_RULE.md
 
 ## Purpose
@@ -42,6 +48,19 @@ After phase work:
 - Validate required artifacts exist.
 - Stop and report next expected command.
 
+## Spec/Invariant/ADR Contract
+- Treat `.ideas/architecture.md`, `.ideas/parameter-spec.md`, `.ideas/plan.md`, `Documentation/invariants.md`, and `Documentation/adr/*.md` as normative implementation inputs.
+- For any code change, confirm behavior still satisfies documented invariants and ADR decisions.
+- If a change requires deviating from a recorded invariant/ADR, create or update an ADR before closing the phase and reference it in status notes.
+- Keep parameter and control wiring traceable in `Documentation/implementation-traceability.md`.
+
+## Documentation Contract
+- Human-authored Markdown docs in root, `.codex/`, `.claude/`, `.ideas/`, `Design/`, `Documentation/`, and `TestEvidence/` must include: `Title`, `Document Type`, `Author`, `Created Date`, and `Last Modified Date`.
+- Generated reports under `qa_output/` are exempt and must not be manually edited for metadata.
+- Keep docs concise: update canonical docs instead of creating parallel duplicates.
+- Follow folder and naming conventions in `Documentation/standards.md`.
+- Record validation snapshots and trend entries in `TestEvidence/validation-trend.md`.
+
 ## Framework Gate
 `ui_framework` in `status.json` is binding:
 - `visage`: avoid WebView-only implementation outputs.
@@ -51,6 +70,7 @@ After phase work:
 ## Build and Validation
 - Prefer repository workflows/scripts over ad-hoc command sequences.
 - Run the smallest meaningful validation first, then broaden as needed.
+- Log significant validation commands/results in `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
 - If validation is skipped, state why.
 - Report status as: `tested`, `partially tested`, or `not tested`.
 

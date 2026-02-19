@@ -1,0 +1,95 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_renderer_spatial_output",
+  "name": "LocusQ Renderer Spatial Output",
+  "category": "spatial",
+  "description": "Validates that the Renderer produces audio output when an active Emitter is present in the SceneGraph. Tests the Phase 2.2 SceneGraph inter-instance pipeline: emitter writes audio pointer → renderer reads and spatializes.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQSpatialAdapter (compound Emitter+Renderer)"
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.5,
+      "duration_seconds": 1.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.5,
+    "1": 0.5,
+    "2": 0.1,
+    "3": 0.5,
+    "4": 0.0,
+    "5": 0.5,
+    "6": 0.0,
+    "7": 1.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 1.0,
+      "description": "Renderer output (skip 50ms for pipeline startup)"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -80.0
+      },
+      "severity": "hard_fail",
+      "description": "Renderer must produce output when emitter is active in SceneGraph"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Renderer output must not contain NaN or Inf"
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Renderer output must not clip with nominal emitter input"
+    },
+    "stereo_output": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -60.0
+      },
+      "severity": "soft_warn",
+      "description": "Renderer should produce non-trivial energy"
+    }
+  },
+
+  "use_cases": [
+    "Verify end-to-end Emitter → SceneGraph → Renderer pipeline",
+    "Confirm renderer reads emitter audio buffer from SceneGraph",
+    "Validate VBAP panning produces output at front-center position"
+  ],
+
+  "pass_criteria": "All hard_fail invariants must pass.",
+  "example_failures": [
+    "signal_present=false → renderer processBlock cleared output (no emitter registered, or SceneGraph read failed)",
+    "non_finite → NaN in VBAP gain calculation",
+    "clipping → gain accumulation error in multi-emitter rendering"
+  ]
+}

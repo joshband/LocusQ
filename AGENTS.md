@@ -1,28 +1,30 @@
+Title: APC Codex Dispatcher (LocusQ Bridge)
+Document Type: Agent Routing Guide
+Author: APC Codex
+Created Date: 2026-02-18
+Last Modified Date: 2026-02-18
+
 # APC Codex Dispatcher (LocusQ Bridge)
 
 Use this guide when working in this repository with Codex models (including `gpt-5.3-codex` with `reasoning effort: xhigh`).
 
-This repository is also linked at `audio-plugin-coder/plugins/LocusQ`. Load APC workflow and skill content from:
-
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/rules/`
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/`
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/skills/`
+This repository is also linked at `audio-plugin-coder/plugins/LocusQ`. APC workflow and skill content is available locally in `.codex/`.
 
 ## Command Routing
 
 If the user input starts with a slash command, route it to the matching APC workflow:
 
-- `/dream [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/dream.md`
-- `/plan [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/plan.md`
-- `/design [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/design.md`
-- `/impl [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/impl.md`
-- `/test [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/test.md`
-- `/ship [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/ship.md`
-- `/status [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/status.md`
-- `/resume [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/resume.md`
-- `/new [PluginName]` -> `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/workflows/new.md`
+- `/dream [PluginName]` -> `.codex/workflows/dream.md`
+- `/plan [PluginName]` -> `.codex/workflows/plan.md`
+- `/design [PluginName]` -> `.codex/workflows/design.md`
+- `/impl [PluginName]` -> `.codex/workflows/impl.md`
+- `/test [PluginName]` -> `.codex/workflows/test.md`
+- `/ship [PluginName]` -> `.codex/workflows/ship.md`
+- `/status [PluginName]` -> `.codex/workflows/status.md`
+- `/resume [PluginName]` -> `.codex/workflows/resume.md`
+- `/new [PluginName]` -> `.codex/workflows/new.md`
 
-Always load `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/rules/agent.md` first, then the selected workflow file, then any referenced skill file from `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/skills/`.
+Always load `.codex/rules/agent.md` first, then the selected workflow file, then any referenced skill file from `.codex/skills/`.
 
 Default `[PluginName]` to `LocusQ` when omitted.
 
@@ -45,13 +47,14 @@ When the user does not type slash commands, map clear intents to the same workfl
 - "package/release/ship" -> ship
 - "what is the status" -> status
 - "continue where we left off" -> resume
+- "standardize docs / ADR / invariants / traceability" -> load `.codex/skills/docs/SKILL.md` in addition to the active phase workflow
 
 ## Skill Location
 
 Use APC Codex skill content from:
 
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/skills/`
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/rules/`
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/guides/`
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/troubleshooting/`
-- `/Users/artbox/Documents/Repos/audio-plugin-coder/.codex/templates/`
+- `.codex/skills/`
+- `.codex/rules/`
+- `.codex/guides/`
+- `.codex/troubleshooting/`
+- `.codex/templates/`
