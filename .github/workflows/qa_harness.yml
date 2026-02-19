@@ -91,6 +91,8 @@ jobs:
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json | tee qa_output/ci_phase_2_8_output_layout_mono_suite.log
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json | tee qa_output/ci_phase_2_8_output_layout_stereo_suite.log
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json | tee qa_output/ci_phase_2_8_output_layout_quad_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json | tee qa_output/ci_phase_2_10b_renderer_cpu_trend_48k_512_ch2.log
+          "${LOCUSQ_QA_BIN}" --spatial --sample-rate 48000 --block-size 512 --channels 4 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json | tee qa_output/ci_phase_2_10b_renderer_cpu_trend_48k_512_ch4.log
 
           # New 4-channel regression lanes.
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4 | tee qa_output/ci_renderer_spatial_output_quad4.log
@@ -109,6 +111,8 @@ jobs:
 
             "${LOCUSQ_QA_BIN}" --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_phase_2_6_full_system_48k_512_ch2.log
             "${LOCUSQ_QA_BIN}" --spatial --sample-rate 48000 --block-size 512 --channels 4 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_phase_2_6_full_system_48k_512_ch4.log
+            "${LOCUSQ_QA_BIN}" --spatial --sample-rate 96000 --block-size 512 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json | tee qa_output/ci_phase_2_10b_renderer_cpu_trend_96k_512_ch2.log
+            "${LOCUSQ_QA_BIN}" --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json | tee qa_output/ci_phase_2_10b_renderer_cpu_trend_96k_512_ch4.log
           fi
 
       - name: Verify QA result statuses

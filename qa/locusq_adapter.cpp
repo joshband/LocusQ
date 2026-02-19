@@ -13,14 +13,20 @@ enum class SnapshotMigrationMode
 {
     disabled,
     legacyStripLayoutMetadata,
+    forceMonoLayoutMetadata,
+    forceStereoLayoutMetadata,
     forceQuadLayoutMetadata
 };
 
 SnapshotMigrationMode decodeSnapshotMigrationMode(float normalized) noexcept
 {
-    if (normalized >= 0.67f)
+    if (normalized >= 0.875f)
         return SnapshotMigrationMode::forceQuadLayoutMetadata;
-    if (normalized >= 0.34f)
+    if (normalized >= 0.625f)
+        return SnapshotMigrationMode::forceStereoLayoutMetadata;
+    if (normalized >= 0.375f)
+        return SnapshotMigrationMode::forceMonoLayoutMetadata;
+    if (normalized >= 0.125f)
         return SnapshotMigrationMode::legacyStripLayoutMetadata;
     return SnapshotMigrationMode::disabled;
 }
@@ -45,6 +51,18 @@ bool rewritePluginSnapshotState(juce::MemoryBlock& stateBlock, SnapshotMigration
             stateTree.removeProperty("locusq_snapshot_schema", nullptr);
             stateTree.removeProperty("locusq_output_layout", nullptr);
             stateTree.removeProperty("locusq_output_channels", nullptr);
+            break;
+
+        case SnapshotMigrationMode::forceMonoLayoutMetadata:
+            stateTree.setProperty("locusq_snapshot_schema", "locusq-state-v2", nullptr);
+            stateTree.setProperty("locusq_output_layout", "mono", nullptr);
+            stateTree.setProperty("locusq_output_channels", 1, nullptr);
+            break;
+
+        case SnapshotMigrationMode::forceStereoLayoutMetadata:
+            stateTree.setProperty("locusq_snapshot_schema", "locusq-state-v2", nullptr);
+            stateTree.setProperty("locusq_output_layout", "stereo", nullptr);
+            stateTree.setProperty("locusq_output_channels", 2, nullptr);
             break;
 
         case SnapshotMigrationMode::forceQuadLayoutMetadata:

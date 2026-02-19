@@ -810,3 +810,118 @@ Artifacts:
 - `plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log`
 - `plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log`
 - `plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log`
+
+## Phase 2.10b Renderer CPU Trend Expansion Snapshot (UTC 2026-02-19)
+
+58. Build plugin + QA targets in local workspace for 2.10b trend matrix
+
+```sh
+cmake --build build_local --target LocusQ_VST3 locusq_qa -j 8
+```
+
+Result: `PASS`
+
+59. Draft high-emitter guardrail matrix (`16` emitters): `48k/512` + `96k/512`, `2ch` + `4ch`
+
+```sh
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 --channels 4 qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json
+```
+
+Result: `PASS` (all 4 runs)
+- `48k/512 ch2`: `perf_avg_block_time_ms=0.067616`, `perf_p95_block_time_ms=0.073208`, `perf_allocation_free=true`
+- `48k/512 ch4`: `perf_avg_block_time_ms=0.0717895`, `perf_p95_block_time_ms=0.0769191`, `perf_allocation_free=true`
+- `96k/512 ch2`: `perf_avg_block_time_ms=0.0678394`, `perf_p95_block_time_ms=0.074208`, `perf_allocation_free=true`
+- `96k/512 ch4`: `perf_avg_block_time_ms=0.0725433`, `perf_p95_block_time_ms=0.0794191`, `perf_allocation_free=true`
+
+60. Final-quality high-emitter guardrail matrix (`16` emitters): `48k/512` + `96k/512`, `2ch` + `4ch`
+
+```sh
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 --channels 4 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json
+```
+
+Result: `PASS` (all 4 runs)
+- `48k/512 ch2`: `perf_avg_block_time_ms=0.068104`, `perf_p95_block_time_ms=0.074083`, `perf_total_allocations=0`
+- `48k/512 ch4`: `perf_avg_block_time_ms=0.0715641`, `perf_p95_block_time_ms=0.0775831`, `perf_total_allocations=0`
+- `96k/512 ch2`: `perf_avg_block_time_ms=0.0675089`, `perf_p95_block_time_ms=0.076041`, `perf_total_allocations=0`
+- `96k/512 ch4`: `perf_avg_block_time_ms=0.0717689`, `perf_p95_block_time_ms=0.0775861`, `perf_total_allocations=0`
+
+61. 2.10b trend-suite matrix (`48k/512` + `96k/512`, `2ch` + `4ch`)
+
+```sh
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 --channels 4 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL` in each run)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_build_phase_2_10b_renderer_cpu_trend_20260219T202603Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch2_phase_2_10b_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch4_phase_2_10b_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch2_phase_2_10b_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch4_phase_2_10b_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch2_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch4_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch2_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch4_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch2_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch4_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch2_20260219T202524Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch4_20260219T202524Z.log`
+
+## Phase 2.11b Snapshot Migration Matrix Expansion Snapshot (UTC 2026-02-19)
+
+62. Reconfigure local QA build for standalone `LocusQ` repo path
+
+```sh
+cmake -S . -B build -DBUILD_LOCUSQ_QA=ON -DJUCE_DIR=/Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE -DQA_HARNESS_DIR=/Users/artbox/Documents/Repos/audio-dsp-qa-harness -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+```
+
+Result: `PASS`
+
+63. Rebuild `locusq_qa` after snapshot-migration matrix mode expansion
+
+```sh
+cmake --build build --target locusq_qa -j 1
+```
+
+Result: `PASS`
+
+64. Run mono runtime migration suite (`2.11b`)
+
+```sh
+./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json
+```
+
+Result: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+
+65. Run stereo runtime migration suite (`2.11b`)
+
+```sh
+./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json
+```
+
+Result: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+
+66. Run quad runtime migration suite (`2.11b`)
+
+```sh
+./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json
+```
+
+Result: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_configure_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log`

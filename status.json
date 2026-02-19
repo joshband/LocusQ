@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-19T19:53:20Z",
+  "last_modified": "2026-02-19T20:31:15Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -173,6 +173,18 @@
       "status": "complete",
       "completed_at": "2026-02-19T19:53:20Z",
       "notes": "Snapshot/preset compatibility hardening landed: snapshot layout schema metadata persisted + restore-time migration for legacy/mismatched layout payloads, emitter preset schema v2 added with v1 compatibility, and dedicated stereo/quad migration QA checks pass."
+    },
+    {
+      "phase": "implementation_phase_2_10b_renderer_cpu_trend_expansion",
+      "status": "complete",
+      "completed_at": "2026-02-19T20:26:03Z",
+      "notes": "Renderer guardrail trend coverage expanded with final-quality high-emitter stress and a rollup suite across 48k/512 and 96k/512 in both 2ch/4ch runtime modes; all runs are deadline-safe and allocation-free."
+    },
+    {
+      "phase": "implementation_phase_2_11b_snapshot_migration_matrix_expansion",
+      "status": "complete",
+      "completed_at": "2026-02-19T20:27:42Z",
+      "notes": "Expanded snapshot migration QA matrix coverage across mono/stereo/quad runtime layouts by adding explicit metadata-forcing modes (mono/stereo/quad + legacy strip), new mismatch scenarios, and dedicated 1ch/2ch/4ch suite passes."
     }
   ],
   "validation": {
@@ -423,7 +435,7 @@
         "plugins/LocusQ/TestEvidence/build-summary.md",
         "plugins/LocusQ/TestEvidence/validation-trend.md"
       ],
-      "last_sync": "2026-02-19T19:46:11Z"
+      "last_sync": "2026-02-19T20:31:15Z"
     },
     "implementation_phase_2_7d_started": true,
     "implementation_phase_2_7d_tasks_complete": true,
@@ -527,12 +539,36 @@
     "implementation_phase_2_10_high_emitter_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_20260219T194552Z.log",
     "implementation_phase_2_10_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log",
     "implementation_phase_2_10_smoke_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log",
+    "implementation_phase_2_10b_started": true,
+    "implementation_phase_2_10b_tasks_complete": true,
+    "implementation_phase_2_10b_status_note": "Renderer CPU trend coverage now includes final-quality high-emitter stress and rollup-suite matrix runs at 48k/512 + 96k/512 in 2ch/4ch; all runs pass deadline and allocation-free gates.",
+    "implementation_phase_2_10b_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_10b_renderer_cpu_trend_20260219T202603Z.log",
+    "implementation_phase_2_10b_draft_48k512_ch2_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch2_phase_2_10b_20260219T202524Z.log",
+    "implementation_phase_2_10b_draft_48k512_ch4_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch4_phase_2_10b_20260219T202524Z.log",
+    "implementation_phase_2_10b_draft_96k512_ch2_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch2_phase_2_10b_20260219T202524Z.log",
+    "implementation_phase_2_10b_draft_96k512_ch4_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch4_phase_2_10b_20260219T202524Z.log",
+    "implementation_phase_2_10b_final_48k512_ch2_log": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch2_20260219T202524Z.log",
+    "implementation_phase_2_10b_final_48k512_ch4_log": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch4_20260219T202524Z.log",
+    "implementation_phase_2_10b_final_96k512_ch2_log": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch2_20260219T202524Z.log",
+    "implementation_phase_2_10b_final_96k512_ch4_log": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch4_20260219T202524Z.log",
+    "implementation_phase_2_10b_suite_48k512_ch2_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch2_20260219T202524Z.log",
+    "implementation_phase_2_10b_suite_48k512_ch4_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch4_20260219T202524Z.log",
+    "implementation_phase_2_10b_suite_96k512_ch2_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch2_20260219T202524Z.log",
+    "implementation_phase_2_10b_suite_96k512_ch4_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch4_20260219T202524Z.log",
     "implementation_phase_2_11_started": true,
     "implementation_phase_2_11_tasks_complete": true,
     "implementation_phase_2_11_status_note": "Snapshot and preset compatibility now includes output-layout schema metadata persistence, restore-time migration for legacy/mismatched layouts, and QA migration checks in stereo + quad runtime paths.",
     "implementation_phase_2_11_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log",
     "implementation_phase_2_11_suite_stereo_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log",
-    "implementation_phase_2_11_legacy_quad4_log": "plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log"
+    "implementation_phase_2_11_legacy_quad4_log": "plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log",
+    "implementation_phase_2_11b_started": true,
+    "implementation_phase_2_11b_tasks_complete": true,
+    "implementation_phase_2_11b_status_note": "Snapshot migration emulation now spans legacy-strip plus forced mono/stereo/quad metadata, and dedicated mono/stereo/quad runtime matrix suites all pass for layout-mismatch state-roundtrip coverage.",
+    "implementation_phase_2_11b_configure_log": "plugins/LocusQ/TestEvidence/locusq_configure_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log",
+    "implementation_phase_2_11b_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log",
+    "implementation_phase_2_11b_mono_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log",
+    "implementation_phase_2_11b_stereo_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log",
+    "implementation_phase_2_11b_quad_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log"
   },
   "framework_selection": {
     "decision": "webview",
@@ -662,10 +698,32 @@
       "guardrail_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log",
       "smoke_suite": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log"
     },
+    "phase_2_10b_renderer_cpu_trend": {
+      "build": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_10b_renderer_cpu_trend_20260219T202603Z.log",
+      "draft_48k512_ch2": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch2_phase_2_10b_20260219T202524Z.log",
+      "draft_48k512_ch4": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch4_phase_2_10b_20260219T202524Z.log",
+      "draft_96k512_ch2": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch2_phase_2_10b_20260219T202524Z.log",
+      "draft_96k512_ch4": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch4_phase_2_10b_20260219T202524Z.log",
+      "final_48k512_ch2": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch2_20260219T202524Z.log",
+      "final_48k512_ch4": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch4_20260219T202524Z.log",
+      "final_96k512_ch2": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch2_20260219T202524Z.log",
+      "final_96k512_ch4": "plugins/LocusQ/TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch4_20260219T202524Z.log",
+      "suite_48k512_ch2": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch2_20260219T202524Z.log",
+      "suite_48k512_ch4": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch4_20260219T202524Z.log",
+      "suite_96k512_ch2": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch2_20260219T202524Z.log",
+      "suite_96k512_ch4": "plugins/LocusQ/TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch4_20260219T202524Z.log"
+    },
     "phase_2_11_snapshot_migration": {
       "qa_build": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log",
       "suite_stereo": "plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log",
       "legacy_quad4": "plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log"
+    },
+    "phase_2_11b_snapshot_migration_matrix": {
+      "configure": "plugins/LocusQ/TestEvidence/locusq_configure_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log",
+      "qa_build": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log",
+      "mono_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log",
+      "stereo_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log",
+      "quad_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log"
     }
   },
   "distribution": {

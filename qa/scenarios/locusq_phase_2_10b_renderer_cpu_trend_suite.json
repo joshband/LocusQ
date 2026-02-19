@@ -1,0 +1,14 @@
+{
+  "id": "locusq_phase_2_10b_renderer_cpu_trend_suite",
+  "name": "LocusQ Phase 2.10b Renderer CPU Trend Suite",
+  "description": "Renderer CPU guardrail trend suite: baseline full-system gate plus draft/final-quality 16-emitter stress scenarios.",
+  "scenario_ids": [
+    "locusq_26_full_system_cpu_draft",
+    "locusq_29_renderer_guardrail_high_emitters",
+    "locusq_210b_renderer_guardrail_high_emitters_final_quality"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_10b_renderer_cpu_trend"
+  }
+}

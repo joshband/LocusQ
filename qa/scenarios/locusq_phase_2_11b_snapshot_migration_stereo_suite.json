@@ -1,0 +1,14 @@
+{
+  "id": "locusq_phase_2_11b_snapshot_migration_stereo_suite",
+  "name": "LocusQ Phase 2.11b Snapshot Migration Stereo Suite",
+  "description": "Layout-aware snapshot migration matrix coverage in stereo runtime mode.",
+  "scenario_ids": [
+    "locusq_211_snapshot_migration_legacy_layout",
+    "locusq_211_snapshot_migration_layout_mismatch_stereo"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_11b_snapshot_migration_stereo",
+    "num_channels": "2"
+  }
+}

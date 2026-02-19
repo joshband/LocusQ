@@ -1,9 +1,9 @@
 {
   "scenario_version": "1.0",
-  "id": "locusq_211_snapshot_migration_legacy_layout",
-  "name": "LocusQ 2.11 Snapshot Migration (Legacy Layout Metadata)",
+  "id": "locusq_211_snapshot_migration_layout_mismatch_mono_runtime",
+  "name": "LocusQ 2.11b Snapshot Migration (Layout Mismatch Mono Runtime)",
   "category": "stability",
-  "description": "State-roundtrip checkpoint must pass when legacy snapshots omit layout metadata and require migration on restore.",
+  "description": "State-roundtrip checkpoint must pass when snapshot metadata reports stereo layout but runtime executes in mono mode.",
 
   "capability_requirements": {
     "required_effect_types": ["SPATIAL"],
@@ -22,7 +22,7 @@
 
   "parameter_variations": {
     "qa_emitter_instances": 0.4286,
-    "qa_snapshot_migration_mode": 0.25,
+    "qa_snapshot_migration_mode": 0.75,
     "pos_azimuth": 0.50,
     "pos_elevation": 0.50,
     "pos_distance": 0.18,
@@ -83,5 +83,5 @@
     }
   },
 
-  "pass_criteria": "All hard_fail invariants must pass with state roundtrip active under legacy snapshot layout metadata migration."
+  "pass_criteria": "All hard_fail invariants must pass with state roundtrip active under forced stereo-to-mono layout mismatch metadata."
 }

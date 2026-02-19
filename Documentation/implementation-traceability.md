@@ -30,6 +30,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.9: QA/CI harness expansion for quad matrix + seeded pluginval stress
 - Phase 2.10: Renderer CPU guardrails (activity culling + high-emitter budget protection)
 - Phase 2.11: Preset/snapshot layout compatibility hardening (metadata versioning + migration checks)
+- Phase 2.11b: Snapshot migration matrix expansion (mono/stereo/quad runtime suites + extended metadata emulation modes)
 - Reference: `.ideas/plan.md`
 
 ## Phase 2.4 Parameter Mapping
@@ -273,6 +274,37 @@ This document tracks end-to-end parameter wiring for implementation phases compl
   - Guardrail suite rollup: `TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
   - Smoke regression: `TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log` (`PASS`, `4 PASS / 0 WARN / 0 FAIL`)
 
+## Phase 2.10b Renderer CPU Trend Expansion Coverage
+
+- Trend scenario/suite additions:
+  - `qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`
+  - `qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`
+  - `locusq_phase_2_10b_renderer_cpu_trend_suite` rolls up:
+    - `locusq_26_full_system_cpu_draft`
+    - `locusq_29_renderer_guardrail_high_emitters`
+    - `locusq_210b_renderer_guardrail_high_emitters_final_quality`
+- CI matrix expansion:
+  - `.github/workflows/qa_harness.yml` (`qa-critical`) now runs `phase_2_10b_renderer_cpu_trend_suite` at:
+    - `48k/512` in `2ch` and `4ch`
+    - `96k/512` in `2ch` and `4ch` (macOS lane)
+- Focused non-manual verification (UTC 2026-02-19):
+  - Build refresh: `TestEvidence/locusq_build_phase_2_10b_renderer_cpu_trend_20260219T202603Z.log` (`PASS`)
+  - Draft high-emitter matrix (`16` emitters):
+    - `TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch2_phase_2_10b_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.067616`, `perf_p95_block_time_ms=0.073208`, `perf_allocation_free=true`)
+    - `TestEvidence/locusq_29_renderer_guardrail_high_emitters_48k512_ch4_phase_2_10b_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.0717895`, `perf_p95_block_time_ms=0.0769191`, `perf_allocation_free=true`)
+    - `TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch2_phase_2_10b_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.0678394`, `perf_p95_block_time_ms=0.074208`, `perf_allocation_free=true`)
+    - `TestEvidence/locusq_29_renderer_guardrail_high_emitters_96k512_ch4_phase_2_10b_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.0725433`, `perf_p95_block_time_ms=0.0794191`, `perf_allocation_free=true`)
+  - Final-quality high-emitter matrix (`16` emitters):
+    - `TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch2_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.068104`, `perf_p95_block_time_ms=0.074083`, `perf_total_allocations=0`)
+    - `TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_48k512_ch4_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.0715641`, `perf_p95_block_time_ms=0.0775831`, `perf_total_allocations=0`)
+    - `TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch2_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.0675089`, `perf_p95_block_time_ms=0.076041`, `perf_total_allocations=0`)
+    - `TestEvidence/locusq_210b_renderer_guardrail_high_emitters_final_quality_96k512_ch4_20260219T202524Z.log` (`PASS`, `perf_avg_block_time_ms=0.0717689`, `perf_p95_block_time_ms=0.0775861`, `perf_total_allocations=0`)
+  - Trend suite matrix:
+    - `TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch2_20260219T202524Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`)
+    - `TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_48k512_ch4_20260219T202524Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`)
+    - `TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch2_20260219T202524Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`)
+    - `TestEvidence/locusq_phase_2_10b_renderer_cpu_trend_suite_96k512_ch4_20260219T202524Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`)
+
 ## Phase 2.11 Preset/Snapshot Layout Compatibility Coverage
 
 - Host-snapshot metadata + migration:
@@ -287,16 +319,30 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - QA migration emulation + scenarios:
   - `qa/locusq_adapter.h` / `qa/locusq_adapter.cpp` adds `qa_snapshot_migration_mode` for state-roundtrip mutation modes:
     - `0.0` passthrough
-    - `0.5` strip snapshot layout metadata (legacy emulation)
-    - `1.0` force quad layout metadata (layout mismatch emulation)
-  - New scenarios/suite:
+    - `0.25` strip snapshot layout metadata (legacy emulation)
+    - `0.5` force mono layout metadata
+    - `0.75` force stereo layout metadata
+    - `1.0` force quad layout metadata
+  - New scenarios/suites:
     - `qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json`
     - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_stereo.json`
     - `qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`
+    - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_mono_runtime.json`
+    - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_quad_runtime.json`
+    - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`
+    - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`
+    - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`
 - Focused non-manual verification (UTC 2026-02-19):
   - QA build: `TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log` (`PASS`)
   - Stereo migration suite: `TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
   - Quad legacy migration scenario: `TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log` (`PASS`)
+  - Matrix configure + QA build refresh:
+    - `TestEvidence/locusq_configure_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log` (`PASS`)
+    - `TestEvidence/locusq_qa_build_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log` (`PASS`)
+  - Matrix suites:
+    - `TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
+    - `TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
+    - `TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
 
 ## Notes
 

@@ -190,6 +190,11 @@ All notable changes to LocusQ are documented here.
   - Added per-block emitter priority budget + activity culling in renderer hot path.
   - Added scene-state guardrail telemetry (`rendererEligibleEmitters`, `rendererProcessedEmitters`, `rendererCulledBudget`, `rendererCulledActivity`, `rendererGuardrailActive`).
   - Expanded QA spatial emitter ceiling to `16` and remapped existing normalized values to preserve prior baseline counts.
+- Renderer CPU trend expansion (`2.10b`) aligned:
+  - `qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`
+  - `qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`
+  - `.github/workflows/qa_harness.yml`
+  - Added final-quality high-emitter stress coverage and trend-suite rollups across `48k/512` + `96k/512`, `2ch/4ch`, with matching CI matrix lanes in `qa-critical`.
 - Preset/snapshot layout compatibility hardening aligned:
   - `Source/PluginProcessor.h`
   - `Source/PluginProcessor.cpp`
@@ -201,6 +206,16 @@ All notable changes to LocusQ are documented here.
   - Snapshot state now persists output-layout schema metadata and applies restore-time migration for legacy/mismatched layout payloads.
   - Emitter preset schema now supports `locusq-emitter-preset-v2` with optional layout block while retaining `v1` compatibility.
   - Added state-roundtrip migration QA modes to emulate legacy metadata stripping and forced layout mismatches.
+- Snapshot migration matrix expansion (`2.11b`) aligned:
+  - `qa/locusq_adapter.h`
+  - `qa/locusq_adapter.cpp`
+  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_mono_runtime.json`
+  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_quad_runtime.json`
+  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`
+  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`
+  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`
+  - Expanded snapshot-migration emulation to five deterministic modes (`off`, `legacy-strip`, `force-mono`, `force-stereo`, `force-quad`).
+  - Added explicit mono/stereo/quad runtime suite coverage for layout mismatch migration checks.
 
 ### Validation Snapshot (2026-02-19 UTC)
 
@@ -260,7 +275,18 @@ All notable changes to LocusQ are documented here.
   - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json --sample-rate 48000 --block-size 512`: `PASS` (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)
   - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json --sample-rate 48000 --block-size 512`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
   - `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+- Renderer CPU trend expansion (`2.10b`) validation snapshot:
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`: `PASS` (`perf_avg_block_time_ms=0.068104`, `perf_p95_block_time_ms=0.074083`, `perf_total_allocations=0`)
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`: `PASS` (`perf_avg_block_time_ms=0.0717689`, `perf_p95_block_time_ms=0.0775861`, `perf_total_allocations=0`)
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
 - Preset/snapshot migration validation snapshot:
   - `cmake --build build --target locusq_qa -j 1`: `PASS`
   - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
   - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json --channels 4`: `PASS`
+- Snapshot migration matrix expansion (`2.11b`) validation snapshot:
+  - `cmake -S . -B build -DBUILD_LOCUSQ_QA=ON -DJUCE_DIR=/Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE -DQA_HARNESS_DIR=/Users/artbox/Documents/Repos/audio-dsp-qa-harness -DCMAKE_POLICY_VERSION_MINIMUM=3.5`: `PASS`
+  - `cmake --build build --target locusq_qa -j 1`: `PASS`
+  - `./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+  - `./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+  - `./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)

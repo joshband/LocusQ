@@ -1,0 +1,14 @@
+{
+  "id": "locusq_phase_2_11b_snapshot_migration_quad_suite",
+  "name": "LocusQ Phase 2.11b Snapshot Migration Quad Suite",
+  "description": "Layout-aware snapshot migration matrix coverage in quad runtime mode.",
+  "scenario_ids": [
+    "locusq_211_snapshot_migration_legacy_layout",
+    "locusq_211_snapshot_migration_layout_mismatch_quad_runtime"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_11b_snapshot_migration_quad",
+    "num_channels": "4"
+  }
+}

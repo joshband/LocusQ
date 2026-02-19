@@ -20,6 +20,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Quad channel routing is now explicit and deterministic (`FL, FR, RL, RR` host order from internal `FL, FR, RR, RL` speaker order).
 - CI harness coverage now includes explicit 4-channel QA matrix lanes and a seeded `pluginval` stress lane (macOS workflow job).
 - Renderer CPU guardrails are in place: per-block emitter budgeting + activity culling now keep high-emitter loads bounded and allocation-free in QA stress runs.
+- Renderer CPU trend matrix expansion (`2.10b`) is in place: draft/final high-emitter guardrail paths now have automated `48k/512` + `96k/512`, `2ch/4ch` validation lanes.
 - Preset/snapshot compatibility hardening is in place: host snapshots now persist output-layout schema metadata and restore through layout-aware migration checks.
 
 ### What is still open
@@ -57,7 +58,9 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Renderer channel-order mapping is explicit (`rendererQuadMap: [0,1,3,2]`) and surfaced in scene-state telemetry.
 - CI expansion (`2.9`): `qa-critical` now runs explicit quad matrix scenarios and `qa-pluginval-seeded-stress` runs deterministic strictness-5 seed sweeps (`0x2a331c6`..`0x2a331ca`).
 - Renderer CPU polish (`2.10`): renderer now enforces an 8-emitter per-block priority budget with silence culling and exposes guardrail telemetry (`rendererEligibleEmitters`, `rendererProcessedEmitters`, `rendererCulledBudget`, `rendererCulledActivity`, `rendererGuardrailActive`).
+- Renderer CPU trend expansion (`2.10b`): new final-quality high-emitter stress scenario + rollup suite pass across `48k/512` and `96k/512` in both `2ch` and `4ch`; CI `qa-critical` now includes equivalent matrix lanes.
 - Preset/snapshot compatibility hardening (`2.11`): host snapshots persist layout metadata (`locusq_snapshot_schema`, `locusq_output_layout`, `locusq_output_channels`), restore applies layout-safe migration for calibration speaker maps, and preset schema now supports `locusq-emitter-preset-v2` with backward-compatible `v1` load.
+- Snapshot migration matrix expansion (`2.11b`): `qa_snapshot_migration_mode` now supports legacy-strip + forced mono/stereo/quad metadata, with dedicated mono/stereo/quad runtime suites passing.
 - Phase 2.7 UI interaction smoke matrix (`/test`): `PASS_WITH_WARNING` with trend deltas published
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 
@@ -70,6 +73,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Phase 2.4 physics engine completed with acceptance closure evidence.
 - Phase 2.5 room acoustics + advanced DSP completed (acceptance suite pass with warning trend).
 - Phase 2.6 implemented items: timeline runtime, keyframe editor interactions, preset persistence, and perf telemetry.
+- Phase 2.11b snapshot migration matrix expansion completed (new mono/stereo/quad runtime suites all pass).
 - Ship phase completed (local macOS universal package).
 - Post-ship integration recovery (`2.7a`) started; bootstrap resiliency patch applied.
 - Post-ship integration recovery (`2.7b`) implemented for viewport movement and calibration visualization pathing.
@@ -95,8 +99,10 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - CI harness definition refresh: `PASS` (workflow now includes quad matrix + seeded `pluginval` stress jobs; first GitHub Actions run pending)
 - Renderer CPU guardrail stress (`locusq_29_renderer_guardrail_high_emitters`, 16 emitters): `PASS` (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)
 - Renderer CPU guardrail suite (`locusq_phase_2_9_renderer_cpu_suite`): `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+- Renderer CPU trend suite (`locusq_phase_2_10b_renderer_cpu_trend_suite`): `PASS` in `48k/512` + `96k/512` and `2ch` + `4ch` (`3 PASS / 0 WARN / 0 FAIL` in each run)
 - Snapshot migration suite (`locusq_phase_2_11_snapshot_migration_suite`, stereo): `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
 - Snapshot migration legacy-layout scenario (`locusq_211_snapshot_migration_legacy_layout`, quad): `PASS`
+- Snapshot migration matrix suites (`2.11b`): `PASS` (`locusq_phase_2_11b_snapshot_migration_mono_suite`, `locusq_phase_2_11b_snapshot_migration_stereo_suite`, `locusq_phase_2_11b_snapshot_migration_quad_suite`; each `2 PASS / 0 WARN / 0 FAIL`)
 - UI interaction smoke matrix refresh: `PASS_WITH_WARNING`; trend deltas published to `qa_output/suite_result.json`
 
 ## Distribution Snapshot

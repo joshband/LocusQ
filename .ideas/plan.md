@@ -315,6 +315,24 @@ Status note (2026-02-19): Renderer now preselects emitters by predicted priority
 
 ---
 
+## Phase 2.10b: Renderer CPU Trend Expansion (Non-Manual Track)
+**Goal:** Expand automated guardrail trend coverage across quality/sample-rate/channel combinations without changing renderer invariants.
+
+### Tasks
+- [x] Add dedicated final-quality high-emitter stress scenario (`qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`).
+- [x] Add trend rollup suite including baseline + draft/high-emitter + final/high-emitter paths (`qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`).
+- [x] Extend CI critical matrix to run `2.10b` trend suite at `48k/512` and `96k/512` in both `2ch` and `4ch` (`.github/workflows/qa_harness.yml`).
+- [x] Capture non-manual local evidence for `2.10b` matrix and publish to `TestEvidence` + `status.json`.
+
+Status note (2026-02-19): Phase 2.10b trend expansion is green. New final-quality high-emitter stress and the 2.10b trend suite both pass across `48k/512` + `96k/512` and `2ch` + `4ch`, with deadline-safe and allocation-free metrics in all runs. CI `qa-critical` now includes the same 2.10b matrix lanes.
+
+### Acceptance Criteria
+- [x] `locusq_210b_renderer_guardrail_high_emitters_final_quality` passes in `48k/512` and `96k/512` for `2ch` and `4ch`.
+- [x] `locusq_phase_2_10b_renderer_cpu_trend_suite` passes in `48k/512` and `96k/512` for `2ch` and `4ch`.
+- [x] `qa_harness.yml` includes explicit `2.10b` trend matrix lanes (`48k/512` + `96k/512`, `2ch` + `4ch`).
+
+---
+
 ## Phase 2.11: Preset/Snapshot Layout Compatibility Hardening (Non-Manual Track)
 **Goal:** Harden preset + host snapshot compatibility by adding layout-aware state metadata and deterministic migration checks for legacy/mismatched layout payloads.
 
@@ -334,6 +352,35 @@ Status note (2026-02-19): Snapshot metadata + migration hardening landed in `Sou
 - [x] `locusq_qa` build passes with snapshot migration hardening (`TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log`).
 - [x] `locusq_phase_2_11_snapshot_migration_suite` passes in stereo runtime (`2 PASS / 0 WARN / 0 FAIL`).
 - [x] `locusq_211_snapshot_migration_legacy_layout` passes in quad runtime mode (`--channels 4`).
+
+---
+
+## Phase 2.11b: Snapshot Migration Matrix Expansion (Non-Manual Track)
+**Goal:** Expand layout-migration QA from point checks to a mono/stereo/quad matrix with explicit metadata-forcing modes.
+
+### Tasks
+- [x] Expand `qa_snapshot_migration_mode` emulation in `qa/locusq_adapter.cpp` / `qa/locusq_adapter.h`:
+  - `0.0` passthrough
+  - `0.25` legacy-strip metadata
+  - `0.5` force mono metadata
+  - `0.75` force stereo metadata
+  - `1.0` force quad metadata
+- [x] Add runtime-mismatch scenarios for missing matrix corners:
+  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_mono_runtime.json`
+  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_quad_runtime.json`
+- [x] Add per-layout migration suites:
+  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`
+  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`
+  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`
+- [x] Validate `state_roundtrip` migration behavior across `1ch/2ch/4ch` runtime output modes.
+
+Status note (2026-02-19): Snapshot migration emulation now covers legacy-strip plus forced mono/stereo/quad metadata injections in `qa/locusq_adapter.cpp`, and dedicated mono/stereo/quad matrix suites now pass with deterministic evidence: `locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log`, `locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log`, and `locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log` (all `2 PASS / 0 WARN / 0 FAIL`).
+
+### Acceptance Criteria
+- [x] `locusq_qa` rebuild passes after adapter migration-mode expansion (`TestEvidence/locusq_qa_build_phase_2_11b_snapshot_migration_matrix_20260219T202551Z.log`).
+- [x] Mono runtime migration suite passes (`locusq_phase_2_11b_snapshot_migration_mono_suite`, `2 PASS / 0 WARN / 0 FAIL`).
+- [x] Stereo runtime migration suite passes (`locusq_phase_2_11b_snapshot_migration_stereo_suite`, `2 PASS / 0 WARN / 0 FAIL`).
+- [x] Quad runtime migration suite passes (`locusq_phase_2_11b_snapshot_migration_quad_suite`, `2 PASS / 0 WARN / 0 FAIL`).
 
 ---
 

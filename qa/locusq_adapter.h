@@ -113,7 +113,9 @@ private:
  *   30: anim_speed           (0.1..10.0)
  *   31: anim_sync            (bool: >0.5 = transport sync)
  *   32: qa_emitter_instances (1..16 emitters)
- *   33: qa_snapshot_migration_mode (0=off, 0.5=legacy-strip, 1.0=force-quad-layout-metadata)
+ *   33: qa_snapshot_migration_mode
+ *       (0=off, 0.25=legacy-strip, 0.5=force-mono-layout-metadata,
+ *        0.75=force-stereo-layout-metadata, 1.0=force-quad-layout-metadata)
  */
 class LocusQSpatialAdapter : public ::qa::DspUnderTest
 {
