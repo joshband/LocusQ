@@ -34,8 +34,9 @@ jobs:
       - name: Checkout QA harness
         uses: actions/checkout@v4
         with:
-          repository: Noizefield/audio-dsp-qa-harness
+          repository: joshband/audio-dsp-qa-harness
           path: audio-dsp-qa-harness
+          token: ${{ secrets.SUBMODULE_TOKEN != '' && secrets.SUBMODULE_TOKEN || github.token }}
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -283,8 +284,9 @@ jobs:
       - name: Checkout QA harness
         uses: actions/checkout@v4
         with:
-          repository: Noizefield/audio-dsp-qa-harness
+          repository: joshband/audio-dsp-qa-harness
           path: audio-dsp-qa-harness
+          token: ${{ secrets.SUBMODULE_TOKEN != '' && secrets.SUBMODULE_TOKEN || github.token }}
 
       - name: Install Linux dependencies
         run: |
