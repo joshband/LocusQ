@@ -65,6 +65,9 @@ All notable changes to LocusQ are documented here.
   - `plugins/LocusQ/TestEvidence/locusq_build_phase_2_7c_vst3.log`
   - `plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7c_js_check.log`
   - `plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7c.log`
+- Standalone UI automation smoke runner (macOS):
+  - `scripts/standalone-ui-smoke-mac.sh`
+  - Captures screenshot deltas and publishes `TestEvidence/standalone_ui_smoke_<timestamp>/summary.tsv`
 
 ### Changed
 

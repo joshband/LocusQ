@@ -157,6 +157,8 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-19T21:26:13Z | Bridge-fix host validation (skip GUI) | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3` | PASS (`exit 0`) |
 | 2026-02-19T21:31:42Z | Bridge-fix host validation (with editor automation) | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3` | PASS (`Editor Automation` completed; `SUCCESS`) |
 | 2026-02-19T21:32:12Z | Bridge-fix matrix publication | `updated plugins/LocusQ/qa_output/suite_result.json + plugins/LocusQ/TestEvidence/test-summary.md + plugins/LocusQ/status.json` | PASS_WITH_WARNING (`manual DAW checklist rerun still pending`) |
+| 2026-02-19T22:00:36Z | Standalone UI smoke automation (macOS) initial run | `./scripts/standalone-ui-smoke-mac.sh` | BLOCKED (`osascript` assistive access denied: `-25211`) |
+| 2026-02-19T22:01:02Z | Standalone UI smoke automation permission-gate check | `./scripts/standalone-ui-smoke-mac.sh` | BLOCKED (fails fast with explicit Accessibility prerequisite message) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

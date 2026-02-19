@@ -136,6 +136,20 @@ See:
 - Verify viewport drag in Cartesian mode in-host (confirm APVTS writeback/persistence and no snapback under DAW WebView input routing).
 - Verify calibration `START/ABORT` and profile-ready lifecycle against real host audio routing.
 
+## Standalone UI Automation (macOS)
+
+- A scripted standalone UI smoke runner is available at `scripts/standalone-ui-smoke-mac.sh`.
+- What it does: launches `LocusQ.app`, forces deterministic window geometry, performs click/text interactions, captures before/after screenshots, and emits a pass/fail matrix (`summary.tsv`) based on visual delta thresholds.
+- Run:
+  - `cd /Users/artbox/Documents/Repos/LocusQ`
+  - `./scripts/standalone-ui-smoke-mac.sh`
+  - Optional explicit app path: `./scripts/standalone-ui-smoke-mac.sh /path/to/LocusQ.app`
+- Output:
+  - `TestEvidence/standalone_ui_smoke_<timestamp>/summary.tsv`
+  - `TestEvidence/standalone_ui_smoke_<timestamp>/*_before.png`
+  - `TestEvidence/standalone_ui_smoke_<timestamp>/*_after.png`
+- Prerequisite: macOS Accessibility permission must be enabled for your terminal app and `/usr/bin/osascript` (`System Settings -> Privacy & Security -> Accessibility`).
+
 ## Canonical Documentation
 
 - Plan: `.ideas/plan.md`
