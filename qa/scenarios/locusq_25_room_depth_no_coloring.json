@@ -27,7 +27,7 @@
     "pos_distance": 0.08,
     "emit_gain": 0.5,
     "emit_mute": 0.0,
-    "rend_master_gain": 0.5,
+    "rend_master_gain": 0.55,
     "rend_distance_model": 0.0,
     "rend_air_absorb": 0.0,
     "rend_room_enable": 1.0,
