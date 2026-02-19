@@ -28,6 +28,8 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.7e: Pluginval automation stability guard for mode-transition scene registration
 - Phase 2.8: Output layout expansion groundwork (mono/stereo/quad bus-layout acceptance)
 - Phase 2.9: QA/CI harness expansion for quad matrix + seeded pluginval stress
+- Phase 2.10: Renderer CPU guardrails (activity culling + high-emitter budget protection)
+- Phase 2.11: Preset/snapshot layout compatibility hardening (metadata versioning + migration checks)
 - Reference: `.ideas/plan.md`
 
 ## Phase 2.4 Parameter Mapping
@@ -235,6 +237,66 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Result gating:
   - Existing `result.json` pass/warn/skip gating remains active.
   - Seeded pluginval lane fails CI on any non-zero seed exit.
+
+## Phase 2.10 Renderer CPU Guardrail Coverage
+
+- Renderer hot-path guardrails:
+  - `Source/SpatialRenderer.h` now performs a two-pass render:
+    - pass 1: select top-priority emitters by `emit_gain * distance attenuation` under a hard per-block budget (`MAX_RENDER_EMITTERS_PER_BLOCK = 8`)
+    - pass 2: process selected emitters only, with near-silent activity culling (`ACTIVITY_PEAK_GATE_LINEAR`) before expensive spatial stages
+  - Per-block guardrail stats are captured in atomics for non-audio telemetry reads:
+    - `lastEligibleEmitterCount`
+    - `lastProcessedEmitterCount`
+    - `lastBudgetCulledEmitterCount`
+    - `lastActivityCulledEmitterCount`
+    - `lastGuardrailActive`
+- Scene-state telemetry surfacing:
+  - `Source/PluginProcessor.cpp` (`getSceneStateJSON`) now includes:
+    - `rendererEligibleEmitters`
+    - `rendererProcessedEmitters`
+    - `rendererCulledBudget`
+    - `rendererCulledActivity`
+    - `rendererGuardrailActive`
+- QA harness high-emitter coverage:
+  - `qa/locusq_adapter.h` / `qa/locusq_adapter.cpp` expands `qa_emitter_instances` ceiling from `8` to `16`.
+  - Existing scenario normalized values were remapped to preserve previous emitter counts:
+    - `qa/scenarios/locusq_26_full_system_cpu_draft.json` (`8` emitters preserved)
+    - `qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json` (`5` emitters preserved)
+  - New focused guardrail scenario:
+    - `qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json` (`16` emitters stress)
+  - New rollup suite:
+    - `qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json`
+- Focused non-manual verification (UTC 2026-02-19):
+  - Build refresh: `TestEvidence/locusq_build_phase_2_9_renderer_cpu_guard_20260219T194552Z.log` (`PASS`)
+  - Baseline CPU gate (`8` emitters): `TestEvidence/locusq_26_full_system_cpu_draft_phase_2_9_guardrail_20260219T194552Z.log` (`PASS`, `perf_avg_block_time_ms=0.304505`, `perf_p95_block_time_ms=0.323633`, `perf_allocation_free=true`)
+  - High-emitter guardrail (`16` emitters): `TestEvidence/locusq_29_renderer_guardrail_high_emitters_20260219T194552Z.log` (`PASS`, `perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)
+  - Guardrail suite rollup: `TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
+  - Smoke regression: `TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log` (`PASS`, `4 PASS / 0 WARN / 0 FAIL`)
+
+## Phase 2.11 Preset/Snapshot Layout Compatibility Coverage
+
+- Host-snapshot metadata + migration:
+  - `Source/PluginProcessor.cpp` (`getStateInformation`) now persists:
+    - `locusq_snapshot_schema` (`locusq-state-v2`)
+    - `locusq_output_layout`
+    - `locusq_output_channels`
+  - `Source/PluginProcessor.cpp` (`setStateInformation`) now applies `migrateSnapshotLayoutIfNeeded` after restore to remap calibration speaker outputs for legacy/mismatched layout snapshots.
+- Preset schema hardening:
+  - `Source/PluginProcessor.cpp` (`buildEmitterPresetLocked`) now writes `schema=locusq-emitter-preset-v2` with `layout` payload (`outputLayout`, `outputChannels`).
+  - `Source/PluginProcessor.cpp` (`applyEmitterPresetLocked`) now accepts `v1` + `v2` schemas and validates optional layout metadata without breaking legacy preset loads.
+- QA migration emulation + scenarios:
+  - `qa/locusq_adapter.h` / `qa/locusq_adapter.cpp` adds `qa_snapshot_migration_mode` for state-roundtrip mutation modes:
+    - `0.0` passthrough
+    - `0.5` strip snapshot layout metadata (legacy emulation)
+    - `1.0` force quad layout metadata (layout mismatch emulation)
+  - New scenarios/suite:
+    - `qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json`
+    - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_stereo.json`
+    - `qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`
+- Focused non-manual verification (UTC 2026-02-19):
+  - QA build: `TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log` (`PASS`)
+  - Stereo migration suite: `TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
+  - Quad legacy migration scenario: `TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log` (`PASS`)
 
 ## Notes
 

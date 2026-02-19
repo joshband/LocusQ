@@ -719,3 +719,94 @@ Result: `PASS` (`0 warning(s)`)
 
 Artifacts:
 - `plugins/LocusQ/.github/workflows/qa_harness.yml`
+
+## Phase 2.10 Renderer CPU Guardrails Snapshot (UTC 2026-02-19)
+
+50. Build plugin + QA targets after renderer guardrail/culling changes
+
+```sh
+cmake --build build --target LocusQ_VST3 locusq_qa -j 8
+```
+
+Result: `PASS`
+
+51. Full-system CPU baseline regression (`8` emitters, `48k/512`)
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512
+```
+
+Result: `PASS`
+- `perf_avg_block_time_ms=0.304505`
+- `perf_p95_block_time_ms=0.323633`
+- `perf_meets_deadline=true`
+- `perf_allocation_free=true`
+
+52. High-emitter guardrail stress (`16` emitters, `48k/512`)
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json --sample-rate 48000 --block-size 512
+```
+
+Result: `PASS`
+- `perf_avg_block_time_ms=0.412833`
+- `perf_p95_block_time_ms=0.433221`
+- `perf_meets_deadline=true`
+- `perf_allocation_free=true`
+
+53. Renderer CPU guardrail suite rollup
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json --sample-rate 48000 --block-size 512
+```
+
+Result: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+
+54. Smoke-suite regression after guardrail changes
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_build_phase_2_9_renderer_cpu_guard_20260219T194552Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_9_guardrail_20260219T194552Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_20260219T194552Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log`
+
+## Phase 2.11 Preset/Snapshot Migration Hardening Snapshot (UTC 2026-02-19)
+
+55. Build QA target for snapshot-migration hardening checks
+
+```sh
+cmake --build build --target locusq_qa -j 1
+```
+
+Result: `PASS`
+
+56. Run stereo migration suite (legacy + layout-mismatch checkpoint scenarios)
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json
+```
+
+Result: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+
+57. Run quad legacy migration scenario (`--channels 4`)
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json --channels 4
+```
+
+Result: `PASS`
+- `non_finite=0`
+- `peak_level=-50.1919`
+- `rms_energy=-65.785`
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log`

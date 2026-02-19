@@ -295,6 +295,48 @@ Status note (2026-02-19): `.github/workflows/qa_harness.yml` now includes quad-a
 
 ---
 
+## Phase 2.10: Renderer CPU Guardrails (Non-Manual Track)
+**Goal:** Reduce renderer CPU risk under high emitter counts through deterministic per-block culling/guardrail behavior with non-manual validation coverage.
+
+### Tasks
+- [x] Add an explicit per-block emitter budget in `SpatialRenderer` (top-priority emitters only when the active set exceeds v1-tested envelope).
+- [x] Add activity culling for near-silent emitters after downmix/gain staging.
+- [x] Publish renderer guardrail telemetry in scene-state JSON (`eligible/processed/culled/guardrail-active`).
+- [x] Expand QA spatial adapter emitter-instance ceiling (`8` -> `16`) while preserving baseline 8-emitter and 5-emitter scenario behavior via normalized remap.
+- [x] Add focused high-emitter guardrail scenario and rollup suite (`qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json`, `qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json`).
+
+Status note (2026-02-19): Renderer now preselects emitters by predicted priority (`gain * distance attenuation`) with a hard per-block budget of `8`, then drops near-silent emitters via activity peak gate before expensive spatial stages (`Source/SpatialRenderer.h`). Scene telemetry now includes `rendererEligibleEmitters`, `rendererProcessedEmitters`, `rendererCulledBudget`, `rendererCulledActivity`, and `rendererGuardrailActive` (`Source/PluginProcessor.cpp`). Focused non-manual validation is green with refreshed QA binary: baseline full-system CPU scenario pass (`perf_avg_block_time_ms=0.304505`, `perf_p95_block_time_ms=0.323633`, allocation-free), high-emitter stress pass at `16` emitters (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, allocation-free), suite pass (`2/2`), and smoke regression pass (`4/4`).
+
+### Acceptance Criteria
+- [x] `LocusQ_VST3` + `locusq_qa` build succeeds with renderer guardrail changes.
+- [x] Existing full-system CPU gate (`locusq_26_full_system_cpu_draft`, 8 emitters) remains pass with allocation-free status.
+- [x] New high-emitter guardrail stress scenario (`locusq_29_renderer_guardrail_high_emitters`, 16 emitters) passes deadline + stability gates.
+- [x] Renderer CPU guardrail suite rollup and smoke regression suite both pass.
+
+---
+
+## Phase 2.11: Preset/Snapshot Layout Compatibility Hardening (Non-Manual Track)
+**Goal:** Harden preset + host snapshot compatibility by adding layout-aware state metadata and deterministic migration checks for legacy/mismatched layout payloads.
+
+### Tasks
+- [x] Persist host-snapshot layout metadata (`locusq_snapshot_schema`, `locusq_output_layout`, `locusq_output_channels`) during `getStateInformation`.
+- [x] Add restore-time layout migration for legacy/mismatched snapshots (`setStateInformation`) to keep calibration speaker-channel mappings layout-safe.
+- [x] Version emitter preset payload schema to `locusq-emitter-preset-v2` with optional `layout` block while preserving `v1` load compatibility.
+- [x] Extend QA spatial adapter with snapshot migration emulation mode (`qa_snapshot_migration_mode`) for native `state_roundtrip` coverage.
+- [x] Add and validate dedicated migration scenarios/suite in `qa/scenarios`:
+  - `locusq_211_snapshot_migration_legacy_layout.json`
+  - `locusq_211_snapshot_migration_layout_mismatch_stereo.json`
+  - `locusq_phase_2_11_snapshot_migration_suite.json`
+
+Status note (2026-02-19): Snapshot metadata + migration hardening landed in `Source/PluginProcessor.cpp`/`Source/PluginProcessor.h` (state schema + output-layout persistence + legacy/mismatch restore remap). QA adapter migration emulation landed in `qa/locusq_adapter.cpp`/`qa/locusq_adapter.h` and is validated with new suite evidence: `locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log` (`2 PASS / 0 WARN / 0 FAIL`) plus quad legacy scenario evidence `locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log` (`PASS`).
+
+### Acceptance Criteria
+- [x] `locusq_qa` build passes with snapshot migration hardening (`TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log`).
+- [x] `locusq_phase_2_11_snapshot_migration_suite` passes in stereo runtime (`2 PASS / 0 WARN / 0 FAIL`).
+- [x] `locusq_211_snapshot_migration_legacy_layout` passes in quad runtime mode (`--channels 4`).
+
+---
+
 ## Risk Assessment
 
 ### Critical Risk (must solve or project fails)

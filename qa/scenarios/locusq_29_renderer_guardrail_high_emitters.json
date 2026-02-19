@@ -1,9 +1,9 @@
 {
   "scenario_version": "1.0",
-  "id": "locusq_26_full_system_cpu_draft",
-  "name": "LocusQ 2.6 Full-System CPU Budget (8E+1R Draft)",
+  "id": "locusq_29_renderer_guardrail_high_emitters",
+  "name": "LocusQ Renderer Guardrail CPU (16E+1R Draft)",
   "category": "performance",
-  "description": "Phase 2.6 acceptance gate: 8 emitters + 1 renderer with physics/animation active must stay within draft CPU deadline budget.",
+  "description": "Renderer guardrail stress check: with 16 emitters active, activity culling + emitter budgeting should keep rendering finite and deadline-safe.",
 
   "capability_requirements": {
     "required_effect_types": ["SPATIAL"],
@@ -15,13 +15,13 @@
     "stimulus_id": "noise",
     "stimulus_variant": "white",
     "parameters": {
-      "amplitude": 0.32,
+      "amplitude": 0.30,
       "duration_seconds": 3.0
     }
   },
 
   "parameter_variations": {
-    "qa_emitter_instances": 0.4667,
+    "qa_emitter_instances": 1.0,
     "pos_azimuth": 0.50,
     "pos_elevation": 0.50,
     "pos_distance": 0.10,
@@ -31,7 +31,7 @@
     "rend_master_gain": 0.50,
     "rend_quality": 0.0,
     "rend_room_enable": 1.0,
-    "rend_room_mix": 0.40,
+    "rend_room_mix": 0.35,
     "rend_room_size": 0.48,
     "rend_room_damping": 0.40,
     "rend_room_er_only": 0.0,
@@ -57,7 +57,7 @@
       "type": "time_range",
       "start_seconds": 0.10,
       "end_seconds": 3.0,
-      "description": "Full-system CPU budget window"
+      "description": "High-emitter guardrail validation window"
     }
   },
 
@@ -84,20 +84,19 @@
         "equals": true
       },
       "severity": "hard_fail",
-      "description": "Full-system render must meet audio deadline."
+      "description": "High-emitter guardrail path must remain deadline-safe."
     },
     "avg_block_time": {
       "metric": "perf_avg_block_time_ms",
       "threshold": {
-        "max": 2.667
+        "max": 3.0
       },
-      "severity": "hard_fail",
-      "description": "Approximate 25% CPU budget at 48k/512 (10.667 ms deadline)."
+      "severity": "hard_fail"
     },
     "p95_block_time": {
       "metric": "perf_p95_block_time_ms",
       "threshold": {
-        "max": 4.0
+        "max": 5.0
       },
       "severity": "soft_warn"
     },

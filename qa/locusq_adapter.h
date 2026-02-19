@@ -112,7 +112,8 @@ private:
  *   29: anim_loop            (bool: >0.5 = loop enabled)
  *   30: anim_speed           (0.1..10.0)
  *   31: anim_sync            (bool: >0.5 = transport sync)
- *   32: qa_emitter_instances (1..8 emitters)
+ *   32: qa_emitter_instances (1..16 emitters)
+ *   33: qa_snapshot_migration_mode (0=off, 0.5=legacy-strip, 1.0=force-quad-layout-metadata)
  */
 class LocusQSpatialAdapter : public ::qa::DspUnderTest
 {
@@ -136,8 +137,8 @@ public:
     bool loadState(const std::vector<std::uint8_t>& state);
 
 private:
-    static constexpr int kNumParameters = 33;
-    static constexpr int kMaxQaEmitters = 8;
+    static constexpr int kNumParameters = 34;
+    static constexpr int kMaxQaEmitters = 16;
 
     // Emitters + renderer sharing the same process-wide SceneGraph singleton
     std::vector<std::unique_ptr<LocusQAudioProcessor>> emitters_;
@@ -155,6 +156,7 @@ private:
     int preparedNumChannels_ = 2;
     int activeEmitterCount_ = 1;
     bool prepared_ = false;
+    float snapshotMigrationMode_ = 0.0f;
 
     static int normalizedToEmitterCount(float normalized) noexcept;
     void rebuildEmitters(int emitterCount);

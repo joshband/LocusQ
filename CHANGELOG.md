@@ -178,6 +178,29 @@ All notable changes to LocusQ are documented here.
   - `.github/workflows/qa_harness.yml` (stronger result gating + explicit 4-channel host-edge/full-system matrix lanes + seeded `pluginval` stress job on macOS)
   - `.github/workflows/docs-freshness.yml`
   - `scripts/validate-docs-freshness.sh`
+- Renderer CPU guardrail polish aligned:
+  - `Source/SpatialRenderer.h`
+  - `Source/PluginProcessor.cpp`
+  - `qa/locusq_adapter.h`
+  - `qa/locusq_adapter.cpp`
+  - `qa/scenarios/locusq_26_full_system_cpu_draft.json`
+  - `qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json`
+  - `qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json`
+  - `qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json`
+  - Added per-block emitter priority budget + activity culling in renderer hot path.
+  - Added scene-state guardrail telemetry (`rendererEligibleEmitters`, `rendererProcessedEmitters`, `rendererCulledBudget`, `rendererCulledActivity`, `rendererGuardrailActive`).
+  - Expanded QA spatial emitter ceiling to `16` and remapped existing normalized values to preserve prior baseline counts.
+- Preset/snapshot layout compatibility hardening aligned:
+  - `Source/PluginProcessor.h`
+  - `Source/PluginProcessor.cpp`
+  - `qa/locusq_adapter.h`
+  - `qa/locusq_adapter.cpp`
+  - `qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json`
+  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_stereo.json`
+  - `qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`
+  - Snapshot state now persists output-layout schema metadata and applies restore-time migration for legacy/mismatched layout payloads.
+  - Emitter preset schema now supports `locusq-emitter-preset-v2` with optional layout block while retaining `v1` compatibility.
+  - Added state-roundtrip migration QA modes to emulate legacy metadata stripping and forced layout mismatches.
 
 ### Validation Snapshot (2026-02-19 UTC)
 
@@ -231,3 +254,13 @@ All notable changes to LocusQ are documented here.
   - `qa-critical` now emits quad matrix logs for smoke, renderer spatial output, host-edge, and full-system paths.
   - `qa-pluginval-seeded-stress` now defines deterministic seed sweep (`0x2a331c6`..`0x2a331ca`) with per-seed logs + `status.tsv` artifact.
   - First remote CI execution of the new lanes is pending.
+- Renderer CPU guardrail validation snapshot:
+  - `cmake --build build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`: `PASS` (`perf_avg_block_time_ms=0.304505`, `perf_p95_block_time_ms=0.323633`, `perf_allocation_free=true`)
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json --sample-rate 48000 --block-size 512`: `PASS` (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json --sample-rate 48000 --block-size 512`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+  - `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+- Preset/snapshot migration validation snapshot:
+  - `cmake --build build --target locusq_qa -j 1`: `PASS`
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json --channels 4`: `PASS`

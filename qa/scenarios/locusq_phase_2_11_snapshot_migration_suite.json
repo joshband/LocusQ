@@ -1,0 +1,14 @@
+{
+  "id": "locusq_phase_2_11_snapshot_migration_suite",
+  "name": "LocusQ Phase 2.11 Snapshot Migration Suite",
+  "description": "Regression suite for layout-aware snapshot migration with legacy and mismatched layout metadata in stereo runtime mode.",
+  "scenario_ids": [
+    "locusq_211_snapshot_migration_legacy_layout",
+    "locusq_211_snapshot_migration_layout_mismatch_stereo"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_11_snapshot_migration",
+    "num_channels": "2"
+  }
+}

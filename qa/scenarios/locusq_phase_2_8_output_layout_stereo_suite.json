@@ -1,0 +1,15 @@
+{
+  "id": "locusq_phase_2_8_output_layout_stereo_suite",
+  "name": "LocusQ Phase 2.8 Output Layout Stereo Suite",
+  "description": "Regression suite for explicit renderer output routing in 2-channel runtime mode.",
+  "scenario_ids": [
+    "locusq_renderer_spatial_output",
+    "locusq_renderer_no_clipping",
+    "locusq_renderer_distance_attenuation"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_8_output_layout_stereo",
+    "num_channels": "2"
+  }
+}

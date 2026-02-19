@@ -19,6 +19,8 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Output layout groundwork is in place: renderer bus validation now supports mono, stereo, and quad output layouts.
 - Quad channel routing is now explicit and deterministic (`FL, FR, RL, RR` host order from internal `FL, FR, RR, RL` speaker order).
 - CI harness coverage now includes explicit 4-channel QA matrix lanes and a seeded `pluginval` stress lane (macOS workflow job).
+- Renderer CPU guardrails are in place: per-block emitter budgeting + activity culling now keep high-emitter loads bounded and allocation-free in QA stress runs.
+- Preset/snapshot compatibility hardening is in place: host snapshots now persist output-layout schema metadata and restore through layout-aware migration checks.
 
 ### What is still open
 - Final manual DAW verification is still needed for embedded-host UI behavior (click/edit/drag checks in real host sessions).
@@ -54,6 +56,8 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Bus-layout expansion: processor now accepts mono/stereo/quad output layouts (`quadraphonic` or `discrete(4)`).
 - Renderer channel-order mapping is explicit (`rendererQuadMap: [0,1,3,2]`) and surfaced in scene-state telemetry.
 - CI expansion (`2.9`): `qa-critical` now runs explicit quad matrix scenarios and `qa-pluginval-seeded-stress` runs deterministic strictness-5 seed sweeps (`0x2a331c6`..`0x2a331ca`).
+- Renderer CPU polish (`2.10`): renderer now enforces an 8-emitter per-block priority budget with silence culling and exposes guardrail telemetry (`rendererEligibleEmitters`, `rendererProcessedEmitters`, `rendererCulledBudget`, `rendererCulledActivity`, `rendererGuardrailActive`).
+- Preset/snapshot compatibility hardening (`2.11`): host snapshots persist layout metadata (`locusq_snapshot_schema`, `locusq_output_layout`, `locusq_output_channels`), restore applies layout-safe migration for calibration speaker maps, and preset schema now supports `locusq-emitter-preset-v2` with backward-compatible `v1` load.
 - Phase 2.7 UI interaction smoke matrix (`/test`): `PASS_WITH_WARNING` with trend deltas published
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 
@@ -89,6 +93,10 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Quad-layout focused checks: `PASS` (`locusq_renderer_spatial_output` @ `--channels 4`, `locusq_smoke_suite` @ `--channels 4`)
 - Output-layout regression suites: `PASS` (`locusq_phase_2_8_output_layout_mono_suite`, `locusq_phase_2_8_output_layout_stereo_suite`, `locusq_phase_2_8_output_layout_quad_suite`)
 - CI harness definition refresh: `PASS` (workflow now includes quad matrix + seeded `pluginval` stress jobs; first GitHub Actions run pending)
+- Renderer CPU guardrail stress (`locusq_29_renderer_guardrail_high_emitters`, 16 emitters): `PASS` (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)
+- Renderer CPU guardrail suite (`locusq_phase_2_9_renderer_cpu_suite`): `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+- Snapshot migration suite (`locusq_phase_2_11_snapshot_migration_suite`, stereo): `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+- Snapshot migration legacy-layout scenario (`locusq_211_snapshot_migration_legacy_layout`, quad): `PASS`
 - UI interaction smoke matrix refresh: `PASS_WITH_WARNING`; trend deltas published to `qa_output/suite_result.json`
 
 ## Distribution Snapshot

@@ -137,6 +137,10 @@ private:
     // Emitter preset helpers
     static juce::String sanitisePresetName (const juce::String& presetName);
     juce::File getPresetDirectory() const;
+    juce::String getSnapshotOutputLayout() const;
+    int getSnapshotOutputChannels() const;
+    void migrateSnapshotLayoutIfNeeded (const juce::ValueTree& restoredState);
+    void setIntegerParameterValueNotifyingHost (const char* parameterId, int value);
     juce::var buildEmitterPresetLocked (const juce::String& presetName) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
     static juce::String keyframeCurveToString (KeyframeCurve curve);

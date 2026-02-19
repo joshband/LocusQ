@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-19T19:46:11Z",
+  "last_modified": "2026-02-19T19:53:20Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -161,6 +161,18 @@
       "status": "complete",
       "completed_at": "2026-02-19T19:46:11Z",
       "notes": "QA harness CI now includes explicit 4-channel host-edge/full-system matrix coverage and a seeded pluginval stress lane on macOS."
+    },
+    {
+      "phase": "implementation_phase_2_10_renderer_cpu_guardrails",
+      "status": "complete",
+      "completed_at": "2026-02-19T19:46:01Z",
+      "notes": "Renderer now applies per-block emitter budget culling + activity gates with deterministic ordering under load; scene-state telemetry and high-emitter QA stress coverage are in place and passing."
+    },
+    {
+      "phase": "implementation_phase_2_11_snapshot_migration_hardening",
+      "status": "complete",
+      "completed_at": "2026-02-19T19:53:20Z",
+      "notes": "Snapshot/preset compatibility hardening landed: snapshot layout schema metadata persisted + restore-time migration for legacy/mismatched layout payloads, emitter preset schema v2 added with v1 compatibility, and dedicated stereo/quad migration QA checks pass."
     }
   ],
   "validation": {
@@ -506,7 +518,21 @@
         "0x2a331ca"
       ],
       "status": "configured_ci_pending_run"
-    }
+    },
+    "implementation_phase_2_10_started": true,
+    "implementation_phase_2_10_tasks_complete": true,
+    "implementation_phase_2_10_status_note": "Spatial renderer now enforces a deterministic top-priority 8-emitter per-block budget with near-silence culling and telemetry exposure; baseline/high-emitter/suite/smoke scenarios all pass allocation-free gates.",
+    "implementation_phase_2_10_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_9_renderer_cpu_guard_20260219T194552Z.log",
+    "implementation_phase_2_10_full_system_cpu_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_9_guardrail_20260219T194552Z.log",
+    "implementation_phase_2_10_high_emitter_log": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_20260219T194552Z.log",
+    "implementation_phase_2_10_suite_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log",
+    "implementation_phase_2_10_smoke_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log",
+    "implementation_phase_2_11_started": true,
+    "implementation_phase_2_11_tasks_complete": true,
+    "implementation_phase_2_11_status_note": "Snapshot and preset compatibility now includes output-layout schema metadata persistence, restore-time migration for legacy/mismatched layouts, and QA migration checks in stereo + quad runtime paths.",
+    "implementation_phase_2_11_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log",
+    "implementation_phase_2_11_suite_stereo_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log",
+    "implementation_phase_2_11_legacy_quad4_log": "plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log"
   },
   "framework_selection": {
     "decision": "webview",
@@ -628,6 +654,18 @@
         "0x2a331c9",
         "0x2a331ca"
       ]
+    },
+    "phase_2_10_renderer_cpu_guardrails": {
+      "build": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_9_renderer_cpu_guard_20260219T194552Z.log",
+      "full_system_cpu": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_phase_2_9_guardrail_20260219T194552Z.log",
+      "high_emitter_guardrail": "plugins/LocusQ/TestEvidence/locusq_29_renderer_guardrail_high_emitters_20260219T194552Z.log",
+      "guardrail_suite": "plugins/LocusQ/TestEvidence/locusq_phase_2_9_renderer_cpu_suite_20260219T194552Z.log",
+      "smoke_suite": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_9_guardrail_20260219T194552Z.log"
+    },
+    "phase_2_11_snapshot_migration": {
+      "qa_build": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_11_snapshot_migration_20260219T194406Z.log",
+      "suite_stereo": "plugins/LocusQ/TestEvidence/locusq_phase_2_11_snapshot_migration_suite_stereo_20260219T194406Z.log",
+      "legacy_quad4": "plugins/LocusQ/TestEvidence/locusq_211_snapshot_migration_legacy_layout_quad4_20260219T194406Z.log"
     }
   },
   "distribution": {

@@ -7,6 +7,71 @@
 #include <cmath>
 #include <cstring>
 
+namespace {
+
+enum class SnapshotMigrationMode
+{
+    disabled,
+    legacyStripLayoutMetadata,
+    forceQuadLayoutMetadata
+};
+
+SnapshotMigrationMode decodeSnapshotMigrationMode(float normalized) noexcept
+{
+    if (normalized >= 0.67f)
+        return SnapshotMigrationMode::forceQuadLayoutMetadata;
+    if (normalized >= 0.34f)
+        return SnapshotMigrationMode::legacyStripLayoutMetadata;
+    return SnapshotMigrationMode::disabled;
+}
+
+bool rewritePluginSnapshotState(juce::MemoryBlock& stateBlock, SnapshotMigrationMode mode)
+{
+    if (mode == SnapshotMigrationMode::disabled)
+        return true;
+
+    std::unique_ptr<juce::XmlElement> stateXml(juce::AudioProcessor::getXmlFromBinary(
+        stateBlock.getData(), static_cast<int>(stateBlock.getSize())));
+    if (!stateXml)
+        return false;
+
+    auto stateTree = juce::ValueTree::fromXml(*stateXml);
+    if (!stateTree.isValid())
+        return false;
+
+    switch (mode)
+    {
+        case SnapshotMigrationMode::legacyStripLayoutMetadata:
+            stateTree.removeProperty("locusq_snapshot_schema", nullptr);
+            stateTree.removeProperty("locusq_output_layout", nullptr);
+            stateTree.removeProperty("locusq_output_channels", nullptr);
+            break;
+
+        case SnapshotMigrationMode::forceQuadLayoutMetadata:
+            stateTree.setProperty("locusq_snapshot_schema", "locusq-state-v2", nullptr);
+            stateTree.setProperty("locusq_output_layout", "quad", nullptr);
+            stateTree.setProperty("locusq_output_channels", 4, nullptr);
+            break;
+
+        case SnapshotMigrationMode::disabled:
+            break;
+    }
+
+    std::unique_ptr<juce::XmlElement> migratedXml(stateTree.createXml());
+    if (!migratedXml)
+        return false;
+
+    juce::MemoryBlock migratedBlock;
+    juce::AudioProcessor::copyXmlToBinary(*migratedXml, migratedBlock);
+    if (migratedBlock.getSize() == 0)
+        return false;
+
+    stateBlock = std::move(migratedBlock);
+    return true;
+}
+
+} // namespace
+
 namespace locusq {
 namespace qa {
 
@@ -381,6 +446,9 @@ void LocusQSpatialAdapter::setParameter(int index, ::qa::NormalizedParam value) 
         case 32:
             rebuildEmitters(normalizedToEmitterCount(normalized));
             break;
+        case 33:
+            snapshotMigrationMode_ = normalized;
+            break;
         default:
             break;
     }
@@ -398,7 +466,7 @@ const char* LocusQSpatialAdapter::getParameterName(int index) const
         "rend_room_er_only", "phys_enable", "phys_vel_x", "phys_vel_y", "phys_vel_z",
         "phys_throw", "phys_drag", "phys_gravity",
         "anim_enable", "anim_mode", "anim_loop", "anim_speed", "anim_sync",
-        "qa_emitter_instances"
+        "qa_emitter_instances", "qa_snapshot_migration_mode"
     };
     if (index >= 0 && index < kNumParameters) return names[index];
     return nullptr;
@@ -456,6 +524,7 @@ bool LocusQSpatialAdapter::loadState(const std::vector<std::uint8_t>& state)
         return false;
 
     juce::MemoryInputStream input(state.data(), state.size(), false);
+    const auto migrationMode = decodeSnapshotMigrationMode(snapshotMigrationMode_);
 
     const int savedEmitterCount = input.readInt();
     if (savedEmitterCount < 1 || savedEmitterCount > kMaxQaEmitters)
@@ -477,6 +546,9 @@ bool LocusQSpatialAdapter::loadState(const std::vector<std::uint8_t>& state)
         if (input.read(stateBlock.getData(), static_cast<size_t>(stateSize)) != static_cast<size_t>(stateSize))
             return false;
 
+        if (!rewritePluginSnapshotState(stateBlock, migrationMode))
+            return false;
+
         emitter->setStateInformation(stateBlock.getData(), static_cast<int>(stateBlock.getSize()));
     }
 
@@ -486,6 +558,9 @@ bool LocusQSpatialAdapter::loadState(const std::vector<std::uint8_t>& state)
 
     juce::MemoryBlock rendererState(static_cast<size_t>(rendererStateSize), true);
     if (input.read(rendererState.getData(), static_cast<size_t>(rendererStateSize)) != static_cast<size_t>(rendererStateSize))
+        return false;
+
+    if (!rewritePluginSnapshotState(rendererState, migrationMode))
         return false;
 
     renderer_->setStateInformation(rendererState.getData(), static_cast<int>(rendererState.getSize()));

@@ -122,8 +122,16 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-19T19:37:25Z | phase 2.8 stereo layout suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
 | 2026-02-19T19:37:25Z | phase 2.8 quad layout suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
 | 2026-02-19T19:43:56Z | phase 2.8 mono layout suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:44:06Z | phase 2.11 snapshot migration QA build | `cmake --build build --target locusq_qa -j 1` | PASS |
+| 2026-02-19T19:44:07Z | phase 2.11 snapshot migration suite (stereo) | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json` | PASS (`2 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:44:08Z | phase 2.11 snapshot migration legacy-layout scenario (quad) | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json --channels 4` | PASS |
 | 2026-02-19T19:44:13Z | phase 2.9 CI quad/pluginval lane definition check | `rg -n "qa-pluginval-seeded-stress\|--channels 4\|ci_phase_2_6_host_edge_.*_ch4\|pluginval_seeded_stress/status.tsv" .github/workflows/qa_harness.yml` | PASS |
 | 2026-02-19T19:44:13Z | phase 2.9 docs freshness gate check | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-19T19:45:52Z | phase 2.10 renderer guardrail build | `cmake --build build --target LocusQ_VST3 locusq_qa -j 8` | PASS |
+| 2026-02-19T19:45:58Z | phase 2.10 full-system CPU baseline (`8` emitters, `48k/512`) | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512` | PASS (`perf_avg_block_time_ms=0.304505`, `perf_p95_block_time_ms=0.323633`, `perf_allocation_free=true`) |
+| 2026-02-19T19:45:59Z | phase 2.10 high-emitter guardrail stress (`16` emitters, `48k/512`) | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json --sample-rate 48000 --block-size 512` | PASS (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`) |
+| 2026-02-19T19:46:00Z | phase 2.10 renderer CPU guardrail suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json --sample-rate 48000 --block-size 512` | PASS (`2 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:46:01Z | phase 2.10 smoke suite regression | `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json` | PASS (`4 PASS / 0 WARN / 0 FAIL`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

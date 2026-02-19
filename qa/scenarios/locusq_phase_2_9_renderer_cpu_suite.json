@@ -1,0 +1,13 @@
+{
+  "id": "locusq_phase_2_9_renderer_cpu_suite",
+  "name": "LocusQ Phase 2.9 Renderer CPU Suite",
+  "description": "Renderer CPU polish suite: baseline full-system CPU gate plus high-emitter guardrail stress check.",
+  "scenario_ids": [
+    "locusq_26_full_system_cpu_draft",
+    "locusq_29_renderer_guardrail_high_emitters"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_9_renderer_cpu"
+  }
+}

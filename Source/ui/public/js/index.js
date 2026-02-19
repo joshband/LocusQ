@@ -623,7 +623,16 @@ const roomBounds = { halfWidth: 2.7, halfDepth: 1.7 };
 // ===== APP STATE =====
 let currentMode = "emitter";
 let selectedLane = "azimuth";
-let sceneData = { emitters: [], emitterCount: 0, rendererActive: false };
+let sceneData = {
+    emitters: [],
+    emitterCount: 0,
+    rendererActive: false,
+    outputChannels: 2,
+    outputLayout: "stereo",
+    rendererOutputChannels: ["L", "R"],
+    rendererInternalSpeakers: ["FL", "FR", "RR", "RL"],
+    rendererQuadMap: [0, 1, 3, 2],
+};
 let selectedEmitterId = -1;
 let localEmitterId = -1;
 const railScrollByMode = { calibrate: 0, emitter: 0, renderer: 0 };
@@ -1882,8 +1891,16 @@ window.updateSceneState = function(data) {
             const blockPerfText = perfBlock !== null ? ` \u00B7 Block ${perfBlock.toFixed(2)}ms` : "";
             const qualityBadge = document.getElementById("quality-badge");
             const qualityText = qualityBadge?.classList.contains("final") ? "Final" : "Draft";
+            const outputChannels = Number.isFinite(data.outputChannels) ? Number(data.outputChannels) : 0;
+            const layoutText = typeof data.outputLayout === "string" ? data.outputLayout.toUpperCase() : "";
+            const outputRoute = Array.isArray(data.rendererOutputChannels)
+                ? data.rendererOutputChannels.join("/")
+                : "";
+            const outputText = outputChannels > 0
+                ? ` \u00B7 Out ${outputChannels}ch${layoutText ? ` ${layoutText}` : ""}${outputRoute ? ` (${outputRoute})` : ""}`
+                : "";
             info.textContent = "Renderer Mode \u00B7 " + data.emitterCount + " emitters \u00B7 " +
-                qualityText + rendererPerfText + blockPerfText;
+                qualityText + outputText + rendererPerfText + blockPerfText;
         } else {
             info.textContent = "Calibrate Mode \u00B7 Room Profile Setup";
         }

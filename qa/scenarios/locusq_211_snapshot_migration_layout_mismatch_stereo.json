@@ -1,9 +1,9 @@
 {
   "scenario_version": "1.0",
-  "id": "locusq_26_host_edge_roundtrip_multipass",
-  "name": "LocusQ 2.6 Host Edge Lifecycle (Roundtrip + Reprepare)",
+  "id": "locusq_211_snapshot_migration_layout_mismatch_stereo",
+  "name": "LocusQ 2.11 Snapshot Migration (Layout Mismatch Stereo)",
   "category": "stability",
-  "description": "Phase 2.6 host edge-case acceptance: repeated prepare/release lifecycle with in-run state roundtrip must remain stable and finite.",
+  "description": "State-roundtrip checkpoint must pass when snapshot metadata reports quad layout but runtime executes in stereo mode.",
 
   "capability_requirements": {
     "required_effect_types": ["SPATIAL"],
@@ -15,45 +15,41 @@
     "stimulus_id": "noise",
     "stimulus_variant": "white",
     "parameters": {
-      "amplitude": 0.28,
-      "duration_seconds": 2.5
+      "amplitude": 0.24,
+      "duration_seconds": 2.0
     }
   },
 
   "parameter_variations": {
-    "qa_emitter_instances": 0.2667,
+    "qa_emitter_instances": 0.4286,
+    "qa_snapshot_migration_mode": 1.0,
     "pos_azimuth": 0.50,
     "pos_elevation": 0.50,
-    "pos_distance": 0.12,
-    "emit_gain": 0.50,
-    "emit_spread": 0.30,
+    "pos_distance": 0.18,
+    "emit_gain": 0.52,
+    "emit_spread": 0.35,
     "emit_directivity": 0.55,
     "phys_enable": 1.0,
-    "phys_drag": 0.20,
+    "phys_drag": 0.24,
     "phys_gravity": 0.50,
     "anim_enable": 1.0,
     "anim_mode": 1.0,
     "anim_loop": 1.0,
-    "anim_speed": 0.1919,
+    "anim_speed": 0.1818,
     "anim_sync": 1.0,
     "rend_master_gain": 0.50,
     "rend_quality": 0.0,
     "rend_room_enable": 1.0,
-    "rend_room_mix": 0.35,
-    "rend_room_size": 0.42,
-    "rend_room_damping": 0.42,
+    "rend_room_mix": 0.30,
+    "rend_room_size": 0.40,
+    "rend_room_damping": 0.45,
     "rend_doppler": 1.0,
-    "rend_doppler_scale": 0.70
-  },
-
-  "multi_pass": {
-    "num_passes": 3,
-    "reset_between_passes": true
+    "rend_doppler_scale": 0.68
   },
 
   "state_roundtrip": {
     "enabled": true,
-    "trigger_seconds": 0.75,
+    "trigger_seconds": 0.70,
     "require_support": true,
     "fail_on_error": true
   },
@@ -62,7 +58,7 @@
     "full": {
       "type": "time_range",
       "start_seconds": 0.05,
-      "end_seconds": 2.5
+      "end_seconds": 2.0
     }
   },
 
@@ -70,28 +66,22 @@
     "no_nan_inf": {
       "metric": "non_finite",
       "window": "full",
-      "threshold": {
-        "max_count": 0
-      },
+      "threshold": { "max_count": 0 },
       "severity": "hard_fail"
     },
     "signal_present": {
       "metric": "rms_energy",
       "window": "full",
-      "threshold": {
-        "min": -90.0
-      },
+      "threshold": { "min": -90.0 },
       "severity": "hard_fail"
     },
     "peak_not_clipped": {
       "metric": "peak_level",
       "window": "full",
-      "threshold": {
-        "max": -0.3
-      },
+      "threshold": { "max": -0.3 },
       "severity": "soft_warn"
     }
   },
 
-  "pass_criteria": "All hard_fail invariants must pass across multi-pass lifecycle execution."
+  "pass_criteria": "All hard_fail invariants must pass with state roundtrip active under forced layout-mismatch metadata."
 }
