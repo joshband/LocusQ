@@ -257,6 +257,44 @@ Status note (2026-02-19): Phase 2.7a bootstrap hardening landed in `Source/ui/pu
 
 ---
 
+## Phase 2.8: Output Layout Expansion (Non-Manual Track)
+**Goal:** Expand renderer output layout support so hosts can negotiate mono/stereo/quad output without manual DAW click-path dependencies.
+
+### Tasks
+- [x] Accept mono/stereo/quad output channel layouts in processor bus-layout validation.
+- [x] Preserve existing mono/stereo behavior (no regression to current automation/test flows).
+- [x] Add focused QA evidence for 4-channel spatial rendering path.
+- [x] Add explicit renderer quad channel-order mapping (host-output order separated from internal speaker order).
+- [x] Expose output-layout/mapping telemetry via scene-state payload for UI diagnostics.
+- [x] Add dedicated mono/stereo/quad output-layout regression suites in `qa/scenarios`.
+
+Status note (2026-02-19): Bus-layout validation now allows `mono`, `stereo`, and `quadraphonic`/`discrete(4)` outputs while retaining mono/stereo input support (`Source/PluginProcessor.cpp`). Renderer output routing is now explicit for quad output (`FL, FR, RL, RR`) via a deterministic map from internal speaker order (`FL, FR, RR, RL`) in `Source/SpatialRenderer.h`. Scene-state telemetry now publishes output layout, output channel labels, and quad mapping metadata (`Source/PluginProcessor.cpp`) and is surfaced in renderer viewport info (`Source/ui/public/js/index.js`). Regression suites now cover mono/stereo/quad layout paths (`qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json`, `qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json`, `qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json`).
+
+### Acceptance Criteria
+- [x] `LocusQ_VST3` + `locusq_qa` build succeeds after bus-layout update.
+- [x] `locusq_renderer_spatial_output` passes in 4-channel runtime mode.
+- [x] `locusq_smoke_suite` remains pass in 4-channel runtime mode.
+- [x] Dedicated mono/stereo/quad output-layout regression suites pass with `--spatial`.
+
+---
+
+## Phase 2.9: QA/CI Harness Expansion (Non-Manual Track)
+**Goal:** Expand automated QA/CI coverage with explicit 4-channel matrix lanes and deterministic seeded `pluginval` stress.
+
+### Tasks
+- [x] Expand CI critical QA runs with explicit 4-channel regressions (`--channels 4`) for renderer spatial output and smoke suite.
+- [x] Add macOS host-edge + full-system `2ch/4ch` matrix lanes while preserving existing baseline 2-channel gates.
+- [x] Add dedicated seeded `pluginval` stress job with deterministic seed list and per-seed artifacts.
+
+Status note (2026-02-19): `.github/workflows/qa_harness.yml` now includes quad-aware matrix runs in `qa-critical` and a new `qa-pluginval-seeded-stress` macOS job that runs strictness-5 in-process validation across deterministic seeds (`0x2a331c6` through `0x2a331ca`) with per-seed logs plus `status.tsv` artifact output.
+
+### Acceptance Criteria
+- [x] CI workflow publishes explicit quad regression logs for smoke, renderer spatial output, host-edge matrix, and full-system scenario coverage.
+- [x] CI workflow publishes seeded `pluginval` stress logs and status table artifacts.
+- [ ] First GitHub Actions run of the new seeded/quad CI lanes is captured and linked in `TestEvidence`.
+
+---
+
 ## Risk Assessment
 
 ### Critical Risk (must solve or project fails)

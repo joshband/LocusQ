@@ -16,6 +16,9 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Major UI wiring work is done: controls are connected to real plugin state, not just visuals.
 - Performance work closed the earlier allocation warning for the Phase 2.6 full-system run.
 - Documentation and decision records are now standardized and synced through a freshness gate.
+- Output layout groundwork is in place: renderer bus validation now supports mono, stereo, and quad output layouts.
+- Quad channel routing is now explicit and deterministic (`FL, FR, RL, RR` host order from internal `FL, FR, RR, RL` speaker order).
+- CI harness coverage now includes explicit 4-channel QA matrix lanes and a seeded `pluginval` stress lane (macOS workflow job).
 
 ### What is still open
 - Final manual DAW verification is still needed for embedded-host UI behavior (click/edit/drag checks in real host sessions).
@@ -48,6 +51,9 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Phase 2.7c implementation: tabs/toggles/dropdowns/value steppers now route through relays/attachments, and `emit-label` / physics preset memory persists through native UI-state bridge
 - Phase 2.7d implementation: Cartesian viewport drag is now APVTS-backed (`pos_x/pos_y/pos_z` relay/attachment wiring + drag writeback sync), and native timeline time input is finite/clamped on bridge entry
 - Pluginval automation guard: mode-transition registration sync prevents stale emitter audio pointer reads during aggressive mode automation.
+- Bus-layout expansion: processor now accepts mono/stereo/quad output layouts (`quadraphonic` or `discrete(4)`).
+- Renderer channel-order mapping is explicit (`rendererQuadMap: [0,1,3,2]`) and surfaced in scene-state telemetry.
+- CI expansion (`2.9`): `qa-critical` now runs explicit quad matrix scenarios and `qa-pluginval-seeded-stress` runs deterministic strictness-5 seed sweeps (`0x2a331c6`..`0x2a331ca`).
 - Phase 2.7 UI interaction smoke matrix (`/test`): `PASS_WITH_WARNING` with trend deltas published
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 
@@ -80,6 +86,9 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Post-2.7b smoke regression suite (`locusq_smoke_suite`): `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
 - Post-2.7c smoke regression suite (`locusq_smoke_suite`): `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
 - Post-2.7d focused headless checks: `PASS` (JS syntax, `LocusQ_VST3` + `locusq_qa` build, smoke suite, animation smoke, phase 2.6 acceptance suite, host-edge `48k/512`)
+- Quad-layout focused checks: `PASS` (`locusq_renderer_spatial_output` @ `--channels 4`, `locusq_smoke_suite` @ `--channels 4`)
+- Output-layout regression suites: `PASS` (`locusq_phase_2_8_output_layout_mono_suite`, `locusq_phase_2_8_output_layout_stereo_suite`, `locusq_phase_2_8_output_layout_quad_suite`)
+- CI harness definition refresh: `PASS` (workflow now includes quad matrix + seeded `pluginval` stress jobs; first GitHub Actions run pending)
 - UI interaction smoke matrix refresh: `PASS_WITH_WARNING`; trend deltas published to `qa_output/suite_result.json`
 
 ## Distribution Snapshot

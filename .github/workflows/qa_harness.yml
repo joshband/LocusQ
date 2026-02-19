@@ -68,18 +68,46 @@ jobs:
       - name: Build QA target
         run: cmake --build build-qa --target locusq_qa -j 4
 
-      - name: Run critical QA suites
+      - name: Run critical QA suites + 4-channel matrix
         run: |
-          ./build-qa/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json | tee qa_output/ci_smoke_suite.log
-          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json | tee qa_output/ci_phase_2_6_acceptance_suite.log
-          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json | tee qa_output/ci_phase_2_5_regression_suite.log
-          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 96000 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_96k.log
+          set -euo pipefail
+          mkdir -p qa_output
+
+          LOCUSQ_QA_BIN="./build-qa/locusq_qa_artefacts/locusq_qa"
+          if [ ! -x "${LOCUSQ_QA_BIN}" ]; then
+            LOCUSQ_QA_BIN="./build-qa/locusq_qa_artefacts/Release/locusq_qa"
+          fi
+          if [ ! -x "${LOCUSQ_QA_BIN}" ]; then
+            echo "Unable to find locusq_qa executable" >&2
+            find build-qa -maxdepth 5 -name locusq_qa -type f || true
+            exit 1
+          fi
+
+          # Existing core gates (2-channel baseline).
+          "${LOCUSQ_QA_BIN}" qa/scenarios/locusq_smoke_suite.json | tee qa_output/ci_smoke_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json | tee qa_output/ci_phase_2_6_acceptance_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json | tee qa_output/ci_phase_2_5_regression_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json | tee qa_output/ci_phase_2_8_output_layout_mono_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json | tee qa_output/ci_phase_2_8_output_layout_stereo_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json | tee qa_output/ci_phase_2_8_output_layout_quad_suite.log
+
+          # New 4-channel regression lanes.
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4 | tee qa_output/ci_renderer_spatial_output_quad4.log
+          "${LOCUSQ_QA_BIN}" qa/scenarios/locusq_smoke_suite.json --channels 4 | tee qa_output/ci_smoke_suite_quad4.log
+
+          # Cross-platform lifecycle probe in 2ch and 4ch.
+          "${LOCUSQ_QA_BIN}" --spatial --sample-rate 96000 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_96k_ch2.log
+          "${LOCUSQ_QA_BIN}" --spatial --sample-rate 96000 --channels 4 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_96k_ch4.log
+
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 44100 --block-size 256 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_44k1_256.log
-            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_48k_512.log
-            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 1024 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_48k_1024.log
-            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 96000 --block-size 512 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee qa_output/ci_phase_2_6_host_edge_96k_512.log
-            ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_phase_2_6_full_system_48k_512.log
+            for pair in "44100 256" "48000 512" "48000 1024" "96000 512"; do
+              set -- ${pair}
+              "${LOCUSQ_QA_BIN}" --spatial --sample-rate "$1" --block-size "$2" qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee "qa_output/ci_phase_2_6_host_edge_${1}_${2}_ch2.log"
+              "${LOCUSQ_QA_BIN}" --spatial --sample-rate "$1" --block-size "$2" --channels 4 qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json | tee "qa_output/ci_phase_2_6_host_edge_${1}_${2}_ch4.log"
+            done
+
+            "${LOCUSQ_QA_BIN}" --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_phase_2_6_full_system_48k_512_ch2.log
+            "${LOCUSQ_QA_BIN}" --spatial --sample-rate 48000 --block-size 512 --channels 4 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_phase_2_6_full_system_48k_512_ch4.log
           fi
 
       - name: Verify QA result statuses
@@ -125,6 +153,115 @@ jobs:
             build-qa/locusq_qa_artefacts/
             build-qa/CMakeCache.txt
           retention-days: 14
+
+  qa-pluginval-seeded-stress:
+    name: QA Pluginval Seeded Stress (macOS)
+    runs-on: macos-latest
+    needs: qa-critical
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout JUCE
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          path: JUCE
+
+      - name: Configure plugin build
+        run: |
+          cmake -S . -B build-pluginval \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE"
+
+      - name: Build VST3 target for pluginval stress
+        run: cmake --build build-pluginval --target LocusQ_VST3 -j 4
+
+      - name: Install pluginval (macOS release)
+        run: |
+          set -euo pipefail
+          mkdir -p _tools/pluginval-ci
+          downloaded=0
+          for url in \
+            "https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip" \
+            "https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_mac.zip"; do
+            if curl -L --fail -o /tmp/pluginval_macOS.zip "${url}"; then
+              downloaded=1
+              break
+            fi
+          done
+          if [[ "${downloaded}" -ne 1 ]]; then
+            echo "Failed to download pluginval macOS release archive" >&2
+            exit 1
+          fi
+          unzip -q -o /tmp/pluginval_macOS.zip -d _tools/pluginval-ci
+
+          PLUGINVAL_BIN="$(find _tools/pluginval-ci -type f -path '*pluginval.app/Contents/MacOS/pluginval' | head -n 1)"
+          if [[ -z "${PLUGINVAL_BIN}" ]]; then
+            echo "pluginval binary not found after extraction" >&2
+            find _tools/pluginval-ci -maxdepth 6 -type f | sed -n '1,120p'
+            exit 1
+          fi
+
+          echo "PLUGINVAL_BIN=${PLUGINVAL_BIN}" >> "${GITHUB_ENV}"
+
+      - name: Run seeded pluginval stress
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/pluginval_seeded_stress
+
+          PLUGIN_PATH="./build-pluginval/LocusQ_artefacts/VST3/LocusQ.vst3"
+          if [[ ! -d "${PLUGIN_PATH}" ]]; then
+            PLUGIN_PATH="./build-pluginval/LocusQ_artefacts/Release/VST3/LocusQ.vst3"
+          fi
+          if [[ ! -d "${PLUGIN_PATH}" ]]; then
+            echo "Unable to find built LocusQ.vst3 for pluginval" >&2
+            find build-pluginval -maxdepth 6 -name LocusQ.vst3 -type d || true
+            exit 1
+          fi
+
+          STATUS_TSV="qa_output/pluginval_seeded_stress/status.tsv"
+          printf "seed\texit_code\tlog\n" > "${STATUS_TSV}"
+
+          failures=0
+          for seed in 0x2a331c6 0x2a331c7 0x2a331c8 0x2a331c9 0x2a331ca; do
+            log_file="qa_output/pluginval_seeded_stress/pluginval_seed_${seed}.log"
+            set +e
+            "${PLUGINVAL_BIN}" \
+              --strictness-level 5 \
+              --validate-in-process \
+              --skip-gui-tests \
+              --random-seed "${seed}" \
+              "${PLUGIN_PATH}" > "${log_file}" 2>&1
+            exit_code=$?
+            set -e
+
+            printf "%s\t%s\t%s\n" "${seed}" "${exit_code}" "${log_file}" | tee -a "${STATUS_TSV}"
+            if [[ "${exit_code}" -ne 0 ]]; then
+              failures=$((failures + 1))
+            fi
+          done
+
+          if [[ "${failures}" -ne 0 ]]; then
+            echo "Seeded pluginval stress failed for ${failures} seed(s)." >&2
+            exit 1
+          fi
+
+      - name: Upload pluginval seeded stress artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusq-pluginval-seeded-stress
+          path: |
+            qa_output/pluginval_seeded_stress/
+            build-pluginval/LocusQ_artefacts/
+            build-pluginval/CMakeCache.txt
+          retention-days: 21
 
   qa-perf-trend:
     name: QA Perf Trend (Ubuntu)

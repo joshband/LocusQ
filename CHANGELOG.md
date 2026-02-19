@@ -162,8 +162,20 @@ All notable changes to LocusQ are documented here.
   - `Source/PluginProcessor.h`
   - `Source/SceneGraph.h`
   - Added mode-transition scene registration sync to prevent stale emitter-slot audio reads under aggressive mode automation.
+- Output-layout expansion groundwork aligned:
+  - `Source/PluginProcessor.cpp`
+  - Bus-layout support now accepts `mono`, `stereo`, and `quadraphonic`/`discrete(4)` outputs while retaining mono/stereo input support.
+- Output-layout robustness follow-through:
+  - `Source/SpatialRenderer.h`
+  - `Source/PluginProcessor.cpp`
+  - `Source/ui/public/js/index.js`
+  - `qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json`
+  - `qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json`
+  - `qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json`
+  - Added deterministic quad channel map (`FL, FR, RL, RR`) from internal speaker order and published layout/map telemetry to UI scene-state payload.
+  - Added explicit mono output-layout regression coverage so output route acceptance now runs in `1ch/2ch/4ch`.
 - CI QA hardening updates:
-  - `.github/workflows/qa_harness.yml` (stronger result gating + expanded mac host-edge/full-system runs)
+  - `.github/workflows/qa_harness.yml` (stronger result gating + explicit 4-channel host-edge/full-system matrix lanes + seeded `pluginval` stress job on macOS)
   - `.github/workflows/docs-freshness.yml`
   - `scripts/validate-docs-freshness.sh`
 
@@ -207,3 +219,15 @@ All notable changes to LocusQ are documented here.
   - crash backtrace: `plugins/LocusQ/TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log` (top frame `SpatialRenderer::process`)
   - deterministic repro after fix: `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log` (`PASS`)
   - stability probe: `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv` (`10/10 PASS`)
+- Quad-layout validation snapshot:
+  - `cmake --build build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4`: `PASS`
+  - `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json --channels 4`: `PASS`
+- Output-layout regression-suite snapshot:
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json`: `PASS`
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json`: `PASS`
+  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json`: `PASS`
+- Phase 2.9 CI harness expansion snapshot:
+  - `qa-critical` now emits quad matrix logs for smoke, renderer spatial output, host-edge, and full-system paths.
+  - `qa-pluginval-seeded-stress` now defines deterministic seed sweep (`0x2a331c6`..`0x2a331ca`) with per-seed logs + `status.tsv` artifact.
+  - First remote CI execution of the new lanes is pending.

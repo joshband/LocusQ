@@ -1,0 +1,15 @@
+{
+  "id": "locusq_phase_2_8_output_layout_mono_suite",
+  "name": "LocusQ Phase 2.8 Output Layout Mono Suite",
+  "description": "Regression suite for explicit renderer output routing in 1-channel runtime mode.",
+  "scenario_ids": [
+    "locusq_renderer_spatial_output",
+    "locusq_renderer_no_clipping",
+    "locusq_renderer_distance_attenuation"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "phase_2_8_output_layout_mono",
+    "num_channels": "1"
+  }
+}

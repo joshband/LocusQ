@@ -615,3 +615,107 @@ Result: `PASS` (`0 warning(s)`)
 Artifacts:
 - `plugins/LocusQ/TestEvidence/locusq_build_continue_20260219T192122Z.log`
 - `plugins/LocusQ/TestEvidence/locusq_smoke_continue_20260219T192136Z.log`
+
+## Phase 2.8 Output Layout Expansion Snapshot (UTC 2026-02-19)
+
+40. Build plugin + QA targets after bus-layout expansion
+
+```sh
+cmake --build build --target LocusQ_VST3 locusq_qa -j 8
+```
+
+Result: `PASS`
+
+41. Renderer spatial-output scenario in 4-channel runtime mode
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4
+```
+
+Result: `PASS`
+- `non_finite`: `PASS`
+- `clipping`: `PASS`
+- `rms_energy`: `PASS`
+
+42. Smoke-suite regression in 4-channel runtime mode
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json --channels 4
+```
+
+Result: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_build_phase_2_8_quad_layout_20260219T192849Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_renderer_spatial_output_quad4_20260219T192849Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_smoke_suite_quad4_20260219T192849Z.log`
+
+## Phase 2.8 Output Mapping + Telemetry Snapshot (UTC 2026-02-19)
+
+43. JS syntax gate after output-layout telemetry UI wiring
+
+```sh
+node --input-type=module --check < Source/ui/public/js/index.js
+```
+
+Result: `PASS`
+
+44. Build plugin + QA targets after explicit channel-map routing changes
+
+```sh
+cmake --build build --target LocusQ_VST3 locusq_qa -j 8
+```
+
+Result: `PASS`
+
+45. Output-layout mono regression suite
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+
+46. Output-layout stereo regression suite
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+
+47. Output-layout quad regression suite
+
+```sh
+./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/locusq_ui_phase_2_8_layout_js_check_20260219T194047Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_build_phase_2_8_layout_mapping_20260219T194047Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_8_output_layout_mono_suite_20260219T194356Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_8_output_layout_stereo_suite_20260219T194356Z.log`
+- `plugins/LocusQ/TestEvidence/locusq_phase_2_8_output_layout_quad_suite_20260219T194356Z.log`
+
+## Phase 2.9 QA/CI Harness Expansion Snapshot (UTC 2026-02-19)
+
+48. Verify CI workflow now includes explicit quad matrix lanes and seeded pluginval stress job
+
+```sh
+rg -n "qa-pluginval-seeded-stress|--channels 4|ci_phase_2_6_host_edge_.*_ch4|pluginval_seeded_stress/status.tsv" .github/workflows/qa_harness.yml
+```
+
+Result: `PASS` (quad matrix and seeded pluginval stress definitions present in workflow)
+
+49. Validate docs freshness after phase 2.9 sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- `plugins/LocusQ/.github/workflows/qa_harness.yml`

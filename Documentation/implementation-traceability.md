@@ -26,6 +26,8 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.7b: Viewport emitter selection/movement path and calibration visualization state wiring
 - Phase 2.7c: UI control wiring/state sync closure (tabs, toggles, dropdowns, text input persistence, transport/keyframe roundtrip)
 - Phase 2.7e: Pluginval automation stability guard for mode-transition scene registration
+- Phase 2.8: Output layout expansion groundwork (mono/stereo/quad bus-layout acceptance)
+- Phase 2.9: QA/CI harness expansion for quad matrix + seeded pluginval stress
 - Reference: `.ideas/plan.md`
 
 ## Phase 2.4 Parameter Mapping
@@ -186,7 +188,53 @@ This document tracks end-to-end parameter wiring for implementation phases compl
   - Repro before fix: `TestEvidence/pluginval_repro_seed_0x2a331c6.log` (`FAIL`, segfault under automation churn).
   - Crash capture: `TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log` (top frame in `SpatialRenderer::process`).
   - Deterministic pass after fix: `TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log` (`PASS`).
-  - Stability probe: `TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv` (`10/10 PASS`).
+- Stability probe: `TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv` (`10/10 PASS`).
+
+## Phase 2.8 Output Layout Expansion Coverage
+
+- Processor bus-layout validation:
+  - `Source/PluginProcessor.cpp` (`isBusesLayoutSupported`) now accepts mono/stereo input with mono/stereo/quad output (`quadraphonic` and `discrete(4)`).
+  - Existing stereo/mono render/downmix paths remain unchanged in `Source/SpatialRenderer.h` (`SpatialRenderer::process`).
+- Explicit channel-order routing:
+  - `Source/SpatialRenderer.h` now defines internal speaker order (`FL, FR, RR, RL`) separately from host quad output order (`FL, FR, RL, RR`) via `kQuadOutputSpeakerOrder = [0,1,3,2]`.
+  - Quad rendering now uses deterministic output-channel mapping instead of direct index passthrough.
+- Scene-state telemetry:
+  - `Source/PluginProcessor.cpp` (`getSceneStateJSON`) now publishes `outputChannels`, `outputLayout`, `rendererOutputMode`, `rendererOutputChannels`, `rendererInternalSpeakers`, and `rendererQuadMap`.
+  - `Source/ui/public/js/index.js` surfaces output-layout telemetry in renderer viewport info.
+- Regression suites:
+  - `qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json` (1-channel route checks).
+  - `qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json` (2-channel route checks).
+  - `qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json` (4-channel route checks).
+- Focused non-manual verification:
+  - Build: `TestEvidence/locusq_build_phase_2_8_quad_layout_20260219T192849Z.log` (`PASS`).
+  - Renderer 4-channel scenario: `TestEvidence/locusq_renderer_spatial_output_quad4_20260219T192849Z.log` (`PASS`).
+  - Smoke suite 4-channel mode: `TestEvidence/locusq_smoke_suite_quad4_20260219T192849Z.log` (`PASS`, `4 PASS / 0 WARN / 0 FAIL`).
+  - JS bridge syntax gate: `TestEvidence/locusq_ui_phase_2_8_layout_js_check_20260219T194047Z.log` (`PASS`).
+  - Mapping build refresh: `TestEvidence/locusq_build_phase_2_8_layout_mapping_20260219T194047Z.log` (`PASS`).
+  - Mono suite: `TestEvidence/locusq_phase_2_8_output_layout_mono_suite_20260219T194356Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`).
+  - Stereo suite: `TestEvidence/locusq_phase_2_8_output_layout_stereo_suite_20260219T194356Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`).
+  - Quad suite: `TestEvidence/locusq_phase_2_8_output_layout_quad_suite_20260219T194356Z.log` (`PASS`, `3 PASS / 0 WARN / 0 FAIL`).
+
+## Phase 2.9 QA/CI Harness Expansion Coverage
+
+- CI harness workflow expansion:
+  - `.github/workflows/qa_harness.yml` (`qa-critical`) now runs explicit quad lanes (`--channels 4`) for:
+    - `qa/scenarios/locusq_renderer_spatial_output.json`
+    - `qa/scenarios/locusq_smoke_suite.json`
+    - `qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json` (`2ch/4ch` matrix at host edge sample-rate/block-size pairs)
+    - `qa/scenarios/locusq_26_full_system_cpu_draft.json` (`48k/512` in both `2ch` and `4ch`)
+- Seeded pluginval stress lane:
+  - `.github/workflows/qa_harness.yml` adds `qa-pluginval-seeded-stress` (macOS).
+  - Builds `LocusQ_VST3`, installs `pluginval`, then executes strictness-5 seeded runs for:
+    - `0x2a331c6`
+    - `0x2a331c7`
+    - `0x2a331c8`
+    - `0x2a331c9`
+    - `0x2a331ca`
+  - Per-seed logs and `qa_output/pluginval_seeded_stress/status.tsv` are published as CI artifacts.
+- Result gating:
+  - Existing `result.json` pass/warn/skip gating remains active.
+  - Seeded pluginval lane fails CI on any non-zero seed exit.
 
 ## Notes
 

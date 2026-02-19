@@ -114,6 +114,16 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-19T19:21:22Z | continue checkpoint build | `cmake --build build --target LocusQ_VST3 locusq_qa -j 8` | PASS |
 | 2026-02-19T19:21:36Z | continue checkpoint smoke suite | `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json` | PASS (`4 PASS / 0 WARN / 0 FAIL`) |
 | 2026-02-19T19:22:04Z | continue checkpoint docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS |
+| 2026-02-19T19:28:49Z | phase 2.8 bus-layout expansion build | `cmake --build build --target LocusQ_VST3 locusq_qa -j 8` | PASS |
+| 2026-02-19T19:28:49Z | phase 2.8 renderer 4-channel scenario | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4` | PASS |
+| 2026-02-19T19:28:49Z | phase 2.8 smoke suite 4-channel mode | `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json --channels 4` | PASS (`4 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:37:25Z | phase 2.8 output telemetry JS check | `node --input-type=module --check < Source/ui/public/js/index.js` | PASS |
+| 2026-02-19T19:37:25Z | phase 2.8 output mapping build | `cmake --build build --target LocusQ_VST3 locusq_qa -j 8` | PASS |
+| 2026-02-19T19:37:25Z | phase 2.8 stereo layout suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:37:25Z | phase 2.8 quad layout suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:43:56Z | phase 2.8 mono layout suite | `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-19T19:44:13Z | phase 2.9 CI quad/pluginval lane definition check | `rg -n "qa-pluginval-seeded-stress\|--channels 4\|ci_phase_2_6_host_edge_.*_ch4\|pluginval_seeded_stress/status.tsv" .github/workflows/qa_harness.yml` | PASS |
+| 2026-02-19T19:44:13Z | phase 2.9 docs freshness gate check | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.
