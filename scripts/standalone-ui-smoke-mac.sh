@@ -72,7 +72,7 @@ if ! pgrep -x "$APP_NAME" >/dev/null 2>&1; then
   exit 4
 fi
 
-osascript <<OSA
+osascript >/dev/null <<OSA
 tell application "$APP_NAME" to activate
 delay 0.6
 tell application "System Events"
@@ -87,35 +87,119 @@ OSA
 
 sleep 0.6
 
-get_window_geometry() {
-  osascript <<OSA
+get_window_geometry_once() {
+  osascript 2>/dev/null <<OSA || true
 tell application "System Events"
   tell process "$APP_NAME"
-    set p to position of front window
-    set s to size of front window
-    return (item 1 of p as string) & "," & (item 2 of p as string) & "," & (item 1 of s as string) & "," & (item 2 of s as string)
+    if (count of windows) = 0 then error "No front window for $APP_NAME"
+    set p to value of attribute "AXPosition" of front window
+    set s to value of attribute "AXSize" of front window
+    set xPos to (item 1 of p) as integer
+    set yPos to (item 2 of p) as integer
+    set w to (item 1 of s) as integer
+    set h to (item 2 of s) as integer
+    return (xPos as string) & "," & (yPos as string) & "," & (w as string) & "," & (h as string)
   end tell
 end tell
 OSA
 }
 
-WINDOW_GEOM="$(get_window_geometry)"
+WINDOW_GEOM=""
+for _ in {1..30}; do
+  candidate="$(get_window_geometry_once)"
+  candidate="${candidate//[[:space:]]/}"
+  if [[ "$candidate" =~ ^[0-9]+,[0-9]+,[0-9]+,[0-9]+$ ]]; then
+    IFS=',' read -r cx cy cw ch <<< "$candidate"
+    if (( cw > 200 && ch > 200 )); then
+      WINDOW_GEOM="$candidate"
+      break
+    fi
+  fi
+  sleep 0.15
+done
+
+if [[ -z "$WINDOW_GEOM" ]]; then
+  # Fallback to expected geometry if AX data is temporarily unavailable.
+  WINDOW_GEOM="120,80,1280,820"
+  echo "WARN: Window geometry query unavailable; using fallback ${WINDOW_GEOM}"
+fi
+
 IFS=',' read -r WIN_X WIN_Y WIN_W WIN_H <<< "$WINDOW_GEOM"
+echo "window_geom: ${WIN_X},${WIN_Y},${WIN_W},${WIN_H}"
+
+CONTENT_X_OFFSET="${CONTENT_X_OFFSET_OVERRIDE:-0}"
+CONTENT_Y_OFFSET="${CONTENT_Y_OFFSET_OVERRIDE:-}"
+if [[ ! "$CONTENT_X_OFFSET" =~ ^-?[0-9]+$ ]]; then
+  CONTENT_X_OFFSET=0
+fi
+
+detect_content_y_offset() {
+  local image_path="$1"
+  python3 - "$image_path" <<'PY'
+import sys
+from PIL import Image, ImageStat
+
+path = sys.argv[1]
+img = Image.open(path).convert("RGB")
+w, h = img.size
+limit = min(h, 280)
+
+lum = []
+for y in range(limit):
+    row = img.crop((0, y, w, y + 1))
+    r, g, b = ImageStat.Stat(row).mean
+    lum.append(0.2126 * r + 0.7152 * g + 0.0722 * b)
+
+# Detect bright warning strip band common in JUCE standalone.
+band = None
+y = 10
+while y < limit:
+    if lum[y] > 170:
+        start = y
+        while y < limit and lum[y] > 170:
+            y += 1
+        end = y - 1
+        if end - start + 1 >= 8:
+            band = (start, end)
+            break
+    else:
+        y += 1
+
+if band is not None:
+    _, end = band
+    for yy in range(end + 1, min(limit, end + 150)):
+        if lum[yy] < 90:
+            print(yy)
+            sys.exit(0)
+
+# Fallback: first sufficiently dark stable run after titlebar.
+for yy in range(20, max(21, limit - 6)):
+    if all(lum[yy + k] < 90 for k in range(6)):
+        print(yy)
+        sys.exit(0)
+
+print(0)
+PY
+}
 
 capture_window() {
   local path="$1"
-  screencapture -x -R"${WIN_X},${WIN_Y},${WIN_W},${WIN_H}" "$path"
+  if ! screencapture -x -R"${WIN_X},${WIN_Y},${WIN_W},${WIN_H}" "$path"; then
+    echo "WARN: Rect capture failed; falling back to full-screen capture."
+    screencapture -x "$path"
+  fi
 }
 
 click_rel() {
   local rel_x="$1"
   local rel_y="$2"
-  osascript <<OSA
+  osascript >/dev/null <<OSA
 tell application "System Events"
   tell process "$APP_NAME"
+    set frontmost to true
     set p to position of front window
-    set absX to (item 1 of p) + ${rel_x}
-    set absY to (item 2 of p) + ${rel_y}
+    set absX to (item 1 of p) + ${CONTENT_X_OFFSET} + ${rel_x}
+    set absY to (item 2 of p) + ${CONTENT_Y_OFFSET:-0} + ${rel_y}
     click at {absX, absY}
   end tell
 end tell
@@ -124,7 +208,7 @@ OSA
 
 type_text_replace() {
   local text="$1"
-  osascript <<OSA
+  osascript >/dev/null <<OSA
 tell application "System Events"
   tell process "$APP_NAME"
     keystroke "a" using {command down}
@@ -182,7 +266,9 @@ run_click_test() {
   capture_window "$after"
 
   local score
-  score="$(diff_score "$before" "$after" "$roi_x" "$roi_y" "$roi_w" "$roi_h")"
+  local roi_x_adj=$((roi_x + CONTENT_X_OFFSET))
+  local roi_y_adj=$((roi_y + CONTENT_Y_OFFSET))
+  score="$(diff_score "$before" "$after" "$roi_x_adj" "$roi_y_adj" "$roi_w" "$roi_h")"
 
   local result="FAIL"
   awk -v a="$score" -v b="$threshold" 'BEGIN{exit !(a > b)}' && result="PASS"
@@ -212,7 +298,9 @@ run_text_test() {
   capture_window "$after"
 
   local score
-  score="$(diff_score "$before" "$after" "$roi_x" "$roi_y" "$roi_w" "$roi_h")"
+  local roi_x_adj=$((roi_x + CONTENT_X_OFFSET))
+  local roi_y_adj=$((roi_y + CONTENT_Y_OFFSET))
+  score="$(diff_score "$before" "$after" "$roi_x_adj" "$roi_y_adj" "$roi_w" "$roi_h")"
 
   local result="FAIL"
   awk -v a="$score" -v b="$threshold" 'BEGIN{exit !(a > b)}' && result="PASS"
@@ -220,8 +308,20 @@ run_text_test() {
   echo "${test_id}: ${result} (score=${score}, threshold=${threshold})"
 }
 
-# Coordinates are relative to the app window top-left after forced resize.
-# These are smoke-level checks for visual state changes, not full correctness.
+# Coordinates are relative to plugin content top-left (not title/warning strip).
+# Script auto-detects content Y offset for JUCE standalone windows.
+BOOTSHOT="$OUT_DIR/_bootstrap_window.png"
+capture_window "$BOOTSHOT"
+
+if [[ -z "$CONTENT_Y_OFFSET" ]]; then
+  CONTENT_Y_OFFSET="$(detect_content_y_offset "$BOOTSHOT")"
+fi
+if [[ ! "$CONTENT_Y_OFFSET" =~ ^-?[0-9]+$ ]]; then
+  CONTENT_Y_OFFSET=0
+fi
+echo "content_offset: x=${CONTENT_X_OFFSET}, y=${CONTENT_Y_OFFSET}"
+
+# Smoke-level checks for visual state changes, not full semantic correctness.
 run_click_test "UI-01-tab-renderer"   275 58  74 40 320 28 0.80
 run_click_test "UI-01-tab-emitter"    180 58  74 40 320 28 0.80
 run_click_test "UI-02-quality-badge" 1185 58 1120 40 130 30 0.60
@@ -229,7 +329,7 @@ run_click_test "UI-03-toggle-size"   1228 394 1190 374  80 42 0.45
 run_click_test "UI-04-pos-mode-dd"   1212 217 1088 194 154 32 0.30
 run_text_test  "UI-05-emit-label"    1140 139 "AutoUITest" 1040 118 220 30 0.35
 
-osascript <<OSA
+osascript >/dev/null <<OSA
 tell application "$APP_NAME" to quit
 OSA
 
