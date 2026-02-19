@@ -14,6 +14,14 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
 - Host: operator-selected DAW session(s) on macOS
 - Phase gate: `.ideas/plan.md` Phase 2.7 acceptance criteria
 
+## Bridge-Fix Rerun Status (2026-02-19)
+
+- A host interaction bridge fix landed after the first manual run:
+  - module-based JS loading removed for in-host compatibility (`index.html`, `js/juce/index.js`, `js/index.js`)
+  - macOS WebBrowser backend/build flags corrected (`Source/PluginEditor.cpp`, `CMakeLists.txt`)
+- Non-manual acceptance rerun after the fix is green with warn-only residuals (`qa_output/suite_result.json`).
+- Manual DAW checklist rows below still reflect the last executed manual run and now require rerun/signoff in host.
+
 ## Normative References
 - `.ideas/plan.md`
 - `.ideas/architecture.md`

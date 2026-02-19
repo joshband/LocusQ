@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-19T20:48:43Z",
+  "last_modified": "2026-02-19T21:32:12Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -218,8 +218,8 @@
       "passed": true,
       "total_tests": 45,
       "failed_tests": 0,
-      "ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
-      "last_run": "2026-02-19T20:41:49Z"
+      "ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest_retry_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+      "last_run": "2026-02-19T21:31:42Z"
     },
     "qa_suite_results": {
       "passed": true,
@@ -229,8 +229,8 @@
       "warned_scenarios": 0,
       "failed_scenarios": 0,
       "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
-      "qa_run_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
-      "last_run": "2026-02-19T20:41:49Z"
+      "qa_run_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+      "last_run": "2026-02-19T21:32:12Z"
     },
     "pluginval_results": {
       "passed": true,
@@ -403,7 +403,7 @@
     "implementation_phase_2_7a_ui_proxy_matrix_complete": true,
     "implementation_phase_2_7a_manual_host_ui_check_pending": true,
     "implementation_phase_2_7a_manual_host_ui_checklist": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
-    "implementation_phase_2_7a_manual_host_ui_status": "deferred_to_2026-02-20_user_execution",
+    "implementation_phase_2_7a_manual_host_ui_status": "pending_rerun_after_bridge_fix_2026-02-19",
     "implementation_phase_2_7b_started": true,
     "implementation_phase_2_7b_tasks_complete": true,
     "implementation_phase_2_7b_status_note": "Phase 2.7b implementation landed: viewport emitter pick/select/move is wired to APVTS position parameters, calibration speaker/meter/profile visuals are now driven by native calibration status data, and post-change smoke regression suite passed (4/4).",
@@ -420,14 +420,14 @@
     "implementation_phase_2_7c_last_run": "2026-02-19T05:09:05Z",
     "test_full_acceptance_rerun_results": {
       "overall_status": "pass_with_warning",
-      "run_id": "test_full_acceptance_rerun_20260219T044525Z",
+      "run_id": "test_full_acceptance_rerun_bridge_fix_20260219T212613Z",
       "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
-      "status_tsv": "plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_20260219T044525Z_status.tsv",
+      "status_tsv": "plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_bridge_fix_20260219T212613Z_status.tsv",
       "test_summary": "plugins/LocusQ/TestEvidence/test-summary.md",
       "trend_log": "plugins/LocusQ/TestEvidence/validation-trend.md",
       "manual_host_ui_checklist": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
-      "manual_host_ui_status": "deferred_to_2026-02-20_user_execution",
-      "last_run": "2026-02-19T04:49:13Z"
+      "manual_host_ui_status": "pending_rerun_after_bridge_fix_2026-02-19",
+      "last_run": "2026-02-19T21:32:12Z"
     },
     "implementation_phase_2_6c_allocation_free_complete": true,
     "implementation_phase_2_6c_status_note": "Audio-thread allocation warning removed for phase 2.6 full-system path: perf_total_allocations=0 and perf_allocation_free=true in allocation probe and official full-system scenario.",
@@ -681,25 +681,25 @@
     "phase_2_7c_smoke_suite_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7c.log",
     "phase_2_7c_animation_smoke_log": "plugins/LocusQ/TestEvidence/locusq_animation_smoke_phase_2_7c.log",
     "manual_host_ui_checklist_phase_2_7a": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
-    "harness_configure_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_configure_test_full_acceptance_rerun_20260219T044525Z.log",
-    "harness_build_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_build_test_full_acceptance_rerun_20260219T044525Z.log",
-    "harness_ctest_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_full_acceptance_rerun_20260219T044525Z.log",
+    "harness_configure_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_configure_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "harness_build_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_build_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "harness_ctest_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/harness_ctest_retry_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
     "qa_build_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_test_full_acceptance_rerun_20260219T044525Z.log",
-    "qa_smoke_suite_emitter_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_emitter_test_full_acceptance_rerun_20260219T044525Z.log",
-    "qa_phase_2_5_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_5_acceptance_suite_test_full_acceptance_rerun_20260219T044525Z.log",
-    "qa_phase_2_6_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_phase_2_6_acceptance_suite_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_smoke_suite_emitter_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_smoke_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_phase_2_5_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_phase_2_6_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_phase_2_6_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
     "qa_animation_smoke_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_animation_internal_smoke_48k512_test_full_acceptance_rerun_20260219T044525Z.log",
-    "qa_full_system_48k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_full_system_cpu_draft_48k512_test_full_acceptance_rerun_20260219T044525Z.log",
+    "qa_full_system_48k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_full_system_48k512_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
     "qa_host_edge_44k1_256_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_44k1_256_test_full_acceptance_rerun_20260219T044525Z.log",
     "qa_host_edge_48k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k512_test_full_acceptance_rerun_20260219T044525Z.log",
     "qa_host_edge_48k1024_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_48k1024_test_full_acceptance_rerun_20260219T044525Z.log",
     "qa_host_edge_96k512_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_26_host_edge_96k512_test_full_acceptance_rerun_20260219T044525Z.log",
     "plugin_build_vst3_standalone_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/locusq_plugin_build_vst3_standalone_test_full_acceptance_rerun_20260219T044525Z.log",
-    "pluginval_test_full_acceptance_rerun_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_test_full_acceptance_rerun_20260219T044525Z_stdout.log",
+    "pluginval_test_full_acceptance_rerun_stdout_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
     "pluginval_test_full_acceptance_rerun_stderr_log": "plugins/LocusQ/TestEvidence/pluginval_test_full_acceptance_rerun_20260219T044525Z_stderr.log",
     "pluginval_test_full_acceptance_rerun_exit_code_file": "plugins/LocusQ/TestEvidence/pluginval_test_full_acceptance_rerun_20260219T044525Z_exit_code.txt",
-    "standalone_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/standalone_test_full_acceptance_rerun_20260219T044525Z.log",
-    "test_full_acceptance_rerun_status_tsv": "plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_20260219T044525Z_status.tsv",
+    "standalone_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/standalone_open_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "test_full_acceptance_rerun_status_tsv": "plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_bridge_fix_20260219T212613Z_status.tsv",
     "phase_2_6c_qa_build_log": "plugins/LocusQ/TestEvidence/locusq_qa_build_phase_2_6c_allocation_free.log",
     "phase_2_6c_vst3_build_log": "plugins/LocusQ/TestEvidence/locusq_build_phase_2_6c_vst3.log",
     "phase_2_6c_smoke_suite_log": "plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_6c_allocation_free.log",
@@ -787,7 +787,13 @@
     "test_non_manual_acceptance_matrix_rerun_status_tsv": "plugins/LocusQ/TestEvidence/test_non_manual_acceptance_matrix_rerun_20260219T202424Z_status.tsv",
     "test_non_manual_acceptance_matrix_post_25_fix_status_tsv": "plugins/LocusQ/TestEvidence/test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z_status.tsv",
     "qa_phase_2_5_suite_test_non_manual_acceptance_matrix_post_25_fix_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
-    "pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log"
+    "pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
+    "pluginval_test_full_acceptance_rerun_with_gui_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_with_gui_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_phase_2_8_stereo_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_phase_2_8_stereo_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_phase_2_8_quad_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_phase_2_8_quad_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_phase_2_9_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_phase_2_9_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_phase_2_11_suite_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_phase_2_11_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "qa_host_edge_roundtrip_test_full_acceptance_rerun_log": "plugins/LocusQ/TestEvidence/qa_host_edge_roundtrip_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
   },
   "distribution": {
     "platforms": [

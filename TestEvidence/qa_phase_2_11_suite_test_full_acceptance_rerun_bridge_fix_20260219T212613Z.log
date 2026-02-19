@@ -1,0 +1,4 @@
+Running suite: qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json
+
+=== Suite: locusq_phase_2_11_snapshot_migration_suite [PASS] ===
+  Total: 2  Pass: 2  Warn: 0  Fail: 0  Error: 0  Skip: 0

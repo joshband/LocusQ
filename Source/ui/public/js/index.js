@@ -1,4 +1,7 @@
-import * as Juce from "./juce/index.js";
+const Juce = window.Juce;
+if (!Juce) {
+    throw new Error("LocusQ: JUCE bridge API unavailable (window.Juce missing)");
+}
 
 // ===========================================================================
 // LocusQ WebView – JUCE Parameter Integration & Three.js Viewport

@@ -1,0 +1,141 @@
+{
+  "plugin": "LocusQ",
+  "phase": "test_full_acceptance_rerun_bridge_fix",
+  "generated_at": "2026-02-19T21:32:12Z",
+  "run_id": "test_full_acceptance_rerun_bridge_fix_20260219T212613Z",
+  "overall_status": "PASS_WITH_WARNING",
+  "harness": {
+    "path": "/Users/artbox/Documents/Repos/audio-dsp-qa-harness",
+    "configure_log": "plugins/LocusQ/TestEvidence/harness_configure_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "build_log": "plugins/LocusQ/TestEvidence/harness_build_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "ctest_log": "plugins/LocusQ/TestEvidence/harness_ctest_retry_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "ctest_initial_log": "plugins/LocusQ/TestEvidence/harness_ctest_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
+    "ctest_summary": "100% tests passed, 0 tests failed out of 45",
+    "notes": [
+      "Initial harness ctest run had a transient performance_profiler_test failure.",
+      "Immediate retry passed (45/45) with no code changes."
+    ]
+  },
+  "qa_runs": [
+    {
+      "id": "smoke_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_smoke_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "phase_2_5_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_phase_2_5_acceptance_suite.json",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "phase_2_6_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_phase_2_6_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "phase_2_8_stereo_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json",
+      "status": "WARN",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_phase_2_8_stereo_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "phase_2_8_quad_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json",
+      "status": "WARN",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_phase_2_8_quad_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "phase_2_9_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_phase_2_9_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "phase_2_11_suite",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_phase_2_11_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "full_system_cpu_48k512",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_26_full_system_cpu_draft.json",
+      "sample_rate": 48000,
+      "block_size": 512,
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_full_system_48k512_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    {
+      "id": "host_edge_roundtrip",
+      "scenario": "plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence_log": "plugins/LocusQ/TestEvidence/qa_host_edge_roundtrip_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    }
+  ],
+  "suites": {
+    "smoke": { "total": 4, "pass": 4, "warn": 0, "fail": 0, "error": 0, "skip": 0 },
+    "phase_2_5": { "total": 9, "pass": 9, "warn": 0, "fail": 0, "error": 0, "skip": 0 },
+    "phase_2_6": { "total": 3, "pass": 3, "warn": 0, "fail": 0, "error": 0, "skip": 0 },
+    "phase_2_8_stereo": { "total": 3, "pass": 2, "warn": 1, "fail": 0, "error": 0, "skip": 0 },
+    "phase_2_8_quad": { "total": 3, "pass": 2, "warn": 1, "fail": 0, "error": 0, "skip": 0 },
+    "phase_2_9": { "total": 2, "pass": 2, "warn": 0, "fail": 0, "error": 0, "skip": 0 },
+    "phase_2_11": { "total": 2, "pass": 2, "warn": 0, "fail": 0, "error": 0, "skip": 0 }
+  },
+  "full_system_cpu_48k512": {
+    "perf_avg_block_time_ms": 0.0687689,
+    "perf_p95_block_time_ms": 0.0904191,
+    "perf_meets_deadline": true,
+    "perf_allocation_free": true,
+    "peak_level": -46.8127,
+    "non_finite": 0,
+    "rms_energy": -55.2822
+  },
+  "host_validation": {
+    "pluginval_skip_gui": {
+      "status": "PASS",
+      "exit_code": 0,
+      "log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    "pluginval_with_gui": {
+      "status": "PASS",
+      "exit_code": 0,
+      "log": "plugins/LocusQ/TestEvidence/pluginval_strict5_with_gui_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    },
+    "standalone_open": {
+      "status": "PASS",
+      "exit_code": 0,
+      "log": "plugins/LocusQ/TestEvidence/standalone_open_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log"
+    }
+  },
+  "manual_host_ui_acceptance": {
+    "status": "pending_rerun_after_bridge_fix_2026-02-19",
+    "checklist": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md"
+  },
+  "regressions": [
+    {
+      "id": "phase_2_8_distance_attenuation_level_stereo",
+      "severity": "WARN",
+      "details": "locusq_phase_2_8_output_layout_stereo_suite remains warn-only (2 PASS / 1 WARN / 0 FAIL)."
+    },
+    {
+      "id": "phase_2_8_distance_attenuation_level_quad",
+      "severity": "WARN",
+      "details": "locusq_phase_2_8_output_layout_quad_suite remains warn-only (2 PASS / 1 WARN / 0 FAIL)."
+    }
+  ],
+  "notes": [
+    "Bridge-fix rerun after host interactivity triage: no blocking FAILs in plugin QA suites.",
+    "Manual DAW checklist must be rerun to confirm in-host click-path closure for 2.7 controls."
+  ]
+}

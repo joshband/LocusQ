@@ -1079,3 +1079,72 @@ Artifacts:
 - `plugins/LocusQ/TestEvidence/qa_phase_2_11_suite_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log`
 - `plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log`
 - `plugins/LocusQ/TestEvidence/standalone_open_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log`
+
+## Full Acceptance Rerun Bridge-Fix Snapshot (UTC 2026-02-19)
+
+Run ID: `test_full_acceptance_rerun_bridge_fix_20260219T212613Z`
+
+74. Rebuild plugin + QA targets after host-bridge triage fix
+
+```sh
+cmake -S . -B build_local -DBUILD_LOCUSQ_QA=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake --build build_local --target LocusQ_VST3 LocusQ_AU LocusQ_Standalone locusq_qa --config Release -j 4
+```
+
+Result: `PASS`
+
+75. Execute full acceptance non-manual matrix (harness + suites + perf/host + pluginval + standalone)
+
+```sh
+cmake -S /Users/artbox/Documents/Repos/audio-dsp-qa-harness -B /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test -DBUILD_QA_TESTS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake --build /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test -j 4
+ctest --test-dir /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test --output-on-failure
+./build_local/locusq_qa_artefacts/Release/locusq_qa qa/scenarios/locusq_smoke_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_26_full_system_cpu_draft.json
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json
+/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3
+open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS_WITH_WARNING`
+- Harness: `PASS` (`45/45`) on immediate retry (`performance_profiler_test` transient on first ctest pass).
+- Core suites: `PASS`
+  - `locusq_smoke_suite`: `4 PASS / 0 WARN / 0 FAIL`
+  - `locusq_phase_2_5_acceptance_suite`: `9 PASS / 0 WARN / 0 FAIL`
+  - `locusq_phase_2_6_acceptance_suite`: `3 PASS / 0 WARN / 0 FAIL`
+  - `locusq_phase_2_9_renderer_cpu_suite`: `2 PASS / 0 WARN / 0 FAIL`
+  - `locusq_phase_2_11_snapshot_migration_suite`: `2 PASS / 0 WARN / 0 FAIL`
+- Warn-only suites (non-blocking):
+  - `locusq_phase_2_8_output_layout_stereo_suite`: `2 PASS / 1 WARN / 0 FAIL`
+  - `locusq_phase_2_8_output_layout_quad_suite`: `2 PASS / 1 WARN / 0 FAIL`
+- Perf snapshot:
+  - `qa_full_system_48k512`: `perf_avg_block_time_ms=0.0687689`, `perf_p95_block_time_ms=0.0904191`, `perf_allocation_free=true`
+- Host snapshot:
+  - `pluginval` strictness 5 (`skip GUI`): `SUCCESS`
+  - `pluginval` strictness 5 (`with GUI`): `SUCCESS` (Editor Automation completed)
+  - standalone open smoke: `PASS`
+
+Artifacts:
+- `plugins/LocusQ/TestEvidence/test_full_acceptance_rerun_bridge_fix_20260219T212613Z_status.tsv`
+- `plugins/LocusQ/TestEvidence/harness_configure_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/harness_build_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/harness_ctest_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/harness_ctest_retry_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_smoke_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_phase_2_6_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_phase_2_8_stereo_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_phase_2_8_quad_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_phase_2_9_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_phase_2_11_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_full_system_48k512_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/qa_host_edge_roundtrip_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/pluginval_strict5_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/pluginval_strict5_with_gui_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+- `plugins/LocusQ/TestEvidence/standalone_open_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`

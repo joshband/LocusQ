@@ -18,147 +18,157 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     // Create WebBrowserComponent with platform-aware backend
     DBG ("LocusQ: Creating WebView");
-    webView = std::make_unique<juce::WebBrowserComponent> (
-        juce::WebBrowserComponent::Options{}
-            .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
-            .withWinWebView2Options (
-                juce::WebBrowserComponent::Options::WinWebView2{}
-                    .withUserDataFolder (juce::File::getSpecialLocation (
-                        juce::File::SpecialLocationType::tempDirectory)))
-            .withNativeIntegrationEnabled()
-            .withNativeFunction ("locusqStartCalibration",
-                                 [this] (const juce::Array<juce::var>& args,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                     completion (audioProcessor.startCalibrationFromUI (options));
-                                 })
-            .withNativeFunction ("locusqAbortCalibration",
-                                 [this] (const juce::Array<juce::var>&,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     audioProcessor.abortCalibrationFromUI();
-                                     completion (true);
-                                 })
-            .withNativeFunction ("locusqGetKeyframeTimeline",
-                                 [this] (const juce::Array<juce::var>&,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     completion (audioProcessor.getKeyframeTimelineForUI());
-                                 })
-            .withNativeFunction ("locusqSetKeyframeTimeline",
-                                 [this] (const juce::Array<juce::var>& args,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     if (args.isEmpty())
-                                     {
-                                         completion (false);
-                                         return;
-                                     }
+    auto webViewOptions = juce::WebBrowserComponent::Options{};
 
-                                     completion (audioProcessor.setKeyframeTimelineFromUI (args[0]));
-                                 })
-            .withNativeFunction ("locusqSetTimelineTime",
-                                 [this] (const juce::Array<juce::var>& args,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     if (args.isEmpty())
-                                     {
-                                         completion (false);
-                                         return;
-                                     }
+#if JUCE_WINDOWS
+    webViewOptions = webViewOptions
+        .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
+        .withWinWebView2Options (
+            juce::WebBrowserComponent::Options::WinWebView2{}
+                .withUserDataFolder (juce::File::getSpecialLocation (
+                    juce::File::SpecialLocationType::tempDirectory)));
+#else
+    webViewOptions = webViewOptions
+        .withBackend (juce::WebBrowserComponent::Options::Backend::defaultBackend);
+#endif
 
-                                     completion (audioProcessor.setTimelineCurrentTimeFromUI (static_cast<double> (args[0])));
-                                 })
-            .withNativeFunction ("locusqListEmitterPresets",
-                                 [this] (const juce::Array<juce::var>&,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
+    webViewOptions = webViewOptions
+        .withNativeIntegrationEnabled()
+        .withNativeFunction ("locusqStartCalibration",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                 completion (audioProcessor.startCalibrationFromUI (options));
+                             })
+        .withNativeFunction ("locusqAbortCalibration",
+                             [this] (const juce::Array<juce::var>&,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 audioProcessor.abortCalibrationFromUI();
+                                 completion (true);
+                             })
+        .withNativeFunction ("locusqGetKeyframeTimeline",
+                             [this] (const juce::Array<juce::var>&,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.getKeyframeTimelineForUI());
+                             })
+        .withNativeFunction ("locusqSetKeyframeTimeline",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 if (args.isEmpty())
                                  {
-                                     completion (audioProcessor.listEmitterPresetsFromUI());
-                                 })
-            .withNativeFunction ("locusqSaveEmitterPreset",
-                                 [this] (const juce::Array<juce::var>& args,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                     completion (audioProcessor.saveEmitterPresetFromUI (options));
-                                 })
-            .withNativeFunction ("locusqLoadEmitterPreset",
-                                 [this] (const juce::Array<juce::var>& args,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                     completion (audioProcessor.loadEmitterPresetFromUI (options));
-                                 })
-            .withNativeFunction ("locusqGetUiState",
-                                 [this] (const juce::Array<juce::var>&,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     completion (audioProcessor.getUIStateFromUI());
-                                 })
-            .withNativeFunction ("locusqSetUiState",
-                                 [this] (const juce::Array<juce::var>& args,
-                                         juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                                 {
-                                     if (args.isEmpty())
-                                     {
-                                         completion (false);
-                                         return;
-                                     }
+                                     completion (false);
+                                     return;
+                                 }
 
-                                     completion (audioProcessor.setUIStateFromUI (args[0]));
-                                 })
-            .withResourceProvider ([this] (const auto& url) { return getResource (url); })
-            .withOptionsFrom (modeRelay)
-            .withOptionsFrom (bypassRelay)
-            .withOptionsFrom (calSpkConfigRelay)
-            .withOptionsFrom (calMicChannelRelay)
-            .withOptionsFrom (calSpk1OutRelay)
-            .withOptionsFrom (calSpk2OutRelay)
-            .withOptionsFrom (calSpk3OutRelay)
-            .withOptionsFrom (calSpk4OutRelay)
-            .withOptionsFrom (calTestLevelRelay)
-            .withOptionsFrom (calTestTypeRelay)
-            .withOptionsFrom (azimuthRelay)
-            .withOptionsFrom (elevationRelay)
-            .withOptionsFrom (distanceRelay)
-            .withOptionsFrom (posXRelay)
-            .withOptionsFrom (posYRelay)
-            .withOptionsFrom (posZRelay)
-            .withOptionsFrom (coordModeRelay)
-            .withOptionsFrom (sizeLinkRelay)
-            .withOptionsFrom (sizeUniformRelay)
-            .withOptionsFrom (emitGainRelay)
-            .withOptionsFrom (spreadRelay)
-            .withOptionsFrom (directivityRelay)
-            .withOptionsFrom (muteRelay)
-            .withOptionsFrom (soloRelay)
-            .withOptionsFrom (emitColorRelay)
-            .withOptionsFrom (physEnableRelay)
-            .withOptionsFrom (physMassRelay)
-            .withOptionsFrom (physDragRelay)
-            .withOptionsFrom (physElasticityRelay)
-            .withOptionsFrom (physGravityRelay)
-            .withOptionsFrom (physGravityDirRelay)
-            .withOptionsFrom (physFrictionRelay)
-            .withOptionsFrom (physThrowRelay)
-            .withOptionsFrom (physResetRelay)
-            .withOptionsFrom (animEnableRelay)
-            .withOptionsFrom (animModeRelay)
-            .withOptionsFrom (animLoopRelay)
-            .withOptionsFrom (animSpeedRelay)
-            .withOptionsFrom (animSyncRelay)
-            .withOptionsFrom (masterGainRelay)
-            .withOptionsFrom (qualityRelay)
-            .withOptionsFrom (distanceModelRelay)
-            .withOptionsFrom (dopplerRelay)
-            .withOptionsFrom (airAbsorbRelay)
-            .withOptionsFrom (roomEnableRelay)
-            .withOptionsFrom (roomErOnlyRelay)
-            .withOptionsFrom (physRateRelay)
-            .withOptionsFrom (physWallsRelay)
-            .withOptionsFrom (physPauseRelay)
-            .withOptionsFrom (vizModeRelay));
+                                 completion (audioProcessor.setKeyframeTimelineFromUI (args[0]));
+                             })
+        .withNativeFunction ("locusqSetTimelineTime",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 if (args.isEmpty())
+                                 {
+                                     completion (false);
+                                     return;
+                                 }
+
+                                 completion (audioProcessor.setTimelineCurrentTimeFromUI (static_cast<double> (args[0])));
+                             })
+        .withNativeFunction ("locusqListEmitterPresets",
+                             [this] (const juce::Array<juce::var>&,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.listEmitterPresetsFromUI());
+                             })
+        .withNativeFunction ("locusqSaveEmitterPreset",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                 completion (audioProcessor.saveEmitterPresetFromUI (options));
+                             })
+        .withNativeFunction ("locusqLoadEmitterPreset",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                 completion (audioProcessor.loadEmitterPresetFromUI (options));
+                             })
+        .withNativeFunction ("locusqGetUiState",
+                             [this] (const juce::Array<juce::var>&,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.getUIStateFromUI());
+                             })
+        .withNativeFunction ("locusqSetUiState",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 if (args.isEmpty())
+                                 {
+                                     completion (false);
+                                     return;
+                                 }
+
+                                 completion (audioProcessor.setUIStateFromUI (args[0]));
+                             })
+        .withResourceProvider ([this] (const auto& url) { return getResource (url); })
+        .withOptionsFrom (modeRelay)
+        .withOptionsFrom (bypassRelay)
+        .withOptionsFrom (calSpkConfigRelay)
+        .withOptionsFrom (calMicChannelRelay)
+        .withOptionsFrom (calSpk1OutRelay)
+        .withOptionsFrom (calSpk2OutRelay)
+        .withOptionsFrom (calSpk3OutRelay)
+        .withOptionsFrom (calSpk4OutRelay)
+        .withOptionsFrom (calTestLevelRelay)
+        .withOptionsFrom (calTestTypeRelay)
+        .withOptionsFrom (azimuthRelay)
+        .withOptionsFrom (elevationRelay)
+        .withOptionsFrom (distanceRelay)
+        .withOptionsFrom (posXRelay)
+        .withOptionsFrom (posYRelay)
+        .withOptionsFrom (posZRelay)
+        .withOptionsFrom (coordModeRelay)
+        .withOptionsFrom (sizeLinkRelay)
+        .withOptionsFrom (sizeUniformRelay)
+        .withOptionsFrom (emitGainRelay)
+        .withOptionsFrom (spreadRelay)
+        .withOptionsFrom (directivityRelay)
+        .withOptionsFrom (muteRelay)
+        .withOptionsFrom (soloRelay)
+        .withOptionsFrom (emitColorRelay)
+        .withOptionsFrom (physEnableRelay)
+        .withOptionsFrom (physMassRelay)
+        .withOptionsFrom (physDragRelay)
+        .withOptionsFrom (physElasticityRelay)
+        .withOptionsFrom (physGravityRelay)
+        .withOptionsFrom (physGravityDirRelay)
+        .withOptionsFrom (physFrictionRelay)
+        .withOptionsFrom (physThrowRelay)
+        .withOptionsFrom (physResetRelay)
+        .withOptionsFrom (animEnableRelay)
+        .withOptionsFrom (animModeRelay)
+        .withOptionsFrom (animLoopRelay)
+        .withOptionsFrom (animSpeedRelay)
+        .withOptionsFrom (animSyncRelay)
+        .withOptionsFrom (masterGainRelay)
+        .withOptionsFrom (qualityRelay)
+        .withOptionsFrom (distanceModelRelay)
+        .withOptionsFrom (dopplerRelay)
+        .withOptionsFrom (airAbsorbRelay)
+        .withOptionsFrom (roomEnableRelay)
+        .withOptionsFrom (roomErOnlyRelay)
+        .withOptionsFrom (physRateRelay)
+        .withOptionsFrom (physWallsRelay)
+        .withOptionsFrom (physPauseRelay)
+        .withOptionsFrom (vizModeRelay);
+
+    webView = std::make_unique<juce::WebBrowserComponent> (std::move (webViewOptions));
 
     addAndMakeVisible (*webView);
     webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());

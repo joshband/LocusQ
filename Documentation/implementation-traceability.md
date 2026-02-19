@@ -130,6 +130,16 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | Transport/keyframe edits | `Source/ui/public/js/index.js` (`renderTimelineLanes`, `commitTimelineToNative`) | Native timeline bridge (`locusqGetKeyframeTimeline`, `locusqSetKeyframeTimeline`, `locusqSetTimelineTime`) | `locusq_timeline_json` state property (`Source/PluginProcessor.cpp`) | Play/stop/rewind and keyframe add/move/delete/curve are persisted. |
 | Numeric value steppers (`azimuth`, `elevation`, `distance`, `size`, `gain`, `spread`, `directivity`, `cal_test_level`, `phys_*`, `master gain`, `anim speed`) | `Source/ui/public/js/index.js` (`bindValueStepper`) | Slider relays/attachments (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`) | APVTS host state | Value displays are now interactive controls, not static labels. |
 
+## Phase 2.7 Host Bridge Recovery (Module/Backend Compatibility)
+
+| Surface | Prior State | Implemented Recovery | Evidence |
+|---|---|---|---|
+| Web UI bootstrap (`index.html`) | module script path (`type=\"module\"`) could fail in-host | switched to non-module script load chain (`check_native_interop.js` -> `js/juce/index.js` -> `js/index.js`) | `Source/ui/public/index.html` |
+| JUCE frontend binding (`js/juce/index.js`) | ES module import/export path | converted to global `window.Juce` bridge export for in-host compatibility | `Source/ui/public/js/juce/index.js` |
+| App binding (`js/index.js`) | direct ES module import of JUCE bridge | consumes global `window.Juce` with explicit guard | `Source/ui/public/js/index.js` |
+| Editor backend selection (`PluginEditor.cpp`) | forced `webview2` backend on all platforms | platform-aware backend: `webview2` only on Windows; default backend on macOS/Linux | `Source/PluginEditor.cpp` |
+| CMake backend flags (`CMakeLists.txt`) | `NEEDS_WEB_BROWSER=FALSE` on Apple | `NEEDS_WEB_BROWSER=TRUE` on Apple (`WKWebView` path enabled) | `CMakeLists.txt` |
+
 ## Phase 2.5 Core Files
 
 - `Source/SpatialRenderer.h`

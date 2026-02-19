@@ -32,7 +32,7 @@
   ==============================================================================
 */
 
-import "./check_native_interop.js";
+// check_native_interop.js must be loaded before this file.
 
 class PromiseHandler {
   constructor() {
@@ -567,11 +567,10 @@ class ControlParameterIndexUpdater {
   }
 }
 
-export {
-  getNativeFunction,
-  getSliderState,
-  getToggleState,
-  getComboBoxState,
-  getBackendResourceAddress,
-  ControlParameterIndexUpdater,
-};
+window.Juce = window.Juce || {};
+window.Juce.getNativeFunction = getNativeFunction;
+window.Juce.getSliderState = getSliderState;
+window.Juce.getToggleState = getToggleState;
+window.Juce.getComboBoxState = getComboBoxState;
+window.Juce.getBackendResourceAddress = getBackendResourceAddress;
+window.Juce.ControlParameterIndexUpdater = ControlParameterIndexUpdater;

@@ -216,6 +216,15 @@ All notable changes to LocusQ are documented here.
   - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`
   - Expanded snapshot-migration emulation to five deterministic modes (`off`, `legacy-strip`, `force-mono`, `force-stereo`, `force-quad`).
   - Added explicit mono/stereo/quad runtime suite coverage for layout mismatch migration checks.
+- Host UI interactivity bridge recovery aligned:
+  - `Source/ui/public/index.html`
+  - `Source/ui/public/js/juce/index.js`
+  - `Source/ui/public/js/index.js`
+  - `Source/PluginEditor.cpp`
+  - `CMakeLists.txt`
+  - Removed module-based WebView JS load path and restored global JUCE bridge bindings for in-host control wiring.
+  - Corrected platform backend/build flags (`webview2` Windows-only; `NEEDS_WEB_BROWSER=TRUE` on macOS).
+  - Published bridge-fix full acceptance rerun evidence (`test_full_acceptance_rerun_bridge_fix_20260219T212613Z`) with `PASS_WITH_WARNING` and no blocking suite failures.
 
 ### Validation Snapshot (2026-02-19 UTC)
 
