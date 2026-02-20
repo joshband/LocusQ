@@ -241,23 +241,29 @@ Return:
 Complete style parity pass and promote incremental route to the primary production UI entry path while preserving rollback safety.
 
 ### Task Checklist
-- [ ] `S12-T1` Apply final style-guide parity for typography, spacing rhythm, section density, and status/quality visual stability.
-- [ ] `S12-T2` Hide or gate debug-only diagnostics sections in non-selftest runs.
-- [ ] `S12-T3` Promote Stage 12 assets as primary incremental route (`/incremental/index.html` -> Stage 12 files; update title tag/version suffix).
-- [ ] `S12-T4` Keep previous stage assets available as fallback targets (no destructive cleanup until Stage 13 signoff).
-- [ ] `S12-T5` Create Stage 12 self-test with full coverage union from Stages 9-11.
-- [ ] `S12-T6` Promote UI PR gate default to Stage 12 self-test.
+- [x] `S12-T1` Apply final style-guide parity for typography, spacing rhythm, section density, and status/quality visual stability.
+- [x] `S12-T2` Hide or gate debug-only diagnostics sections in non-selftest runs.
+- [x] `S12-T3` Promote Stage 12 assets as primary incremental route (`/incremental/index.html` -> Stage 12 files; update title tag/version suffix).
+- [x] `S12-T4` Keep previous stage assets available as fallback targets (no destructive cleanup until Stage 13 signoff).
+- [x] `S12-T5` Create Stage 12 self-test with full coverage union from Stages 9-11.
+- [x] `S12-T6` Promote UI PR gate default to Stage 12 self-test.
 
 ### Acceptance Checklist
-- [ ] Visual parity review passes against `Design/v3-style-guide.md`.
-- [ ] Primary route loads Stage 12 assets in standalone and DAW hosts.
-- [ ] Stage 12 self-test `ok=true`.
-- [ ] Gate passes with Stage 12 default.
+- [x] Visual parity review passes against `Design/v3-style-guide.md`.
+- [ ] Primary route loads Stage 12 assets in standalone and DAW hosts (standalone verified; manual DAW rerun deferred to Stage 13).
+- [x] Stage 12 self-test `ok=true`.
+- [x] Gate passes with Stage 12 default.
 
 ### Expected Evidence
 - `TestEvidence/locusq_incremental_stage12_selftest_<timestamp>.json`
 - `TestEvidence/ui_pr_gate_<timestamp>/status.tsv`
 - updated resource-request probe logs for stage12 assets
+
+### Captured Evidence (UTC 2026-02-20)
+- `TestEvidence/locusq_build_incremental_stage12_20260220T175454Z.log`
+- `TestEvidence/locusq_incremental_stage12_selftest_20260220T175530Z.json`
+- `TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage12_resource_probe_20260220T175539Z.log`
 
 ### Codex Mega-Prompts
 

@@ -15,12 +15,12 @@ Track implementation parity against:
 This checklist is the live implementation tracker. Completed items are `[x]`; open work remains `[ ]`.
 
 ## Current Baseline
-- Incremental UI route: `Source/ui/public/incremental/index_stage11.html`
-- Runtime logic: `Source/ui/public/incremental/js/stage11_ui.js`
+- Incremental UI route: `Source/ui/public/incremental/index_stage12.html`
+- Runtime logic: `Source/ui/public/incremental/js/stage12_ui.js`
 - Native bridge hooks: `Source/PluginEditor.cpp`, `Source/PluginProcessor.cpp`
 - Latest automated evidence:
-  - `TestEvidence/locusq_incremental_stage11_selftest_20260220T174757Z.json`
-  - `TestEvidence/ui_pr_gate_20260220T174757Z/status.tsv`
+  - `TestEvidence/locusq_incremental_stage12_selftest_20260220T175530Z.json`
+  - `TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv`
 
 ## v3 Contract Status
 - [x] v3 design spec and style guide are finalized and approved (`Design/v3-ui-spec.md`, `Design/v3-style-guide.md`).
@@ -32,19 +32,18 @@ This checklist is the live implementation tracker. Completed items are `[x]`; op
 - [x] Draft/Final quality badge behavior is stable and non-layout-shifting.
 - [x] Calibrate capture flow has deterministic Start/Abort/Measure Again transitions with explicit automated checks.
 - [x] Calibration routing re-detect is bridged native-side and surfaced live in UI status.
-- [x] Stage 11 self-test and UI PR gate run as the default fast regression gate on macOS.
+- [x] Stage 12 self-test and UI PR gate run as the default fast regression gate on macOS.
 
 ## Remaining Parity Work
 - [ ] Complete manual DAW acceptance checklist for Stage 11 calibrate workflow (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
-- [ ] Finish visual polish pass to strict style parity (typography hierarchy, spacing rhythm, final contrast/label density refinements).
-- [ ] Promote incremental Stage 11 route into the primary production UI entry path and retire obsolete/legacy UI paths.
+- [ ] Retire obsolete/legacy incremental UI paths after Stage 13 signoff (Stage 9-11 fallback kept intentionally during Stage 12).
 - [ ] Re-run/refresh manual DAW host acceptance checklist after parity promotion (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
 
 ## Next Implementation Stages
 - [x] Stage 9: Emitter rail parity completion (identity/position/audio/physics/animation/preset groups to final v3 density). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 9 - Emitter Rail Parity Completion`).
 - [x] Stage 10: Renderer rail parity completion (system monitoring and spatial/room/global controls at final layout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 10 - Renderer Rail Parity Completion`).
 - [ ] Stage 11: Calibrate workflow parity completion (automated implementation complete; manual DAW checklist follow-up pending). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 11 - Calibrate Workflow Parity Completion`).
-- [ ] Stage 12: Visual polish and promotion (token-level styling pass, incremental->primary route switch, cleanup). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 12 - Visual Polish And Primary Route Promotion`).
+- [x] Stage 12: Visual polish and promotion (token-level styling pass, incremental->primary route switch, debug-surface gating, rollback-safe fallback retention). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 12 - Visual Polish And Primary Route Promotion`).
 - [ ] Stage 13: Final acceptance sweep (automated gate + manual DAW checklist signoff + doc closeout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 13 - Final Acceptance Sweep And Closeout`).
 
 ## Skills Routing For Remaining Work

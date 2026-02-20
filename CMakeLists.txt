@@ -89,6 +89,8 @@ juce_add_binary_data(LocusQ_WebUI
         Source/ui/public/incremental/js/stage10_ui.js
         Source/ui/public/incremental/index_stage11.html
         Source/ui/public/incremental/js/stage11_ui.js
+        Source/ui/public/incremental/index_stage12.html
+        Source/ui/public/incremental/js/stage12_ui.js
 )
 
 # ============================================

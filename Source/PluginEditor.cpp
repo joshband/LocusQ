@@ -14,7 +14,7 @@ juce::String getStandaloneWindowTitle()
 {
     return juce::String (JucePlugin_Name)
         + " v" + juce::String (JucePlugin_VersionString)
-        + " [incremental-stage11]";
+        + " [incremental-stage12]";
 }
 
 bool isUiSelfTestEnabled()
@@ -748,8 +748,8 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
     }
     else if (path == "incremental/index.html")
     {
-        resourceData = BinaryData::index_stage11_html;
-        resourceSize = BinaryData::index_stage11_htmlSize;
+        resourceData = BinaryData::index_stage12_html;
+        resourceSize = BinaryData::index_stage12_htmlSize;
         mimeType = "text/html";
     }
     else if (path == "incremental/stage1.html")
@@ -818,6 +818,12 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
         resourceSize = BinaryData::index_stage11_htmlSize;
         mimeType = "text/html";
     }
+    else if (path == "incremental/stage12.html")
+    {
+        resourceData = BinaryData::index_stage12_html;
+        resourceSize = BinaryData::index_stage12_htmlSize;
+        mimeType = "text/html";
+    }
     else if (path == "incremental/js/stage2_ui.js")
     {
         resourceData = BinaryData::stage2_ui_js;
@@ -876,6 +882,12 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
     {
         resourceData = BinaryData::stage11_ui_js;
         resourceSize = BinaryData::stage11_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage12_ui.js")
+    {
+        resourceData = BinaryData::stage12_ui_js;
+        resourceSize = BinaryData::stage12_ui_jsSize;
         mimeType = "text/javascript";
     }
     else if (path == "poc/js/poc_ui.js")
