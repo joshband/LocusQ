@@ -1071,3 +1071,66 @@ git commit -m "chore(release): CHANGELOG freeze and version bump to v1.0.0-ga"
 - [ ] Update status.json to record GA milestone
 
 ---
+
+## Section 5 — Parallel Agent Dependency Graph
+
+> **What this means:** Tasks with no incoming arrows can start immediately in separate
+> Claude Code sessions. Red = Opus 4.6, Blue = Sonnet 4.6, Green = Haiku 4.5,
+> Gold = Human. Solid arrow = hard dependency. Dashed = benefits from but can start.
+
+```mermaid
+graph TD
+    RES["Section 0 Research\nOpus 4.6"]:::opus
+    B["15-B phys_vel UI\nSonnet 4.6"]:::sonnet
+    C["15-C ADR-0007\nOpus 4.6"]:::opus
+    D["15-D Manual DAW\nHuman"]:::human
+    E["15-E Traceability\nHaiku 4.5"]:::haiku
+    F["15-F Draft Tag\nSonnet 4.6"]:::sonnet
+    A16["16-A QA Scenarios\nSonnet 4.6"]:::sonnet
+    B16["16-B RT Safety Audit\nHaiku 4.5"]:::haiku
+    C16["16-C Research Integration\nOpus 4.6"]:::opus
+    D16["16-D Viewport ADR\nOpus 4.6"]:::opus
+    E16["16-E Dir Aim Scenario\nHaiku 4.5"]:::haiku
+    A17["17-A Device Acceptance\nHuman"]:::human
+    B17["17-B Docs Freshness\nHaiku 4.5"]:::haiku
+    C17["17-C CHANGELOG\nSonnet 4.6"]:::sonnet
+    D17["17-D GA Promotion\nHuman"]:::human
+
+    B --> C
+    C --> E
+    C --> D
+    D --> F
+    E --> F
+    F --> A16
+    F --> B16
+    F -.-> C16
+    RES -.-> C16
+    C16 --> D16
+    A16 --> E16
+    A16 --> A17
+    B16 --> A17
+    C16 --> A17
+    D16 --> A17
+    E16 --> A17
+    A17 --> B17
+    B17 --> C17
+    C17 --> D17
+
+    classDef opus fill:#5c1a1a,color:#fff
+    classDef sonnet fill:#1a3a5c,color:#fff
+    classDef haiku fill:#1a5c1a,color:#fff
+    classDef human fill:#5c4a1a,color:#fff
+```
+
+### Updated Start Now (Post 15-A Resolution)
+
+Task 15-A (emit_dir UI) is already complete. The immediate next action is:
+
+| Session | Mega-Prompt | Model | Notes |
+|---------|------------|-------|-------|
+| 1 | Task 15-B (phys_vel UI) | Sonnet 4.6 | Only remaining code gap |
+| 2 | Section 0 Research | Opus 4.6 | Already running in background |
+
+After 15-B completes, run 15-C -> 15-D -> 15-E -> 15-F sequentially.
+
+---
