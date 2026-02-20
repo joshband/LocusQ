@@ -14,7 +14,214 @@ Last Modified Date: 2026-02-20
 ---
 
 ## Section 0 — Research & Ecosystem Landscape
-*[Populated in Task 8 from research agent output]*
+
+> **What this section is:** Before reading any project-specific findings, this section
+> establishes what already exists in the domain. A reader new to spatial audio should
+> understand the landscape after reading this section.
+
+### 0a. Spatial Audio Algorithms
+
+> **Plain language:** Spatial audio algorithms place sounds in 3D space so a listener
+> perceives them coming from specific directions. Different techniques trade off accuracy,
+> CPU cost, and speaker layout flexibility.
+
+**State of the art:** The field divides into four main approaches:
+- **VBAP (Vector Base Amplitude Panning):** Places sound between 2-3 speakers using
+  trigonometric gain calculations. Simple, low CPU, speaker-layout-specific.
+- **Ambisonics (HOA):** Encodes sound into a spherical harmonic representation that
+  decodes to arbitrary speaker layouts. More flexible, higher CPU, scales by order (1st-7th).
+- **Binaural/HRTF:** Renders 3D audio for headphones using head-related transfer functions.
+  Personalized HRTFs improve localization dramatically.
+- **WFS (Wave Field Synthesis):** Physical wavefront recreation using large speaker arrays.
+  Academic/installation use only.
+
+**Key libraries:**
+
+| Library | URL | License | Features | Status |
+|---------|-----|---------|----------|--------|
+| **Resonance Audio** (Google) | [github.com/resonance-audio](https://github.com/resonance-audio/resonance-audio) | Apache 2.0 | Ambisonics + binaural HRTF, C++/Web/Unity/Unreal | **Archived Nov 2023.** Read-only, no maintenance. |
+| **Steam Audio** (Valve) | [github.com/ValveSoftware/steam-audio](https://github.com/ValveSoftware/steam-audio) | Apache 2.0 | Physics-based propagation, occlusion, HRTF, C API | **Active.** v4.5.2 fully open-sourced. Best production-ready option. |
+| **SAF / SPARTA** (McCormack) | [github.com/leomccormack/Spatial_Audio_Framework](https://github.com/leomccormack/Spatial_Audio_Framework) | ISC | VBAP, ambisonics (1st-7th), HRIR, room sim | **Active.** Updated Jan 2025. Academic-grade, highly optimized (MKL/Accelerate). |
+| **IEM Plug-in Suite** | [plugins.iem.at](https://plugins.iem.at/) | GPL-3.0 | Ambisonics (1st-7th), binaural decoder, JUCE-based | **Active.** Reference ambisonics implementation. |
+| **libmysofa** | [github.com/hoene/libmysofa](https://github.com/hoene/libmysofa) | BSD-3 | SOFA HRTF file reader, C library | **Active.** Standard for HRTF data loading. |
+| **Mach1 Spatial SDK** | [github.com/Mach1Studios/m1-sdk](https://github.com/Mach1Studios/m1-sdk) | Free/open source | Format-agnostic spatial encoding, head tracking, monitoring | **Active.** v4.0 open-sourced. Lightweight, format-neutral. |
+
+**LocusQ overlap assessment:**
+
+| Component | Verdict | Rationale |
+|-----------|---------|-----------|
+| VBAP Panner | **build** | LocusQ's quad-specific 2D VBAP with elevation blending is simpler and more targeted than SAF's general VBAP. Custom build is justified — 150 LOC vs importing a large framework. |
+| Ambisonics/HOA | **ignore** | Not in v1 scope. Quad VBAP is the correct choice for 4-speaker layouts. HOA adds value only for larger arrays or headphone decode. |
+| Binaural/HRTF | **augment (post-v1)** | ADR-0006 headphone profile currently uses stereo downmix. Steam Audio or libmysofa could provide personalized HRTF for v2 headphone mode. |
+| WFS | **ignore** | Requires large speaker arrays. Not applicable to LocusQ's quad target. |
+
+---
+
+### 0b. Apple Spatial Audio & Platform APIs
+
+> **Plain language:** Apple provides built-in spatial audio processing in iOS/macOS that
+> can render 3D sound to AirPods with head tracking. The question is whether LocusQ should
+> use these APIs instead of its own spatialization.
+
+**State of the art:**
+
+| API | Purpose | Availability | Head Tracking |
+|-----|---------|-------------|---------------|
+| **PHASE** (Physical Audio Spatialization Engine) | 3D audio rendering, reverb, occlusion | iOS 15+, macOS 12+ | Yes (via CMHeadphoneMotionManager) |
+| **AVAudioEnvironmentNode** | SceneKit-style 3D audio | iOS 8+, macOS 10.10+ | No (pre-PHASE legacy) |
+| **Core Audio 3D / AU3D** | 3D audio unit hosting | macOS only | No |
+
+**PHASE assessment for LocusQ:**
+
+PHASE provides HRTF-based binaural rendering with AirPods head tracking via
+`CMHeadphoneMotionManager`. For LocusQ, this means the headphone profile (ADR-0006,
+currently post-v1) could leverage PHASE for binaural decode instead of building a custom
+HRTF renderer.
+
+**However:** PHASE is a *rendering* API, not a *plugin* API. It cannot run inside a
+VST3/AU plugin's processBlock — it expects to own the audio graph. Using PHASE would
+require either: (a) a standalone companion app that receives LocusQ's spatial metadata
+and renders to AirPods, or (b) an AU3D extension model. Neither is practical for v1.
+
+**LocusQ overlap assessment:**
+
+| Component | Verdict | Rationale |
+|-----------|---------|-----------|
+| PHASE for headphone binaural | **ignore (v1), evaluate (v2)** | Cannot run inside a plugin's audio thread. Post-v1 headphone mode should evaluate a standalone PHASE bridge or use libmysofa HRTF directly. |
+| Head tracking | **ignore (v1)** | Requires CMHeadphoneMotionManager + companion app. Not viable inside DAW plugin. |
+| AVAudioEnvironmentNode | **ignore** | Legacy API. LocusQ's custom renderer is more capable. |
+
+---
+
+### 0c. JUCE Ecosystem
+
+> **Plain language:** JUCE is the framework LocusQ is built on. It includes some built-in
+> DSP modules that overlap with what LocusQ implements custom. The question is which custom
+> implementations are justified and which are redundant.
+
+**JUCE 8 built-in DSP vs LocusQ custom:**
+
+| JUCE Module | LocusQ Custom | Justified? | Reasoning |
+|-------------|---------------|------------|-----------|
+| `dsp::Reverb` (Freeverb) | `FDNReverb.h` (4x4 Hadamard FDN) | **Yes** | JUCE Reverb is stereo Freeverb. LocusQ needs 4-channel FDN that maps naturally to quad output and takes RT60/room-size from calibration. Fundamentally different algorithm. |
+| `dsp::Convolution` | `IRCapture.h` + `RoomAnalyzer.h` | **Yes** | JUCE Convolution is for applying IRs. LocusQ needs IR *capture* and *analysis* (deconvolution, peak-picking, RT60 estimation). Different problem domain. |
+| `dsp::Panner` | `VBAPPanner.h` | **Yes** | JUCE Panner is stereo only. LocusQ needs 2D VBAP for quad layout. No overlap. |
+| `dsp::DelayLine` | `DopplerProcessor.h` | **Partial** | JUCE DelayLine could replace the custom fractional delay in DopplerProcessor. However, the custom version is <80 LOC and tightly integrated. Low value in switching. |
+| `AudioProcessorGraph` | N/A (not used) | **N/A** | LocusQ doesn't use APG — it routes via SceneGraph singleton. Different architecture. |
+
+**Community libraries:**
+
+| Library | URL | Relevance |
+|---------|-----|-----------|
+| **chowdsp_utils** | [github.com/Chowdhury-DSP/chowdsp_utils](https://github.com/Chowdhury-DSP/chowdsp_utils) | Enhanced DelayLine, StateVariableFilter, pitch shifter. Could replace DopplerProcessor's delay line, but low value vs current clean implementation. |
+| **foleys_gui_magic** | [github.com/ffAudio/foleys_gui_magic](https://github.com/ffAudio/foleys_gui_magic) | Declarative JUCE GUI. Not applicable — LocusQ uses WebView UI. |
+| **melatonin_inspector** | [github.com/sudara/melatonin_inspector](https://github.com/sudara/melatonin_inspector) | JUCE component inspector. Not applicable — LocusQ uses WebView. |
+| **FRUT** | [github.com/McMartin/FRUT](https://github.com/McMartin/FRUT) | CMake integration for JUCE. JUCE 8 has native CMake. Not needed. |
+
+**LocusQ overlap assessment:**
+
+| Component | Verdict | Rationale |
+|-----------|---------|-----------|
+| FDNReverb vs dsp::Reverb | **build** | Custom FDN is architecturally necessary (4-ch, calibration-driven). Not replaceable by JUCE Reverb. |
+| Doppler vs chowdsp DelayLine | **build** | Custom delay is 80 LOC, well-tested, tightly integrated. Importing chowdsp for one component adds dependency weight for no quality gain. |
+| IR Capture/Analysis | **build** | JUCE provides FFT; LocusQ correctly uses it. The capture/analysis logic is novel and not available in any library. |
+| VBAP | **build** | No JUCE equivalent for quad VBAP. SAF provides general VBAP but is heavyweight for LocusQ's targeted use. |
+
+> **See Section 2b:** Code review confirms processBlock is allocation-free with all JUCE
+> parameter reads via `getRawParameterValue()->load()`.
+
+---
+
+### 0d. Audio Plugin Standards & Distribution
+
+> **Plain language:** Audio plugins must conform to format standards (VST3, AU, etc.) so
+> DAWs can load them. Different formats have different capabilities, adoption, and
+> validation requirements.
+
+**Current coverage:**
+
+| Format | LocusQ Status | Market Share | Notes |
+|--------|--------------|-------------|-------|
+| **VST3** | Shipped | ~70% of DAWs | Universal. Required for commercial viability. |
+| **AU** (Audio Unit) | Shipped | macOS only | Required for Logic Pro, GarageBand. |
+| **CLAP** | Not implemented | Growing (17+ DAWs, 430+ plugins) | Better thread model, modern C API. |
+| **AAX** | Not implemented | Pro Tools only | Requires Avid developer agreement + iLok. |
+| **LV2** | Not implemented | Linux only | Niche. Not worth v1 effort. |
+
+**Validation tools:**
+
+| Tool | Status | Notes |
+|------|--------|-------|
+| **pluginval** | Passing | JUCE-based plugin validator. Green on GUI context. |
+| **auval** | Passing | Apple AU validator. Required for AU distribution. |
+| **Apple notarization** | Required for macOS | Code signing + notarization for Gatekeeper. |
+
+**CLAP assessment:** CLAP adoption is accelerating — Bitwig, REAPER, FL Studio support it;
+FabFilter and u-he ship CLAP plugins. CLAP's thread model is cleaner than VST3 (explicit
+audio-thread vs. main-thread guarantees), which aligns well with LocusQ's lock-free
+architecture.
+
+**LocusQ overlap assessment:**
+
+| Component | Verdict | Rationale |
+|-----------|---------|-----------|
+| CLAP support | **augment (v2)** | Worth adding in v2. JUCE 8 does not yet have native CLAP support, but [clap-juce-extensions](https://github.com/free-audio/clap-juce-extensions) provides a bridge. The thread model is a natural fit for LocusQ's lock-free design. |
+| AAX support | **ignore** | Pro Tools market is declining. Developer agreement overhead not justified for v1 or v2. |
+| LV2 support | **ignore** | Linux desktop audio is too niche to justify effort. |
+
+---
+
+### 0e. 3D Visualization & Audio-Reactive UI
+
+> **Plain language:** LocusQ uses Three.js for its 3D viewport (currently placeholder).
+> This section surveys what patterns exist for spatial audio visualization and
+> physics-reactive sound UIs.
+
+**State of the art:**
+
+**Three.js spatial audio patterns:**
+- Three.js has built-in `AudioListener` + `PositionalAudio` using Web Audio API, but these
+  are for browser-based spatial audio playback, not plugin UI visualization.
+- The relevant pattern for LocusQ is *visualization-only*: render emitter positions, room
+  bounds, and speaker locations as 3D objects without using Three.js for audio processing.
+
+**Physics-reactive visualization:**
+- matter.js + Three.js: 2D physics driving 3D visuals. Common in creative coding.
+- cannon-es + Three.js: 3D physics with Three.js rendering. More relevant for LocusQ's
+  3D emitter motion visualization.
+- LocusQ's unique value: physics runs in C++ (real-time, lock-free), visualized via
+  Three.js through the WebView bridge. No existing library covers this exact pattern.
+
+**Audio-reactive Three.js:**
+- Web Audio API `AnalyserNode` driving `uniforms` for shader-based visualization.
+- Common pattern: FFT data drives geometry scale, color, or displacement.
+- For LocusQ: the renderer could push per-speaker level meters to the UI, driving
+  speaker cone brightness or size in the viewport.
+
+**Mach1 Spatial SDK UI patterns:**
+- Mach1 provides `M1-Panner` and `M1-Monitor` plugins with 3D spatial visualization.
+- Their UI uses a 2D top-down panning view (not full 3D viewport).
+- LocusQ's Three.js approach is more ambitious than Mach1's UI.
+
+**LocusQ overlap assessment:**
+
+| Component | Verdict | Rationale |
+|-----------|---------|-----------|
+| Three.js viewport | **build (post-v1)** | No off-the-shelf spatial audio plugin viewport exists. LocusQ needs custom Three.js scenes driven by C++ scene snapshots. This is the right approach but is post-v1 scope (see D-01). |
+| Audio-reactive visuals | **augment (post-v1)** | Push per-speaker RMS from renderer to WebView. Low-effort enhancement for post-v1 viewport. |
+| Physics visualization | **build (post-v1)** | Motion trails + velocity vectors from physics engine. No library provides this for plugin UI. |
+
+---
+
+### Section 0 Summary Table
+
+| Area | Key Library | LocusQ Verdict | Action |
+|------|------------|----------------|--------|
+| 0a Spatial Algorithms | SAF/SPARTA (reference), Steam Audio (production) | **build** (VBAP justified, HOA/binaural post-v1) | No change for v1. Evaluate Steam Audio HRTF for v2 headphone mode. |
+| 0b Apple Spatial Audio | PHASE framework | **ignore** (v1), evaluate (v2) | Cannot run inside plugin processBlock. Post-v1 standalone bridge possibility. |
+| 0c JUCE Ecosystem | chowdsp_utils (community DSP) | **build** (all custom DSP justified) | No JUCE module replaces LocusQ's FDN, VBAP, or IR analysis. |
+| 0d Plugin Standards | CLAP (free-audio/clap) | **augment** (v2 roadmap) | Add CLAP via clap-juce-extensions. Skip AAX and LV2. |
+| 0e 3D Visualization | Three.js + custom bridge | **build** (post-v1 viewport) | Custom Three.js viewport is correct approach. Defer to post-v1. |
 
 ---
 
