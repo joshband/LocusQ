@@ -19,8 +19,9 @@ This checklist is the live implementation tracker. Completed items are `[x]`; op
 - Runtime logic: `Source/ui/public/incremental/js/stage12_ui.js`
 - Native bridge hooks: `Source/PluginEditor.cpp`, `Source/PluginProcessor.cpp`
 - Latest automated evidence:
-  - `TestEvidence/locusq_incremental_stage12_selftest_20260220T175530Z.json`
-  - `TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv`
+  - `TestEvidence/locusq_incremental_stage12_selftest_20260220T180214Z.json`
+  - `TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv`
+  - `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`
 
 ## v3 Contract Status
 - [x] v3 design spec and style guide are finalized and approved (`Design/v3-ui-spec.md`, `Design/v3-style-guide.md`).
@@ -44,7 +45,7 @@ This checklist is the live implementation tracker. Completed items are `[x]`; op
 - [x] Stage 10: Renderer rail parity completion (system monitoring and spatial/room/global controls at final layout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 10 - Renderer Rail Parity Completion`).
 - [ ] Stage 11: Calibrate workflow parity completion (automated implementation complete; manual DAW checklist follow-up pending). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 11 - Calibrate Workflow Parity Completion`).
 - [x] Stage 12: Visual polish and promotion (token-level styling pass, incremental->primary route switch, debug-surface gating, rollback-safe fallback retention). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 12 - Visual Polish And Primary Route Promotion`).
-- [ ] Stage 13: Final acceptance sweep (automated gate + manual DAW checklist signoff + doc closeout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 13 - Final Acceptance Sweep And Closeout`).
+- [ ] Stage 13: Final acceptance sweep (automation + closeout docs complete; manual DAW checklist signoff pending). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 13 - Final Acceptance Sweep And Closeout`).
 
 ## Skills Routing For Remaining Work
 - `skill_dream`: no new ideation scope unless concept/parameter set changes.

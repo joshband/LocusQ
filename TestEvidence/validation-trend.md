@@ -200,6 +200,15 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T17:55:17Z | Incremental Stage 12 automated UI self-test (`.app` path) | `scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage12_selftest_20260220T175517Z.json`) |
 | 2026-02-20T17:55:30Z | Incremental UI PR gate (Stage 12 self-test default) | `scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`ui_stage12_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv`) |
 | 2026-02-20T17:55:39Z | Incremental Stage 12 resource probe | `rg -n "incremental/index.html|incremental/js/stage12_ui.js" "$HOME/Library/LocusQ/resource_requests.log"` | PASS (`index size=37563`, `stage12_ui.js size=202265`; `TestEvidence/locusq_incremental_stage12_resource_probe_20260220T175539Z.log`) |
+| 2026-02-20T18:02:14Z | Stage 13 automated self-test (`.app` path) | `scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage12_selftest_20260220T180204Z.json`) |
+| 2026-02-20T18:02:23Z | Stage 13 automated UI PR gate | `scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv`) |
+| 2026-02-20T18:02:23Z | Stage 13 targeted smoke suite | `build_local/locusq_qa_artefacts/Release/locusq_qa qa/scenarios/locusq_smoke_suite.json` | PASS (`4 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-20T18:02:24Z | Stage 13 targeted Phase 2.5 acceptance suite | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json` | PASS (`9 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-20T18:02:25Z | Stage 13 targeted Phase 2.6 acceptance suite | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`) |
+| 2026-02-20T18:02:27Z | Stage 13 host-edge matrix (`44.1k/256, 48k/512, 48k/1024, 96k/512`) | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate ... --block-size ...` | PASS (`4/4`) |
+| 2026-02-20T18:02:28Z | Stage 13 pluginval strictness-5 host validation | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3` | PASS (`SUCCESS`) |
+| 2026-02-20T18:02:28Z | Stage 13 standalone smoke | `open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (process launch observed; `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`) |
+| 2026-02-20T18:06:18Z | Stage 13 docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

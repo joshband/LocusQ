@@ -303,11 +303,11 @@ Output:
 Run full acceptance sweep across automation and manual host checks, then close documentation/status surfaces for parity signoff.
 
 ### Task Checklist
-- [ ] `S13-T1` Run Stage 12 UI self-test and UI PR gate (default settings).
-- [ ] `S13-T2` Run targeted QA matrix for non-UI regressions required by parity promotion (smoke + acceptance suites + host edge).
-- [ ] `S13-T3` Run plugin host validation (`pluginval` and standalone smoke) on promoted artifacts.
+- [x] `S13-T1` Run Stage 12 UI self-test and UI PR gate (default settings).
+- [x] `S13-T2` Run targeted QA matrix for non-UI regressions required by parity promotion (smoke + acceptance suites + host edge).
+- [x] `S13-T3` Run plugin host validation (`pluginval` and standalone smoke) on promoted artifacts.
 - [ ] `S13-T4` Execute and record manual DAW UI acceptance checklist rerun.
-- [ ] `S13-T5` Update canonical closeout bundle per ADR-0005:
+- [x] `S13-T5` Update canonical closeout bundle per ADR-0005:
   - `status.json`
   - `README.md`
   - `CHANGELOG.md`
@@ -316,15 +316,31 @@ Run full acceptance sweep across automation and manual host checks, then close d
 - [ ] `S13-T6` Mark Stage 9-13 checkboxes complete in parity docs only after evidence is attached.
 
 ### Acceptance Checklist
-- [ ] Automated UI gate is PASS on promoted stage.
+- [x] Automated UI gate is PASS on promoted stage.
 - [ ] Manual DAW checklist is PASS.
-- [ ] No new hard failures in non-UI acceptance suites.
-- [ ] Closeout docs freshness gate passes.
+- [x] No new hard failures in non-UI acceptance suites.
+- [x] Closeout docs freshness gate passes.
 
 ### Expected Evidence
 - Latest UI self-test JSON + gate status TSV
 - QA suite logs referenced in `TestEvidence/build-summary.md`
 - `scripts/validate-docs-freshness.sh` PASS output
+
+### Captured Evidence (UTC 2026-02-20)
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage12_selftest_20260220T180204Z.json`
+- `TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_smoke_suite.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_5_acceptance_suite.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_6_acceptance_suite.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_44k1_256.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_48k512.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_48k1024.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_96k512.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/pluginval_strict5_skip_gui.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`
+- `./scripts/validate-docs-freshness.sh` -> PASS (`0 warning(s)`)
+- Manual DAW rerun remains pending in `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 
 ### Codex Mega-Prompts
 

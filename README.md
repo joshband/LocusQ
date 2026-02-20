@@ -41,9 +41,9 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - [ ] Keep closeout docs synchronized on each final closeout pass (`status.json`, `README.md`, `CHANGELOG.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`).
 - [ ] Cut v1 release candidate and run final ship smoke checks.
 
-## Current Status (UTC 2026-02-19)
+## Current Status (UTC 2026-02-20)
 
-- `current_phase`: `code` (post-ship reopen for Phase `2.7a/2.7b/2.7c/2.7d` UI-runtime recovery; manual host acceptance remains pending)
+- `current_phase`: `code` (Stage 12 promoted as primary incremental route; Stage 13 automated acceptance sweep complete, manual DAW signoff pending)
 - `version`: `v0.1.0`
 - Implementation plan phases: `2.1-2.6` complete (Phase 2.4 acceptance now closed)
 - UI framework: `webview`
@@ -64,6 +64,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Snapshot migration matrix expansion (`2.11b`): `qa_snapshot_migration_mode` now supports legacy-strip + forced mono/stereo/quad metadata, with dedicated mono/stereo/quad runtime suites passing.
 - Phase 2.7 UI interaction smoke matrix (`/test`): `PASS_WITH_WARNING` with trend deltas published
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+- Stage 13 automated sweep: `PASS` (`TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`; 0 failures across UI gate, targeted non-UI matrix, pluginval, and standalone smoke)
 
 ## Completed Phases
 

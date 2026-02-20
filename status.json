@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T17:55:39Z",
+  "last_modified": "2026-02-20T18:06:58Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -294,6 +294,12 @@
       "status": "complete",
       "completed_at": "2026-02-20T17:55:39Z",
       "notes": "Stage 12 applies style/token polish, gates debug diagnostics behind self-test or explicit debug mode, promotes Stage 12 as the primary incremental route, preserves Stage 9-11 fallback resource paths, and validates passing Stage 12 self-test/UI gate/resource probe evidence."
+    },
+    {
+      "phase": "testing_stage13_final_acceptance_sweep_closeout",
+      "status": "in_progress",
+      "started_at": "2026-02-20T18:02:04Z",
+      "notes": "Stage 13 automated acceptance sweep is complete with zero failures across Stage 12 self-test/UI gate, targeted non-UI matrix (smoke + phase 2.5 + phase 2.6 + host-edge), pluginval strictness-5, and standalone smoke. Manual DAW checklist rerun remains pending before parity signoff."
     }
   ],
   "validation": {
@@ -326,20 +332,20 @@
       "warned_scenarios": 0,
       "failed_scenarios": 0,
       "suite_result_json": "plugins/LocusQ/qa_output/suite_result.json",
-      "qa_run_log": "plugins/LocusQ/TestEvidence/qa_phase_2_5_suite_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log",
-      "last_run": "2026-02-19T21:32:12Z"
+      "qa_run_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_5_acceptance_suite.log",
+      "last_run": "2026-02-20T18:02:24Z"
     },
     "pluginval_results": {
       "passed": true,
       "failed": false,
       "strictness_level": 5,
       "exit_code": 0,
-      "plugin_path": "plugins/LocusQ/build/LocusQ_artefacts/Release/VST3/LocusQ.vst3",
-      "output_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
-      "error_log": "plugins/LocusQ/TestEvidence/pluginval_strict5_test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z.log",
-      "output_summary": "Strictness-5 in-process pluginval run passed during post-fix non-manual acceptance matrix rerun.",
+      "plugin_path": "plugins/LocusQ/build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3",
+      "output_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/pluginval_strict5_skip_gui.log",
+      "error_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/pluginval_strict5_skip_gui.log",
+      "output_summary": "Strictness-5 in-process pluginval run passed during Stage 13 acceptance sweep on promoted Stage 12 artifacts.",
       "environment_blocked": false,
-      "last_successful_run": "2026-02-19T20:41:49Z",
+      "last_successful_run": "2026-02-20T18:02:28Z",
       "environment_note": "In restricted/headless contexts, pluginval may abort in AppKit/HIServices before plugin load; classify as environment_blocked when observed.",
       "blocked_run_artifacts": {
         "note": "plugins/LocusQ/TestEvidence/pluginval_blocked_note.txt",
@@ -1106,7 +1112,16 @@
     "incremental_stage12_ui_selftest_script_ready": true,
     "incremental_stage12_ui_selftest_passed": true,
     "incremental_stage12_ui_pr_gate_selftest_default": true,
-    "incremental_stage12_ui_pr_gate_passed": true
+    "incremental_stage12_ui_pr_gate_passed": true,
+    "incremental_stage13_automation_sweep_passed": true,
+    "incremental_stage13_ui_selftest_passed": true,
+    "incremental_stage13_ui_pr_gate_passed": true,
+    "incremental_stage13_targeted_qa_matrix_passed": true,
+    "incremental_stage13_pluginval_passed": true,
+    "incremental_stage13_standalone_smoke_passed": true,
+    "incremental_stage13_docs_freshness_passed": true,
+    "incremental_stage13_manual_daw_signoff_pending": true,
+    "incremental_stage13_status_tsv": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv"
   },
   "framework_selection": {
     "decision": "webview",
@@ -1426,6 +1441,24 @@
       "selftest_run_log": "plugins/LocusQ/TestEvidence/locusq_incremental_stage12_selftest_20260220T175530Z.run.log",
       "ui_pr_gate_script": "plugins/LocusQ/scripts/ui-pr-gate-mac.sh",
       "ui_pr_gate_status_tsv": "plugins/LocusQ/TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv"
+    },
+    "incremental_stage13_acceptance_sweep": {
+      "status_tsv": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv",
+      "ui_selftest_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/ui_stage12_selftest.log",
+      "ui_selftest_result_json": "plugins/LocusQ/TestEvidence/locusq_incremental_stage12_selftest_20260220T180204Z.json",
+      "ui_pr_gate_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/ui_pr_gate_stage12.log",
+      "ui_pr_gate_status_tsv": "plugins/LocusQ/TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv",
+      "qa_smoke_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_smoke_suite.log",
+      "qa_phase_2_5_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_5_acceptance_suite.log",
+      "qa_phase_2_6_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_6_acceptance_suite.log",
+      "qa_host_edge_44k1_256_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_44k1_256.log",
+      "qa_host_edge_48k512_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_48k512.log",
+      "qa_host_edge_48k1024_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_48k1024.log",
+      "qa_host_edge_96k512_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_96k512.log",
+      "pluginval_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/pluginval_strict5_skip_gui.log",
+      "standalone_smoke_log": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log",
+      "manual_daw_checklist": "plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md",
+      "manual_daw_status": "pending_operator_rerun"
     }
   }
 }

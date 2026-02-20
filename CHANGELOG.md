@@ -76,6 +76,17 @@ All notable changes to LocusQ are documented here.
 
 ### Changed
 
+- Stage 13 acceptance sweep closeout sync:
+  - Automated Stage 12 self-test + UI PR gate rerun, targeted non-UI parity matrix, pluginval strictness-5, and standalone smoke recorded under `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/`.
+  - Closeout surfaces synchronized for Stage 13 progress with manual DAW signoff intentionally left open:
+    - `status.json`
+    - `README.md`
+    - `CHANGELOG.md`
+    - `Documentation/v3-ui-parity-checklist.md`
+    - `Documentation/v3-stage-9-plus-detailed-checklists.md`
+    - `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+    - `TestEvidence/build-summary.md`
+    - `TestEvidence/validation-trend.md`
 - Phase 2.4 acceptance state promoted from partial to complete across:
   - `status.json`
   - `.ideas/plan.md`

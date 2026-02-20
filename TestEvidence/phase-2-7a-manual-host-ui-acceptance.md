@@ -2,7 +2,7 @@ Title: LocusQ Phase 2.7a Manual Host UI Acceptance
 Document Type: Test Evidence Checklist
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # Phase 2.7a Manual Host UI Acceptance
 
@@ -21,6 +21,15 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
   - macOS WebBrowser backend/build flags corrected (`Source/PluginEditor.cpp`, `CMakeLists.txt`)
 - Non-manual acceptance rerun after the fix is green with warn-only residuals (`qa_output/suite_result.json`).
 - Manual DAW checklist rows below still reflect the last executed manual run and now require rerun/signoff in host.
+
+## Stage 13 Manual Rerun Handoff (2026-02-20)
+
+- Automated Stage 13 sweep passed (`TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`).
+- Stage 12 self-test/gate and non-UI parity suites are green on promoted artifacts.
+- Manual DAW rerun is still required to close Stage 13:
+  - fill operator context table
+  - rerun checklist rows UI-01 through UI-12 in target DAW
+  - update rollup and final manual verdict
 
 ## Normative References
 - `.ideas/plan.md`

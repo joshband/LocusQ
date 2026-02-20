@@ -1600,3 +1600,72 @@ Artifacts:
 - `TestEvidence/locusq_incremental_stage12_selftest_20260220T175530Z.run.log`
 - `TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv`
 - `TestEvidence/locusq_incremental_stage12_resource_probe_20260220T175539Z.log`
+
+## Stage 13 Final Acceptance Sweep Snapshot (UTC 2026-02-20)
+
+117. Run Stage 12 standalone self-test on promoted app
+
+```sh
+scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+118. Run Stage 12 UI PR gate on promoted app
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage12_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+119. Run targeted non-UI parity matrix (smoke + acceptance suites + host edge)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa qa/scenarios/locusq_smoke_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 44100 --block-size 256
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 48000 --block-size 512
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 48000 --block-size 1024
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 96000 --block-size 512
+```
+
+Result: `PASS`
+- `locusq_smoke_suite`: `4 PASS / 0 WARN / 0 FAIL`
+- `locusq_phase_2_5_acceptance_suite`: `9 PASS / 0 WARN / 0 FAIL`
+- `locusq_phase_2_6_acceptance_suite`: `3 PASS / 0 WARN / 0 FAIL`
+- host edge roundtrip: `PASS` across `44.1k/256`, `48k/512`, `48k/1024`, `96k/512`
+
+120. Run host validation on promoted artifacts (`pluginval` + standalone smoke)
+
+```sh
+/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3
+open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`pluginval SUCCESS`; standalone process launch observed)
+
+121. Run docs freshness gate after Stage 13 closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/ui_stage12_selftest.log`
+- `TestEvidence/locusq_incremental_stage12_selftest_20260220T180204Z.json`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/ui_pr_gate_stage12.log`
+- `TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_smoke_suite.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_5_acceptance_suite.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_phase_2_6_acceptance_suite.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_44k1_256.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_48k512.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_48k1024.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_96k512.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/pluginval_strict5_skip_gui.log`
+- `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`
