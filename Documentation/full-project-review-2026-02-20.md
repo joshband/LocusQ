@@ -589,9 +589,12 @@ Default keyframe presets are loaded automatically.
 
 **Current state:** 43 scenario files covering DSP components, output layouts, snapshot
 migration, physics, RT safety, and CPU budget. Automated lanes are green. Manual DAW
-acceptance (DEV-01..DEV-06) remains unexecuted.
+acceptance (DEV-01..DEV-06) is now executed with `DEV-01..DEV-05=PASS`, `DEV-06=N/A`
+(external mic unavailable). During manual DAW validation, a multi-instance REAPER crash
+was reproduced and fixed in `main` (`4ed4b1b`).
 
-**Verdict:** Strong automated coverage. Four component gaps. Manual acceptance still open.
+**Verdict:** Strong automated coverage. Four component gaps remain for dedicated scenarios.
+Manual device-profile acceptance is closed.
 
 #### Coverage Matrix
 
@@ -617,10 +620,11 @@ acceptance (DEV-01..DEV-06) remains unexecuted.
 
 | ID | Severity | Finding | Disposition |
 |----|----------|---------|-------------|
-| Q-01 | Medium | DEV-01..DEV-06 manual DAW acceptance unexecuted | fix now (Stage 15-D) |
+| Q-01 | Medium | DEV-01..DEV-06 manual DAW acceptance was unexecuted | resolved (Stage 15-D, 2026-02-20) |
 | Q-02 | Low | No dedicated AirAbsorption scenario | fix next (Stage 16-A) |
 | Q-03 | Low | No CalibrationEngine scenario | fix next (Stage 16-A) |
 | Q-04 | Low | No emit_dir DSP effect scenario | fix next (Stage 16-E) |
+| Q-05 | High | Multi-instance renderer/emitter audio handoff could crash REAPER (`EXC_BAD_ACCESS`) | resolved (`fix(renderer)` commit `4ed4b1b`) |
 
 #### Q-01: Manual DAW acceptance rows still open
 
@@ -628,7 +632,22 @@ acceptance (DEV-01..DEV-06) remains unexecuted.
 > and verify output have not been run. These are the portable-device profile gates from
 > ADR-0006.
 
-**Recommendation:** Execute in Stage 15-D. Blocks draft-pre-release promotion.
+**Resolution status:** Completed in Stage 15-D on 2026-02-20.
+- `DEV-01..DEV-05`: `PASS`
+- `DEV-06`: `N/A` (external mic unavailable for run)
+- Evidence commit: `3112797` (`docs(evidence): record Stage 15 manual DAW acceptance results`)
+
+#### Q-05: Multi-instance crash during REAPER validation
+
+> **What this means:** Loading a second LocusQ instance in a Renderer+Emitter DAW setup
+> could crash in `LocusQAudioProcessor::processBlock` due to cross-instance audio pointer
+> lifetime/race hazards.
+
+Crash report analysis showed a null/invalid dereference in the renderer path while reading
+emitter audio buffers from `SceneGraph`. The fix replaced borrowed raw channel pointers
+with an owned double-buffered mono snapshot in `EmitterSlot`, consumed by `SpatialRenderer`.
+
+**Resolution status:** Completed on 2026-02-20 (`4ed4b1b`), host retest `PASS`.
 
 #### Q-02: AirAbsorption lacks dedicated scenario
 
@@ -689,7 +708,7 @@ Downgrade to **Haiku 4.5** if the task:
 | Constant/comment additions | Haiku 4.5 | Single file; deterministic |
 | Phase closeout validation | Haiku 4.5 | Run scripts; check output |
 | Build scripts, grep sweeps | Haiku 4.5 | No reasoning depth needed |
-| Parallel Codex 5.3 tasks | Codex 5.3 | Same as Sonnet; separate sandboxed session |
+| Parallel Codex 5.3 tasks | Codex 5.3 (thinking: medium default) | Same as Sonnet; separate sandboxed session |
 
 ### Cost Intuition
 
@@ -724,15 +743,25 @@ in Section 2b finding C-02. No mega-prompt needed — skip to 15-B.
 
 #### Task 15-B: Bind `phys_vel_x`, `phys_vel_y`, `phys_vel_z` (Relay / Attachment / UI)
 
-**Model:** Sonnet 4.6
+**Status: RESOLVED (2026-02-20).**
+**Model:** Sonnet 4.6 (implementation) + Codex 5.3 (thinking: medium, parallel verification/update sessions)
 **Parallel with:** None (15-A is already done)
-**Blocks:** 15-C, 15-E
+**Previously blocked:** 15-C, 15-E
 
 **What this task does (plain language):** The initial velocity parameters set how fast and
 in which direction an emitter is launched when you press "throw." They exist in the DSP
 but are currently invisible in the UI.
 
-**Mega-Prompt:**
+**Completion evidence (validated on `main` @ `0d73641`):**
+- `Source/PluginEditor.h` declares `physVelXRelay`/`physVelYRelay`/`physVelZRelay` before `webView`, and declares `physVelXAttachment`/`physVelYAttachment`/`physVelZAttachment`.
+- `Source/PluginEditor.cpp` creates three `juce::WebSliderParameterAttachment` objects bound to `phys_vel_x`/`phys_vel_y`/`phys_vel_z`.
+- `Source/ui/public/js/index.js` includes `phys_vel_x`/`phys_vel_y`/`phys_vel_z` in `sliderStates`, `bindValueStepper`, `valueChangedEvent`, and initial display sync.
+- `Source/ui/public/index.html` includes `val-vel-x`/`val-vel-y`/`val-vel-z` inside `#physics-advanced` after the Direction row.
+- Validation succeeded: `./scripts/build-and-install-mac.sh` completed with exit code 0 on 2026-02-20.
+
+**Unblock status:** 15-C and 15-E are no longer blocked by 15-B.
+
+**Archived Mega-Prompt (kept for reproducibility):**
 
 ````
 CONTEXT:
@@ -848,13 +877,19 @@ git commit -m "feat(stage15): wire phys_vel_x/y/z relay/attachment/UI"
 
 #### Task 15-C: Author ADR-0007 for emit_dir and phys_vel UI Exposure Decision
 
+**Status: RESOLVED (2026-02-20).**
 **Model:** Opus 4.6
-**Blocked by:** 15-B
+**Blocked by:** none (15-B resolved 2026-02-20)
 **Blocks:** 15-E
 
 **What this task does (plain language):** An Architecture Decision Record (ADR) documents
 *why* a decision was made, so future developers don't accidentally undo it. This ADR
 records that directivity aim and initial velocity are now UI-exposed in v1.
+
+**Completion evidence (on `main`):**
+- `Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md` added.
+- Commit: `77494d4` (`docs(adr): add ADR-0007 emit_dir and phys_vel UI exposure decision`).
+- Unblock status: 15-E is no longer blocked by 15-C.
 
 **Mega-Prompt:**
 
@@ -895,12 +930,23 @@ git commit -m "docs(adr): add ADR-0007 emit_dir and phys_vel UI exposure decisio
 
 #### Task 15-D: Execute Manual DAW Acceptance (DEV-01..DEV-06)
 
+**Status: RESOLVED (2026-02-20).**
 **Model:** Human task (you execute; Claude Code assists with build and log capture)
-**Blocked by:** 15-C
+**Blocked by:** 15-C (resolved)
 
 **What this task does (plain language):** These are the portable-device profile checks —
 verifying that LocusQ works on laptop speakers, built-in microphone, and headphones.
 They cannot be automated; a human must plug in headphones, press play, and listen.
+
+**Completion evidence (on `main`):**
+- `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` updated:
+  - `DEV-01..DEV-05`: `PASS`
+  - `DEV-06`: `N/A` (external mic unavailable)
+- `TestEvidence/validation-trend.md` appended with Stage 15 manual acceptance entry.
+- `TestEvidence/build-summary.md` appended with Stage 15 manual acceptance summary.
+- Commit: `3112797` (`docs(evidence): record Stage 15 manual DAW acceptance results`).
+- Follow-up hardening during this run:
+  - Multi-instance REAPER crash fixed by `4ed4b1b` (`fix(renderer): snapshot emitter audio in SceneGraph to prevent stale-pointer multi-instance crash`).
 
 **Checklist:**
 - [ ] Read `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` rows DEV-01..DEV-06
@@ -937,7 +983,7 @@ git commit -m "docs(evidence): record Stage 15 manual DAW acceptance results"
 #### Task 15-E: Update implementation-traceability.md
 
 **Model:** Haiku 4.5
-**Blocked by:** 15-B, 15-C
+**Blocked by:** 15-C
 
 **Mega-Prompt:**
 
@@ -972,7 +1018,7 @@ git commit -m "docs(traceability): update emit_dir and phys_vel UI binding cover
 #### Task 15-F: Cut draft-pre-release Tag
 
 **Model:** Sonnet 4.6
-**Blocked by:** 15-D (manual acceptance must pass)
+**Blocked by:** 15-E (traceability update pending)
 
 **Mega-Prompt:**
 
@@ -1349,15 +1395,15 @@ graph TD
     classDef human fill:#5c4a1a,color:#fff
 ```
 
-### Updated Start Now (Post 15-A Resolution)
+### Updated Start Now (Post 15-D Completion)
 
-Task 15-A (emit_dir UI) is already complete. The immediate next action is:
+Task 15-A, 15-B, 15-C, and 15-D are complete. The immediate next action is:
 
 | Session | Mega-Prompt | Model | Notes |
 |---------|------------|-------|-------|
-| 1 | Task 15-B (phys_vel UI) | Sonnet 4.6 | Only remaining code gap |
-| 2 | Section 0 Research | Opus 4.6 | Already running in background |
+| 1 | Task 15-E (traceability update) | Haiku 4.5 | Unblocked by 15-C completion |
+| 2 | Task 15-F (draft tag) | Sonnet 4.6 | Run after 15-E lands |
 
-After 15-B completes, run 15-C -> 15-D -> 15-E -> 15-F sequentially.
+Then proceed to Stage 16 parallel tracks.
 
 ---
