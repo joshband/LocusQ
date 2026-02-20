@@ -426,3 +426,48 @@ acceptance (DEV-01..DEV-06) remains unexecuted.
 **Recommendation:** Author `locusq_directivity_aim.json` in Stage 16-E.
 
 ---
+
+## Section 3 — Model Assignment Rationale
+
+> **What this means:** Different Claude models have different strengths and costs. Choosing
+> the right model per task saves time and money without sacrificing quality. These rules
+> are calibrated for LocusQ's specific task mix.
+
+### Decision Rule (Plain Language)
+
+Start with **Sonnet 4.6**. Upgrade to **Opus 4.6** if the task:
+- touches an ADR or invariants.md
+- crosses 3+ files with causal dependencies
+- requires a judgment call that affects system design
+- synthesises research from many external sources
+
+Downgrade to **Haiku 4.5** if the task:
+- touches one file
+- has a clear template to follow
+- success is binary (it either compiles / passes / matches a pattern, or it doesn't)
+- is high-volume and repetitive
+
+### Assignment Table
+
+| Task Type | Model | Reasoning |
+|-----------|-------|-----------|
+| Architecture decisions, ADR authoring | Opus 4.6 | Multi-file causal reasoning; wrong call is expensive |
+| Cross-cutting design (invariant changes) | Opus 4.6 | Must hold entire constraint graph in context |
+| Research synthesis (Section 0) | Opus 4.6 | Heterogeneous sources; needs judgment on relevance |
+| DSP implementation (C++) | Sonnet 4.6 | Clear spec; best cost/quality ratio |
+| UI wiring (JS + HTML + C++ relay) | Sonnet 4.6 | Follows a template; needs to see 4 files at once |
+| Code review fixes (bounded scope) | Sonnet 4.6 | Single finding -> single fix |
+| QA scenario JSON authoring | Haiku 4.5 | Template-driven; parameters are known |
+| Doc metadata fixes | Haiku 4.5 | Pattern match; binary correctness |
+| Constant/comment additions | Haiku 4.5 | Single file; deterministic |
+| Phase closeout validation | Haiku 4.5 | Run scripts; check output |
+| Build scripts, grep sweeps | Haiku 4.5 | No reasoning depth needed |
+
+### Cost Intuition
+
+Running Opus when Haiku suffices costs ~20x more per token. For LocusQ's Stage 15-17
+work, roughly 60% of tasks are Haiku-appropriate. Defaulting everything to Opus would
+be both wasteful and unnecessary — the quality ceiling is determined by spec clarity,
+not model tier, for well-scoped tasks.
+
+---
