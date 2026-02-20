@@ -124,6 +124,16 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
   - `pluginval` on ship VST3: `PASS` (`plugins/LocusQ/TestEvidence/pluginval_ship_universal_stdout.log`)
   - Standalone smoke: `PASS` (`plugins/LocusQ/TestEvidence/standalone_ship_universal_smoke.log`)
 
+## Local Build + Install (macOS)
+
+- Canonical local command for DAW-refreshable plugin binaries:
+  - `./scripts/build-and-install-mac.sh`
+- Installs fresh builds to user plugin scan paths:
+  - `~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3`
+  - `~/Library/Audio/Plug-Ins/Components/LocusQ.component`
+- Optional standalone app install:
+  - `LOCUSQ_INSTALL_STANDALONE=1 ./scripts/build-and-install-mac.sh` (copies `LocusQ.app` to `~/Applications`)
+
 See:
 - `status.json`
 - `TestEvidence/build-summary.md`

@@ -25,6 +25,7 @@ Keep documentation lean, canonical, and current while preserving traceability fr
 - `Documentation/multi-agent-thread-watchdog.md`: Optional guide for thread contract + heartbeat watchdog flows in parallel Codex sessions (disabled by default).
 - `Documentation/adr/`: Architecture Decision Records (ADRs), one decision per file.
 - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`: Research-backed prioritized execution matrix for `skill_plan`, `skill_design`, and `skill_impl`.
+- `Documentation/research/qa-harness-upstream-backport-opportunities-2026-02-20.md`: Comparison across LocusQ, echoform, memory-echoes, and monument-reverb with prioritized upstream harness and backport opportunities.
 - `Documentation/Doxyfile`: API documentation generation configuration for Doxygen.
 - `TestEvidence/build-summary.md`: Latest validation snapshot.
 - `TestEvidence/validation-trend.md`: Time-series validation trend entries.

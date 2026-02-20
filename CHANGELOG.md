@@ -12,6 +12,10 @@ All notable changes to LocusQ are documented here.
 
 ### Added
 
+- Local macOS build/install automation command:
+  - `scripts/build-and-install-mac.sh` (builds `LocusQ_VST3` + `LocusQ_AU`, installs to `~/Library/Audio/Plug-Ins/{VST3,Components}`, prints hash/timestamp verification, and optionally installs standalone app with `LOCUSQ_INSTALL_STANDALONE=1`).
+- Harness comparison and backport analysis doc:
+  - `Documentation/research/qa-harness-upstream-backport-opportunities-2026-02-20.md`
 - Stage 14 review/release planning artifacts:
   - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
   - `Documentation/stage14-review-release-checklist.md`
@@ -79,6 +83,9 @@ All notable changes to LocusQ are documented here.
 
 ### Changed
 
+- Documentation indices updated for new harness comparison artifact and local build/install command:
+  - `Documentation/README.md`
+  - `README.md`
 - Stage 14 contract alignment updates:
   - `.ideas/creative-brief.md`
   - `.ideas/architecture.md`
