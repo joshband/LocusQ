@@ -527,6 +527,7 @@ let uiState = {
 
 let uiStateCommitTimer = null;
 let isApplyingPhysicsPreset = false;
+let suppressPhysicsPresetCustomUntilMs = 0;
 
 async function commitUiStateToNative() {
     try {
@@ -1551,6 +1552,13 @@ function setActiveView(viewName) {
 
 function applyPhysicsPreset(presetName, persistUiState = true) {
     const normalized = normalizePhysicsPresetName(presetName);
+    const nowMs = typeof performance !== "undefined" && typeof performance.now === "function"
+        ? performance.now()
+        : Date.now();
+
+    // Some host-to-UI callbacks arrive slightly after preset application; keep the
+    // selected preset stable through that short synchronization window.
+    suppressPhysicsPresetCustomUntilMs = nowMs + 750.0;
     isApplyingPhysicsPreset = true;
     uiState.physicsPreset = normalized;
 
@@ -1877,19 +1885,34 @@ function initUIBindings() {
     if (presetSaveButton) {
         presetSaveButton.addEventListener("click", async () => {
             const suggestedName = `Preset_${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}`;
-            const inputName = window.prompt("Preset name", suggestedName);
-            if (inputName === null) return;
+            let resolvedName = suggestedName;
 
-            const trimmed = inputName.trim();
-            if (!trimmed) {
-                setPresetStatus("Preset name is required", true);
-                return;
+            try {
+                const inputName = typeof window.prompt === "function"
+                    ? window.prompt("Preset name", suggestedName)
+                    : suggestedName;
+
+                if (typeof inputName === "string") {
+                    const trimmed = inputName.trim();
+                    if (!trimmed) {
+                        setPresetStatus("Preset name is required", true);
+                        return;
+                    }
+                    resolvedName = trimmed;
+                } else {
+                    // Some in-host WebView contexts suppress modal prompt UI and return null.
+                    // Fall back to an auto-generated name so save remains functional.
+                    resolvedName = suggestedName;
+                }
+            } catch (error) {
+                console.warn("Preset name prompt unavailable, using auto-generated name:", error);
+                resolvedName = suggestedName;
             }
 
             try {
-                const result = await callNative("locusqSaveEmitterPreset", nativeFunctions.saveEmitterPreset, { name: trimmed });
+                const result = await callNative("locusqSaveEmitterPreset", nativeFunctions.saveEmitterPreset, { name: resolvedName });
                 if (result?.ok) {
-                    setPresetStatus(`Saved: ${result.name || trimmed}`);
+                    setPresetStatus(`Saved: ${result.name || resolvedName}`);
                     await refreshPresetList();
                 } else {
                     setPresetStatus(result?.message || "Preset save failed", true);
@@ -1964,7 +1987,11 @@ function initParameterListeners() {
     };
 
     const markPhysicsPresetCustom = () => {
-        if (isApplyingPhysicsPreset) return;
+        const nowMs = typeof performance !== "undefined" && typeof performance.now === "function"
+            ? performance.now()
+            : Date.now();
+
+        if (isApplyingPhysicsPreset || nowMs < suppressPhysicsPresetCustomUntilMs) return;
         const physicsPreset = document.getElementById("physics-preset");
         if (physicsPreset && physicsPreset.value !== "custom" && physicsPreset.value !== "off") {
             physicsPreset.value = "custom";
