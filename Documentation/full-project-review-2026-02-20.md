@@ -462,6 +462,7 @@ Downgrade to **Haiku 4.5** if the task:
 | Constant/comment additions | Haiku 4.5 | Single file; deterministic |
 | Phase closeout validation | Haiku 4.5 | Run scripts; check output |
 | Build scripts, grep sweeps | Haiku 4.5 | No reasoning depth needed |
+| Parallel Codex 5.3 tasks | Codex 5.3 | Same as Sonnet; separate sandboxed session |
 
 ### Cost Intuition
 
@@ -469,5 +470,313 @@ Running Opus when Haiku suffices costs ~20x more per token. For LocusQ's Stage 1
 work, roughly 60% of tasks are Haiku-appropriate. Defaulting everything to Opus would
 be both wasteful and unnecessary — the quality ceiling is determined by spec clarity,
 not model tier, for well-scoped tasks.
+
+---
+
+## Section 4 — Phased Work Plan with Mega-Prompts
+
+> **What this means:** Each task below is a complete instruction set for Claude Code.
+> Copy the block under "Mega-Prompt" into a new Claude Code session. The session will
+> know exactly what to do without needing prior context.
+
+---
+
+### Stage 15 — Close the Gap
+
+**Goal:** Close all open Stage 14 findings. Reach `draft-pre-release` readiness.
+**Prerequisite:** Current build passes `./scripts/build-and-install-mac.sh`.
+
+---
+
+#### Task 15-A: Bind `emit_dir_azimuth` + `emit_dir_elevation` (Relay / Attachment / UI)
+
+**Status: RESOLVED.** This task was completed prior to the review. Evidence confirmed
+in Section 2b finding C-02. No mega-prompt needed — skip to 15-B.
+
+---
+
+#### Task 15-B: Bind `phys_vel_x`, `phys_vel_y`, `phys_vel_z` (Relay / Attachment / UI)
+
+**Model:** Sonnet 4.6
+**Parallel with:** None (15-A is already done)
+**Blocks:** 15-C, 15-E
+
+**What this task does (plain language):** The initial velocity parameters set how fast and
+in which direction an emitter is launched when you press "throw." They exist in the DSP
+but are currently invisible in the UI.
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ is a JUCE 8 spatial audio plugin. PluginEditor.h declares parameter relays
+(juce::WebSliderRelay, etc.) that bridge APVTS parameters to the WebView UI.
+PluginEditor.cpp creates WebSliderParameterAttachment objects that connect each relay
+to its parameter. Source/ui/public/js/index.js registers sliderStates and toggleStates
+using Juce.getSliderState() / Juce.getToggleState(), binds value steppers, adds
+valueChangedEvent listeners, and syncs initial values. Source/ui/public/index.html
+contains the control rows.
+
+CURRENT GAP:
+phys_vel_x, phys_vel_y, phys_vel_z are float sliders (range -50..50 m/s, default 0).
+They are read in DSP at PluginProcessor.cpp ~lines 698–700 but have no relay/attachment/UI.
+
+GOAL:
+Wire phys_vel_x, phys_vel_y, phys_vel_z end-to-end. Follow the pattern of phys_friction.
+
+READ FIRST:
+1. Source/PluginEditor.h lines 77–90 (physics relay group)
+2. Source/PluginEditor.cpp lines 344–360 (physics attachment creation)
+3. Source/ui/public/js/index.js lines 265–278 (physics sliderStates)
+4. Source/ui/public/js/index.js lines 1662–1666 (physics bindValueStepper)
+5. Source/ui/public/js/index.js lines 2008–2020 (physics valueChangedEvent)
+6. Source/ui/public/index.html lines 594–602 (physics-advanced disclosure section)
+
+CONSTRAINTS:
+- Same member order rules: relays before webView, attachments after addAndMakeVisible.
+- Place relays in PluginEditor.h after physResetRelay.
+- Place HTML controls inside the physics-advanced disclosure div, after the Direction row.
+- Naming convention:
+    relays: physVelXRelay / physVelYRelay / physVelZRelay
+    attachments: physVelXAttachment / physVelYAttachment / physVelZAttachment
+    HTML ids: val-vel-x / val-vel-y / val-vel-z
+    sliderStates keys: phys_vel_x / phys_vel_y / phys_vel_z
+
+EXACT CHANGES:
+
+1. PluginEditor.h — add after physResetRelay (in relay section):
+   juce::WebSliderRelay physVelXRelay { "phys_vel_x" };
+   juce::WebSliderRelay physVelYRelay { "phys_vel_y" };
+   juce::WebSliderRelay physVelZRelay { "phys_vel_z" };
+
+2. PluginEditor.h — add after physResetAttachment (in attachments section):
+   std::unique_ptr<juce::WebSliderParameterAttachment> physVelXAttachment;
+   std::unique_ptr<juce::WebSliderParameterAttachment> physVelYAttachment;
+   std::unique_ptr<juce::WebSliderParameterAttachment> physVelZAttachment;
+
+3. PluginEditor.cpp — add after physResetAttachment = ... creation:
+   physVelXAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+       *audioProcessor.apvts.getParameter ("phys_vel_x"), physVelXRelay);
+   physVelYAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+       *audioProcessor.apvts.getParameter ("phys_vel_y"), physVelYRelay);
+   physVelZAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+       *audioProcessor.apvts.getParameter ("phys_vel_z"), physVelZRelay);
+
+4. Source/ui/public/js/index.js — add to sliderStates after phys_friction:
+   phys_vel_x: Juce.getSliderState("phys_vel_x"),
+   phys_vel_y: Juce.getSliderState("phys_vel_y"),
+   phys_vel_z: Juce.getSliderState("phys_vel_z"),
+
+5. Source/ui/public/index.html — add inside physics-advanced div, after Direction row:
+   <div class="control-row"><span class="control-label">Init Vel X</span><span class="control-value" id="val-vel-x">0.0<span class="control-unit">m/s</span></span></div>
+   <div class="control-row"><span class="control-label">Init Vel Y</span><span class="control-value" id="val-vel-y">0.0<span class="control-unit">m/s</span></span></div>
+   <div class="control-row"><span class="control-label">Init Vel Z</span><span class="control-value" id="val-vel-z">0.0<span class="control-unit">m/s</span></span></div>
+
+6. Source/ui/public/js/index.js — add to bindValueStepper block after val-friction:
+   bindValueStepper("val-vel-x", sliderStates.phys_vel_x,
+       { step: 1.0, min: -50.0, max: 50.0, roundDigits: 1 });
+   bindValueStepper("val-vel-y", sliderStates.phys_vel_y,
+       { step: 1.0, min: -50.0, max: 50.0, roundDigits: 1 });
+   bindValueStepper("val-vel-z", sliderStates.phys_vel_z,
+       { step: 1.0, min: -50.0, max: 50.0, roundDigits: 1 });
+
+7. Source/ui/public/js/index.js — add to valueChangedEvent block after phys_friction:
+   sliderStates.phys_vel_x.valueChangedEvent.addListener(() => {
+       updateValueDisplay("val-vel-x",
+           sliderStates.phys_vel_x.getScaledValue().toFixed(1), "m/s");
+   });
+   sliderStates.phys_vel_y.valueChangedEvent.addListener(() => {
+       updateValueDisplay("val-vel-y",
+           sliderStates.phys_vel_y.getScaledValue().toFixed(1), "m/s");
+   });
+   sliderStates.phys_vel_z.valueChangedEvent.addListener(() => {
+       updateValueDisplay("val-vel-z",
+           sliderStates.phys_vel_z.getScaledValue().toFixed(1), "m/s");
+   });
+
+8. Source/ui/public/js/index.js — add to initial sync block:
+   updateValueDisplay("val-vel-x",
+       sliderStates.phys_vel_x.getScaledValue().toFixed(1), "m/s");
+   updateValueDisplay("val-vel-y",
+       sliderStates.phys_vel_y.getScaledValue().toFixed(1), "m/s");
+   updateValueDisplay("val-vel-z",
+       sliderStates.phys_vel_z.getScaledValue().toFixed(1), "m/s");
+
+OUTPUT: 4 files modified
+
+SUCCESS CRITERIA:
+- grep "physVelXRelay" Source/PluginEditor.h -> found before webView declaration
+- grep "phys_vel_x" Source/ui/public/js/index.js -> in sliderStates, bindValueStepper,
+  valueChangedEvent, and initial sync
+- grep "val-vel-x" Source/ui/public/index.html -> found inside physics-advanced div
+
+VALIDATION:
+./scripts/build-and-install-mac.sh
+
+COMMIT:
+git commit -m "feat(stage15): wire phys_vel_x/y/z relay/attachment/UI"
+````
+
+---
+
+#### Task 15-C: Author ADR-0007 for emit_dir and phys_vel UI Exposure Decision
+
+**Model:** Opus 4.6
+**Blocked by:** 15-B
+**Blocks:** 15-E
+
+**What this task does (plain language):** An Architecture Decision Record (ADR) documents
+*why* a decision was made, so future developers don't accidentally undo it. This ADR
+records that directivity aim and initial velocity are now UI-exposed in v1.
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ uses Architecture Decision Records (ADRs) in Documentation/adr/. The last is
+ADR-0006. Each ADR has Title, Status, Context, Decision, Consequences sections and
+the project metadata header (Title, Document Type, Author, Created Date, Last Modified Date).
+
+GOAL:
+Write Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md.
+
+READ FIRST:
+1. Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md
+   (for format reference)
+2. Documentation/invariants.md (check if any invariant is affected)
+3. Documentation/implementation-traceability.md (to understand what traceability means here)
+
+CONTENT:
+- Status: Accepted
+- Context: emit_dir_azimuth, emit_dir_elevation, phys_vel_x/y/z were DSP-backed but not
+  exposed in the production UI. Stage 14 review flagged this as a medium-severity gap.
+  Stage 15 tasks 15-A and 15-B close this gap.
+- Decision: Expose all five parameters via relay/attachment/UI in the production index.js
+  and index.html. No defer — v1 ships with full directivity aim and initial velocity
+  editability.
+- Consequences: (a) Users can now set directivity aim direction and throw velocity without
+  DAW automation. (b) implementation-traceability.md must be updated (Task 15-E).
+  (c) QA should add a scenario covering directivity aim effect on spatial output.
+
+OUTPUT: Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md
+
+COMMIT:
+git commit -m "docs(adr): add ADR-0007 emit_dir and phys_vel UI exposure decision"
+````
+
+---
+
+#### Task 15-D: Execute Manual DAW Acceptance (DEV-01..DEV-06)
+
+**Model:** Human task (you execute; Claude Code assists with build and log capture)
+**Blocked by:** 15-C
+
+**What this task does (plain language):** These are the portable-device profile checks —
+verifying that LocusQ works on laptop speakers, built-in microphone, and headphones.
+They cannot be automated; a human must plug in headphones, press play, and listen.
+
+**Checklist:**
+- [ ] Read `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` rows DEV-01..DEV-06
+- [ ] Run `./scripts/build-and-install-mac.sh` first
+- [ ] Execute each check in REAPER (or Logic) with the specified device profile
+- [ ] Fill in the result column for each row
+- [ ] Save the file
+
+**Assist mega-prompt (run in parallel while executing checks):**
+
+````
+CONTEXT:
+TestEvidence/phase-2-7a-manual-host-ui-acceptance.md contains manual acceptance rows
+DEV-01..DEV-06 for portable device profile checks (laptop speakers, mic, headphones).
+
+GOAL:
+After the human fills in the result column for each row, update:
+1. TestEvidence/validation-trend.md — add a new trend entry for Stage 15 DAW acceptance
+2. TestEvidence/build-summary.md — add a summary line for this run
+
+READ FIRST:
+1. TestEvidence/phase-2-7a-manual-host-ui-acceptance.md (full)
+2. TestEvidence/validation-trend.md (last 5 entries for format)
+3. TestEvidence/build-summary.md (last 3 entries for format)
+
+OUTPUT: Both trend files updated.
+
+COMMIT:
+git commit -m "docs(evidence): record Stage 15 manual DAW acceptance results"
+````
+
+---
+
+#### Task 15-E: Update implementation-traceability.md
+
+**Model:** Haiku 4.5
+**Blocked by:** 15-B, 15-C
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+Documentation/implementation-traceability.md maps every parameter to its APVTS
+definition, DSP usage, and UI relay/attachment. Five parameters are now newly wired:
+emit_dir_azimuth, emit_dir_elevation (already done), phys_vel_x, phys_vel_y, phys_vel_z.
+
+GOAL:
+Update the traceability table rows for these five parameters to show:
+- Relay: PluginEditor.h (dirAzimuthRelay/dirElevationRelay/physVelXRelay etc.)
+- Attachment: PluginEditor.cpp
+- UI: index.js (sliderStates + bindValueStepper) / index.html (val-dir-azimuth etc.)
+
+READ FIRST:
+1. Documentation/implementation-traceability.md
+2. Source/PluginEditor.h (to confirm exact relay names)
+
+OUTPUT: Documentation/implementation-traceability.md updated.
+
+VALIDATION:
+grep "emit_dir_azimuth" Documentation/implementation-traceability.md
+# Must show relay + UI columns filled
+
+COMMIT:
+git commit -m "docs(traceability): update emit_dir and phys_vel UI binding coverage"
+````
+
+---
+
+#### Task 15-F: Cut draft-pre-release Tag
+
+**Model:** Sonnet 4.6
+**Blocked by:** 15-D (manual acceptance must pass)
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ is at draft-pre-release hold per Documentation/stage14-comprehensive-review-2026-02-20.md.
+Stage 15 has closed: emit_dir/phys_vel UI gap, ADR-0007 recorded, manual DAW acceptance
+complete. Automated lanes are green.
+
+GOAL:
+1. Update CHANGELOG.md with Stage 15 entries (15-A resolved, 15-B, 15-C close-out).
+2. Update status.json: set notes field to "draft-pre-release candidate".
+3. Verify ./scripts/validate-docs-freshness.sh passes.
+4. Create annotated git tag v0.15.0-draft.
+
+READ FIRST:
+1. CHANGELOG.md (last 3 entries for format)
+2. status.json
+3. Documentation/stage14-comprehensive-review-2026-02-20.md (release recommendation section)
+
+CONSTRAINTS:
+- Do NOT push to remote. Tag locally only. User will push when ready.
+- Do NOT modify status.json current_phase field.
+
+VALIDATION:
+./scripts/validate-docs-freshness.sh
+git tag --list | grep draft
+
+COMMIT:
+git commit -m "chore(release): Stage 15 closeout — draft-pre-release candidate"
+git tag -a v0.15.0-draft -m "Stage 15 closeout: emit_dir/phys_vel UI, manual DAW acceptance"
+````
 
 ---
