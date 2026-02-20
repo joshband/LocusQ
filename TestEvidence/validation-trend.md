@@ -213,6 +213,9 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T18:57:55Z | Contract-pack backport QA build | `cmake --build build_local --config Release --target locusq_qa -j 8` | PASS (`TestEvidence/locusq_qa_contract_pack_build_20260220T185755Z.log`) |
 | 2026-02-20T18:58:30Z | Contract-pack suite (spatial adapter) | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_contract_pack_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_contract_pack_suite_20260220T185830Z.log`) |
 | 2026-02-20T18:58:57Z | Contract-pack docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-20T19:08:08Z | Stage 14 macOS build/install automation + cache hygiene | `LOCUSQ_REAPER_AUTO_QUIT=0 ./scripts/build-and-install-mac.sh` | PASS (AU registrar refreshed, REAPER cache rows pruned/backed up, installed AU/VST3 hashes match build artefacts) |
+| 2026-02-20T19:08:20Z | Stage 14 REAPER cache prune verification | `rg -n "LocusQ|LcQd|Nfld" "$HOME/Library/Application Support/REAPER"/reaper-vstplugins*.ini "$HOME/Library/Application Support/REAPER"/reaper-auplugins*.ini "$HOME/Library/Application Support/REAPER"/reaper-recentfx.ini "$HOME/Library/Application Support/REAPER"/reaper-fxtags.ini` | PASS (no matching cache rows after prune) |
+| 2026-02-20T19:08:25Z | Stage 14 docs freshness gate after review/install automation sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

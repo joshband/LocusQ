@@ -402,17 +402,17 @@ Status note (2026-02-19): Snapshot migration emulation now covers legacy-strip p
   - `phys_vel_y`
   - `phys_vel_z`
   - `rend_phys_interact`
-- [ ] Publish Stage 14 comprehensive review pass (architecture/code/design/QA) with findings and prioritized fixes.
+- [x] Publish Stage 14 comprehensive review pass (architecture/code/design/QA) with findings and prioritized fixes.
 - [ ] Create release decision package (draft/pre-release vs GA) with artifact and checklist evidence.
 
 ### Acceptance Criteria
 - [ ] Manual DAW checklist is complete with explicit laptop-speaker and headphone verification rows.
 - [ ] Drift list for spec vs implementation is reduced to intentional deferred items only.
-- [ ] Docs freshness gate passes after closeout bundle updates.
+- [x] Docs freshness gate passes after closeout bundle updates.
 - [ ] Release readiness decision is explicit (`hold`, `draft-pre-release`, or `ga`), with gating evidence links.
 
 ### Status Note (2026-02-20)
-Phase 2.12 planning/contract updates are now authored in docs/spec/ADR surfaces. Implementation work remains open for manual DAW signoff, deferred-parameter disposition, and final release packaging/publishing gates.
+Phase 2.12 planning/contract updates are now authored in docs/spec/ADR surfaces. Stage 14 findings are published in `Documentation/stage14-comprehensive-review-2026-02-20.md`, and install automation now includes REAPER/AU cache hygiene in `scripts/build-and-install-mac.sh`. Remaining work is manual DAW signoff, deferred-parameter disposition, and final release packaging/publishing gates.
 
 ---
 

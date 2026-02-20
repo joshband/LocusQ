@@ -404,17 +404,18 @@ Close remaining spec/implementation drift, validate laptop-speaker/mic/headphone
   - `hold` (gates pending)
   - `draft-pre-release` (state lock)
   - `ga` (all gates complete)
-- [ ] `S14-T7` Run docs freshness gate and synchronize closeout bundle if phase/release status changes.
+- [x] `S14-T7` Run docs freshness gate and synchronize closeout bundle if phase/release status changes.
 
 ### Acceptance Checklist
 - [ ] No undocumented spec/implementation drifts remain.
 - [ ] Manual DAW checklist includes portable device profile signoff rows.
-- [ ] Comprehensive review findings are recorded and prioritized.
+- [x] Comprehensive review findings are recorded and prioritized.
 - [ ] Release decision and rationale are explicit in docs/status.
-- [ ] Docs freshness gate passes.
+- [x] Docs freshness gate passes.
 
 ### Expected Evidence
 - `Documentation/stage14-review-release-checklist.md`
+- `Documentation/stage14-comprehensive-review-2026-02-20.md`
 - updated `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`

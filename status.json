@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T18:24:17Z",
+  "last_modified": "2026-02-20T19:07:56Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -300,6 +300,12 @@
       "status": "in_progress",
       "started_at": "2026-02-20T18:02:04Z",
       "notes": "Stage 13 automated acceptance sweep is complete with zero failures across Stage 12 self-test/UI gate, targeted non-UI matrix (smoke + phase 2.5 + phase 2.6 + host-edge), pluginval strictness-5, and standalone smoke. Manual DAW checklist rerun remains pending before parity signoff. Stage 14 contract-alignment docs/checklists are now prepared (ADR-0006, drift ledger, release checklist); manual DAW signoff remains the gating item for parity/release decision."
+    },
+    {
+      "phase": "stage14_comprehensive_review_and_install_automation",
+      "status": "complete",
+      "completed_at": "2026-02-20T19:07:56Z",
+      "notes": "Published Stage 14 comprehensive review findings and added deterministic macOS build/install host-cache automation for REAPER/AU freshness (auto-quit option, cache prune, hash verification)."
     }
   ],
   "validation": {

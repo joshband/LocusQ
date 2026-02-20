@@ -24,6 +24,7 @@ Define one canonical closeout checklist for:
 - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
 - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
 - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
+- `Documentation/stage14-comprehensive-review-2026-02-20.md`
 
 ## Stage 14A - Contract Alignment
 
@@ -36,14 +37,14 @@ Define one canonical closeout checklist for:
 ## Stage 14B - Comprehensive Review
 
 ### Architecture Review
-- [ ] Re-verify renderer scene contract and output-layout mapping assumptions (`mono/stereo/quad`) against current source.
-- [ ] Re-verify calibration routing assumptions for built-in/external mic paths.
-- [ ] Reconfirm ADR alignment for any behavior changed since Stage 13.
+- [x] Re-verify renderer scene contract and output-layout mapping assumptions (`mono/stereo/quad`) against current source.
+- [x] Re-verify calibration routing assumptions for built-in/external mic paths.
+- [x] Reconfirm ADR alignment for any behavior changed since Stage 13.
 
 ### Code Review
-- [ ] Findings-first review of `Source/PluginProcessor.cpp` hot paths for deterministic behavior and no-op/dead parameter risks.
-- [ ] Findings-first review of `Source/PluginEditor.cpp` and incremental UI bridge wiring for control coverage gaps.
-- [ ] Findings-first review of key scripts under `scripts/` for release/validation drift.
+- [x] Findings-first review of `Source/PluginProcessor.cpp` hot paths for deterministic behavior and no-op/dead parameter risks.
+- [x] Findings-first review of `Source/PluginEditor.cpp` and incremental UI bridge wiring for control coverage gaps.
+- [x] Findings-first review of key scripts under `scripts/` for release/validation drift.
 
 ### Design Review
 - [ ] Validate Stage 12 UI against `Design/v3-ui-spec.md`, `Design/v3-style-guide.md`, and `Design/HANDOFF.md`.
@@ -52,8 +53,8 @@ Define one canonical closeout checklist for:
 
 ### QA Review
 - [ ] Re-run manual DAW checklist and attach evidence updates.
-- [ ] Confirm non-manual matrix remains green on targeted suites.
-- [ ] Confirm pluginval + standalone smoke remain green on release candidate artifacts.
+- [x] Confirm non-manual matrix remains green on targeted suites.
+- [x] Confirm pluginval + standalone smoke remain green on release candidate artifacts.
 
 ## Stage 14C - Portable Device Validation
 
@@ -74,8 +75,8 @@ Define one canonical closeout checklist for:
 
 ### Gate Checks
 - [ ] Manual DAW checklist status: PASS.
-- [ ] Stage 13/14 automated checks status: PASS (or documented warn-only exceptions).
-- [ ] Distribution artifacts present and reproducible.
+- [x] Stage 13/14 automated checks status: PASS (or documented warn-only exceptions).
+- [x] Distribution artifacts present and reproducible.
 - [ ] GitHub release plan selected:
   - [ ] `draft-pre-release` (state lock before manual signoff), or
   - [ ] `ga` (all gates complete).

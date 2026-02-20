@@ -133,6 +133,14 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
   - `~/Library/Audio/Plug-Ins/Components/LocusQ.component`
 - Optional standalone app install:
   - `LOCUSQ_INSTALL_STANDALONE=1 ./scripts/build-and-install-mac.sh` (copies `LocusQ.app` to `~/Applications`)
+- REAPER/AU stale-cache handling is built in by default:
+  - requests REAPER quit before install (`LOCUSQ_REAPER_AUTO_QUIT=1`)
+  - refreshes AU registrar cache (`LOCUSQ_REFRESH_AU_CACHE=1`)
+  - prunes `LocusQ` rows from REAPER cache files (`LOCUSQ_REFRESH_REAPER_CACHE=1`)
+- Useful overrides:
+  - `LOCUSQ_REAPER_FORCE_KILL=1` to force-stop REAPER if graceful quit is ignored
+  - `LOCUSQ_REAPER_RELAUNCH=1` to reopen REAPER after install
+  - `LOCUSQ_CLEAR_QUARANTINE=0` to skip xattr cleanup (default clears quarantine)
 
 See:
 - `status.json`
@@ -169,11 +177,12 @@ See:
 ## Primary PR UI Gate (macOS)
 
 - Canonical command: `./scripts/ui-pr-gate-mac.sh`
-- This is the primary gate and runs `scripts/standalone-ui-smoke-mac.sh` as the required fast UI check.
+- This is the primary gate and runs `scripts/standalone-ui-selftest-stage12-mac.sh` as the required default check.
 - Output:
   - `TestEvidence/ui_pr_gate_<timestamp>/status.tsv`
-  - `TestEvidence/ui_pr_gate_<timestamp>/ui_smoke_fast_gate.log`
+  - `TestEvidence/ui_pr_gate_<timestamp>/ui_stage12_selftest.log`
 - Optional app path: `./scripts/ui-pr-gate-mac.sh /path/to/LocusQ.app`
+- Optional smoke lane (disabled by default): `UI_PR_GATE_WITH_SMOKE=1 ./scripts/ui-pr-gate-mac.sh`
 - Optional deeper lane (non-default): `UI_PR_GATE_WITH_APPIUM=1 ./scripts/ui-pr-gate-mac.sh`
 
 ## Appium/mac2 UI Regression (macOS)

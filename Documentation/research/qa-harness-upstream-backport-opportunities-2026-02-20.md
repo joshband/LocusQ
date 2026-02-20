@@ -65,6 +65,16 @@ Compare LocusQ against migrated harness adopters (`echoform`, `memory-echoes`, `
 - Completed: CI critical lane now executes `locusq_contract_pack_suite` in `.github/workflows/qa_harness.yml`.
 - Pending: upstream harness runner-app/perf/runtime-config unification and cross-repo (`echoform`, `memory-echoes`, `monument-reverb`) rollouts remain open.
 
+## Additional Cross-Repo Verification (UTC 2026-02-20)
+
+- `monument-reverb/scripts/install_macos.sh` and `monument-reverb/scripts/rebuild_and_install.sh` were reviewed for host-cache refresh patterns (`AudioComponentRegistrar` refresh and explicit old-bundle replacement semantics).
+- LocusQ backported equivalent operational hardening into `scripts/build-and-install-mac.sh`:
+  - optional REAPER pre-install shutdown flow,
+  - AU registrar refresh,
+  - deterministic REAPER cache prune for `LocusQ` entries,
+  - post-install binary hash equality checks.
+- `echoform` and `memory-echoes` continue to show strong harness-suite CI/runner patterns; no contradictory contract-pack findings were observed during this verification pass.
+
 ## Proposed Upstream Sequence
 
 1. P0-1: shared runner app library.

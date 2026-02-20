@@ -1719,3 +1719,36 @@ Result: `PASS` (`0 warning(s)`)
 Artifacts:
 - `TestEvidence/locusq_qa_contract_pack_build_20260220T185755Z.log`
 - `TestEvidence/locusq_contract_pack_suite_20260220T185830Z.log`
+
+## Stage 14 Install Automation + Host Cache Hygiene (UTC 2026-02-20)
+
+125. Run canonical macOS build/install automation with host-cache hygiene enabled
+
+```sh
+LOCUSQ_REAPER_AUTO_QUIT=0 ./scripts/build-and-install-mac.sh
+```
+
+Result: `PASS`
+- VST3/AU build + install completed
+- AU registrar refresh executed
+- REAPER cache rows for `LocusQ` were pruned with timestamped backups
+- Installed AU/VST3 binary hashes match build artefacts
+
+126. Verify REAPER cache files no longer carry stale `LocusQ` registry rows
+
+```sh
+for f in "$HOME/Library/Application Support/REAPER"/reaper-vstplugins*.ini "$HOME/Library/Application Support/REAPER"/reaper-auplugins*.ini "$HOME/Library/Application Support/REAPER"/reaper-recentfx.ini "$HOME/Library/Application Support/REAPER"/reaper-fxtags.ini; do rg -n "LocusQ|LcQd|Nfld" "$f"; done
+```
+
+Result: `PASS` (no matching rows in scanned cache files)
+
+127. Run docs freshness gate after Stage 14 review/install automation sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- `TestEvidence/locusq_build_install_mac_20260220T190808Z.log`
