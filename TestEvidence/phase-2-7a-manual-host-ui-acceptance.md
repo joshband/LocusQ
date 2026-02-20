@@ -48,15 +48,15 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
 
 | Field | Value |
 |---|---|
-| Operator | |
-| Run Date (UTC) | |
-| Host (DAW) | |
-| Host Version | |
-| macOS Version | |
+| Operator | Josh Band |
+| Run Date (UTC) | 2026-02-20T21:42:35Z |
+| Host (DAW) | Reaper |
+| Host Version | v7.61 |
+| macOS Version | Tahoe 26.3 |
 | Plugin Version | `v0.1.0` |
-| Plugin Format Under Test | |
-| Plugin Binary Path | |
-| Session Sample Rate / Block Size | |
+| Plugin Format Under Test | VST3 |
+| Plugin Binary Path | /Users/artbox/Library/Audio/Plug-Ins/VST3/LocusQ.vst3/Contents/MacOS/LocusQ |
+| Session Sample Rate / Block Size | 48kHz / 512 |
 | Notes | |
 
 ## Manual Host UI Checklist (2.7 Closeout Sheet)
@@ -80,21 +80,21 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
 
 | ID | Check | Steps | Expected Result | Manual Result | Run Date (UTC) | Host (DAW/Standalone) | Host Version | Notes | Evidence Paths |
 |---|---|---|---|---|---|---|---|---|---|
-| DEV-01 | Standalone laptop speaker playback | Launch standalone, play reference material through built-in speakers | Audible output is stable, no UI/input lockup, no non-finite artifacts | `PENDING` | | | | Stereo fallback path should remain coherent with renderer scene intent. | |
-| DEV-02 | Standalone headphone playback | Connect headphones and replay same material | Audible output is stable and level controls remain responsive | `PENDING` | | | | Verify renderer controls do not regress in headphone profile. | |
-| DEV-03 | DAW laptop speaker playback | Run plugin in host session and monitor via built-in speakers | In-host playback remains stable with working controls and expected monitoring behavior | `PENDING` | | | | Run in same DAW used for UI-01..UI-12. | |
-| DEV-04 | DAW headphone playback | Monitor same host session via headphones | In-host playback remains stable with no transport/control regressions | `PENDING` | | | | Confirm no profile-specific UI lockups. | |
-| DEV-05 | Built-in mic calibration route | In Calibrate mode, select built-in mic channel and run start/abort cycle | Calibration status transitions remain coherent and abort path is deterministic | `PENDING` | | | | Log selected mic channel in operator notes. | |
-| DEV-06 | External mic calibration route (if available) | Select external mic channel and run start/abort cycle | Calibration status transitions remain coherent and routing reflects expected input | `PENDING` | | | | Mark `N/A` if external mic is unavailable for run. | |
+| DEV-01 | Standalone laptop speaker playback | Launch standalone, play reference material through built-in speakers | Audible output is stable, no UI/input lockup, no non-finite artifacts | `PASS` | 2026-02-20T22:08:23Z | Standalone | v0.1.0 | Operator confirmed completion in built-in speaker profile with stable playback. | |
+| DEV-02 | Standalone headphone playback | Connect headphones and replay same material | Audible output is stable and level controls remain responsive | `PASS` | 2026-02-20T22:08:23Z | Standalone | v0.1.0 | Operator reported PASS during headphone profile run. | |
+| DEV-03 | DAW laptop speaker playback | Run plugin in host session and monitor via built-in speakers | In-host playback remains stable with working controls and expected monitoring behavior | `PASS` | 2026-02-20T22:08:23Z | Reaper | v7.61 | Operator reported PASS in DAW speaker profile. | |
+| DEV-04 | DAW headphone playback | Monitor same host session via headphones | In-host playback remains stable with no transport/control regressions | `PASS` | 2026-02-20T22:08:23Z | Reaper | v7.61 | PASS after DAW routing/setup adjustment; emitter controls verified effective in correct mode/path. | |
+| DEV-05 | Built-in mic calibration route | In Calibrate mode, select built-in mic channel and run start/abort cycle | Calibration status transitions remain coherent and abort path is deterministic | `PASS` | 2026-02-20T22:08:23Z | Reaper | v7.61 | PASS (operator-confirmed). Built-in mic start/abort transitions remained coherent. | |
+| DEV-06 | External mic calibration route (if available) | Select external mic channel and run start/abort cycle | Calibration status transitions remain coherent and routing reflects expected input | `N/A` | 2026-02-20T22:08:23Z | Reaper | v7.61 | External mic unavailable for this run. | |
 
 ## Pass/Fail Rollup (Fill After Running)
 
 | Verdict Bucket | Count | Checklist IDs |
 |---|---|---|
-| PASS | 2 | UI-04, UI-05 |
+| PASS | 7 | UI-04, UI-05, DEV-01, DEV-02, DEV-03, DEV-04, DEV-05 |
 | FAIL | 10 | UI-01, UI-02, UI-03, UI-06, UI-07, UI-08, UI-09, UI-10, UI-11, UI-12 |
-| N/A | 0 | |
-| PENDING | 6 | DEV-01, DEV-02, DEV-03, DEV-04, DEV-05, DEV-06 |
+| N/A | 1 | DEV-06 |
+| PENDING | 0 | |
 
 - Final manual host UI verdict (manual-only): `FAIL`
 - Ready for 2.7 closeout when: no `FAIL`, all non-`N/A` checks are `PASS`, and host/version fields are populated.

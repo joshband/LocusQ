@@ -221,6 +221,7 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T19:35:54Z | Stage 14 standalone rebuild after runtime/UI interaction binding | `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` | PASS |
 | 2026-02-20T19:35:50Z | Stage 14 installed-binary match verification (AU/VST3) | `sha256 + mtime verification between build_local and ~/Library/Audio/Plug-Ins targets` | PASS (`match_vst3=true`, `match_au=true`) |
 | 2026-02-20T19:35:58Z | Stage 14 docs freshness gate after interaction + checklist sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-20T22:08:23Z | Stage 15 manual DAW acceptance (DEV-01..DEV-06) | `Manual operator execution in Standalone/Reaper; updated TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` | PASS_WITH_NA (`DEV-01..DEV-05=PASS`, `DEV-06=N/A` external mic unavailable) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

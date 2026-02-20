@@ -1803,3 +1803,24 @@ Artifacts:
 - `TestEvidence/locusq_incremental_stage12_selftest_20260220T193020Z.json`
 - `TestEvidence/locusq_incremental_stage12_selftest_20260220T193031Z.json`
 - `TestEvidence/ui_pr_gate_20260220T193031Z/status.tsv`
+
+## Stage 15 Manual DAW Acceptance (UTC 2026-02-20)
+
+133. Execute portable-device DEV acceptance rows (`DEV-01..DEV-06`) with operator-in-the-loop run
+
+```sh
+manual operator execution:
+- DEV-01 standalone laptop speakers
+- DEV-02 standalone headphones
+- DEV-03 DAW (Reaper) laptop speakers
+- DEV-04 DAW (Reaper) headphones
+- DEV-05 DAW (Reaper) built-in mic calibrate start/abort
+- DEV-06 external mic calibrate start/abort (if available)
+```
+
+Result: `PASS_WITH_NA`
+- `DEV-01..DEV-05`: `PASS`
+- `DEV-06`: `N/A` (external mic unavailable during this run)
+
+Artifacts:
+- `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
