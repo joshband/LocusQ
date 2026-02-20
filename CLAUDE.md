@@ -2,7 +2,7 @@ Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # CLAUDE.md
 
@@ -29,6 +29,31 @@ Use this file for behavior and quality rules. Use `AGENTS.md` for routing.
 1. `.codex/rules/agent.md`
 2. Selected file in `.codex/workflows/`
 3. Referenced skill file in `.codex/skills/`
+
+## Automatic Skill Selection
+- Automatically load skills when:
+  - The user explicitly names a skill token (for example `$threejs`, `$skill_docs`), or
+  - The request clearly matches a specialist skill intent.
+- Routing order:
+  1. Phase workflow skill.
+  2. Minimal specialist skills required by the task.
+- Specialist routing defaults:
+  - WebView runtime/bridge/host interop issues -> `juce-webview-runtime`.
+  - Audio-reactive or physics-reactive visualization behavior -> `reactive-av`.
+  - Physics/simulation to DSP/audio behavior -> `physics-reactive-audio`.
+  - 3D scene/render architecture and performance -> `threejs`.
+  - Unresolved failures and diagnostics -> `skill_troubleshooting`.
+- If multiple skills apply, declare selected skills and execution order in the response.
+- Reference matrix: `Documentation/skill-selection-matrix.md`.
+
+## Skill Catalog Scope
+Claude must consider the full repo skill catalog:
+- `skill_dream`, `skill_plan`, `skill_design`, `skill_impl`, `skill_test`, `skill_ship`
+- `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
+- `juce-webview-windows`, `juce-webview-runtime`
+- `threejs`, `reactive-av`, `physics-reactive-audio`
+
+Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 
 ## Phase Discipline
 - Enforce one phase at a time.

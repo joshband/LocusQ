@@ -26,6 +26,29 @@ Use APC workflows to implement and validate LocusQ while preserving phase discip
 5. Honor `ui_framework` gate (`visage`/`webview`) and do not mix UI paradigms.
 6. Do not auto-advance to the next phase after finishing one command.
 
+## Automatic Skill Selection
+- Auto-select skills whenever user names a skill token or intent clearly matches a skill.
+- Apply this routing order:
+  1. Phase workflow skill (dream/plan/design/impl/test/ship).
+  2. Specialist skill(s), minimal set only.
+- Specialist routing defaults:
+  - WebView host/runtime/interop defects -> `juce-webview-runtime`.
+  - Audio-reactive or physics-reactive visuals -> `reactive-av`.
+  - Physics/simulation-driven DSP behavior -> `physics-reactive-audio`.
+  - Core 3D scene/render integration -> `threejs`.
+  - Unknown/failing behavior -> `skill_troubleshooting`.
+- For overlapping intents, compose skills in that order and announce selected skills.
+- Reference matrix: `Documentation/skill-selection-matrix.md`.
+
+## Skill Catalog Scope
+Codex must consider the full repo skill catalog (not only specialist skills):
+- `skill_dream`, `skill_plan`, `skill_design`, `skill_impl`, `skill_test`, `skill_ship`
+- `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
+- `juce-webview-windows`, `juce-webview-runtime`
+- `threejs`, `reactive-av`, `physics-reactive-audio`
+
+Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
+
 ## Build/Test Policy
 - Prefer project scripts and validators over ad-hoc command chains.
 - Run the smallest meaningful validation first, then broaden.

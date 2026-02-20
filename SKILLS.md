@@ -35,10 +35,13 @@ For any phase execution:
 |---|---|---|
 | `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation standardization, metadata compliance, ADR hygiene, traceability upkeep |
 | `juce-webview-windows` | `.codex/skills/skill_design_webview/SKILL.md` | WebView implementation details or WebView crash/order hardening |
+| `juce-webview-runtime` | `.codex/skills/juce-webview-runtime/SKILL.md` | Host/runtime interop, WebView bridge timeouts, callback ordering, UI click/hit-target anomalies, startup hydration issues |
 | `skill_testing` | `.codex/skills/skill_testing/SKILL.md` | Detailed harness-first testing and plugin validation workflows |
 | `skill_troubleshooting` | `.codex/skills/skill_troubleshooting/SKILL.md` | Build/runtime failures, recurring errors, issue capture |
 | `skill_debug` | `.codex/skills/debug/SKILL.md` | Autonomous debug sessions and debugger configuration tasks |
 | `threejs` | `.codex/skills/threejs/SKILL.md` | Three.js scene architecture, JUCE WebView bridge integration, and spatial-audio UI workflows including Apple Spatial Audio, Atmos-style routing, `7.4.2` layout handling, and binaural monitoring |
+| `reactive-av` | `.codex/skills/reactive-av/SKILL.md` | Audio-reactive and physics-reactive visualization mapping, smoothing, stability, and visual QA |
+| `physics-reactive-audio` | `.codex/skills/physics-reactive-audio/SKILL.md` | Simulation-driven DSP behavior (flocking/herding/crowd/fluid/0G/gravity/drag/collision responses) with realtime safety requirements |
 
 ## Three.js Skill Bundle
 The `threejs` skill is organized as one triggerable skill plus focused references:
@@ -62,6 +65,23 @@ Map clear intent to phase skills through workflows:
 - Package/release -> ship
 - Check progress -> status workflow
 - Continue from current state -> resume workflow
+
+## Automatic Specialist Trigger Matrix (Codex + Claude)
+When specialist intent is present, auto-load the matching specialist skill(s):
+- WebView runtime/interop/callback/hydration issue -> `juce-webview-runtime`
+- 3D scene/render loop/performance issue -> `threejs`
+- Audio-reactive or physics-reactive visual behavior -> `reactive-av`
+- Physics/simulation-driven DSP/audio behavior -> `physics-reactive-audio`
+- Broad unresolved failures -> `skill_troubleshooting`
+
+If multiple specialist intents apply, compose skills in this order:
+1. `juce-webview-runtime`
+2. `reactive-av`
+3. `physics-reactive-audio`
+4. `threejs`
+5. `skill_troubleshooting`
+
+Canonical matrix and examples: `Documentation/skill-selection-matrix.md`.
 
 ## Skill Execution Checklist
 Before skill execution:

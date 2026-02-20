@@ -28,6 +28,11 @@ Use this skill to produce production-grade Three.js code with deterministic life
 - `references/sdk-api-oss-research-landscape.md`: Use for SDK/API selection, GitHub toolchain discovery, and research/project starting points.
 - `references/performance-and-debugging.md`: Use for frame-time budgeting, GPU memory hygiene, and diagnostics flow.
 
+## Cross-Skill Routing
+- Use `juce-webview-runtime` when issues are primarily bridge/runtime/host-interop related rather than scene logic.
+- Use `reactive-av` when visual behavior is driven by audio/physics feature mapping contracts.
+- Use `physics-reactive-audio` when physics state directly drives DSP or audio-thread behavior.
+
 ## Execution Rules
 - Start with one camera, one renderer, and one explicit animation loop owner.
 - Treat resize and device pixel ratio changes as first-class lifecycle events.

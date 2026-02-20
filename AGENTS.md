@@ -43,6 +43,41 @@ Load order for phase execution:
 2. Selected workflow in `.codex/workflows/`
 3. Referenced skill in `.codex/skills/`
 
+## Automatic Skill Routing (Codex + Claude)
+- Both Codex and Claude must auto-select skills when either condition is true:
+  - The user explicitly names a skill (for example `$threejs`, `$skill_docs`).
+  - The task intent clearly matches a skill description in `SKILLS.md`.
+- Selection method:
+  1. Route to the phase workflow first (if applicable).
+  2. Add the minimal specialist skills needed for the task.
+  3. Keep load order: rule -> workflow -> specialist skills.
+- Specialist trigger priorities:
+  - `juce-webview-runtime`: WebView host/runtime interop, click/hit-target issues, bridge timeout/callback ordering, startup hydration faults.
+  - `reactive-av`: audio-reactive or physics-reactive visualization mapping, smoothing, jitter control, render behavior validation.
+  - `physics-reactive-audio`: simulation-driven DSP/audio behavior (flocking/herding/crowd/fluid/0G/gravity/drag/collision audio responses).
+  - `threejs`: scene architecture/camera/materials/render loop/performance for 3D UI.
+  - `skill_troubleshooting`: unresolved build/runtime failures and recurrent defects.
+- When multiple skills apply, state chosen skills and order at task start.
+- Canonical matrix: `Documentation/skill-selection-matrix.md`.
+
+## Repo Skill Catalog (All Skills)
+All currently supported repo skills that must be considered for routing:
+- `skill_dream` -> `.codex/skills/dream/SKILL.md`
+- `skill_plan` -> `.codex/skills/plan/SKILL.md`
+- `skill_design` -> `.codex/skills/design/SKILL.md`
+- `skill_impl` -> `.codex/skills/impl/SKILL.md`
+- `skill_test` -> `.codex/skills/test/SKILL.md`
+- `skill_ship` -> `.codex/skills/ship/SKILL.md`
+- `skill_docs` -> `.codex/skills/docs/SKILL.md`
+- `skill_debug` -> `.codex/skills/debug/SKILL.md`
+- `skill_testing` -> `.codex/skills/skill_testing/SKILL.md`
+- `skill_troubleshooting` -> `.codex/skills/skill_troubleshooting/SKILL.md`
+- `juce-webview-windows` -> `.codex/skills/skill_design_webview/SKILL.md`
+- `juce-webview-runtime` -> `.codex/skills/juce-webview-runtime/SKILL.md`
+- `threejs` -> `.codex/skills/threejs/SKILL.md`
+- `reactive-av` -> `.codex/skills/reactive-av/SKILL.md`
+- `physics-reactive-audio` -> `.codex/skills/physics-reactive-audio/SKILL.md`
+
 ## Phase Discipline
 - Enforce one phase at a time.
 - Read and update `status.json` during phase work.
