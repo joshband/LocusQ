@@ -1,0 +1,153 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_state_roundtrip_contract",
+  "name": "LocusQ State Roundtrip Contract",
+  "category": "contract",
+  "description": "State-management proxy contract using in-run save/load roundtrip under continuous excitation.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses harness state_roundtrip support to validate stateful continuity and stability."
+  },
+
+  "stimulus": {
+    "stimulus_id": "multitone",
+    "stimulus_variant": "harmonic",
+    "parameters": {
+      "fundamental_hz": 110.0,
+      "num_harmonics": 8,
+      "overall_amplitude": 0.30,
+      "duration_seconds": 4.0
+    }
+  },
+
+  "parameter_variations": {
+    "qa_emitter_instances": 0.3333,
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.12,
+    "emit_gain": 0.56,
+    "emit_spread": 0.32,
+    "emit_directivity": 0.55,
+    "phys_enable": 1.0,
+    "phys_drag": 0.18,
+    "phys_gravity": 0.50,
+    "anim_enable": 1.0,
+    "anim_mode": 1.0,
+    "anim_loop": 1.0,
+    "anim_speed": 0.1919,
+    "anim_sync": 1.0,
+    "rend_master_gain": 0.50,
+    "rend_quality": 0.0,
+    "rend_room_enable": 1.0,
+    "rend_room_mix": 0.38,
+    "rend_room_size": 0.45,
+    "rend_room_damping": 0.40,
+    "rend_doppler": 1.0,
+    "rend_doppler_scale": 0.68,
+    "rend_air_absorb": 1.0
+  },
+
+  "parameter_automation": [
+    {
+      "parameter_index": 3,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.56 },
+        { "time": 1.0, "value": 0.72 },
+        { "time": 2.0, "value": 0.48 },
+        { "time": 3.0, "value": 0.68 },
+        { "time": 4.0, "value": 0.56 }
+      ]
+    },
+    {
+      "parameter_index": 17,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.40 },
+        { "time": 1.0, "value": 0.65 },
+        { "time": 2.0, "value": 0.30 },
+        { "time": 3.0, "value": 0.58 },
+        { "time": 4.0, "value": 0.45 }
+      ]
+    }
+  ],
+
+  "state_roundtrip": {
+    "enabled": true,
+    "trigger_seconds": 1.20,
+    "require_support": true,
+    "fail_on_error": true
+  },
+
+  "multi_pass": {
+    "num_passes": 2,
+    "reset_between_passes": true
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 4.0
+    },
+    "late_state": {
+      "type": "time_range",
+      "start_seconds": 1.4,
+      "end_seconds": 4.0
+    }
+  },
+
+  "expected_invariants": {
+    "contract_finite": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "State transitions must remain finite."
+    },
+    "contract_state_signal": {
+      "metric": "rms_energy",
+      "window": "late_state",
+      "threshold": {
+        "min": -92.0
+      },
+      "severity": "hard_fail",
+      "description": "Post-roundtrip signal must remain present."
+    },
+    "contract_peak_budget": {
+      "metric": "peak_level",
+      "window": "full",
+      "threshold": {
+        "max": -0.1
+      },
+      "severity": "soft_warn",
+      "description": "State transitions should remain bounded."
+    },
+    "contract_state_growth": {
+      "metric": "energy_growth",
+      "window": "late_state",
+      "threshold": {
+        "allow_increase_pct": 700.0
+      },
+      "severity": "soft_warn",
+      "description": "State accumulation should stay bounded."
+    },
+    "contract_state_continuity": {
+      "metric": "discontinuity_count",
+      "window": "late_state",
+      "threshold": {
+        "max_count": 9000,
+        "detection_threshold_db": -20.0
+      },
+      "severity": "soft_warn",
+      "description": "Roundtrip should avoid severe discontinuity bursts."
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass with state roundtrip active."
+}

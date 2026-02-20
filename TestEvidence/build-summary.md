@@ -1689,3 +1689,33 @@ Artifacts:
 - `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/qa_host_edge_96k512.log`
 - `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/pluginval_strict5_skip_gui.log`
 - `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`
+
+## QA Contract-Pack Backport (UTC 2026-02-20)
+
+122. Build LocusQ QA target after runtime-config + contract-pack wiring
+
+```sh
+cmake --build build_local --config Release --target locusq_qa -j 8
+```
+
+Result: `PASS`
+
+123. Run new contract-pack suite (spatial adapter)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_contract_pack_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
+
+124. Run docs freshness gate after QA/doc sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- `TestEvidence/locusq_qa_contract_pack_build_20260220T185755Z.log`
+- `TestEvidence/locusq_contract_pack_suite_20260220T185830Z.log`

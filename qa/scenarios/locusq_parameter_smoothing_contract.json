@@ -1,0 +1,150 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_parameter_smoothing_contract",
+  "name": "LocusQ Parameter Smoothing Contract",
+  "category": "contract",
+  "description": "Contract baseline for dense automation on high-impact spatial controls.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "TIME_VARYING"],
+    "excluded_behaviors": [],
+    "notes": "Exercises rapid control movement while requiring finite, bounded output."
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.28,
+      "duration_seconds": 4.0
+    }
+  },
+
+  "parameter_variations": {
+    "qa_emitter_instances": 0.3333,
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.14,
+    "emit_gain": 0.58,
+    "emit_spread": 0.35,
+    "emit_directivity": 0.45,
+    "rend_master_gain": 0.50,
+    "rend_quality": 0.0,
+    "rend_room_enable": 1.0,
+    "rend_room_mix": 0.35,
+    "rend_room_size": 0.44,
+    "rend_room_damping": 0.42,
+    "rend_doppler": 1.0,
+    "rend_doppler_scale": 0.60,
+    "rend_air_absorb": 1.0,
+    "phys_enable": 0.0,
+    "anim_enable": 0.0
+  },
+
+  "parameter_automation": [
+    {
+      "parameter_index": 3,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.45 },
+        { "time": 0.5, "value": 0.80 },
+        { "time": 1.0, "value": 0.50 },
+        { "time": 1.5, "value": 0.78 },
+        { "time": 2.0, "value": 0.48 },
+        { "time": 2.5, "value": 0.76 },
+        { "time": 3.0, "value": 0.52 },
+        { "time": 3.5, "value": 0.74 },
+        { "time": 4.0, "value": 0.58 }
+      ]
+    },
+    {
+      "parameter_index": 8,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.10 },
+        { "time": 0.5, "value": 0.90 },
+        { "time": 1.0, "value": 0.20 },
+        { "time": 1.5, "value": 0.85 },
+        { "time": 2.0, "value": 0.30 },
+        { "time": 2.5, "value": 0.80 },
+        { "time": 3.0, "value": 0.25 },
+        { "time": 3.5, "value": 0.75 },
+        { "time": 4.0, "value": 0.35 }
+      ]
+    },
+    {
+      "parameter_index": 16,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.05 },
+        { "time": 0.6, "value": 0.60 },
+        { "time": 1.2, "value": 0.15 },
+        { "time": 1.8, "value": 0.70 },
+        { "time": 2.4, "value": 0.25 },
+        { "time": 3.0, "value": 0.65 },
+        { "time": 3.6, "value": 0.20 },
+        { "time": 4.0, "value": 0.35 }
+      ]
+    }
+  ],
+
+  "analysis_windows": {
+    "exercise": {
+      "type": "time_range",
+      "start_seconds": 0.2,
+      "end_seconds": 4.0
+    }
+  },
+
+  "expected_invariants": {
+    "contract_finite": {
+      "metric": "non_finite",
+      "window": "exercise",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Automation must remain finite."
+    },
+    "contract_signal_present": {
+      "metric": "rms_energy",
+      "window": "exercise",
+      "threshold": {
+        "min": -95.0
+      },
+      "severity": "hard_fail",
+      "description": "Automation lane must keep audible output."
+    },
+    "contract_peak_budget": {
+      "metric": "peak_level",
+      "window": "exercise",
+      "threshold": {
+        "max": -0.05
+      },
+      "severity": "soft_warn",
+      "description": "Rapid automation should stay below clipping."
+    },
+    "contract_discontinuities": {
+      "metric": "discontinuity_count",
+      "window": "exercise",
+      "threshold": {
+        "max_count": 6000,
+        "detection_threshold_db": -24.0
+      },
+      "severity": "soft_warn",
+      "description": "Smoothing should bound zipper artifacts."
+    },
+    "contract_dc_bias": {
+      "metric": "dc_offset",
+      "window": "exercise",
+      "threshold": {
+        "max": 0.05
+      },
+      "severity": "soft_warn",
+      "description": "Automation should not introduce sustained DC bias."
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

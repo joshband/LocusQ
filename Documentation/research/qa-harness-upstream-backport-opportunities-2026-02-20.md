@@ -54,6 +54,17 @@ Compare LocusQ against migrated harness adopters (`echoform`, `memory-echoes`, `
 2. Align `qa/main.cpp` runtime overrides to harness-native `applySuiteRuntimeConfig()` semantics as an interim step until shared runner-app utility lands upstream.
 3. Keep current Stage 14 manual DAW/device-profile checklist as release gate while upstream harness changes are developed.
 
+## Progress Update (UTC 2026-02-20)
+
+- Completed: `qa/main.cpp` now applies suite runtime overrides via `qa::scenario::applySuiteRuntimeConfig(...)` (custom local override parser removed).
+- Completed: Added LocusQ contract-pack scenarios and suite:
+  - `qa/scenarios/locusq_latency_processing_contract.json`
+  - `qa/scenarios/locusq_parameter_smoothing_contract.json`
+  - `qa/scenarios/locusq_state_roundtrip_contract.json`
+  - `qa/scenarios/locusq_contract_pack_suite.json`
+- Completed: CI critical lane now executes `locusq_contract_pack_suite` in `.github/workflows/qa_harness.yml`.
+- Pending: upstream harness runner-app/perf/runtime-config unification and cross-repo (`echoform`, `memory-echoes`, `monument-reverb`) rollouts remain open.
+
 ## Proposed Upstream Sequence
 
 1. P0-1: shared runner app library.

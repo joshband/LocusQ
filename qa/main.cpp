@@ -25,7 +25,6 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -78,46 +77,6 @@ qa::scenario::ExecutionConfig makeConfig(bool useSpatial, const RunOptions& opti
     cfg.numChannels  = options.numChannels;
     cfg.outputDir    = "qa_output/locusq" + std::string(useSpatial ? "_spatial" : "_emitter");
     return cfg;
-}
-
-void applySuiteRuntimeOverrides(const qa::scenario::TestSuite& suite,
-                                qa::scenario::ExecutionConfig& cfg)
-{
-    auto parsePositiveInt = [](const std::string& value) -> std::optional<int>
-    {
-        try
-        {
-            const auto parsed = std::stoi(value);
-            if (parsed > 0)
-                return parsed;
-        }
-        catch (const std::exception&)
-        {
-        }
-
-        return std::nullopt;
-    };
-
-    if (const auto sampleRateIt = suite.sharedConfig.find("sample_rate");
-        sampleRateIt != suite.sharedConfig.end())
-    {
-        if (const auto parsed = parsePositiveInt(sampleRateIt->second))
-            cfg.sampleRate = *parsed;
-    }
-
-    if (const auto blockSizeIt = suite.sharedConfig.find("block_size");
-        blockSizeIt != suite.sharedConfig.end())
-    {
-        if (const auto parsed = parsePositiveInt(blockSizeIt->second))
-            cfg.blockSize = *parsed;
-    }
-
-    if (const auto channelsIt = suite.sharedConfig.find("num_channels");
-        channelsIt != suite.sharedConfig.end())
-    {
-        if (const auto parsed = parsePositiveInt(channelsIt->second))
-            cfg.numChannels = *parsed;
-    }
 }
 
 bool scenarioRequestsPerfMetrics(const qa::scenario::ScenarioSpec& scenario)
@@ -344,8 +303,7 @@ qa::scenario::TestSuiteResult executeSuite(const qa::scenario::TestSuite& suite,
                                            const RunOptions& options)
 {
     auto dutFactory = useSpatial ? createSpatialDut : createEmitterDut;
-    auto cfg = makeConfig(useSpatial, options);
-    applySuiteRuntimeOverrides(suite, cfg);
+    auto cfg = qa::scenario::applySuiteRuntimeConfig(makeConfig(useSpatial, options), suite);
 
     qa::scenario::ScenarioExecutor executor(makeRunnerFactory(dutFactory), dutFactory, cfg);
     qa::scenario::InvariantEvaluator evaluator;

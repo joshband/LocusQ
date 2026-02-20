@@ -1,0 +1,113 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_latency_processing_contract",
+  "name": "LocusQ Latency Processing Contract",
+  "category": "contract",
+  "description": "Contract baseline for near-immediate response in a passthrough-weighted spatial path.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses single-impulse excitation and short onset windows to guard latency regressions."
+  },
+
+  "stimulus": {
+    "stimulus_id": "impulse",
+    "stimulus_variant": "single",
+    "parameters": {
+      "amplitude": 0.65,
+      "offset_samples": 96
+    }
+  },
+
+  "parameter_variations": {
+    "qa_emitter_instances": 0.0,
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.0,
+    "emit_gain": 1.0,
+    "emit_spread": 0.0,
+    "emit_directivity": 0.40,
+    "rend_master_gain": 1.0,
+    "rend_quality": 0.0,
+    "rend_room_enable": 0.0,
+    "rend_room_mix": 0.0,
+    "rend_room_size": 0.35,
+    "rend_room_damping": 0.45,
+    "rend_doppler": 0.0,
+    "rend_doppler_scale": 0.50,
+    "rend_air_absorb": 0.0,
+    "phys_enable": 0.0,
+    "anim_enable": 0.0
+  },
+
+  "analysis_windows": {
+    "onset_20ms": {
+      "type": "time_range",
+      "start_seconds": 0.0,
+      "end_seconds": 0.02
+    },
+    "onset_40ms": {
+      "type": "time_range",
+      "start_seconds": 0.0,
+      "end_seconds": 0.04
+    },
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.0,
+      "end_seconds": 1.0
+    }
+  },
+
+  "expected_invariants": {
+    "contract_finite": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Output must remain finite."
+    },
+    "contract_immediate_energy_40ms": {
+      "metric": "rms_energy",
+      "window": "onset_40ms",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "Impulse energy must appear within 40 ms."
+    },
+    "contract_immediate_energy_20ms": {
+      "metric": "rms_energy",
+      "window": "onset_20ms",
+      "threshold": {
+        "min": -96.0
+      },
+      "severity": "soft_warn",
+      "description": "Preferred onset target is within 20 ms."
+    },
+    "contract_peak_budget": {
+      "metric": "peak_level",
+      "window": "full",
+      "threshold": {
+        "max": -0.1
+      },
+      "severity": "soft_warn",
+      "description": "Contract baseline should remain below clipping."
+    },
+    "contract_continuity": {
+      "metric": "discontinuity_count",
+      "window": "full",
+      "threshold": {
+        "max_count": 1600,
+        "detection_threshold_db": -30.0
+      },
+      "severity": "soft_warn",
+      "description": "Onset path should avoid excessive discontinuities."
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

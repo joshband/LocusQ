@@ -210,6 +210,9 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T18:02:28Z | Stage 13 standalone smoke | `open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (process launch observed; `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`) |
 | 2026-02-20T18:06:18Z | Stage 13 docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 | 2026-02-20T18:24:17Z | Stage 14 contract-alignment docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-20T18:57:55Z | Contract-pack backport QA build | `cmake --build build_local --config Release --target locusq_qa -j 8` | PASS (`TestEvidence/locusq_qa_contract_pack_build_20260220T185755Z.log`) |
+| 2026-02-20T18:58:30Z | Contract-pack suite (spatial adapter) | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_contract_pack_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_contract_pack_suite_20260220T185830Z.log`) |
+| 2026-02-20T18:58:57Z | Contract-pack docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

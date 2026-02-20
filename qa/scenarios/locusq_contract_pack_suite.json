@@ -1,0 +1,20 @@
+{
+  "id": "locusq_contract_pack_suite",
+  "name": "LocusQ Contract Pack Suite",
+  "description": "Core contract pack coverage for latency, parameter smoothing, and state roundtrip continuity.",
+  "scenario_ids": [
+    "locusq_latency_processing_contract",
+    "locusq_parameter_smoothing_contract",
+    "locusq_state_roundtrip_contract"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "contract_pack"
+  },
+  "runtime_config": {
+    "sample_rate": 48000,
+    "block_size": 512,
+    "channels": 2,
+    "output_dir": "qa_output/locusq_spatial_contract_pack"
+  }
+}

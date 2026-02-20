@@ -86,6 +86,7 @@ jobs:
 
           # Existing core gates (2-channel baseline).
           "${LOCUSQ_QA_BIN}" qa/scenarios/locusq_smoke_suite.json | tee qa_output/ci_smoke_suite.log
+          "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_contract_pack_suite.json | tee qa_output/ci_contract_pack_suite.log
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json | tee qa_output/ci_phase_2_6_acceptance_suite.log
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json | tee qa_output/ci_phase_2_5_regression_suite.log
           "${LOCUSQ_QA_BIN}" --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json | tee qa_output/ci_phase_2_8_output_layout_mono_suite.log
