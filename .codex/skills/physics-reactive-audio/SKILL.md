@@ -25,6 +25,15 @@ Use this skill when audio behavior is driven by simulation state (for example: f
 - `references/realtime-safety.md`: Threading contracts and lock avoidance.
 - `references/validation-evidence.md`: QA matrix and evidence requirements.
 
+## Architecture Defaults: Multi-Bus vs Cross-Instance
+- Treat multi-bus support as a first-class, portable architecture tool (AU/VST3 capable).
+- Do not assume cross-instance awareness is portable across AUv3/AU/VST3 hosts.
+- Default architecture recommendation:
+  - One authoritative renderer/audio coordinator instance.
+  - Routed input via host buses/tracks/sends.
+  - Host-serialized state and automation as the canonical recall path.
+- If cross-instance messaging is requested, classify it as optional and host-specific, and document scope limits explicitly.
+
 ## Execution Rules
 - Never block or allocate on the audio thread.
 - Keep simulation update cadence explicit and bounded.

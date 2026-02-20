@@ -25,6 +25,15 @@ Use this skill when visualization behavior must react to audio features and/or p
 - `references/runtime-stability-and-performance.md`: Frame-time budgets and memory hygiene.
 - `references/qa-troubleshooting-checklist.md`: Reactive visual QA and failure signatures.
 
+## Backend-Aware QA Requirements
+- Validate reactive visualization behavior on both:
+  - `WKWebView` hosts (Apple platforms)
+  - `WebView2` hosts (Windows)
+- Record backend-specific differences in:
+  - update cadence/jitter behavior,
+  - UI interaction responsiveness,
+  - fallback behavior when native bridge calls are delayed.
+
 ## Execution Rules
 - Keep mapping deterministic for the same input stream.
 - Avoid direct coupling from transport callbacks into render mutations.

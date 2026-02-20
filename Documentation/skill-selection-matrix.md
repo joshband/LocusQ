@@ -48,9 +48,12 @@ Phase skills remain first when a phase command is active.
 | Task Pattern | Skills |
 |---|---|
 | "UI button clicks fail in host but work in browser preview" | `juce-webview-runtime`, optionally `skill_troubleshooting` |
+| "WKWebView and WebView2 behave differently for the same UI action" | `juce-webview-runtime`, optionally `threejs` |
+| "Need to decide between multi-bus and cross-instance awareness" | `skill_plan`, `physics-reactive-audio` |
 | "Improve Three.js frame rate and memory stability" | `threejs` |
 | "Make visuals respond to spectrum/onsets and avoid jitter" | `reactive-av`, optionally `threejs` |
 | "Add flocking/crowd/drag/gravity model driving sound behavior" | `physics-reactive-audio`, optionally `skill_impl` |
+| "Implement optional host-specific cross-instance coordination" | `physics-reactive-audio`, `skill_troubleshooting`, optionally `skill_docs` |
 | "Update ADR/traceability after implementation changes" | `skill_docs` |
 | "Run formal test phase with harness evidence" | `skill_test`, `skill_testing` |
 

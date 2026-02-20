@@ -27,6 +27,15 @@ Use this skill for deep runtime issues in JUCE WebView plugin UIs (interop glitc
 - `references/debugging-playbook.md`: Diagnostic steps and capture checklist.
 - `references/qa-and-evidence.md`: Acceptance matrix and evidence requirements.
 
+## Backend Scope: WKWebView vs WebView2
+- `WKWebView` (Apple) and `WebView2` (Windows) must be treated as distinct runtime targets.
+- Differences that matter for bug triage and QA:
+  - Process/runtime model and crash isolation behavior.
+  - JS/native bridge entry points and callback timing semantics.
+  - Input focus/hit-testing behavior for embedded plugin UIs.
+  - Storage/session/profile behavior and persistence scope.
+- Every runtime bug write-up must include backend, host, plugin format, and reproducible steps.
+
 ## Execution Rules
 - Preserve relay/attachment/member-order constraints in JUCE editor classes.
 - Treat bridge timeouts and callback ordering as first-class failure modes.
