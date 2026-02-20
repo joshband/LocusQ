@@ -1330,6 +1330,21 @@ COMMIT:
 git commit -m "docs(adr): add ADR-0008 viewport scope — post-v1 deferral"
 ````
 
+**Stage 16-D Gap Assessment Result (2026-02-20): viewport telemetry deferred post-v1**
+
+| Section 7 viewport feature | Production UI status | Scope decision |
+| --- | --- | --- |
+| Room wireframe + grid | Present | v1-required (keep) |
+| Speaker positions/cones | Present (marker meshes instead of literal cones) | v1-required (keep) |
+| Draggable emitters | Present | v1-required (keep) |
+| Orbit/drag camera controls | Present | v1-required (keep) |
+| Motion trails | Absent | Post-v1 (defer) |
+| Velocity vectors | Absent | Post-v1 (defer) |
+
+Stage 16-D decision: the production control panel and foundational viewport satisfy v1
+functional needs. Missing viewport telemetry/polish features (motion trails, velocity
+vectors) are explicitly scoped as post-v1 and formalized in ADR-0008.
+
 ---
 
 #### Task 16-E: Directivity Aim QA Scenario

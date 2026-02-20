@@ -319,6 +319,12 @@
       "status": "complete",
       "completed_at": "2026-02-20T23:01:24Z",
       "notes": "Stage 16-A complete: added dedicated AirAbsorption distance sweep, Calibration sweep/capture proxy, Keyframe 8s loop playback, and emit_dir spatial-effect QA scenarios under qa/scenarios/."
+    },
+    {
+      "phase": "stage16_viewport_scope_adr0008",
+      "status": "complete",
+      "completed_at": "2026-02-20T23:04:47Z",
+      "notes": "Stage 16-D complete: compared Section 7 viewport spec to production UI, identified missing motion trails/velocity vectors, and accepted ADR-0008 deferring telemetry overlays to post-v1."
     }
   ],
   "validation": {
