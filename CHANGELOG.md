@@ -10,6 +10,10 @@ All notable changes to LocusQ are documented here.
 
 ## [Unreleased]
 
+- Reserved for post-`v1.0.0-ga` changes.
+
+## [v1.0.0-ga] - 2026-02-20
+
 ### Added
 
 - Local macOS build/install automation command:
@@ -87,6 +91,16 @@ All notable changes to LocusQ are documented here.
   - Task 15-A confirmed resolved: `emit_dir_azimuth` and `emit_dir_elevation` relay/attachment/UI exposure already landed.
   - Task 15-B resolved: `phys_vel_x`, `phys_vel_y`, and `phys_vel_z` relay/attachment/UI wiring landed in production WebView controls.
   - Task 15-C resolved: UI exposure decision captured in `Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md`.
+- Stage 16 hardening completed:
+  - Task 16-A added dedicated QA scenarios for `AirAbsorption`, `CalibrationEngine`, `KeyframeTimeline` loop playback, and `emit_dir` spatial effect.
+  - Task 16-B RT-safety audit confirmed processBlock allocation-free compliance (`0` RT-path violations).
+  - Task 16-C research integration recommendations published in `Documentation/research/section0-integration-recommendations-2026-02-20.md`.
+  - Task 16-D viewport scope decision formalized via `Documentation/adr/ADR-0008-viewport-scope-v1-vs-post-v1.md` (telemetry deferred post-v1).
+  - Task 16-E added directivity aim QA scenario `qa/scenarios/locusq_directivity_aim.json`.
+- Stage 17 GA-readiness progress:
+  - Task 17-A portable acceptance rerun recorded `PASS_WITH_NA` (`DEV-01..DEV-05=PASS`, `DEV-06=N/A`, external mic unavailable) at `2026-02-20T23:23:53Z`.
+  - Task 17-B docs freshness gate passed with `0 warning(s)`.
+  - Task 17-C release freeze applied: changelog finalized and CMake project version bumped to `1.0.0` (`v1.0.0-ga` target).
 - Documentation indices updated for new harness comparison artifact and local build/install command:
   - `Documentation/README.md`
   - `README.md`

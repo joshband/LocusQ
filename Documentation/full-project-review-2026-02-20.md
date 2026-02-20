@@ -1510,6 +1510,21 @@ COMMIT:
 git commit -m "chore(release): CHANGELOG freeze and version bump to v1.0.0-ga"
 ````
 
+**Stage 17-C Execution Result (2026-02-20): complete**
+
+- `CHANGELOG.md` frozen for release:
+  - added `## [v1.0.0-ga] - 2026-02-20`
+  - included explicit Stage 15/16/17 entries under release changes
+  - left `## [Unreleased]` as post-GA placeholder
+- `CMakeLists.txt` version bump:
+  - `project(LocusQ VERSION 1.0.0 LANGUAGES C CXX)`
+- `README.md` release status refresh:
+  - release checklist/status aligned to Stage 17 progress
+  - version string updated to `v1.0.0-ga` target
+- Validation:
+  - `./scripts/build-and-install-mac.sh`: `PASS` (warnings only; install/hash verification complete)
+  - `grep VERSION CMakeLists.txt`: `project(LocusQ VERSION 1.0.0 LANGUAGES C CXX)`
+
 ---
 
 #### Task 17-D: GA Promotion
@@ -1575,14 +1590,13 @@ graph TD
     classDef human fill:#5c4a1a,color:#fff
 ```
 
-### Updated Start Now (Post 17-B Completion)
+### Updated Start Now (Post 17-C Completion)
 
-Stage 15 and Stage 16 are complete. Stage 17-A and Stage 17-B are complete. The
+Stage 15 and Stage 16 are complete. Stage 17-A, 17-B, and 17-C are complete. The
 immediate next action is:
 
 | Session | Mega-Prompt | Model | Notes |
 |---------|------------|-------|-------|
-| 1 | Task 17-C (CHANGELOG freeze + version bump) | Sonnet 4.6 | Execute after confirming release notes scope |
-| 2 | Task 17-D (GA promotion) | Human | Execute after 17-C validation and tag readiness |
+| 1 | Task 17-D (GA promotion) | Human | Final release/tag publication gate |
 
 ---

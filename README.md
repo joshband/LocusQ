@@ -24,10 +24,8 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Preset/snapshot compatibility hardening is in place: host snapshots now persist output-layout schema metadata and restore through layout-aware migration checks.
 
 ### What is still open
-- Final manual DAW verification is still needed for embedded-host UI behavior (click/edit/drag checks in real host sessions).
-- Portable profile signoff is still needed for laptop speakers, built-in/external mic routing, and headphones.
-- Comprehensive Stage 14 architecture/code/design/QA review pass is not yet complete.
-- After manual checks, publish one final full acceptance snapshot with the manual signoff rows populated.
+- Stage 17-D GA promotion is still pending (tag push + release publication + GA milestone sync).
+- Final release artifact promotion/signing checklist is still pending final operator signoff.
 
 ### V1 Completion Checklist
 - [x] Core feature set implemented (spatialization, room effects, motion/physics, calibration, keyframe animation).
@@ -37,18 +35,17 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - [x] Bridge-fix full acceptance non-manual rerun executed (`test_full_acceptance_rerun_bridge_fix_20260219T212613Z`).
 - [x] Pluginval automation-segfault mitigation landed and validated (seeded repro now passes; 10-run stability pass).
 - [x] Documentation freshness gate enabled (ADR-0005 + CI/script checks).
-- [ ] Complete manual host UI checklist (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
-- [ ] Add explicit manual signoff rows for laptop speakers, mic routing (built-in/external), and headphones.
+- [x] Stage 16 hardening completed (QA coverage expansion, RT-safety audit, research integration, viewport scope ADR, directivity aim scenario).
+- [x] Stage 17-A portable profile rerun completed (`DEV-01..DEV-05=PASS`, `DEV-06=N/A`).
+- [x] Stage 17-B docs freshness gate rerun passed (`./scripts/validate-docs-freshness.sh`).
+- [x] Stage 17-C release freeze applied (changelog finalized, version bump to `v1.0.0-ga` target).
 - [ ] Run final `/test` acceptance rerun (DSP + host + UI matrix) and publish deltas.
-- [ ] Close any remaining 2.7d issues found during manual DAW verification.
-- [ ] Close Stage 14 drift items (`room_profile`/`cal_state`/`rend_phys_interact` contract and unbound-parameter disposition).
-- [ ] Keep closeout docs synchronized on each final closeout pass (`status.json`, `README.md`, `CHANGELOG.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`).
-- [ ] Cut v1 release candidate and run final ship smoke checks.
+- [ ] Execute Stage 17-D GA promotion (final tag/release publication + GA milestone sync).
 
 ## Current Status (UTC 2026-02-20)
 
-- `current_phase`: `code` (Stage 12 promoted as primary incremental route; Stage 13 automated acceptance sweep complete, manual DAW signoff pending)
-- `version`: `v0.1.0`
+- `current_phase`: `code` (Stage 17-A/B complete; Stage 17-C release freeze complete; Stage 17-D GA promotion pending)
+- `version`: `v1.0.0-ga`
 - Implementation plan phases: `2.1-2.6` complete (Phase 2.4 acceptance now closed)
 - UI framework: `webview`
 - Planning decision package: `complete` (ADR-0002/0003/0004 + scene-state contract)
@@ -70,6 +67,11 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 - Stage 13 automated sweep: `PASS` (`TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`; 0 failures across UI gate, targeted non-UI matrix, pluginval, and standalone smoke)
 - Stage 14 contract alignment: `in_progress` (ADR-0006 + `.ideas`/traceability/invariants updates landed; execution/checklist signoff pending)
+- Stage 15 close-the-gap: `complete`
+- Stage 16 hardening: `complete`
+- Stage 17-A portable device acceptance repeat: `PASS_WITH_NA`
+- Stage 17-B docs freshness gate: `PASS`
+- Stage 17-C changelog freeze + version bump: `complete`
 
 ## Completed Phases
 
@@ -120,6 +122,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Distribution directory: `dist/LocusQ-v0.1.0-macOS`
 - Archive: `dist/LocusQ-v0.1.0-macOS.zip`
 - Build manifest: `dist/LocusQ-v0.1.0-macOS/BUILD_MANIFEST.md`
+- Note: the latest archived package remains `v0.1.0`; `v1.0.0-ga` promotion artifacts are finalized in Stage 17-D.
 - Universal ship checks:
   - `pluginval` on ship VST3: `PASS` (`plugins/LocusQ/TestEvidence/pluginval_ship_universal_stdout.log`)
   - Standalone smoke: `PASS` (`plugins/LocusQ/TestEvidence/standalone_ship_universal_smoke.log`)
@@ -224,4 +227,4 @@ See:
 
 ## Suggested Next Command
 
-- Run the Stage 14 checklist (`Documentation/stage14-review-release-checklist.md`), complete manual DAW/device-profile signoff in `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`, then run `/test LocusQ full acceptance rerun (DSP + host + UI matrix)`.
+- Run Stage 17-D GA promotion steps: verify `draft-pre-release` tag state, push `v1.0.0-ga`, publish release notes from `CHANGELOG.md`, and update `status.json` with the GA milestone.

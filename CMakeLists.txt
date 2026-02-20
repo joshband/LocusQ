@@ -3,7 +3,7 @@
 # Cross-platform: Windows (VST3), macOS (VST3/AU), Linux (VST3/LV2)
 
 cmake_minimum_required(VERSION 3.22)
-project(LocusQ VERSION 0.1.0 LANGUAGES C CXX)
+project(LocusQ VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
