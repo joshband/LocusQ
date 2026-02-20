@@ -33,9 +33,8 @@ Comprehensive architecture, code, design, and QA review for Stage 14 closeout wi
 
 ### High
 
-1. `rend_phys_interact` is still a no-op/deferred control and remains unbound in Stage 12 UI bridge.
-   - Evidence: parameter is declared (`Source/PluginProcessor.cpp`) but has no active runtime consumer beyond declaration/read-path absence in processor/editor bridge coverage.
-   - Risk: user-visible contract ambiguity unless explicitly documented as deferred.
+1. No unresolved high-severity drift remains after Stage 14 follow-up implementation of `rend_phys_interact`.
+   - Evidence: runtime consumer path is now active in `Source/PluginProcessor.cpp` + `Source/PhysicsEngine.h`, and Stage 12 relay/UI binding is present in `Source/PluginEditor.cpp` + `Source/ui/public/incremental/js/stage12_ui.js`.
 
 ### Medium
 
@@ -81,7 +80,7 @@ Comprehensive architecture, code, design, and QA review for Stage 14 closeout wi
 | Area | Current State | Disposition |
 |---|---|---|
 | Portable device profile gate | Spec requires laptop speakers/mic/headphones checks | Pending manual execution (`DEV-01..DEV-06`) |
-| `rend_phys_interact` | Parameter present, runtime/UI behavior deferred | Decide implement vs explicit defer contract |
+| `rend_phys_interact` | Parameter present with runtime + Stage 12 UI bridge behavior | Resolved in Stage 14 follow-up implementation |
 | `emit_dir_*` + `phys_vel_*` Stage 12 exposure | Runtime present, UI bridge absent | Bind in Stage 14 or explicitly defer |
 | REAPER stale load handling | Previously manual and error-prone | Automated in install script (new) |
 
@@ -103,11 +102,8 @@ Current recommendation: `hold` for GA, optional `draft-pre-release` state lock.
 1. Execute one fresh manual DAW session using current binaries:
    - `./scripts/build-and-install-mac.sh`
    - complete `UI-01..UI-12`, `DEV-01..DEV-06` in `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`.
-2. Decide `rend_phys_interact` path now:
-   - implement runtime behavior in v1, or
-   - record explicit defer/no-op contract and keep hidden/unbound in UI.
-3. Resolve Stage 12 exposure gap for `emit_dir_*` and `phys_vel_*`:
+2. Resolve Stage 12 exposure gap for `emit_dir_*` and `phys_vel_*`:
    - add relay/attachment/UI controls, or
    - document defer status explicitly in ADR + traceability.
-4. If manual checks pass, cut GitHub `draft-pre-release` immediately, then promote to `ga` after signoff review.
-5. Keep harness upstream backlog active (runner-app/perf/runtime-config unification) and backport once upstream lands.
+3. If manual checks pass, cut GitHub `draft-pre-release` immediately, then promote to `ga` after signoff review.
+4. Keep harness upstream backlog active (runner-app/perf/runtime-config unification) and backport once upstream lands.

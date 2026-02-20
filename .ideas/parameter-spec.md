@@ -164,7 +164,7 @@ Last Modified Date: 2026-02-20
 |:---|:-----|:-----|:------|:--------|:-----|:------|
 | `rend_phys_rate` | Physics Update Rate | Enum | 30 / 60 / 120 / 240 Hz | 60 | Hz | Simulation tick rate |
 | `rend_phys_walls` | Wall Collision | Bool | On / Off | On | — | Objects bounce off room boundaries |
-| `rend_phys_interact` | Object Interaction | Bool | On / Off | Off | — | v2 stretch; parameter exists but has no runtime effect in current v1 implementation |
+| `rend_phys_interact` | Object Interaction | Bool | On / Off | Off | — | Enables global soft inter-emitter interaction force for physics-enabled emitters |
 | `rend_phys_pause` | Pause Physics | Bool | On / Off | Off | — | Freeze all physics simulation |
 
 ### Visualization
@@ -199,7 +199,7 @@ Last Modified Date: 2026-02-20
 ## As-Built Contract Delta (2026-02-20)
 
 1. `room_profile` and `cal_state` remain documented internal states, but are runtime/native status fields in current v1 rather than APVTS parameters.
-2. `rend_phys_interact` exists in APVTS layout but is currently a deferred no-op (`v2` interaction feature).
+2. `rend_phys_interact` is now runtime-active in v1: renderer-mode global control toggles inter-emitter interaction force computation for physics-enabled emitters, and Stage 12 incremental UI now binds this toggle.
 3. Stage 12 incremental UI binds renderer depth controls (`rend_doppler_scale`, `rend_room_mix`, `rend_room_size`, `rend_room_damping`), while these remain missing in legacy WebView traceability rows that pre-date Stage 10-12.
 4. `emit_dir_azimuth`, `emit_dir_elevation`, and `phys_vel_x/y/z` are active DSP/runtime parameters but are not yet exposed in Stage 12 incremental control bindings.
 5. Device compatibility contract for next phase: mono/stereo/quad output layout support is implemented in processor/runtime; laptop speakers and headphones run through stereo output paths, with advanced personalized binaural processing still deferred.

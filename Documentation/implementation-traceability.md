@@ -41,7 +41,6 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 |---|---|---|---|
 | `room_profile` | Runtime/internal status concept; not APVTS parameter | Previously documented as global parameter without APVTS caveat | Keep as internal runtime state with explicit non-APVTS note in `.ideas/parameter-spec.md` |
 | `cal_state` | Runtime/internal status concept; not APVTS parameter | Previously documented as calibrate parameter without APVTS caveat | Keep as internal runtime state with explicit non-APVTS note in `.ideas/parameter-spec.md` |
-| `rend_phys_interact` | APVTS parameter present; currently no runtime consumer | Documented as active renderer physics control | Implement runtime behavior or keep explicitly deferred/no-op across docs/UI |
 | `emit_dir_azimuth` / `emit_dir_elevation` | DSP/runtime active | Not exposed in Stage 12 incremental control UI | Add Stage 14 binding or mark intentional defer with ADR-linked note |
 | `phys_vel_x` / `phys_vel_y` / `phys_vel_z` | DSP/runtime active (throw request inputs) | Not exposed in Stage 12 incremental control UI | Add Stage 14 binding or mark intentional defer with ADR-linked note |
 
@@ -63,7 +62,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | `phys_reset` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (edge-trigger -> `physicsEngine.requestReset`) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | One-shot reset trigger (`btn-reset`) |
 | `rend_phys_rate` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global simulation tick rate |
 | `rend_phys_walls` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global wall-collision enable |
-| `rend_phys_interact` | `Source/PluginProcessor.cpp` | No active runtime consumer in current v1 | Not bound in Stage 12 incremental UI | Deferred v2 interaction feature; currently no-op |
+| `rend_phys_interact` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`processBlock` renderer global + `publishEmitterState` interaction force path) and `Source/PhysicsEngine.h` (`setInteractionForce`) | Bound in Stage 12 incremental UI (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/incremental/js/stage12_ui.js`) | Enables global soft inter-emitter interaction force for physics-enabled emitters |
 | `rend_phys_pause` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global pause/freeze control |
 
 ## Phase 2.4 Acceptance Coverage

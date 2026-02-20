@@ -1752,3 +1752,54 @@ Result: `PASS` (`0 warning(s)`)
 
 Artifacts:
 - `TestEvidence/locusq_build_install_mac_20260220T190808Z.log`
+
+## Stage 14 `rend_phys_interact` Runtime + Stage 12 Binding (UTC 2026-02-20)
+
+128. Rebuild standalone after runtime/UI interaction binding
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+129. Run Stage 12 standalone self-test on rebuilt app
+
+```sh
+scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+130. Run Stage 12 UI PR gate (self-test default lane)
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage12_selftest=PASS`)
+
+131. Verify installed AU/VST3 binaries match current build artifacts
+
+```sh
+shasum/stat verification for:
+- build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3/Contents/MacOS/LocusQ
+- build_local/LocusQ_artefacts/Release/AU/LocusQ.component/Contents/MacOS/LocusQ
+- ~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3/Contents/MacOS/LocusQ
+- ~/Library/Audio/Plug-Ins/Components/LocusQ.component/Contents/MacOS/LocusQ
+```
+
+Result: `PASS` (`match_vst3=true`, `match_au=true`)
+
+132. Run docs freshness gate after Stage 14 drift-resolution updates
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- `TestEvidence/locusq_incremental_stage12_selftest_20260220T193020Z.json`
+- `TestEvidence/locusq_incremental_stage12_selftest_20260220T193031Z.json`
+- `TestEvidence/ui_pr_gate_20260220T193031Z/status.tsv`

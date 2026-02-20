@@ -115,6 +115,7 @@ private:
     juce::WebToggleButtonRelay roomErOnlyRelay { "rend_room_er_only" };
     juce::WebComboBoxRelay physRateRelay { "rend_phys_rate" };
     juce::WebToggleButtonRelay physWallsRelay { "rend_phys_walls" };
+    juce::WebToggleButtonRelay physInteractRelay { "rend_phys_interact" };
     juce::WebToggleButtonRelay physPauseRelay { "rend_phys_pause" };
     juce::WebComboBoxRelay vizModeRelay { "rend_viz_mode" };
     juce::WebToggleButtonRelay vizTrailsRelay { "rend_viz_trails" };
@@ -196,6 +197,7 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> roomErOnlyAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> physRateAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physWallsAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> physInteractAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physPauseAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> vizModeAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizTrailsAttachment;

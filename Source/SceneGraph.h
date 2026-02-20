@@ -241,6 +241,16 @@ public:
         return physicsWallCollisionEnabled.load (std::memory_order_acquire);
     }
 
+    void setPhysicsInteractionEnabled (bool enabled)
+    {
+        physicsInteractionEnabled.store (enabled, std::memory_order_release);
+    }
+
+    bool isPhysicsInteractionEnabled() const
+    {
+        return physicsInteractionEnabled.load (std::memory_order_acquire);
+    }
+
 private:
     SceneGraph() = default;
     ~SceneGraph() = default;
@@ -260,6 +270,7 @@ private:
     std::atomic<int> physicsRateIndex { 1 }; // 0=30,1=60,2=120,3=240 Hz
     std::atomic<bool> physicsPaused { false };
     std::atomic<bool> physicsWallCollisionEnabled { true };
+    std::atomic<bool> physicsInteractionEnabled { false };
 
     juce::SpinLock registrationLock;
 };

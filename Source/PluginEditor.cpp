@@ -274,6 +274,7 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         .withOptionsFrom (roomErOnlyRelay)
         .withOptionsFrom (physRateRelay)
         .withOptionsFrom (physWallsRelay)
+        .withOptionsFrom (physInteractRelay)
         .withOptionsFrom (physPauseRelay)
         .withOptionsFrom (vizModeRelay)
         .withOptionsFrom (vizTrailsRelay)
@@ -416,6 +417,8 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("rend_phys_rate"), physRateRelay);
     physWallsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_phys_walls"), physWallsRelay);
+    physInteractAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_phys_interact"), physInteractRelay);
     physPauseAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_phys_pause"), physPauseRelay);
     vizModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (

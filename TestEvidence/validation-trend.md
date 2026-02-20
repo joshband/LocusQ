@@ -216,6 +216,11 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T19:08:08Z | Stage 14 macOS build/install automation + cache hygiene | `LOCUSQ_REAPER_AUTO_QUIT=0 ./scripts/build-and-install-mac.sh` | PASS (AU registrar refreshed, REAPER cache rows pruned/backed up, installed AU/VST3 hashes match build artefacts) |
 | 2026-02-20T19:08:20Z | Stage 14 REAPER cache prune verification | `rg -n "LocusQ|LcQd|Nfld" "$HOME/Library/Application Support/REAPER"/reaper-vstplugins*.ini "$HOME/Library/Application Support/REAPER"/reaper-auplugins*.ini "$HOME/Library/Application Support/REAPER"/reaper-recentfx.ini "$HOME/Library/Application Support/REAPER"/reaper-fxtags.ini` | PASS (no matching cache rows after prune) |
 | 2026-02-20T19:08:25Z | Stage 14 docs freshness gate after review/install automation sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-20T19:30:20Z | Stage 14 `rend_phys_interact` self-test verification | `scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage12_selftest_20260220T193020Z.json`) |
+| 2026-02-20T19:30:31Z | Stage 14 `rend_phys_interact` UI PR gate verification | `scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260220T193031Z/status.tsv`) |
+| 2026-02-20T19:35:54Z | Stage 14 standalone rebuild after runtime/UI interaction binding | `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` | PASS |
+| 2026-02-20T19:35:50Z | Stage 14 installed-binary match verification (AU/VST3) | `sha256 + mtime verification between build_local and ~/Library/Audio/Plug-Ins targets` | PASS (`match_vst3=true`, `match_au=true`) |
+| 2026-02-20T19:35:58Z | Stage 14 docs freshness gate after interaction + checklist sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

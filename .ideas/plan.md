@@ -394,14 +394,13 @@ Status note (2026-02-19): Snapshot migration emulation now covers legacy-strip p
 - [x] Align `.ideas/parameter-spec.md` with as-built APVTS/runtime reality (`room_profile`, `cal_state`, `rend_phys_interact` contract notes).
 - [x] Refresh implementation traceability for Stage 12 renderer control bindings and explicit deferred parameter exposure.
 - [ ] Complete manual DAW acceptance rerun and include laptop speaker + headphone playback checks.
-- [ ] Decide and execute one path for `rend_phys_interact`: implement runtime effect or mark deferred/no-op across UI/runtime consistently.
+- [x] Decide and execute one path for `rend_phys_interact`: implement runtime effect or mark deferred/no-op across UI/runtime consistently.
 - [ ] Add Stage 12 incremental bindings (or explicit defer ADR notes) for:
   - `emit_dir_azimuth`
   - `emit_dir_elevation`
   - `phys_vel_x`
   - `phys_vel_y`
   - `phys_vel_z`
-  - `rend_phys_interact`
 - [x] Publish Stage 14 comprehensive review pass (architecture/code/design/QA) with findings and prioritized fixes.
 - [ ] Create release decision package (draft/pre-release vs GA) with artifact and checklist evidence.
 
@@ -412,7 +411,7 @@ Status note (2026-02-19): Snapshot migration emulation now covers legacy-strip p
 - [ ] Release readiness decision is explicit (`hold`, `draft-pre-release`, or `ga`), with gating evidence links.
 
 ### Status Note (2026-02-20)
-Phase 2.12 planning/contract updates are now authored in docs/spec/ADR surfaces. Stage 14 findings are published in `Documentation/stage14-comprehensive-review-2026-02-20.md`, and install automation now includes REAPER/AU cache hygiene in `scripts/build-and-install-mac.sh`. Remaining work is manual DAW signoff, deferred-parameter disposition, and final release packaging/publishing gates.
+Phase 2.12 planning/contract updates are now authored in docs/spec/ADR surfaces. Stage 14 findings are published in `Documentation/stage14-comprehensive-review-2026-02-20.md`, install automation now includes REAPER/AU cache hygiene in `scripts/build-and-install-mac.sh`, and `rend_phys_interact` is now implemented with Stage 12 relay/UI coverage. Remaining work is manual DAW signoff, plus Stage 12 exposure decisions for `emit_dir_*` and `phys_vel_*`, and final release packaging/publishing gates.
 
 ---
 

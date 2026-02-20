@@ -111,6 +111,75 @@ constexpr std::array<const char*, 5> kCurveNames
     "easeInOut",
     "step"
 };
+
+Vec3 computeEmitterInteractionForce (const SceneGraph& sceneGraph,
+                                     int selfSlotId,
+                                     const Vec3& selfPosition)
+{
+    if (sceneGraph.getActiveEmitterCount() <= 1)
+        return {};
+
+    constexpr float kInteractionRadius = 2.0f;
+    constexpr float kInteractionRadiusSq = kInteractionRadius * kInteractionRadius;
+    constexpr float kMinimumDistance = 0.05f;
+    constexpr float kMinimumDistanceSq = kMinimumDistance * kMinimumDistance;
+    constexpr float kInteractionStrength = 8.0f;
+    constexpr float kMaxForce = 12.0f;
+
+    Vec3 interactionForce {};
+
+    for (int slotId = 0; slotId < SceneGraph::MAX_EMITTERS; ++slotId)
+    {
+        if (slotId == selfSlotId || ! sceneGraph.isSlotActive (slotId))
+            continue;
+
+        const auto other = sceneGraph.getSlot (slotId).read();
+        if (! other.active || ! other.physicsEnabled)
+            continue;
+
+        float dx = selfPosition.x - other.position.x;
+        float dy = selfPosition.y - other.position.y;
+        float dz = selfPosition.z - other.position.z;
+        float distanceSq = (dx * dx) + (dy * dy) + (dz * dz);
+
+        if (distanceSq >= kInteractionRadiusSq)
+            continue;
+
+        if (distanceSq < kMinimumDistanceSq)
+        {
+            const float direction = (((selfSlotId + slotId) & 1) == 0) ? 1.0f : -1.0f;
+            dx = direction * kMinimumDistance;
+            dy = 0.0f;
+            dz = -direction * kMinimumDistance;
+            distanceSq = (dx * dx) + (dz * dz);
+        }
+
+        const float distance = std::sqrt (distanceSq);
+        if (distance <= 0.0f)
+            continue;
+
+        const float falloff = juce::jlimit (0.0f, 1.0f, 1.0f - (distance / kInteractionRadius));
+        const float forceMagnitude = falloff * kInteractionStrength;
+        const float invDistance = 1.0f / distance;
+
+        interactionForce.x += dx * invDistance * forceMagnitude;
+        interactionForce.y += dy * invDistance * forceMagnitude;
+        interactionForce.z += dz * invDistance * forceMagnitude;
+    }
+
+    const float forceMagSq = (interactionForce.x * interactionForce.x)
+                           + (interactionForce.y * interactionForce.y)
+                           + (interactionForce.z * interactionForce.z);
+    if (forceMagSq > (kMaxForce * kMaxForce))
+    {
+        const float scale = kMaxForce / std::sqrt (forceMagSq);
+        interactionForce.x *= scale;
+        interactionForce.y *= scale;
+        interactionForce.z *= scale;
+    }
+
+    return interactionForce;
+}
 }
 
 //==============================================================================
@@ -151,6 +220,7 @@ void LocusQAudioProcessor::syncSceneGraphRegistrationForMode (LocusQMode mode)
     if (mode != LocusQMode::Renderer && rendererRegistered)
     {
         sceneGraph.unregisterRenderer();
+        sceneGraph.setPhysicsInteractionEnabled (false);
         rendererRegistered = false;
     }
 
@@ -293,6 +363,8 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                 apvts.getRawParameterValue ("rend_phys_pause")->load() > 0.5f);
             sceneGraph.setPhysicsWallCollisionEnabled (
                 apvts.getRawParameterValue ("rend_phys_walls")->load() > 0.5f);
+            sceneGraph.setPhysicsInteractionEnabled (
+                apvts.getRawParameterValue ("rend_phys_interact")->load() > 0.5f);
 
             // Update renderer DSP parameters from APVTS
             updateRendererParameters();
@@ -588,6 +660,15 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         apvts.getRawParameterValue ("phys_gravity")->load(),
         static_cast<int> (apvts.getRawParameterValue ("phys_gravity_dir")->load()));
 
+    Vec3 interactionForce {};
+    if (physicsEnabled && sceneGraph.isPhysicsInteractionEnabled())
+    {
+        const auto physicsState = physicsEngine.getState();
+        const Vec3 interactionPosition = physicsState.initialized ? physicsState.position : basePosition;
+        interactionForce = computeEmitterInteractionForce (sceneGraph, emitterSlotId, interactionPosition);
+    }
+    physicsEngine.setInteractionForce (interactionForce);
+
     const bool throwGate = apvts.getRawParameterValue ("phys_throw")->load() > 0.5f;
     if (throwGate && ! lastPhysThrowGate)
     {
@@ -747,6 +828,7 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
           + ",\"calAutoRoutingOutputChannels\":" + juce::String (lastAutoDetectedOutputChannels)
           + ",\"calAutoRoutingSpeakerConfig\":" + juce::String (lastAutoDetectedSpeakerConfig)
           + ",\"calAutoRoutingMap\":" + autoDetectedRoutingJson
+          + ",\"physicsInteraction\":" + juce::String (sceneGraph.isPhysicsInteractionEnabled() ? "true" : "false")
           + ",\"animEnabled\":" + juce::String (apvts.getRawParameterValue ("anim_enable")->load() > 0.5f ? "true" : "false")
           + ",\"animMode\":" + juce::String (static_cast<int> (apvts.getRawParameterValue ("anim_mode")->load()))
           + ",\"animTime\":" + juce::String (timelineTime, 3)

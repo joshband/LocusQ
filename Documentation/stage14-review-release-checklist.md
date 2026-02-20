@@ -87,5 +87,4 @@ Define one canonical closeout checklist for:
 - `git status --short --branch`
 
 ## Deferred Until Explicit Approval
-- Implementing runtime behavior for `rend_phys_interact`.
-- Adding new UI controls for currently unbound params (`emit_dir_azimuth`, `emit_dir_elevation`, `phys_vel_x/y/z`, `rend_phys_interact`).
+- Adding new UI controls for currently unbound params (`emit_dir_azimuth`, `emit_dir_elevation`, `phys_vel_x/y/z`).

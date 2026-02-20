@@ -399,7 +399,7 @@ Close remaining spec/implementation drift, validate laptop-speaker/mic/headphone
   - headphone playback
   - built-in mic calibration route
   - external mic calibration route (if available)
-- [ ] `S14-T5` Resolve deferred/runtime gap for `rend_phys_interact` (implement or retain explicit no-op/defer contract).
+- [x] `S14-T5` Resolve deferred/runtime gap for `rend_phys_interact` (implemented runtime + Stage 12 UI bridge path).
 - [ ] `S14-T6` Decide and document release state:
   - `hold` (gates pending)
   - `draft-pre-release` (state lock)

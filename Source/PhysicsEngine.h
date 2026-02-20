@@ -73,6 +73,12 @@ public:
     void setElasticity (float value)                   { elasticity.store (juce::jlimit (0.0f, 1.0f, value), std::memory_order_release); }
     void setFriction (float value)                     { friction.store (juce::jlimit (0.0f, 1.0f, value), std::memory_order_release); }
     void setGravity (float magnitude, int direction)   { gravityMagnitude.store (magnitude, std::memory_order_release); gravityDirection.store (direction, std::memory_order_release); }
+    void setInteractionForce (const Vec3& force)
+    {
+        interactionForceX.store (force.x, std::memory_order_release);
+        interactionForceY.store (force.y, std::memory_order_release);
+        interactionForceZ.store (force.z, std::memory_order_release);
+    }
 
     void setRestPosition (const Vec3& position)
     {
@@ -208,11 +214,21 @@ private:
         const float currentFriction   = friction.load (std::memory_order_acquire);
 
         const Vec3 gravity = computeGravityVector (state.position);
+        const Vec3 interactionForce
+        {
+            interactionForceX.load (std::memory_order_acquire),
+            interactionForceY.load (std::memory_order_acquire),
+            interactionForceZ.load (std::memory_order_acquire)
+        };
         const float inverseMass = 1.0f / juce::jmax (0.01f, currentMass);
 
         state.velocity.x += gravity.x * inverseMass * dt;
         state.velocity.y += gravity.y * inverseMass * dt;
         state.velocity.z += gravity.z * inverseMass * dt;
+
+        state.velocity.x += interactionForce.x * inverseMass * dt;
+        state.velocity.y += interactionForce.y * inverseMass * dt;
+        state.velocity.z += interactionForce.z * inverseMass * dt;
 
         const float dragFactor = juce::jlimit (0.0f, 1.0f, 1.0f - currentDrag * dt);
         state.velocity.x *= dragFactor;
@@ -365,6 +381,9 @@ private:
 
     std::atomic<float> gravityMagnitude { 0.0f };
     std::atomic<int> gravityDirection { 0 };
+    std::atomic<float> interactionForceX { 0.0f };
+    std::atomic<float> interactionForceY { 0.0f };
+    std::atomic<float> interactionForceZ { 0.0f };
 
     std::atomic<float> restX { 0.0f };
     std::atomic<float> restY { 0.0f };

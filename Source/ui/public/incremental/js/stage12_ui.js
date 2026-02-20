@@ -78,6 +78,7 @@
     toggleRendRoomEnable: document.getElementById("toggle-rend-room-enable"),
     toggleRendRoomErOnly: document.getElementById("toggle-rend-room-er-only"),
     toggleRendPhysWalls: document.getElementById("toggle-rend-phys-walls"),
+    toggleRendPhysInteract: document.getElementById("toggle-rend-phys-interact"),
     toggleRendPhysPause: document.getElementById("toggle-rend-phys-pause"),
     toggleRendVizTrails: document.getElementById("toggle-rend-viz-trails"),
     toggleRendVizVectors: document.getElementById("toggle-rend-viz-vectors"),
@@ -232,6 +233,7 @@
       rendRoomErOnly: false,
       rendPhysRateIndex: 0,
       rendPhysWalls: false,
+      rendPhysInteract: false,
       rendPhysPause: false,
       rendVizModeIndex: 0,
       rendVizTrails: false,
@@ -645,6 +647,7 @@
         rend_room_enable: true,
         rend_room_er_only: false,
         rend_phys_walls: true,
+        rend_phys_interact: false,
         rend_phys_pause: false,
         rend_viz_trails: true,
         rend_viz_vectors: false,
@@ -825,6 +828,7 @@
     rendDistanceModel: bridge.getComboBoxState("rend_distance_model"),
     rendPhysRate: bridge.getComboBoxState("rend_phys_rate"),
     rendPhysWalls: bridge.getToggleState("rend_phys_walls"),
+    rendPhysInteract: bridge.getToggleState("rend_phys_interact"),
     rendPhysPause: bridge.getToggleState("rend_phys_pause"),
     rendVizMode: bridge.getComboBoxState("rend_viz_mode"),
     rendVizTrails: bridge.getToggleState("rend_viz_trails"),
@@ -1736,6 +1740,7 @@
     const rateIndex = clamp(getChoiceIndex(controlStates.rendPhysRate), 0, Math.max(0, rateChoices.length - 1));
     const rateLabel = rateChoices[rateIndex] || "n/a";
     const physWalls = getToggleValue(controlStates.rendPhysWalls);
+    const physInteract = getToggleValue(controlStates.rendPhysInteract);
     const physPause = getToggleValue(controlStates.rendPhysPause);
     const vizChoices = getChoices(controlStates.rendVizMode, DEFAULT_CHOICES.rend_viz_mode);
     const vizIndex = clamp(getChoiceIndex(controlStates.rendVizMode), 0, Math.max(0, vizChoices.length - 1));
@@ -1768,6 +1773,7 @@
     runtime.snapshot.rendRoomErOnly = roomErOnly;
     runtime.snapshot.rendPhysRateIndex = rateIndex;
     runtime.snapshot.rendPhysWalls = physWalls;
+    runtime.snapshot.rendPhysInteract = physInteract;
     runtime.snapshot.rendPhysPause = physPause;
     runtime.snapshot.rendVizModeIndex = vizIndex;
     runtime.snapshot.rendVizTrails = vizTrails;
@@ -1778,7 +1784,7 @@
 
     if (dom.statusRendererCore) {
       dom.statusRendererCore.textContent =
-        `Master ${Math.round(masterGainNorm * 100)}% · Distance ${distanceLabel} · Ref ${formatNumber(distanceRef, 2)}m · Max ${formatNumber(distanceMax, 1)}m · Doppler ${doppler ? "ON" : "OFF"} ${formatNumber(dopplerScale, 2)}x · Air ${airAbsorb ? "ON" : "OFF"} · Room ${roomEnable ? "ON" : "OFF"} mix ${formatNumber(roomMix, 2)} size ${formatNumber(roomSize, 2)} damp ${formatNumber(roomDamping, 2)} er ${roomErOnly ? "ON" : "OFF"} · Rate ${rateLabel} · Walls ${physWalls ? "ON" : "OFF"} · Pause ${physPause ? "ON" : "OFF"} · View ${vizLabel} · Trails ${vizTrails ? "ON" : "OFF"} ${formatNumber(vizTrailLen, 1)}s · Vectors ${vizVectors ? "ON" : "OFF"} · Grid ${vizGrid ? "ON" : "OFF"} · Labels ${vizLabels ? "ON" : "OFF"}`;
+        `Master ${Math.round(masterGainNorm * 100)}% · Distance ${distanceLabel} · Ref ${formatNumber(distanceRef, 2)}m · Max ${formatNumber(distanceMax, 1)}m · Doppler ${doppler ? "ON" : "OFF"} ${formatNumber(dopplerScale, 2)}x · Air ${airAbsorb ? "ON" : "OFF"} · Room ${roomEnable ? "ON" : "OFF"} mix ${formatNumber(roomMix, 2)} size ${formatNumber(roomSize, 2)} damp ${formatNumber(roomDamping, 2)} er ${roomErOnly ? "ON" : "OFF"} · Rate ${rateLabel} · Walls ${physWalls ? "ON" : "OFF"} · Interact ${physInteract ? "ON" : "OFF"} · Pause ${physPause ? "ON" : "OFF"} · View ${vizLabel} · Trails ${vizTrails ? "ON" : "OFF"} ${formatNumber(vizTrailLen, 1)}s · Vectors ${vizVectors ? "ON" : "OFF"} · Grid ${vizGrid ? "ON" : "OFF"} · Labels ${vizLabels ? "ON" : "OFF"}`;
     }
 
     if (dom.statusRendererSpeakers) {
@@ -2121,6 +2127,7 @@
       rendRoomErOnly: getToggleValue(controlStates.rendRoomErOnly),
       rendPhysRate: getChoiceIndex(controlStates.rendPhysRate),
       rendPhysWalls: getToggleValue(controlStates.rendPhysWalls),
+      rendPhysInteract: getToggleValue(controlStates.rendPhysInteract),
       rendPhysPause: getToggleValue(controlStates.rendPhysPause),
       rendVizMode: getChoiceIndex(controlStates.rendVizMode),
       rendVizTrails: getToggleValue(controlStates.rendVizTrails),
@@ -2269,6 +2276,8 @@
         dom.toggleRendRoomErOnly.dispatchEvent(new Event("change", { bubbles: true }));
         dom.toggleRendPhysWalls.checked = originals.rendPhysWalls;
         dom.toggleRendPhysWalls.dispatchEvent(new Event("change", { bubbles: true }));
+        dom.toggleRendPhysInteract.checked = originals.rendPhysInteract;
+        dom.toggleRendPhysInteract.dispatchEvent(new Event("change", { bubbles: true }));
         dom.toggleRendPhysPause.checked = originals.rendPhysPause;
         dom.toggleRendPhysPause.dispatchEvent(new Event("change", { bubbles: true }));
         dom.toggleRendVizTrails.checked = originals.rendVizTrails;
@@ -2412,6 +2421,7 @@
         !!dom.toggleRendRoomEnable &&
         !!dom.toggleRendRoomErOnly &&
         !!dom.toggleRendPhysWalls &&
+        !!dom.toggleRendPhysInteract &&
         !!dom.toggleRendPhysPause &&
         !!dom.toggleRendVizTrails &&
         !!dom.toggleRendVizVectors &&
@@ -3042,6 +3052,17 @@
         dom.statusRendererCore.textContent.includes(`Walls ${targetPhysWalls ? "ON" : "OFF"}`)
       );
       recordStep("rend_phys_walls", true, `target=${targetPhysWalls}`);
+
+      const targetPhysInteract = !originals.rendPhysInteract;
+      dom.toggleRendPhysInteract.checked = targetPhysInteract;
+      dom.toggleRendPhysInteract.dispatchEvent(new Event("change", { bubbles: true }));
+      await waitForCondition("rend_phys_interact relay", () =>
+        getToggleValue(controlStates.rendPhysInteract) === targetPhysInteract
+      );
+      await waitForCondition("rend_phys_interact status", () =>
+        dom.statusRendererCore.textContent.includes(`Interact ${targetPhysInteract ? "ON" : "OFF"}`)
+      );
+      recordStep("rend_phys_interact", true, `target=${targetPhysInteract}`);
 
       const targetPhysPause = !originals.rendPhysPause;
       dom.toggleRendPhysPause.checked = targetPhysPause;
@@ -4029,6 +4050,11 @@
 
   bindToggle(dom.toggleRendPhysWalls, controlStates.rendPhysWalls, checked => {
     runtime.snapshot.rendPhysWalls = !!checked;
+    updateRendererCoreStatus();
+  });
+
+  bindToggle(dom.toggleRendPhysInteract, controlStates.rendPhysInteract, checked => {
+    runtime.snapshot.rendPhysInteract = !!checked;
     updateRendererCoreStatus();
   });
 
