@@ -48,3 +48,31 @@ _tools/JUCE/
 # Python
 __pycache__/
 *.pyc
+
+# Local generated QA/TestEvidence artifacts (non-canonical)
+build_local/
+tmp/
+qa_output/focused_matrix_runs.tsv
+qa_output/locusq_emitter/
+qa_output/locusq_spatial/
+qa_output/locusq_spatial_contract_pack/
+
+TestEvidence/appium_source.xml
+TestEvidence/appium_accessibility_probe/
+TestEvidence/appium_ui_regression_*/
+TestEvidence/manual_click_probe_*/
+TestEvidence/standalone_ui_smoke_*/
+TestEvidence/standalone_ui_smoke_stage1_*/
+TestEvidence/ui_debug_*/
+TestEvidence/ui_pr_gate_*/
+TestEvidence/stage13_acceptance_sweep_*/
+TestEvidence/stage16a_scenario_validation_*/
+
+TestEvidence/*_20??????T??????Z.json
+TestEvidence/*_20??????T??????Z.png
+TestEvidence/*_20??????T??????Z_status.tsv
+TestEvidence/*_exit_code.txt
+TestEvidence/pluginval_blocked_note.txt
+TestEvidence/thread-contracts.tsv
+TestEvidence/thread-heartbeats.tsv
+TestEvidence/suite_result_*.json
