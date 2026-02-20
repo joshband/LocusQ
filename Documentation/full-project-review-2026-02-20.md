@@ -83,12 +83,32 @@ VST3/AU plugin's processBlock — it expects to own the audio graph. Using PHASE
 require either: (a) a standalone companion app that receives LocusQ's spatial metadata
 and renders to AirPods, or (b) an AU3D extension model. Neither is practical for v1.
 
+**Headphone spatial audio SDK/API landscape:**
+
+| SDK/Platform | Access Model | Plugin-Compatible? | Notes |
+|-------------|-------------|-------------------|-------|
+| **Apple PHASE** | App-level renderer, `CMHeadphoneMotionManager` for head tracking | **No.** Owns audio graph; cannot run inside VST/AU processBlock. | AirPods Pro 2+ get system-level binaural from multichannel output automatically. |
+| **Sony 360 Reality Audio** | MPEG-H object-based; Wwise "Gaming Virtualizer" plugin only | **No open DAW plugin SDK.** | Sony headphones binauralize Atmos content at device level. |
+| **Dolby Atmos Renderer** | Commercial license; binaural decode is system/DAW-level | **No direct plugin integration.** Output 7.1.4 bed → DAW renderer handles binaural. | Dolby Atmos Binaural Settings Plugin controls renderer metadata from DAW. |
+| **Steam Audio** (C API) | `iplBinauralEffectApply()` — per-source HRTF render → stereo | **Yes.** Apache 2.0, ~200 LOC wrapper. Loads SOFA custom HRTFs. | Best open-source option for plugin-internal binaural mode. |
+| **libmysofa** | SOFA HRTF file reader (C, BSD-3) | **Yes** (you build convolution on top). | Standard for loading personalized HRTF data. |
+| **libspatialaudio** | Ambisonics encode/decode + binaural (C++, LGPL-2.1) | **Yes.** | Alternative: ambisonics→binaural decode path. |
+| **SAF / SPARTA** | Full spatial framework — HRIR, ambisonics binaural, SOFA (C, ISC) | **Yes** but heavyweight dependency. | Academic-grade; overkill if only binaural decode is needed. |
+
+**Practical integration path for LocusQ headphone support:**
+
+1. **v1 (now):** No change needed. LocusQ's quad output is automatically binauralized by Apple Spatial Audio (AirPods) and Dolby Atmos (Sony WH-1000XM5) at the OS/device level when the DAW routes multichannel correctly.
+2. **v1.1 (recommended):** Add stereo binaural output mode via **Steam Audio C API** (~200 LOC). Load default or user-provided SOFA HRTF. Per-emitter `iplBinauralEffectApply()` in renderer, sum to stereo. Works on *any* headphones without proprietary dependencies.
+3. **v2:** Add `CMHeadphoneMotionManager` via standalone companion app → local IPC → head orientation drives HRTF direction. Unlocks AirPods Pro 2+ head tracking.
+
 **LocusQ overlap assessment:**
 
 | Component | Verdict | Rationale |
 |-----------|---------|-----------|
-| PHASE for headphone binaural | **ignore (v1), evaluate (v2)** | Cannot run inside a plugin's audio thread. Post-v1 headphone mode should evaluate a standalone PHASE bridge or use libmysofa HRTF directly. |
-| Head tracking | **ignore (v1)** | Requires CMHeadphoneMotionManager + companion app. Not viable inside DAW plugin. |
+| PHASE for headphone binaural | **ignore (v1), evaluate (v2)** | Cannot run inside a plugin's audio thread. Post-v1 standalone bridge or Steam Audio HRTF is the path. |
+| Steam Audio binaural | **augment (v1.1)** | Best open-source option. ~200 LOC integration, Apache 2.0, SOFA HRTF support, auto-resampling. |
+| Head tracking (AirPods) | **ignore (v1), augment (v2)** | Requires companion app + IPC. Not viable inside DAW plugin directly. |
+| Sony 360 RA | **ignore** | No open plugin SDK. Sony headphones get binaural from Atmos output at device level. |
 | AVAudioEnvironmentNode | **ignore** | Legacy API. LocusQ's custom renderer is more capable. |
 
 ---
