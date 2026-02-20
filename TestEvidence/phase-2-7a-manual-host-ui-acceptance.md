@@ -30,7 +30,19 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
   - fill operator context table
   - rerun checklist rows UI-01 through UI-12 in target DAW
   - execute portable-device rows DEV-01 through DEV-06 (laptop speakers/mic/headphones)
-  - update rollup and final manual verdict
+- update rollup and final manual verdict
+
+## Stage 17-A Portable Acceptance Rerun Handoff (2026-02-20)
+
+- Stage 17-A prerequisite build completed:
+  - command: `./scripts/build-and-install-mac.sh`
+  - result: `PASS`
+  - evidence: `TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log`
+- Manual rerun required to close Stage 17-A gate:
+  - rerun portable-device rows `DEV-01..DEV-06` in Standalone + Reaper.
+  - focus on headphone and laptop speaker profiles (ADR-0006 contract gate).
+  - if any DEV row fails, block GA and file a defect issue with repro + evidence path.
+- Current Stage 17-A status: `PENDING_OPERATOR_RERUN`.
 
 ## Normative References
 - `.ideas/plan.md`

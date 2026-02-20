@@ -1824,3 +1824,37 @@ Result: `PASS_WITH_NA`
 
 Artifacts:
 - `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+
+## Stage 17-A Portable Device Acceptance Repeat (UTC 2026-02-20)
+
+134. Run fresh macOS build/install prerequisite for portable-profile rerun
+
+```sh
+./scripts/build-and-install-mac.sh
+```
+
+Result: `PASS`
+- AU/VST3 rebuild + install succeeded
+- AudioComponentRegistrar refresh succeeded
+- REAPER cache prune/backup steps completed
+- Installed binary hashes match build artefacts
+
+135. Stage 17-A manual portable-device rerun gate handoff (`DEV-01..DEV-06`)
+
+```sh
+manual operator rerun required:
+- DEV-01 standalone laptop speakers
+- DEV-02 standalone headphones
+- DEV-03 DAW (Reaper) laptop speakers
+- DEV-04 DAW (Reaper) headphones
+- DEV-05 DAW (Reaper) built-in mic calibrate start/abort
+- DEV-06 external mic calibrate start/abort (if available)
+```
+
+Result: `PENDING_OPERATOR_RERUN`
+- Stage 17-A remains open until manual rows are re-executed with Stage 16 hardening in place.
+- If any DEV row fails, block GA and file a defect issue with repro + evidence path.
+
+Artifacts:
+- `TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log`
+- `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`

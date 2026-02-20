@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T23:01:24Z",
+  "last_modified": "2026-02-20T23:19:17Z",
   "notes": "draft-pre-release candidate",
   "phase_history": [
     {
@@ -325,6 +325,12 @@
       "status": "complete",
       "completed_at": "2026-02-20T23:04:47Z",
       "notes": "Stage 16-D complete: compared Section 7 viewport spec to production UI, identified missing motion trails/velocity vectors, and accepted ADR-0008 deferring telemetry overlays to post-v1."
+    },
+    {
+      "phase": "stage17_portable_device_acceptance_repeat",
+      "status": "in_progress",
+      "started_at": "2026-02-20T23:19:17Z",
+      "notes": "Stage 17-A started: fresh ./scripts/build-and-install-mac.sh pass captured (TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log). Manual operator rerun of DEV-01..DEV-06 in Standalone/Reaper remains pending; GA blocked until manual gate is closed."
     }
   ],
   "validation": {
