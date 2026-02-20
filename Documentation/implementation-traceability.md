@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ Implementation Traceability
 
@@ -353,6 +353,161 @@ This document tracks end-to-end parameter wiring for implementation phases compl
     - `TestEvidence/locusq_phase_2_11b_snapshot_migration_mono_suite_20260219T202742Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
     - `TestEvidence/locusq_phase_2_11b_snapshot_migration_stereo_suite_20260219T202742Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
     - `TestEvidence/locusq_phase_2_11b_snapshot_migration_quad_suite_20260219T202742Z.log` (`PASS`, `2 PASS / 0 WARN / 0 FAIL`)
+
+## Incremental Stage 2 UI Shell Mapping
+
+Scope: focused incremental WebView shell aligned to `Design/v3-ui-spec.md` and `Design/v3-style-guide.md` with a minimal verified control set before reintroducing full-density panels.
+
+| Parameter ID / Contract | Stage 2 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| `mode` | `Source/ui/public/incremental/index_stage2.html` (mode tabs) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getComboBoxState("mode")` + `setChoiceIndexSafe(...)` | Drives mode tab state, adaptive rail width class, timeline visibility, and per-mode scroll restore. |
+| `rend_quality` | `Source/ui/public/incremental/index_stage2.html` (`#quality-badge`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getComboBoxState("rend_quality")` | Badge click toggles Draft/Final; live relay value keeps badge/status synchronized. |
+| `size_link` | `Source/ui/public/incremental/index_stage2.html` (`#toggle-size-link`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getToggleState("size_link")` | Uses native checkbox input path to avoid overlay hit-target ambiguity from the legacy shell. |
+| `size_uniform` | `Source/ui/public/incremental/index_stage2.html` (`#slider-size-uniform`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getSliderState("size_uniform")` + `setNormalisedValue(...)` | Slider readout displays normalized/scaled values from relay state. |
+| `phys_enable` | `Source/ui/public/incremental/index_stage2.html` (`#toggle-phys-enable`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getToggleState("phys_enable")` | Emitter-mode status badge uses this state (`STABLE` vs `PHYSICS`). |
+| `anim_enable` | `Source/ui/public/incremental/index_stage2.html` (`#toggle-anim-enable`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getToggleState("anim_enable")` | Incremental animation control-path verification in reduced UI context. |
+| `anim_mode` | `Source/ui/public/incremental/index_stage2.html` (`#choice-anim-mode`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getComboBoxState("anim_mode")` + native choice fallback (`locusqGetChoiceItems`) | Dropdown keeps working even when relay choices arrive late. |
+| `anim_loop` | `Source/ui/public/incremental/index_stage2.html` (`#toggle-anim-loop`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getToggleState("anim_loop")` | Included in Stage 2 to validate emitter timeline toggle path before full timeline editor reintegration. |
+| `anim_sync` | `Source/ui/public/incremental/index_stage2.html` (`#toggle-anim-sync`) + `Source/ui/public/incremental/js/stage2_ui.js` | `Juce.getToggleState("anim_sync")` | Included in Stage 2 with direct checkbox binding path. |
+| Viewport continuity invariant | `Source/ui/public/incremental/js/stage2_ui.js` (`createSceneApp`, `applyMode`) | C++ push hooks unchanged: `window.updateSceneState(...)`, `window.updateCalibrationStatus(...)` | One Three.js scene/camera/render loop owner; mode switches do not recreate scene or reset orbit state. |
+
+## Incremental Stage 3 Emitter Audio Block Mapping
+
+Scope: extend the verified Stage 2 shell with one fuller Emitter block while preserving direct relay binding behavior and viewport continuity.
+
+| Parameter ID / Contract | Stage 3 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| `emit_mute` | `Source/ui/public/incremental/index_stage3.html` (`#toggle-emit-mute`) + `Source/ui/public/incremental/js/stage3_ui.js` | `Juce.getToggleState("emit_mute")` | Toggle is wired through the shared `bindToggle` path and updates Stage 3 status text. |
+| `emit_gain` | `Source/ui/public/incremental/index_stage3.html` (`#slider-emit-gain`) + `Source/ui/public/incremental/js/stage3_ui.js` | `Juce.getSliderState("emit_gain")` + `setNormalisedValue(...)` | Slider uses normalized UI range while relay handles native scaled value mapping. |
+| `phys_gravity_dir` | `Source/ui/public/incremental/index_stage3.html` (`#choice-phys-gravity-dir`) + `Source/ui/public/incremental/js/stage3_ui.js` | `Juce.getComboBoxState("phys_gravity_dir")` + native choice fetch fallback (`locusqGetChoiceItems`) | Dropdown keeps values even when relay choices arrive late. |
+| Emitter Audio status reflection | `Source/ui/public/incremental/index_stage3.html` (`#status-emitter-audio`) + `Source/ui/public/incremental/js/stage3_ui.js` (`updateEmitterAudioStatus`) | Derived from relay states (`emit_mute`, `emit_gain`, `phys_gravity_dir`) | Status line updates on change events and heartbeat to show live bridge state. |
+| Default incremental route | `Source/PluginEditor.cpp` (`incremental/index.html` resource mapping, window title tag) | BinaryData entries generated from `CMakeLists.txt` Stage 3 files | Stage 3 is now the default incremental shell (`[incremental-stage3]`) while Stage 1/2 paths remain available. |
+
+## Incremental Stage 4 Emitter Audio Extended Mapping
+
+Scope: extend Stage 3 emitter audio controls with additional working relay-bound controls while keeping the same verified binding path and continuity behavior.
+
+| Parameter ID / Contract | Stage 4 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| `emit_solo` | `Source/ui/public/incremental/index_stage4.html` (`#toggle-emit-solo`) + `Source/ui/public/incremental/js/stage4_ui.js` | `Juce.getToggleState("emit_solo")` | Uses shared `bindToggle` path to keep parity with other working toggles. |
+| `emit_spread` | `Source/ui/public/incremental/index_stage4.html` (`#slider-emit-spread`) + `Source/ui/public/incremental/js/stage4_ui.js` | `Juce.getSliderState("emit_spread")` + `setNormalisedValue(...)` | Adds audio spread control in the incremental shell with live status reflection. |
+| `emit_directivity` | `Source/ui/public/incremental/index_stage4.html` (`#slider-emit-directivity`) + `Source/ui/public/incremental/js/stage4_ui.js` | `Juce.getSliderState("emit_directivity")` + `setNormalisedValue(...)` | Adds directivity control in the same status-backed block. |
+| Emitter Audio status reflection (extended) | `Source/ui/public/incremental/index_stage4.html` (`#status-emitter-audio`) + `Source/ui/public/incremental/js/stage4_ui.js` (`updateEmitterAudioStatus`) | Derived from relay states (`emit_mute`, `emit_solo`, `emit_gain`, `emit_spread`, `emit_directivity`, `phys_gravity_dir`) | Status line now tracks all Stage 4 emitter-audio controls in one live readout. |
+| Default incremental route | `Source/PluginEditor.cpp` (`incremental/index.html` resource mapping, window title tag) | BinaryData entries generated from `CMakeLists.txt` Stage 4 files | Stage 4 is now the default incremental shell (`[incremental-stage4]`) while Stage 1/2/3 remain available by route. |
+
+## Incremental Stage 4 Self-Test Automation
+
+Scope: add repeatable, non-coordinate Stage 4 UI interaction checks that run against live standalone WebView bindings.
+
+| Artifact / Hook | Location | Purpose | Notes |
+|---|---|---|---|
+| Stage 4 self-test runner script | `scripts/standalone-ui-selftest-stage4-mac.sh` | Launch standalone in self-test mode, wait for pass/fail JSON, enforce exit code | Uses `LOCUSQ_UI_SELFTEST=1` and `LOCUSQ_UI_SELFTEST_RESULT_PATH` to enable deterministic automation runs. |
+| Self-test mode URL gate | `Source/PluginEditor.cpp` (`isUiSelfTestEnabled`, initial URL query append) | Adds `selftest=1` query only when explicitly requested | Keeps normal UI sessions unchanged. |
+| Self-test result export path | `Source/PluginEditor.cpp` (`getUiSelfTestResultFile`, timer polling for `window.__LQ_SELFTEST_RESULT__`) | Writes machine-readable result JSON from live WebView runtime | Polling finalizes when JS reports `status=pass|fail`. |
+| Live control checks | `Source/ui/public/incremental/js/stage4_ui.js` (`runIncrementalStage4SelfTest`) | Verifies DOM-to-relay behavior for `emit_mute`, `emit_solo`, `emit_gain`, `emit_spread`, `emit_directivity`, `phys_gravity_dir` plus status reflection | Restores original values after checks to avoid persistent state drift. |
+
+## Incremental Stage 4 UI PR Gate (Self-Test Default)
+
+Scope: make the non-coordinate Stage 4 self-test the default automated UI gate and keep legacy coordinate smoke optional.
+
+| Artifact / Hook | Location | Purpose | Notes |
+|---|---|---|---|
+| Stage 4 self-test argument handling | `scripts/standalone-ui-selftest-stage4-mac.sh` | Accept either `.app` bundle path or direct executable path | Allows one consistent invocation shape across manual and gate flows. |
+| Default UI gate sequencing | `scripts/ui-pr-gate-mac.sh` | Runs `ui_stage4_selftest` by default, with smoke lane opt-in via `UI_PR_GATE_WITH_SMOKE=1` | Prevents false negatives from legacy coordinate smoke during incremental UI bring-up. |
+| Gate evidence | `TestEvidence/ui_pr_gate_20260220T024215Z/status.tsv` | Records pass/fail state for self-test and optional lanes | Latest recorded run: `ui_stage4_selftest=PASS`, smoke/Appium skipped by default. |
+
+## Incremental Stage 5 Renderer Core Mapping
+
+Scope: extend Stage 4 with a focused renderer block that preserves direct relay bindings and status reflection discipline.
+
+| Parameter ID / Contract | Stage 5 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| `rend_master_gain` | `Source/ui/public/incremental/index_stage5.html` (`#slider-rend-master-gain`) + `Source/ui/public/incremental/js/stage5_ui.js` | `Juce.getSliderState("rend_master_gain")` + `setNormalisedValue(...)` | Renderer master-gain path added as a normalized slider with live status output. |
+| `rend_distance_model` | `Source/ui/public/incremental/index_stage5.html` (`#choice-rend-distance-model`) + `Source/ui/public/incremental/js/stage5_ui.js` | `Juce.getComboBoxState("rend_distance_model")` + native choice fetch fallback (`locusqGetChoiceItems`) | Uses canonical fallback labels and late-choice hydration path. |
+| `rend_doppler` | `Source/ui/public/incremental/index_stage5.html` (`#toggle-rend-doppler`) + `Source/ui/public/incremental/js/stage5_ui.js` | `Juce.getToggleState("rend_doppler")` | Toggle is wired with the same proven `bindToggle` path as emitter controls. |
+| `rend_room_enable` | `Source/ui/public/incremental/index_stage5.html` (`#toggle-rend-room-enable`) + `Source/ui/public/incremental/js/stage5_ui.js` | `Juce.getToggleState("rend_room_enable")` | Room enable route is reflected in renderer status and heartbeat snapshot. |
+| `rend_phys_rate` | `Source/ui/public/incremental/index_stage5.html` (`#choice-rend-phys-rate`) + `Source/ui/public/incremental/js/stage5_ui.js` | `Juce.getComboBoxState("rend_phys_rate")` + native choice fetch fallback (`locusqGetChoiceItems`) | Choice list remains stable even when relay properties arrive late. |
+| `rend_viz_mode` | `Source/ui/public/incremental/index_stage5.html` (`#choice-rend-viz-mode`) + `Source/ui/public/incremental/js/stage5_ui.js` | `Juce.getComboBoxState("rend_viz_mode")` + native choice fetch fallback (`locusqGetChoiceItems`) | Completes focused renderer control set for Stage 5. |
+| Renderer status reflection | `Source/ui/public/incremental/index_stage5.html` (`#status-renderer-core`) + `Source/ui/public/incremental/js/stage5_ui.js` (`updateRendererCoreStatus`) | Derived from relay states (`rend_master_gain`, `rend_distance_model`, `rend_doppler`, `rend_room_enable`, `rend_phys_rate`, `rend_viz_mode`) | Live status now mirrors the full Stage 5 renderer control subset. |
+| Default incremental route | `Source/PluginEditor.cpp` (`incremental/index.html` resource mapping, window title tag) | BinaryData entries generated from `CMakeLists.txt` Stage 5 files | Stage 5 is now the default incremental shell (`[incremental-stage5]`) while Stage 2/3/4 routes remain available. |
+
+## Incremental Stage 5 Self-Test and Gate
+
+Scope: extend deterministic non-coordinate automation to cover the Stage 5 renderer subset and make Stage 5 the gate default.
+
+| Artifact / Hook | Location | Purpose | Notes |
+|---|---|---|---|
+| Stage 5 self-test runner script | `scripts/standalone-ui-selftest-stage5-mac.sh` | Launch standalone in self-test mode and enforce pass/fail JSON | Accepts `.app` or direct executable path. |
+| Stage 5 self-test runtime | `Source/ui/public/incremental/js/stage5_ui.js` (`runIncrementalStage5SelfTest`) | Verifies emitter + renderer control paths and status reflection in one run | Adds checks for `rend_master_gain`, `rend_distance_model`, `rend_doppler`, `rend_room_enable`, `rend_phys_rate`, `rend_viz_mode`. |
+| UI PR gate default | `scripts/ui-pr-gate-mac.sh` | Runs `ui_stage5_selftest` by default, with smoke/Appium optional | Latest gate evidence: `TestEvidence/ui_pr_gate_20260220T025111Z/status.tsv` (`PASS`). |
+
+## Incremental Stage 6 Calibrate Core Mapping
+
+Scope: extend Stage 5 with a focused calibrate control block while preserving the same direct relay binding and status reflection pattern.
+
+| Parameter ID / Contract | Stage 6 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| `cal_spk_config` | `Source/ui/public/incremental/index_stage6.html` (`#choice-cal-spk-config`) + `Source/ui/public/incremental/js/stage6_ui.js` | `Juce.getComboBoxState("cal_spk_config")` + native choice fetch fallback (`locusqGetChoiceItems`) | Uses canonical fallback choices (`4x Mono`, `2x Stereo`) with late-choice hydration. |
+| `cal_mic_channel` | `Source/ui/public/incremental/index_stage6.html` (`#slider-cal-mic-channel`) + `Source/ui/public/incremental/js/stage6_ui.js` | `Juce.getSliderState("cal_mic_channel")` + `setNormalisedValue(...)` | Integer-backed mic-channel route is exposed via normalized slider binding. |
+| `cal_test_level` | `Source/ui/public/incremental/index_stage6.html` (`#slider-cal-test-level`) + `Source/ui/public/incremental/js/stage6_ui.js` | `Juce.getSliderState("cal_test_level")` + `setNormalisedValue(...)` | Calibrate test-level path added as a focused slider in the incremental shell. |
+| `cal_test_type` | `Source/ui/public/incremental/index_stage6.html` (`#choice-cal-test-type`) + `Source/ui/public/incremental/js/stage6_ui.js` | `Juce.getComboBoxState("cal_test_type")` + native choice fetch fallback (`locusqGetChoiceItems`) | Uses fallback choices (`Sweep`, `Pink`, `White`, `Impulse`) with relay-first behavior. |
+| Calibrate status reflection | `Source/ui/public/incremental/index_stage6.html` (`#status-calibrate-core`) + `Source/ui/public/incremental/js/stage6_ui.js` (`updateCalibrateCoreStatus`) | Derived from relay states (`cal_spk_config`, `cal_mic_channel`, `cal_test_level`, `cal_test_type`) | Live status mirrors Stage 6 calibrate controls in one compact line. |
+| Default incremental route | `Source/PluginEditor.cpp` (`incremental/index.html` resource mapping, window title tag) | BinaryData entries generated from `CMakeLists.txt` Stage 6 files | Stage 6 is now the default incremental shell (`[incremental-stage6]`) while Stage 2/3/4/5 remain available by route. |
+
+## Incremental Stage 6 Self-Test and Gate
+
+Scope: extend deterministic automation coverage to include the Stage 6 calibrate subset and promote Stage 6 as the default UI gate.
+
+| Artifact / Hook | Location | Purpose | Notes |
+|---|---|---|---|
+| Stage 6 self-test runner script | `scripts/standalone-ui-selftest-stage6-mac.sh` | Launch standalone in self-test mode and enforce pass/fail JSON | Accepts `.app` or direct executable path. |
+| Stage 6 self-test runtime | `Source/ui/public/incremental/js/stage6_ui.js` (`runIncrementalStage6SelfTest`) | Verifies calibrate + emitter + renderer control paths and status reflection | Adds checks for `cal_spk_config`, `cal_mic_channel`, `cal_test_level`, `cal_test_type` on top of Stage 5 coverage. |
+| UI PR gate default | `scripts/ui-pr-gate-mac.sh` | Runs `ui_stage6_selftest` by default, with smoke/Appium optional | Latest gate evidence: `TestEvidence/ui_pr_gate_20260220T030133Z/status.tsv` (`PASS`). |
+
+## Incremental Stage 7 Calibrate Speaker Output Routing Mapping
+
+Scope: extend Stage 6 with explicit calibrate speaker output routing sliders while preserving the same direct relay binding and status reflection pattern.
+
+| Parameter ID / Contract | Stage 7 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| `cal_spk1_out` | `Source/ui/public/incremental/index_stage7.html` (`#slider-cal-spk1-out`) + `Source/ui/public/incremental/js/stage7_ui.js` | `Juce.getSliderState("cal_spk1_out")` + `setNormalisedValue(...)` | Adds normalized slider routing for speaker output 1. |
+| `cal_spk2_out` | `Source/ui/public/incremental/index_stage7.html` (`#slider-cal-spk2-out`) + `Source/ui/public/incremental/js/stage7_ui.js` | `Juce.getSliderState("cal_spk2_out")` + `setNormalisedValue(...)` | Adds normalized slider routing for speaker output 2. |
+| `cal_spk3_out` | `Source/ui/public/incremental/index_stage7.html` (`#slider-cal-spk3-out`) + `Source/ui/public/incremental/js/stage7_ui.js` | `Juce.getSliderState("cal_spk3_out")` + `setNormalisedValue(...)` | Adds normalized slider routing for speaker output 3. |
+| `cal_spk4_out` | `Source/ui/public/incremental/index_stage7.html` (`#slider-cal-spk4-out`) + `Source/ui/public/incremental/js/stage7_ui.js` | `Juce.getSliderState("cal_spk4_out")` + `setNormalisedValue(...)` | Adds normalized slider routing for speaker output 4. |
+| Calibrate status reflection | `Source/ui/public/incremental/index_stage7.html` (`#status-calibrate-core`) + `Source/ui/public/incremental/js/stage7_ui.js` (`updateCalibrateCoreStatus`) | Derived from relay states (`cal_spk_config`, `cal_mic_channel`, `cal_spk1_out`, `cal_spk2_out`, `cal_spk3_out`, `cal_spk4_out`, `cal_test_level`, `cal_test_type`) | Live status now includes `Out ch1/ch2/ch3/ch4` routing values. |
+| Default incremental route | `Source/PluginEditor.cpp` (`incremental/index.html` resource mapping, window title tag) | BinaryData entries generated from `CMakeLists.txt` Stage 7 files | Stage 7 is now the default incremental shell (`[incremental-stage7]`); Stage 2-6 routes remain addressable. |
+
+## Incremental Stage 7 Self-Test and Gate
+
+Scope: extend deterministic automation coverage to include the Stage 7 speaker output routing subset and promote Stage 7 as the default UI gate.
+
+| Artifact / Hook | Location | Purpose | Notes |
+|---|---|---|---|
+| Stage 7 self-test runner script | `scripts/standalone-ui-selftest-stage7-mac.sh` | Launch standalone in self-test mode and enforce pass/fail JSON | Accepts `.app` or direct executable path. |
+| Stage 7 self-test runtime | `Source/ui/public/incremental/js/stage7_ui.js` (`runIncrementalStage7SelfTest`) | Verifies calibrate + emitter + renderer control paths and status reflection | Adds checks for `cal_spk1_out`, `cal_spk2_out`, `cal_spk3_out`, `cal_spk4_out` on top of Stage 6 coverage. |
+| UI PR gate default | `scripts/ui-pr-gate-mac.sh` | Runs `ui_stage7_selftest` by default, with smoke/Appium optional | Latest gate evidence: `TestEvidence/ui_pr_gate_20260220T031226Z/status.tsv` (`PASS`). |
+
+## Incremental Stage 8 Calibrate Capture/Progress Mapping
+
+Scope: extend Stage 7 with explicit calibrate capture/progress controls and status reflection while preserving direct relay bindings and the persistent viewport shell.
+
+| Parameter ID / Contract | Stage 8 UI Path | Bridge Path | Notes |
+|---|---|---|---|
+| Capture start/abort action | `Source/ui/public/incremental/index_stage8.html` (`#btn-cal-measure`) + `Source/ui/public/incremental/js/stage8_ui.js` (`handleCalibrationMeasureClick`) | Native functions `locusqStartCalibration` / `locusqAbortCalibration` via `Juce.getNativeFunction(...)` | Button text/state follows calibration runtime (`START MEASURE`, `ABORT`, `MEASURE AGAIN`). |
+| Capture progress reflection | `Source/ui/public/incremental/index_stage8.html` (`#status-cal-progress`, `#cal-progress-bar`) + `Source/ui/public/incremental/js/stage8_ui.js` (`updateCalibrateCaptureStatus`) | `window.updateCalibrationStatus(...)` payload from processor | Reflects `state` + `overallPercent` in text and progress bar width. |
+| Capture message reflection | `Source/ui/public/incremental/index_stage8.html` (`#status-cal-message`) + `Source/ui/public/incremental/js/stage8_ui.js` (`updateCalibrateCaptureStatus`) | `window.updateCalibrationStatus(...)` payload (`message`) | Shows live phase guidance (`playing`, `recording`, `analyzing`, complete). |
+| Per-speaker calibration status rows | `Source/ui/public/incremental/index_stage8.html` (`#cal-spk1-status..#cal-spk4-status`, dots) + `Source/ui/public/incremental/js/stage8_ui.js` (`setCalSpeakerRow`) | `window.updateCalibrationStatus(...)` payload (`currentSpeaker`, `completedSpeakers`, `playPercent`, `recordPercent`) | Adds row-by-row status semantics (`Not measured`, active phase, `Measured`). |
+| Default incremental route | `Source/PluginEditor.cpp` (`incremental/index.html` resource mapping, window title tag) | BinaryData entries generated from `CMakeLists.txt` Stage 8 files | Stage 8 is now the default incremental shell (`[incremental-stage8]`); Stage 2-7 routes remain addressable. |
+
+## Incremental Stage 8 Self-Test and Gate
+
+Scope: extend deterministic automation coverage with capture/progress status checks and promote Stage 8 as the default UI gate.
+
+| Artifact / Hook | Location | Purpose | Notes |
+|---|---|---|---|
+| Stage 8 self-test runner script | `scripts/standalone-ui-selftest-stage8-mac.sh` | Launch standalone in self-test mode and enforce pass/fail JSON | Accepts `.app` or direct executable path. |
+| Stage 8 self-test runtime | `Source/ui/public/incremental/js/stage8_ui.js` (`runIncrementalStage8SelfTest`) | Verifies calibrate + emitter + renderer controls and capture/progress status reflection | Adds checks for `cal_capture_running_status` and `cal_capture_complete_status` in addition to Stage 7 coverage. |
+| UI PR gate default | `scripts/ui-pr-gate-mac.sh` | Runs `ui_stage8_selftest` by default, with smoke/Appium optional | Latest gate evidence: `TestEvidence/ui_pr_gate_20260220T033031Z/status.tsv` (`PASS`). |
 
 ## Notes
 

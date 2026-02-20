@@ -1,9 +1,3 @@
-Title: APC Skill: docs
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_docs
 description: "Documentation governance skill for metadata compliance, ADR hygiene, invariant traceability, and validation evidence logging."

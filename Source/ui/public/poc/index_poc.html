@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LocusQ Incremental UI Stage 1</title>
+  <script src="/js/juce/check_native_interop.js?cb=8"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #162029;
+      --muted: #5f6b76;
+      --line: #c8d1d9;
+      --accent: #0f766e;
+      --good: #1e7f39;
+      --warn: #9a3412;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: radial-gradient(circle at top left, #ffffff 0%, var(--bg) 56%);
+      color: var(--ink);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    main {
+      width: min(760px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 28px rgba(17, 24, 39, 0.08);
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fcfdfd;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      min-height: 136px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    select,
+    input[type="range"] {
+      width: 100%;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.25);
+      accent-color: var(--accent);
+    }
+
+    .inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stats {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+      display: grid;
+      gap: 6px;
+    }
+
+    .row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .name {
+      color: var(--muted);
+    }
+
+    .val {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .bridge-ok {
+      color: var(--good);
+    }
+
+    .bridge-warn {
+      color: var(--warn);
+    }
+
+    pre {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+      font-size: 12px;
+      line-height: 1.35;
+      overflow: auto;
+      max-height: 160px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>LocusQ Incremental UI - Stage 1</h1>
+      <p class="sub">Baseline bridge validation before rebuilding the full LocusQ interface section-by-section.</p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Toggle</h2>
+        <label class="inline" for="toggle-size-link">
+          <input id="toggle-size-link" type="checkbox" />
+          <span>`size_link`</span>
+        </label>
+        <div class="sub">Expected: UI change triggers `setValue`, then backend emits `valueChanged`.</div>
+      </article>
+
+      <article class="card">
+        <h2>Choice</h2>
+        <label for="choice-quality">
+          <span>`rend_quality`</span>
+          <select id="choice-quality"></select>
+        </label>
+        <div class="sub">Expected: options from combo `properties.choices`, change -> `setChoiceIndex`.</div>
+      </article>
+
+      <article class="card">
+        <h2>Slider</h2>
+        <label for="slider-size-uniform">
+          <span>`size_uniform` (normalized)</span>
+          <input id="slider-size-uniform" type="range" min="0" max="1" step="0.001" />
+        </label>
+        <div class="sub" id="slider-readout"></div>
+      </article>
+    </section>
+
+    <section class="stats" id="status-panel">
+      <div class="row"><span class="name">Bridge status</span><span class="val" id="bridge-state">init</span></div>
+      <div class="row"><span class="name">DOM pointer/click/change</span><span class="val" id="count-dom">0 / 0 / 0</span></div>
+      <div class="row"><span class="name">set* calls (toggle/choice/slider)</span><span class="val" id="count-set">0 / 0 / 0</span></div>
+      <div class="row"><span class="name">valueChanged events (toggle/choice/slider)</span><span class="val" id="count-value">0 / 0 / 0</span></div>
+      <div class="row"><span class="name">propertiesChanged events (toggle/choice/slider)</span><span class="val" id="count-props">0 / 0 / 0</span></div>
+      <div class="row"><span class="name">Live state (toggle/choice/slider)</span><span class="val" id="count-live">n/a</span></div>
+      <div class="row"><span class="name">Heartbeat</span><span class="val" id="count-heartbeat">0</span></div>
+    </section>
+
+    <pre id="diagnostics"></pre>
+  </main>
+  <script>
+    (function () {
+      window.__POC_STARTED = true;
+
+      const DEFAULT_CHOICES = ["Draft", "Final"];
+      const els = {
+        toggle: document.getElementById("toggle-size-link"),
+        choice: document.getElementById("choice-quality"),
+        slider: document.getElementById("slider-size-uniform"),
+        sliderReadout: document.getElementById("slider-readout"),
+        bridge: document.getElementById("bridge-state"),
+        dom: document.getElementById("count-dom"),
+        set: document.getElementById("count-set"),
+        value: document.getElementById("count-value"),
+        props: document.getElementById("count-props"),
+        live: document.getElementById("count-live"),
+        heartbeat: document.getElementById("count-heartbeat"),
+        diag: document.getElementById("diagnostics"),
+      };
+
+      const counts = {
+        domPointer: 0,
+        domClick: 0,
+        domChange: 0,
+        setToggle: 0,
+        setChoice: 0,
+        setSlider: 0,
+        valueToggle: 0,
+        valueChoice: 0,
+        valueSlider: 0,
+        propsToggle: 0,
+        propsChoice: 0,
+        propsSlider: 0,
+        heartbeat: 0,
+      };
+
+      const snapshot = {
+        toggle: false,
+        choice: 0,
+        sliderNorm: 0,
+        choiceSource: "default",
+      };
+
+      function setBridge(ok, text) {
+        els.bridge.textContent = text;
+        els.bridge.className = "val " + (ok ? "bridge-ok" : "bridge-warn");
+      }
+
+      function render() {
+        els.dom.textContent = counts.domPointer + " / " + counts.domClick + " / " + counts.domChange;
+        els.set.textContent = counts.setToggle + " / " + counts.setChoice + " / " + counts.setSlider;
+        els.value.textContent = counts.valueToggle + " / " + counts.valueChoice + " / " + counts.valueSlider;
+        els.props.textContent = counts.propsToggle + " / " + counts.propsChoice + " / " + counts.propsSlider;
+        els.live.textContent =
+          (snapshot.toggle ? "1" : "0")
+          + " / " + String(snapshot.choice)
+          + " / " + Number(snapshot.sliderNorm).toFixed(3);
+        els.heartbeat.textContent = String(counts.heartbeat);
+      }
+
+      function writeDiagnostics(extra) {
+        const payload = {
+          ts: new Date().toISOString(),
+          hasJuceObj: typeof window.Juce !== "undefined",
+          hasBackend: !!(window.__JUCE__ && window.__JUCE__.backend),
+          pocStarted: !!window.__POC_STARTED,
+          counts: counts,
+          snapshot: snapshot,
+          extra: extra || {},
+        };
+        els.diag.textContent = JSON.stringify(payload, null, 2);
+      }
+
+      function createListenerList() {
+        const listeners = new Map();
+        let id = 0;
+        return {
+          addListener(fn) {
+            const key = id++;
+            listeners.set(key, fn);
+            return key;
+          },
+          callListeners() {
+            listeners.forEach(function (fn) {
+              try { fn(); } catch (_) {}
+            });
+          },
+        };
+      }
+
+      const backend = window.__JUCE__ && window.__JUCE__.backend ? window.__JUCE__.backend : null;
+      if (!backend) {
+        setBridge(false, "no backend");
+        render();
+        writeDiagnostics({ error: "window.__JUCE__.backend missing" });
+        return;
+      }
+
+      function emit(id, payload) {
+        backend.emitEvent(id, payload);
+      }
+
+      function attach(id, fn) {
+        backend.addEventListener(id, function (event) {
+          fn(event || {});
+        });
+        emit(id, { eventType: "requestInitialUpdate" });
+      }
+
+      function rebuildChoices(items, source) {
+        const arr = Array.isArray(items) && items.length > 0 ? items : DEFAULT_CHOICES;
+        els.choice.innerHTML = "";
+        arr.forEach(function (item, index) {
+          const opt = document.createElement("option");
+          opt.value = String(index);
+          opt.textContent = String(item);
+          els.choice.appendChild(opt);
+        });
+        snapshot.choiceSource = source || "default";
+      }
+
+      const toggleState = {
+        id: "__juce__togglesize_link",
+        value: false,
+        valueEvt: createListenerList(),
+        propsEvt: createListenerList(),
+        setValue(v) {
+          this.value = !!v;
+          emit(this.id, { eventType: "valueChanged", value: this.value });
+          this.valueEvt.callListeners();
+        },
+        getValue() { return !!this.value; },
+      };
+
+      const comboState = {
+        id: "__juce__comboBoxrend_quality",
+        value: 0,
+        props: { choices: DEFAULT_CHOICES.slice() },
+        valueEvt: createListenerList(),
+        propsEvt: createListenerList(),
+        getChoiceIndex() {
+          const n = (this.props.choices && this.props.choices.length) || DEFAULT_CHOICES.length;
+          if (n <= 1) return Math.max(0, Math.round(this.value || 0));
+          const normal = Math.max(0, Math.min(1, Number(this.value) || 0));
+          return Math.max(0, Math.min(n - 1, Math.round(normal * (n - 1))));
+        },
+        setChoiceIndex(index) {
+          const n = (this.props.choices && this.props.choices.length) || DEFAULT_CHOICES.length;
+          const clamped = Math.max(0, Math.round(Number(index) || 0));
+          this.value = n <= 1 ? clamped : Math.max(0, Math.min(1, clamped / (n - 1)));
+          emit(this.id, { eventType: "valueChanged", value: this.value });
+          this.valueEvt.callListeners();
+        },
+      };
+
+      const sliderState = {
+        id: "__juce__slidersize_uniform",
+        scaled: 0.5,
+        props: { start: 0, end: 1, skew: 1 },
+        valueEvt: createListenerList(),
+        propsEvt: createListenerList(),
+        getNormalisedValue() {
+          const d = this.props.end - this.props.start;
+          if (Math.abs(d) < 1.0e-9) return 0;
+          const linear = Math.max(0, Math.min(1, (this.scaled - this.props.start) / d));
+          const skew = this.props.skew > 0 ? this.props.skew : 1;
+          return Math.pow(linear, skew);
+        },
+        setNormalisedValue(v) {
+          const normal = Math.max(0, Math.min(1, Number(v) || 0));
+          const skew = this.props.skew > 0 ? this.props.skew : 1;
+          this.scaled = Math.pow(normal, 1 / skew) * (this.props.end - this.props.start) + this.props.start;
+          emit(this.id, { eventType: "valueChanged", value: this.scaled });
+          this.valueEvt.callListeners();
+        },
+      };
+
+      function applyFromState() {
+        snapshot.toggle = toggleState.getValue();
+        els.toggle.checked = snapshot.toggle;
+
+        snapshot.choice = comboState.getChoiceIndex();
+        els.choice.selectedIndex = snapshot.choice;
+
+        snapshot.sliderNorm = sliderState.getNormalisedValue();
+        els.slider.value = Number(snapshot.sliderNorm).toFixed(3);
+        els.sliderReadout.textContent = "normalized=" + Number(snapshot.sliderNorm).toFixed(3)
+          + " scaled=" + Number(sliderState.scaled).toFixed(3);
+      }
+
+      function bindProbe(el) {
+        const onPointer = function () { counts.domPointer += 1; render(); };
+        const onClick = function () { counts.domClick += 1; render(); };
+        el.addEventListener("pointerdown", onPointer);
+        el.addEventListener("mousedown", onPointer);
+        el.addEventListener("click", onClick);
+      }
+
+      bindProbe(els.toggle);
+      bindProbe(els.choice);
+      bindProbe(els.slider);
+
+      els.toggle.addEventListener("change", function () {
+        counts.domChange += 1;
+        counts.setToggle += 1;
+        toggleState.setValue(els.toggle.checked);
+        render();
+        writeDiagnostics({ event: "toggle.change" });
+      });
+
+      els.choice.addEventListener("change", function () {
+        counts.domChange += 1;
+        counts.setChoice += 1;
+        comboState.setChoiceIndex(Math.max(0, els.choice.selectedIndex));
+        render();
+        writeDiagnostics({ event: "choice.change" });
+      });
+
+      els.slider.addEventListener("input", function () {
+        counts.domChange += 1;
+        counts.setSlider += 1;
+        sliderState.setNormalisedValue(Number(els.slider.value));
+        render();
+        writeDiagnostics({ event: "slider.input" });
+      });
+
+      toggleState.valueEvt.addListener(function () { counts.valueToggle += 1; applyFromState(); render(); });
+      toggleState.propsEvt.addListener(function () { counts.propsToggle += 1; render(); });
+      comboState.valueEvt.addListener(function () { counts.valueChoice += 1; applyFromState(); render(); });
+      comboState.propsEvt.addListener(function () {
+        counts.propsChoice += 1;
+        rebuildChoices(comboState.props.choices, "relay");
+        applyFromState();
+        render();
+      });
+      sliderState.valueEvt.addListener(function () { counts.valueSlider += 1; applyFromState(); render(); });
+      sliderState.propsEvt.addListener(function () { counts.propsSlider += 1; applyFromState(); render(); });
+
+      attach(toggleState.id, function (event) {
+        if (event.eventType === "valueChanged") {
+          toggleState.value = !!event.value;
+          toggleState.valueEvt.callListeners();
+          return;
+        }
+        if (event.eventType === "propertiesChanged") {
+          toggleState.propsEvt.callListeners();
+        }
+      });
+
+      attach(comboState.id, function (event) {
+        if (event.eventType === "valueChanged") {
+          comboState.value = Number(event.value) || 0;
+          comboState.valueEvt.callListeners();
+          return;
+        }
+        if (event.eventType === "propertiesChanged") {
+          const next = Object.assign({}, event);
+          delete next.eventType;
+          comboState.props = Object.assign({}, comboState.props, next);
+          comboState.propsEvt.callListeners();
+        }
+      });
+
+      attach(sliderState.id, function (event) {
+        if (event.eventType === "valueChanged") {
+          sliderState.scaled = Number(event.value) || 0;
+          sliderState.valueEvt.callListeners();
+          return;
+        }
+        if (event.eventType === "propertiesChanged") {
+          const next = Object.assign({}, event);
+          delete next.eventType;
+          sliderState.props = Object.assign({}, sliderState.props, next);
+          sliderState.propsEvt.callListeners();
+        }
+      });
+
+      rebuildChoices(comboState.props.choices, "default");
+      applyFromState();
+      setBridge(true, "backend connected");
+      render();
+      writeDiagnostics({ note: "inline poc bootstrap ready" });
+
+      window.setInterval(function () {
+        counts.heartbeat += 1;
+        applyFromState();
+        render();
+      }, 350);
+    })();
+  </script>
+</body>
+</html>

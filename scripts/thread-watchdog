@@ -1,0 +1,401 @@
+#!/usr/bin/env python3
+"""
+LocusQ thread watchdog.
+
+Checks:
+1) Explicit contract per thread (task, expected outputs, timeout, owner)
+2) Heartbeat freshness
+3) Artifact freshness (file mtime or commit timestamp)
+4) Stalled thread detection
+5) Coordinator/worker slot policy
+6) DONE closeout status format
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import datetime as dt
+import os
+import pathlib
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+
+DONE_RE = re.compile(r"^DONE\s+\S+\s+\S+")
+COMMIT_RE = re.compile(r"^[0-9a-f]{7,40}$")
+
+
+@dataclass
+class Contract:
+    thread_id: str
+    task: str
+    expected_outputs: str
+    timeout_minutes: int
+    owner: str
+    role: str  # optional column; defaults to "worker"
+
+
+@dataclass
+class Heartbeat:
+    timestamp: dt.datetime
+    thread_id: str
+    status: str
+    last_artifact: str
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Monitor LocusQ parallel thread heartbeats")
+    parser.add_argument(
+        "--contracts",
+        default="TestEvidence/thread-contracts.tsv",
+        help="TSV file with thread contracts",
+    )
+    parser.add_argument(
+        "--heartbeats",
+        default="TestEvidence/thread-heartbeats.tsv",
+        help="TSV file with thread heartbeats",
+    )
+    parser.add_argument(
+        "--stall-minutes",
+        type=int,
+        default=10,
+        help="Heartbeat idle threshold (minutes) for stalled classification",
+    )
+    parser.add_argument(
+        "--artifact-max-age-minutes",
+        type=int,
+        default=10,
+        help="Artifact freshness threshold (minutes)",
+    )
+    parser.add_argument(
+        "--now-utc",
+        default="",
+        help="Override current UTC timestamp (ISO-8601, e.g. 2026-02-19T22:00:00Z)",
+    )
+    parser.add_argument(
+        "--allow-empty",
+        action="store_true",
+        help="Allow empty contracts/heartbeats files without failing",
+    )
+    return parser.parse_args()
+
+
+def parse_timestamp(value: str) -> dt.datetime:
+    raw = value.strip()
+    if not raw:
+        raise ValueError("empty timestamp")
+    if raw.endswith("Z"):
+        return dt.datetime.strptime(raw, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
+    parsed = dt.datetime.fromisoformat(raw)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc)
+
+
+def read_tsv_rows(path: pathlib.Path) -> List[Dict[str, str]]:
+    if not path.exists():
+        raise FileNotFoundError(f"missing file: {path}")
+    rows: List[Dict[str, str]] = []
+    with path.open("r", encoding="utf-8") as handle:
+        filtered = (line for line in handle if line.strip() and not line.lstrip().startswith("#"))
+        reader = csv.DictReader(filtered, delimiter="\t")
+        if reader.fieldnames is None:
+            raise ValueError(f"missing header in {path}")
+        for row in reader:
+            rows.append({k: (v or "").strip() for k, v in row.items()})
+    return rows
+
+
+def load_contracts(path: pathlib.Path) -> Dict[str, Contract]:
+    rows = read_tsv_rows(path)
+    required = {"thread_id", "task", "expected_outputs", "timeout_minutes", "owner"}
+    if not rows:
+        return {}
+    available = set(rows[0].keys())
+    missing = required - available
+    if missing:
+        raise ValueError(f"{path} missing required columns: {', '.join(sorted(missing))}")
+
+    contracts: Dict[str, Contract] = {}
+    for idx, row in enumerate(rows, start=2):
+        thread_id = row.get("thread_id", "")
+        if not thread_id:
+            raise ValueError(f"{path}:{idx} missing thread_id")
+        if thread_id in contracts:
+            raise ValueError(f"{path}:{idx} duplicate thread_id '{thread_id}'")
+        timeout_text = row.get("timeout_minutes", "")
+        try:
+            timeout = int(timeout_text)
+        except ValueError as exc:
+            raise ValueError(f"{path}:{idx} invalid timeout_minutes '{timeout_text}'") from exc
+        contracts[thread_id] = Contract(
+            thread_id=thread_id,
+            task=row.get("task", ""),
+            expected_outputs=row.get("expected_outputs", ""),
+            timeout_minutes=timeout,
+            owner=row.get("owner", ""),
+            role=(row.get("role", "") or "worker").lower(),
+        )
+    return contracts
+
+
+def load_latest_heartbeats(path: pathlib.Path) -> Dict[str, Heartbeat]:
+    rows = read_tsv_rows(path)
+    required = {"timestamp_utc", "thread_id", "status", "last_artifact"}
+    if not rows:
+        return {}
+    available = set(rows[0].keys())
+    missing = required - available
+    if missing:
+        raise ValueError(f"{path} missing required columns: {', '.join(sorted(missing))}")
+
+    latest: Dict[str, Heartbeat] = {}
+    for idx, row in enumerate(rows, start=2):
+        thread_id = row.get("thread_id", "")
+        if not thread_id:
+            raise ValueError(f"{path}:{idx} missing thread_id")
+        ts = parse_timestamp(row.get("timestamp_utc", ""))
+        hb = Heartbeat(
+            timestamp=ts,
+            thread_id=thread_id,
+            status=row.get("status", ""),
+            last_artifact=row.get("last_artifact", ""),
+        )
+        prev = latest.get(thread_id)
+        if prev is None or hb.timestamp > prev.timestamp:
+            latest[thread_id] = hb
+    return latest
+
+
+def git_commit_epoch(root: pathlib.Path, commit: str) -> Optional[int]:
+    try:
+        check = subprocess.run(
+            ["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+            cwd=root,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if check.returncode != 0:
+            return None
+        show = subprocess.run(
+            ["git", "show", "-s", "--format=%ct", commit],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if show.returncode != 0:
+            return None
+        return int(show.stdout.strip())
+    except Exception:
+        return None
+
+
+def artifact_candidates(value: str) -> List[str]:
+    if not value:
+        return []
+    split = re.split(r"[|,]", value)
+    return [item.strip() for item in split if item.strip()]
+
+
+def artifact_latest_epoch(root: pathlib.Path, artifact_field: str) -> Tuple[Optional[int], str]:
+    """
+    Returns (latest_epoch, description).
+    description in {'file', 'commit', 'missing'}.
+    """
+    latest: Optional[int] = None
+    kind = "missing"
+    for candidate in artifact_candidates(artifact_field):
+        if COMMIT_RE.fullmatch(candidate):
+            commit_epoch = git_commit_epoch(root, candidate)
+            if commit_epoch is not None:
+                if latest is None or commit_epoch > latest:
+                    latest = commit_epoch
+                    kind = "commit"
+            continue
+
+        path = pathlib.Path(candidate)
+        if not path.is_absolute():
+            path = root / path
+        if path.exists():
+            try:
+                mtime = int(path.stat().st_mtime)
+            except OSError:
+                continue
+            if latest is None or mtime > latest:
+                latest = mtime
+                kind = "file"
+    return latest, kind
+
+
+def minutes_between(older: dt.datetime, newer: dt.datetime) -> float:
+    return (newer - older).total_seconds() / 60.0
+
+
+def epoch_to_utc(epoch: int) -> dt.datetime:
+    return dt.datetime.fromtimestamp(epoch, tz=dt.timezone.utc)
+
+
+def main() -> int:
+    args = parse_args()
+    root = pathlib.Path(__file__).resolve().parents[1]
+
+    now = parse_timestamp(args.now_utc) if args.now_utc else dt.datetime.now(tz=dt.timezone.utc)
+
+    contracts_path = pathlib.Path(args.contracts)
+    if not contracts_path.is_absolute():
+        contracts_path = root / contracts_path
+
+    heartbeats_path = pathlib.Path(args.heartbeats)
+    if not heartbeats_path.is_absolute():
+        heartbeats_path = root / heartbeats_path
+
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    try:
+        contracts = load_contracts(contracts_path)
+    except Exception as exc:
+        print(f"ERROR: {exc}")
+        return 2
+
+    try:
+        latest_hb = load_latest_heartbeats(heartbeats_path)
+    except Exception as exc:
+        print(f"ERROR: {exc}")
+        return 2
+
+    if not contracts:
+        message = "no contracts found"
+        if args.allow_empty:
+            warnings.append(message)
+        else:
+            errors.append(message)
+    if not latest_hb:
+        message = "no heartbeats found"
+        if args.allow_empty:
+            warnings.append(message)
+        else:
+            errors.append(message)
+
+    # Slot policy checks
+    active_contracts: List[Tuple[Contract, Optional[Heartbeat]]] = []
+    for thread_id, contract in contracts.items():
+        hb = latest_hb.get(thread_id)
+        is_done = bool(hb and hb.status.strip().startswith("DONE"))
+        if not is_done:
+            active_contracts.append((contract, hb))
+
+    if active_contracts:
+        active_workers = sum(1 for contract, _ in active_contracts if contract.role == "worker")
+        active_coordinators = sum(1 for contract, _ in active_contracts if contract.role == "coordinator")
+        if active_workers > 5:
+            errors.append(f"active workers {active_workers} exceeds policy max 5")
+        if active_coordinators > 1:
+            errors.append(f"active coordinators {active_coordinators} exceeds policy max 1")
+        if any(contract.role == "coordinator" for contract, _ in active_contracts):
+            if active_workers > 5:
+                errors.append("6th slot policy violated: coordinator + >5 workers")
+
+    print("THREAD\tROLE\tOWNER\tHB_AGE_MIN\tART_AGE_MIN\tSTATUS\tARTIFACT_KIND\tFLAGS")
+    for thread_id in sorted(set(contracts.keys()) | set(latest_hb.keys())):
+        contract = contracts.get(thread_id)
+        hb = latest_hb.get(thread_id)
+        role = contract.role if contract else "unknown"
+        owner = contract.owner if contract else "unknown"
+        flags: List[str] = []
+
+        if contract is None:
+            flags.append("NO_CONTRACT")
+            errors.append(f"{thread_id}: heartbeat exists but contract missing")
+
+        if hb is None:
+            flags.append("NO_HEARTBEAT")
+            errors.append(f"{thread_id}: contract exists but heartbeat missing")
+            print(f"{thread_id}\t{role}\t{owner}\t-\t-\t-\t-\t{','.join(flags)}")
+            continue
+
+        hb_age_min = minutes_between(hb.timestamp, now)
+        hb_age_text = f"{hb_age_min:.1f}"
+        if hb_age_min > args.stall_minutes:
+            flags.append("HB_STALE")
+
+        done_line_valid = bool(DONE_RE.match(hb.status))
+        is_done = hb.status.startswith("DONE")
+        if is_done and not done_line_valid:
+            flags.append("DONE_FORMAT")
+            errors.append(
+                f"{thread_id}: status must be 'DONE <result> <artifact/commit>' (got '{hb.status}')"
+            )
+
+        artifact_epoch, artifact_kind = artifact_latest_epoch(root, hb.last_artifact)
+        art_age_text = "-"
+        artifact_stale = True
+        if artifact_epoch is not None:
+            art_age_min = minutes_between(epoch_to_utc(artifact_epoch), now)
+            art_age_text = f"{art_age_min:.1f}"
+            artifact_stale = art_age_min > args.artifact_max_age_minutes
+            if artifact_stale:
+                flags.append("ART_STALE")
+        else:
+            flags.append("ART_MISSING")
+
+        timeout_breach = False
+        if contract is not None and contract.timeout_minutes > 0 and hb_age_min > contract.timeout_minutes:
+            timeout_breach = True
+            flags.append("TIMEOUT")
+            if not is_done:
+                errors.append(
+                    f"{thread_id}: heartbeat age {hb_age_min:.1f}m exceeds timeout {contract.timeout_minutes}m"
+                )
+
+        stalled = (hb_age_min > args.stall_minutes) and artifact_stale and (not is_done)
+        if stalled:
+            flags.append("STALLED")
+            errors.append(
+                f"{thread_id}: stalled (heartbeat>{args.stall_minutes}m and no fresh artifact/update)"
+            )
+
+        if contract is not None:
+            if not contract.task:
+                errors.append(f"{thread_id}: contract missing task")
+                flags.append("TASK_MISSING")
+            if not contract.expected_outputs:
+                errors.append(f"{thread_id}: contract missing expected_outputs")
+                flags.append("OUTPUT_MISSING")
+            if not contract.owner:
+                errors.append(f"{thread_id}: contract missing owner")
+                flags.append("OWNER_MISSING")
+
+        if is_done and not hb.last_artifact:
+            errors.append(f"{thread_id}: DONE line must include artifact/commit in last_artifact")
+            flags.append("DONE_ARTIFACT")
+
+        print(
+            f"{thread_id}\t{role}\t{owner}\t{hb_age_text}\t{art_age_text}\t"
+            f"{hb.status}\t{artifact_kind}\t{','.join(flags) if flags else 'OK'}"
+        )
+
+        if timeout_breach and is_done:
+            warnings.append(f"{thread_id}: timed out before DONE heartbeat")
+
+    for warn in warnings:
+        print(f"WARN: {warn}")
+
+    if errors:
+        print("FAIL:")
+        for err in errors:
+            print(f"  - {err}")
+        return 1
+
+    print("PASS: thread watchdog checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

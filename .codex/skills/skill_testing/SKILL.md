@@ -1,9 +1,3 @@
-Title: APC Skill: skill_testing
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_testing
 description: "Detailed DSP QA harness-first testing workflow for APC plugins."

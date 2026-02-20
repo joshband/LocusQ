@@ -30,6 +30,7 @@ private:
     //==============================================================================
     // Timer for pushing scene state to WebView
     void timerCallback() override;
+    void updateStandaloneWindowTitle();
 
     //==============================================================================
     // CRITICAL: MEMBER DECLARATION ORDER
@@ -164,6 +165,13 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physWallsAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physPauseAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> vizModeAttachment;
+
+    bool runtimeProbeDone = false;
+    int runtimeProbeTicks = 0;
+    bool standaloneWindowTitleUpdated = false;
+    bool uiSelfTestProbeInFlight = false;
+    bool uiSelfTestResultWritten = false;
+    int uiSelfTestPollTicks = 0;
 
     //==============================================================================
     // Resource provider for embedded web files

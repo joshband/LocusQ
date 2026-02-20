@@ -53,6 +53,11 @@ message(STATUS "LocusQ: Building for ${PLUGIN_FORMATS}")
 message(STATUS "LocusQ: WebView backend: ${WEBVIEW_BACKEND}")
 
 # ============================================
+# UI DEBUG/POC MODE
+# ============================================
+option(LOCUSQ_UI_POC "Load focused WebView POC UI by default" OFF)
+
+# ============================================
 # BINARY DATA (Web UI Resources)
 # ============================================
 juce_add_binary_data(LocusQ_WebUI
@@ -62,6 +67,24 @@ juce_add_binary_data(LocusQ_WebUI
         Source/ui/public/js/three.min.js
         Source/ui/public/js/juce/index.js
         Source/ui/public/js/juce/check_native_interop.js
+        Source/ui/public/poc/index_poc.html
+        Source/ui/public/poc/js/poc_ui.js
+        Source/ui/public/incremental/index_stage2.html
+        Source/ui/public/incremental/js/stage2_ui.js
+        Source/ui/public/incremental/index_stage3.html
+        Source/ui/public/incremental/js/stage3_ui.js
+        Source/ui/public/incremental/index_stage4.html
+        Source/ui/public/incremental/js/stage4_ui.js
+        Source/ui/public/incremental/index_stage5.html
+        Source/ui/public/incremental/js/stage5_ui.js
+        Source/ui/public/incremental/index_stage6.html
+        Source/ui/public/incremental/js/stage6_ui.js
+        Source/ui/public/incremental/index_stage7.html
+        Source/ui/public/incremental/js/stage7_ui.js
+        Source/ui/public/incremental/index_stage8.html
+        Source/ui/public/incremental/js/stage8_ui.js
+        Source/ui/public/incremental/index_stage9.html
+        Source/ui/public/incremental/js/stage9_ui.js
 )
 
 # ============================================
@@ -148,6 +171,7 @@ target_compile_definitions(LocusQ
         JUCE_WEB_BROWSER=1
         JUCE_VST3_CAN_REPLACE_VST2=0
         _USE_MATH_DEFINES=1
+        LOCUSQ_UI_POC_DEFAULT=$<IF:$<BOOL:${LOCUSQ_UI_POC}>,1,0>
 )
 
 if(WIN32)

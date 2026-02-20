@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LocusQ Incremental UI Stage 8</title>
+  <script src="/js/juce/check_native_interop.js?cb=9"></script>
+  <script defer src="/js/three.min.js"></script>
+  <script defer src="/incremental/js/stage8_ui.js?cb=8"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface-elevated: #1e1e1e;
+      --border: #2a2a2a;
+      --gold: #d4a847;
+      --gold-dim: #8b7234;
+      --text-primary: #e0e0e0;
+      --text-secondary: #aaaaaa;
+      --text-dim: #666666;
+      --text-warning: #aa4444;
+      --text-success: #44aa66;
+      --rail-width-calibrate: 320px;
+      --rail-width-emitter: 280px;
+      --rail-width-renderer: 304px;
+      --rail-width: var(--rail-width-emitter);
+      --header-height: 40px;
+      --timeline-height: 108px;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      display: grid;
+      grid-template-rows: var(--header-height) 1fr;
+    }
+
+    body.mode-calibrate { --rail-width: var(--rail-width-calibrate); }
+    body.mode-emitter { --rail-width: var(--rail-width-emitter); }
+    body.mode-renderer { --rail-width: var(--rail-width-renderer); }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+    }
+
+    .mode-tabs {
+      display: flex;
+      margin-left: 4px;
+    }
+
+    .mode-tab {
+      background: transparent;
+      border: 0;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .mode-tab.active {
+      color: var(--text-primary);
+    }
+
+    .mode-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .header-spacer {
+      flex: 1;
+    }
+
+    .scene-status {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      border: 1px solid rgba(170, 170, 170, 0.2);
+      border-radius: 9px;
+      padding: 3px 8px;
+      color: var(--text-secondary);
+    }
+
+    .scene-status.physics,
+    .scene-status.measuring {
+      color: var(--gold);
+      border-color: rgba(212, 168, 71, 0.3);
+    }
+
+    .scene-status.ready {
+      color: var(--text-success);
+      border-color: rgba(68, 170, 102, 0.3);
+    }
+
+    .scene-status.noprofile {
+      color: var(--text-warning);
+      border-color: rgba(170, 68, 68, 0.3);
+    }
+
+    .viewport-lock {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border: 1px solid rgba(102, 102, 102, 0.25);
+      border-radius: 9px;
+      padding: 3px 8px;
+    }
+
+    .room-profile {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+
+    .room-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    .room-dot.loaded {
+      background: var(--text-success);
+    }
+
+    .quality-badge {
+      border-radius: 3px;
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid var(--text-dim);
+      color: var(--text-secondary);
+      background: transparent;
+    }
+
+    .quality-badge.final {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: #0a0a0a;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr var(--rail-width);
+      min-height: 0;
+    }
+
+    .viewport-shell {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      position: relative;
+      border-right: 1px solid var(--border);
+      background: #080808;
+    }
+
+    #viewport-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    #viewport-canvas.dragging {
+      cursor: grabbing;
+    }
+
+    .view-buttons {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      gap: 4px;
+      z-index: 4;
+    }
+
+    .view-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: rgba(20, 20, 20, 0.8);
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .view-btn.active {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+    }
+
+    .viewport-overlay {
+      position: absolute;
+      bottom: calc(var(--timeline-height) + 10px);
+      left: 10px;
+      z-index: 4;
+      font-size: 11px;
+      color: var(--text-dim);
+      pointer-events: none;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    }
+
+    .timeline {
+      height: 0;
+      overflow: hidden;
+      transition: height 200ms ease-out;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      min-height: 0;
+    }
+
+    .timeline.visible {
+      height: var(--timeline-height);
+    }
+
+    .timeline-header {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .lane-list {
+      display: grid;
+      gap: 4px;
+      padding: 6px 12px;
+    }
+
+    .lane {
+      height: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      background: linear-gradient(to right, rgba(200, 200, 200, 0.04), rgba(200, 200, 200, 0.01));
+      color: var(--text-dim);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      cursor: pointer;
+    }
+
+    .lane.selected {
+      color: var(--gold);
+      border-color: rgba(212, 168, 71, 0.45);
+      background: rgba(212, 168, 71, 0.1);
+    }
+
+    .rail {
+      width: var(--rail-width);
+      transition: width 180ms ease;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: var(--surface);
+      min-height: 0;
+    }
+
+    .rail::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .rail::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .rail-panel {
+      display: none;
+      padding: 12px;
+    }
+
+    .rail-panel.active {
+      display: block;
+    }
+
+    .rail-title {
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .section {
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 8px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .section:first-of-type {
+      border-top: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .section-header {
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 26px;
+    }
+
+    .label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .value {
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .value.wrap {
+      text-align: right;
+      max-width: 170px;
+      line-height: 1.3;
+      white-space: normal;
+    }
+
+    .action-btn {
+      border: 1px solid var(--gold-dim);
+      background: rgba(212, 168, 71, 0.14);
+      color: var(--gold);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 5px 9px;
+      cursor: pointer;
+      min-width: 124px;
+    }
+
+    .action-stack {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .action-btn.secondary {
+      min-width: 132px;
+      border-color: rgba(188, 188, 188, 0.3);
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .action-btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .action-btn:hover {
+      background: rgba(212, 168, 71, 0.22);
+    }
+
+    .action-btn.running {
+      border-color: rgba(170, 68, 68, 0.6);
+      color: #ffb2b2;
+      background: rgba(170, 68, 68, 0.18);
+    }
+
+    .cal-progress {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      margin-top: -2px;
+    }
+
+    .cal-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #d4a847, #f0d487);
+      transition: width 130ms linear;
+    }
+
+    .cal-status-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cal-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 18px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .cal-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      flex: 0 0 7px;
+    }
+
+    .cal-status-dot.active {
+      background: var(--gold);
+      box-shadow: 0 0 7px rgba(212, 168, 71, 0.75);
+    }
+
+    .cal-status-dot.complete {
+      background: var(--text-success);
+    }
+
+    select,
+    input[type="range"] {
+      width: 138px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font);
+      padding: 2px 6px;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      accent-color: var(--gold);
+      border: none;
+      background: transparent;
+    }
+
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .switch {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      display: inline-block;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: var(--border);
+      transition: 150ms;
+      cursor: pointer;
+    }
+
+    .switch-slider::before {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 3px;
+      top: 3px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      transition: 150ms;
+    }
+
+    .switch input:checked + .switch-slider {
+      background: var(--gold);
+    }
+
+    .switch input:checked + .switch-slider::before {
+      transform: translateX(14px);
+      background: #111;
+    }
+
+    .debug-card {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #101010;
+      padding: 8px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .debug-row {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .debug-row .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bridge-ok {
+      color: var(--text-success);
+    }
+
+    .bridge-warn {
+      color: var(--text-warning);
+    }
+
+    pre#diagnostics {
+      margin: 8px 0 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #0e0e0e;
+      color: #bfc6ce;
+      font-size: 11px;
+      line-height: 1.25;
+      padding: 8px;
+      max-height: 180px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body class="mode-emitter">
+  <header class="header">
+    <div class="logo">LOCUSQ</div>
+    <div class="mode-tabs">
+      <button class="mode-tab" data-mode="calibrate" type="button">Calibrate</button>
+      <button class="mode-tab active" data-mode="emitter" type="button">Emitter</button>
+      <button class="mode-tab" data-mode="renderer" type="button">Renderer</button>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="scene-status" id="scene-status">STABLE</div>
+    <div class="viewport-lock">VIEWPORT LOCK</div>
+    <div class="room-profile">
+      <span class="room-dot" id="room-dot"></span>
+      <span id="room-label">No Profile</span>
+    </div>
+    <button class="quality-badge draft" id="quality-badge" type="button">DRAFT</button>
+  </header>
+
+  <main class="layout">
+    <section class="viewport-shell">
+      <canvas id="viewport-canvas"></canvas>
+
+      <div class="view-buttons">
+        <button class="view-btn active" data-view="perspective" type="button">P</button>
+        <button class="view-btn" data-view="top" type="button">T</button>
+        <button class="view-btn" data-view="front" type="button">F</button>
+        <button class="view-btn" data-view="side" type="button">S</button>
+      </div>
+
+      <div class="viewport-overlay" id="viewport-info">Emitter Mode - 0 objects</div>
+
+      <div class="timeline visible" id="timeline">
+        <div class="timeline-header">
+          <span>Timeline (Emitter only)</span>
+          <span class="value" id="timeline-time">00:00.000</span>
+        </div>
+        <div class="lane-list">
+          <button class="lane selected" data-lane="azimuth" type="button"><span>Azimuth</span><span>ease</span></button>
+          <button class="lane" data-lane="elevation" type="button"><span>Elevation</span><span>ease</span></button>
+          <button class="lane" data-lane="distance" type="button"><span>Distance</span><span>ease</span></button>
+          <button class="lane" data-lane="size" type="button"><span>Size</span><span>step</span></button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rail" id="rail">
+      <section class="rail-panel" data-panel="calibrate">
+        <div class="rail-title">Calibrate</div>
+        <div class="section">
+          <div class="section-header">Setup</div>
+          <div class="row"><span class="label">Mode Contract</span><span class="value">Viewport Persistent</span></div>
+          <div class="row"><span class="label">Timeline</span><span class="value">Hidden</span></div>
+          <div class="row"><span class="label">Rail Width</span><span class="value">320 px</span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Core Controls</div>
+          <div class="row">
+            <span class="label">Speaker Config</span>
+            <select id="choice-cal-spk-config"></select>
+          </div>
+          <div class="row">
+            <span class="label">Mic Channel</span>
+            <input id="slider-cal-mic-channel" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">SPK1 Out</span>
+            <input id="slider-cal-spk1-out" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">SPK2 Out</span>
+            <input id="slider-cal-spk2-out" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">SPK3 Out</span>
+            <input id="slider-cal-spk3-out" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">SPK4 Out</span>
+            <input id="slider-cal-spk4-out" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">Test Level</span>
+            <input id="slider-cal-test-level" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">Test Type</span>
+            <select id="choice-cal-test-type"></select>
+          </div>
+          <div class="row">
+            <span class="label">Status</span>
+            <span class="value" id="status-calibrate-core">Config n/a · Mic CH n/a · Out 1/2/3/4 · Level 0% · Type n/a</span>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-header">Capture</div>
+          <div class="row">
+            <span class="label">Measure</span>
+            <div class="action-stack">
+              <button id="btn-cal-measure" class="action-btn" type="button">START MEASURE</button>
+              <button id="btn-cal-redetect" class="action-btn secondary" type="button">RE-DETECT ROUTING</button>
+            </div>
+          </div>
+          <div class="row">
+            <span class="label">Routing</span>
+            <span class="value wrap" id="status-cal-routing">Detecting output layout...</span>
+          </div>
+          <div class="row">
+            <span class="label">Progress</span>
+            <span class="value" id="status-cal-progress">IDLE 0%</span>
+          </div>
+          <div class="row">
+            <span class="label">Message</span>
+            <span class="value wrap" id="status-cal-message">Idle - press Start to begin calibration</span>
+          </div>
+          <div class="cal-progress"><div class="cal-progress-bar" id="cal-progress-bar"></div></div>
+          <div class="cal-status-list" id="cal-status-list">
+            <div class="cal-status-row"><span id="cal-spk1-dot" class="cal-status-dot"></span><span id="cal-spk1-status">SPK1: Not measured</span></div>
+            <div class="cal-status-row"><span id="cal-spk2-dot" class="cal-status-dot"></span><span id="cal-spk2-status">SPK2: Not measured</span></div>
+            <div class="cal-status-row"><span id="cal-spk3-dot" class="cal-status-dot"></span><span id="cal-spk3-status">SPK3: Not measured</span></div>
+            <div class="cal-status-row"><span id="cal-spk4-dot" class="cal-status-dot"></span><span id="cal-spk4-status">SPK4: Not measured</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rail-panel active" data-panel="emitter">
+        <div class="rail-title">Emitter</div>
+        <div class="section">
+          <div class="section-header">Core Controls</div>
+          <div class="row">
+            <span class="label">Size Link</span>
+            <label class="switch">
+              <input id="toggle-size-link" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Size Uniform</span>
+            <input id="slider-size-uniform" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row"><span class="label">Size Value</span><span class="value" id="readout-size-uniform">n/a</span></div>
+          <div class="row">
+            <span class="label">Physics Enable</span>
+            <label class="switch">
+              <input id="toggle-phys-enable" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Animation</div>
+          <div class="row">
+            <span class="label">Enable</span>
+            <label class="switch">
+              <input id="toggle-anim-enable" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Source</span>
+            <select id="choice-anim-mode"></select>
+          </div>
+          <div class="row">
+            <span class="label">Loop</span>
+            <label class="switch">
+              <input id="toggle-anim-loop" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Sync</span>
+            <label class="switch">
+              <input id="toggle-anim-sync" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">Emitter Audio</div>
+          <div class="row">
+            <span class="label">Mute</span>
+            <label class="switch">
+              <input id="toggle-emit-mute" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Solo</span>
+            <label class="switch">
+              <input id="toggle-emit-solo" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Gain</span>
+            <input id="slider-emit-gain" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">Spread</span>
+            <input id="slider-emit-spread" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">Directivity</span>
+            <input id="slider-emit-directivity" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">Gravity Dir</span>
+            <select id="choice-phys-gravity-dir"></select>
+          </div>
+          <div class="row">
+            <span class="label">Status</span>
+            <span class="value" id="status-emitter-audio">Mute OFF · Solo OFF · Gain 0% · Spread 0% · Dir 0% · Gravity n/a</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="rail-panel" data-panel="renderer">
+        <div class="rail-title">Renderer</div>
+        <div class="section">
+          <div class="section-header">Monitoring</div>
+          <div class="row"><span class="label">Mode Contract</span><span class="value">Viewport Persistent</span></div>
+          <div class="row"><span class="label">Timeline</span><span class="value">Hidden</span></div>
+          <div class="row"><span class="label">Rail Width</span><span class="value">304 px</span></div>
+          <div class="row"><span class="label">Quality</span><span class="value" id="readout-quality">Draft</span></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Core Controls</div>
+          <div class="row">
+            <span class="label">Master Gain</span>
+            <input id="slider-rend-master-gain" type="range" min="0" max="1" step="0.001" />
+          </div>
+          <div class="row">
+            <span class="label">Distance Model</span>
+            <select id="choice-rend-distance-model"></select>
+          </div>
+          <div class="row">
+            <span class="label">Doppler</span>
+            <label class="switch">
+              <input id="toggle-rend-doppler" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Room Enable</span>
+            <label class="switch">
+              <input id="toggle-rend-room-enable" type="checkbox" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div class="row">
+            <span class="label">Physics Rate</span>
+            <select id="choice-rend-phys-rate"></select>
+          </div>
+          <div class="row">
+            <span class="label">View Mode</span>
+            <select id="choice-rend-viz-mode"></select>
+          </div>
+          <div class="row">
+            <span class="label">Status</span>
+            <span class="value" id="status-renderer-core">Master 0% · Distance n/a · Doppler OFF · Room OFF · Rate n/a · View n/a</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="debug-card">
+        <div class="debug-row"><span>Bridge</span><span class="mono bridge-warn" id="bridge-state">init</span></div>
+        <div class="debug-row"><span>Mode (live)</span><span class="mono" id="mode-live">emitter</span></div>
+        <div class="debug-row"><span>set* (toggle/choice/slider)</span><span class="mono" id="count-set">0 / 0 / 0</span></div>
+        <div class="debug-row"><span>valueChanged (toggle/choice/slider)</span><span class="mono" id="count-value">0 / 0 / 0</span></div>
+        <div class="debug-row"><span>propertiesChanged (toggle/choice/slider)</span><span class="mono" id="count-props">0 / 0 / 0</span></div>
+        <div class="debug-row"><span>Live (size_link/quality/size_uniform)</span><span class="mono" id="count-live">0 / ? / ?</span></div>
+        <div class="debug-row"><span>Heartbeat</span><span class="mono" id="count-heartbeat">0</span></div>
+      </section>
+
+      <pre id="diagnostics"></pre>
+    </aside>
+  </main>
+</body>
+</html>

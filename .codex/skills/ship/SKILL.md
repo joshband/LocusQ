@@ -1,9 +1,3 @@
-Title: APC Skill: ship
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_ship
 description: "Packaging and distribution workflow for APC plugins across supported platforms."

@@ -641,8 +641,10 @@ void LocusQAudioProcessor::primeRendererStateFromCurrentParameters()
 }
 
 //==============================================================================
-juce::String LocusQAudioProcessor::getSceneStateJSON() const
+juce::String LocusQAudioProcessor::getSceneStateJSON()
 {
+    applyAutoDetectedCalibrationRoutingIfAppropriate (getSnapshotOutputChannels(), false);
+
     // Build JSON scene snapshot for WebView
     juce::String json = "{\"emitters\":[";
     bool first = true;
@@ -667,6 +669,24 @@ juce::String LocusQAudioProcessor::getSceneStateJSON() const
         outputChannelLabelsJson = "[\"L\",\"R\"]";
         rendererOutputMode = "stereo_downmix";
     }
+
+    const auto currentCalSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
+    const auto currentCalSpeakerRouting = getCurrentCalibrationSpeakerRouting();
+    const auto toRoutingJson = [] (const std::array<int, SpatialRenderer::NUM_SPEAKERS>& routing)
+    {
+        juce::String jsonArray { "[" };
+        for (size_t i = 0; i < routing.size(); ++i)
+        {
+            if (i > 0)
+                jsonArray << ",";
+            jsonArray << juce::String (juce::jlimit (1, 8, routing[i]));
+        }
+        jsonArray << "]";
+        return jsonArray;
+    };
+
+    const auto currentCalSpeakerRoutingJson = toRoutingJson (currentCalSpeakerRouting);
+    const auto autoDetectedRoutingJson = toRoutingJson (lastAutoDetectedSpeakerRouting);
 
     {
         const juce::SpinLock::ScopedTryLockType timelineLock (keyframeTimelineLock);
@@ -721,6 +741,12 @@ juce::String LocusQAudioProcessor::getSceneStateJSON() const
           + ",\"rendererOutputChannels\":" + outputChannelLabelsJson
           + ",\"rendererInternalSpeakers\":" + internalSpeakerLabelsJson
           + ",\"rendererQuadMap\":" + quadOutputMapJson
+          + ",\"calCurrentSpeakerConfig\":" + juce::String (currentCalSpeakerConfig)
+          + ",\"calCurrentSpeakerMap\":" + currentCalSpeakerRoutingJson
+          + ",\"calAutoRoutingApplied\":" + juce::String (hasAppliedAutoDetectedCalibrationRouting ? "true" : "false")
+          + ",\"calAutoRoutingOutputChannels\":" + juce::String (lastAutoDetectedOutputChannels)
+          + ",\"calAutoRoutingSpeakerConfig\":" + juce::String (lastAutoDetectedSpeakerConfig)
+          + ",\"calAutoRoutingMap\":" + autoDetectedRoutingJson
           + ",\"animEnabled\":" + juce::String (apvts.getRawParameterValue ("anim_enable")->load() > 0.5f ? "true" : "false")
           + ",\"animMode\":" + juce::String (static_cast<int> (apvts.getRawParameterValue ("anim_mode")->load()))
           + ",\"animTime\":" + juce::String (timelineTime, 3)
@@ -737,11 +763,24 @@ juce::String LocusQAudioProcessor::getSceneStateJSON() const
 //==============================================================================
 bool LocusQAudioProcessor::startCalibrationFromUI (const juce::var& options)
 {
+    applyAutoDetectedCalibrationRoutingIfAppropriate (getSnapshotOutputChannels(), false);
+
     if (getCurrentMode() != LocusQMode::Calibrate)
         return false;
 
-    if (calibrationEngine.getState() != CalibrationEngine::State::Idle)
+    const auto state = calibrationEngine.getState();
+    if (state == CalibrationEngine::State::Playing
+        || state == CalibrationEngine::State::Recording
+        || state == CalibrationEngine::State::Analyzing)
+    {
         return false;
+    }
+
+    if (state == CalibrationEngine::State::Complete
+        || state == CalibrationEngine::State::Error)
+    {
+        calibrationEngine.abortCalibration();
+    }
 
     int testTypeIndex = static_cast<int> (apvts.getRawParameterValue ("cal_test_type")->load());
     float levelDb     = apvts.getRawParameterValue ("cal_test_level")->load();
@@ -814,6 +853,28 @@ bool LocusQAudioProcessor::startCalibrationFromUI (const juce::var& options)
 void LocusQAudioProcessor::abortCalibrationFromUI()
 {
     calibrationEngine.abortCalibration();
+}
+
+juce::var LocusQAudioProcessor::redetectCalibrationRoutingFromUI()
+{
+    applyAutoDetectedCalibrationRoutingIfAppropriate (getSnapshotOutputChannels(), true);
+
+    juce::var resultVar (new juce::DynamicObject());
+    auto* result = resultVar.getDynamicObject();
+    if (result == nullptr)
+        return resultVar;
+
+    result->setProperty ("ok", true);
+    result->setProperty ("outputChannels", getSnapshotOutputChannels());
+    result->setProperty ("speakerConfigIndex", getCurrentCalibrationSpeakerConfigIndex());
+
+    juce::Array<juce::var> routing;
+    const auto map = getCurrentCalibrationSpeakerRouting();
+    for (const auto channel : map)
+        routing.add (juce::jlimit (1, 8, channel));
+    result->setProperty ("routing", juce::var (routing));
+
+    return resultVar;
 }
 
 juce::var LocusQAudioProcessor::getCalibrationStatus() const
@@ -1110,6 +1171,84 @@ int LocusQAudioProcessor::getSnapshotOutputChannels() const
     return juce::jmax (1, getTotalNumOutputChannels());
 }
 
+std::array<int, SpatialRenderer::NUM_SPEAKERS> LocusQAudioProcessor::getCurrentCalibrationSpeakerRouting() const
+{
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> routing { 1, 2, 3, 4 };
+
+    routing[0] = static_cast<int> (apvts.getRawParameterValue ("cal_spk1_out")->load());
+    routing[1] = static_cast<int> (apvts.getRawParameterValue ("cal_spk2_out")->load());
+    routing[2] = static_cast<int> (apvts.getRawParameterValue ("cal_spk3_out")->load());
+    routing[3] = static_cast<int> (apvts.getRawParameterValue ("cal_spk4_out")->load());
+
+    for (auto& channel : routing)
+        channel = juce::jlimit (1, 8, channel);
+
+    return routing;
+}
+
+int LocusQAudioProcessor::getCurrentCalibrationSpeakerConfigIndex() const
+{
+    return juce::jlimit (0, 1, static_cast<int> (apvts.getRawParameterValue ("cal_spk_config")->load()));
+}
+
+void LocusQAudioProcessor::applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force)
+{
+    const auto clampedOutputChannels = juce::jlimit (1, 8, outputChannels);
+
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> autoRouting { 1, 2, 3, 4 };
+    int autoSpeakerConfig = 0; // 0 = 4x Mono, 1 = 2x Stereo
+
+    if (clampedOutputChannels == 1)
+    {
+        autoSpeakerConfig = 1;
+        autoRouting = { 1, 1, 1, 1 };
+    }
+    else if (clampedOutputChannels == 2)
+    {
+        autoSpeakerConfig = 1;
+        autoRouting = { 1, 2, 1, 2 };
+    }
+    else if (clampedOutputChannels == 3)
+    {
+        autoSpeakerConfig = 0;
+        autoRouting = { 1, 2, 3, 3 };
+    }
+
+    const auto currentRouting = getCurrentCalibrationSpeakerRouting();
+    const auto currentSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
+    const auto isFactoryMonoRouting = currentSpeakerConfig == 0
+                                      && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 3, 4 };
+    const auto isFactoryStereoRouting = currentSpeakerConfig == 1
+                                        && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 1, 2 };
+    const auto isFactoryMonoByChoice = currentSpeakerConfig == 0
+                                       && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 1, 2 };
+    const auto followsPreviousAuto = hasAppliedAutoDetectedCalibrationRouting
+                                     && currentSpeakerConfig == lastAutoDetectedSpeakerConfig
+                                     && currentRouting == lastAutoDetectedSpeakerRouting;
+
+    if (! force && ! followsPreviousAuto && ! isFactoryMonoRouting && ! isFactoryStereoRouting && ! isFactoryMonoByChoice)
+        return;
+
+    if (hasAppliedAutoDetectedCalibrationRouting
+        && clampedOutputChannels == lastAutoDetectedOutputChannels
+        && autoSpeakerConfig == lastAutoDetectedSpeakerConfig
+        && autoRouting == lastAutoDetectedSpeakerRouting)
+    {
+        return;
+    }
+
+    setIntegerParameterValueNotifyingHost ("cal_spk_config", autoSpeakerConfig);
+    setIntegerParameterValueNotifyingHost ("cal_spk1_out", autoRouting[0]);
+    setIntegerParameterValueNotifyingHost ("cal_spk2_out", autoRouting[1]);
+    setIntegerParameterValueNotifyingHost ("cal_spk3_out", autoRouting[2]);
+    setIntegerParameterValueNotifyingHost ("cal_spk4_out", autoRouting[3]);
+
+    hasAppliedAutoDetectedCalibrationRouting = true;
+    lastAutoDetectedOutputChannels = clampedOutputChannels;
+    lastAutoDetectedSpeakerConfig = autoSpeakerConfig;
+    lastAutoDetectedSpeakerRouting = autoRouting;
+}
+
 void LocusQAudioProcessor::setIntegerParameterValueNotifyingHost (const char* parameterId, int value)
 {
     if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter (parameterId)))
@@ -1146,16 +1285,20 @@ void LocusQAudioProcessor::migrateSnapshotLayoutIfNeeded (const juce::ValueTree&
         return;
 
     std::array<int, SpatialRenderer::NUM_SPEAKERS> migratedSpeakerMap { 1, 2, 3, 4 };
+    int migratedSpeakerConfig = 0;
 
     if (currentOutputChannels == 1)
     {
         migratedSpeakerMap.fill (1);
+        migratedSpeakerConfig = 1;
     }
     else if (currentOutputChannels == 2)
     {
         migratedSpeakerMap = { 1, 2, 1, 2 };
+        migratedSpeakerConfig = 1;
     }
 
+    setIntegerParameterValueNotifyingHost ("cal_spk_config", migratedSpeakerConfig);
     setIntegerParameterValueNotifyingHost ("cal_spk1_out", migratedSpeakerMap[0]);
     setIntegerParameterValueNotifyingHost ("cal_spk2_out", migratedSpeakerMap[1]);
     setIntegerParameterValueNotifyingHost ("cal_spk3_out", migratedSpeakerMap[2]);
@@ -1578,6 +1721,7 @@ void LocusQAudioProcessor::setStateInformation (const void* data, int sizeInByte
 
             const auto state = apvts.copyState();
             migrateSnapshotLayoutIfNeeded (state);
+            applyAutoDetectedCalibrationRoutingIfAppropriate (getSnapshotOutputChannels(), false);
 
             if (state.hasProperty ("locusq_timeline_json"))
             {

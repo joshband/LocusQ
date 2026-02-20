@@ -44,3 +44,7 @@ _tools/JUCE/
 # Temp
 *.log
 *.tmp
+
+# Python
+__pycache__/
+*.pyc

@@ -1,9 +1,3 @@
-Title: APC Skill: debug
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_debug
 description: "Autonomous debugging instructions for Visual Studio Code plugin projects."

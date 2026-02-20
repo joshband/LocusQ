@@ -2,11 +2,11 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ Build Summary (Acceptance Closeout)
 
-Date (UTC): `2026-02-19`
+Date (UTC): `2026-02-20`
 
 ## Commands Run
 
@@ -1148,3 +1148,332 @@ Artifacts:
 - `plugins/LocusQ/TestEvidence/pluginval_strict5_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
 - `plugins/LocusQ/TestEvidence/pluginval_strict5_with_gui_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
 - `plugins/LocusQ/TestEvidence/standalone_open_test_full_acceptance_rerun_bridge_fix_20260219T212613Z.log`
+
+## Incremental Stage 2 Shell (UTC 2026-02-20)
+
+76. Rebuild standalone with incremental Stage 2 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+77. Standalone launch/title smoke after Stage 2 routing
+
+```sh
+open build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+pgrep -x LocusQ | wc -l
+osascript # query front window title/geometry
+```
+
+Result: `PASS` (`process_count=1`, window title `LocusQ v0.1.0 [incremental-stage2]`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage2_20260220T015353Z.log`
+- `TestEvidence/locusq_standalone_incremental_stage2_smoke_20260220T015702Z.log`
+- `TestEvidence/locusq_incremental_stage2_window_20260220T020057Z.png`
+
+## Incremental Stage 3 Emitter Audio Block (UTC 2026-02-20)
+
+78. Rebuild standalone with incremental Stage 3 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+79. Standalone smoke after Stage 3 default-route switch
+
+```sh
+osascript -e 'tell application "LocusQ" to quit' || true
+pkill -x LocusQ || true
+open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+pgrep -x LocusQ | wc -l
+osascript # optional window title probe (may require Accessibility permission)
+```
+
+Result: `PASS` (`process_count=1`; window-title probe unavailable in this run due OS automation visibility)
+
+80. Resource-provider probe for active Stage 3 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage3_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `17624`; `incremental/js/stage3_ui.js` loaded with size `48326`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage3_20260220T020821Z.log`
+- `TestEvidence/locusq_standalone_incremental_stage3_smoke_20260220T020854Z.log`
+- `TestEvidence/locusq_incremental_stage3_resource_probe_20260220T020938Z.log`
+
+## Incremental Stage 4 Emitter Audio Extended (UTC 2026-02-20)
+
+81. Rebuild standalone with incremental Stage 4 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+82. Standalone smoke after Stage 4 default-route switch
+
+```sh
+osascript -e 'tell application "LocusQ" to quit' || true
+pkill -x LocusQ || true
+open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+pgrep -x LocusQ | wc -l
+osascript # optional window title probe (may require Accessibility permission)
+```
+
+Result: `PASS` (`process_count=1`; window-title probe unavailable in this run due OS automation visibility)
+
+83. Resource-provider probe for active Stage 4 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage4_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `18284`; `incremental/js/stage4_ui.js` loaded with size `50147`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage4_20260220T021738Z.log`
+- `TestEvidence/locusq_standalone_incremental_stage4_smoke_20260220T021804Z.log`
+- `TestEvidence/locusq_incremental_stage4_resource_probe_20260220T021814Z.log`
+
+## Incremental Stage 4 UI Self-Test Automation (UTC 2026-02-20)
+
+84. Rebuild standalone with Stage 4 self-test hooks
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+85. Run automated Stage 4 UI interaction self-test
+
+```sh
+scripts/standalone-ui-selftest-stage4-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage4_selftestclean_20260220T023706Z.log`
+- `TestEvidence/locusq_incremental_stage4_selftest_20260220T023730Z.json`
+- `TestEvidence/locusq_incremental_stage4_selftest_20260220T023730Z.run.log`
+
+## Incremental Stage 4 UI PR Gate Default Self-Test (UTC 2026-02-20)
+
+86. Re-run Stage 4 self-test using `.app` path input
+
+```sh
+scripts/standalone-ui-selftest-stage4-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+87. Run UI PR gate with default self-test-first sequencing
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage4_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+Artifacts:
+- `TestEvidence/locusq_incremental_stage4_selftest_20260220T024215Z.json`
+- `TestEvidence/locusq_incremental_stage4_selftest_20260220T024215Z.run.log`
+- `TestEvidence/ui_pr_gate_20260220T024215Z/status.tsv`
+
+## Incremental Stage 5 Renderer Core + Automation (UTC 2026-02-20)
+
+88. Rebuild standalone with incremental Stage 5 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+89. Run automated Stage 5 self-test against standalone app path
+
+```sh
+scripts/standalone-ui-selftest-stage5-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+90. Run UI PR gate with Stage 5 self-test default
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage5_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+91. Resource-provider probe for active Stage 5 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage5_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `19808`; `incremental/js/stage5_ui.js` loaded with size `72020`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage5_20260220T025040Z.log`
+- `TestEvidence/locusq_incremental_stage5_selftest_20260220T025103Z.json`
+- `TestEvidence/locusq_incremental_stage5_selftest_20260220T025103Z.run.log`
+- `TestEvidence/locusq_incremental_stage5_selftest_20260220T025111Z.json`
+- `TestEvidence/locusq_incremental_stage5_selftest_20260220T025111Z.run.log`
+- `TestEvidence/ui_pr_gate_20260220T025111Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage5_resource_probe_20260220T025122Z.log`
+
+## Incremental Stage 6 Calibrate Core + Automation (UTC 2026-02-20)
+
+92. Rebuild standalone with incremental Stage 6 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+93. Run automated Stage 6 self-test against standalone app path
+
+```sh
+scripts/standalone-ui-selftest-stage6-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+94. Run UI PR gate with Stage 6 self-test default
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage6_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+95. Resource-provider probe for active Stage 6 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage6_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `20797`; `incremental/js/stage6_ui.js` loaded with size `82163`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage6_20260220T030058Z.log`
+- `TestEvidence/locusq_incremental_stage6_selftest_20260220T030123Z.json`
+- `TestEvidence/locusq_incremental_stage6_selftest_20260220T030123Z.run.log`
+- `TestEvidence/locusq_incremental_stage6_selftest_20260220T030133Z.json`
+- `TestEvidence/locusq_incremental_stage6_selftest_20260220T030133Z.run.log`
+- `TestEvidence/ui_pr_gate_20260220T030133Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage6_resource_probe_20260220T030144Z.log`
+
+## Incremental Stage 7 Calibrate Speaker Output Routing + Automation (UTC 2026-02-20)
+
+96. Rebuild standalone with incremental Stage 7 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+97. Run automated Stage 7 self-test against standalone app path
+
+```sh
+scripts/standalone-ui-selftest-stage7-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+98. Run UI PR gate with Stage 7 self-test default
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage7_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+99. Resource-provider probe for active Stage 7 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage7_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `21540`; `incremental/js/stage7_ui.js` loaded with size `89844`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage7_20260220T031152Z.log`
+- `TestEvidence/locusq_incremental_stage7_selftest_20260220T031217Z.json`
+- `TestEvidence/locusq_incremental_stage7_selftest_20260220T031217Z.run.log`
+- `TestEvidence/locusq_incremental_stage7_selftest_20260220T031226Z.json`
+- `TestEvidence/locusq_incremental_stage7_selftest_20260220T031226Z.run.log`
+- `TestEvidence/ui_pr_gate_20260220T031226Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage7_resource_probe_20260220T031234Z.log`
+
+## Incremental Stage 8 Calibrate Capture/Progress + Automation (UTC 2026-02-20)
+
+100. Rebuild standalone with incremental Stage 8 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+101. Run automated Stage 8 self-test against standalone app path
+
+```sh
+scripts/standalone-ui-selftest-stage8-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+102. Run UI PR gate with Stage 8 self-test default
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage8_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+103. Resource-provider probe for active Stage 8 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage8_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `24647`; `incremental/js/stage8_ui.js` loaded with size `98723`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage8_20260220T032953Z.log`
+- `TestEvidence/locusq_incremental_stage8_selftest_20260220T033017Z.json`
+- `TestEvidence/locusq_incremental_stage8_selftest_20260220T033017Z.run.log`
+- `TestEvidence/locusq_incremental_stage8_selftest_20260220T033031Z.json`
+- `TestEvidence/locusq_incremental_stage8_selftest_20260220T033031Z.run.log`
+- `TestEvidence/ui_pr_gate_20260220T033031Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage8_resource_probe_20260220T033040Z.log`
+
+## Stage 9+ Checklist Planning Snapshot (UTC 2026-02-20)
+
+104. Validate docs freshness after creating Stage 9+ detailed parity checklist documentation
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Artifacts:
+- Updated docs:
+  - `Documentation/v3-stage-9-plus-detailed-checklists.md`
+  - `Documentation/v3-ui-parity-checklist.md`
+  - `Documentation/README.md`

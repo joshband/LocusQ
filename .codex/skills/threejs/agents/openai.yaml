@@ -1,0 +1,4 @@
+interface:
+  display_name: "Three.js"
+  short_description: "Build and debug Three.js UI workflows"
+  default_prompt: "Help build and debug Three.js scenes, interactions, and performance."

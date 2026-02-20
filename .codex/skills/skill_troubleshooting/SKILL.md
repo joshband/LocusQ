@@ -1,9 +1,3 @@
-Title: APC Skill: skill_troubleshooting
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_troubleshooting
 description: "Troubleshooting and issue-resolution workflow for APC plugin build and runtime problems."

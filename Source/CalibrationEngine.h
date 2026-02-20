@@ -114,6 +114,7 @@ public:
                            int micInputChannel)
     {
         if (state_.load() != State::Idle) return;
+        abortRequested_.store (false, std::memory_order_release);
 
         type_          = type;
         testLevelDb_   = testLevelDb;
@@ -130,6 +131,8 @@ public:
     /** Abort calibration and return to Idle. */
     void abortCalibration()
     {
+        abortRequested_.store (true, std::memory_order_release);
+        analysisRequested_.store (false, std::memory_order_release);
         state_.store (State::Idle, std::memory_order_release);
     }
 
@@ -137,6 +140,12 @@ public:
     /** Real-time safe. Call from processBlock when mode == Calibrate. */
     void processBlock (juce::AudioBuffer<float>& buffer, int micInputChannel)
     {
+        if (abortRequested_.load (std::memory_order_acquire))
+        {
+            buffer.clear();
+            return;
+        }
+
         const auto state    = state_.load (std::memory_order_acquire);
         const int  numSamps = buffer.getNumSamples();
         const int  numCh    = buffer.getNumChannels();
@@ -190,7 +199,7 @@ public:
         switch (p.state)
         {
             case State::Idle:
-                p.message = "Idle — press Start to begin calibration";
+                p.message = "Idle - press Start to begin calibration";
                 break;
 
             case State::Playing:
@@ -198,7 +207,7 @@ public:
                 int total = generator_.getTotalSamples();
                 int pos   = generator_.getPlaybackPosition();
                 p.playPercent = total > 0 ? static_cast<float> (pos) / total : 0.0f;
-                p.message = "Playing test signal — Speaker "
+                p.message = "Playing test signal - Speaker "
                           + juce::String (p.currentSpeaker + 1) + " of 4";
                 break;
             }
@@ -208,18 +217,18 @@ public:
                 int exp = capture_.getExpectedLength();
                 int rec = capture_.getRecordedSamples();
                 p.recordPercent = exp > 0 ? static_cast<float> (rec) / exp : 0.0f;
-                p.message = "Recording room response — Speaker "
+                p.message = "Recording room response - Speaker "
                           + juce::String (p.currentSpeaker + 1) + " of 4";
                 break;
             }
 
             case State::Analyzing:
-                p.message = "Analysing impulse response — Speaker "
+                p.message = "Analysing impulse response - Speaker "
                           + juce::String (p.currentSpeaker + 1) + " of 4";
                 break;
 
             case State::Complete:
-                p.message = "Calibration complete — Room Profile ready";
+                p.message = "Calibration complete - Room Profile ready";
                 break;
 
             case State::Error:
@@ -240,6 +249,12 @@ private:
     // Called from the analysis background thread — allocations are fine here.
     void startSpeaker (int speakerIdx)
     {
+        if (abortRequested_.load (std::memory_order_acquire))
+        {
+            state_.store (State::Idle, std::memory_order_release);
+            return;
+        }
+
         currentSpeaker_.store (speakerIdx, std::memory_order_release);
         generator_.prepare (sampleRate_, type_, sweepDuration_, testLevelDb_);
         state_.store (State::Playing, std::memory_order_release);
@@ -254,10 +269,23 @@ private:
         {
             if (analysisRequested_.exchange (false, std::memory_order_acq_rel))
             {
+                if (abortRequested_.load (std::memory_order_acquire)
+                    || state_.load (std::memory_order_acquire) == State::Idle)
+                {
+                    continue;
+                }
+
                 int spk = currentSpeaker_.load (std::memory_order_acquire);
 
                 // --- IR deconvolution (expensive) ---
                 capture_.computeIR (generator_.getInverseFilter());
+
+                if (abortRequested_.load (std::memory_order_acquire)
+                    || state_.load (std::memory_order_acquire) == State::Idle)
+                {
+                    state_.store (State::Idle, std::memory_order_release);
+                    continue;
+                }
 
                 if (capture_.isIRReady())
                 {
@@ -265,6 +293,13 @@ private:
 
                     if (res.valid)
                     {
+                        if (abortRequested_.load (std::memory_order_acquire)
+                            || state_.load (std::memory_order_acquire) == State::Idle)
+                        {
+                            state_.store (State::Idle, std::memory_order_release);
+                            continue;
+                        }
+
                         auto& spkProfile = resultProfile_.speakers[spk];
                         spkProfile.delayComp = res.delayMs;
                         spkProfile.gainTrim  = res.gainTrimDb;
@@ -285,6 +320,13 @@ private:
                 }
 
                 // Advance to next speaker or finish
+                if (abortRequested_.load (std::memory_order_acquire)
+                    || state_.load (std::memory_order_acquire) == State::Idle)
+                {
+                    state_.store (State::Idle, std::memory_order_release);
+                    continue;
+                }
+
                 if (spk < 3)
                 {
                     startSpeaker (spk + 1);
@@ -322,6 +364,7 @@ private:
     // Atomic state
     std::atomic<State> state_             { State::Idle };
     std::atomic<int>   currentSpeaker_    { 0 };
+    std::atomic<bool>  abortRequested_    { false };
     std::atomic<bool>  analysisRunning_   { false };
     std::atomic<bool>  analysisRequested_ { false };
     std::thread        analysisThread_;

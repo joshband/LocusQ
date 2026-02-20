@@ -1,9 +1,3 @@
-Title: APC Skill: plan
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_plan
 description: "Architecture and planning phase for APC plugins, including DSP strategy and implementation planning."

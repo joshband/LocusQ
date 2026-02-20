@@ -1,9 +1,3 @@
-Title: APC Skill: design
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_design
 description: Create the Visual Interface for audio plugins. Use when user mentions UI design, mockup, WebView interface, or requests 'design UI for [plugin]'.

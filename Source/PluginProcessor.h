@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 #include <juce_gui_extra/juce_gui_extra.h>
+#include <array>
 #include <optional>
 #include "SceneGraph.h"
 #include "SpatialRenderer.h"
@@ -75,11 +76,12 @@ public:
     void primeRendererStateFromCurrentParameters();
 
     // Scene graph JSON for WebView (called from editor timer)
-    juce::String getSceneStateJSON() const;
+    juce::String getSceneStateJSON();
 
     // Calibration control/status API for WebView bridge
     bool startCalibrationFromUI (const juce::var& options);
     void abortCalibrationFromUI();
+    juce::var redetectCalibrationRoutingFromUI();
     juce::var getCalibrationStatus() const;
 
     // Timeline and preset API for WebView bridge (Phase 2.6)
@@ -140,6 +142,9 @@ private:
     juce::String getSnapshotOutputLayout() const;
     int getSnapshotOutputChannels() const;
     void migrateSnapshotLayoutIfNeeded (const juce::ValueTree& restoredState);
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> getCurrentCalibrationSpeakerRouting() const;
+    int getCurrentCalibrationSpeakerConfigIndex() const;
+    void applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force);
     void setIntegerParameterValueNotifyingHost (const char* parameterId, int value);
     juce::var buildEmitterPresetLocked (const juce::String& presetName) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
@@ -165,6 +170,10 @@ private:
     mutable juce::SpinLock uiStateLock;
     juce::String emitterLabelState { "Emitter" };
     juce::String physicsPresetState { "off" };
+    bool hasAppliedAutoDetectedCalibrationRouting = false;
+    int lastAutoDetectedOutputChannels = 0;
+    int lastAutoDetectedSpeakerConfig = 0;
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> lastAutoDetectedSpeakerRouting { 1, 2, 3, 4 };
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LocusQAudioProcessor)

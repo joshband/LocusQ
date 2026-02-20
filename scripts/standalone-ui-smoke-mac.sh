@@ -41,6 +41,48 @@ echo "app_path: $APP_PATH"
 echo "app_name: $APP_NAME"
 echo "out_dir:  $OUT_DIR"
 
+close_all_app_instances() {
+  local phase="$1"
+  local pids
+  pids="$(pgrep -x "$APP_NAME" || true)"
+  if [[ -z "$pids" ]]; then
+    return 0
+  fi
+
+  echo "[${phase}] Closing existing ${APP_NAME} instance(s): $(echo "$pids" | tr '\n' ' ')"
+  osascript >/dev/null 2>&1 <<OSA || true
+tell application "$APP_NAME" to quit
+OSA
+
+  for _ in {1..40}; do
+    if ! pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.15
+  done
+
+  echo "[${phase}] Graceful quit timed out; sending TERM."
+  pkill -TERM -x "$APP_NAME" >/dev/null 2>&1 || true
+  for _ in {1..20}; do
+    if ! pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.15
+  done
+
+  echo "[${phase}] TERM timed out; sending KILL."
+  pkill -KILL -x "$APP_NAME" >/dev/null 2>&1 || true
+}
+
+cleanup() {
+  local exit_code="$?"
+  close_all_app_instances "cleanup"
+  if [[ "$exit_code" -ne 0 ]]; then
+    echo "Smoke script exited with code ${exit_code}"
+  fi
+}
+trap cleanup EXIT INT TERM
+
 osascript -e 'tell application "System Events" to UI elements enabled' >/dev/null \
   || { echo "ERROR: UI scripting is not enabled. Enable Accessibility for Terminal and Script Editor."; exit 3; }
 
@@ -58,7 +100,8 @@ then
   exit 3
 fi
 
-open -na "$APP_PATH"
+close_all_app_instances "preflight"
+open "$APP_PATH"
 
 for _ in {1..50}; do
   if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
@@ -329,9 +372,7 @@ run_click_test "UI-03-toggle-size"   1228 394 1190 374  80 42 0.45
 run_click_test "UI-04-pos-mode-dd"   1212 217 1088 194 154 32 0.30
 run_text_test  "UI-05-emit-label"    1140 139 "AutoUITest" 1040 118 220 30 0.35
 
-osascript >/dev/null <<OSA
-tell application "$APP_NAME" to quit
-OSA
+close_all_app_instances "post-run"
 
 echo
 echo "Summary: $SUMMARY_TSV"

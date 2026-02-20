@@ -1,9 +1,3 @@
-Title: APC Skill: test
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_test
 description: "Testing phase entrypoint that routes APC plugin validation through the testing workflow."

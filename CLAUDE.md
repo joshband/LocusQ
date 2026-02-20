@@ -1,22 +1,23 @@
-Title: Claude Operating Contract
+Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
+Last Modified Date: 2026-02-19
 
 # CLAUDE.md
 
 ## Purpose
-Assistant operating contract for the `audio-plugin-coder` repository.
-Use this file for behavior and quality rules. Use `AGENTS.md` for command routing.
+Claude-specific operating contract for the standalone `LocusQ` repository.
+Use this file for behavior and quality rules. Use `AGENTS.md` for routing.
 
 ## Priority Order
-1. User request
-2. Safety and correctness
-3. This file
-4. `AGENTS.md`
-5. Workflow and skill files under `.codex/`
-6. Existing code conventions
+1. User request.
+2. Safety and correctness.
+3. This file.
+4. `AGENTS.md`.
+5. `CODEX.md`.
+6. Workflow and skill files under `.codex/`.
+7. Existing code conventions.
 
 ## Default Mode
 - Execute directly with minimal, targeted edits.
@@ -24,29 +25,14 @@ Use this file for behavior and quality rules. Use `AGENTS.md` for command routin
 - Do not revert unrelated user changes.
 - Validate with the smallest meaningful checks first.
 
-## Command Routing
-If input starts with a slash command, route to:
-- `/dream [PluginName]` -> `.codex/workflows/dream.md`
-- `/plan [PluginName]` -> `.codex/workflows/plan.md`
-- `/design [PluginName]` -> `.codex/workflows/design.md`
-- `/impl [PluginName]` -> `.codex/workflows/impl.md`
-- `/test [PluginName]` -> `.codex/workflows/test.md`
-- `/ship [PluginName]` -> `.codex/workflows/ship.md`
-- `/status [PluginName]` -> `.codex/workflows/status.md`
-- `/resume [PluginName]` -> `.codex/workflows/resume.md`
-- `/new [PluginName]` -> `.codex/workflows/new.md`
-
-For clear natural-language intent, map to the same workflows.
-
 ## Required Loading Sequence
-For workflow execution, always load in this order:
 1. `.codex/rules/agent.md`
 2. Selected file in `.codex/workflows/`
 3. Referenced skill file in `.codex/skills/`
 
 ## Phase Discipline
 - Enforce one phase at a time.
-- Read `plugins/[PluginName]/status.json` before phase work.
+- Read `status.json` before phase work.
 - Update `status.json` as phase state changes.
 - Do not auto-advance to the next phase.
 - Stop after completing the requested command output.
@@ -58,21 +44,20 @@ For workflow execution, always load in this order:
 - `pending`: block framework-specific implementation until planning resolves it.
 
 ## Spec/Invariant/ADR Discipline
-- Treat `.ideas/architecture.md`, `.ideas/parameter-spec.md`, `.ideas/plan.md`, `Documentation/invariants.md`, and `Documentation/adr/*.md` as normative references for implementation decisions.
+- Treat `.ideas/architecture.md`, `.ideas/parameter-spec.md`, `.ideas/plan.md`, `Documentation/invariants.md`, and `Documentation/adr/*.md` as normative references.
 - Do not ship code that conflicts with documented invariants or ADR decisions.
 - If a change must override an invariant/ADR, record the decision in a new ADR before closing the task.
 
 ## Expected Project Layout
-Per plugin, keep work inside:
-- `plugins/[PluginName]/.ideas/`
-- `plugins/[PluginName]/Design/`
-- `plugins/[PluginName]/Source/`
-- `plugins/[PluginName]/status.json`
+Keep work inside:
+- `.ideas/`
+- `Design/`
+- `Source/`
+- `status.json`
 
-Keep build artifacts and shipping assets in repository-level build and dist paths.
+Keep build artifacts and shipping assets in repository build/dist paths.
 
 ## Quality Contract
-Every response and code change should be:
 - Clear: explicit assumptions and scope boundaries.
 - Accurate: verify claims against repository sources.
 - Concise: high signal, no filler.
@@ -102,7 +87,5 @@ For simple tasks, use one short paragraph or up to three bullets.
 ## Documentation Hygiene
 - Keep this file aligned with `AGENTS.md` and `.codex/workflows/*`.
 - When workflow/skill behavior changes, update this file in the same change set.
-- Keep rule parity through `AGENT_RULE.md` and run `pwsh ./scripts/sync-agent-contract.ps1` after contract edits.
-- Keep parity-managed APC workflow/skill files synced through the same script across both `.codex` and `.claude`.
 - Enforce markdown metadata (`Title`, `Document Type`, `Author`, `Created Date`, `Last Modified Date`) for human-authored docs in root, `.codex/`, `.claude/`, `.ideas/`, `Design/`, `Documentation/`, and `TestEvidence/`.
 - Track validation snapshots/trends in `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.

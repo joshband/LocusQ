@@ -1,6 +1,47 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "BinaryData.h"
+#include <cstdlib>
+
+namespace
+{
+juce::String getInitialUiResourcePath()
+{
+    return "/incremental/index.html";
+}
+
+juce::String getStandaloneWindowTitle()
+{
+    return juce::String (JucePlugin_Name)
+        + " v" + juce::String (JucePlugin_VersionString)
+        + " [incremental-stage9]";
+}
+
+bool isUiSelfTestEnabled()
+{
+    if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST"))
+    {
+        const auto value = juce::String (flag).trim().toLowerCase();
+        if (value.isNotEmpty() && value != "0" && value != "false" && value != "off")
+            return true;
+    }
+
+    return false;
+}
+
+juce::File getUiSelfTestResultFile()
+{
+    if (const auto* path = std::getenv ("LOCUSQ_UI_SELFTEST_RESULT_PATH"))
+    {
+        const auto configuredPath = juce::String (path).trim();
+        if (configuredPath.isNotEmpty())
+            return juce::File (configuredPath);
+    }
+
+    return juce::File::getSpecialLocation (juce::File::tempDirectory)
+        .getChildFile ("locusq_incremental_ui_selftest_result.json");
+}
+} // namespace
 
 //==============================================================================
 LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
@@ -12,8 +53,8 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
     // CRITICAL: CREATION ORDER
     // 1. Relays already created (member initialization)
     // 2. Create WebBrowserComponent
-    // 3. addAndMakeVisible
-    // 4. Create attachments AFTER WebView
+    // 3. Create attachments (before browser visibility/navigation)
+    // 4. addAndMakeVisible + goToURL
     //==========================================================================
 
     // Create WebBrowserComponent with platform-aware backend
@@ -47,6 +88,12 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
                              {
                                  audioProcessor.abortCalibrationFromUI();
                                  completion (true);
+                             })
+        .withNativeFunction ("locusqRedetectCalibrationRouting",
+                             [this] (const juce::Array<juce::var>&,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.redetectCalibrationRoutingFromUI());
                              })
         .withNativeFunction ("locusqGetKeyframeTimeline",
                              [this] (const juce::Array<juce::var>&,
@@ -116,6 +163,54 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
                                  completion (audioProcessor.setUIStateFromUI (args[0]));
                              })
+        .withNativeFunction ("locusqGetChoiceItems",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 juce::Array<juce::var> values;
+
+                                 if (! args.isEmpty() && args[0].isString())
+                                 {
+                                     const auto parameterId = args[0].toString();
+                                     if (auto* parameter = audioProcessor.apvts.getParameter (parameterId))
+                                     {
+                                         if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (parameter))
+                                         {
+                                             for (const auto& item : choice->choices)
+                                                 values.add (item);
+                                         }
+                                     }
+                                 }
+
+                                 completion (juce::var (values));
+                             })
+        .withNativeFunction ("locusqWriteUiSelfTestResult",
+                             [] (const juce::Array<juce::var>& args,
+                                 juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const auto resultFile = getUiSelfTestResultFile();
+                                 resultFile.getParentDirectory().createDirectory();
+
+                                 juce::var payload (new juce::DynamicObject());
+                                 if (auto* object = payload.getDynamicObject())
+                                 {
+                                     object->setProperty ("timestampUtc", juce::Time::getCurrentTime().toISO8601 (true));
+                                     object->setProperty ("selftestEnabled", isUiSelfTestEnabled());
+                                     object->setProperty ("payload", args.isEmpty() ? juce::var() : args[0]);
+                                 }
+
+                                 const auto json = juce::JSON::toString (payload, true);
+                                 const auto writeOk = resultFile.replaceWithText (json);
+
+                                 juce::var response (new juce::DynamicObject());
+                                 if (auto* object = response.getDynamicObject())
+                                 {
+                                     object->setProperty ("ok", writeOk);
+                                     object->setProperty ("path", resultFile.getFullPathName());
+                                 }
+
+                                 completion (response);
+                             })
         .withResourceProvider ([this] (const auto& url) { return getResource (url); })
         .withOptionsFrom (modeRelay)
         .withOptionsFrom (bypassRelay)
@@ -170,10 +265,7 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     webView = std::make_unique<juce::WebBrowserComponent> (std::move (webViewOptions));
 
-    addAndMakeVisible (*webView);
-    webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
-
-    // Create parameter attachments after WebView is alive
+    // Create parameter attachments before exposing/loading the WebView.
     modeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("mode"), modeRelay);
     bypassAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
@@ -282,6 +374,20 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
     vizModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_viz_mode"), vizModeRelay);
 
+    addAndMakeVisible (*webView);
+
+    const auto initialResourcePath = getInitialUiResourcePath();
+    const auto normalizedInitialPath = (initialResourcePath == "/") ? "/index.html" : initialResourcePath;
+    const auto cacheBust = juce::String (juce::Time::getCurrentTime().toMilliseconds());
+    auto initialUrl = juce::WebBrowserComponent::getResourceProviderRoot()
+        + normalizedInitialPath + "?cb=" + cacheBust;
+
+    if (isUiSelfTestEnabled())
+        initialUrl += "&selftest=1";
+
+    DBG ("LocusQ: Loading UI path " + initialResourcePath);
+    webView->goToURL (initialUrl);
+
     // Start timer for scene state updates (~30fps)
     startTimerHz (30);
 
@@ -311,6 +417,8 @@ void LocusQAudioProcessorEditor::timerCallback()
 {
     if (webView == nullptr) return;
 
+    updateStandaloneWindowTitle();
+
     // Push scene state JSON to the WebView for 3D viewport updates
     auto json = audioProcessor.getSceneStateJSON();
     webView->evaluateJavascript (
@@ -319,6 +427,157 @@ void LocusQAudioProcessorEditor::timerCallback()
     auto calibrationJSON = juce::JSON::toString (audioProcessor.getCalibrationStatus());
     webView->evaluateJavascript (
         "if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(" + calibrationJSON + ");");
+
+    if (! runtimeProbeDone)
+    {
+        ++runtimeProbeTicks;
+
+        if (runtimeProbeTicks >= 60)
+        {
+            runtimeProbeDone = true;
+
+            const auto probeFile = juce::File::getSpecialLocation (juce::File::tempDirectory)
+                .getChildFile ("locusq_webview_runtime_probe.json");
+
+            const juce::String probeScript = R"JS(
+                (() => {
+                    const badge = document.getElementById('quality-badge');
+                    return {
+                        hasJuce: typeof window.Juce !== 'undefined',
+                        hasBackend: typeof window.__JUCE__ !== 'undefined' && !!window.__JUCE__.backend,
+                        hasUpdateSceneState: typeof window.updateSceneState === 'function',
+                        hasUpdateCalibrationStatus: typeof window.updateCalibrationStatus === 'function',
+                        modeTabCount: document.querySelectorAll('.mode-tab').length,
+                        bodyClass: document.body ? document.body.className : '',
+                        qualityText: badge ? badge.textContent : ''
+                    };
+                })()
+            )JS";
+
+            juce::Component::SafePointer<LocusQAudioProcessorEditor> safeThis (this);
+            webView->evaluateJavascript (probeScript,
+                [safeThis, probeFile] (juce::WebBrowserComponent::EvaluationResult result)
+                {
+                    if (safeThis == nullptr)
+                        return;
+
+                    juce::var payloadVar (new juce::DynamicObject());
+                    if (auto* payload = payloadVar.getDynamicObject())
+                    {
+                        payload->setProperty ("timestampUtc", juce::Time::getCurrentTime().toISO8601 (true));
+
+                        if (const auto* value = result.getResult())
+                        {
+                            payload->setProperty ("status", "ok");
+                            payload->setProperty ("result", *value);
+                        }
+                        else if (const auto* error = result.getError())
+                        {
+                            juce::String typeText = "unknown";
+                            switch (error->type)
+                            {
+                                case juce::WebBrowserComponent::EvaluationResult::Error::Type::javascriptException: typeText = "javascriptException"; break;
+                                case juce::WebBrowserComponent::EvaluationResult::Error::Type::unsupportedReturnType: typeText = "unsupportedReturnType"; break;
+                                case juce::WebBrowserComponent::EvaluationResult::Error::Type::unknown: default: break;
+                            }
+
+                            juce::var errorVar (new juce::DynamicObject());
+                            if (auto* errorObj = errorVar.getDynamicObject())
+                            {
+                                errorObj->setProperty ("type", typeText);
+                                errorObj->setProperty ("message", error->message);
+                            }
+
+                            payload->setProperty ("status", "error");
+                            payload->setProperty ("error", errorVar);
+                        }
+                        else
+                        {
+                            payload->setProperty ("status", "no_result");
+                        }
+                    }
+
+                    probeFile.replaceWithText (juce::JSON::toString (payloadVar, true));
+                });
+        }
+    }
+
+    if (isUiSelfTestEnabled() && ! uiSelfTestResultWritten)
+    {
+        ++uiSelfTestPollTicks;
+
+        if (uiSelfTestPollTicks >= 30 && ! uiSelfTestProbeInFlight && (uiSelfTestPollTicks % 6) == 0)
+        {
+            uiSelfTestProbeInFlight = true;
+            const auto resultFile = getUiSelfTestResultFile();
+
+            const juce::String selfTestPollScript = R"JS(
+                (() => {
+                    const value = window.__LQ_SELFTEST_RESULT__;
+                    if (!value || typeof value !== 'object')
+                        return { ready: false };
+
+                    const status = String(value.status || '');
+                    if (status !== 'pass' && status !== 'fail')
+                        return { ready: false, status };
+
+                    return {
+                        ready: true,
+                        status,
+                        ok: !!value.ok,
+                        result: value
+                    };
+                })()
+            )JS";
+
+            juce::Component::SafePointer<LocusQAudioProcessorEditor> safeThis (this);
+            webView->evaluateJavascript (selfTestPollScript,
+                [safeThis, resultFile] (juce::WebBrowserComponent::EvaluationResult result)
+                {
+                    if (safeThis == nullptr)
+                        return;
+
+                    safeThis->uiSelfTestProbeInFlight = false;
+
+                    const auto* value = result.getResult();
+                    if (value == nullptr)
+                        return;
+
+                    const auto* root = value->getDynamicObject();
+                    if (root == nullptr)
+                        return;
+
+                    if (! static_cast<bool> (root->getProperty ("ready")))
+                        return;
+
+                    juce::var payloadVar (new juce::DynamicObject());
+                    if (auto* payload = payloadVar.getDynamicObject())
+                    {
+                        payload->setProperty ("timestampUtc", juce::Time::getCurrentTime().toISO8601 (true));
+                        payload->setProperty ("selftestEnabled", true);
+                        payload->setProperty ("status", root->getProperty ("status"));
+                        payload->setProperty ("ok", root->getProperty ("ok"));
+                        payload->setProperty ("result", root->getProperty ("result"));
+                    }
+
+                    resultFile.getParentDirectory().createDirectory();
+                    const auto writeOk = resultFile.replaceWithText (juce::JSON::toString (payloadVar, true));
+                    safeThis->uiSelfTestResultWritten = writeOk;
+                });
+        }
+    }
+}
+
+void LocusQAudioProcessorEditor::updateStandaloneWindowTitle()
+{
+    if (standaloneWindowTitleUpdated)
+        return;
+
+    if (auto* window = findParentComponentOfClass<juce::DocumentWindow>())
+    {
+        window->setName (getStandaloneWindowTitle());
+        standaloneWindowTitleUpdated = true;
+    }
 }
 
 //==============================================================================
@@ -349,11 +608,38 @@ const char* LocusQAudioProcessorEditor::getMimeForExtension (const juce::String&
 std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::getResource (
     const juce::String& url)
 {
-    auto resourcePath = url.fromFirstOccurrenceOf (
-        juce::WebBrowserComponent::getResourceProviderRoot(), false, false);
+    auto resourcePath = url.trim();
 
+    const auto stripKnownPrefix = [&resourcePath] (const juce::String& prefix)
+    {
+        if (resourcePath.startsWithIgnoreCase (prefix))
+            resourcePath = resourcePath.substring (prefix.length());
+    };
+
+    stripKnownPrefix ("juce://juce.backend");
+    stripKnownPrefix ("https://juce.backend");
+    stripKnownPrefix ("http://juce.backend");
+
+    while (resourcePath.startsWith ("//"))
+        resourcePath = resourcePath.substring (1);
+
+    if (resourcePath.isEmpty())
+        resourcePath = "/";
+
+    if (! resourcePath.startsWithChar ('/'))
+        resourcePath = "/" + resourcePath;
+
+    resourcePath = resourcePath.upToFirstOccurrenceOf ("?", false, false);
+    resourcePath = resourcePath.upToFirstOccurrenceOf ("#", false, false);
     if (resourcePath.isEmpty() || resourcePath == "/")
         resourcePath = "/index.html";
+
+    const auto logDirectory = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+        .getChildFile ("LocusQ");
+    logDirectory.createDirectory();
+    const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
+    resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
+        + " request url=" + url + " path=" + resourcePath + "\n");
 
 #if JUCE_DEBUG
     DBG ("LocusQ resource requested: " + resourcePath);
@@ -397,6 +683,126 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
         resourceSize = BinaryData::check_native_interop_jsSize;
         mimeType = "text/javascript";
     }
+    else if (path == "poc/index.html")
+    {
+        resourceData = BinaryData::index_poc_html;
+        resourceSize = BinaryData::index_poc_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/index.html")
+    {
+        resourceData = BinaryData::index_stage9_html;
+        resourceSize = BinaryData::index_stage9_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage1.html")
+    {
+        resourceData = BinaryData::index_poc_html;
+        resourceSize = BinaryData::index_poc_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage2.html")
+    {
+        resourceData = BinaryData::index_stage2_html;
+        resourceSize = BinaryData::index_stage2_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage3.html")
+    {
+        resourceData = BinaryData::index_stage3_html;
+        resourceSize = BinaryData::index_stage3_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage4.html")
+    {
+        resourceData = BinaryData::index_stage4_html;
+        resourceSize = BinaryData::index_stage4_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage5.html")
+    {
+        resourceData = BinaryData::index_stage5_html;
+        resourceSize = BinaryData::index_stage5_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage6.html")
+    {
+        resourceData = BinaryData::index_stage6_html;
+        resourceSize = BinaryData::index_stage6_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage7.html")
+    {
+        resourceData = BinaryData::index_stage7_html;
+        resourceSize = BinaryData::index_stage7_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage8.html")
+    {
+        resourceData = BinaryData::index_stage8_html;
+        resourceSize = BinaryData::index_stage8_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/stage9.html")
+    {
+        resourceData = BinaryData::index_stage9_html;
+        resourceSize = BinaryData::index_stage9_htmlSize;
+        mimeType = "text/html";
+    }
+    else if (path == "incremental/js/stage2_ui.js")
+    {
+        resourceData = BinaryData::stage2_ui_js;
+        resourceSize = BinaryData::stage2_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage3_ui.js")
+    {
+        resourceData = BinaryData::stage3_ui_js;
+        resourceSize = BinaryData::stage3_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage4_ui.js")
+    {
+        resourceData = BinaryData::stage4_ui_js;
+        resourceSize = BinaryData::stage4_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage5_ui.js")
+    {
+        resourceData = BinaryData::stage5_ui_js;
+        resourceSize = BinaryData::stage5_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage6_ui.js")
+    {
+        resourceData = BinaryData::stage6_ui_js;
+        resourceSize = BinaryData::stage6_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage7_ui.js")
+    {
+        resourceData = BinaryData::stage7_ui_js;
+        resourceSize = BinaryData::stage7_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage8_ui.js")
+    {
+        resourceData = BinaryData::stage8_ui_js;
+        resourceSize = BinaryData::stage8_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage9_ui.js")
+    {
+        resourceData = BinaryData::stage9_ui_js;
+        resourceSize = BinaryData::stage9_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "poc/js/poc_ui.js")
+    {
+        resourceData = BinaryData::poc_ui_js;
+        resourceSize = BinaryData::poc_ui_jsSize;
+        mimeType = "text/javascript";
+    }
 
 #if JUCE_DEBUG
     if (resourceData != nullptr)
@@ -404,6 +810,10 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
     else
         DBG ("  -> NOT FOUND: " + path);
 #endif
+
+    resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
+        + " result path=" + path + " found=" + juce::String (resourceData != nullptr ? "1" : "0")
+        + " size=" + juce::String (resourceSize) + "\n");
 
     if (resourceData != nullptr && resourceSize > 0)
     {

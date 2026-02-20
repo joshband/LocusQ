@@ -2,7 +2,7 @@ Title: APC Skills Index
 Document Type: Skill Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
+Last Modified Date: 2026-02-20
 
 # SKILLS.md
 
@@ -38,6 +38,19 @@ For any phase execution:
 | `skill_testing` | `.codex/skills/skill_testing/SKILL.md` | Detailed harness-first testing and plugin validation workflows |
 | `skill_troubleshooting` | `.codex/skills/skill_troubleshooting/SKILL.md` | Build/runtime failures, recurring errors, issue capture |
 | `skill_debug` | `.codex/skills/debug/SKILL.md` | Autonomous debug sessions and debugger configuration tasks |
+| `threejs` | `.codex/skills/threejs/SKILL.md` | Three.js scene architecture, JUCE WebView bridge integration, and spatial-audio UI workflows including Apple Spatial Audio, Atmos-style routing, `7.4.2` layout handling, and binaural monitoring |
+
+## Three.js Skill Bundle
+The `threejs` skill is organized as one triggerable skill plus focused references:
+
+| Component | File | Purpose |
+|---|---|---|
+| Core trigger + workflow | `.codex/skills/threejs/SKILL.md` | Entry criteria, execution workflow, and delivery requirements |
+| Scene architecture reference | `.codex/skills/threejs/references/scene-architecture.md` | Render-loop ownership, lifecycle, resize, and teardown patterns |
+| JUCE WebView bridge reference | `.codex/skills/threejs/references/juce-webview-integration.md` | C++ to JS state flow, bridge contracts, and robust fallback patterns |
+| Spatial-audio integration reference | `.codex/skills/threejs/references/spatial-audio-integration.md` | Emitter/listener transport, thread-safe DSP handoff, Apple Spatial Audio, Atmos workflows, `7.4.2`, and binaural mode support |
+| Performance/debugging reference | `.codex/skills/threejs/references/performance-and-debugging.md` | Frame budget strategy, memory hygiene, and regression checks |
+| SDK/API/OSS/research landscape | `.codex/skills/threejs/references/sdk-api-oss-research-landscape.md` | Curated ecosystem map for SDK selection and GitHub research/project discovery |
 
 ## Natural Language Routing
 Map clear intent to phase skills through workflows:

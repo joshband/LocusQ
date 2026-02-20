@@ -2,7 +2,7 @@ Title: LocusQ Root README
 Document Type: Project README
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ
 
@@ -150,6 +150,39 @@ See:
   - `TestEvidence/standalone_ui_smoke_<timestamp>/*_after.png`
 - Prerequisite: macOS Accessibility permission must be enabled for your terminal app and `/usr/bin/osascript` (`System Settings -> Privacy & Security -> Accessibility`).
 
+## Primary PR UI Gate (macOS)
+
+- Canonical command: `./scripts/ui-pr-gate-mac.sh`
+- This is the primary gate and runs `scripts/standalone-ui-smoke-mac.sh` as the required fast UI check.
+- Output:
+  - `TestEvidence/ui_pr_gate_<timestamp>/status.tsv`
+  - `TestEvidence/ui_pr_gate_<timestamp>/ui_smoke_fast_gate.log`
+- Optional app path: `./scripts/ui-pr-gate-mac.sh /path/to/LocusQ.app`
+- Optional deeper lane (non-default): `UI_PR_GATE_WITH_APPIUM=1 ./scripts/ui-pr-gate-mac.sh`
+
+## Appium/mac2 UI Regression (macOS)
+
+- A deeper regression lane is available at `scripts/appium-mac2-ui-regression.sh`.
+- Intent: secondary/deeper regression lane with structured assertions/reporting.
+- Prerequisites:
+  - Appium CLI: `npm install -g appium`
+  - mac2 driver: `appium driver install mac2`
+  - Python deps:
+    - Preferred (PEP 668-safe): `python3 -m venv .venv-ui && ./.venv-ui/bin/python3 -m pip install -r qa/ui/requirements-appium-mac2.txt`
+    - Or bootstrap automatically on first run: `APPIUM_UI_BOOTSTRAP_VENV=1 ./scripts/appium-mac2-ui-regression.sh`
+  - Appium server running locally: `appium`
+- Run:
+  - `cd /Users/artbox/Documents/Repos/LocusQ`
+  - `./scripts/appium-mac2-ui-regression.sh`
+  - Optional explicit app path: `./scripts/appium-mac2-ui-regression.sh /path/to/LocusQ.app`
+  - Optional explicit Python interpreter: `APPIUM_UI_PYTHON=/abs/path/to/python3 ./scripts/appium-mac2-ui-regression.sh`
+  - Optional fail-fast guards: `APPIUM_UI_STEP_TIMEOUT_SECONDS=8 APPIUM_UI_MAX_RUN_SECONDS=120 ./scripts/appium-mac2-ui-regression.sh`
+- Output:
+  - `TestEvidence/appium_ui_regression_<timestamp>/summary.tsv`
+  - `TestEvidence/appium_ui_regression_<timestamp>/report.json`
+  - `TestEvidence/appium_ui_regression_<timestamp>/*_before.png`
+  - `TestEvidence/appium_ui_regression_<timestamp>/*_after.png`
+
 ## Canonical Documentation
 
 - Plan: `.ideas/plan.md`
@@ -159,6 +192,7 @@ See:
 - Scene-state contract: `Documentation/scene-state-contract.md`
 - Wiring traceability: `Documentation/implementation-traceability.md`
 - Lessons learned: `Documentation/lessons-learned.md`
+- Optional multi-agent watchdog guide (disabled by default): `Documentation/multi-agent-thread-watchdog.md`
 - Research synthesis and next steps: `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
 
 ## Suggested Next Command

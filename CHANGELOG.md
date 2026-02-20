@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # Changelog
 
@@ -68,6 +68,11 @@ All notable changes to LocusQ are documented here.
 - Standalone UI automation smoke runner (macOS):
   - `scripts/standalone-ui-smoke-mac.sh`
   - Captures screenshot deltas and publishes `TestEvidence/standalone_ui_smoke_<timestamp>/summary.tsv`
+- Multi-agent thread watchdog capability:
+  - `scripts/thread-watchdog`
+  - `TestEvidence/thread-contracts.tsv` (contract template)
+  - `TestEvidence/thread-heartbeats.tsv` (heartbeat template)
+  - Enforces contract completeness, heartbeat/artifact freshness, slot policy (`<=5` workers + `<=1` coordinator), stalled detection, and `DONE <result> <artifact/commit>` closeout format.
 
 ### Changed
 

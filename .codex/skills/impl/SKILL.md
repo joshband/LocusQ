@@ -1,9 +1,3 @@
-Title: APC Skill: impl
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: skill_impl
 description: "Implementation phase for APC plugins, focused on DSP and framework-aware code execution."

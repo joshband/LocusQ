@@ -1,6 +1,244 @@
-const Juce = window.Juce;
+function createFallbackListenerList() {
+    const listeners = new Map();
+    let nextId = 0;
+    return {
+        addListener(fn) {
+            const id = nextId++;
+            listeners.set(id, fn);
+            return id;
+        },
+        removeListener(id) {
+            listeners.delete(id);
+        },
+        callListeners(...args) {
+            for (const fn of listeners.values()) {
+                try {
+                    fn(...args);
+                } catch (error) {
+                    console.error("LocusQ fallback listener failed:", error);
+                }
+            }
+        },
+    };
+}
+
+function createFallbackJuceBridge() {
+    const backend = window.__JUCE__ && window.__JUCE__.backend ? window.__JUCE__.backend : null;
+
+    const sliderStates = new Map();
+    const toggleStates = new Map();
+    const comboStates = new Map();
+
+    const emit = (identifier, payload) => {
+        if (!backend || typeof backend.emitEvent !== "function") return;
+        backend.emitEvent(identifier, payload);
+    };
+
+    const attachBackendListener = (identifier, onEvent) => {
+        if (!backend || typeof backend.addEventListener !== "function") return;
+        backend.addEventListener(identifier, event => onEvent(event || {}));
+        emit(identifier, { eventType: "requestInitialUpdate" });
+    };
+
+    const toScaled = (normalised, start, end, skew) => {
+        const clamped = Math.max(0, Math.min(1, Number(normalised) || 0));
+        const safeSkew = Number.isFinite(skew) && skew > 0 ? skew : 1;
+        const safeStart = Number(start) || 0;
+        const safeEnd = Number(end) || 1;
+        return Math.pow(clamped, 1 / safeSkew) * (safeEnd - safeStart) + safeStart;
+    };
+
+    const toNormalised = (scaled, start, end, skew) => {
+        const safeStart = Number(start) || 0;
+        const safeEnd = Number(end) || 1;
+        const safeSkew = Number.isFinite(skew) && skew > 0 ? skew : 1;
+        const denom = safeEnd - safeStart;
+        if (Math.abs(denom) < 1.0e-9) return 0;
+        const linear = Math.max(0, Math.min(1, (Number(scaled) - safeStart) / denom));
+        return Math.pow(linear, safeSkew);
+    };
+
+    const createSliderState = name => {
+        const state = {
+            name,
+            identifier: `__juce__slider${name}`,
+            scaledValue: 0,
+            properties: {
+                start: 0,
+                end: 1,
+                skew: 1,
+                interval: 0,
+                name: "",
+                label: "",
+                numSteps: 0,
+                parameterIndex: -1,
+            },
+            valueChangedEvent: createFallbackListenerList(),
+            propertiesChangedEvent: createFallbackListenerList(),
+            getScaledValue() {
+                return Number(this.scaledValue) || 0;
+            },
+            getNormalisedValue() {
+                return toNormalised(this.scaledValue, this.properties.start, this.properties.end, this.properties.skew);
+            },
+            setNormalisedValue(newValue) {
+                this.scaledValue = toScaled(
+                    newValue,
+                    this.properties.start,
+                    this.properties.end,
+                    this.properties.skew
+                );
+                emit(this.identifier, {
+                    eventType: "valueChanged",
+                    value: this.scaledValue,
+                });
+                this.valueChangedEvent.callListeners();
+            },
+            sliderDragStarted() {},
+            sliderDragEnded() {},
+        };
+
+        attachBackendListener(state.identifier, event => {
+            if (event.eventType === "valueChanged") {
+                state.scaledValue = Number(event.value) || 0;
+                state.valueChangedEvent.callListeners();
+                return;
+            }
+            if (event.eventType === "propertiesChanged") {
+                const next = { ...event };
+                delete next.eventType;
+                state.properties = { ...state.properties, ...next };
+                state.propertiesChangedEvent.callListeners();
+            }
+        });
+
+        return state;
+    };
+
+    const createToggleState = name => {
+        const state = {
+            name,
+            identifier: `__juce__toggle${name}`,
+            value: false,
+            properties: { name: "", parameterIndex: -1 },
+            valueChangedEvent: createFallbackListenerList(),
+            propertiesChangedEvent: createFallbackListenerList(),
+            getValue() {
+                return !!this.value;
+            },
+            setValue(nextValue) {
+                this.value = !!nextValue;
+                emit(this.identifier, {
+                    eventType: "valueChanged",
+                    value: this.value,
+                });
+                this.valueChangedEvent.callListeners();
+            },
+        };
+
+        attachBackendListener(state.identifier, event => {
+            if (event.eventType === "valueChanged") {
+                state.value = !!event.value;
+                state.valueChangedEvent.callListeners();
+                return;
+            }
+            if (event.eventType === "propertiesChanged") {
+                const next = { ...event };
+                delete next.eventType;
+                state.properties = { ...state.properties, ...next };
+                state.propertiesChangedEvent.callListeners();
+            }
+        });
+
+        return state;
+    };
+
+    const createComboState = name => {
+        const state = {
+            name,
+            identifier: `__juce__comboBox${name}`,
+            value: 0,
+            properties: { choices: [] },
+            valueChangedEvent: createFallbackListenerList(),
+            propertiesChangedEvent: createFallbackListenerList(),
+            getChoiceIndex() {
+                const choices = Array.isArray(this.properties.choices) ? this.properties.choices.length : 0;
+                if (choices <= 1) return Math.max(0, Math.round(this.value || 0));
+                const normalised = Math.max(0, Math.min(1, Number(this.value) || 0));
+                return Math.max(0, Math.min(choices - 1, Math.round(normalised * (choices - 1))));
+            },
+            setChoiceIndex(index) {
+                const choices = Array.isArray(this.properties.choices) ? this.properties.choices.length : 0;
+                const clamped = Math.max(0, Math.round(Number(index) || 0));
+                if (choices <= 1) {
+                    this.value = clamped;
+                } else {
+                    this.value = Math.max(0, Math.min(1, clamped / (choices - 1)));
+                }
+                emit(this.identifier, {
+                    eventType: "valueChanged",
+                    value: this.value,
+                });
+                this.valueChangedEvent.callListeners();
+            },
+            getChosenItemIndex() {
+                return this.getChoiceIndex() + 1;
+            },
+            setChosenItemIndex(oneBasedIndex) {
+                this.setChoiceIndex(Math.max(0, Math.round(Number(oneBasedIndex) || 1) - 1));
+            },
+        };
+
+        attachBackendListener(state.identifier, event => {
+            if (event.eventType === "valueChanged") {
+                state.value = Number(event.value) || 0;
+                state.valueChangedEvent.callListeners();
+                return;
+            }
+            if (event.eventType === "propertiesChanged") {
+                const next = { ...event };
+                delete next.eventType;
+                state.properties = { ...state.properties, ...next };
+                state.propertiesChangedEvent.callListeners();
+            }
+        });
+
+        return state;
+    };
+
+    return {
+        getNativeFunction(name) {
+            return async function fallbackNativeFunction() {
+                throw new Error(`Native function bridge unavailable: ${name}`);
+            };
+        },
+        getSliderState(name) {
+            if (!sliderStates.has(name)) sliderStates.set(name, createSliderState(name));
+            return sliderStates.get(name);
+        },
+        getToggleState(name) {
+            if (!toggleStates.has(name)) toggleStates.set(name, createToggleState(name));
+            return toggleStates.get(name);
+        },
+        getComboBoxState(name) {
+            if (!comboStates.has(name)) comboStates.set(name, createComboState(name));
+            return comboStates.get(name);
+        },
+        getBackendResourceAddress(path) {
+            return path;
+        },
+        ControlParameterIndexUpdater: class {},
+    };
+}
+
+const hasNativeJuceBridge = typeof window.Juce !== "undefined";
+const Juce = window.Juce || createFallbackJuceBridge();
 if (!Juce) {
     throw new Error("LocusQ: JUCE bridge API unavailable (window.Juce missing)");
+}
+if (!window.Juce) {
+    window.Juce = Juce;
+    console.warn("LocusQ: using fallback JUCE bridge wrapper");
 }
 
 // ===========================================================================
@@ -80,6 +318,70 @@ const nativeFunctions = {
     setUiState: Juce.getNativeFunction("locusqSetUiState"),
 };
 
+const NATIVE_CALL_TIMEOUT_MS = 3000;
+const BASIC_CONTROL_VALUE_CHANGED_EVENT = "valueChanged";
+
+function withNativeTimeout(promise, label) {
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = window.setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            reject(new Error(`${label} timed out after ${NATIVE_CALL_TIMEOUT_MS}ms`));
+        }, NATIVE_CALL_TIMEOUT_MS);
+
+        Promise.resolve(promise).then(
+            value => {
+                if (settled) return;
+                settled = true;
+                window.clearTimeout(timer);
+                resolve(value);
+            },
+            error => {
+                if (settled) return;
+                settled = true;
+                window.clearTimeout(timer);
+                reject(error);
+            }
+        );
+    });
+}
+
+async function callNative(label, fn, ...args) {
+    if (typeof fn !== "function") {
+        throw new Error(`${label} unavailable`);
+    }
+    return withNativeTimeout(fn(...args), label);
+}
+
+function notifyStateValueChanged(state) {
+    if (hasNativeJuceBridge) return;
+    if (!state || !state.valueChangedEvent) return;
+    if (typeof state.valueChangedEvent.callListeners !== "function") return;
+    try {
+        state.valueChangedEvent.callListeners();
+    } catch (error) {
+        console.warn("LocusQ: failed to notify local valueChanged listener", error);
+    }
+}
+
+function getToggleValue(state) {
+    if (!state) return false;
+    if (typeof state.getValue === "function") return !!state.getValue();
+    return !!state.value;
+}
+
+function setToggleValue(state, nextValue) {
+    if (!state) return;
+    const value = !!nextValue;
+    if (typeof state.setValue === "function") {
+        state.setValue(value);
+        return;
+    }
+    state.value = value;
+    notifyStateValueChanged(state);
+}
+
 function getChoiceIndex(state) {
     if (!state) return 0;
     if (typeof state.getChoiceIndex === "function") return state.getChoiceIndex();
@@ -87,20 +389,68 @@ function getChoiceIndex(state) {
     return 0;
 }
 
-function setChoiceIndex(state, index) {
+function emitChoiceWithFallback(state, index, assumedChoiceCount) {
+    if (!state || !window.__JUCE__ || !window.__JUCE__.backend) return;
+    if (!state.identifier || typeof window.__JUCE__.backend.emitEvent !== "function") return;
+
+    const count = Number.isFinite(assumedChoiceCount) && assumedChoiceCount > 1
+        ? assumedChoiceCount
+        : Math.max(index + 1, 2);
+    const normalised = Math.max(0, Math.min(1, index / Math.max(1, count - 1)));
+    state.value = normalised;
+    window.__JUCE__.backend.emitEvent(state.identifier, {
+        eventType: BASIC_CONTROL_VALUE_CHANGED_EVENT,
+        value: normalised,
+    });
+}
+
+function setChoiceIndex(state, index, fallbackChoiceCount = 0) {
     if (!state) return;
     if (typeof state.setChoiceIndex === "function") {
-        state.setChoiceIndex(index);
+        const choicesCount = Array.isArray(state.properties?.choices) ? state.properties.choices.length : 0;
+        if (choicesCount <= 1 && fallbackChoiceCount > 1) {
+            // Early clicks can happen before combo properties arrive from JUCE.
+            emitChoiceWithFallback(state, index, fallbackChoiceCount);
+        } else {
+            state.setChoiceIndex(index);
+        }
         return;
     }
     if (typeof state.setChosenItemIndex === "function") {
         state.setChosenItemIndex(index + 1);
+        return;
     }
+    notifyStateValueChanged(state);
 }
 
 function setToggleClass(id, isOn) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle("on", !!isOn);
+}
+
+function toggleStateAndClass(toggleId, state) {
+    const nextValue = !getToggleValue(state);
+    setToggleValue(state, nextValue);
+    if (toggleId) setToggleClass(toggleId, nextValue);
+    return nextValue;
+}
+
+function bindControlActivate(element, handler) {
+    if (!element || typeof handler !== "function") return;
+
+    const trigger = event => {
+        if (event && typeof event.preventDefault === "function") {
+            event.preventDefault();
+        }
+        handler(event);
+    };
+
+    element.addEventListener("click", trigger, { passive: false });
+    element.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+            trigger(event);
+        }
+    });
 }
 
 function setAnimationControlsEnabled(enabled) {
@@ -147,6 +497,7 @@ function setSliderScaledValue(sliderState, scaledValue) {
     const linearNorm = clamp((clampedScaled - start) / denominator, 0.0, 1.0);
     const safeSkew = Number.isFinite(skew) && skew > 0.0 ? skew : 1.0;
     sliderState.setNormalisedValue(Math.pow(linearNorm, safeSkew));
+    notifyStateValueChanged(sliderState);
 }
 
 function sanitizeEmitterLabel(label) {
@@ -173,7 +524,7 @@ let isApplyingPhysicsPreset = false;
 
 async function commitUiStateToNative() {
     try {
-        await nativeFunctions.setUiState({
+        await callNative("locusqSetUiState", nativeFunctions.setUiState, {
             emitterLabel: sanitizeEmitterLabel(uiState.emitterLabel),
             physicsPreset: normalizePhysicsPresetName(uiState.physicsPreset),
         });
@@ -196,7 +547,7 @@ function scheduleUiStateCommit(immediate = false) {
 
 async function loadUiStateFromNative() {
     try {
-        const payload = await nativeFunctions.getUiState();
+        const payload = await callNative("locusqGetUiState", nativeFunctions.getUiState);
         if (!payload || typeof payload !== "object") return;
         uiState.emitterLabel = sanitizeEmitterLabel(payload.emitterLabel ?? uiState.emitterLabel);
         uiState.physicsPreset = normalizePhysicsPresetName(payload.physicsPreset ?? uiState.physicsPreset);
@@ -270,8 +621,8 @@ function bindValueStepper(displayId, sliderState, options = {}) {
 
 function pulseToggleParameter(toggleState) {
     if (!toggleState) return;
-    toggleState.setValue(true);
-    window.setTimeout(() => toggleState.setValue(false), 40);
+    setToggleValue(toggleState, true);
+    window.setTimeout(() => setToggleValue(toggleState, false), 40);
 }
 
 function applyUiStateToControls() {
@@ -531,7 +882,7 @@ function renderTimelineLanes() {
             const point = timelinePointFromPointer(event, lane, laneTrack);
             timelineState.currentTimeSeconds = clamp(point.timeSeconds, 0.0, duration);
             updateTimelinePlayheads();
-            nativeFunctions.setTimelineTime(timelineState.currentTimeSeconds).catch(() => {});
+            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, timelineState.currentTimeSeconds).catch(() => {});
         };
 
         updateLaneCurveBadge(lane);
@@ -555,7 +906,7 @@ function scheduleTimelineCommit(immediate = false) {
 
 async function commitTimelineToNative() {
     try {
-        await nativeFunctions.setKeyframeTimeline(serialiseTimelineForNative());
+        await callNative("locusqSetKeyframeTimeline", nativeFunctions.setKeyframeTimeline, serialiseTimelineForNative());
     } catch (error) {
         console.warn("Failed to commit keyframe timeline:", error);
     }
@@ -563,7 +914,7 @@ async function commitTimelineToNative() {
 
 async function loadTimelineFromNative() {
     try {
-        const payload = await nativeFunctions.getKeyframeTimeline();
+        const payload = await callNative("locusqGetKeyframeTimeline", nativeFunctions.getKeyframeTimeline);
         timelineState = normaliseTimelineFromNative(payload || {});
         timelineLoaded = true;
         renderTimelineLanes();
@@ -589,7 +940,7 @@ async function refreshPresetList() {
     select.innerHTML = "";
 
     try {
-        const items = await nativeFunctions.listEmitterPresets();
+        const items = await callNative("locusqListEmitterPresets", nativeFunctions.listEmitterPresets);
         presetEntries = Array.isArray(items) ? items : [];
     } catch (error) {
         presetEntries = [];
@@ -908,12 +1259,6 @@ function markViewportDegraded(error) {
 
 async function initialiseUIRuntime() {
     try {
-        await loadUiStateFromNative();
-    } catch (error) {
-        console.error("LocusQ: loadUiStateFromNative failed:", error);
-    }
-
-    try {
         initUIBindings();
     } catch (error) {
         console.error("LocusQ: initUIBindings failed:", error);
@@ -923,18 +1268,6 @@ async function initialiseUIRuntime() {
         initParameterListeners();
     } catch (error) {
         console.error("LocusQ: initParameterListeners failed:", error);
-    }
-
-    try {
-        await loadTimelineFromNative();
-    } catch (error) {
-        console.error("LocusQ: loadTimelineFromNative failed:", error);
-    }
-
-    try {
-        await refreshPresetList();
-    } catch (error) {
-        console.error("LocusQ: refreshPresetList failed:", error);
     }
 
     applyUiStateToControls();
@@ -948,6 +1281,36 @@ async function initialiseUIRuntime() {
     } catch (error) {
         markViewportDegraded(error);
     }
+
+    const startupHydrationTasks = [
+        (async () => {
+            try {
+                await loadUiStateFromNative();
+                applyUiStateToControls();
+                if (uiState.physicsPreset !== "off") {
+                    applyPhysicsPreset(uiState.physicsPreset, false);
+                }
+            } catch (error) {
+                console.error("LocusQ: loadUiStateFromNative failed:", error);
+            }
+        })(),
+        (async () => {
+            try {
+                await loadTimelineFromNative();
+            } catch (error) {
+                console.error("LocusQ: loadTimelineFromNative failed:", error);
+            }
+        })(),
+        (async () => {
+            try {
+                await refreshPresetList();
+            } catch (error) {
+                console.error("LocusQ: refreshPresetList failed:", error);
+            }
+        })(),
+    ];
+
+    await Promise.allSettled(startupHydrationTasks);
 
     console.log("LocusQ WebView initialized");
 }
@@ -1189,9 +1552,9 @@ function applyPhysicsPreset(presetName, persistUiState = true) {
     if (active) active.style.display = normalized === "off" ? "none" : "block";
 
     if (normalized === "off") {
-        toggleStates.phys_enable.setValue(false);
+        setToggleValue(toggleStates.phys_enable, false);
     } else {
-        toggleStates.phys_enable.setValue(true);
+        setToggleValue(toggleStates.phys_enable, true);
     }
 
     if (normalized === "bounce") {
@@ -1230,7 +1593,8 @@ function initUIBindings() {
         tab.addEventListener("click", () => {
             const mode = tab.dataset.mode;
             const modeMap = { calibrate: 0, emitter: 1, renderer: 2 };
-            setChoiceIndex(comboStates.mode, modeMap[mode] ?? 1);
+            switchMode(modeMap[mode] !== undefined ? mode : currentMode);
+            setChoiceIndex(comboStates.mode, modeMap[mode] ?? 1, 3);
         });
     });
 
@@ -1239,7 +1603,9 @@ function initUIBindings() {
     if (qualityBadge) {
         qualityBadge.addEventListener("click", function() {
             const isCurrentlyDraft = this.classList.contains("draft");
-            setChoiceIndex(comboStates.rend_quality, isCurrentlyDraft ? 1 : 0);
+            this.className = `quality-badge ${isCurrentlyDraft ? "final" : "draft"}`;
+            this.textContent = isCurrentlyDraft ? "FINAL" : "DRAFT";
+            setChoiceIndex(comboStates.rend_quality, isCurrentlyDraft ? 1 : 0, 2);
         });
     }
 
@@ -1279,8 +1645,8 @@ function initUIBindings() {
 
     const sizeLinkToggle = document.getElementById("toggle-size-link");
     if (sizeLinkToggle) {
-        sizeLinkToggle.addEventListener("click", () => {
-            toggleStates.size_link.setValue(!toggleStates.size_link.getValue());
+        bindControlActivate(sizeLinkToggle, () => {
+            toggleStateAndClass("toggle-size-link", toggleStates.size_link);
         });
     }
 
@@ -1301,14 +1667,14 @@ function initUIBindings() {
     // Emitter mute/solo
     const muteToggle = document.getElementById("toggle-mute");
     if (muteToggle) {
-        muteToggle.addEventListener("click", () => {
-            toggleStates.emit_mute.setValue(!toggleStates.emit_mute.getValue());
+        bindControlActivate(muteToggle, () => {
+            toggleStateAndClass("toggle-mute", toggleStates.emit_mute);
         });
     }
     const soloToggle = document.getElementById("toggle-solo");
     if (soloToggle) {
-        soloToggle.addEventListener("click", () => {
-            toggleStates.emit_solo.setValue(!toggleStates.emit_solo.getValue());
+        bindControlActivate(soloToggle, () => {
+            toggleStateAndClass("toggle-solo", toggleStates.emit_solo);
         });
     }
 
@@ -1368,43 +1734,45 @@ function initUIBindings() {
 
     const dopplerToggle = document.getElementById("toggle-doppler");
     if (dopplerToggle) {
-        dopplerToggle.addEventListener("click", () => {
-            toggleStates.rend_doppler.setValue(!toggleStates.rend_doppler.getValue());
+        bindControlActivate(dopplerToggle, () => {
+            toggleStateAndClass("toggle-doppler", toggleStates.rend_doppler);
         });
     }
 
     const airAbsorbToggle = document.getElementById("toggle-air-absorb");
     if (airAbsorbToggle) {
-        airAbsorbToggle.addEventListener("click", () => {
-            toggleStates.rend_air_absorb.setValue(!toggleStates.rend_air_absorb.getValue());
+        bindControlActivate(airAbsorbToggle, () => {
+            toggleStateAndClass("toggle-air-absorb", toggleStates.rend_air_absorb);
         });
     }
 
     const roomEnableToggle = document.getElementById("toggle-room");
     if (roomEnableToggle) {
-        roomEnableToggle.addEventListener("click", () => {
-            toggleStates.rend_room_enable.setValue(!toggleStates.rend_room_enable.getValue());
+        bindControlActivate(roomEnableToggle, () => {
+            toggleStateAndClass("toggle-room", toggleStates.rend_room_enable);
         });
     }
 
     const roomErOnlyToggle = document.getElementById("toggle-er-only");
     if (roomErOnlyToggle) {
-        roomErOnlyToggle.addEventListener("click", () => {
-            toggleStates.rend_room_er_only.setValue(!toggleStates.rend_room_er_only.getValue());
+        bindControlActivate(roomErOnlyToggle, () => {
+            toggleStateAndClass("toggle-er-only", toggleStates.rend_room_er_only);
         });
     }
 
     const wallsToggle = document.getElementById("toggle-walls");
     if (wallsToggle) {
-        wallsToggle.addEventListener("click", () => {
-            toggleStates.rend_phys_walls.setValue(!toggleStates.rend_phys_walls.getValue());
+        bindControlActivate(wallsToggle, () => {
+            toggleStateAndClass("toggle-walls", toggleStates.rend_phys_walls);
         });
     }
 
     const pausePhysicsButton = document.getElementById("btn-pause-physics");
     if (pausePhysicsButton) {
         pausePhysicsButton.addEventListener("click", () => {
-            toggleStates.rend_phys_pause.setValue(!toggleStates.rend_phys_pause.getValue());
+            const paused = !getToggleValue(toggleStates.rend_phys_pause);
+            setToggleValue(toggleStates.rend_phys_pause, paused);
+            pausePhysicsButton.textContent = paused ? "RESUME ALL" : "PAUSE ALL";
         });
     }
 
@@ -1415,7 +1783,7 @@ function initUIBindings() {
             const nextTime = clamp((timelineState.currentTimeSeconds || 0.0) - 0.25, 0.0, duration);
             timelineState.currentTimeSeconds = nextTime;
             updateTimelinePlayheads();
-            nativeFunctions.setTimelineTime(nextTime).catch(() => {});
+            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, nextTime).catch(() => {});
         });
     }
 
@@ -1424,8 +1792,10 @@ function initUIBindings() {
         stopButton.addEventListener("click", () => {
             timelineState.currentTimeSeconds = 0.0;
             updateTimelinePlayheads();
-            toggleStates.anim_enable.setValue(false);
-            nativeFunctions.setTimelineTime(0.0).catch(() => {});
+            setToggleValue(toggleStates.anim_enable, false);
+            setToggleClass("toggle-anim", false);
+            setAnimationControlsEnabled(false);
+            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 0.0).catch(() => {});
         });
     }
 
@@ -1435,15 +1805,18 @@ function initUIBindings() {
             if (getChoiceIndex(comboStates.anim_mode) !== 1) {
                 setChoiceIndex(comboStates.anim_mode, 1);
             }
-            toggleStates.anim_enable.setValue(true);
+            setToggleValue(toggleStates.anim_enable, true);
+            setToggleClass("toggle-anim", true);
+            setAnimationControlsEnabled(true);
         });
     }
 
     // Animation controls
     const animToggle = document.getElementById("toggle-anim");
     if (animToggle) {
-        animToggle.addEventListener("click", () => {
-            toggleStates.anim_enable.setValue(!toggleStates.anim_enable.getValue());
+        bindControlActivate(animToggle, () => {
+            const enabled = toggleStateAndClass("toggle-anim", toggleStates.anim_enable);
+            setAnimationControlsEnabled(enabled);
         });
     }
 
@@ -1457,9 +1830,12 @@ function initUIBindings() {
     ["toggle-anim-loop", "toggle-timeline-loop"].forEach(id => {
         const loopToggle = document.getElementById(id);
         if (loopToggle) {
-            loopToggle.addEventListener("click", () => {
-                toggleStates.anim_loop.setValue(!toggleStates.anim_loop.getValue());
-                timelineState.looping = !!toggleStates.anim_loop.getValue();
+            bindControlActivate(loopToggle, () => {
+                const nextLoop = !getToggleValue(toggleStates.anim_loop);
+                setToggleValue(toggleStates.anim_loop, nextLoop);
+                setToggleClass("toggle-anim-loop", nextLoop);
+                setToggleClass("toggle-timeline-loop", nextLoop);
+                timelineState.looping = nextLoop;
                 scheduleTimelineCommit();
             });
         }
@@ -1467,8 +1843,8 @@ function initUIBindings() {
 
     const syncToggle = document.getElementById("toggle-timeline-sync");
     if (syncToggle) {
-        syncToggle.addEventListener("click", () => {
-            toggleStates.anim_sync.setValue(!toggleStates.anim_sync.getValue());
+        bindControlActivate(syncToggle, () => {
+            toggleStateAndClass("toggle-timeline-sync", toggleStates.anim_sync);
         });
     }
 
@@ -1488,7 +1864,7 @@ function initUIBindings() {
             }
 
             try {
-                const result = await nativeFunctions.saveEmitterPreset({ name: trimmed });
+                const result = await callNative("locusqSaveEmitterPreset", nativeFunctions.saveEmitterPreset, { name: trimmed });
                 if (result?.ok) {
                     setPresetStatus(`Saved: ${result.name || trimmed}`);
                     await refreshPresetList();
@@ -1512,7 +1888,7 @@ function initUIBindings() {
             }
 
             try {
-                const result = await nativeFunctions.loadEmitterPreset({ path: select.value });
+                const result = await callNative("locusqLoadEmitterPreset", nativeFunctions.loadEmitterPreset, { path: select.value });
                 if (result?.ok) {
                     setPresetStatus(`Loaded: ${select.options[select.selectedIndex]?.textContent || "preset"}`);
                     await loadTimelineFromNative();
@@ -1538,7 +1914,7 @@ function initUIBindings() {
             const options = collectCalibrationOptions();
 
             try {
-                const started = await nativeFunctions.startCalibration(options);
+                const started = await callNative("locusqStartCalibration", nativeFunctions.startCalibration, options);
                 if (!started) {
                     console.warn("Calibration did not start. Ensure mode is Calibrate and engine is idle.");
                 }
@@ -1710,7 +2086,13 @@ function initParameterListeners() {
     comboStates.rend_quality.valueChangedEvent.addListener(updateQualityBadge);
 
     // Initial sync
-    switchMode((["calibrate", "emitter", "renderer"][getChoiceIndex(comboStates.mode)]) || "emitter");
+    const initialModeChoices = Array.isArray(comboStates.mode?.properties?.choices)
+        ? comboStates.mode.properties.choices.length
+        : 0;
+    const initialMode = initialModeChoices >= 3
+        ? (["calibrate", "emitter", "renderer"][getChoiceIndex(comboStates.mode)] || currentMode)
+        : currentMode;
+    switchMode(initialMode);
     updateQualityBadge();
     setToggleClass("toggle-mute", !!toggleStates.emit_mute.getValue());
     setToggleClass("toggle-solo", !!toggleStates.emit_solo.getValue());
@@ -1947,7 +2329,7 @@ function collectCalibrationOptions() {
 
 async function abortCalibration() {
     try {
-        await nativeFunctions.abortCalibration();
+        await callNative("locusqAbortCalibration", nativeFunctions.abortCalibration);
     } catch (error) {
         console.error("Failed to abort calibration:", error);
     }
@@ -2145,14 +2527,14 @@ function updateSceneList(emitters) {
             soloButton.addEventListener("click", event => {
                 event.stopPropagation();
                 if (em.id !== localEmitterId) return;
-                toggleStates.emit_solo.setValue(!toggleStates.emit_solo.getValue());
+                setToggleValue(toggleStates.emit_solo, !getToggleValue(toggleStates.emit_solo));
             });
         }
         if (muteButton) {
             muteButton.addEventListener("click", event => {
                 event.stopPropagation();
                 if (em.id !== localEmitterId) return;
-                toggleStates.emit_mute.setValue(!toggleStates.emit_mute.getValue());
+                setToggleValue(toggleStates.emit_mute, !getToggleValue(toggleStates.emit_mute));
             });
         }
 

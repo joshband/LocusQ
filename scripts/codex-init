@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""
+Bootstrap/update Codex multi-agent thread tracking for this project.
+
+This helper:
+1) Upserts a thread contract row (unless --heartbeat-only)
+2) Appends a heartbeat row
+3) Optionally runs thread-watchdog
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import datetime as dt
+import pathlib
+import subprocess
+import sys
+from typing import Dict, List
+
+
+CONTRACT_HEADER = ["thread_id", "task", "expected_outputs", "timeout_minutes", "owner", "role"]
+HEARTBEAT_HEADER = ["timestamp_utc", "thread_id", "status", "last_artifact"]
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Initialize Codex multi-agent tracking state")
+    parser.add_argument("--thread-id", required=True, help="Stable thread identifier")
+    parser.add_argument("--task", default="", help="Thread task/ownership summary")
+    parser.add_argument("--expected-outputs", default="", help="Expected artifact paths or commits (comma/pipe separated)")
+    parser.add_argument("--timeout-minutes", type=int, default=60, help="Thread timeout in minutes")
+    parser.add_argument("--owner", default="", help="Thread owner (defaults to current user)")
+    parser.add_argument("--role", choices=["worker", "coordinator"], default="worker", help="Thread role")
+
+    parser.add_argument("--status", default="WORKING init", help="Heartbeat status")
+    parser.add_argument("--last-artifact", default="", help="Most recent artifact path or commit")
+    parser.add_argument("--timestamp-utc", default="", help="Override heartbeat time (ISO-8601 UTC)")
+
+    parser.add_argument("--contracts", default="TestEvidence/thread-contracts.tsv", help="Contracts TSV path")
+    parser.add_argument("--heartbeats", default="TestEvidence/thread-heartbeats.tsv", help="Heartbeats TSV path")
+    parser.add_argument("--heartbeat-only", action="store_true", help="Do not modify contract file")
+    parser.add_argument("--skip-watchdog", action="store_true", help="Skip running thread-watchdog after update")
+    parser.add_argument("--allow-empty-watchdog", action="store_true", help="Pass --allow-empty to thread-watchdog")
+    return parser.parse_args()
+
+
+def utc_now_iso() -> str:
+    return dt.datetime.now(tz=dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def ensure_tsv(path: pathlib.Path, header: List[str]) -> None:
+    if path.exists():
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle, delimiter="\t")
+        writer.writerow(header)
+
+
+def read_rows(path: pathlib.Path, expected_header: List[str]) -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        filtered = (line for line in handle if line.strip() and not line.lstrip().startswith("#"))
+        reader = csv.DictReader(filtered, delimiter="\t")
+        if reader.fieldnames is None:
+            raise ValueError(f"{path} missing header")
+        missing = [col for col in expected_header if col not in reader.fieldnames]
+        if missing:
+            raise ValueError(f"{path} missing columns: {', '.join(missing)}")
+        for row in reader:
+            rows.append({key: (value or "").strip() for key, value in row.items()})
+    return rows
+
+
+def write_rows(path: pathlib.Path, header: List[str], rows: List[Dict[str, str]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=header, delimiter="\t")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: row.get(key, "") for key in header})
+
+
+def upsert_contract(path: pathlib.Path, args: argparse.Namespace) -> None:
+    rows = read_rows(path, CONTRACT_HEADER)
+    updated = False
+    for row in rows:
+        if row.get("thread_id") == args.thread_id:
+            row["task"] = args.task
+            row["expected_outputs"] = args.expected_outputs
+            row["timeout_minutes"] = str(args.timeout_minutes)
+            row["owner"] = args.owner
+            row["role"] = args.role
+            updated = True
+            break
+
+    if not updated:
+        rows.append(
+            {
+                "thread_id": args.thread_id,
+                "task": args.task,
+                "expected_outputs": args.expected_outputs,
+                "timeout_minutes": str(args.timeout_minutes),
+                "owner": args.owner,
+                "role": args.role,
+            }
+        )
+
+    write_rows(path, CONTRACT_HEADER, rows)
+
+
+def append_heartbeat(path: pathlib.Path, args: argparse.Namespace) -> None:
+    timestamp = args.timestamp_utc.strip() or utc_now_iso()
+    with path.open("a", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle, delimiter="\t")
+        writer.writerow([timestamp, args.thread_id, args.status, args.last_artifact])
+
+
+def run_watchdog(root: pathlib.Path, args: argparse.Namespace) -> int:
+    cmd = [str(root / "scripts" / "thread-watchdog")]
+    if args.allow_empty_watchdog:
+        cmd.append("--allow-empty")
+    proc = subprocess.run(cmd, cwd=root, check=False)
+    return proc.returncode
+
+
+def main() -> int:
+    args = parse_args()
+    root = pathlib.Path(__file__).resolve().parents[1]
+
+    contracts_path = pathlib.Path(args.contracts)
+    if not contracts_path.is_absolute():
+        contracts_path = root / contracts_path
+
+    heartbeats_path = pathlib.Path(args.heartbeats)
+    if not heartbeats_path.is_absolute():
+        heartbeats_path = root / heartbeats_path
+
+    args.owner = args.owner or (pathlib.Path.home().name)
+
+    ensure_tsv(contracts_path, CONTRACT_HEADER)
+    ensure_tsv(heartbeats_path, HEARTBEAT_HEADER)
+
+    if not args.heartbeat_only:
+        if not args.task:
+            print("ERROR: --task is required unless --heartbeat-only is set", file=sys.stderr)
+            return 2
+        if not args.expected_outputs:
+            print("ERROR: --expected-outputs is required unless --heartbeat-only is set", file=sys.stderr)
+            return 2
+        upsert_contract(contracts_path, args)
+
+    append_heartbeat(heartbeats_path, args)
+
+    print(f"Updated contract/heartbeat for thread '{args.thread_id}'.")
+    print(f"Contracts:  {contracts_path}")
+    print(f"Heartbeats: {heartbeats_path}")
+
+    if args.skip_watchdog:
+        return 0
+
+    return run_watchdog(root, args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

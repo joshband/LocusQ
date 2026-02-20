@@ -56,7 +56,7 @@ check_markdown_metadata_scope() {
     md_files+=("${file}")
   done < <(
     find . \
-      \( -path "./.git" -o -path "./build" -o -path "./build_local" -o -path "./build-qa-local" -o -path "./build_ship_universal" -o -path "./qa_output" -o -path "./tmp" \) -prune \
+      \( -path "./.git" -o -path "./.venv*" -o -path "./build" -o -path "./build_local" -o -path "./build-qa-local" -o -path "./build_ship_universal" -o -path "./qa_output" -o -path "./tmp" \) -prune \
       -o -type f -name "*.md" -print
   )
 

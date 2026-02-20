@@ -1,9 +1,3 @@
-Title: APC Skill: skill_design_webview
-Document Type: Skill Specification
-Author: APC Codex
-Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
-
 ---
 name: juce-webview-windows
 description: Quick-start guide for building JUCE 8 audio plugins with WebView2 UIs on Windows. Covers essential setup, critical member ordering, and step-by-step implementation workflow.

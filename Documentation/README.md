@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # Documentation Index
 
@@ -17,7 +17,10 @@ Keep documentation lean, canonical, and current while preserving traceability fr
 - `Documentation/invariants.md`: Non-negotiable behavioral and implementation invariants.
 - `Documentation/scene-state-contract.md`: Source-of-truth contract across audio/physics/UI state domains.
 - `Documentation/implementation-traceability.md`: Parameter/control wiring to source files.
+- `Documentation/v3-ui-parity-checklist.md`: Live checked/unchecked parity tracker against `Design/v3-ui-spec.md` and `Design/v3-style-guide.md`.
+- `Documentation/v3-stage-9-plus-detailed-checklists.md`: Detailed Stage 9-13 execution checklists with task-level acceptance gates and Codex mega-prompts.
 - `Documentation/lessons-learned.md`: Compact operational lessons and associated corrective actions.
+- `Documentation/multi-agent-thread-watchdog.md`: Optional guide for thread contract + heartbeat watchdog flows in parallel Codex sessions (disabled by default).
 - `Documentation/adr/`: Architecture Decision Records (ADRs), one decision per file.
 - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`: Research-backed prioritized execution matrix for `skill_plan`, `skill_design`, and `skill_impl`.
 - `Documentation/Doxyfile`: API documentation generation configuration for Doxygen.
