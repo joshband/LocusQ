@@ -83,6 +83,10 @@ All notable changes to LocusQ are documented here.
 
 ### Changed
 
+- Stage 15 closeout tracked for draft-pre-release readiness:
+  - Task 15-A confirmed resolved: `emit_dir_azimuth` and `emit_dir_elevation` relay/attachment/UI exposure already landed.
+  - Task 15-B resolved: `phys_vel_x`, `phys_vel_y`, and `phys_vel_z` relay/attachment/UI wiring landed in production WebView controls.
+  - Task 15-C resolved: UI exposure decision captured in `Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md`.
 - Documentation indices updated for new harness comparison artifact and local build/install command:
   - `Documentation/README.md`
   - `README.md`
