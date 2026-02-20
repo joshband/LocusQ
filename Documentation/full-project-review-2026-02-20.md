@@ -1550,7 +1550,8 @@ git commit -m "chore(release): CHANGELOG freeze and version bump to v1.0.0-ga"
   - Stage 17-C: release freeze + version bump closed (`project VERSION 1.0.0`, build/install `PASS`)
 - Promotion actions:
   - pushed release tag `v1.0.0-ga`
-  - published GitHub release using changelog excerpt
+  - published GitHub release using changelog excerpt:
+    - `https://github.com/joshband/LocusQ/releases/tag/v1.0.0-ga`
   - updated `status.json` to record GA milestone (`version=v1.0.0-ga`, Stage 17 phases marked complete)
 
 ---
