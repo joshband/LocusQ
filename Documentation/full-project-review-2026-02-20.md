@@ -780,3 +780,294 @@ git tag -a v0.15.0-draft -m "Stage 15 closeout: emit_dir/phys_vel UI, manual DAW
 ````
 
 ---
+
+### Stage 16 — Hardening
+
+**Goal:** Expand QA coverage, audit RT safety, integrate research findings, scope viewport.
+**Prerequisite:** Stage 15 draft tag cut. All five tasks are parallelizable.
+
+---
+
+#### Task 16-A: QA Scenario Expansion
+
+**Model:** Sonnet 4.6 (Haiku 4.5 for individual scenario JSON files)
+**Parallel with:** 16-B, 16-C, 16-D
+
+**What this task does (plain language):** Fills the four component coverage gaps identified
+in Section 2d: AirAbsorption, CalibrationEngine, KeyframeTimeline, and emit_dir DSP path.
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ uses JSON scenario files in qa/scenarios/ to define automated test cases.
+Each scenario specifies stimulus parameters, expected assertions, and severity.
+
+GOAL:
+Author 4 new scenario files, one per coverage gap:
+1. qa/scenarios/locusq_air_absorption_distance.json — verify HF rolloff at 3 distances
+2. qa/scenarios/locusq_calibration_sweep_capture.json — basic calibration state machine exercise
+3. qa/scenarios/locusq_keyframe_loop_playback.json — verify keyframe evaluation over 8s loop
+4. qa/scenarios/locusq_emit_dir_spatial_effect.json — directivity aim vs spatial output
+
+READ FIRST:
+1. qa/scenarios/locusq_25_directivity_focus.json (template for DSP-focused scenario)
+2. qa/scenarios/locusq_24_physics_spatial_motion.json (template for multi-step scenario)
+3. Source/AirAbsorption.h (understand cutoff calculation)
+4. Source/CalibrationEngine.h (understand state machine)
+
+OUTPUT: 4 new JSON files in qa/scenarios/
+
+VALIDATION:
+ls qa/scenarios/locusq_air_absorption_distance.json
+ls qa/scenarios/locusq_calibration_sweep_capture.json
+ls qa/scenarios/locusq_keyframe_loop_playback.json
+ls qa/scenarios/locusq_emit_dir_spatial_effect.json
+
+COMMIT:
+git commit -m "test(stage16): add AirAbsorption, Calibration, Keyframe, and emit_dir scenarios"
+````
+
+---
+
+#### Task 16-B: RT-Safety Audit
+
+**Model:** Haiku 4.5
+**Parallel with:** 16-A, 16-C, 16-D
+
+**What this task does (plain language):** Scans the processBlock call stack for any
+accidental heap allocation, logging, or string construction that would violate real-time
+constraints.
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ's processBlock must be allocation-free. The invariant is in Documentation/invariants.md.
+
+GOAL:
+Grep PluginProcessor.cpp for patterns that indicate RT violations:
+  new , std::vector, .push_back, .resize, std::string(, juce::Logger, std::cout
+
+For each hit, determine if it's in the processBlock call stack or in a non-RT path
+(serialization, parameter creation, WebView command handlers).
+
+Report findings as a table:
+| Line | Pattern | In processBlock stack? | Severity |
+
+Expected: zero RT-path violations (all hits should be in non-RT paths).
+
+READ FIRST:
+1. Source/PluginProcessor.cpp (full file, focus on processBlock and functions it calls)
+2. Documentation/invariants.md
+
+OUTPUT: Findings table. If zero RT violations found, document as "clean" with evidence.
+
+COMMIT:
+git commit -m "docs(stage16): RT-safety audit — processBlock allocation-free confirmed"
+````
+
+---
+
+#### Task 16-C: Research Integration Recommendations
+
+**Model:** Opus 4.6
+**Blocked by:** Section 0 research (soft dependency — can start with draft)
+
+**What this task does (plain language):** Reads the Section 0 research findings and produces
+3-5 concrete integration recommendations for LocusQ.
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+Documentation/full-project-review-2026-02-20.md Section 0 contains ecosystem research
+covering spatial audio algorithms, Apple APIs, JUCE ecosystem, plugin standards, and
+3D visualization. LocusQ implements custom VBAP, FDN reverb, physics engine, and Doppler.
+
+GOAL:
+Compare Section 0 findings against LocusQ's current implementation. Produce 3-5 concrete
+integration recommendations, each with:
+- What to integrate (library/pattern)
+- What it replaces or augments
+- LOC estimate for change
+- Risk assessment
+- Recommended timing (v1.1, v2, or never)
+
+Write recommendations to:
+Documentation/research/section0-integration-recommendations-2026-02-20.md
+
+READ FIRST:
+1. Documentation/full-project-review-2026-02-20.md (Section 0 — full)
+2. Source/SpatialRenderer.h (current DSP chain)
+3. Source/FDNReverb.h (current reverb implementation)
+4. .ideas/architecture.md (design intent)
+
+OUTPUT: Markdown file with 3-5 opinionated recommendations.
+
+COMMIT:
+git commit -m "docs(research): Section 0 integration recommendations for LocusQ"
+````
+
+---
+
+#### Task 16-D: Three.js Viewport Gap Assessment + ADR-0008
+
+**Model:** Opus 4.6
+**Parallel with:** 16-A, 16-B
+
+**What this task does (plain language):** Compares the architecture spec's UI section
+against the actual production UI to list every missing viewport feature, then decides
+which gaps are v1-required vs post-v1.
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+.ideas/architecture.md Section 7 specifies a full Three.js viewport with room wireframe,
+speaker cones, draggable emitters, motion trails, velocity vectors, and orbit controls.
+The production UI (index.js + index.html) has the control panel but not the viewport.
+
+GOAL:
+1. List every specced viewport feature that is absent from production UI
+2. Write Documentation/adr/ADR-0008-viewport-scope-v1-vs-post-v1.md scoping which
+   features are v1-required (none, if control panel is sufficient) vs post-v1
+3. Be opinionated: the right answer is likely "viewport is post-v1"
+
+READ FIRST:
+1. .ideas/architecture.md (Section 7 UI spec)
+2. Source/ui/public/js/index.js (viewport-related code)
+3. Source/ui/public/index.html (canvas/viewport elements)
+4. Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md
+   (format reference)
+
+OUTPUT: ADR-0008 file + gap assessment in review notes.
+
+COMMIT:
+git commit -m "docs(adr): add ADR-0008 viewport scope — post-v1 deferral"
+````
+
+---
+
+#### Task 16-E: Directivity Aim QA Scenario
+
+**Model:** Haiku 4.5
+**Blocked by:** 16-A (for template consistency)
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+emit_dir_azimuth and emit_dir_elevation are now fully wired. The DirectivityFilter
+applies a cardioid-like gain shaping based on the angle between the emitter's aim
+direction and each speaker direction.
+
+GOAL:
+Author qa/scenarios/locusq_directivity_aim.json covering:
+1. Default aim (0,0) — verify baseline spatial output
+2. Aim rotated 90 degrees — verify gain shift toward aimed speaker
+3. Aim at max elevation — verify vertical directivity effect
+
+Follow the format of locusq_25_directivity_focus.json.
+
+READ FIRST:
+1. qa/scenarios/locusq_25_directivity_focus.json
+2. Source/DirectivityFilter.h
+
+OUTPUT: qa/scenarios/locusq_directivity_aim.json
+
+COMMIT:
+git commit -m "test(stage16): add directivity aim QA scenario"
+````
+
+---
+
+### Stage 17 — GA Readiness
+
+**Goal:** Final validation pass, docs freeze, version bump, release.
+
+---
+
+#### Task 17-A: Portable Device Acceptance Repeat
+
+**Model:** Human + Sonnet 4.6
+**Blocked by:** Stage 16 complete
+
+**What this task does:** Same as 15-D but with Stage 16 hardening in place. Focus on
+headphone profile (ADR-0006 gate).
+
+**Checklist:**
+- [ ] Fresh build with `./scripts/build-and-install-mac.sh`
+- [ ] Re-execute DEV-01..DEV-06 with focus on headphone and laptop speaker profiles
+- [ ] Update validation-trend.md with Stage 17 entry
+- [ ] If any check fails, create issue and block GA
+
+---
+
+#### Task 17-B: Docs Freshness Gate
+
+**Model:** Haiku 4.5
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ docs require metadata freshness. ADR-0005 mandates synchronized updates.
+
+GOAL:
+1. Run ./scripts/validate-docs-freshness.sh
+2. Resolve any failures (update Last Modified Date metadata on stale files)
+3. Verify all metadata headers are present
+
+VALIDATION:
+./scripts/validate-docs-freshness.sh (must return 0)
+
+COMMIT:
+git commit -m "docs(stage17): resolve docs freshness gate violations"
+````
+
+---
+
+#### Task 17-C: CHANGELOG Freeze + Version Bump
+
+**Model:** Sonnet 4.6
+
+**Mega-Prompt:**
+
+````
+CONTEXT:
+LocusQ is preparing for v1.0.0-ga release.
+
+GOAL:
+1. Finalize CHANGELOG.md for v1.0.0-ga (include Stage 15-17 entries)
+2. Bump version in CMakeLists.txt (search for VERSION field)
+3. Update README.md release section
+4. Verify build succeeds with new version
+
+READ FIRST:
+1. CHANGELOG.md
+2. CMakeLists.txt (version field)
+3. README.md
+
+VALIDATION:
+./scripts/build-and-install-mac.sh
+grep VERSION CMakeLists.txt
+
+COMMIT:
+git commit -m "chore(release): CHANGELOG freeze and version bump to v1.0.0-ga"
+````
+
+---
+
+#### Task 17-D: GA Promotion
+
+**Model:** Human
+
+**Checklist:**
+- [ ] Review `draft-pre-release` tag
+- [ ] Resolve any final concerns from Stage 17-A/B/C
+- [ ] Push tag `v1.0.0-ga`
+- [ ] Publish GitHub release with changelog excerpt
+- [ ] Update status.json to record GA milestone
+
+---
