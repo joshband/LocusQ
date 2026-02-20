@@ -119,20 +119,37 @@ Vec3 computeEmitterInteractionForce (const SceneGraph& sceneGraph,
     if (sceneGraph.getActiveEmitterCount() <= 1)
         return {};
 
+    // Radius within which emitters repel each other (metres in normalised scene space).
+    // 2.0 m covers roughly one quadrant of the ±3 m scene at typical multi-emitter densities.
     constexpr float kInteractionRadius = 2.0f;
     constexpr float kInteractionRadiusSq = kInteractionRadius * kInteractionRadius;
     constexpr float kMinimumDistance = 0.05f;
     constexpr float kMinimumDistanceSq = kMinimumDistance * kMinimumDistance;
+    // Peak repulsion acceleration (m/s² equivalent). Tuned so two nearby emitters
+    // separate at a perceptible but not violent rate at the default physics rate.
     constexpr float kInteractionStrength = 8.0f;
+    // Hard cap prevents runaway force accumulation when many emitters overlap.
     constexpr float kMaxForce = 12.0f;
 
     Vec3 interactionForce {};
 
-    for (int slotId = 0; slotId < SceneGraph::MAX_EMITTERS; ++slotId)
+    // Early-exit once all active slots have been visited to avoid scanning the
+    // full MAX_EMITTERS tail when only a few slots are occupied.
+    int remaining = sceneGraph.getActiveEmitterCount();
+
+    for (int slotId = 0; slotId < SceneGraph::MAX_EMITTERS && remaining > 0; ++slotId)
     {
-        if (slotId == selfSlotId || ! sceneGraph.isSlotActive (slotId))
+        if (! sceneGraph.isSlotActive (slotId))
             continue;
 
+        --remaining;
+
+        if (slotId == selfSlotId)
+            continue;
+
+        // NOTE: other.position is written by the other emitter's processBlock and
+        // read here one audio callback later — a 1-frame temporal lag that is
+        // intentional and acceptable in this lock-free multi-reader design.
         const auto other = sceneGraph.getSlot (slotId).read();
         if (! other.active || ! other.physicsEnabled)
             continue;
@@ -151,14 +168,18 @@ Vec3 computeEmitterInteractionForce (const SceneGraph& sceneGraph,
             dx = direction * kMinimumDistance;
             dy = 0.0f;
             dz = -direction * kMinimumDistance;
-            distanceSq = (dx * dx) + (dz * dz);
+            // Include dy² for formula consistency (dy = 0 here, so no numeric change).
+            distanceSq = (dx * dx) + (dy * dy) + (dz * dz);
         }
 
         const float distance = std::sqrt (distanceSq);
         if (distance <= 0.0f)
             continue;
 
-        const float falloff = juce::jlimit (0.0f, 1.0f, 1.0f - (distance / kInteractionRadius));
+        // Smoothstep falloff: C1-continuous at the boundary (no derivative
+        // discontinuity), giving a smoother force transition than linear.
+        const float t = juce::jlimit (0.0f, 1.0f, 1.0f - (distance / kInteractionRadius));
+        const float falloff = t * t * (3.0f - 2.0f * t);
         const float forceMagnitude = falloff * kInteractionStrength;
         const float invDistance = 1.0f / distance;
 

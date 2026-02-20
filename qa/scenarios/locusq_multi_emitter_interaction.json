@@ -1,0 +1,109 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_multi_emitter_interaction",
+  "name": "LocusQ Multi-Emitter Runtime Interaction Force",
+  "category": "physics",
+  "description": "Validates that rend_phys_interact produces bounded, finite repulsion forces between two or more active emitters with physics enabled. Covers the computeEmitterInteractionForce runtime path: force accumulation, smoothstep falloff, max-force cap, and absence of NaN/Inf artifacts under close-proximity conditions.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "MULTI_INSTANCE"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "tone",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 440.0,
+      "end_hz": 440.0,
+      "amplitude": 0.35,
+      "duration_seconds": 3.0
+    }
+  },
+
+  "instance_config": {
+    "num_emitter_instances": 2,
+    "renderer_instance": true,
+    "note": "Two emitter instances placed within kInteractionRadius (2.0 m) to exercise the interaction force path."
+  },
+
+  "parameter_variations": {
+    "pos_azimuth":         0.55,
+    "pos_elevation":       0.5,
+    "pos_distance":        0.08,
+    "emit_gain":           0.5,
+    "emit_spread":         0.0,
+    "emit_directivity":    0.0,
+    "phys_enable":         1.0,
+    "phys_mass":           0.5,
+    "phys_drag":           0.15,
+    "phys_elasticity":     0.8,
+    "phys_gravity":        0.5,
+    "phys_throw":          0.0,
+    "rend_phys_interact":  1.0,
+    "rend_phys_walls":     1.0,
+    "rend_phys_rate":      1.0,
+    "rend_master_gain":    0.5,
+    "rend_room_enable":    0.0,
+    "rend_doppler":        0.0,
+    "rend_air_absorb":     0.0
+  },
+
+  "analysis_windows": {
+    "interaction_window": {
+      "type": "time_range",
+      "start_seconds": 0.1,
+      "end_seconds": 3.0,
+      "description": "Full interaction period with physics active"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "interaction_window",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "interaction_window",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "no_clicks_from_interaction_updates": {
+      "metric": "discontinuity_count",
+      "window": "interaction_window",
+      "threshold": {
+        "max_count": 10,
+        "detection_threshold_db": 9.0
+      },
+      "severity": "hard_fail"
+    },
+    "interaction_modulates_spatial_output": {
+      "metric": "flux_rate",
+      "window": "interaction_window",
+      "threshold": {
+        "min": 0.00001,
+        "max": 10.0
+      },
+      "severity": "hard_fail"
+    },
+    "force_bounded": {
+      "metric": "max_force_magnitude",
+      "window": "interaction_window",
+      "threshold": {
+        "max": 12.0,
+        "note": "Matches kMaxForce cap in computeEmitterInteractionForce"
+      },
+      "severity": "hard_fail"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}
