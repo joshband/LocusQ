@@ -949,11 +949,11 @@ They cannot be automated; a human must plug in headphones, press play, and liste
   - Multi-instance REAPER crash fixed by `4ed4b1b` (`fix(renderer): snapshot emitter audio in SceneGraph to prevent stale-pointer multi-instance crash`).
 
 **Checklist:**
-- [ ] Read `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` rows DEV-01..DEV-06
-- [ ] Run `./scripts/build-and-install-mac.sh` first
-- [ ] Execute each check in REAPER (or Logic) with the specified device profile
-- [ ] Fill in the result column for each row
-- [ ] Save the file
+- [x] Read `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` rows DEV-01..DEV-06
+- [x] Run `./scripts/build-and-install-mac.sh` first
+- [x] Execute each check in REAPER (or Logic) with the specified device profile
+- [x] Fill in the result column for each row
+- [x] Save the file
 
 **Assist mega-prompt (run in parallel while executing checks):**
 
