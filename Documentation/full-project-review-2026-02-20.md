@@ -395,13 +395,14 @@ gantt
     2.8 Output Layout & Routing        :done, 2026-02-19, 1d
     2.9–2.13 QA / Hardening Stages     :done, 2026-02-20, 1d
     2.14 Stage 14 Closeout             :done, 2026-02-20, 1d
+    Stage 15 Close the Gap             :done, 2026-02-20, 1d
+    Stage 16 Hardening                 :done, 2026-02-20, 1d
 
     section Current
-    Stage 15 Close the Gap             :active, 2026-02-20, 3d
+    Stage 17 GA Readiness              :active, 2026-02-20, 3d
 
     section Ahead
-    Stage 16 Hardening                 :2026-02-23, 4d
-    Stage 17 GA Readiness              :2026-02-27, 3d
+    Post-v1 Backlog Execution          :2026-03-01, 3d
 ```
 
 ---
@@ -587,13 +588,15 @@ Default keyframe presets are loaded automatically.
 
 ### 2d. QA Review
 
-**Current state:** 43 scenario files covering DSP components, output layouts, snapshot
-migration, physics, RT safety, and CPU budget. Automated lanes are green. Manual DAW
-acceptance (DEV-01..DEV-06) is now executed with `DEV-01..DEV-05=PASS`, `DEV-06=N/A`
-(external mic unavailable). During manual DAW validation, a multi-instance REAPER crash
-was reproduced and fixed in `main` (`4ed4b1b`).
+**Current state:** 48 scenario files covering DSP components, output layouts, snapshot
+migration, physics, RT safety, CPU budget, and Stage 16 hardening additions
+(AirAbsorption, CalibrationEngine, KeyframeTimeline loop playback, emit_dir spatial effect,
+and directivity aim). Automated lanes are green. Manual DAW acceptance (DEV-01..DEV-06)
+was rerun in Stage 17-A with `DEV-01..DEV-05=PASS`, `DEV-06=N/A` (external mic unavailable).
+During manual DAW validation, a multi-instance REAPER crash was reproduced and fixed in
+`main` (`4ed4b1b`).
 
-**Verdict:** Strong automated coverage. Four component gaps remain for dedicated scenarios.
+**Verdict:** Strong automated coverage with Stage 16 gap closure complete.
 Manual device-profile acceptance is closed.
 
 #### Coverage Matrix
@@ -602,16 +605,16 @@ Manual device-profile acceptance is closed.
 |-----------|-----------------|------|
 | VBAPPanner | locusq_renderer_spatial_output.json | — |
 | DistanceAttenuator | locusq_renderer_distance_attenuation.json | — |
-| AirAbsorption | (covered indirectly by quality/distance scenarios) | **gap: no dedicated scenario** |
+| AirAbsorption | locusq_air_absorption_distance.json | — |
 | FDNReverb | locusq_25_room_size_small/large.json | partial |
 | DopplerProcessor | locusq_25_doppler_motion.json | — |
 | DirectivityFilter | locusq_25_directivity_focus.json | — |
 | SpreadProcessor | locusq_25_spread_diffuse.json | — |
 | PhysicsEngine | locusq_24_physics_spatial_motion/zero_g_drift.json | — |
 | computeEmitterInteractionForce | locusq_multi_emitter_interaction.json | — |
-| CalibrationEngine | (no scenario) | **gap** |
-| KeyframeTimeline | locusq_26_animation_internal_smoke.json | — |
-| emit_dir DSP path | (no dedicated scenario) | **gap** |
+| CalibrationEngine | locusq_calibration_sweep_capture.json | — |
+| KeyframeTimeline | locusq_26_animation_internal_smoke.json; locusq_keyframe_loop_playback.json | — |
+| emit_dir DSP path | locusq_emit_dir_spatial_effect.json; locusq_directivity_aim.json | — |
 | Output layouts | locusq_phase_2_8_output_layout_*.json (mono/stereo/quad) | — |
 | Snapshot migration | locusq_phase_2_11*.json (5 scenarios) | — |
 | RT safety | locusq_rt_safety_emitter.json | — |
@@ -621,9 +624,9 @@ Manual device-profile acceptance is closed.
 | ID | Severity | Finding | Disposition |
 |----|----------|---------|-------------|
 | Q-01 | Medium | DEV-01..DEV-06 manual DAW acceptance was unexecuted | resolved (Stage 15-D, 2026-02-20) |
-| Q-02 | Low | No dedicated AirAbsorption scenario | fix next (Stage 16-A) |
-| Q-03 | Low | No CalibrationEngine scenario | fix next (Stage 16-A) |
-| Q-04 | Low | No emit_dir DSP effect scenario | fix next (Stage 16-E) |
+| Q-02 | Low | No dedicated AirAbsorption scenario | resolved (Stage 16-A, commit `2503707`) |
+| Q-03 | Low | No CalibrationEngine scenario | resolved (Stage 16-A, commit `2503707`, refined in `088be6f`) |
+| Q-04 | Low | No emit_dir DSP effect scenario | resolved (Stage 16-A + 16-E, commits `2503707`, `7da49e8`) |
 | Q-05 | High | Multi-instance renderer/emitter audio handoff could crash REAPER (`EXC_BAD_ACCESS`) | resolved (`fix(renderer)` commit `4ed4b1b`) |
 
 #### Q-01: Manual DAW acceptance rows still open
@@ -655,21 +658,28 @@ with an owned double-buffered mono snapshot in `EmitterSlot`, consumed by `Spati
 > indirectly by other scenarios but has no scenario that specifically validates the filter
 > cutoff vs distance relationship.
 
-**Recommendation:** Author scenario in Stage 16-A.
+**Resolution status:** Completed in Stage 16-A.
+- Scenario: `qa/scenarios/locusq_air_absorption_distance.json`
+- Evidence commit: `2503707`
 
 #### Q-03: CalibrationEngine has no automated scenario
 
 > **What this means:** The room measurement system has no automated test scenario. It was
 > validated manually during Phase 2.3 but has no regression coverage.
 
-**Recommendation:** Author scenario in Stage 16-A.
+**Resolution status:** Completed in Stage 16-A (with adapter alignment follow-up).
+- Scenario: `qa/scenarios/locusq_calibration_sweep_capture.json`
+- Evidence commits: `2503707`, `088be6f`
 
 #### Q-04: Directivity aim effect has no dedicated scenario
 
 > **What this means:** The directivity aim parameters now have UI exposure (C-02 resolved)
 > but no scenario verifying the DSP effect of aim direction on spatial output.
 
-**Recommendation:** Author `locusq_directivity_aim.json` in Stage 16-E.
+**Resolution status:** Completed in Stage 16-A and Stage 16-E.
+- Scenario: `qa/scenarios/locusq_emit_dir_spatial_effect.json`
+- Scenario: `qa/scenarios/locusq_directivity_aim.json`
+- Evidence commits: `2503707`, `7da49e8`
 
 ---
 
@@ -1101,6 +1111,15 @@ COMMIT:
 git commit -m "test(stage16): add AirAbsorption, Calibration, Keyframe, and emit_dir scenarios"
 ````
 
+**Stage 16-A Execution Result (2026-02-20): complete**
+
+- Added scenario: `qa/scenarios/locusq_air_absorption_distance.json`
+- Added scenario: `qa/scenarios/locusq_calibration_sweep_capture.json`
+- Added scenario: `qa/scenarios/locusq_keyframe_loop_playback.json`
+- Added scenario: `qa/scenarios/locusq_emit_dir_spatial_effect.json`
+- Validation command (`ls` on all four files): `PASS`
+- Evidence commits: `2503707` (initial add), `088be6f` (calibration scenario adapter alignment)
+
 ---
 
 #### Task 16-B: RT-Safety Audit
@@ -1292,6 +1311,13 @@ COMMIT:
 git commit -m "docs(research): Section 0 integration recommendations for LocusQ"
 ````
 
+**Stage 16-C Execution Result (2026-02-20): complete**
+
+- Added: `Documentation/research/section0-integration-recommendations-2026-02-20.md`
+- Recommendations recorded: `5` (Steam Audio binaural mode, CLAP host format expansion,
+  guarded FDNReverb quality ladder, viewport telemetry layering, PHASE bridge deferment)
+- Evidence commit: `856bde8`
+
 ---
 
 #### Task 16-D: Three.js Viewport Gap Assessment + ADR-0008
@@ -1378,6 +1404,12 @@ COMMIT:
 git commit -m "test(stage16): add directivity aim QA scenario"
 ````
 
+**Stage 16-E Execution Result (2026-02-20): complete**
+
+- Added scenario: `qa/scenarios/locusq_directivity_aim.json`
+- Validation command (`ls qa/scenarios/locusq_directivity_aim.json`): `PASS`
+- Evidence commit: `7da49e8`
+
 ---
 
 ### Stage 17 — GA Readiness
@@ -1395,10 +1427,27 @@ git commit -m "test(stage16): add directivity aim QA scenario"
 headphone profile (ADR-0006 gate).
 
 **Checklist:**
-- [ ] Fresh build with `./scripts/build-and-install-mac.sh`
-- [ ] Re-execute DEV-01..DEV-06 with focus on headphone and laptop speaker profiles
-- [ ] Update validation-trend.md with Stage 17 entry
-- [ ] If any check fails, create issue and block GA
+- [x] Fresh build with `./scripts/build-and-install-mac.sh`
+- [x] Re-execute DEV-01..DEV-06 with focus on headphone and laptop speaker profiles
+- [x] Update validation-trend.md with Stage 17 entry
+- [x] If any check fails, create issue and block GA (no failures observed)
+
+**Stage 17-A Execution Result (2026-02-20): PASS_WITH_NA**
+
+- Build prerequisite: `PASS`
+  - Evidence: `TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log`
+- Operator rerun context:
+  - Run Date (UTC): `2026-02-20T23:23:53Z`
+  - Host (DAW) + Version: `Reaper v7.61`
+  - Plugin Format: `VST3`
+- Manual outcomes:
+  - `DEV-01`: `PASS`
+  - `DEV-02`: `PASS`
+  - `DEV-03`: `PASS`
+  - `DEV-04`: `PASS`
+  - `DEV-05`: `PASS`
+  - `DEV-06`: `N/A` (no external mic available)
+- GA implication: not blocked by DEV failures.
 
 ---
 
@@ -1423,6 +1472,12 @@ VALIDATION:
 COMMIT:
 git commit -m "docs(stage17): resolve docs freshness gate violations"
 ````
+
+**Stage 17-B Execution Result (2026-02-20): pass**
+
+- Command: `./scripts/validate-docs-freshness.sh`
+- Result: `PASS` (`0 warning(s)`)
+- Metadata header check: present in the current review doc and unaffected by this run.
 
 ---
 
@@ -1520,15 +1575,14 @@ graph TD
     classDef human fill:#5c4a1a,color:#fff
 ```
 
-### Updated Start Now (Post 15-D Completion)
+### Updated Start Now (Post 17-B Completion)
 
-Task 15-A, 15-B, 15-C, and 15-D are complete. The immediate next action is:
+Stage 15 and Stage 16 are complete. Stage 17-A and Stage 17-B are complete. The
+immediate next action is:
 
 | Session | Mega-Prompt | Model | Notes |
 |---------|------------|-------|-------|
-| 1 | Task 15-E (traceability update) | Haiku 4.5 | Unblocked by 15-C completion |
-| 2 | Task 15-F (draft tag) | Sonnet 4.6 | Run after 15-E lands |
-
-Then proceed to Stage 16 parallel tracks.
+| 1 | Task 17-C (CHANGELOG freeze + version bump) | Sonnet 4.6 | Execute after confirming release notes scope |
+| 2 | Task 17-D (GA promotion) | Human | Execute after 17-C validation and tag readiness |
 
 ---
