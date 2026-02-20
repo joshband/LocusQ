@@ -1140,6 +1140,116 @@ COMMIT:
 git commit -m "docs(stage16): RT-safety audit — processBlock allocation-free confirmed"
 ````
 
+**Stage 16-B Execution Result (2026-02-20): clean**
+
+**Evidence:**
+- Invariant checked: `Documentation/invariants.md` -> "No heap allocation, locks, or blocking I/O inside `processBlock()`."
+- Scan command: `rg -n "\bnew\b|std::vector|\.push_back|\.resize|std::string\(|juce::Logger|std::cout" Source/PluginProcessor.cpp`
+- Hit counts: `new=14`, `std::vector=2`, `.push_back=79`, `.resize=0`, `std::string(=0`, `juce::Logger=0`, `std::cout=0`.
+- `processBlock` stack hit count: `0/95` (all matches are in non-RT paths: UI handlers, preset/state serialization, editor/factory creation, and parameter layout construction).
+
+| Line | Pattern | In processBlock stack? | Severity |
+|---|---|---|---|
+| 965 | `new` | No | Informational (non-RT path) |
+| 1031 | `new` | No | Informational (non-RT path) |
+| 1080 | `new` | No | Informational (non-RT path) |
+| 1092 | `new` | No | Informational (non-RT path) |
+| 1099 | `new` | No | Informational (non-RT path) |
+| 1137 | `std::vector` | No | Informational (non-RT path) |
+| 1152 | `.push_back` | No | Informational (non-RT path) |
+| 1462 | `new` | No | Informational (non-RT path) |
+| 1469 | `new` | No | Informational (non-RT path) |
+| 1475 | `new` | No | Informational (non-RT path) |
+| 1554 | `new` | No | Informational (non-RT path) |
+| 1601 | `new` | No | Informational (non-RT path) |
+| 1644 | `new` | No | Informational (non-RT path) |
+| 1680 | `new` | No | Informational (non-RT path) |
+| 1761 | `new` | No | Informational (non-RT path) |
+| 1859 | `std::vector` | No | Informational (non-RT path) |
+| 1862 | `.push_back` | No | Informational (non-RT path) |
+| 1866 | `.push_back` | No | Informational (non-RT path) |
+| 1870 | `.push_back` | No | Informational (non-RT path) |
+| 1874 | `.push_back` | No | Informational (non-RT path) |
+| 1877 | `.push_back` | No | Informational (non-RT path) |
+| 1879 | `.push_back` | No | Informational (non-RT path) |
+| 1881 | `.push_back` | No | Informational (non-RT path) |
+| 1883 | `.push_back` | No | Informational (non-RT path) |
+| 1886 | `.push_back` | No | Informational (non-RT path) |
+| 1890 | `.push_back` | No | Informational (non-RT path) |
+| 1895 | `.push_back` | No | Informational (non-RT path) |
+| 1899 | `.push_back` | No | Informational (non-RT path) |
+| 1903 | `.push_back` | No | Informational (non-RT path) |
+| 1907 | `.push_back` | No | Informational (non-RT path) |
+| 1911 | `.push_back` | No | Informational (non-RT path) |
+| 1915 | `.push_back` | No | Informational (non-RT path) |
+| 1919 | `.push_back` | No | Informational (non-RT path) |
+| 1924 | `.push_back` | No | Informational (non-RT path) |
+| 1928 | `.push_back` | No | Informational (non-RT path) |
+| 1932 | `.push_back` | No | Informational (non-RT path) |
+| 1936 | `.push_back` | No | Informational (non-RT path) |
+| 1939 | `.push_back` | No | Informational (non-RT path) |
+| 1944 | `.push_back` | No | Informational (non-RT path) |
+| 1948 | `.push_back` | No | Informational (non-RT path) |
+| 1951 | `.push_back` | No | Informational (non-RT path) |
+| 1954 | `.push_back` | No | Informational (non-RT path) |
+| 1958 | `.push_back` | No | Informational (non-RT path) |
+| 1962 | `.push_back` | No | Informational (non-RT path) |
+| 1966 | `.push_back` | No | Informational (non-RT path) |
+| 1971 | `.push_back` | No | Informational (non-RT path) |
+| 1974 | `.push_back` | No | Informational (non-RT path) |
+| 1978 | `.push_back` | No | Informational (non-RT path) |
+| 1982 | `.push_back` | No | Informational (non-RT path) |
+| 1986 | `.push_back` | No | Informational (non-RT path) |
+| 1990 | `.push_back` | No | Informational (non-RT path) |
+| 1994 | `.push_back` | No | Informational (non-RT path) |
+| 1998 | `.push_back` | No | Informational (non-RT path) |
+| 2002 | `.push_back` | No | Informational (non-RT path) |
+| 2006 | `.push_back` | No | Informational (non-RT path) |
+| 2010 | `.push_back` | No | Informational (non-RT path) |
+| 2013 | `.push_back` | No | Informational (non-RT path) |
+| 2017 | `.push_back` | No | Informational (non-RT path) |
+| 2020 | `.push_back` | No | Informational (non-RT path) |
+| 2024 | `.push_back` | No | Informational (non-RT path) |
+| 2027 | `.push_back` | No | Informational (non-RT path) |
+| 2031 | `.push_back` | No | Informational (non-RT path) |
+| 2035 | `.push_back` | No | Informational (non-RT path) |
+| 2039 | `.push_back` | No | Informational (non-RT path) |
+| 2043 | `.push_back` | No | Informational (non-RT path) |
+| 2046 | `.push_back` | No | Informational (non-RT path) |
+| 2049 | `.push_back` | No | Informational (non-RT path) |
+| 2052 | `.push_back` | No | Informational (non-RT path) |
+| 2056 | `.push_back` | No | Informational (non-RT path) |
+| 2059 | `.push_back` | No | Informational (non-RT path) |
+| 2062 | `.push_back` | No | Informational (non-RT path) |
+| 2065 | `.push_back` | No | Informational (non-RT path) |
+| 2070 | `.push_back` | No | Informational (non-RT path) |
+| 2074 | `.push_back` | No | Informational (non-RT path) |
+| 2078 | `.push_back` | No | Informational (non-RT path) |
+| 2082 | `.push_back` | No | Informational (non-RT path) |
+| 2086 | `.push_back` | No | Informational (non-RT path) |
+| 2089 | `.push_back` | No | Informational (non-RT path) |
+| 2093 | `.push_back` | No | Informational (non-RT path) |
+| 2097 | `.push_back` | No | Informational (non-RT path) |
+| 2100 | `.push_back` | No | Informational (non-RT path) |
+| 2104 | `.push_back` | No | Informational (non-RT path) |
+| 2108 | `.push_back` | No | Informational (non-RT path) |
+| 2112 | `.push_back` | No | Informational (non-RT path) |
+| 2116 | `.push_back` | No | Informational (non-RT path) |
+| 2120 | `.push_back` | No | Informational (non-RT path) |
+| 2123 | `.push_back` | No | Informational (non-RT path) |
+| 2126 | `.push_back` | No | Informational (non-RT path) |
+| 2130 | `.push_back` | No | Informational (non-RT path) |
+| 2134 | `.push_back` | No | Informational (non-RT path) |
+| 2137 | `.push_back` | No | Informational (non-RT path) |
+| 2141 | `.push_back` | No | Informational (non-RT path) |
+| 2144 | `.push_back` | No | Informational (non-RT path) |
+| 2147 | `.push_back` | No | Informational (non-RT path) |
+| 2156 | `new` | No | Informational (non-RT path) |
+| - | `.resize` | No hits in file | None |
+| - | `std::string(` | No hits in file | None |
+| - | `juce::Logger` | No hits in file | None |
+| - | `std::cout` | No hits in file | None |
+
 ---
 
 #### Task 16-C: Research Integration Recommendations
