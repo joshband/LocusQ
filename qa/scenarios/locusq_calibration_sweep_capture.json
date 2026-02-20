@@ -23,15 +23,6 @@
   },
 
   "parameter_variations": {
-    "mode": 0.0,
-    "cal_spk_config": 0.0,
-    "cal_mic_channel": 0.0,
-    "cal_spk1_out": 0.0,
-    "cal_spk2_out": 0.1429,
-    "cal_spk3_out": 0.2857,
-    "cal_spk4_out": 0.4286,
-    "cal_test_level": 0.6667,
-    "cal_test_type": 0.0,
     "pos_azimuth": 0.50,
     "pos_elevation": 0.50,
     "pos_distance": 0.12,
@@ -39,9 +30,11 @@
     "emit_spread": 0.00,
     "emit_directivity": 0.00,
     "rend_master_gain": 0.50,
+    "rend_quality": 1.0,
     "rend_room_enable": 0.0,
     "rend_doppler": 0.0,
-    "rend_air_absorb": 0.0
+    "rend_air_absorb": 0.0,
+    "qa_emitter_instances": 0.0
   },
 
   "multi_pass": {
