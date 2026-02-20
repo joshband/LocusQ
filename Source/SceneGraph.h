@@ -61,6 +61,8 @@ struct EmitterData
 class EmitterSlot
 {
 public:
+    static constexpr int MAX_SHARED_AUDIO_SAMPLES = 8192;
+
     EmitterSlot() = default;
 
     // Writer side (Emitter instance, audio thread)
@@ -77,33 +79,79 @@ public:
         return buffers[readIndex.load (std::memory_order_acquire)];
     }
 
-    // Audio buffer pointer (valid only during processBlock)
+    // Audio handoff buffer (single-producer/single-consumer, double-buffered).
+    // The writer copies a mono snapshot so renderer never dereferences host-owned
+    // pointers from another plugin instance.
     void setAudioBuffer (const float* const* channels, int numChannels, int numSamples)
     {
-        audioChannels = channels;
-        audioNumChannels = numChannels;
-        audioNumSamples = numSamples;
+        if (channels == nullptr || numChannels <= 0 || numSamples <= 0)
+        {
+            clearAudioBuffer();
+            return;
+        }
+
+        const int samplesToCopy = juce::jlimit (0, MAX_SHARED_AUDIO_SAMPLES, numSamples);
+        if (samplesToCopy <= 0)
+        {
+            clearAudioBuffer();
+            return;
+        }
+
+        const int writeIdx = 1 - audioReadIndex.load (std::memory_order_acquire);
+        auto& writeBuffer = audioBuffers[writeIdx];
+
+        const float norm = 1.0f / static_cast<float> (numChannels);
+        for (int i = 0; i < samplesToCopy; ++i)
+        {
+            float sum = 0.0f;
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                if (const auto* channel = channels[ch])
+                    sum += channel[i];
+            }
+
+            writeBuffer.mono[static_cast<size_t> (i)] = sum * norm;
+        }
+
+        writeBuffer.numSamples = samplesToCopy;
+        writeBuffer.valid = true;
+        audioReadIndex.store (writeIdx, std::memory_order_release);
     }
 
     void clearAudioBuffer()
     {
-        audioChannels = nullptr;
-        audioNumChannels = 0;
-        audioNumSamples = 0;
+        const int writeIdx = 1 - audioReadIndex.load (std::memory_order_acquire);
+        auto& writeBuffer = audioBuffers[writeIdx];
+        writeBuffer.numSamples = 0;
+        writeBuffer.valid = false;
+        audioReadIndex.store (writeIdx, std::memory_order_release);
     }
 
-    const float* const* getAudioChannels() const { return audioChannels; }
-    int getAudioNumChannels() const { return audioNumChannels; }
-    int getAudioNumSamples() const { return audioNumSamples; }
+    const float* getAudioMono() const
+    {
+        const auto& readBuffer = audioBuffers[audioReadIndex.load (std::memory_order_acquire)];
+        return readBuffer.valid ? readBuffer.mono.data() : nullptr;
+    }
+
+    int getAudioNumSamples() const
+    {
+        const auto& readBuffer = audioBuffers[audioReadIndex.load (std::memory_order_acquire)];
+        return readBuffer.valid ? readBuffer.numSamples : 0;
+    }
 
 private:
+    struct AudioBufferSnapshot
+    {
+        std::array<float, MAX_SHARED_AUDIO_SAMPLES> mono {};
+        int numSamples = 0;
+        bool valid = false;
+    };
+
     std::array<EmitterData, 2> buffers;
     std::atomic<int> readIndex { 0 };
 
-    // Audio buffer pointers (only valid during processBlock cycle)
-    const float* const* audioChannels = nullptr;
-    int audioNumChannels = 0;
-    int audioNumSamples = 0;
+    std::array<AudioBufferSnapshot, 2> audioBuffers;
+    std::atomic<int> audioReadIndex { 0 };
 };
 
 //==============================================================================

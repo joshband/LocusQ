@@ -402,24 +402,19 @@ public:
             const int slotIdx = candidate.slotIdx;
 
             // Get emitter's audio data
-            const float* const* emitterAudio = scene.getSlot (slotIdx).getAudioChannels();
-            const int emitterChannels = scene.getSlot (slotIdx).getAudioNumChannels();
+            const float* emitterAudio = scene.getSlot (slotIdx).getAudioMono();
             const int emitterSamples = scene.getSlot (slotIdx).getAudioNumSamples();
 
-            if (emitterAudio == nullptr || emitterChannels <= 0 || emitterSamples <= 0)
+            if (emitterAudio == nullptr || emitterSamples <= 0)
                 continue;
 
             const int samplesToProcess = std::min (emitterSamples, numSamples);
 
-            // Downmix emitter audio to mono and apply emitter gain in one pass.
+            // Apply emitter gain to pre-downmixed mono audio.
             float blockPeak = 0.0f;
             for (int i = 0; i < samplesToProcess; ++i)
             {
-                float sum = 0.0f;
-                for (int ch = 0; ch < emitterChannels; ++ch)
-                    sum += emitterAudio[ch][i];
-
-                const float sample = (sum / static_cast<float> (emitterChannels)) * candidate.emitterGainLinear;
+                const float sample = emitterAudio[i] * candidate.emitterGainLinear;
                 tempMonoBuffer[static_cast<size_t> (i)] = sample;
                 blockPeak = juce::jmax (blockPeak, std::abs (sample));
             }
