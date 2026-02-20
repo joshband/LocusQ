@@ -1,0 +1,159 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_directivity_aim",
+  "name": "LocusQ Directivity Aim",
+  "category": "spatial",
+  "description": "Validates directivity aim behavior across three phases: default aim (0,0), azimuth rotated to 90 degrees, and maximum elevation aim.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "TIME_VARYING"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.42,
+      "duration_seconds": 6.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.10,
+    "emit_gain": 0.50,
+    "emit_spread": 0.00,
+    "emit_directivity": 1.0,
+    "emit_dir_azimuth": 0.50,
+    "emit_dir_elevation": 0.50,
+    "rend_master_gain": 0.50,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "parameter_automation": [
+    {
+      "parameter_index": 10,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.50 },
+        { "time": 2.0, "value": 0.50 },
+        { "time": 2.1, "value": 0.75 },
+        { "time": 4.0, "value": 0.75 },
+        { "time": 4.1, "value": 0.50 },
+        { "time": 6.0, "value": 0.50 }
+      ]
+    },
+    {
+      "parameter_index": 11,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.50 },
+        { "time": 4.0, "value": 0.50 },
+        { "time": 4.1, "value": 1.00 },
+        { "time": 6.0, "value": 1.00 }
+      ]
+    }
+  ],
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 6.0,
+      "description": "Entire directivity-aim exercise"
+    },
+    "default_aim": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 1.90,
+      "description": "Default aim (0,0)"
+    },
+    "rotated_aim_90deg": {
+      "type": "time_range",
+      "start_seconds": 2.20,
+      "end_seconds": 3.90,
+      "description": "Aim rotated to +90 deg azimuth"
+    },
+    "max_elevation_aim": {
+      "type": "time_range",
+      "start_seconds": 4.20,
+      "end_seconds": 6.0,
+      "description": "Aim at +90 deg elevation"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present_default": {
+      "metric": "rms_energy",
+      "window": "default_aim",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail",
+      "description": "Default aim phase should produce stable audible output."
+    },
+    "signal_present_rotated": {
+      "metric": "rms_energy",
+      "window": "rotated_aim_90deg",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail",
+      "description": "Rotated aim phase should keep signal present."
+    },
+    "signal_present_max_elevation": {
+      "metric": "rms_energy",
+      "window": "max_elevation_aim",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail",
+      "description": "Max-elevation aim phase should keep signal present."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "aim_changes_modulate_output": {
+      "metric": "flux_rate",
+      "window": "full",
+      "threshold": {
+        "min": 0.00001,
+        "max": 10.0
+      },
+      "severity": "hard_fail",
+      "description": "Aim changes should modulate spatial rendering."
+    },
+    "rotated_aim_directional_ild": {
+      "metric": "ild_max_db",
+      "window": "rotated_aim_90deg",
+      "threshold": {
+        "min": 0.10,
+        "max": 60.0
+      },
+      "severity": "soft_warn",
+      "description": "Rotating aim should bias speaker energy and produce measurable ILD."
+    },
+    "max_elevation_continuity": {
+      "metric": "discontinuity_count",
+      "window": "max_elevation_aim",
+      "threshold": {
+        "max_count": 3000,
+        "detection_threshold_db": -16.0
+      },
+      "severity": "soft_warn",
+      "description": "Elevation aim phase should avoid severe discontinuity bursts."
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}
