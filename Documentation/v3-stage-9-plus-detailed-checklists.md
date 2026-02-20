@@ -109,27 +109,33 @@ Validation:
 Complete renderer-rail parity to final monitoring/system density with full spatial, room, speaker, and global physics controls.
 
 ### Task Checklist
-- [ ] `S10-T1` Expand renderer panel structure to match final sections: Scene, Master, Speakers, Spatialization, Room, Physics (Global), Visualization.
-- [ ] `S10-T2` Add missing renderer parameter controls and status updates:
+- [x] `S10-T1` Expand renderer panel structure to match final sections: Scene, Master, Speakers, Spatialization, Room, Physics (Global), Visualization.
+- [x] `S10-T2` Add missing renderer parameter controls and status updates:
   - speaker trims/delays (`rend_spk1_gain`..`rend_spk4_gain`, `rend_spk1_delay`..`rend_spk4_delay`)
   - distance refs (`rend_distance_ref`, `rend_distance_max`)
   - doppler/air (`rend_doppler_scale`, `rend_air_absorb`)
   - room depth (`rend_room_mix`, `rend_room_size`, `rend_room_damping`, `rend_room_er_only`)
   - global physics (`rend_phys_walls`, `rend_phys_pause`)
   - visualization (`rend_viz_trails`, `rend_viz_trail_len`, `rend_viz_vectors`, `rend_viz_grid`, `rend_viz_labels`)
-- [ ] `S10-T3` Ensure scene list and output telemetry remain coherent with renderer mode status semantics (`READY`, output layout/channel route text).
-- [ ] `S10-T4` Add Stage 10 self-test coverage for every new renderer control and status string.
-- [ ] `S10-T5` Promote gate default to Stage 10 self-test.
+- [x] `S10-T3` Ensure scene list and output telemetry remain coherent with renderer mode status semantics (`READY`, output layout/channel route text).
+- [x] `S10-T4` Add Stage 10 self-test coverage for every new renderer control and status string.
+- [x] `S10-T5` Promote gate default to Stage 10 self-test.
 
 ### Acceptance Checklist
-- [ ] Renderer controls are bridge-backed and reflected in status readouts.
-- [ ] Scene/output monitoring text remains consistent with processor snapshot fields.
-- [ ] Stage 10 self-test `ok=true`.
-- [ ] UI PR gate passes with Stage 10 as default.
+- [x] Renderer controls are bridge-backed and reflected in status readouts.
+- [x] Scene/output monitoring text remains consistent with processor snapshot fields.
+- [x] Stage 10 self-test `ok=true`.
+- [x] UI PR gate passes with Stage 10 as default.
 
 ### Expected Evidence
 - `TestEvidence/locusq_incremental_stage10_selftest_<timestamp>.json`
 - `TestEvidence/ui_pr_gate_<timestamp>/status.tsv`
+
+### Captured Evidence (UTC 2026-02-20)
+- `TestEvidence/locusq_build_incremental_stage10_20260220T173255Z.log`
+- `TestEvidence/locusq_incremental_stage10_selftest_20260220T173332Z.json`
+- `TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage10_resource_probe_20260220T173344Z.log`
 
 ### Codex Mega-Prompts
 

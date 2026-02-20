@@ -15,12 +15,12 @@ Track implementation parity against:
 This checklist is the live implementation tracker. Completed items are `[x]`; open work remains `[ ]`.
 
 ## Current Baseline
-- Incremental UI route: `Source/ui/public/incremental/index_stage9.html`
-- Runtime logic: `Source/ui/public/incremental/js/stage9_ui.js`
+- Incremental UI route: `Source/ui/public/incremental/index_stage10.html`
+- Runtime logic: `Source/ui/public/incremental/js/stage10_ui.js`
 - Native bridge hooks: `Source/PluginEditor.cpp`, `Source/PluginProcessor.cpp`
 - Latest automated evidence:
-  - `TestEvidence/locusq_incremental_stage9_selftest_20260220T061917Z.json`
-  - `TestEvidence/ui_pr_gate_20260220T061917Z/status.tsv`
+  - `TestEvidence/locusq_incremental_stage10_selftest_20260220T173332Z.json`
+  - `TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv`
 
 ## v3 Contract Status
 - [x] v3 design spec and style guide are finalized and approved (`Design/v3-ui-spec.md`, `Design/v3-style-guide.md`).
@@ -32,19 +32,18 @@ This checklist is the live implementation tracker. Completed items are `[x]`; op
 - [x] Draft/Final quality badge behavior is stable and non-layout-shifting.
 - [x] Calibrate capture flow has deterministic Start/Abort/Measure Again transitions with explicit automated checks.
 - [x] Calibration routing re-detect is bridged native-side and surfaced live in UI status.
-- [x] Stage 9 self-test and UI PR gate run as the default fast regression gate on macOS.
+- [x] Stage 10 self-test and UI PR gate run as the default fast regression gate on macOS.
 
 ## Remaining Parity Work
-- [ ] Complete full control-surface parity for the right rail sections from final design intent (beyond current focused Stage 8 subset).
-- [ ] Expand Renderer panel parity to full monitoring/system density (scene/system groups, speaker/room/global sections as finalized).
+- [ ] Complete full control-surface parity for calibrate and final operator messaging/profile lifecycle sections from final design intent.
 - [ ] Expand Calibrate panel parity to full operator flow and profile lifecycle UX expected in final LocusQ UI.
 - [ ] Finish visual polish pass to strict style parity (typography hierarchy, spacing rhythm, final contrast/label density refinements).
-- [ ] Promote incremental Stage 8 route into the primary production UI entry path and retire obsolete/legacy UI paths.
+- [ ] Promote incremental Stage 10 route into the primary production UI entry path and retire obsolete/legacy UI paths.
 - [ ] Re-run/refresh manual DAW host acceptance checklist after parity promotion (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
 
 ## Next Implementation Stages
 - [x] Stage 9: Emitter rail parity completion (identity/position/audio/physics/animation/preset groups to final v3 density). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 9 - Emitter Rail Parity Completion`).
-- [ ] Stage 10: Renderer rail parity completion (system monitoring and spatial/room/global controls at final layout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 10 - Renderer Rail Parity Completion`).
+- [x] Stage 10: Renderer rail parity completion (system monitoring and spatial/room/global controls at final layout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 10 - Renderer Rail Parity Completion`).
 - [ ] Stage 11: Calibrate workflow parity completion (setup, capture, profile lifecycle, operator messaging). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 11 - Calibrate Workflow Parity Completion`).
 - [ ] Stage 12: Visual polish and promotion (token-level styling pass, incremental->primary route switch, cleanup). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 12 - Visual Polish And Primary Route Promotion`).
 - [ ] Stage 13: Final acceptance sweep (automated gate + manual DAW checklist signoff + doc closeout). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 13 - Final Acceptance Sweep And Closeout`).

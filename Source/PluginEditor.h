@@ -93,16 +93,35 @@ private:
 
     // Renderer
     juce::WebSliderRelay masterGainRelay { "rend_master_gain" };
+    juce::WebSliderRelay spk1GainRelay { "rend_spk1_gain" };
+    juce::WebSliderRelay spk2GainRelay { "rend_spk2_gain" };
+    juce::WebSliderRelay spk3GainRelay { "rend_spk3_gain" };
+    juce::WebSliderRelay spk4GainRelay { "rend_spk4_gain" };
+    juce::WebSliderRelay spk1DelayRelay { "rend_spk1_delay" };
+    juce::WebSliderRelay spk2DelayRelay { "rend_spk2_delay" };
+    juce::WebSliderRelay spk3DelayRelay { "rend_spk3_delay" };
+    juce::WebSliderRelay spk4DelayRelay { "rend_spk4_delay" };
     juce::WebComboBoxRelay qualityRelay { "rend_quality" };
     juce::WebComboBoxRelay distanceModelRelay { "rend_distance_model" };
+    juce::WebSliderRelay distanceRefRelay { "rend_distance_ref" };
+    juce::WebSliderRelay distanceMaxRelay { "rend_distance_max" };
     juce::WebToggleButtonRelay dopplerRelay { "rend_doppler" };
+    juce::WebSliderRelay dopplerScaleRelay { "rend_doppler_scale" };
     juce::WebToggleButtonRelay airAbsorbRelay { "rend_air_absorb" };
     juce::WebToggleButtonRelay roomEnableRelay { "rend_room_enable" };
+    juce::WebSliderRelay roomMixRelay { "rend_room_mix" };
+    juce::WebSliderRelay roomSizeRelay { "rend_room_size" };
+    juce::WebSliderRelay roomDampingRelay { "rend_room_damping" };
     juce::WebToggleButtonRelay roomErOnlyRelay { "rend_room_er_only" };
     juce::WebComboBoxRelay physRateRelay { "rend_phys_rate" };
     juce::WebToggleButtonRelay physWallsRelay { "rend_phys_walls" };
     juce::WebToggleButtonRelay physPauseRelay { "rend_phys_pause" };
     juce::WebComboBoxRelay vizModeRelay { "rend_viz_mode" };
+    juce::WebToggleButtonRelay vizTrailsRelay { "rend_viz_trails" };
+    juce::WebSliderRelay vizTrailLenRelay { "rend_viz_trail_len" };
+    juce::WebToggleButtonRelay vizVectorsRelay { "rend_viz_vectors" };
+    juce::WebToggleButtonRelay vizGridRelay { "rend_viz_grid" };
+    juce::WebToggleButtonRelay vizLabelsRelay { "rend_viz_labels" };
 
     // 2. WEBBROWSERCOMPONENT (Destroyed middle)
     std::unique_ptr<juce::WebBrowserComponent> webView;
@@ -155,16 +174,35 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> animSyncAttachment;
 
     std::unique_ptr<juce::WebSliderParameterAttachment> masterGainAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk1GainAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk2GainAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk3GainAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk4GainAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk1DelayAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk2DelayAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk3DelayAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> spk4DelayAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> qualityAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> distanceModelAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> distanceRefAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> distanceMaxAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> dopplerAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> dopplerScaleAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> airAbsorbAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> roomEnableAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> roomMixAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> roomSizeAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> roomDampingAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> roomErOnlyAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> physRateAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physWallsAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physPauseAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> vizModeAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizTrailsAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> vizTrailLenAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizVectorsAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizGridAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizLabelsAttachment;
 
     bool runtimeProbeDone = false;
     int runtimeProbeTicks = 0;

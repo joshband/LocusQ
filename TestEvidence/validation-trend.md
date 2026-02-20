@@ -188,6 +188,10 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T03:30:31Z | Incremental UI PR gate (Stage 8 self-test default) | `scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`ui_stage8_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T033031Z/status.tsv`) |
 | 2026-02-20T03:30:40Z | Incremental Stage 8 resource probe | `rg -n "incremental/index.html|incremental/js/stage8_ui.js" "$HOME/Library/LocusQ/resource_requests.log"` | PASS (`index size=24647`, `stage8_ui.js size=98723`; `TestEvidence/locusq_incremental_stage8_resource_probe_20260220T033040Z.log`) |
 | 2026-02-20T06:02:33Z | Stage 9+ parity checklist documentation freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-20T17:32:55Z | Incremental Stage 10 standalone rebuild | `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` | PASS (`TestEvidence/locusq_build_incremental_stage10_20260220T173255Z.log`) |
+| 2026-02-20T17:33:21Z | Incremental Stage 10 automated UI self-test (`.app` path) | `scripts/standalone-ui-selftest-stage10-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage10_selftest_20260220T173321Z.json`) |
+| 2026-02-20T17:33:32Z | Incremental UI PR gate (Stage 10 self-test default) | `scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (`ui_stage10_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv`) |
+| 2026-02-20T17:33:44Z | Incremental Stage 10 resource probe | `rg -n "incremental/index.html|incremental/js/stage10_ui.js" "$HOME/Library/LocusQ/resource_requests.log"` | PASS (`index size=36723`, `stage10_ui.js size=194438`; `TestEvidence/locusq_incremental_stage10_resource_probe_20260220T173344Z.log`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

@@ -38,24 +38,24 @@ echo "=== LocusQ UI PR Gate (macOS) ==="
 echo "out_dir: $OUT_DIR"
 echo "selftest_enabled: ${UI_PR_GATE_WITH_SELFTEST:-1}"
 echo "smoke_enabled: ${UI_PR_GATE_WITH_SMOKE:-0}"
-echo "primary_gate: standalone-ui-selftest-stage9-mac.sh"
+echo "primary_gate: standalone-ui-selftest-stage10-mac.sh"
 echo "appium_enabled: ${UI_PR_GATE_WITH_APPIUM:-0}"
 echo
 
 if [[ "${UI_PR_GATE_WITH_SELFTEST:-1}" == "1" ]]; then
-  SELFTEST_CMD=("$ROOT_DIR/scripts/standalone-ui-selftest-stage9-mac.sh")
+  SELFTEST_CMD=("$ROOT_DIR/scripts/standalone-ui-selftest-stage10-mac.sh")
   if [[ -n "$APP_PATH" ]]; then
     SELFTEST_CMD+=("$APP_PATH")
   fi
 
-  if ! run_step "ui_stage9_selftest" "$OUT_DIR/ui_stage9_selftest.log" "${SELFTEST_CMD[@]}"; then
+  if ! run_step "ui_stage10_selftest" "$OUT_DIR/ui_stage10_selftest.log" "${SELFTEST_CMD[@]}"; then
     echo
-    echo "UI PR GATE RESULT: FAIL (stage9 self-test gate failed)"
+    echo "UI PR GATE RESULT: FAIL (stage10 self-test gate failed)"
     echo "status: $STATUS_TSV"
     exit 1
   fi
 else
-  echo -e "ui_stage9_selftest\tSKIP\t0\t-" | tee -a "$STATUS_TSV"
+  echo -e "ui_stage10_selftest\tSKIP\t0\t-" | tee -a "$STATUS_TSV"
 fi
 
 if [[ "${UI_PR_GATE_WITH_SMOKE:-0}" == "1" ]]; then

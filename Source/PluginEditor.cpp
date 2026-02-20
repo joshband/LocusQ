@@ -14,7 +14,7 @@ juce::String getStandaloneWindowTitle()
 {
     return juce::String (JucePlugin_Name)
         + " v" + juce::String (JucePlugin_VersionString)
-        + " [incremental-stage9]";
+        + " [incremental-stage10]";
 }
 
 bool isUiSelfTestEnabled()
@@ -252,16 +252,35 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         .withOptionsFrom (animSpeedRelay)
         .withOptionsFrom (animSyncRelay)
         .withOptionsFrom (masterGainRelay)
+        .withOptionsFrom (spk1GainRelay)
+        .withOptionsFrom (spk2GainRelay)
+        .withOptionsFrom (spk3GainRelay)
+        .withOptionsFrom (spk4GainRelay)
+        .withOptionsFrom (spk1DelayRelay)
+        .withOptionsFrom (spk2DelayRelay)
+        .withOptionsFrom (spk3DelayRelay)
+        .withOptionsFrom (spk4DelayRelay)
         .withOptionsFrom (qualityRelay)
         .withOptionsFrom (distanceModelRelay)
+        .withOptionsFrom (distanceRefRelay)
+        .withOptionsFrom (distanceMaxRelay)
         .withOptionsFrom (dopplerRelay)
+        .withOptionsFrom (dopplerScaleRelay)
         .withOptionsFrom (airAbsorbRelay)
         .withOptionsFrom (roomEnableRelay)
+        .withOptionsFrom (roomMixRelay)
+        .withOptionsFrom (roomSizeRelay)
+        .withOptionsFrom (roomDampingRelay)
         .withOptionsFrom (roomErOnlyRelay)
         .withOptionsFrom (physRateRelay)
         .withOptionsFrom (physWallsRelay)
         .withOptionsFrom (physPauseRelay)
-        .withOptionsFrom (vizModeRelay);
+        .withOptionsFrom (vizModeRelay)
+        .withOptionsFrom (vizTrailsRelay)
+        .withOptionsFrom (vizTrailLenRelay)
+        .withOptionsFrom (vizVectorsRelay)
+        .withOptionsFrom (vizGridRelay)
+        .withOptionsFrom (vizLabelsRelay);
 
     webView = std::make_unique<juce::WebBrowserComponent> (std::move (webViewOptions));
 
@@ -353,16 +372,44 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     masterGainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_master_gain"), masterGainRelay);
+    spk1GainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk1_gain"), spk1GainRelay);
+    spk2GainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk2_gain"), spk2GainRelay);
+    spk3GainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk3_gain"), spk3GainRelay);
+    spk4GainAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk4_gain"), spk4GainRelay);
+    spk1DelayAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk1_delay"), spk1DelayRelay);
+    spk2DelayAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk2_delay"), spk2DelayRelay);
+    spk3DelayAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk3_delay"), spk3DelayRelay);
+    spk4DelayAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_spk4_delay"), spk4DelayRelay);
     qualityAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_quality"), qualityRelay);
     distanceModelAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_distance_model"), distanceModelRelay);
+    distanceRefAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_distance_ref"), distanceRefRelay);
+    distanceMaxAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_distance_max"), distanceMaxRelay);
     dopplerAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_doppler"), dopplerRelay);
+    dopplerScaleAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_doppler_scale"), dopplerScaleRelay);
     airAbsorbAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_air_absorb"), airAbsorbRelay);
     roomEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_room_enable"), roomEnableRelay);
+    roomMixAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_room_mix"), roomMixRelay);
+    roomSizeAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_room_size"), roomSizeRelay);
+    roomDampingAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_room_damping"), roomDampingRelay);
     roomErOnlyAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_room_er_only"), roomErOnlyRelay);
     physRateAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
@@ -373,6 +420,16 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("rend_phys_pause"), physPauseRelay);
     vizModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_viz_mode"), vizModeRelay);
+    vizTrailsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_trails"), vizTrailsRelay);
+    vizTrailLenAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_trail_len"), vizTrailLenRelay);
+    vizVectorsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_vectors"), vizVectorsRelay);
+    vizGridAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_grid"), vizGridRelay);
+    vizLabelsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_labels"), vizLabelsRelay);
 
     addAndMakeVisible (*webView);
 
@@ -691,8 +748,8 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
     }
     else if (path == "incremental/index.html")
     {
-        resourceData = BinaryData::index_stage9_html;
-        resourceSize = BinaryData::index_stage9_htmlSize;
+        resourceData = BinaryData::index_stage10_html;
+        resourceSize = BinaryData::index_stage10_htmlSize;
         mimeType = "text/html";
     }
     else if (path == "incremental/stage1.html")
@@ -749,6 +806,12 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
         resourceSize = BinaryData::index_stage9_htmlSize;
         mimeType = "text/html";
     }
+    else if (path == "incremental/stage10.html")
+    {
+        resourceData = BinaryData::index_stage10_html;
+        resourceSize = BinaryData::index_stage10_htmlSize;
+        mimeType = "text/html";
+    }
     else if (path == "incremental/js/stage2_ui.js")
     {
         resourceData = BinaryData::stage2_ui_js;
@@ -795,6 +858,12 @@ std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::g
     {
         resourceData = BinaryData::stage9_ui_js;
         resourceSize = BinaryData::stage9_ui_jsSize;
+        mimeType = "text/javascript";
+    }
+    else if (path == "incremental/js/stage10_ui.js")
+    {
+        resourceData = BinaryData::stage10_ui_js;
+        resourceSize = BinaryData::stage10_ui_jsSize;
         mimeType = "text/javascript";
     }
     else if (path == "poc/js/poc_ui.js")
