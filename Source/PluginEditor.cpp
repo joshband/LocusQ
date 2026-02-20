@@ -363,6 +363,12 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("phys_throw"), physThrowRelay);
     physResetAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("phys_reset"), physResetRelay);
+    physVelXAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_vel_x"), physVelXRelay);
+    physVelYAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_vel_y"), physVelYRelay);
+    physVelZAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("phys_vel_z"), physVelZRelay);
 
     animEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("anim_enable"), animEnableRelay);

@@ -85,6 +85,9 @@ private:
     juce::WebSliderRelay physFrictionRelay { "phys_friction" };
     juce::WebToggleButtonRelay physThrowRelay { "phys_throw" };
     juce::WebToggleButtonRelay physResetRelay { "phys_reset" };
+    juce::WebSliderRelay physVelXRelay { "phys_vel_x" };
+    juce::WebSliderRelay physVelYRelay { "phys_vel_y" };
+    juce::WebSliderRelay physVelZRelay { "phys_vel_z" };
 
     // Emitter Animation
     juce::WebToggleButtonRelay animEnableRelay { "anim_enable" };
@@ -171,6 +174,9 @@ private:
     std::unique_ptr<juce::WebSliderParameterAttachment> physFrictionAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physThrowAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physResetAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> physVelXAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> physVelYAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> physVelZAttachment;
 
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> animEnableAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> animModeAttachment;

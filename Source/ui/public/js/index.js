@@ -271,6 +271,9 @@ const sliderStates = {
     phys_elasticity: Juce.getSliderState("phys_elasticity"),
     phys_gravity:   Juce.getSliderState("phys_gravity"),
     phys_friction:  Juce.getSliderState("phys_friction"),
+    phys_vel_x:     Juce.getSliderState("phys_vel_x"),
+    phys_vel_y:     Juce.getSliderState("phys_vel_y"),
+    phys_vel_z:     Juce.getSliderState("phys_vel_z"),
     anim_speed:     Juce.getSliderState("anim_speed"),
     rend_master_gain: Juce.getSliderState("rend_master_gain"),
 };
@@ -1670,6 +1673,12 @@ function initUIBindings() {
     bindValueStepper("val-elasticity", sliderStates.phys_elasticity, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
     bindValueStepper("val-gravity", sliderStates.phys_gravity, { step: 0.5, min: -20.0, max: 20.0, roundDigits: 1 });
     bindValueStepper("val-friction", sliderStates.phys_friction, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindValueStepper("val-vel-x", sliderStates.phys_vel_x,
+        { step: 1.0, min: -50.0, max: 50.0, roundDigits: 1 });
+    bindValueStepper("val-vel-y", sliderStates.phys_vel_y,
+        { step: 1.0, min: -50.0, max: 50.0, roundDigits: 1 });
+    bindValueStepper("val-vel-z", sliderStates.phys_vel_z,
+        { step: 1.0, min: -50.0, max: 50.0, roundDigits: 1 });
 
     // Emitter mute/solo
     const muteToggle = document.getElementById("toggle-mute");
@@ -2039,6 +2048,18 @@ function initParameterListeners() {
         updateValueDisplay("val-friction", sliderStates.phys_friction.getScaledValue().toFixed(2), "");
         markPhysicsPresetCustom();
     });
+    sliderStates.phys_vel_x.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-vel-x",
+            sliderStates.phys_vel_x.getScaledValue().toFixed(1), "m/s");
+    });
+    sliderStates.phys_vel_y.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-vel-y",
+            sliderStates.phys_vel_y.getScaledValue().toFixed(1), "m/s");
+    });
+    sliderStates.phys_vel_z.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-vel-z",
+            sliderStates.phys_vel_z.getScaledValue().toFixed(1), "m/s");
+    });
     sliderStates.rend_master_gain.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-master-gain", sliderStates.rend_master_gain.getScaledValue().toFixed(1), "dB");
     });
@@ -2136,6 +2157,12 @@ function initParameterListeners() {
     updateValueDisplay("val-elasticity", sliderStates.phys_elasticity.getScaledValue().toFixed(2), "");
     updateValueDisplay("val-gravity", sliderStates.phys_gravity.getScaledValue().toFixed(1), "m/s&sup2;");
     updateValueDisplay("val-friction", sliderStates.phys_friction.getScaledValue().toFixed(2), "");
+    updateValueDisplay("val-vel-x",
+        sliderStates.phys_vel_x.getScaledValue().toFixed(1), "m/s");
+    updateValueDisplay("val-vel-y",
+        sliderStates.phys_vel_y.getScaledValue().toFixed(1), "m/s");
+    updateValueDisplay("val-vel-z",
+        sliderStates.phys_vel_z.getScaledValue().toFixed(1), "m/s");
     updateValueDisplay("val-master-gain", sliderStates.rend_master_gain.getScaledValue().toFixed(1), "dB");
     setToggleClass("toggle-size-link", !!toggleStates.size_link.getValue());
     setToggleClass("toggle-doppler", !!toggleStates.rend_doppler.getValue());
