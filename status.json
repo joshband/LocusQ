@@ -1,12 +1,12 @@
 {
   "plugin_name": "LocusQ",
-  "version": "v0.1.0",
+  "version": "v1.0.0-ga",
   "current_phase": "code",
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T23:19:17Z",
-  "notes": "draft-pre-release candidate",
+  "last_modified": "2026-02-20T23:38:36Z",
+  "notes": "v1.0.0-ga milestone promoted",
   "phase_history": [
     {
       "phase": "ideation",
@@ -328,9 +328,28 @@
     },
     {
       "phase": "stage17_portable_device_acceptance_repeat",
-      "status": "in_progress",
+      "status": "complete",
       "started_at": "2026-02-20T23:19:17Z",
-      "notes": "Stage 17-A started: fresh ./scripts/build-and-install-mac.sh pass captured (TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log). Manual operator rerun of DEV-01..DEV-06 in Standalone/Reaper remains pending; GA blocked until manual gate is closed."
+      "notes": "Stage 17-A complete: build/install prerequisite PASS and portable operator rerun PASS_WITH_NA (`DEV-01..DEV-05=PASS`, `DEV-06=N/A` external mic unavailable).",
+      "completed_at": "2026-02-20T23:23:53Z"
+    },
+    {
+      "phase": "stage17_docs_freshness_gate",
+      "status": "complete",
+      "completed_at": "2026-02-20T23:31:18Z",
+      "notes": "Stage 17-B complete: docs freshness validation passed with 0 warnings."
+    },
+    {
+      "phase": "stage17_changelog_freeze_version_bump",
+      "status": "complete",
+      "completed_at": "2026-02-20T23:37:07Z",
+      "notes": "Stage 17-C complete: changelog frozen for v1.0.0-ga, CMake project version set to 1.0.0, README release section updated, and build/install validation passed."
+    },
+    {
+      "phase": "stage17_ga_promotion",
+      "status": "complete",
+      "completed_at": "2026-02-20T23:38:36Z",
+      "notes": "Stage 17-D complete: reviewed draft-pre-release tag, closed Stage 17-A/B/C concerns, pushed v1.0.0-ga tag, and published GitHub release."
     }
   ],
   "validation": {
@@ -1153,14 +1172,14 @@
     "incremental_stage13_pluginval_passed": true,
     "incremental_stage13_standalone_smoke_passed": true,
     "incremental_stage13_docs_freshness_passed": true,
-    "incremental_stage13_manual_daw_signoff_pending": true,
+    "incremental_stage13_manual_daw_signoff_pending": false,
     "incremental_stage13_status_tsv": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv",
     "stage14_contract_alignment_docs_updated": true,
     "stage14_device_profiles_contract_ready": true,
     "stage14_review_release_checklist": "Documentation/stage14-review-release-checklist.md",
     "stage14_rend_phys_interact_runtime_resolved": true,
-    "stage14_release_decision": "pending",
-    "stage14_portable_profile_manual_signoff_pending": true,
+    "stage14_release_decision": "v1.0.0-ga promoted",
+    "stage14_portable_profile_manual_signoff_pending": false,
     "stage14_docs_freshness_passed": true,
     "stage14_docs_freshness_last_run": "2026-02-20T19:35:58Z"
   },
@@ -1361,7 +1380,9 @@
     ],
     "github_build": [],
     "dist_dir": "dist/LocusQ-v0.1.0-macOS",
-    "archive": "dist/LocusQ-v0.1.0-macOS.zip"
+    "archive": "dist/LocusQ-v0.1.0-macOS.zip",
+    "ga_tag": "v1.0.0-ga",
+    "release_channel": "ga"
   },
   "error_recovery": {
     "last_backup": null,

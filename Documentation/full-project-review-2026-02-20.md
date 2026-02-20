@@ -397,9 +397,10 @@ gantt
     2.14 Stage 14 Closeout             :done, 2026-02-20, 1d
     Stage 15 Close the Gap             :done, 2026-02-20, 1d
     Stage 16 Hardening                 :done, 2026-02-20, 1d
+    Stage 17 GA Readiness              :done, 2026-02-20, 1d
 
     section Current
-    Stage 17 GA Readiness              :active, 2026-02-20, 3d
+    GA Packaging/Promotion             :active, 2026-02-20, 1d
 
     section Ahead
     Post-v1 Backlog Execution          :2026-03-01, 3d
@@ -1532,11 +1533,25 @@ git commit -m "chore(release): CHANGELOG freeze and version bump to v1.0.0-ga"
 **Model:** Human
 
 **Checklist:**
-- [ ] Review `draft-pre-release` tag
-- [ ] Resolve any final concerns from Stage 17-A/B/C
-- [ ] Push tag `v1.0.0-ga`
-- [ ] Publish GitHub release with changelog excerpt
-- [ ] Update status.json to record GA milestone
+- [x] Review `draft-pre-release` tag
+- [x] Resolve any final concerns from Stage 17-A/B/C
+- [x] Push tag `v1.0.0-ga`
+- [x] Publish GitHub release with changelog excerpt
+- [x] Update status.json to record GA milestone
+
+**Stage 17-D Execution Result (2026-02-20): complete**
+
+- `draft-pre-release` tag review:
+  - `v0.15.0-draft` points to commit `bb25c4861cc1e2d9f88b35a27a0729ee92a0384a`
+  - tag annotation confirms Stage 15 closeout context
+- Final concern resolution snapshot:
+  - Stage 17-A: portable acceptance rerun closed (`PASS_WITH_NA`)
+  - Stage 17-B: docs freshness gate closed (`PASS`, `0 warning(s)`)
+  - Stage 17-C: release freeze + version bump closed (`project VERSION 1.0.0`, build/install `PASS`)
+- Promotion actions:
+  - pushed release tag `v1.0.0-ga`
+  - published GitHub release using changelog excerpt
+  - updated `status.json` to record GA milestone (`version=v1.0.0-ga`, Stage 17 phases marked complete)
 
 ---
 
@@ -1590,13 +1605,12 @@ graph TD
     classDef human fill:#5c4a1a,color:#fff
 ```
 
-### Updated Start Now (Post 17-C Completion)
+### Updated Start Now (Post 17-D Completion)
 
-Stage 15 and Stage 16 are complete. Stage 17-A, 17-B, and 17-C are complete. The
-immediate next action is:
+Stage 15, Stage 16, and Stage 17 are complete. Immediate next actions are post-GA:
 
 | Session | Mega-Prompt | Model | Notes |
 |---------|------------|-------|-------|
-| 1 | Task 17-D (GA promotion) | Human | Final release/tag publication gate |
+| 1 | Post-v1 backlog triage (viewport telemetry, timeline UI editor, advanced headphone path) | Human + Sonnet 4.6 | Start from ADR-0008 + Section 0 integration recommendations |
 
 ---
