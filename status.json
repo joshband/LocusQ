@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T17:33:44Z",
+  "last_modified": "2026-02-20T17:48:08Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -281,6 +281,12 @@
       "status": "complete",
       "completed_at": "2026-02-20T17:33:44Z",
       "notes": "Incremental Stage 10 completes renderer rail parity (scene/master/speakers/spatialization/room/global physics/visualization), adds relay+attachment coverage for new renderer parameters, and promotes Stage 10 self-test as the default UI PR gate with passing self-test/gate/resource evidence."
+    },
+    {
+      "phase": "implementation_recovery_2_7s_incremental_stage11_calibrate_parity",
+      "status": "in_progress",
+      "started_at": "2026-02-20T17:47:25Z",
+      "notes": "Stage 11 incremental route landed with calibrate setup/test readouts, deterministic start-abort-measure-again transitions, routing re-detect current/auto map reflection, ASCII-safe status sanitation, and explicit profile lifecycle semantics (`NO PROFILE`/`MEASURING`/`PROFILE READY`) in rail and viewport overlay. Automated Stage 11 self-test + UI PR gate pass; manual DAW checklist follow-up remains open."
     }
   ],
   "validation": {
@@ -1035,7 +1041,35 @@
     "incremental_stage10_ui_selftest_script_ready": true,
     "incremental_stage10_ui_selftest_passed": true,
     "incremental_stage10_ui_pr_gate_selftest_default": true,
-    "incremental_stage10_ui_pr_gate_passed": true
+    "incremental_stage10_ui_pr_gate_passed": true,
+    "incremental_stage11_shell_ready": true,
+    "incremental_stage11_controls_bound": [
+      "mode",
+      "cal_spk_config",
+      "cal_mic_channel",
+      "cal_spk1_out",
+      "cal_spk2_out",
+      "cal_spk3_out",
+      "cal_spk4_out",
+      "cal_test_level",
+      "cal_test_type",
+      "cal_capture_start_abort",
+      "cal_capture_measure_again",
+      "cal_capture_progress",
+      "cal_capture_message",
+      "cal_capture_profile_lifecycle",
+      "cal_capture_speaker_status",
+      "cal_routing_redetect",
+      "cal_routing_current_auto_map",
+      "cal_status_sanitization",
+      "cal_viewport_overlay_lifecycle"
+    ],
+    "incremental_stage11_build_passed": true,
+    "incremental_stage11_resource_probe_passed": true,
+    "incremental_stage11_ui_selftest_script_ready": true,
+    "incremental_stage11_ui_selftest_passed": true,
+    "incremental_stage11_ui_pr_gate_selftest_default": true,
+    "incremental_stage11_ui_pr_gate_passed": true
   },
   "framework_selection": {
     "decision": "webview",
@@ -1333,6 +1367,17 @@
       "selftest_run_log": "plugins/LocusQ/TestEvidence/locusq_incremental_stage10_selftest_20260220T173332Z.run.log",
       "ui_pr_gate_script": "plugins/LocusQ/scripts/ui-pr-gate-mac.sh",
       "ui_pr_gate_status_tsv": "plugins/LocusQ/TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv"
+    },
+    "incremental_stage11": {
+      "ui_shell": "plugins/LocusQ/Source/ui/public/incremental/index_stage11.html",
+      "ui_runtime": "plugins/LocusQ/Source/ui/public/incremental/js/stage11_ui.js",
+      "build_log": "plugins/LocusQ/TestEvidence/locusq_build_incremental_stage11_20260220T174725Z.log",
+      "resource_probe_log": "plugins/LocusQ/TestEvidence/locusq_incremental_stage11_resource_probe_20260220T174808Z.log",
+      "selftest_script": "plugins/LocusQ/scripts/standalone-ui-selftest-stage11-mac.sh",
+      "selftest_result_json": "plugins/LocusQ/TestEvidence/locusq_incremental_stage11_selftest_20260220T174757Z.json",
+      "selftest_run_log": "plugins/LocusQ/TestEvidence/locusq_incremental_stage11_selftest_20260220T174757Z.run.log",
+      "ui_pr_gate_script": "plugins/LocusQ/scripts/ui-pr-gate-mac.sh",
+      "ui_pr_gate_status_tsv": "plugins/LocusQ/TestEvidence/ui_pr_gate_20260220T174757Z/status.tsv"
     }
   }
 }

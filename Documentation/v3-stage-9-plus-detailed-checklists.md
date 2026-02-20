@@ -175,27 +175,33 @@ Provide:
 Complete calibrate operator flow parity: setup, capture lifecycle, routing re-detect, measure-again behavior, and profile lifecycle messaging.
 
 ### Task Checklist
-- [ ] `S11-T1` Complete calibrate setup density and readouts (speaker config, mic routing, SPK output mapping, test type/level).
-- [ ] `S11-T2` Harden capture flow state machine UI transitions:
+- [x] `S11-T1` Complete calibrate setup density and readouts (speaker config, mic routing, SPK output mapping, test type/level).
+- [x] `S11-T2` Harden capture flow state machine UI transitions:
   - `START MEASURE` -> `ABORT` while active
   - `ABORT` -> idle state reset
   - complete -> `MEASURE AGAIN` with deterministic reset behavior
-- [ ] `S11-T3` Ensure routing re-detect UX reflects native results (current map, auto-detected map, output channels).
-- [ ] `S11-T4` Ensure calibration messages/status strings are sanitized (ASCII-safe, no mojibake artifacts).
-- [ ] `S11-T5` Add explicit profile lifecycle status semantics (`NO PROFILE`, `MEASURING`, `PROFILE READY`) in both rail and viewport overlay.
-- [ ] `S11-T6` Add Stage 11 self-test coverage for start/abort/measure-again/re-detect and speaker progress row transitions.
-- [ ] `S11-T7` Promote gate default to Stage 11 self-test.
+- [x] `S11-T3` Ensure routing re-detect UX reflects native results (current map, auto-detected map, output channels).
+- [x] `S11-T4` Ensure calibration messages/status strings are sanitized (ASCII-safe, no mojibake artifacts).
+- [x] `S11-T5` Add explicit profile lifecycle status semantics (`NO PROFILE`, `MEASURING`, `PROFILE READY`) in both rail and viewport overlay.
+- [x] `S11-T6` Add Stage 11 self-test coverage for start/abort/measure-again/re-detect and speaker progress row transitions.
+- [x] `S11-T7` Promote gate default to Stage 11 self-test.
 
 ### Acceptance Checklist
 - [ ] Manual checklist steps 1-11 for calibration flow are passable without hidden state.
-- [ ] `Measure Again` reliably resets progress/status and starts a new run.
-- [ ] Re-detect routing status updates on every invocation.
-- [ ] Stage 11 self-test `ok=true`.
+- [x] `Measure Again` reliably resets progress/status and starts a new run.
+- [x] Re-detect routing status updates on every invocation.
+- [x] Stage 11 self-test `ok=true`.
 
 ### Expected Evidence
 - `TestEvidence/locusq_incremental_stage11_selftest_<timestamp>.json`
 - `TestEvidence/ui_pr_gate_<timestamp>/status.tsv`
 - manual checklist artifacts under `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` follow-up entries
+
+### Captured Evidence (UTC 2026-02-20)
+- `TestEvidence/locusq_build_incremental_stage11_20260220T174725Z.log`
+- `TestEvidence/locusq_incremental_stage11_selftest_20260220T174757Z.json`
+- `TestEvidence/ui_pr_gate_20260220T174757Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage11_resource_probe_20260220T174808Z.log`
 
 ### Codex Mega-Prompts
 

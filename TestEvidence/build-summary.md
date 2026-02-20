@@ -1518,3 +1518,44 @@ Artifacts:
 - `TestEvidence/locusq_incremental_stage10_selftest_20260220T173332Z.run.log`
 - `TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv`
 - `TestEvidence/locusq_incremental_stage10_resource_probe_20260220T173344Z.log`
+
+## Incremental Stage 11 Calibrate Workflow Parity + Automation (UTC 2026-02-20)
+
+109. Rebuild standalone with incremental Stage 11 WebView resources
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+110. Run automated Stage 11 self-test against standalone app path
+
+```sh
+scripts/standalone-ui-selftest-stage11-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+111. Run UI PR gate with Stage 11 self-test default
+
+```sh
+scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS` (`ui_stage11_selftest=PASS`; `ui_smoke_fast_gate=SKIP`; `ui_regression_appium=SKIP`)
+
+112. Resource-provider probe for active Stage 11 payload
+
+```sh
+rg -n "incremental/index.html|incremental/js/stage11_ui.js" "$HOME/Library/LocusQ/resource_requests.log"
+```
+
+Result: `PASS` (`incremental/index.html` loaded with size `37293`; `incremental/js/stage11_ui.js` loaded with size `201827`)
+
+Artifacts:
+- `TestEvidence/locusq_build_incremental_stage11_20260220T174725Z.log`
+- `TestEvidence/locusq_incremental_stage11_selftest_20260220T174757Z.json`
+- `TestEvidence/locusq_incremental_stage11_selftest_20260220T174757Z.run.log`
+- `TestEvidence/ui_pr_gate_20260220T174757Z/status.tsv`
+- `TestEvidence/locusq_incremental_stage11_resource_probe_20260220T174808Z.log`
