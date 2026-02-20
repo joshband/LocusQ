@@ -340,6 +340,10 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("emit_solo"), soloRelay);
     emitColorAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
         *audioProcessor.apvts.getParameter ("emit_color"), emitColorRelay);
+    dirAzimuthAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_dir_azimuth"), dirAzimuthRelay);
+    dirElevationAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("emit_dir_elevation"), dirElevationRelay);
 
     physEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("phys_enable"), physEnableRelay);

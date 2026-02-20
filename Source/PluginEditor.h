@@ -72,6 +72,8 @@ private:
     juce::WebToggleButtonRelay muteRelay { "emit_mute" };
     juce::WebToggleButtonRelay soloRelay { "emit_solo" };
     juce::WebSliderRelay emitColorRelay { "emit_color" };
+    juce::WebSliderRelay dirAzimuthRelay  { "emit_dir_azimuth" };
+    juce::WebSliderRelay dirElevationRelay { "emit_dir_elevation" };
 
     // Emitter Physics
     juce::WebToggleButtonRelay physEnableRelay { "phys_enable" };
@@ -157,6 +159,8 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> muteAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> soloAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> emitColorAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> dirAzimuthAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> dirElevationAttachment;
 
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> physEnableAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> physMassAttachment;

@@ -258,6 +258,8 @@ const sliderStates = {
     emit_spread:    Juce.getSliderState("emit_spread"),
     emit_directivity: Juce.getSliderState("emit_directivity"),
     emit_color:     Juce.getSliderState("emit_color"),
+    emit_dir_azimuth:   Juce.getSliderState("emit_dir_azimuth"),
+    emit_dir_elevation: Juce.getSliderState("emit_dir_elevation"),
     cal_mic_channel: Juce.getSliderState("cal_mic_channel"),
     cal_spk1_out:   Juce.getSliderState("cal_spk1_out"),
     cal_spk2_out:   Juce.getSliderState("cal_spk2_out"),
@@ -288,8 +290,9 @@ const toggleStates = {
     rend_air_absorb: Juce.getToggleState("rend_air_absorb"),
     rend_room_enable: Juce.getToggleState("rend_room_enable"),
     rend_room_er_only: Juce.getToggleState("rend_room_er_only"),
-    rend_phys_walls: Juce.getToggleState("rend_phys_walls"),
-    rend_phys_pause: Juce.getToggleState("rend_phys_pause"),
+    rend_phys_walls:    Juce.getToggleState("rend_phys_walls"),
+    rend_phys_interact: Juce.getToggleState("rend_phys_interact"),
+    rend_phys_pause:    Juce.getToggleState("rend_phys_pause"),
 };
 
 const comboStates = {
@@ -1657,6 +1660,10 @@ function initUIBindings() {
     bindValueStepper("val-gain", sliderStates.emit_gain, { step: 0.5, min: -60.0, max: 12.0, roundDigits: 1 });
     bindValueStepper("val-spread", sliderStates.emit_spread, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
     bindValueStepper("val-directivity", sliderStates.emit_directivity, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindValueStepper("val-dir-azimuth", sliderStates.emit_dir_azimuth,
+        { step: 1.0, min: -180.0, max: 180.0, roundDigits: 1 });
+    bindValueStepper("val-dir-elevation", sliderStates.emit_dir_elevation,
+        { step: 1.0, min: -90.0, max: 90.0, roundDigits: 1 });
     bindValueStepper("val-master-gain", sliderStates.rend_master_gain, { step: 0.5, min: -60.0, max: 12.0, roundDigits: 1 });
     bindValueStepper("val-mass", sliderStates.phys_mass, { step: 0.1, min: 0.01, max: 100.0, roundDigits: 2 });
     bindValueStepper("val-drag", sliderStates.phys_drag, { step: 0.05, min: 0.0, max: 10.0, roundDigits: 2 });
@@ -1764,6 +1771,13 @@ function initUIBindings() {
     if (wallsToggle) {
         bindControlActivate(wallsToggle, () => {
             toggleStateAndClass("toggle-walls", toggleStates.rend_phys_walls);
+        });
+    }
+
+    const interactToggle = document.getElementById("toggle-interact");
+    if (interactToggle) {
+        bindControlActivate(interactToggle, () => {
+            toggleStateAndClass("toggle-interact", toggleStates.rend_phys_interact);
         });
     }
 
@@ -1987,6 +2001,14 @@ function initParameterListeners() {
     sliderStates.emit_directivity.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-directivity", sliderStates.emit_directivity.getScaledValue().toFixed(2), "");
     });
+    sliderStates.emit_dir_azimuth.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-dir-azimuth",
+            sliderStates.emit_dir_azimuth.getScaledValue().toFixed(1), "°");
+    });
+    sliderStates.emit_dir_elevation.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-dir-elevation",
+            sliderStates.emit_dir_elevation.getScaledValue().toFixed(1), "°");
+    });
     sliderStates.emit_color.valueChangedEvent.addListener(() => {
         const swatch = document.getElementById("emit-color-swatch");
         if (!swatch) return;
@@ -2072,6 +2094,9 @@ function initParameterListeners() {
     toggleStates.rend_phys_walls.valueChangedEvent.addListener(() => {
         setToggleClass("toggle-walls", !!toggleStates.rend_phys_walls.getValue());
     });
+    toggleStates.rend_phys_interact.valueChangedEvent.addListener(() => {
+        setToggleClass("toggle-interact", !!toggleStates.rend_phys_interact.getValue());
+    });
     toggleStates.rend_phys_pause.valueChangedEvent.addListener(() => {
         const button = document.getElementById("btn-pause-physics");
         if (button) {
@@ -2118,6 +2143,7 @@ function initParameterListeners() {
     setToggleClass("toggle-room", !!toggleStates.rend_room_enable.getValue());
     setToggleClass("toggle-er-only", !!toggleStates.rend_room_er_only.getValue());
     setToggleClass("toggle-walls", !!toggleStates.rend_phys_walls.getValue());
+    setToggleClass("toggle-interact", !!toggleStates.rend_phys_interact.getValue());
     const pauseButton = document.getElementById("btn-pause-physics");
     if (pauseButton) pauseButton.textContent = toggleStates.rend_phys_pause.getValue() ? "RESUME ALL" : "PAUSE ALL";
     const colorSwatch = document.getElementById("emit-color-swatch");
@@ -2125,6 +2151,10 @@ function initParameterListeners() {
         const idx = clamp(Math.round(sliderStates.emit_color.getScaledValue()), 0, emitterPalette.length - 1);
         colorSwatch.style.background = "#" + emitterPalette[idx].toString(16).padStart(6, "0");
     }
+    updateValueDisplay("val-dir-azimuth",
+        sliderStates.emit_dir_azimuth.getScaledValue().toFixed(1), "°");
+    updateValueDisplay("val-dir-elevation",
+        sliderStates.emit_dir_elevation.getScaledValue().toFixed(1), "°");
     updateViewMode();
     syncAnimationUI();
 }
