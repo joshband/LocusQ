@@ -14,11 +14,13 @@ Keep documentation lean, canonical, and current while preserving traceability fr
 - `CHANGELOG.md`: Lean chronological change record for implementation and validation milestones.
 - `Documentation/standards.md`: Documentation structure, metadata, naming, and update rules.
 - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`: Mandatory phase-closeout synchronization gate for status/evidence/readme/changelog surfaces.
+- `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`: Device-profile contract for quad studio + laptop stereo + headphone workflows and release gating.
 - `Documentation/invariants.md`: Non-negotiable behavioral and implementation invariants.
 - `Documentation/scene-state-contract.md`: Source-of-truth contract across audio/physics/UI state domains.
 - `Documentation/implementation-traceability.md`: Parameter/control wiring to source files.
 - `Documentation/v3-ui-parity-checklist.md`: Live checked/unchecked parity tracker against `Design/v3-ui-spec.md` and `Design/v3-style-guide.md`.
 - `Documentation/v3-stage-9-plus-detailed-checklists.md`: Detailed Stage 9-13 execution checklists with task-level acceptance gates and Codex mega-prompts.
+- `Documentation/stage14-review-release-checklist.md`: Stage 14 comprehensive architecture/code/design/QA review and release decision checklist.
 - `Documentation/lessons-learned.md`: Compact operational lessons and associated corrective actions.
 - `Documentation/multi-agent-thread-watchdog.md`: Optional guide for thread contract + heartbeat watchdog flows in parallel Codex sessions (disabled by default).
 - `Documentation/adr/`: Architecture Decision Records (ADRs), one decision per file.

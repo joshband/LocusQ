@@ -12,6 +12,9 @@ All notable changes to LocusQ are documented here.
 
 ### Added
 
+- Stage 14 review/release planning artifacts:
+  - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
+  - `Documentation/stage14-review-release-checklist.md`
 - Phase 2.4 acceptance closure tooling:
   - `qa/physics_probe_main.cpp` deterministic physics probe target
   - `qa/scenarios/locusq_24_physics_spatial_motion.json`
@@ -76,6 +79,22 @@ All notable changes to LocusQ are documented here.
 
 ### Changed
 
+- Stage 14 contract alignment updates:
+  - `.ideas/creative-brief.md`
+  - `.ideas/architecture.md`
+  - `.ideas/parameter-spec.md`
+  - `.ideas/plan.md`
+  - `Documentation/invariants.md`
+  - `Documentation/implementation-traceability.md`
+  - `Documentation/v3-ui-parity-checklist.md`
+  - `Documentation/v3-stage-9-plus-detailed-checklists.md`
+  - `Documentation/README.md`
+  - `README.md`
+  - `status.json`
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+  - Added explicit laptop speaker/mic/headphone usability contract and Stage 14 comprehensive review/release gating checklist.
+  - Corrected spec/traceability drift notes for internal runtime fields (`room_profile`, `cal_state`) and deferred/no-op parameter (`rend_phys_interact`).
 - Stage 13 acceptance sweep closeout sync:
   - Automated Stage 12 self-test + UI PR gate rerun, targeted non-UI parity matrix, pluginval strictness-5, and standalone smoke recorded under `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/`.
   - Closeout surfaces synchronized for Stage 13 progress with manual DAW signoff intentionally left open:

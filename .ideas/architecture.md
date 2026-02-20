@@ -2,7 +2,7 @@ Title: LocusQ DSP Architecture Specification
 Document Type: Architecture Specification
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ - DSP Architecture Specification
 
@@ -53,6 +53,7 @@ This architecture is aligned to the planning decision package:
 - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
 - `Documentation/adr/ADR-0004-v1-ai-deferral.md`
 - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+- `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
 - `Documentation/scene-state-contract.md`
 
 Key implications:
@@ -80,9 +81,19 @@ The outermost JUCE layer. A single `AudioProcessor` class that delegates to one 
 **Channel Configurations:**
 | Mode | Input | Output | Notes |
 |------|-------|--------|-------|
-| Calibrate | 1 (mic) | 4 (speakers) | Mono mic → quad test signals |
+| Calibrate | 1 (mic) | 4 (speakers) | Mono mic route (external or built-in) -> quad test signals |
 | Emitter | 1-2 (track audio) | 1-2 (passthrough) | Audio passes through; spatial state published to scene graph |
-| Renderer | 4 (from quad bus) | 4 (to speakers) | Reads scene graph, spatializes all emitters, outputs quad |
+| Renderer | 1-2 (host bus) + scene metadata/audio fast path | 1 / 2 / 4 (host layout) | Internal quad reference render with host-layout output mapping (mono/stereo/quad) |
+
+### Device Compatibility Contract (Stage 14 Planning)
+
+Renderer behavior is profile-oriented and must preserve one canonical scene contract:
+
+1. **Quad Studio Profile:** quad output layout (`quadraphonic` or `discrete(4)`) with explicit speaker mapping (`FL, FR, RL, RR`).
+2. **Laptop Speaker Profile:** stereo host output layout with deterministic downmix from the same internal scene/render state.
+3. **Headphone Profile:** stereo host output layout suitable for headphones; advanced personalized binaural/HRTF remains post-v1.
+
+Calibration input routing remains channel-driven (`cal_mic_channel`) and must be usable with both built-in and external microphones.
 
 ### 2. Scene Graph (`SceneGraph` — Singleton)
 
@@ -225,7 +236,7 @@ For each active emitter with phys_enable:
 
 ### 5. Spatialization Renderer (`SpatialRenderer`)
 
-The DSP core of Renderer mode. Reads all emitter states from the scene graph and produces 4-channel output.
+The DSP core of Renderer mode. Reads all emitter states from the scene graph, renders in a quad reference domain, and maps to host output layout (`1ch/2ch/4ch`).
 
 **Processing Chain (per audio block):**
 ```
@@ -237,14 +248,14 @@ For each active EmitterSlot:
   5. Apply doppler shift (if enabled, using velocity from physics)
   6. Apply directivity pattern (cardioid-like gain shaping based on aim vs speaker angle)
   7. Apply size/spread (decorrelation + multi-point source distribution)
-  8. Sum into 4-channel accumulation buffer
+  8. Sum into quad-reference accumulation buffer
 
 After all emitters:
   9. Apply room acoustics (early reflections + late reverb from Room Profile)
   10. Apply per-speaker delay compensation (from calibration)
   11. Apply per-speaker gain trim
   12. Apply master gain
-  13. Output 4 channels
+  13. Map to host output layout (mono/stereo/quad)
 ```
 
 **Sub-components:**
@@ -459,7 +470,7 @@ For each EmitterSlot in SceneGraph:
      ↓
 [Master Gain]
      ↓
-[4-Channel Output]
+[Host Output Layout (mono/stereo/quad)]
 ```
 
 ---

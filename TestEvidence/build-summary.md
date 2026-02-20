@@ -162,6 +162,26 @@ Result: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
 - Phase 2.4 acceptance gates are now closed (`probe + scenario + suite all pass`).
 - Historical allocation warning from early Phase 2.6 closeout is superseded by the Phase 2.6c allocation-free rerun.
 
+## Stage 14 Contract Alignment Addendum (UTC 2026-02-20)
+
+15. Documentation freshness gate after Stage 14 contract/drift updates
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+Stage 14 docs touched in this pass:
+- `.ideas/creative-brief.md`
+- `.ideas/architecture.md`
+- `.ideas/parameter-spec.md`
+- `.ideas/plan.md`
+- `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
+- `Documentation/invariants.md`
+- `Documentation/implementation-traceability.md`
+- `Documentation/stage14-review-release-checklist.md`
+
 ## Ship Addendum (UTC 2026-02-19)
 
 9. Configure universal macOS release build

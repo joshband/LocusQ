@@ -24,6 +24,7 @@ This document is the execution companion to:
 - `Documentation/adr/ADR-0002-routing-model-v1.md`
 - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
 - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+- `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
 
 ## Stage 9 - Emitter Rail Parity Completion
 
@@ -378,4 +379,75 @@ Return:
 - tested/partially tested/not tested
 - complete list of changed files
 - remaining deferred items (if any)
+```
+
+## Stage 14 - Device Profiles, Comprehensive Review, and Release Decision
+
+### Objective
+Close remaining spec/implementation drift, validate laptop-speaker/mic/headphone usability, complete comprehensive architecture/code/design/QA review, and produce explicit release decision output.
+
+### Task Checklist
+- [x] `S14-T1` Align `.ideas` and ADR/invariant contracts to current implementation state and portable-device requirement.
+- [x] `S14-T2` Refresh implementation traceability for Stage 12 renderer bindings and deferred parameter exposure.
+- [ ] `S14-T3` Execute comprehensive review pass:
+  - architecture review (`.ideas`, ADR, invariants, routing/state contracts)
+  - code review (processor/editor/UI bridge/scripts)
+  - design review (v3 visual/interaction parity in real host context)
+  - QA review (manual + automated evidence coherence)
+- [ ] `S14-T4` Complete manual DAW rerun with explicit rows for:
+  - laptop speaker playback
+  - headphone playback
+  - built-in mic calibration route
+  - external mic calibration route (if available)
+- [ ] `S14-T5` Resolve deferred/runtime gap for `rend_phys_interact` (implement or retain explicit no-op/defer contract).
+- [ ] `S14-T6` Decide and document release state:
+  - `hold` (gates pending)
+  - `draft-pre-release` (state lock)
+  - `ga` (all gates complete)
+- [ ] `S14-T7` Run docs freshness gate and synchronize closeout bundle if phase/release status changes.
+
+### Acceptance Checklist
+- [ ] No undocumented spec/implementation drifts remain.
+- [ ] Manual DAW checklist includes portable device profile signoff rows.
+- [ ] Comprehensive review findings are recorded and prioritized.
+- [ ] Release decision and rationale are explicit in docs/status.
+- [ ] Docs freshness gate passes.
+
+### Expected Evidence
+- `Documentation/stage14-review-release-checklist.md`
+- updated `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+- `TestEvidence/build-summary.md`
+- `TestEvidence/validation-trend.md`
+- optional release evidence (tag/release notes/artifacts) when selected
+
+### Codex Mega-Prompts
+
+`S14-T1-S14-T2`
+```text
+Use $skill_plan, $skill_docs, $skill_dream, $skill_design, and $threejs.
+Implement Stage 14 contract-alignment tasks.
+Deliverables:
+- .ideas contract updates (creative-brief, architecture, parameter-spec, plan)
+- ADR/invariant updates for device profiles and deferred/no-op parameter contract
+- traceability refresh for renderer control bindings and known open drifts
+Run:
+- ./scripts/validate-docs-freshness.sh
+Return:
+- changed files
+- tested/partially tested/not tested
+- explicit open drifts that remain
+```
+
+`S14-T3-S14-T7`
+```text
+Use $skill_docs and $skill_ship (plus $skill_test for validation reruns).
+Execute Stage 14 comprehensive review + release decision flow.
+Requirements:
+- findings-first review output for architecture/code/design/QA
+- manual DAW checklist updated with laptop speakers/mic/headphones rows
+- release decision documented (hold/draft-pre-release/ga) with gate rationale
+- closeout bundle updated if status/release state changes
+Validation:
+- run docs freshness gate
+- include evidence artifact paths
 ```

@@ -17,6 +17,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - `Documentation/adr/ADR-0002-routing-model-v1.md`
 - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
 - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+- `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
 
 ## Scope
 
@@ -31,7 +32,18 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.10: Renderer CPU guardrails (activity culling + high-emitter budget protection)
 - Phase 2.11: Preset/snapshot layout compatibility hardening (metadata versioning + migration checks)
 - Phase 2.11b: Snapshot migration matrix expansion (mono/stereo/quad runtime suites + extended metadata emulation modes)
+- Phase 2.12: Device-profile contract alignment and drift closure planning
 - Reference: `.ideas/plan.md`
+
+## Stage 14 Drift Ledger (Open)
+
+| Parameter / Contract Surface | Implementation State | Documentation State | Next Action |
+|---|---|---|---|
+| `room_profile` | Runtime/internal status concept; not APVTS parameter | Previously documented as global parameter without APVTS caveat | Keep as internal runtime state with explicit non-APVTS note in `.ideas/parameter-spec.md` |
+| `cal_state` | Runtime/internal status concept; not APVTS parameter | Previously documented as calibrate parameter without APVTS caveat | Keep as internal runtime state with explicit non-APVTS note in `.ideas/parameter-spec.md` |
+| `rend_phys_interact` | APVTS parameter present; currently no runtime consumer | Documented as active renderer physics control | Implement runtime behavior or keep explicitly deferred/no-op across docs/UI |
+| `emit_dir_azimuth` / `emit_dir_elevation` | DSP/runtime active | Not exposed in Stage 12 incremental control UI | Add Stage 14 binding or mark intentional defer with ADR-linked note |
+| `phys_vel_x` / `phys_vel_y` / `phys_vel_z` | DSP/runtime active (throw request inputs) | Not exposed in Stage 12 incremental control UI | Add Stage 14 binding or mark intentional defer with ADR-linked note |
 
 ## Phase 2.4 Parameter Mapping
 
@@ -51,6 +63,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | `phys_reset` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (edge-trigger -> `physicsEngine.requestReset`) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | One-shot reset trigger (`btn-reset`) |
 | `rend_phys_rate` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global simulation tick rate |
 | `rend_phys_walls` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global wall-collision enable |
+| `rend_phys_interact` | `Source/PluginProcessor.cpp` | No active runtime consumer in current v1 | Not bound in Stage 12 incremental UI | Deferred v2 interaction feature; currently no-op |
 | `rend_phys_pause` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global pause/freeze control |
 
 ## Phase 2.4 Acceptance Coverage
@@ -78,11 +91,11 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | `emit_dir_azimuth` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`publishEmitterState` computes `directivityAim`) -> `Source/SpatialRenderer.h` | Not yet bound in WebView relay | Directivity aim azimuth |
 | `emit_dir_elevation` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`publishEmitterState` computes `directivityAim`) -> `Source/SpatialRenderer.h` | Not yet bound in WebView relay | Directivity aim elevation |
 | `rend_doppler` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setDopplerEnabled`) -> `Source/DopplerProcessor.h` | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Enables doppler processing |
-| `rend_doppler_scale` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setDopplerScale`) -> `Source/DopplerProcessor.h` | Not yet bound in WebView relay | Doppler intensity |
+| `rend_doppler_scale` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setDopplerScale`) -> `Source/DopplerProcessor.h` | Bound in Stage 12 incremental UI (`Source/ui/public/incremental/js/stage12_ui.js`) | Doppler intensity |
 | `rend_room_enable` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomEnabled`) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Enables room acoustics chain |
-| `rend_room_mix` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomMix`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Not yet bound in WebView relay | Dry/wet mix |
-| `rend_room_size` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomSize`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Not yet bound in WebView relay | Scales delays/room model |
-| `rend_room_damping` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomDamping`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Not yet bound in WebView relay | High-frequency damping |
+| `rend_room_mix` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomMix`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Bound in Stage 12 incremental UI (`Source/ui/public/incremental/js/stage12_ui.js`) | Dry/wet mix |
+| `rend_room_size` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomSize`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Bound in Stage 12 incremental UI (`Source/ui/public/incremental/js/stage12_ui.js`) | Scales delays/room model |
+| `rend_room_damping` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setRoomDamping`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Bound in Stage 12 incremental UI (`Source/ui/public/incremental/js/stage12_ui.js`) | High-frequency damping |
 | `rend_room_er_only` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setEarlyReflectionsOnly`) -> `Source/FDNReverb.h` | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Early reflections only mode |
 | `rend_quality` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`updateRendererParameters`) -> `Source/SpatialRenderer.h` (`setQualityTier`) -> `Source/EarlyReflections.h`, `Source/FDNReverb.h` | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Draft/final processing depth |
 

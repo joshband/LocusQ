@@ -29,6 +29,7 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
 - Manual DAW rerun is still required to close Stage 13:
   - fill operator context table
   - rerun checklist rows UI-01 through UI-12 in target DAW
+  - execute portable-device rows DEV-01 through DEV-06 (laptop speakers/mic/headphones)
   - update rollup and final manual verdict
 
 ## Normative References
@@ -75,6 +76,17 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
 | UI-11 | Profile/status indicators | Observe `scene-status`, viewport info, profile indicators across modes | Status labels update consistently and match current mode/action | `FAIL` | 2026-02-19 | | | 2.7b calibration/profile status path was wired and 2.7d smoke remains pass; DAW-session indicator behavior still requires manual evidence. | `plugins/LocusQ/status.json`; `plugins/LocusQ/TestEvidence/locusq_phase_2_7d_smoke.log` |
 | UI-12 | Persistence sanity | Save/load preset after edits (timeline + toggles) | Loaded state restores expected settings without UI lockup | `FAIL` | 2026-02-19 | | | Preset persistence is listed as implemented in Phase 2.6 and current acceptance suite rerun is pass; in-host save/load UX still needs manual verification. | `plugins/LocusQ/README.md`; `plugins/LocusQ/TestEvidence/locusq_phase_2_7d_phase_2_6_acceptance_suite.log` |
 
+## Portable Device Profile Checklist (Stage 14 Addendum)
+
+| ID | Check | Steps | Expected Result | Manual Result | Run Date (UTC) | Host (DAW/Standalone) | Host Version | Notes | Evidence Paths |
+|---|---|---|---|---|---|---|---|---|---|
+| DEV-01 | Standalone laptop speaker playback | Launch standalone, play reference material through built-in speakers | Audible output is stable, no UI/input lockup, no non-finite artifacts | `PENDING` | | | | Stereo fallback path should remain coherent with renderer scene intent. | |
+| DEV-02 | Standalone headphone playback | Connect headphones and replay same material | Audible output is stable and level controls remain responsive | `PENDING` | | | | Verify renderer controls do not regress in headphone profile. | |
+| DEV-03 | DAW laptop speaker playback | Run plugin in host session and monitor via built-in speakers | In-host playback remains stable with working controls and expected monitoring behavior | `PENDING` | | | | Run in same DAW used for UI-01..UI-12. | |
+| DEV-04 | DAW headphone playback | Monitor same host session via headphones | In-host playback remains stable with no transport/control regressions | `PENDING` | | | | Confirm no profile-specific UI lockups. | |
+| DEV-05 | Built-in mic calibration route | In Calibrate mode, select built-in mic channel and run start/abort cycle | Calibration status transitions remain coherent and abort path is deterministic | `PENDING` | | | | Log selected mic channel in operator notes. | |
+| DEV-06 | External mic calibration route (if available) | Select external mic channel and run start/abort cycle | Calibration status transitions remain coherent and routing reflects expected input | `PENDING` | | | | Mark `N/A` if external mic is unavailable for run. | |
+
 ## Pass/Fail Rollup (Fill After Running)
 
 | Verdict Bucket | Count | Checklist IDs |
@@ -82,7 +94,7 @@ Capture in-host DAW UI checks required to close Phase 2.7 acceptance items that 
 | PASS | 2 | UI-04, UI-05 |
 | FAIL | 10 | UI-01, UI-02, UI-03, UI-06, UI-07, UI-08, UI-09, UI-10, UI-11, UI-12 |
 | N/A | 0 | |
-| PENDING | 0 | |
+| PENDING | 6 | DEV-01, DEV-02, DEV-03, DEV-04, DEV-05, DEV-06 |
 
 - Final manual host UI verdict (manual-only): `FAIL`
 - Ready for 2.7 closeout when: no `FAIL`, all non-`N/A` checks are `PASS`, and host/version fields are populated.

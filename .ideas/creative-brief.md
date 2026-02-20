@@ -2,7 +2,7 @@ Title: LocusQ Creative Brief
 Document Type: Creative Brief
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ - Creative Brief
 
@@ -75,6 +75,7 @@ Advanced physics behaviors beyond basic throw/bounce:
 - Immersive audio artists and installers
 - Experimental composers wanting physical metaphors for spatial mixing
 - Anyone with 4 speakers and a desire to place sound in real space
+- Producers who need a portable stereo/headphone workflow on laptops before moving to full quad rooms
 
 ## Technical Context
 
@@ -84,6 +85,13 @@ Advanced physics behaviors beyond basic throw/bounce:
 - **Measurement Mic:** Any calibration mic (user-supplied)
 - **DAW:** Any VST3 host (Ableton, Reaper, Bitwig, etc.)
 - **Framework:** JUCE 8, WebView UI path, C++ DSP
+
+## Operational Device Profiles (Stage 14 Planning)
+
+- **Quad Studio Profile (reference target):** 4-channel monitor layout with full room calibration and quad rendering.
+- **Laptop Speaker Profile (portable target):** stereo output fallback using the same scene/automation contracts with deterministic downmix behavior.
+- **Headphone Profile (portable target):** stereo output path suitable for headphones; spatial behavior should remain coherent with quad intent.
+- **Mic Input Profiles:** external measurement mic and built-in laptop mic routes are both valid for calibration workflows, with channel mapping surfaced explicitly in UI status.
 
 ## V1 Scope Contract (2026-02-19)
 
@@ -95,12 +103,13 @@ Advanced physics behaviors beyond basic throw/bounce:
 4. Physics v1 (deterministic throw/bounce/drag/gravity) integrated with spatial motion.
 5. Internal keyframe timeline and transport-aware behavior with documented authority precedence.
 6. Full-system acceptance evidence for CPU/deadline and host edge-case stability.
+7. Usable monitoring/device baseline across quad studio, laptop stereo speakers, and headphones using existing output-layout support.
 
 ### Out of Scope (Deferred Post-V1)
 
 1. AI orchestration and autonomous scene mutation.
 2. Neural acoustic modeling / neural IR generation.
-3. Advanced output formats and binaural/HRTF expansion beyond current v1 plan.
+3. Advanced output formats and personalized binaural/HRTF expansion beyond current v1 plan.
 4. Cross-emitter complex interaction systems (flocking/swarm/fluid) beyond preset-level motion behavior.
 5. Sensor-driven calibration dependencies (for example LiDAR) as shipping requirements.
 
@@ -123,3 +132,4 @@ Advanced physics behaviors beyond basic throw/bounce:
 5. 3D visualization is responsive, clear, and accurately represents the spatial field
 6. Keyframe animation exports/imports and syncs with DAW transport
 7. In-host UI interaction is fully functional (tabs, controls, timeline, calibration actions) with explicit degraded-mode behavior if viewport initialization fails
+8. Portable operation is reliable on laptop speakers, built-in/external mic calibration input, and headphones (stereo output profile)

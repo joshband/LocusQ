@@ -2,12 +2,12 @@ Title: LocusQ Implementation Plan
 Document Type: Implementation Plan
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ - Implementation Plan
 
 **Complexity Score: 5 / 5**
-**Strategy: Phased Implementation (6 phases)**
+**Strategy: Phased Implementation (2.1+ staged)**
 **UI Framework: WebView (Three.js for 3D)**
 
 ---
@@ -23,6 +23,7 @@ Given the extreme complexity, LocusQ requires strict phased implementation with 
 - [x] ADR-0003 accepted: deterministic authority precedence (DAW/APVTS -> timeline rest pose -> physics offset)
 - [x] ADR-0004 accepted: AI orchestration deferred from v1 critical path
 - [x] ADR-0005 accepted: phase-closeout docs freshness gate (status/evidence/readme/changelog sync contract)
+- [x] ADR-0006 accepted: device compatibility profiles (quad studio + laptop stereo + headphones) and release gating contract
 - [x] Scene state contract authored: `Documentation/scene-state-contract.md`
 
 These decisions are mandatory inputs for `skill_design` and `skill_impl` execution and must be treated as normative alongside invariants and parameter/architecture specs.
@@ -384,6 +385,37 @@ Status note (2026-02-19): Snapshot migration emulation now covers legacy-strip p
 
 ---
 
+## Phase 2.12: Device Compatibility + Contract Drift Closure (Planning/Execution Track)
+**Goal:** Close implementation/spec drift and make current v1 usable on laptop speakers, built-in/external mic input paths, and headphones while preserving quad reference behavior.
+
+### Tasks
+- [x] Define device-profile contract for quad studio, laptop stereo speakers, and headphones in `.ideas/creative-brief.md` and `.ideas/architecture.md`.
+- [x] Record architecture decision for device-profile behavior and release gating (`Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`).
+- [x] Align `.ideas/parameter-spec.md` with as-built APVTS/runtime reality (`room_profile`, `cal_state`, `rend_phys_interact` contract notes).
+- [x] Refresh implementation traceability for Stage 12 renderer control bindings and explicit deferred parameter exposure.
+- [ ] Complete manual DAW acceptance rerun and include laptop speaker + headphone playback checks.
+- [ ] Decide and execute one path for `rend_phys_interact`: implement runtime effect or mark deferred/no-op across UI/runtime consistently.
+- [ ] Add Stage 12 incremental bindings (or explicit defer ADR notes) for:
+  - `emit_dir_azimuth`
+  - `emit_dir_elevation`
+  - `phys_vel_x`
+  - `phys_vel_y`
+  - `phys_vel_z`
+  - `rend_phys_interact`
+- [ ] Publish Stage 14 comprehensive review pass (architecture/code/design/QA) with findings and prioritized fixes.
+- [ ] Create release decision package (draft/pre-release vs GA) with artifact and checklist evidence.
+
+### Acceptance Criteria
+- [ ] Manual DAW checklist is complete with explicit laptop-speaker and headphone verification rows.
+- [ ] Drift list for spec vs implementation is reduced to intentional deferred items only.
+- [ ] Docs freshness gate passes after closeout bundle updates.
+- [ ] Release readiness decision is explicit (`hold`, `draft-pre-release`, or `ga`), with gating evidence links.
+
+### Status Note (2026-02-20)
+Phase 2.12 planning/contract updates are now authored in docs/spec/ADR surfaces. Implementation work remains open for manual DAW signoff, deferred-parameter disposition, and final release packaging/publishing gates.
+
+---
+
 ## Risk Assessment
 
 ### Critical Risk (must solve or project fails)
@@ -478,3 +510,4 @@ This plan file was updated to reflect as-built progress so it does not drift fro
 - Execute manual host UI checklist for Phase 2.7 closeout.
 - Route follow-on validation to `/test` and CI harness automation integration.
 - Maintain ADR/docs freshness gate compliance on each phase closeout.
+- Execute Phase 2.12 contract-driven closeout for laptop speakers/mic/headphones and release-decision readiness.

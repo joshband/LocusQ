@@ -39,6 +39,7 @@ This checklist is the live implementation tracker. Completed items are `[x]`; op
 - [ ] Complete manual DAW acceptance checklist for Stage 11 calibrate workflow (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
 - [ ] Retire obsolete/legacy incremental UI paths after Stage 13 signoff (Stage 9-11 fallback kept intentionally during Stage 12).
 - [ ] Re-run/refresh manual DAW host acceptance checklist after parity promotion (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
+- [ ] Add explicit portable profile rows in manual checklist for laptop speakers, built-in/external mic routing, and headphones.
 
 ## Next Implementation Stages
 - [x] Stage 9: Emitter rail parity completion (identity/position/audio/physics/animation/preset groups to final v3 density). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 9 - Emitter Rail Parity Completion`).
@@ -46,6 +47,7 @@ This checklist is the live implementation tracker. Completed items are `[x]`; op
 - [ ] Stage 11: Calibrate workflow parity completion (automated implementation complete; manual DAW checklist follow-up pending). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 11 - Calibrate Workflow Parity Completion`).
 - [x] Stage 12: Visual polish and promotion (token-level styling pass, incremental->primary route switch, debug-surface gating, rollback-safe fallback retention). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 12 - Visual Polish And Primary Route Promotion`).
 - [ ] Stage 13: Final acceptance sweep (automation + closeout docs complete; manual DAW checklist signoff pending). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 13 - Final Acceptance Sweep And Closeout`).
+- [ ] Stage 14: Device profiles + comprehensive review + release decision (contract alignment landed; execution and signoff pending). Detailed checklist: `Documentation/v3-stage-9-plus-detailed-checklists.md` (`Stage 14 - Device Profiles, Comprehensive Review, and Release Decision`).
 
 ## Skills Routing For Remaining Work
 - `skill_dream`: no new ideation scope unless concept/parameter set changes.

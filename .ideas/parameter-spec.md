@@ -2,7 +2,7 @@ Title: LocusQ Parameter Specification
 Document Type: Parameter Specification
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-20
 
 # LocusQ - Parameter Specification
 
@@ -16,7 +16,7 @@ Last Modified Date: 2026-02-19
 | ID | Name | Type | Range | Default | Unit | Notes |
 |:---|:-----|:-----|:------|:--------|:-----|:------|
 | `mode` | Operating Mode | Enum | Calibrate / Emitter / Renderer | Emitter | — | Determines active parameter set |
-| `room_profile` | Room Profile | String | file path | "" | — | [internal] Loaded Room Profile reference |
+| `room_profile` | Room Profile | String | file path | "" | — | [internal runtime state] Room profile reference; not an APVTS parameter in v1 |
 | `bypass` | Bypass | Bool | On / Off | Off | — | True bypass |
 
 ---
@@ -25,7 +25,7 @@ Last Modified Date: 2026-02-19
 
 | ID | Name | Type | Range | Default | Unit | Notes |
 |:---|:-----|:-----|:------|:--------|:-----|:------|
-| `cal_state` | Calibration State | Enum | Idle / Measuring / Complete | Idle | — | [internal] Current calibration stage |
+| `cal_state` | Calibration State | Enum | Idle / Measuring / Complete | Idle | — | [internal runtime state] Derived from calibration engine status; not an APVTS parameter in v1 |
 | `cal_mic_channel` | Mic Input Channel | Int | 1–8 | 1 | — | Input channel for measurement mic |
 | `cal_spk_config` | Speaker Configuration | Enum | 4xMono / 2xStereo | 4xMono | — | How speakers are routed |
 | `cal_spk1_out` | Speaker 1 Output | Int | 1–8 | 1 | — | Output channel assignment |
@@ -164,7 +164,7 @@ Last Modified Date: 2026-02-19
 |:---|:-----|:-----|:------|:--------|:-----|:------|
 | `rend_phys_rate` | Physics Update Rate | Enum | 30 / 60 / 120 / 240 Hz | 60 | Hz | Simulation tick rate |
 | `rend_phys_walls` | Wall Collision | Bool | On / Off | On | — | Objects bounce off room boundaries |
-| `rend_phys_interact` | Object Interaction | Bool | On / Off | Off | — | Objects affect each other (v2 stretch) |
+| `rend_phys_interact` | Object Interaction | Bool | On / Off | Off | — | v2 stretch; parameter exists but has no runtime effect in current v1 implementation |
 | `rend_phys_pause` | Pause Physics | Bool | On / Off | Off | — | Freeze all physics simulation |
 
 ### Visualization
@@ -196,6 +196,16 @@ Last Modified Date: 2026-02-19
 
 ---
 
+## As-Built Contract Delta (2026-02-20)
+
+1. `room_profile` and `cal_state` remain documented internal states, but are runtime/native status fields in current v1 rather than APVTS parameters.
+2. `rend_phys_interact` exists in APVTS layout but is currently a deferred no-op (`v2` interaction feature).
+3. Stage 12 incremental UI binds renderer depth controls (`rend_doppler_scale`, `rend_room_mix`, `rend_room_size`, `rend_room_damping`), while these remain missing in legacy WebView traceability rows that pre-date Stage 10-12.
+4. `emit_dir_azimuth`, `emit_dir_elevation`, and `phys_vel_x/y/z` are active DSP/runtime parameters but are not yet exposed in Stage 12 incremental control bindings.
+5. Device compatibility contract for next phase: mono/stereo/quad output layout support is implemented in processor/runtime; laptop speakers and headphones run through stereo output paths, with advanced personalized binaural processing still deferred.
+
+---
+
 ## Notes
 
 1. **Automation:** All Float/Enum/Bool parameters are DAW-automatable except those marked [internal].
@@ -205,6 +215,7 @@ Last Modified Date: 2026-02-19
 5. **Room Profile dependency:** Emitter and Renderer modes will show a warning and pass audio through unprocessed if no Room Profile is loaded.
 6. **AI scope gate (ADR-0004):** AI orchestration is deferred from v1 critical path and planned only for post-v1 phases.
 7. **Future expansion:** Flocking, swarm, fluid dynamics, and material properties will add parameters in v2. The parameter ID scheme leaves room for `phys_flock_*`, `phys_fluid_*`, `phys_mat_*` prefixes.
+8. **Device compatibility contract (Stage 14 planning):** laptop speakers and headphones are first-class runtime targets through existing stereo output layout support; future personalized binaural/HRTF remains post-v1.
 
 ---
 

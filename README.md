@@ -25,6 +25,8 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 
 ### What is still open
 - Final manual DAW verification is still needed for embedded-host UI behavior (click/edit/drag checks in real host sessions).
+- Portable profile signoff is still needed for laptop speakers, built-in/external mic routing, and headphones.
+- Comprehensive Stage 14 architecture/code/design/QA review pass is not yet complete.
 - After manual checks, publish one final full acceptance snapshot with the manual signoff rows populated.
 
 ### V1 Completion Checklist
@@ -36,8 +38,10 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - [x] Pluginval automation-segfault mitigation landed and validated (seeded repro now passes; 10-run stability pass).
 - [x] Documentation freshness gate enabled (ADR-0005 + CI/script checks).
 - [ ] Complete manual host UI checklist (`TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`).
+- [ ] Add explicit manual signoff rows for laptop speakers, mic routing (built-in/external), and headphones.
 - [ ] Run final `/test` acceptance rerun (DSP + host + UI matrix) and publish deltas.
 - [ ] Close any remaining 2.7d issues found during manual DAW verification.
+- [ ] Close Stage 14 drift items (`room_profile`/`cal_state`/`rend_phys_interact` contract and unbound-parameter disposition).
 - [ ] Keep closeout docs synchronized on each final closeout pass (`status.json`, `README.md`, `CHANGELOG.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`).
 - [ ] Cut v1 release candidate and run final ship smoke checks.
 
@@ -65,6 +69,7 @@ LocusQ is a spatial audio plugin under APC, built with JUCE and a WebView UI.
 - Phase 2.7 UI interaction smoke matrix (`/test`): `PASS_WITH_WARNING` with trend deltas published
 - Manual host UI checklist staged: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 - Stage 13 automated sweep: `PASS` (`TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv`; 0 failures across UI gate, targeted non-UI matrix, pluginval, and standalone smoke)
+- Stage 14 contract alignment: `in_progress` (ADR-0006 + `.ideas`/traceability/invariants updates landed; execution/checklist signoff pending)
 
 ## Completed Phases
 
@@ -190,12 +195,14 @@ See:
 - Architecture/spec: `.ideas/architecture.md`, `.ideas/parameter-spec.md`
 - Invariants and ADRs: `Documentation/invariants.md`, `Documentation/adr/`
 - Docs freshness gate ADR: `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
+- Device profile contract ADR: `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
 - Scene-state contract: `Documentation/scene-state-contract.md`
 - Wiring traceability: `Documentation/implementation-traceability.md`
+- Stage 14 review/release checklist: `Documentation/stage14-review-release-checklist.md`
 - Lessons learned: `Documentation/lessons-learned.md`
 - Optional multi-agent watchdog guide (disabled by default): `Documentation/multi-agent-thread-watchdog.md`
 - Research synthesis and next steps: `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
 
 ## Suggested Next Command
 
-- Run `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md` in your DAW session, then run `/test LocusQ full acceptance rerun (DSP + host + UI matrix)` once manual checks pass.
+- Run the Stage 14 checklist (`Documentation/stage14-review-release-checklist.md`), complete manual DAW/device-profile signoff in `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`, then run `/test LocusQ full acceptance rerun (DSP + host + UI matrix)`.

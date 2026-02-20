@@ -209,6 +209,7 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-20T18:02:28Z | Stage 13 pluginval strictness-5 host validation | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3` | PASS (`SUCCESS`) |
 | 2026-02-20T18:02:28Z | Stage 13 standalone smoke | `open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | PASS (process launch observed; `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`) |
 | 2026-02-20T18:06:18Z | Stage 13 docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
+| 2026-02-20T18:24:17Z | Stage 14 contract-alignment docs freshness gate | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`) |
 
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.

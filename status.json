@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T18:06:58Z",
+  "last_modified": "2026-02-20T18:24:17Z",
   "phase_history": [
     {
       "phase": "ideation",
@@ -299,7 +299,7 @@
       "phase": "testing_stage13_final_acceptance_sweep_closeout",
       "status": "in_progress",
       "started_at": "2026-02-20T18:02:04Z",
-      "notes": "Stage 13 automated acceptance sweep is complete with zero failures across Stage 12 self-test/UI gate, targeted non-UI matrix (smoke + phase 2.5 + phase 2.6 + host-edge), pluginval strictness-5, and standalone smoke. Manual DAW checklist rerun remains pending before parity signoff."
+      "notes": "Stage 13 automated acceptance sweep is complete with zero failures across Stage 12 self-test/UI gate, targeted non-UI matrix (smoke + phase 2.5 + phase 2.6 + host-edge), pluginval strictness-5, and standalone smoke. Manual DAW checklist rerun remains pending before parity signoff. Stage 14 contract-alignment docs/checklists are now prepared (ADR-0006, drift ledger, release checklist); manual DAW signoff remains the gating item for parity/release decision."
     }
   ],
   "validation": {
@@ -1121,7 +1121,14 @@
     "incremental_stage13_standalone_smoke_passed": true,
     "incremental_stage13_docs_freshness_passed": true,
     "incremental_stage13_manual_daw_signoff_pending": true,
-    "incremental_stage13_status_tsv": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv"
+    "incremental_stage13_status_tsv": "plugins/LocusQ/TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv",
+    "stage14_contract_alignment_docs_updated": true,
+    "stage14_device_profiles_contract_ready": true,
+    "stage14_review_release_checklist": "Documentation/stage14-review-release-checklist.md",
+    "stage14_release_decision": "pending",
+    "stage14_portable_profile_manual_signoff_pending": true,
+    "stage14_docs_freshness_passed": true,
+    "stage14_docs_freshness_last_run": "2026-02-20T18:24:17Z"
   },
   "framework_selection": {
     "decision": "webview",
