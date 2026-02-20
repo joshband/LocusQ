@@ -1,0 +1,105 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_keyframe_loop_playback",
+  "name": "LocusQ Keyframe Loop Playback",
+  "category": "spatial",
+  "description": "Validates internal keyframe timeline evaluation across an 8-second loop, including wrap continuity and post-wrap signal stability.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "TIME_VARYING"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.32,
+      "duration_seconds": 8.6
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.14,
+    "emit_gain": 0.52,
+    "emit_spread": 0.18,
+    "emit_directivity": 0.45,
+    "anim_enable": 1.0,
+    "anim_mode": 1.0,
+    "anim_loop": 1.0,
+    "anim_speed": 0.1919,
+    "anim_sync": 0.0,
+    "phys_enable": 0.0,
+    "rend_master_gain": 0.50,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 8.6
+    },
+    "loop_wrap": {
+      "type": "time_range",
+      "start_seconds": 7.80,
+      "end_seconds": 8.20
+    },
+    "post_wrap": {
+      "type": "time_range",
+      "start_seconds": 8.20,
+      "end_seconds": 8.60
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present_full": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "timeline_motion_flux": {
+      "metric": "flux_rate",
+      "window": "full",
+      "threshold": {
+        "min": 0.00001,
+        "max": 10.0
+      },
+      "severity": "hard_fail"
+    },
+    "loop_wrap_continuity": {
+      "metric": "discontinuity_count",
+      "window": "loop_wrap",
+      "threshold": {
+        "max_count": 1200,
+        "detection_threshold_db": -18.0
+      },
+      "severity": "soft_warn"
+    },
+    "post_wrap_signal_present": {
+      "metric": "rms_energy",
+      "window": "post_wrap",
+      "threshold": {
+        "min": -95.0
+      },
+      "severity": "hard_fail"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass; loop wrap continuity should remain in bounds."
+}

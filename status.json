@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-20T19:36:32Z",
+  "last_modified": "2026-02-20T23:01:24Z",
   "notes": "draft-pre-release candidate",
   "phase_history": [
     {
@@ -313,6 +313,12 @@
       "status": "complete",
       "completed_at": "2026-02-20T19:31:31Z",
       "notes": "Implemented runtime inter-emitter physics interaction path (`rend_phys_interact`) and wired Stage 12 relay/attachment/UI + self-test coverage to remove deferred/no-op drift."
+    },
+    {
+      "phase": "stage16_qa_scenario_expansion",
+      "status": "complete",
+      "completed_at": "2026-02-20T23:01:24Z",
+      "notes": "Stage 16-A complete: added dedicated AirAbsorption distance sweep, Calibration sweep/capture proxy, Keyframe 8s loop playback, and emit_dir spatial-effect QA scenarios under qa/scenarios/."
     }
   ],
   "validation": {

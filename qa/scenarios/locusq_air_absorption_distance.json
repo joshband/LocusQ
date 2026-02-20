@@ -1,0 +1,78 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_air_absorption_distance",
+  "name": "LocusQ Air Absorption Distance",
+  "category": "spatial",
+  "description": "Validates dedicated AirAbsorption behavior by sweeping emitter distance and requiring high-frequency rolloff (spectral centroid decreases) across three distances.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "TIME_VARYING"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.40,
+      "duration_seconds": 3.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.08,
+    "emit_gain": 0.58,
+    "emit_spread": 0.00,
+    "emit_directivity": 0.00,
+    "rend_master_gain": 0.50,
+    "rend_quality": 1.0,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 1.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 3.0,
+      "description": "Air-absorption sweep render output"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    }
+  },
+
+  "parameter_sweeps": [
+    {
+      "parameter_index": 2,
+      "parameter_name": "pos_distance",
+      "values_normalized": [0.04, 0.25, 0.65],
+      "expected_metric": "spectral_centroid",
+      "expected_direction": "decreasing",
+      "severity": "hard_fail",
+      "description": "HF centroid should drop as distance increases with AirAbsorption enabled."
+    }
+  ],
+
+  "pass_criteria": "All hard_fail invariants pass and spectral_centroid decreases across the distance sweep."
+}

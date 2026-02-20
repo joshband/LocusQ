@@ -1,0 +1,121 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_emit_dir_spatial_effect",
+  "name": "LocusQ Emit Dir Spatial Effect",
+  "category": "spatial",
+  "description": "Validates that directivity aim controls modulate spatial output when directivity is high and aim direction is swept during playback.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "TIME_VARYING"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.40,
+      "duration_seconds": 4.5
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.10,
+    "emit_gain": 0.50,
+    "emit_spread": 0.00,
+    "emit_directivity": 1.0,
+    "emit_dir_azimuth": 0.50,
+    "emit_dir_elevation": 0.50,
+    "rend_master_gain": 0.50,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "parameter_automation": [
+    {
+      "parameter_index": 10,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.50 },
+        { "time": 1.5, "value": 0.75 },
+        { "time": 3.0, "value": 0.25 },
+        { "time": 4.5, "value": 0.50 }
+      ]
+    },
+    {
+      "parameter_index": 11,
+      "type": "envelope",
+      "points": [
+        { "time": 0.0, "value": 0.50 },
+        { "time": 2.25, "value": 0.70 },
+        { "time": 4.5, "value": 0.50 }
+      ]
+    }
+  ],
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 4.5
+    },
+    "aim_sweep": {
+      "type": "time_range",
+      "start_seconds": 0.80,
+      "end_seconds": 3.80
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "aim_modulates_spatial_output": {
+      "metric": "flux_rate",
+      "window": "aim_sweep",
+      "threshold": {
+        "min": 0.00002,
+        "max": 10.0
+      },
+      "severity": "hard_fail",
+      "description": "Aim motion should cause measurable spectral/spatial modulation."
+    },
+    "directional_contrast": {
+      "metric": "ild_max_db",
+      "window": "aim_sweep",
+      "threshold": {
+        "min": 0.10,
+        "max": 60.0
+      },
+      "severity": "soft_warn"
+    },
+    "aim_sweep_continuity": {
+      "metric": "discontinuity_count",
+      "window": "aim_sweep",
+      "threshold": {
+        "max_count": 2000,
+        "detection_threshold_db": -16.0
+      },
+      "severity": "soft_warn"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

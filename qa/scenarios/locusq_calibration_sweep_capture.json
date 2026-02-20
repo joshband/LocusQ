@@ -1,0 +1,101 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_calibration_sweep_capture",
+  "name": "LocusQ Calibration Sweep Capture",
+  "category": "stability",
+  "description": "Basic calibration-path exercise: runs a sweep-oriented stateful scenario across repeated passes to validate finite, stable behavior through calibration-related settings.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL", "TIME_VARYING"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 200.0,
+      "end_hz": 6000.0,
+      "amplitude": 0.25,
+      "duration_seconds": 5.0
+    }
+  },
+
+  "parameter_variations": {
+    "mode": 0.0,
+    "cal_spk_config": 0.0,
+    "cal_mic_channel": 0.0,
+    "cal_spk1_out": 0.0,
+    "cal_spk2_out": 0.1429,
+    "cal_spk3_out": 0.2857,
+    "cal_spk4_out": 0.4286,
+    "cal_test_level": 0.6667,
+    "cal_test_type": 0.0,
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.12,
+    "emit_gain": 0.50,
+    "emit_spread": 0.00,
+    "emit_directivity": 0.00,
+    "rend_master_gain": 0.50,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "multi_pass": {
+    "num_passes": 2,
+    "reset_between_passes": true
+  },
+
+  "state_roundtrip": {
+    "enabled": true,
+    "trigger_seconds": 2.0,
+    "require_support": true,
+    "fail_on_error": true
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 5.0
+    },
+    "late_capture": {
+      "type": "time_range",
+      "start_seconds": 3.5,
+      "end_seconds": 5.0
+    }
+  },
+
+  "expected_invariants": {
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "signal_present_late": {
+      "metric": "rms_energy",
+      "window": "late_capture",
+      "threshold": {
+        "min": -95.0
+      },
+      "severity": "hard_fail"
+    },
+    "capture_continuity": {
+      "metric": "discontinuity_count",
+      "window": "full",
+      "threshold": {
+        "max_count": 12000,
+        "detection_threshold_db": -18.0
+      },
+      "severity": "soft_warn"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass across both passes."
+}
