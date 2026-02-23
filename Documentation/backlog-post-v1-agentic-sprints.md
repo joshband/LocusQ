@@ -148,7 +148,7 @@ Band mapping:
 ## Comprehensive Coverage Matrix (Recommendations, Gaps, and Enhancements)
 | Domain | Source Findings and Ideas | Backlog Coverage | Remaining Tightening |
 |---|---|---|---|
-| DSP architecture | FDN expansion, deterministic RT safety, no-allocation audio thread | BL-010, BL-011, BL-012 | HX-01 migration guard + HX-04 scenario audit |
+| DSP architecture | FDN expansion, deterministic RT safety, no-allocation audio thread | BL-010, BL-011, BL-012 | Keep HX-01 migration guard discipline; HX-04 drift guard is now enforced in-lane |
 | CLAP lifecycle and format expansion | CLAP adapter path, host validation, CI readiness, telemetry contract | BL-011 | Keep BL-011 closeout tied to docs/test evidence sync |
 | Headphone/spatial quality | Steam runtime contract, profile fallback, head-tracked expansion path | BL-009, BL-017, BL-018 | Keep HX-03 REAPER multi-instance lane in recurring regression cadence while BL-017 expands |
 | Spatial 3D support and layout coverage | surround/ambisonics/binaural profile matrix + companion bridge | BL-018, BL-017 | Maintain BL-018 strict warning-free gate before BL-017 promotion |
@@ -156,7 +156,7 @@ Band mapping:
 | UX/UI authoring flow | Emitter UX v2, choreography packs, resize hardening | BL-025, BL-022, BL-023 | Ensure BL-023 follows finalized BL-025 authority/responsive contracts |
 | Calibration and renderer UX coherence | CALIBRATE v2 and RENDERER v2 profile/topology workflows | BL-026, BL-027 | Keep shared topology alias dictionary and diagnostics chip semantics aligned across panels |
 | WebView runtime and host interaction | resize behavior, callback ordering, stale-state fallbacks | BL-016, BL-023, BL-025, BL-026, BL-027 | HX-02 transport/registration contract audit |
-| QA and automation maturity | REAPER headless lane, manual listening gates, harness unification | BL-024, BL-012, BL-013 | HX-03 closed; HX-04 remains an explicit closure gate |
+| QA and automation maturity | REAPER headless lane, manual listening gates, harness unification | BL-024, BL-012, BL-013 | HX-03 and HX-04 closed; keep HX-04 parity guard active in BL-012 reruns |
 | Code-level tightening from reviews | deprecated `shared_ptr` atomic free funcs, lock scope semantics, host instability findings | HX-01, HX-02, HX-03 | Keep tied to BL-012/BL-016 contracts and recurring HX-03 regression runs |
 | Docs and governance discipline | status/evidence freshness and invariant traceability | all BL/HX items | Enforced by DoD + docs freshness gate |
 
