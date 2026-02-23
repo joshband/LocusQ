@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LocusQ Executive Delivery Brief</title>
+  <style>
+    :root { --bg:#f8fafc; --card:#ffffff; --ink:#111827; --muted:#4b5563; --line:#e2e8f0; --blue:#1d4ed8; --green:#16a34a; --amber:#d97706; --rose:#e11d48; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Avenir Next","Segoe UI",Arial,sans-serif; color:var(--ink); background:linear-gradient(180deg,#eef6ff 0%,var(--bg) 30%,var(--bg) 100%); line-height:1.45; }
+    .wrap { max-width:1200px; margin:0 auto; padding:28px 18px 64px; }
+    .hero, .panel { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 6px 22px rgba(15,23,42,.05); margin-bottom:16px; }
+    h1 { margin:0 0 8px; font-size:32px; }
+    h2 { margin:8px 0 10px; font-size:24px; }
+    .muted { color:var(--muted); }
+    .kpis { margin-top:14px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+    .kpi { border:1px solid var(--line); border-radius:12px; background:#fbfdff; padding:10px 12px; }
+    .kpi .v { font-size:24px; font-weight:700; }
+    .kpi .k { color:var(--muted); font-size:13px; }
+    .img { width:100%; border:1px solid var(--line); border-radius:12px; margin:10px 0; background:#fff; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th,td { border:1px solid var(--line); text-align:left; padding:8px 10px; }
+    th { background:#f8fafc; }
+    .pill { display:inline-block; font-size:12px; font-weight:600; color:#fff; background:var(--blue); padding:4px 8px; border-radius:999px; margin-right:6px; }
+    .ok { background:var(--green); }
+    .warn { background:var(--amber); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>LocusQ Executive Delivery Brief</h1>
+      <p class="muted">Window: 2026-02-17 to 2026-02-23 (UTC)</p>
+      <div class="kpis">
+        <div class="kpi"><div class="v">v1.0.0-ga</div><div class="k">Release milestone (2026-02-20)</div></div>
+        <div class="kpi"><div class="v">63</div><div class="k">Commits</div></div>
+        <div class="kpi"><div class="v">371</div><div class="k">Validation trend entries</div></div>
+        <div class="kpi"><div class="v">48 / 61</div><div class="k">Structured run passes</div></div>
+        <div class="kpi"><div class="v">15</div><div class="k">Archived hygiene candidates</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Visual Dashboard</h2>
+      <img class="img" src="visuals/kpi-cards-2026-02-23.png" alt="KPI cards" />
+      <img class="img" src="visuals/validation-outcomes-by-day-2026-02-23.png" alt="Validation outcomes" />
+      <img class="img" src="visuals/backlog-status-2026-02-23.png" alt="Backlog readiness" />
+      <img class="img" src="visuals/sdlc-flow-2026-02-23.png" alt="SDLC flow" />
+    </section>
+
+    <section class="panel">
+      <h2>Fresh Screenshot Evidence (Same Set Used in Markdown)</h2>
+      <p class="muted">Source run: <code>standalone_ui_smoke_20260223T015539Z</code> | Summary: <code>TestEvidence/standalone_ui_smoke_20260223T015539Z/summary.tsv</code></p>
+      <img class="img" src="visuals/fresh-smoke-feature-grid-20260223T015539Z.png" alt="Fresh smoke feature grid" />
+      <img class="img" src="visuals/fresh-smoke-verification-board-20260223T015539Z.png" alt="Fresh smoke verification board" />
+    </section>
+
+    <section class="panel">
+      <h2>Plain-Language Readout</h2>
+      <p><span class="pill ok">Stable</span> Host interaction blockers are closed in manual DAW checks.</p>
+      <p><span class="pill ok">Safer</span> Allocation-free performance closure is documented in full-system lanes.</p>
+      <p><span class="pill warn">In Validation</span> Spatial profile expansion (BL-009/BL-018) is active with deterministic evidence.</p>
+      <table>
+        <thead><tr><th>Area</th><th>Result</th><th>Impact</th></tr></thead>
+        <tbody>
+          <tr><td>Host UI</td><td>UI-04/UI-06/UI-07/UI-12 pass</td><td>Reliable day-to-day host workflow</td></tr>
+          <tr><td>Performance</td><td>Allocation-free closeout</td><td>Higher confidence for real-time sessions</td></tr>
+          <tr><td>Spatial profiles</td><td>BL-009 + BL-018 lanes expanded</td><td>Broader device/layout readiness</td></tr>
+          <tr><td>CLAP</td><td>External validator all-pass rerun</td><td>Reduced format-integration risk</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>

@@ -3,7 +3,9 @@
 #include <juce_core/juce_core.h>
 #include <atomic>
 #include <array>
+#include <cstdint>
 #include <cstring>
+#include "SharedPtrAtomicContract.h"
 
 //==============================================================================
 // Vec3 - Minimal 3D vector for lock-free scene data
@@ -51,6 +53,9 @@ struct EmitterData
     float   directivity  = 0.5f;
     Vec3    directivityAim { 0.0f, 0.0f, -1.0f };
     Vec3    velocity     { 0.0f, 0.0f, 0.0f };
+    Vec3    force        { 0.0f, 0.0f, 0.0f };
+    std::uint8_t collisionMask = 0;
+    float   collisionEnergy = 0.0f;
     char    label[32]    = "Emitter";
     uint8_t colorIndex   = 0;
     bool    muted        = false;
@@ -182,7 +187,7 @@ public:
                 slotOccupied[i] = true;
                 EmitterData d;
                 d.active = true;
-                d.colorIndex = static_cast<uint8_t> (i % 16);
+                d.colorIndex = seededPaletteIndexForSlot (i);
                 snprintf (d.label, sizeof (d.label), "Emitter %d", i + 1);
                 slots[i].write (d);
                 ++activeEmitterCount;
@@ -237,12 +242,12 @@ public:
     void setRoomProfile (const RoomProfile& profile)
     {
         auto newProfile = std::make_shared<RoomProfile> (profile);
-        std::atomic_store (&currentRoomProfile, newProfile);
+        currentRoomProfile.store (std::move (newProfile));
     }
 
     std::shared_ptr<RoomProfile> getRoomProfile() const
     {
-        return std::atomic_load (&currentRoomProfile);
+        return currentRoomProfile.load();
     }
 
     //--------------------------------------------------------------------------
@@ -300,6 +305,19 @@ public:
     }
 
 private:
+    static uint8_t seededPaletteIndexForSlot (int slotId) noexcept
+    {
+        // Deterministic pseudo-random index to spread new emitters across the 16-color palette.
+        const auto s = static_cast<uint32_t> (juce::jmax (0, slotId) + 1);
+        uint32_t x = (s * 0x9e3779b1u) ^ 0x7f4a7c15u;
+        x ^= (x >> 16);
+        x *= 0x85ebca6bu;
+        x ^= (x >> 13);
+        x *= 0xc2b2ae35u;
+        x ^= (x >> 16);
+        return static_cast<uint8_t> (x % 16u);
+    }
+
     SceneGraph() = default;
     ~SceneGraph() = default;
 
@@ -311,7 +329,7 @@ private:
     std::atomic<int> activeEmitterCount { 0 };
     bool rendererRegistered = false;
 
-    std::shared_ptr<RoomProfile> currentRoomProfile = std::make_shared<RoomProfile>();
+    SharedPtrAtomicContract<RoomProfile> currentRoomProfile { std::make_shared<RoomProfile>() };
 
     std::atomic<uint64_t> globalSampleCounter { 0 };
 

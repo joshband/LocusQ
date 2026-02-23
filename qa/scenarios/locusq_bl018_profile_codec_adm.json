@@ -1,0 +1,84 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl018_profile_codec_adm",
+  "name": "LocusQ BL-018 Profile Codec ADM",
+  "category": "spatial",
+  "description": "Spatial profile matrix run for ADM layout placeholder path.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "multitone",
+    "stimulus_variant": "harmonic",
+    "parameters": {
+      "fundamental_hz": 110.0,
+      "num_harmonics": 8,
+      "overall_amplitude": 0.30,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.78,
+    "pos_elevation": 0.44,
+    "pos_distance": 0.10,
+    "emit_gain": 0.50,
+    "emit_mute": 0.0,
+    "emit_spread": 0.05,
+    "emit_directivity": 0.35,
+    "emit_dir_azimuth": 0.75,
+    "emit_dir_elevation": 0.42,
+    "rend_master_gain": 0.50,
+    "rend_quality": 1.0,
+    "rend_air_absorb": 0.0,
+    "rend_doppler": 0.0,
+    "rend_room_enable": 0.0,
+    "rend_headphone_mode": 0.0,
+    "rend_spatial_profile": 1.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 2.0,
+      "description": "Spatial profile render window"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "Spatial profile render must produce stable output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Render output must remain finite."
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Render output must stay below clipping."
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

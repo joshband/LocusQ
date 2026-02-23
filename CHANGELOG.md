@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-23
 
 # Changelog
 
@@ -10,7 +10,75 @@ All notable changes to LocusQ are documented here.
 
 ## [Unreleased]
 
-- Reserved for post-`v1.0.0-ga` changes.
+Operational snapshot:
+- Live backlog state and P0-P2 priorities are tracked in `Documentation/backlog-post-v1-agentic-sprints.md`.
+- Canonical runtime/state snapshot is tracked in `status.json`.
+
+### Added
+
+- WebView entrypoint routing override for host/runtime diagnostics:
+  - Production default now loads `Source/ui/public/index.html`.
+  - Incremental UI remains available via `LOCUSQ_UI_VARIANT=incremental`.
+  - UI self-test flow (`LOCUSQ_UI_SELFTEST`) now forces incremental stage12 automatically.
+- Steam Audio C API specialist skill for repeatable BL-009 integration:
+  - `.codex/skills/steam-audio-capi/SKILL.md`
+  - `.codex/skills/steam-audio-capi/references/sources.md`
+- CLAP and spatial-audio specialist skills for BL-011/BL-018 execution:
+  - `.codex/skills/clap-plugin-lifecycle/SKILL.md`
+  - `.codex/skills/spatial-audio-engineering/SKILL.md`
+- Holistic post-v1 backlog execution spec refresh:
+  - `Documentation/backlog-post-v1-agentic-sprints.md`
+  - Includes fresh `P0-P2` prioritization, dependency graphs, parallel agent tracks, and per-task Codex/Claude mega-prompts.
+
+### Changed
+
+- P0 host UI baseline now targets production UI by default (`BL-003`, `BL-004`, `BL-005` execution track).
+- BL-010 closeout promotion completed (2026-02-23):
+  - backlog state moved from `In Validation (blocked)` to `Done` after BL-009 dependency closure.
+  - deterministic evidence bundle remains authoritative at `TestEvidence/bl010_validation_20260222T191102Z/`.
+- BL-016 transport-contract closeout completed (2026-02-23):
+  - backlog/state promoted to `Done` after refreshing the required validation bundle.
+  - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T025859Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl016_20260223T025916Z.log` (warn-only baseline retained), `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl016_20260223T030005Z.log`, `TestEvidence/validate_docs_freshness_bl016_20260223T030010Z.log`.
+- BL-015 all-emitter realtime rendering closeout completed (2026-02-23):
+  - backlog/state promoted to `Done` after fresh production self-test and smoke-suite reruns.
+  - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T034704Z.json` (`UI-P1-015` pass: selected vs non-selected styling), `TestEvidence/locusq_smoke_suite_spatial_bl015_20260223T034751Z.log` (`3 PASS / 1 WARN / 0 FAIL` baseline retained).
+  - companion checks in the same self-test remain green (`UI-P1-014`, `UI-P1-019`, `UI-P1-022`) to protect downstream overlay lanes.
+- BL-011 CLAP lifecycle and host/CI closeout completed (2026-02-23):
+  - backlog/state promoted to `Done` after deterministic CLAP closeout lane pass.
+  - closeout artifact: `TestEvidence/bl011_clap_closeout_20260223T032730Z/` (CLAP build/install, `clap-info`, `clap-validator`, QA smoke, phase 2.6 suite, BL-011 self-test, non-CLAP guard, REAPER discoverability probe).
+  - CLAP discoverability evidence: `TestEvidence/reaper_clap_discovery_probe_20260223T023314Z.json` (`matchedFxName=CLAP: LocusQ (Noizefield)`).
+- HX-01 shared_ptr atomic migration guard completed (2026-02-23):
+  - direct deprecated SceneGraph call sites were migrated to the contract wrapper path (`Source/SharedPtrAtomicContract.h`, `Source/SceneGraph.h`).
+  - validation artifacts: `TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`, `TestEvidence/hx01_sharedptr_atomic_deprecation_scan_excluding_wrapper_20260223T034931Z.log`.
+- CLAP documentation consolidation for BL-011:
+  - new canonical closeout plan: `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
+  - governance ADR: `Documentation/adr/ADR-0009-clap-closeout-documentation-consolidation.md`
+  - archived CLAP references/PDFs: `Documentation/archive/2026-02-23-clap-reference-bundle/`
+- Physics preset stickiness hardening in production UI (`BL-002` execution track):
+  - `custom` promotion now checks against preset parameter signatures before flipping state.
+  - Added deferred re-check around host callback ordering window to avoid false preset reverts.
+- Root `README.md` structure standardized to concise quick-start/status/release-policy layout (`BL-001`).
+- BL-009 Steam headphone path is now integrated behind runtime availability checks:
+  - Added Steam Audio runtime load/init/teardown in `SpatialRenderer` with deterministic stereo fallback.
+  - Added Steam-enabled CMake include/runtime path wiring (`LOCUSQ_ENABLE_STEAM_AUDIO`).
+  - Added opt-in production self-test switch `LOCUSQ_UI_SELFTEST_BL009=1` and passing `UI-P1-009` evidence.
+- BL-009 diagnostics closeout hardening:
+  - Added explicit Steam init stage/error/runtime-lib/missing-symbol telemetry in `Source/SpatialRenderer.h`.
+  - Surfaced diagnostics in scene-state payload (`Source/PluginProcessor.cpp`) and production UI self-test reporting (`Source/ui/public/js/index.js`).
+- BL-011 CLAP lifecycle diagnostics (Slice 2):
+  - `LocusQAudioProcessor` now surfaces deterministic CLAP runtime telemetry (`clapBuildEnabled`, `clapPropertiesAvailable`, `clapIsPluginFormat`, `clapLifecycleStage`, `clapRuntimeMode`, `clapVersion`) in `getSceneStateJSON`.
+  - Added opt-in production self-test lane `UI-P2-011` (`selftest_bl011=1`) and environment passthrough (`LOCUSQ_UI_SELFTEST_BL011`).
+- REAPER host-lane planning scaffolding (`BL-024`):
+  - Added plan doc `Documentation/plans/reaper-host-automation-plan-2026-02-22.md`.
+  - Added manual QA runbook `Documentation/testing/reaper-manual-qa-session.md`.
+  - Added headless smoke runner `scripts/reaper-headless-render-smoke-mac.sh`.
+  - Added REAPER bootstrap script `qa/reaper/reascripts/LocusQ_Create_Manual_QA_Session.lua`.
+- Root docs contract tightened for clearer entrypoints and reduced drift:
+  - `README.md`
+  - `CODEX.md`
+  - `CLAUDE.md`
+  - `SKILLS.md`
+  - `AGENT_RULE.md`
 
 ## [v1.0.0-ga] - 2026-02-20
 
@@ -22,7 +90,7 @@ All notable changes to LocusQ are documented here.
   - `Documentation/research/qa-harness-upstream-backport-opportunities-2026-02-20.md`
 - Stage 14 review/release planning artifacts:
   - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
-  - `Documentation/stage14-review-release-checklist.md`
+  - `Documentation/archive/2026-02-23-historical-review-bundles/stage14-review-release-checklist.md`
 - Phase 2.4 acceptance closure tooling:
   - `qa/physics_probe_main.cpp` deterministic physics probe target
   - `qa/scenarios/locusq_24_physics_spatial_motion.json`
@@ -111,8 +179,8 @@ All notable changes to LocusQ are documented here.
   - `.ideas/plan.md`
   - `Documentation/invariants.md`
   - `Documentation/implementation-traceability.md`
-  - `Documentation/v3-ui-parity-checklist.md`
-  - `Documentation/v3-stage-9-plus-detailed-checklists.md`
+  - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
+  - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
   - `Documentation/README.md`
   - `README.md`
   - `status.json`
@@ -126,8 +194,8 @@ All notable changes to LocusQ are documented here.
     - `status.json`
     - `README.md`
     - `CHANGELOG.md`
-    - `Documentation/v3-ui-parity-checklist.md`
-    - `Documentation/v3-stage-9-plus-detailed-checklists.md`
+    - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
+    - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
     - `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
     - `TestEvidence/build-summary.md`
     - `TestEvidence/validation-trend.md`

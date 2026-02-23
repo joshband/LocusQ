@@ -56,7 +56,7 @@ check_markdown_metadata_scope() {
     md_files+=("${file}")
   done < <(
     find . \
-      \( -path "./.git" -o -path "./.venv*" -o -path "./build" -o -path "./build_local" -o -path "./build-qa-local" -o -path "./build_ship_universal" -o -path "./qa_output" -o -path "./tmp" \) -prune \
+      \( -path "./.git" -o -path "./.venv*" -o -path "./build" -o -path "./build_*" -o -path "./build_local" -o -path "./build-qa-local" -o -path "./build_ship_universal" -o -path "./qa_output" -o -path "./tmp" -o -path "./third_party" \) -prune \
       -o -type f -name "*.md" -print
   )
 
@@ -131,10 +131,30 @@ check_closeout_bundle_sync() {
   fi
 }
 
+check_generated_doc_output_dirs() {
+  local generated_dirs=(
+    "Documentation/exports"
+  )
+
+  local dir
+  for dir in "${generated_dirs[@]}"; do
+    if [[ ! -d "${dir}" ]]; then
+      continue
+    fi
+
+    local file_count
+    file_count="$(find "${dir}" -type f | wc -l | tr -d ' ')"
+    if [[ "${file_count}" -gt 0 ]]; then
+      error "${dir} contains ${file_count} generated file(s). Archive or remove these artifacts before closeout."
+    fi
+  done
+}
+
 main() {
   info "Running LocusQ docs freshness checks from ${ROOT_DIR}"
 
   check_markdown_metadata_scope
+  check_generated_doc_output_dirs
 
   local status_date
   status_date="$(extract_status_date || true)"

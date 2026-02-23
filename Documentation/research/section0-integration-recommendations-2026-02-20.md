@@ -7,7 +7,7 @@ Last Modified Date: 2026-02-20
 # Section 0 Integration Recommendations for LocusQ
 
 ## Baseline Compared
-- `Documentation/full-project-review-2026-02-20.md` Section 0 research findings.
+- `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md` Section 0 research findings.
 - `Source/SpatialRenderer.h` current renderer chain (quad accumulation, stereo matrix downmix, room FX stage).
 - `Source/FDNReverb.h` current late reverb (4x4 Hadamard FDN, static delays).
 - `.ideas/architecture.md` design intent (post-draft target includes richer room/viewport behavior).

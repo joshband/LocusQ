@@ -1,0 +1,1777 @@
+[
+  {
+    "run_name": "_coord_probe_20260222T032311Z",
+    "category": "_coord_probe",
+    "timestamp_utc": "2026-02-22T03:23:11Z",
+    "size_bytes": 387255,
+    "size_mb": 0.369,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "newest_in_category",
+      "non_pass_or_unknown:unknown",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260219T230637Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-19T23:06:37Z",
+    "size_bytes": 27480944,
+    "size_mb": 26.208,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260219T231132Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-19T23:11:32Z",
+    "size_bytes": 9319,
+    "size_mb": 0.009,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260219T231139Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-19T23:11:39Z",
+    "size_bytes": 9177,
+    "size_mb": 0.009,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260219T231155Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-19T23:11:55Z",
+    "size_bytes": 7397,
+    "size_mb": 0.007,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260219T233806Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-19T23:38:06Z",
+    "size_bytes": 9410,
+    "size_mb": 0.009,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260219T233842Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-19T23:38:42Z",
+    "size_bytes": 22337491,
+    "size_mb": 21.303,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "appium_ui_regression_20260222T025034Z",
+    "category": "appium_ui_regression",
+    "timestamp_utc": "2026-02-22T02:50:34Z",
+    "size_bytes": 9410,
+    "size_mb": 0.009,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T193857Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:38:57Z",
+    "size_bytes": 3084405,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T195826Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:58:26Z",
+    "size_bytes": 3084404,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T195837Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:58:37Z",
+    "size_bytes": 3084404,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T195852Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:58:52Z",
+    "size_bytes": 3084404,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T200016Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:00:16Z",
+    "size_bytes": 3084404,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T200027Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:00:27Z",
+    "size_bytes": 3084404,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T200040Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:00:40Z",
+    "size_bytes": 3084404,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T201645Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:16:45Z",
+    "size_bytes": 3084405,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T202031Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:20:31Z",
+    "size_bytes": 3084405,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T202233Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:22:33Z",
+    "size_bytes": 3084405,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T202245Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:22:45Z",
+    "size_bytes": 3084405,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T204437Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:44:37Z",
+    "size_bytes": 3084528,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T204505Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:45:05Z",
+    "size_bytes": 3084528,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260222T204517Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:45:17Z",
+    "size_bytes": 3084528,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "bl009_headphone_contract_20260223T015214Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-23T01:52:14Z",
+    "size_bytes": 3081324,
+    "size_mb": 2.939,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_profile_contract_20260222T204130Z",
+    "category": "bl009_headphone_profile_contract",
+    "timestamp_utc": "2026-02-22T20:41:30Z",
+    "size_bytes": 3082292,
+    "size_mb": 2.94,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:fail",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_profile_contract_20260222T204324Z",
+    "category": "bl009_headphone_profile_contract",
+    "timestamp_utc": "2026-02-22T20:43:24Z",
+    "size_bytes": 3082372,
+    "size_mb": 2.94,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "bl009_headphone_profile_contract_20260222T204451Z",
+    "category": "bl009_headphone_profile_contract",
+    "timestamp_utc": "2026-02-22T20:44:51Z",
+    "size_bytes": 3084876,
+    "size_mb": 2.942,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "bl010_validation_20260222T191102Z",
+    "category": "bl010_validation",
+    "timestamp_utc": "2026-02-22T19:11:02Z",
+    "size_bytes": 3091282,
+    "size_mb": 2.948,
+    "overall": "warn",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md",
+      "Documentation/backlog-post-v1-agentic-sprints.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "newest_in_category",
+      "non_pass_or_unknown:warn",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T195416Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:54:16Z",
+    "size_bytes": 292087,
+    "size_mb": 0.279,
+    "overall": "warn",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:warn",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T195448Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:54:48Z",
+    "size_bytes": 292087,
+    "size_mb": 0.279,
+    "overall": "warn",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:warn",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T195837Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:58:37Z",
+    "size_bytes": 292396,
+    "size_mb": 0.279,
+    "overall": "warn",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:warn",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T195852Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:58:52Z",
+    "size_bytes": 292373,
+    "size_mb": 0.279,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T200026Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:00:26Z",
+    "size_bytes": 294415,
+    "size_mb": 0.281,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T200040Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:00:40Z",
+    "size_bytes": 294415,
+    "size_mb": 0.281,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T201656Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:16:56Z",
+    "size_bytes": 296969,
+    "size_mb": 0.283,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T202029Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:20:29Z",
+    "size_bytes": 30650119,
+    "size_mb": 29.23,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T202244Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:22:44Z",
+    "size_bytes": 30650119,
+    "size_mb": 29.23,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl018_ambisonic_contract_20260222T204516Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:45:16Z",
+    "size_bytes": 30650119,
+    "size_mb": 29.23,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "bl022_validation_20260222T213204Z",
+    "category": "bl022_validation",
+    "timestamp_utc": "2026-02-22T21:32:04Z",
+    "size_bytes": 2331,
+    "size_mb": 0.002,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md",
+      "Documentation/backlog-post-v1-agentic-sprints.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "newest_in_category",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "clap_validation_20260222T181504Z",
+    "category": "clap_validation",
+    "timestamp_utc": "2026-02-22T18:15:04Z",
+    "size_bytes": 125091,
+    "size_mb": 0.119,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:unknown",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "clap_validation_20260222T182157Z",
+    "category": "clap_validation",
+    "timestamp_utc": "2026-02-22T18:21:57Z",
+    "size_bytes": 125091,
+    "size_mb": 0.119,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "clap_validation_20260222T182619Z",
+    "category": "clap_validation",
+    "timestamp_utc": "2026-02-22T18:26:19Z",
+    "size_bytes": 122420,
+    "size_mb": 0.117,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "non_pass_or_unknown:unknown",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "manual_click_probe_20260219T235722Z",
+    "category": "manual_click_probe",
+    "timestamp_utc": "2026-02-19T23:57:22Z",
+    "size_bytes": 9208936,
+    "size_mb": 8.782,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "newest_in_category",
+      "non_pass_or_unknown:unknown",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "reaper_headless_render_20260222T205132Z",
+    "category": "reaper_headless_render",
+    "timestamp_utc": "2026-02-22T20:51:32Z",
+    "size_bytes": 2134969,
+    "size_mb": 2.036,
+    "overall": "pass",
+    "outcome_source": "status.json",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category"
+    ]
+  },
+  {
+    "run_name": "reaper_headless_render_20260222T205237Z",
+    "category": "reaper_headless_render",
+    "timestamp_utc": "2026-02-22T20:52:37Z",
+    "size_bytes": 16997,
+    "size_mb": 0.016,
+    "overall": "fail",
+    "outcome_source": "status.json",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "reaper_headless_render_20260223T010307Z",
+    "category": "reaper_headless_render",
+    "timestamp_utc": "2026-02-23T01:03:07Z",
+    "size_bytes": 2135019,
+    "size_mb": 2.036,
+    "overall": "pass",
+    "outcome_source": "status.json",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/validation-trend.md",
+      "Documentation/backlog-post-v1-agentic-sprints.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "reaper_headless_render_20260223T011212Z",
+    "category": "reaper_headless_render",
+    "timestamp_utc": "2026-02-23T01:12:12Z",
+    "size_bytes": 2134971,
+    "size_mb": 2.036,
+    "overall": "pass",
+    "outcome_source": "status.json",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "reaper_headless_render_20260223T011438Z",
+    "category": "reaper_headless_render",
+    "timestamp_utc": "2026-02-23T01:14:38Z",
+    "size_bytes": 15769,
+    "size_mb": 0.015,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "reaper_headless_render_20260223T011722Z",
+    "category": "reaper_headless_render",
+    "timestamp_utc": "2026-02-23T01:17:22Z",
+    "size_bytes": 2135353,
+    "size_mb": 2.036,
+    "overall": "pass",
+    "outcome_source": "status.json",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category"
+    ]
+  },
+  {
+    "run_name": "stage13_acceptance_sweep_20260220T180204Z",
+    "category": "stage13_acceptance_sweep",
+    "timestamp_utc": "2026-02-20T18:02:04Z",
+    "size_bytes": 9970,
+    "size_mb": 0.01,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "CHANGELOG.md",
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "newest_in_category",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "stage16a_scenario_validation_20260220T230314Z",
+    "category": "stage16a_scenario_validation",
+    "timestamp_utc": "2026-02-20T23:03:14Z",
+    "size_bytes": 1221,
+    "size_mb": 0.001,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:fail",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "stage16a_scenario_validation_20260220T230400Z",
+    "category": "stage16a_scenario_validation",
+    "timestamp_utc": "2026-02-20T23:04:00Z",
+    "size_bytes": 2036,
+    "size_mb": 0.002,
+    "overall": "warn",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "non_pass_or_unknown:warn",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "stage17a_portable_acceptance_20260220T231840Z",
+    "category": "stage17a_portable_acceptance",
+    "timestamp_utc": "2026-02-20T23:18:40Z",
+    "size_bytes": 4198,
+    "size_mb": 0.004,
+    "overall": "unknown",
+    "outcome_source": "none",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "newest_in_category",
+      "non_pass_or_unknown:unknown",
+      "referenced_in_canonical_docs",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T220036Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:00:36Z",
+    "size_bytes": 415,
+    "size_mb": 0.0,
+    "overall": "unknown",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T220102Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:01:02Z",
+    "size_bytes": 524,
+    "size_mb": 0.0,
+    "overall": "unknown",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T220508Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:05:08Z",
+    "size_bytes": 342,
+    "size_mb": 0.0,
+    "overall": "unknown",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T220610Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:06:10Z",
+    "size_bytes": 4233580,
+    "size_mb": 4.037,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T220627Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:06:27Z",
+    "size_bytes": 3031491,
+    "size_mb": 2.891,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T220924Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:09:24Z",
+    "size_bytes": 3281274,
+    "size_mb": 3.129,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T221103Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:11:03Z",
+    "size_bytes": 3283214,
+    "size_mb": 3.131,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T221643Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T22:16:43Z",
+    "size_bytes": 3280452,
+    "size_mb": 3.128,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T232506Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T23:25:06Z",
+    "size_bytes": 3281274,
+    "size_mb": 3.129,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260219T232546Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-19T23:25:46Z",
+    "size_bytes": 3301999,
+    "size_mb": 3.149,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260220T014034Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-20T01:40:34Z",
+    "size_bytes": 10254854,
+    "size_mb": 9.78,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260220T024144Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-20T02:41:44Z",
+    "size_bytes": 5264768,
+    "size_mb": 5.021,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T001608Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T00:16:08Z",
+    "size_bytes": 3375321,
+    "size_mb": 3.219,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail",
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T002339Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T00:23:39Z",
+    "size_bytes": 2076195,
+    "size_mb": 1.98,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T002452Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T00:24:52Z",
+    "size_bytes": 3377111,
+    "size_mb": 3.221,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T103643Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T10:36:43Z",
+    "size_bytes": 46,
+    "size_mb": 0.0,
+    "overall": "unknown",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T103658Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T10:36:58Z",
+    "size_bytes": 456,
+    "size_mb": 0.0,
+    "overall": "unknown",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T103714Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T10:37:14Z",
+    "size_bytes": 3282750,
+    "size_mb": 3.131,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260221T104009Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-21T10:40:09Z",
+    "size_bytes": 3284701,
+    "size_mb": 3.133,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T023605Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T02:36:05Z",
+    "size_bytes": 5172218,
+    "size_mb": 4.933,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T025012Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T02:50:12Z",
+    "size_bytes": 5119803,
+    "size_mb": 4.883,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T031023Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T03:10:23Z",
+    "size_bytes": 5101199,
+    "size_mb": 4.865,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T031152Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T03:11:52Z",
+    "size_bytes": 5066159,
+    "size_mb": 4.831,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T031302Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T03:13:02Z",
+    "size_bytes": 46,
+    "size_mb": 0.0,
+    "overall": "unknown",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:unknown"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T031318Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T03:13:18Z",
+    "size_bytes": 5064961,
+    "size_mb": 4.83,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T031840Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T03:18:40Z",
+    "size_bytes": 5063401,
+    "size_mb": 4.829,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T032045Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T03:20:45Z",
+    "size_bytes": 5066011,
+    "size_mb": 4.831,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T162341Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T16:23:41Z",
+    "size_bytes": 4590518,
+    "size_mb": 4.378,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T162453Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T16:24:53Z",
+    "size_bytes": 6197326,
+    "size_mb": 5.91,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T162700Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T16:27:00Z",
+    "size_bytes": 5684087,
+    "size_mb": 5.421,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260222T162856Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-22T16:28:56Z",
+    "size_bytes": 4765910,
+    "size_mb": 4.545,
+    "overall": "pass",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "standalone_ui_smoke_20260223T015539Z",
+    "category": "standalone_ui_smoke",
+    "timestamp_utc": "2026-02-23T01:55:39Z",
+    "size_bytes": 4965235,
+    "size_mb": 4.735,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_stage1_20260220T013700Z",
+    "category": "standalone_ui_smoke_stage1",
+    "timestamp_utc": "2026-02-20T01:37:00Z",
+    "size_bytes": 5537304,
+    "size_mb": 5.281,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:fail",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "standalone_ui_smoke_stage1_20260220T013942Z",
+    "category": "standalone_ui_smoke_stage1",
+    "timestamp_utc": "2026-02-20T01:39:42Z",
+    "size_bytes": 5526144,
+    "size_mb": 5.27,
+    "overall": "fail",
+    "outcome_source": "summary.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category",
+      "non_pass_or_unknown:fail",
+      "low_duplication_category"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260219T231854Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-19T23:18:54Z",
+    "size_bytes": 153,
+    "size_mb": 0.0,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "oldest_baseline_in_category",
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T024136Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T02:41:36Z",
+    "size_bytes": 3219,
+    "size_mb": 0.003,
+    "overall": "fail",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "non_pass_or_unknown:fail"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T024215Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T02:42:15Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T025111Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T02:51:11Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T030133Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T03:01:33Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T031226Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T03:12:26Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T033031Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T03:30:31Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T040540Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:05:40Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T041501Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:15:01Z",
+    "size_bytes": 871,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T045202Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:52:02Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T045405Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:54:05Z",
+    "size_bytes": 649,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T061917Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T06:19:17Z",
+    "size_bytes": 686,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T173332Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T17:33:32Z",
+    "size_bytes": 654,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T174757Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T17:47:57Z",
+    "size_bytes": 654,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T175530Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T17:55:30Z",
+    "size_bytes": 654,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T180214Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T18:02:14Z",
+    "size_bytes": 654,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260220T193031Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T19:30:31Z",
+    "size_bytes": 652,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T001557Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T00:15:57Z",
+    "size_bytes": 689,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T002339Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T00:23:39Z",
+    "size_bytes": 690,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T005211Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T00:52:11Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T013208Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T01:32:08Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T014738Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T01:47:38Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T031609Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T03:16:09Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T083650Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T08:36:50Z",
+    "size_bytes": 690,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": false,
+    "keep_reasons": []
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T083926Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T08:39:26Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T092337Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T09:23:37Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T102057Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T10:20:57Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [
+      "status.json",
+      "TestEvidence/build-summary.md",
+      "TestEvidence/validation-trend.md"
+    ],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "referenced_in_canonical_docs"
+    ]
+  },
+  {
+    "run_name": "ui_pr_gate_20260221T102652Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T10:26:52Z",
+    "size_bytes": 691,
+    "size_mb": 0.001,
+    "overall": "pass",
+    "outcome_source": "status.tsv",
+    "referenced_in": [],
+    "keep_recommended": true,
+    "keep_reasons": [
+      "newest_in_category"
+    ]
+  }
+]

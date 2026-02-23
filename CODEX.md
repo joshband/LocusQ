@@ -2,7 +2,7 @@ Title: LocusQ Codex Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-23
 
 # CODEX.md
 
@@ -35,6 +35,9 @@ Use APC workflows to implement and validate LocusQ while preserving phase discip
   - WebView host/runtime/interop defects -> `juce-webview-runtime`.
   - Audio-reactive or physics-reactive visuals -> `reactive-av`.
   - Physics/simulation-driven DSP behavior -> `physics-reactive-audio`.
+  - CLAP format integration/lifecycle/host lanes -> `clap-plugin-lifecycle`.
+  - Steam Audio C API runtime/lifecycle/fallback behavior -> `steam-audio-capi`.
+  - Spatial layout/ambisonic/binaural architecture and QA -> `spatial-audio-engineering`.
   - Core 3D scene/render integration -> `threejs`.
   - Unknown/failing behavior -> `skill_troubleshooting`.
 - For overlapping intents, compose skills in that order and announce selected skills.
@@ -46,6 +49,7 @@ Codex must consider the full repo skill catalog (not only specialist skills):
 - `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
 - `juce-webview-windows`, `juce-webview-runtime`
 - `threejs`, `reactive-av`, `physics-reactive-audio`
+- `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
 
 Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 
@@ -53,6 +57,15 @@ Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selec
 - Prefer project scripts and validators over ad-hoc command chains.
 - Run the smallest meaningful validation first, then broaden.
 - Report validation as `tested`, `partially tested`, or `not tested`.
+
+## Documentation Hygiene Policy
+- Follow tiered documentation authority in `Documentation/README.md`.
+- Do not treat archived docs (`Documentation/archive/`) as status authority unless explicitly re-promoted.
+- Keep generated doc outputs out of top-level source docs:
+  - `Documentation/reports/`
+  - `Documentation/exports/`
+- Archive generated bundles under `Documentation/archive/<YYYY-MM-DD>-<slug>/` with a manifest.
+- Before closeout, run `./scripts/validate-docs-freshness.sh` (includes guardrails for populated generated doc folders).
 
 ## High-Value Paths
 - Workflows: `.codex/workflows/`

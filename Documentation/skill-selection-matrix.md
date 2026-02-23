@@ -2,7 +2,7 @@ Title: LocusQ Skill Selection Matrix
 Document Type: Routing Guide
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-22
 
 # Skill Selection Matrix (Codex + Claude)
 
@@ -33,14 +33,20 @@ Single reference for automatic skill selection in LocusQ so Codex and Claude cho
 | `threejs` | `.codex/skills/threejs/SKILL.md` | Three.js scene/render/performance integration |
 | `reactive-av` | `.codex/skills/reactive-av/SKILL.md` | audio-/physics-reactive visualization mapping and QA |
 | `physics-reactive-audio` | `.codex/skills/physics-reactive-audio/SKILL.md` | simulation-driven DSP/audio behavior with realtime guarantees |
+| `clap-plugin-lifecycle` | `.codex/skills/clap-plugin-lifecycle/SKILL.md` | CLAP architecture/integration, BL-011 planning and execution, host/CI validation |
+| `steam-audio-capi` | `.codex/skills/steam-audio-capi/SKILL.md` | Steam Audio C API integration, runtime fallback ownership, and BL-009 headphone lane validation |
+| `spatial-audio-engineering` | `.codex/skills/spatial-audio-engineering/SKILL.md` | ambisonic/binaural/multichannel spatial audio design, integration, and deterministic QA lanes (including BL-018) |
 
 ## Specialist Composition Order
 When multiple specialist intents appear, compose skills in this order:
 1. `juce-webview-runtime`
 2. `reactive-av`
 3. `physics-reactive-audio`
-4. `threejs`
-5. `skill_troubleshooting`
+4. `clap-plugin-lifecycle`
+5. `steam-audio-capi`
+6. `spatial-audio-engineering`
+7. `threejs`
+8. `skill_troubleshooting`
 
 Phase skills remain first when a phase command is active.
 
@@ -53,6 +59,8 @@ Phase skills remain first when a phase command is active.
 | "Improve Three.js frame rate and memory stability" | `threejs` |
 | "Make visuals respond to spectrum/onsets and avoid jitter" | `reactive-av`, optionally `threejs` |
 | "Add flocking/crowd/drag/gravity model driving sound behavior" | `physics-reactive-audio`, optionally `skill_impl` |
+| "Add CLAP format support, host checks, and CI lanes (BL-011)" | `clap-plugin-lifecycle`, `skill_plan`, `skill_impl`, `skill_test`, optionally `skill_docs` |
+| "Add or validate ambisonic/binaural/multichannel layout lanes (BL-018 or similar)" | `spatial-audio-engineering`, optionally `steam-audio-capi`, `threejs`, `skill_testing` |
 | "Implement optional host-specific cross-instance coordination" | `physics-reactive-audio`, `skill_troubleshooting`, optionally `skill_docs` |
 | "Update ADR/traceability after implementation changes" | `skill_docs` |
 | "Run formal test phase with harness evidence" | `skill_test`, `skill_testing` |

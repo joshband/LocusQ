@@ -172,6 +172,9 @@ echo "window_geom: ${WIN_X},${WIN_Y},${WIN_W},${WIN_H}"
 
 CONTENT_X_OFFSET="${CONTENT_X_OFFSET_OVERRIDE:-0}"
 CONTENT_Y_OFFSET="${CONTENT_Y_OFFSET_OVERRIDE:-}"
+AUTO_CONTENT_Y_OFFSET="${AUTO_CONTENT_Y_OFFSET:-0}"
+CAPTURE_SCALE_X=1
+CAPTURE_SCALE_Y=1
 if [[ ! "$CONTENT_X_OFFSET" =~ ^-?[0-9]+$ ]]; then
   CONTENT_X_OFFSET=0
 fi
@@ -222,6 +225,59 @@ for yy in range(20, max(21, limit - 6)):
         sys.exit(0)
 
 print(0)
+PY
+}
+
+detect_capture_scale() {
+  local image_path="$1"
+  python3 - "$image_path" "$WIN_W" "$WIN_H" <<'PY'
+import sys
+from PIL import Image
+
+image_path, win_w, win_h = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+img = Image.open(image_path)
+img_w, img_h = img.size
+
+def resolve_scale(pixel_size, point_size):
+    if point_size <= 0:
+        return 1.0
+    raw = pixel_size / float(point_size)
+    rounded = round(raw)
+    if rounded >= 1 and abs(raw - rounded) <= 0.2:
+        return float(rounded)
+    return max(1.0, raw)
+
+sx = resolve_scale(img_w, win_w)
+sy = resolve_scale(img_h, win_h)
+print(f"{sx:.6f} {sy:.6f}")
+PY
+}
+
+scale_to_pixels() {
+  local points="$1"
+  local scale="$2"
+  python3 - "$points" "$scale" <<'PY'
+import sys
+
+points = float(sys.argv[1])
+scale = float(sys.argv[2]) if len(sys.argv) > 2 else 1.0
+if not scale > 0:
+    scale = 1.0
+print(int(round(points * scale)))
+PY
+}
+
+pixels_to_points() {
+  local pixels="$1"
+  local scale="$2"
+  python3 - "$pixels" "$scale" <<'PY'
+import sys
+
+pixels = float(sys.argv[1])
+scale = float(sys.argv[2]) if len(sys.argv) > 2 else 1.0
+if not scale > 0:
+    scale = 1.0
+print(int(round(pixels / scale)))
 PY
 }
 
@@ -309,9 +365,17 @@ run_click_test() {
   capture_window "$after"
 
   local score
-  local roi_x_adj=$((roi_x + CONTENT_X_OFFSET))
-  local roi_y_adj=$((roi_y + CONTENT_Y_OFFSET))
-  score="$(diff_score "$before" "$after" "$roi_x_adj" "$roi_y_adj" "$roi_w" "$roi_h")"
+  local roi_x_adj_pt=$((roi_x + CONTENT_X_OFFSET))
+  local roi_y_adj_pt=$((roi_y + CONTENT_Y_OFFSET))
+  local roi_x_adj_px
+  local roi_y_adj_px
+  local roi_w_px
+  local roi_h_px
+  roi_x_adj_px="$(scale_to_pixels "$roi_x_adj_pt" "$CAPTURE_SCALE_X")"
+  roi_y_adj_px="$(scale_to_pixels "$roi_y_adj_pt" "$CAPTURE_SCALE_Y")"
+  roi_w_px="$(scale_to_pixels "$roi_w" "$CAPTURE_SCALE_X")"
+  roi_h_px="$(scale_to_pixels "$roi_h" "$CAPTURE_SCALE_Y")"
+  score="$(diff_score "$before" "$after" "$roi_x_adj_px" "$roi_y_adj_px" "$roi_w_px" "$roi_h_px")"
 
   local result="FAIL"
   awk -v a="$score" -v b="$threshold" 'BEGIN{exit !(a > b)}' && result="PASS"
@@ -341,9 +405,17 @@ run_text_test() {
   capture_window "$after"
 
   local score
-  local roi_x_adj=$((roi_x + CONTENT_X_OFFSET))
-  local roi_y_adj=$((roi_y + CONTENT_Y_OFFSET))
-  score="$(diff_score "$before" "$after" "$roi_x_adj" "$roi_y_adj" "$roi_w" "$roi_h")"
+  local roi_x_adj_pt=$((roi_x + CONTENT_X_OFFSET))
+  local roi_y_adj_pt=$((roi_y + CONTENT_Y_OFFSET))
+  local roi_x_adj_px
+  local roi_y_adj_px
+  local roi_w_px
+  local roi_h_px
+  roi_x_adj_px="$(scale_to_pixels "$roi_x_adj_pt" "$CAPTURE_SCALE_X")"
+  roi_y_adj_px="$(scale_to_pixels "$roi_y_adj_pt" "$CAPTURE_SCALE_Y")"
+  roi_w_px="$(scale_to_pixels "$roi_w" "$CAPTURE_SCALE_X")"
+  roi_h_px="$(scale_to_pixels "$roi_h" "$CAPTURE_SCALE_Y")"
+  score="$(diff_score "$before" "$after" "$roi_x_adj_px" "$roi_y_adj_px" "$roi_w_px" "$roi_h_px")"
 
   local result="FAIL"
   awk -v a="$score" -v b="$threshold" 'BEGIN{exit !(a > b)}' && result="PASS"
@@ -351,26 +423,92 @@ run_text_test() {
   echo "${test_id}: ${result} (score=${score}, threshold=${threshold})"
 }
 
+run_presence_test() {
+  local test_id="$1"
+  local roi_x="$2"
+  local roi_y="$3"
+  local roi_w="$4"
+  local roi_h="$5"
+  local min_mean="$6"
+  local min_std="$7"
+
+  local shot="$OUT_DIR/${test_id}.png"
+  capture_window "$shot"
+
+  local roi_x_adj_pt=$((roi_x + CONTENT_X_OFFSET))
+  local roi_y_adj_pt=$((roi_y + CONTENT_Y_OFFSET))
+  local roi_x_adj_px
+  local roi_y_adj_px
+  local roi_w_px
+  local roi_h_px
+  roi_x_adj_px="$(scale_to_pixels "$roi_x_adj_pt" "$CAPTURE_SCALE_X")"
+  roi_y_adj_px="$(scale_to_pixels "$roi_y_adj_pt" "$CAPTURE_SCALE_Y")"
+  roi_w_px="$(scale_to_pixels "$roi_w" "$CAPTURE_SCALE_X")"
+  roi_h_px="$(scale_to_pixels "$roi_h" "$CAPTURE_SCALE_Y")"
+
+  local stats
+  stats="$(python3 - "$shot" "$roi_x_adj_px" "$roi_y_adj_px" "$roi_w_px" "$roi_h_px" <<'PY'
+import sys
+from PIL import Image, ImageStat
+
+path, x, y, w, h = sys.argv[1:]
+x = int(x); y = int(y); w = int(w); h = int(h)
+img = Image.open(path).convert("L")
+roi = img.crop((x, y, x + w, y + h))
+stat = ImageStat.Stat(roi)
+print(f"{stat.mean[0]:.6f} {stat.stddev[0]:.6f}")
+PY
+)"
+  local mean std
+  read -r mean std <<< "$stats"
+
+  local result="FAIL"
+  awk -v m="$mean" -v s="$std" -v mm="$min_mean" -v ms="$min_std" 'BEGIN{exit !((m >= mm) && (s >= ms))}' \
+    && result="PASS"
+
+  echo -e "${test_id}\t${result}\t${std}\t${min_std}\t${shot}" >> "$SUMMARY_TSV"
+  echo "${test_id}: ${result} (mean=${mean}, std=${std}, min_mean=${min_mean}, min_std=${min_std})"
+}
+
 # Coordinates are relative to plugin content top-left (not title/warning strip).
 # Script auto-detects content Y offset for JUCE standalone windows.
 BOOTSHOT="$OUT_DIR/_bootstrap_window.png"
 capture_window "$BOOTSHOT"
 
-if [[ -z "$CONTENT_Y_OFFSET" ]]; then
-  CONTENT_Y_OFFSET="$(detect_content_y_offset "$BOOTSHOT")"
+read -r CAPTURE_SCALE_X CAPTURE_SCALE_Y <<< "$(detect_capture_scale "$BOOTSHOT")"
+if [[ ! "$CAPTURE_SCALE_X" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+  CAPTURE_SCALE_X=1
+fi
+if [[ ! "$CAPTURE_SCALE_Y" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+  CAPTURE_SCALE_Y=1
+fi
+
+if [[ -z "$CONTENT_Y_OFFSET" && "$AUTO_CONTENT_Y_OFFSET" == "1" ]]; then
+  CONTENT_Y_OFFSET_PX="$(detect_content_y_offset "$BOOTSHOT")"
+  if [[ ! "$CONTENT_Y_OFFSET_PX" =~ ^-?[0-9]+$ ]]; then
+    CONTENT_Y_OFFSET_PX=0
+  fi
+  CONTENT_Y_OFFSET="$(pixels_to_points "$CONTENT_Y_OFFSET_PX" "$CAPTURE_SCALE_Y")"
 fi
 if [[ ! "$CONTENT_Y_OFFSET" =~ ^-?[0-9]+$ ]]; then
   CONTENT_Y_OFFSET=0
 fi
-echo "content_offset: x=${CONTENT_X_OFFSET}, y=${CONTENT_Y_OFFSET}"
+echo "capture_scale: x=${CAPTURE_SCALE_X}, y=${CAPTURE_SCALE_Y}"
+echo "content_offset: x=${CONTENT_X_OFFSET}, y=${CONTENT_Y_OFFSET} (points)"
+
+# Stabilize initial state: enter emitter mode before smoke checks.
+click_rel 235 91
+sleep 0.30
 
 # Smoke-level checks for visual state changes, not full semantic correctness.
-run_click_test "UI-01-tab-renderer"   275 58  74 40 320 28 0.80
-run_click_test "UI-01-tab-emitter"    180 58  74 40 320 28 0.80
-run_click_test "UI-02-quality-badge" 1185 58 1120 40 130 30 0.60
-run_click_test "UI-03-toggle-size"   1228 394 1190 374  80 42 0.45
-run_click_test "UI-04-pos-mode-dd"   1212 217 1088 194 154 32 0.30
-run_text_test  "UI-05-emit-label"    1140 139 "AutoUITest" 1040 118 220 30 0.35
+# Coordinates are tuned for production-ui layout at 1202x858 points and are
+# scaled to capture pixels via CAPTURE_SCALE_* above.
+run_click_test "UI-01-tab-renderer"   314 91   170 56 220 50 0.80
+run_click_test "UI-01-tab-emitter"    235 91   170 56 220 50 0.80
+run_click_test "UI-02-quality-badge" 1159 67  1098 46  95 40 0.60
+run_presence_test "UI-03-timeline-header-visible" 620 700 140 30 16.0 10.0
+run_presence_test "UI-04-timeline-lanes-visible"   20 730 720 127 16.0 8.0
+run_text_test  "UI-05-emit-label"    1120 127 "AutoUITest" 1033 108 170 40 0.35
 
 close_all_app_instances "post-run"
 

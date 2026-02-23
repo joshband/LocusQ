@@ -4,12 +4,26 @@
 #include <juce_dsp/juce_dsp.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <array>
+#include <cstdint>
 #include <optional>
 #include "SceneGraph.h"
 #include "SpatialRenderer.h"
 #include "CalibrationEngine.h"
 #include "PhysicsEngine.h"
 #include "KeyframeTimeline.h"
+
+#if LOCUSQ_ENABLE_CLAP
+ #if __has_include(<clap-juce-extensions/clap-juce-extensions.h>)
+  JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wnon-virtual-dtor", "-Wunused-parameter", "-Wextra-semi")
+  #include <clap-juce-extensions/clap-juce-extensions.h>
+  JUCE_END_IGNORE_WARNINGS_GCC_LIKE
+  #define LOCUSQ_CLAP_PROPERTIES_AVAILABLE 1
+ #else
+  #define LOCUSQ_CLAP_PROPERTIES_AVAILABLE 0
+ #endif
+#else
+ #define LOCUSQ_CLAP_PROPERTIES_AVAILABLE 0
+#endif
 
 //==============================================================================
 // LocusQ Operating Mode
@@ -32,6 +46,10 @@ enum class LocusQMode
  * Phase 2.1: Foundation & Scene Graph
  */
 class LocusQAudioProcessor : public juce::AudioProcessor
+#if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
+                          , public clap_juce_extensions::clap_properties
+                          , public clap_juce_extensions::clap_juce_audio_processor_capabilities
+#endif
 {
 public:
     //==============================================================================
@@ -91,10 +109,35 @@ public:
     juce::var listEmitterPresetsFromUI() const;
     juce::var saveEmitterPresetFromUI (const juce::var& options);
     juce::var loadEmitterPresetFromUI (const juce::var& options);
+    juce::var renameEmitterPresetFromUI (const juce::var& options);
+    juce::var deleteEmitterPresetFromUI (const juce::var& options);
     juce::var getUIStateFromUI() const;
     bool setUIStateFromUI (const juce::var& state);
 
+#if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
+    bool supportsDirectEvent (uint16_t space_id, uint16_t type) override;
+    void handleDirectEvent (const clap_event_header_t* event, int sampleOffset) override;
+#endif
+
 private:
+    struct ClapRuntimeDiagnostics
+    {
+        bool buildEnabled = false;
+        bool propertiesAvailable = false;
+        bool isClapInstance = false;
+        bool isActive = false;
+        bool isProcessing = false;
+        bool hasTransport = false;
+        juce::String wrapperType { "Unknown" };
+        juce::String lifecycleStage { "not_compiled" };
+        juce::String runtimeMode { "disabled" };
+        std::uint32_t versionMajor = 0;
+        std::uint32_t versionMinor = 0;
+        std::uint32_t versionRevision = 0;
+    };
+
+    ClapRuntimeDiagnostics getClapRuntimeDiagnostics() const;
+
     //==============================================================================
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
@@ -138,7 +181,11 @@ private:
 
     // Emitter preset helpers
     static juce::String sanitisePresetName (const juce::String& presetName);
+    static juce::String normalisePresetType (const juce::String& presetType);
+    static juce::String normaliseChoreographyPackId (const juce::String& packId);
+    static juce::String inferPresetTypeFromPayload (const juce::var& payload);
     juce::File getPresetDirectory() const;
+    juce::File resolvePresetFileFromOptions (const juce::var& options) const;
     juce::String getSnapshotOutputLayout() const;
     int getSnapshotOutputChannels() const;
     void migrateSnapshotLayoutIfNeeded (const juce::ValueTree& restoredState);
@@ -146,7 +193,11 @@ private:
     int getCurrentCalibrationSpeakerConfigIndex() const;
     void applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force);
     void setIntegerParameterValueNotifyingHost (const char* parameterId, int value);
-    juce::var buildEmitterPresetLocked (const juce::String& presetName) const;
+    juce::var buildEmitterPresetLocked (const juce::String& presetName,
+                                        const juce::String& presetType,
+                                        const juce::String& choreographyPackId,
+                                        bool includeParameters,
+                                        bool includeTimeline) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
     static juce::String keyframeCurveToString (KeyframeCurve curve);
     static KeyframeCurve keyframeCurveFromVar (const juce::var& value);
@@ -160,6 +211,8 @@ private:
     double perfProcessBlockMs = 0.0;
     double perfEmitterPublishMs = 0.0;
     double perfRendererProcessMs = 0.0;
+    std::array<float, SpatialRenderer::NUM_SPEAKERS> sceneSpeakerRms { 0.0f, 0.0f, 0.0f, 0.0f };
+    std::uint64_t sceneSnapshotSequence = 0;
 
     //==============================================================================
     // Sample rate tracking
@@ -170,10 +223,13 @@ private:
     mutable juce::SpinLock uiStateLock;
     juce::String emitterLabelState { "Emitter" };
     juce::String physicsPresetState { "off" };
+    juce::String choreographyPackState { "custom" };
     bool hasAppliedAutoDetectedCalibrationRouting = false;
     int lastAutoDetectedOutputChannels = 0;
     int lastAutoDetectedSpeakerConfig = 0;
     std::array<int, SpatialRenderer::NUM_SPEAKERS> lastAutoDetectedSpeakerRouting { 1, 2, 3, 4 };
+    bool hasRestoredSnapshotState = false;
+    bool hasSeededInitialEmitterColor = false;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LocusQAudioProcessor)

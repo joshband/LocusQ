@@ -1,0 +1,2 @@
+/usr/bin/ar qc libqa_state.a CMakeFiles/qa_state.dir/src/MigrationCatalog.cpp.o CMakeFiles/qa_state.dir/src/StateSerializer.cpp.o CMakeFiles/qa_state.dir/src/StateMigration.cpp.o CMakeFiles/qa_state.dir/src/SnapshotComparator.cpp.o CMakeFiles/qa_state.dir/src/GoldenPresetRunner.cpp.o
+/usr/bin/ranlib libqa_state.a

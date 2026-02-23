@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-23
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -180,7 +180,7 @@ Stage 14 docs touched in this pass:
 - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
 - `Documentation/invariants.md`
 - `Documentation/implementation-traceability.md`
-- `Documentation/stage14-review-release-checklist.md`
+- `Documentation/archive/2026-02-23-historical-review-bundles/stage14-review-release-checklist.md`
 
 ## Ship Addendum (UTC 2026-02-19)
 
@@ -1494,8 +1494,8 @@ Result: `PASS` (`0 warning(s)`)
 
 Artifacts:
 - Updated docs:
-  - `Documentation/v3-stage-9-plus-detailed-checklists.md`
-  - `Documentation/v3-ui-parity-checklist.md`
+  - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
+  - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
   - `Documentation/README.md`
 
 ## Incremental Stage 10 Renderer Parity + Automation (UTC 2026-02-20)
@@ -1858,3 +1858,1480 @@ Result: `PENDING_OPERATOR_RERUN`
 Artifacts:
 - `TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log`
 - `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+
+## P0 Runtime Patch Addendum (UTC 2026-02-21)
+
+1. Rebuild plugin targets after production UI baseline switch + physics preset hardening
+
+```sh
+cmake --build build_local --config Release --target LocusQ_VST3 LocusQ_Standalone -j 8
+```
+
+Result: `PASS` (warnings only; no compile/link errors)
+
+2. Stage12 incremental self-test gate (fallback path verification)
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+```
+
+Result: `PASS` (`ui_stage12_selftest=PASS`)
+
+3. Production standalone smoke automation
+
+```sh
+./scripts/standalone-ui-smoke-mac.sh
+```
+
+Result: `FAIL` (`0/6` visual deltas; script click-coordinate assumptions no longer match current production layout)
+
+4. QA smoke suite (Spatial adapter)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `WARN` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+
+5. QA Phase 2.6 acceptance suite (Spatial adapter)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+
+### Artifacts (2026-02-21)
+
+- UI PR gate status: `TestEvidence/ui_pr_gate_20260221T001557Z/status.tsv`
+- Stage12 self-test JSON: `TestEvidence/locusq_incremental_stage12_selftest_20260221T001557Z.json`
+- Production standalone smoke summary: `TestEvidence/standalone_ui_smoke_20260221T001608Z/summary.tsv`
+- Smoke suite log (spatial): `TestEvidence/locusq_smoke_suite_spatial_p0_20260221T001710Z.log`
+- Phase 2.6 acceptance suite log (spatial): `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_p0_20260221T001710Z.log`
+
+### Notes
+
+- Non-spatial adapter execution for `locusq_phase_2_6_acceptance_suite` produces runner-prep `ERROR`; use `--spatial` for this suite.
+- Manual host DAW rerun remains required for closure of checklist rows `UI-04`, `UI-06`, `UI-07`, `UI-12`.
+
+## P0 Runtime Patch Addendum II (UTC 2026-02-21)
+
+1. Production P0 self-test on production route (`UI-04/UI-06/UI-07/UI-12`)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `FAIL` (initial run: `UI-12` save completion timeout)
+
+2. Production P0 self-test rerun after preset-save selftest harness fix
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+3. Shared gate rerun after production self-test closure
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result:
+- `ui-pr-gate`: `PASS` (`ui_stage12_selftest=PASS`)
+- `smoke suite (spatial)`: `WARN` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- `phase 2.6 suite (spatial)`: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- `docs freshness`: `PASS` (`0 warning(s)`)
+
+### Artifacts (2026-02-21)
+
+- Production self-test fail JSON: `TestEvidence/locusq_production_p0_selftest_20260221T005050Z.json`
+- Production self-test pass JSON: `TestEvidence/locusq_production_p0_selftest_20260221T005145Z.json`
+- Shared gate status: `TestEvidence/ui_pr_gate_20260221T005211Z/status.tsv`
+- Smoke suite log (spatial rerun): `TestEvidence/locusq_smoke_suite_spatial_p0_20260221T005221Z.log`
+- Phase 2.6 suite log (spatial rerun): `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_p0_20260221T005221Z.log`
+
+### Notes
+
+- P0 automated gates now pass for BL-002/BL-003/BL-004/BL-005.
+- Manual DAW checklist rerun remains the only exit gate for moving BL-002 through BL-005 to `Done`.
+
+## P1 BL-016 Kickoff Addendum (UTC 2026-02-21)
+
+1. Rebuild standalone after scene-snapshot transport contract implementation
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS` (warnings only; no compile/link errors)
+
+2. Production regression self-test after transport hardening
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+3. Shared gate rerun
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result:
+- `ui-pr-gate`: `PASS` (`ui_stage12_selftest=PASS`)
+- `smoke suite (spatial)`: `WARN` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- `phase 2.6 suite (spatial)`: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- `docs freshness`: `PASS` (`0 warning(s)`)
+
+### Artifacts (2026-02-21)
+
+- Production self-test JSON: `TestEvidence/locusq_production_p0_selftest_20260221T013140Z.json`
+- Shared gate status: `TestEvidence/ui_pr_gate_20260221T013208Z/status.tsv`
+- Smoke suite log (spatial rerun): `TestEvidence/locusq_smoke_suite_spatial_bl016_20260221T013152Z.log`
+- Phase 2.6 suite log (spatial rerun): `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl016_20260221T013152Z.log`
+
+## P1 BL-015/BL-014/BL-006/BL-007 Validation Addendum (UTC 2026-02-21)
+
+1. Production self-test expansion run 1 (`UI-P1-015` failure capture)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `FAIL` (`UI-P1-015`: synthetic multi-emitter meshes were not created)
+
+2. Production self-test expansion run 2 (`UI-P1-015` failure capture)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `FAIL` (`UI-P1-015`: synthetic multi-emitter meshes were not created)
+
+3. Production self-test expansion run 3 (`UI-P1-015` failure capture)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `FAIL` (`UI-P1-015`: synthetic multi-emitter meshes were not created)
+
+4. Production self-test rerun after synthetic-scene hold/fallback hardening
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`)
+
+5. Shared gate rerun
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+```
+
+Result: `PASS` (`ui_stage12_selftest=PASS`)
+
+6. QA rerun (spatial adapter) + docs freshness
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result:
+- `smoke suite (spatial)`: `WARN` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- `phase 2.6 suite (spatial)`: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- `docs freshness`: `PASS` (`0 warning(s)`)
+
+### Artifacts (2026-02-21)
+
+- Production self-test fail JSON #1: `TestEvidence/locusq_production_p0_selftest_20260221T014405Z.json`
+- Production self-test fail JSON #2: `TestEvidence/locusq_production_p0_selftest_20260221T014527Z.json`
+- Production self-test fail JSON #3: `TestEvidence/locusq_production_p0_selftest_20260221T014616Z.json`
+- Production self-test pass JSON: `TestEvidence/locusq_production_p0_selftest_20260221T014724Z.json`
+- Shared gate status: `TestEvidence/ui_pr_gate_20260221T014738Z/status.tsv`
+- Smoke suite log (spatial rerun): `TestEvidence/locusq_smoke_suite_spatial_p1_20260221T014756Z.log`
+- Phase 2.6 suite log (spatial rerun): `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_p1_20260221T014756Z.log`
+- Docs freshness log: `TestEvidence/validate_docs_freshness_p1_20260221T014756Z.log`
+
+### Notes
+
+- Manual host DAW checks remain deferred by user direction; this addendum closes automated validation coverage for the P1 viewport slice.
+
+## P1 BL-008 Audio-Reactive Telemetry Addendum (UTC 2026-02-21)
+
+1. Rebuild standalone after BL-008 self-test assertion addition (`UI-P1-008`)
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS` (warnings only; no compile/link errors)
+
+2. Production self-test rerun with BL-008 assertion active
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`; `UI-P1-008` check included)
+
+3. Shared gate rerun
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+```
+
+Result: `PASS` (`ui_stage12_selftest=PASS`)
+
+4. QA + docs freshness rerun
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result:
+- `smoke suite (spatial)`: `WARN` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- `phase 2.6 suite (spatial)`: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- `docs freshness`: `PASS` (`0 warning(s)`)
+
+### Artifacts (2026-02-21)
+
+- Production self-test pass JSON (with `UI-P1-008`): `TestEvidence/locusq_production_p0_selftest_20260221T031550Z.json`
+- Shared gate status: `TestEvidence/ui_pr_gate_20260221T031609Z/status.tsv`
+- Smoke suite log (spatial rerun): `TestEvidence/locusq_smoke_suite_spatial_bl008_20260221T0316Z.log`
+- Phase 2.6 suite log (spatial rerun): `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl008_20260221T0316Z.log`
+- Docs freshness log: `TestEvidence/validate_docs_freshness_bl008_20260221T0316Z.log`
+
+## Resume Baseline Realignment Addendum (UTC 2026-02-21)
+
+1. Production self-test baseline rerun (pre-patch)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `FAIL` both runs (shared timeout: headphone mode request; artifacts below).
+
+2. Scope-alignment patch rebuild
+
+```sh
+node --check Source/ui/public/js/index.js
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS` (syntax/build; warnings unchanged).
+
+3. Production self-test rerun (post-patch)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`).
+
+4. Shared gate + spatial suites + docs freshness rerun
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result:
+- `UI PR gate`: `PASS` (`ui_stage12_selftest=PASS`)
+- `smoke suite (spatial)`: `WARN` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- `phase 2.6 suite (spatial)`: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- `docs freshness`: `PASS` (`0 warning(s)`)
+
+### Artifacts (2026-02-21 resume rerun)
+
+- Pre-patch self-test fail #1: `TestEvidence/locusq_production_p0_selftest_20260221T083613Z.json`
+- Pre-patch self-test fail #2: `TestEvidence/locusq_production_p0_selftest_20260221T083632Z.json`
+- Post-patch self-test pass: `TestEvidence/locusq_production_p0_selftest_20260221T083905Z.json`
+- Shared gate status: `TestEvidence/ui_pr_gate_20260221T083926Z/status.tsv`
+
+## Manual Host Blocker Rerun Addendum (UTC 2026-02-21)
+
+1. Install latest local plugin build before manual DAW rerun
+
+```sh
+./scripts/build-and-install-mac.sh
+```
+
+Result: `PASS` (VST3/AU install hashes match local build; AU registrar refreshed; REAPER cache rows pruned).
+
+2. Manual host blocker rerun (`UI-04`, `UI-06`, `UI-07`, `UI-12`)
+
+Result: `PARTIAL_PASS`
+- `UI-04`: `PASS` (physics preset stickiness restored in host)
+- `UI-06`: `FAIL` (transport controls do not behave coherently; rewind/play/stop behavior remains broken)
+- `UI-07`: `FAIL` (timeline/keyframe bar is vertically clipped/squished in host, blocking gesture path)
+- `UI-12`: `PASS` (`SAVE` creates preset and `LOAD` restores state; rename/delete remains UX gap)
+
+### Artifacts (manual blocker rerun)
+
+- Checklist + operator observations: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+- Host screenshot evidence for `UI-07`: chat attachment `Image #1` (2026-02-21)
+
+## Manual Blocker Follow-Up Closeout Addendum (UTC 2026-02-21)
+
+1. Transport/layout patch automated validation rerun
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+./scripts/ui-pr-gate-mac.sh
+```
+
+Result: `PASS`
+- production self-test: `PASS` (`UI-06` and `UI-07` checks pass)
+- shared UI PR gate: `PASS` (`ui_stage12_selftest=PASS`)
+
+2. Manual host blocker follow-up confirmation
+
+Result: `PASS`
+- `UI-06`: `PASS`
+- `UI-07`: `PASS`
+- blocker defects are cleared for manual P0 closeout.
+
+3. Docs freshness gate after manual closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+### Artifacts (manual blocker follow-up closeout)
+
+- Production self-test pass JSON: `TestEvidence/locusq_production_p0_selftest_20260221T092320Z.json`
+- Shared gate status TSV: `TestEvidence/ui_pr_gate_20260221T092337Z/status.tsv`
+- Updated manual checklist: `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
+
+## P1 BL-006/BL-007/BL-008 Closeout Addendum (UTC 2026-02-21)
+
+1. Coordinator closeout sync for completed viewport overlays slice
+
+Result: `PASS`
+- `BL-006` motion trails: closeout on automated evidence (`UI-P1-006` pass)
+- `BL-007` velocity vectors: closeout on automated evidence (`UI-P1-007` pass)
+- `BL-008` RMS telemetry overlays: closeout on automated evidence (`UI-P1-008` pass)
+- backlog/status/evidence records synchronized to `Done`.
+
+2. Docs freshness gate after closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+### Artifacts (BL-006/BL-007/BL-008 closeout)
+
+- Production self-test (includes `UI-P1-006`/`UI-P1-007`/`UI-P1-008`): `TestEvidence/locusq_production_p0_selftest_20260221T092320Z.json`
+- Shared UI gate status: `TestEvidence/ui_pr_gate_20260221T092337Z/status.tsv`
+- Smoke suite log (spatial): `TestEvidence/locusq_smoke_suite_spatial_bl008_20260221T0316Z.log`
+- Phase 2.6 suite log (spatial): `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl008_20260221T0316Z.log`
+- Docs freshness log reference: `TestEvidence/validation-trend.md`
+
+## P1 BL-009 Steam Binaural Addendum (UTC 2026-02-21)
+
+1. Steam-enabled standalone build validation
+
+```sh
+cmake -S . -B build_local -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_STEAM_AUDIO=ON
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS` (Steam-enabled runtime path compiles and links for standalone target).
+
+2. Production self-test baseline after BL-009 integration patch set
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`).
+
+3. BL-009 opt-in assertion run (`UI-P1-009`)
+
+```sh
+LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`; `UI-P1-009` pass).
+
+4. Shared UI gate rerun after BL-009 integration
+
+```sh
+./scripts/ui-pr-gate-mac.sh
+```
+
+Result: `PASS` (`ui_stage12_selftest=PASS`).
+
+5. Docs freshness check (post-BL-009 sync)
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-016 Transport Contract Closeout Refresh (UTC 2026-02-23)
+
+1. Production transport-contract regression self-test
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260223T025859Z.json`
+- run log: `TestEvidence/locusq_production_p0_selftest_20260223T025859Z.run.log`
+- status: `status=pass`, `ok=true`
+
+2. BL-016 required smoke suite rerun (Spatial adapter)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `PASS_WITH_WARNING` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- artifact: `TestEvidence/locusq_smoke_suite_spatial_bl016_20260223T025916Z.log`
+- warn source: `locusq_emitter_passthrough` soft-warn invariant `rms_level` (`rms_energy=-29.667 dB`) from `qa/scenarios/locusq_emitter_passthrough.json`
+- note: warn-only baseline retained; hard-fail invariants passed
+
+3. BL-016 companion phase 2.6 acceptance suite rerun (Spatial adapter)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+```
+
+Result: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- artifact: `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl016_20260223T030005Z.log`
+
+4. Docs freshness gate after BL-016 closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_bl016_20260223T030010Z.log`
+
+## BL-024 REAPER Automation Lane Hardening (UTC 2026-02-23)
+
+1. Initial wrapper run after strictness/retry patchset
+
+```sh
+LQ_BL024_SKIP_INSTALL=1 LQ_BL024_HEADLESS_RUNS=1 ./scripts/qa-bl024-reaper-automation-lane-mac.sh
+```
+
+Result: `FAIL`
+- artifact: `TestEvidence/bl024_reaper_automation_20260223T024628Z/`
+- failure signature: `renderExitCode=0` with `renderOutputDetected=false`; prompted render-target/auto-quit follow-up hardening.
+
+2. Hardened headless smoke rerun (timeouts + isolated REAPER instance + auto-bootstrap render target pinning)
+
+```sh
+LQ_REAPER_BOOTSTRAP_TIMEOUT_SEC=30 LQ_REAPER_RENDER_TIMEOUT_SEC=45 ./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/reaper_headless_render_20260223T025610Z/status.json`
+- key checks: `requireLocusQ=true`, `locusqFxFound=true`, `renderOutputDetected=true`, `renderAttempts=1`.
+
+3. Wrapper lane rerun with hardened headless path
+
+```sh
+LQ_BL024_SKIP_INSTALL=1 LQ_BL024_HEADLESS_RUNS=1 LQ_REAPER_BOOTSTRAP_TIMEOUT_SEC=30 LQ_REAPER_RENDER_TIMEOUT_SEC=45 ./scripts/qa-bl024-reaper-automation-lane-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl024_reaper_automation_20260223T025619Z/status.tsv`
+- report: `TestEvidence/bl024_reaper_automation_20260223T025619Z/report.md`
+- note: this rerun validated the hardened path before full acceptance pack.
+
+4. Docs freshness gate after BL-024 hardening sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+5. BL-024 acceptance pack (`3/3` strict runs with install enabled)
+
+```sh
+LQ_BL024_HEADLESS_RUNS=3 LQ_REAPER_BOOTSTRAP_TIMEOUT_SEC=45 LQ_REAPER_RENDER_TIMEOUT_SEC=90 ./scripts/qa-bl024-reaper-automation-lane-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl024_reaper_automation_20260223T030210Z/status.tsv`
+- report: `TestEvidence/bl024_reaper_automation_20260223T030210Z/report.md`
+- install lane: `build_install=pass`
+- strict host checks: `headless_run_1..3=pass` with `locusqFxFound=true` and `renderOutputDetected=true`.
+
+6. Manual runbook evidence row update
+
+```sh
+TestEvidence/phase-2-7a-manual-host-ui-acceptance.md
+```
+
+Result: `PASS`
+- new section: `BL-024 Manual Runbook Evidence Row (2026-02-23)`.
+- includes host-session row plus deterministic automation references for bootstrap/routing and headphone mode stability checks.
+
+7. Docs freshness gate after BL-024 In Validation sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## HX-03 REAPER Multi-Instance Stability Lane (UTC 2026-02-23)
+
+1. Run deterministic clean/warm cache multi-instance host lane
+
+```sh
+LQ_HX03_INSTANCE_COUNT=3 LQ_HX03_START_STAGGER_SEC=1 LQ_REAPER_BOOTSTRAP_TIMEOUT_SEC=45 LQ_REAPER_RENDER_TIMEOUT_SEC=90 ./scripts/qa-hx03-reaper-multi-instance-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/hx03_reaper_multi_instance_20260223T031450Z/status.tsv`
+- report: `TestEvidence/hx03_reaper_multi_instance_20260223T031450Z/report.md`
+- clean phase: `instance_1..3=pass`, `new_reports=0`, `reaper_processes_clean`
+- warm phase: `instance_1..3=pass`, `new_reports=0`, `reaper_processes_clean`
+- strict checks: all per-instance artifacts reported `locusqFxFound=true` and `renderOutputDetected=true`
+
+2. BL-024 closure gate update after HX-03 pass
+
+```sh
+Documentation/backlog-post-v1-agentic-sprints.md
+status.json
+```
+
+Result: `PASS`
+- BL-024 moved to `Done (2026-02-23)` with HX-03 evidence linked.
+- HX-03 marked `Done (2026-02-23)` and retained as recurring regression lane.
+
+3. Docs freshness gate after HX-03/BL-024 closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-012 Harness Backport Tranche 1 (UTC 2026-02-23)
+
+1. Initial tranche-1 lane run (pre-fix)
+
+```sh
+./scripts/qa-bl012-harness-backport-tranche1-mac.sh
+```
+
+Result: `FAIL`
+- artifact: `TestEvidence/bl012_harness_backport_20260223T032829Z/status.tsv`
+- failure signature: runtime probe expected `locusq_state_roundtrip_contract/result.json`; actual result is nested (`pass_2/result.json`) for multi-pass state-roundtrip scenario output layout.
+
+2. Runtime probe hardening for nested scenario result paths
+
+```sh
+scripts/qa-bl012-harness-backport-tranche1-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl012_harness_backport_20260223T032945Z/status.tsv`
+- report: `TestEvidence/bl012_harness_backport_20260223T032945Z/report.md`
+- assertions:
+  - harness sanity configure/build/ctest `PASS`
+  - contract coverage `PASS` (`latency=1`, `smoothing=1`, `state=1`, `contract_scenarios=3`)
+  - runtime-config precedence probe `PASS` (`sample_rate=48000`, `block_size=512`, `channels=2` across all contract scenarios despite conflicting CLI flags)
+  - perf probe `PASS` (`perf_metric_count=4` without forcing `--profile`)
+  - canonical `qa_output/suite_result.json` sync `PASS`
+
+3. BL-012 state promotion sync
+
+```sh
+Documentation/backlog-post-v1-agentic-sprints.md
+status.json
+```
+
+Result: `PASS`
+- BL-012 moved to `In Validation` with tranche-1 lane artifacts linked.
+
+## BL-010 FDN Expansion Promotion Closeout (UTC 2026-02-23)
+
+1. Verify existing BL-010 validation bundle remains fully green
+
+```sh
+awk -F'\t' 'NR==1 {next} {if ($2 != 0) {bad=1}} END {exit bad}' TestEvidence/bl010_validation_20260222T191102Z/status.tsv
+```
+
+Result: `PASS`
+- all recorded BL-010 steps remain `exit_code=0` (`qa_210c` matrix, phase `2.10b` suite, seeded `pluginval`, RT-safety audit, deterministic hash compare, docs gate).
+- canonical artifact set remains: `TestEvidence/bl010_validation_20260222T191102Z/`.
+
+2. Docs freshness gate after BL-010 promotion/state sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+3. Final docs freshness gate after `status.json` BL-010 state/timestamp sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-022 Choreography Packs Multipass Validation (UTC 2026-02-22)
+
+1. Syntax/build guard before choreography closeout
+
+```sh
+node --check Source/ui/public/js/index.js
+cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+2. Production self-test lane rerun (includes `UI-P1-022`)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260222T213205Z.json`
+- `UI-P1-022` detail: `orbit choreography pack apply/save/load verified`.
+
+3. Spatial smoke regression check after choreography patch
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `PASS_WITH_WARNING` (`3 PASS / 1 WARN / 0 FAIL`; existing warn-only baseline retained).
+
+4. Documentation freshness gate after backlog/evidence sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+5. Documentation freshness gate after final status/backlog sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+6. Final documentation freshness confirmation
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+BL-022 evidence bundle:
+- `TestEvidence/bl022_validation_20260222T213204Z/status.tsv`
+- `TestEvidence/bl022_validation_20260222T213204Z/selftest_production_p0.log`
+- `TestEvidence/bl022_validation_20260222T213204Z/qa_smoke_spatial.log`
+- `TestEvidence/bl022_validation_20260222T213204Z/docs_freshness.log`
+- `TestEvidence/bl022_validation_20260222T213204Z/docs_freshness_postsync.log`
+- `TestEvidence/bl022_validation_20260222T213204Z/docs_freshness_final.log`
+
+## BL-019 Physics Interaction Lens Validation (UTC 2026-02-22)
+
+1. Compile and syntax guard for production UI + QA host
+
+```sh
+node --check Source/ui/public/js/index.js
+cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+2. Production self-test with BL-019 assertions
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+jq '.result.checks[] | select(.id=="UI-P1-019")' TestEvidence/locusq_production_p0_selftest_20260222T211349Z.json
+```
+
+Result: `PASS`
+- `status=pass`, `ok=true`.
+- `UI-P1-019`: `pass=true`, details `physics lens overlays verified (force/collision/trajectory)`.
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260222T211349Z.json`.
+
+3. Docs freshness gate after BL-019 state/evidence sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-017 Planning Kickoff (UTC 2026-02-22)
+
+1. Companion bridge planning artifact authored
+
+- `Documentation/plans/bl-017-head-tracked-monitoring-companion-bridge-plan-2026-02-22.md`
+- scope includes:
+  - PHASE exclusion inside plugin process callback
+  - companion IPC bridge contract (`seq`, timestamps, pose fields, stale handling)
+  - RT-safe plugin integration slices (A/B/C)
+  - deterministic QA lane and manual AirPods validation path
+
+2. Backlog/status sync
+
+- `Documentation/backlog-post-v1-agentic-sprints.md`:
+  - BL-017 moved to `In Planning (2026-02-22)`
+- `status.json` notes updated for BL-017 kickoff state
+
+3. Docs freshness gate
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## P1 BL-009 Audio-Path Contract Addendum (UTC 2026-02-22)
+
+1. BL-009 QA adapter + Steam include-path build verification
+
+```sh
+cmake --build build_local --config Release --target locusq_qa -j 8
+```
+
+Result: `PASS`.
+- `locusq_qa` now compiles in Steam-enabled lanes with SDK include/runtime macros propagated from `CMakeLists.txt`.
+
+2. BL-009 deterministic headphone-path contract lane
+
+```sh
+./scripts/qa-bl009-headphone-contract-mac.sh
+```
+
+Result: `PASS`.
+- Downmix reference determinism: stable hash across reruns.
+- Steam-request determinism: stable hash across reruns.
+- `UI-P1-009` scene-state check: `request=steam_binaural active=steam_binaural steamAvailable=true steamCompiled=true stage=ready err=0`.
+- Cross-mode contract: hashes diverge when `steamAvailable=true`.
+
+3. Docs freshness gate after BL-009 automation sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+### Artifacts (BL-009 audio-path contract)
+
+- `TestEvidence/bl009_headphone_contract_20260222T193857Z/status.tsv`
+- `TestEvidence/bl009_headphone_contract_20260222T193857Z/report.md`
+- `TestEvidence/bl009_headphone_contract_20260222T193857Z/ui_selftest_bl009.json`
+
+## P2 BL-010 Modulated FDN Validation Bundle (UTC 2026-02-22)
+
+1. Isolated BL-010 configure/build lane (`build_bl010`, Steam disabled to avoid cross-lane Steam include coupling in `build_local` QA target)
+
+```sh
+cmake -S . -B build_bl010 -DCMAKE_BUILD_TYPE=Release -DBUILD_LOCUSQ_QA=ON -DLOCUSQ_ENABLE_STEAM_AUDIO=OFF -DLOCUSQ_ENABLE_CLAP=OFF -DQA_HARNESS_DIR=/Users/artbox/Documents/Repos/audio-dsp-qa-harness -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake --build build_bl010 --config Release --target locusq_qa LocusQ_VST3 -j 8
+```
+
+Result: `PASS`.
+- Built artifacts:
+  - `build_bl010/locusq_qa_artefacts/Release/locusq_qa`
+  - `build_bl010/LocusQ_artefacts/Release/VST3/LocusQ.vst3`
+
+2. New BL-010 deterministic scenario matrix (`locusq_210c_fdn_modulated_deterministic`)
+
+```sh
+./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_210c_fdn_modulated_deterministic.json --sample-rate 48000 --block-size 512
+./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_210c_fdn_modulated_deterministic.json --sample-rate 96000 --block-size 512 --channels 4
+```
+
+Result: `PASS`.
+- 48k/512: `rt60=4.24773`, `perf_avg_block_time_ms=0.062053`, `perf_meets_deadline=true`.
+- 96k/512/4ch: `rt60=4.26626`, `perf_avg_block_time_ms=0.0636573`, `perf_meets_deadline=true`.
+
+3. Existing renderer CPU trend suite regression matrix
+
+```sh
+./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json --sample-rate 48000 --block-size 512
+./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json --sample-rate 96000 --block-size 512 --channels 4
+```
+
+Result: `PASS`.
+- Both runs: `3 PASS / 0 WARN / 0 FAIL`.
+
+4. Determinism replay check (same scenario, repeated render hash)
+
+```sh
+./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_210c_fdn_modulated_deterministic.json --sample-rate 48000 --block-size 512
+./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_210c_fdn_modulated_deterministic.json --sample-rate 48000 --block-size 512
+shasum -a 256 <run_a_wet.wav> <run_b_wet.wav>
+```
+
+Result: `PASS`.
+- `match=true` (`run_a_sha256 == run_b_sha256`).
+
+5. Seeded host regression check
+
+```sh
+/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build_bl010/LocusQ_artefacts/Release/VST3/LocusQ.vst3
+```
+
+Result: `PASS` (`SUCCESS`).
+
+6. RT-safety audit grep
+
+```sh
+rg -n "new |std::vector|\\.push_back|\\.resize|std::string\\(|juce::Logger|std::cout" Source/PluginProcessor.cpp Source/SpatialRenderer.h Source/FDNReverb.h
+```
+
+Result: `PASS` (audit completed; matches are confined to setup/state paths, not `FDNReverb::process`).
+
+7. Docs freshness gate after BL-010 sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+### Artifacts (BL-010)
+
+- Validation folder: `TestEvidence/bl010_validation_20260222T191102Z`
+- Command rollup: `TestEvidence/bl010_validation_20260222T191102Z/status.tsv`
+- Determinism hash report: `TestEvidence/bl010_validation_20260222T191102Z/qa_210c_determinism_hashes.txt`
+
+## P2 BL-011 CLAP External Validation (UTC 2026-02-22)
+
+1. Verify CLAP tooling availability
+
+```sh
+command -v clap-info
+command -v clap-validator
+```
+
+Result: `PASS`.
+- `clap-info` available at `/Users/artbox/.local/bin/clap-info` (`0.9.0`).
+- `clap-validator` available at `/Users/artbox/.local/bin/clap-validator` (`0.3.2`).
+
+2. Descriptor/introspection snapshot
+
+```sh
+clap-info build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap
+```
+
+Result: `PASS`.
+- `plugin_count=1`
+- `id=com.noizefield.locusq`
+- `name=LocusQ`
+- `version=1.0.0`
+
+3. External validator suite
+
+```sh
+clap-validator validate build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap
+clap-validator validate --json build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap
+```
+
+Result: `FAIL`.
+- `21 tests run, 15 passed, 1 failed, 5 skipped, 0 warnings`.
+- Failing check: `param-set-wrong-namespace`
+- Failure detail: parameter values changed after `CLAP_EVENT_PARAM_VALUE` events with mismatching namespace ID.
+
+4. Remediation and revalidation
+
+```sh
+cmake --build build_local --config Release --target LocusQ_CLAP -j 8
+clap-validator validate build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap
+clap-validator validate --json build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap
+```
+
+Result: `PASS`.
+- Code fix in `Source/PluginProcessor.cpp`: CLAP instance now skips activation-time `emit_color` host parameter seeding.
+- Revalidation summary: `21 tests run, 16 passed, 0 failed, 5 skipped, 0 warnings`.
+- Previously failing check `param-set-wrong-namespace` now `PASSED`.
+
+### Artifacts (BL-011 external validation)
+
+- Report: `TestEvidence/clap-validation-report-2026-02-22.md`
+- Logs: `TestEvidence/clap_validation_20260222T181504Z/clap-info.json`, `TestEvidence/clap_validation_20260222T181504Z/clap-validator.txt`, `TestEvidence/clap_validation_20260222T181504Z/clap-validator.json`, `TestEvidence/clap_validation_20260222T181504Z/clap-validator-quiet.json`, `TestEvidence/clap_validation_20260222T181504Z/clap-validator-quiet.cleaned.json`
+- Binary evidence: `TestEvidence/clap_validation_20260222T181504Z/artifact_stat.txt`, `TestEvidence/clap_validation_20260222T181504Z/artifact_sha256.txt`
+- Revalidation logs: `TestEvidence/clap_validation_20260222T182619Z/clap-info.json`, `TestEvidence/clap_validation_20260222T182619Z/clap-validator.txt`, `TestEvidence/clap_validation_20260222T182619Z/clap-validator.json`, `TestEvidence/clap_validation_20260222T182619Z/clap-validator-quiet.json`, `TestEvidence/clap_validation_20260222T182619Z/clap-validator-quiet.cleaned.json`
+- Revalidation binary evidence: `TestEvidence/clap_validation_20260222T182619Z/artifact_stat.txt`, `TestEvidence/clap_validation_20260222T182619Z/artifact_sha256.txt`
+- Added metadata header to `Documentation/plans/CLAP_References.md`.
+- Updated `scripts/validate-docs-freshness.sh` to prune `third_party/` vendor docs from repo-owned metadata checks.
+
+### Artifacts (BL-009 validation)
+
+- BL-009 opt-in self-test pass JSON: `TestEvidence/locusq_production_p0_selftest_20260221T102014Z.json`
+- Baseline production self-test pass JSON: `TestEvidence/locusq_production_p0_selftest_20260221T102031Z.json`
+- Shared gate status TSV: `TestEvidence/ui_pr_gate_20260221T102057Z/status.tsv`
+
+## P1 BL-009 Diagnostics Closeout Addendum (UTC 2026-02-21)
+
+1. Rebuild after Steam diagnostic telemetry patch set
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`.
+
+2. BL-009 opt-in self-test with diagnostics
+
+```sh
+LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS` (`status=pass`, `ok=true`).
+- `UI-P1-009` detail confirms active Steam path on this host:
+  - `request=steam_binaural`
+  - `active=steam_binaural`
+  - `steamAvailable=true`
+  - `steamCompiled=true`
+  - `stage=ready`
+  - `err=0`
+  - `lib=/Users/artbox/Documents/Repos/LocusQ/third_party/steam-audio/sdk/steamaudio/lib/osx/libphonon.dylib`
+
+### Artifacts (BL-009 diagnostics)
+
+- Diagnostics self-test pass JSON: `TestEvidence/locusq_production_p0_selftest_20260221T104708Z.json`
+- Intermediate failure history (for traceability): `TestEvidence/locusq_production_p0_selftest_20260221T104429Z.json`, `TestEvidence/locusq_production_p0_selftest_20260221T104557Z.json`
+
+## P2 BL-011 Slice 1 CLAP Build Scaffolding (UTC 2026-02-22)
+
+1. CLAP-enabled configure with pinned `clap-juce-extensions` commit
+
+```sh
+cmake -S . -B build_local -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=ON -DLOCUSQ_CLAP_FETCH=ON -DLOCUSQ_CLAP_JUCE_EXTENSIONS_TAG=02f91b7988298f7f1f05c706da16e1d9da852a87 -DBUILD_LOCUSQ_QA=ON
+```
+
+Result: `PASS`.
+- CLAP helper loaded successfully.
+- Generated target: `LocusQ_CLAP`.
+
+2. CLAP target build
+
+```sh
+cmake --build build_local --config Release --target LocusQ_CLAP -j 8
+```
+
+Result: `PASS`.
+
+3. CLAP artifact verification
+
+```sh
+ls -la build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap/Contents/MacOS
+file build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap/Contents/MacOS/LocusQ
+```
+
+Result: `PASS`.
+- Output bundle: `build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap`
+- Binary detected: `Mach-O 64-bit bundle arm64`
+
+4. CLAP-aware installer script syntax validation
+
+```sh
+bash -n scripts/build-and-install-mac.sh
+```
+
+Result: `PASS`.
+- Added opt-in CLAP controls: `LOCUSQ_ENABLE_CLAP`, `LOCUSQ_INSTALL_CLAP`, `LOCUSQ_CLAP_FETCH`, `LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR`.
+- Full installer execution was intentionally not run in this slice to avoid unsolicited host/plugin install side effects.
+
+## P2 BL-011 Slice 2 CLAP Lifecycle Telemetry + Self-Test Lane (UTC 2026-02-22)
+
+1. JS + script syntax guards for BL-011 self-test lane
+
+```sh
+node --check Source/ui/public/js/index.js
+bash -n scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS`.
+
+2. CLAP-enabled configure/build after telemetry integration
+
+```sh
+cmake -S . -B build_local -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=ON -DLOCUSQ_CLAP_FETCH=ON -DLOCUSQ_CLAP_JUCE_EXTENSIONS_TAG=02f91b7988298f7f1f05c706da16e1d9da852a87 -DBUILD_LOCUSQ_QA=ON
+cmake --build build_local --config Release --target LocusQ_CLAP -j 8
+ls -la build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap/Contents/MacOS
+file build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap/Contents/MacOS/LocusQ
+```
+
+Result: `PASS`.
+- `LocusQ_CLAP` rebuilt successfully with new scene-state telemetry fields.
+- Artifact confirmed at `build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap`.
+
+3. Production self-test with BL-011 lane enabled
+
+```sh
+LOCUSQ_UI_SELFTEST_BL011=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
+jq '.result.checks[] | select(.id=="UI-P2-011")' TestEvidence/locusq_production_p0_selftest_20260222T172815Z.json
+```
+
+Result: `PASS`.
+- `UI-P2-011` detail: `build=true properties=true clap=false stage=non_clap_instance active=false processing=false transport=false mode=disabled wrapper=Standalone version=0.0.0`.
+- Artifact: `TestEvidence/locusq_production_p0_selftest_20260222T172815Z.json`.
+
+4. CLAP-disabled regression build path verification
+
+```sh
+cmake -S . -B build_no_clap_check -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=OFF -DBUILD_LOCUSQ_QA=OFF
+cmake --build build_no_clap_check --config Release --target LocusQ_VST3 -j 8
+```
+
+Result: `PASS`.
+- Confirms no-CLAP compile path remains healthy after `clap_properties` integration.
+
+5. BL-011 tool availability note
+
+```sh
+command -v clap-info
+command -v clap-validator
+```
+
+Result: `NOT AVAILABLE` on this machine (`clap-info`: missing, `clap-validator`: missing).
+
+6. Docs freshness gate after BL-011 Slice 2 sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## Spatial Audio Skill + BL-018 Addendum (UTC 2026-02-22)
+
+1. Validate new `spatial-audio-engineering` skill package
+
+```sh
+/tmp/locusq-skillcreator-venv/bin/python /Users/artbox/.codex/skills/.system/skill-creator/scripts/quick_validate.py .codex/skills/spatial-audio-engineering
+```
+
+Result: `PASS` (`Skill is valid!`)
+
+2. Run BL-018 ambisonic/layout contract lane (lightweight mode)
+
+```sh
+bash scripts/qa-bl018-ambisonic-contract-mac.sh --no-binaural-runtime
+```
+
+Result: `PASS_WITH_WARNING`
+- warnings are expected for this mode:
+  - `integration_probe=warn` (`no_ambisonic_backend_markers_in_source_pending_backend_impl`)
+  - `binaural_runtime_contract=warn` (`disabled_by_flag`)
+- artifact: `TestEvidence/bl018_ambisonic_contract_20260222T195416Z/`
+
+3. Run skill wrapper lane smoke
+
+```sh
+RUN_BINAURAL_RUNTIME=0 ./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh --skip-bl009
+```
+
+Result: `PASS_WITH_WARNING`
+- BL-018 lane executed end-to-end through skill wrapper.
+- artifact: `TestEvidence/bl018_ambisonic_contract_20260222T195448Z/`
+
+4. Docs freshness gate after skill/routing/backlog updates
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`)
+
+## Spatial Lane Closeout Addendum (UTC 2026-02-22)
+
+1. Integrated spatial lane run (`BL-009` + `BL-018`) before strict remediation
+
+```sh
+./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh
+```
+
+Result: `PASS_WITH_WARNING`
+- `BL-009`: `PASS`.
+- `BL-018`: `PASS_WITH_WARNING` due missing ambisonic marker gate prior to remediation.
+- artifacts: `TestEvidence/bl009_headphone_contract_20260222T195826Z/`, `TestEvidence/bl018_ambisonic_contract_20260222T195837Z/`.
+
+2. Strict BL-018 integration gate (pre-remediation)
+
+```sh
+bash scripts/qa-bl018-ambisonic-contract-mac.sh --strict-integration
+```
+
+Result: `FAIL`
+- failing step: `integration_probe` (`no_ambisonic_backend_markers_in_source_strict_mode`).
+- artifact: `TestEvidence/bl018_ambisonic_contract_20260222T195852Z/`.
+
+3. Ambisonic telemetry marker patch + syntax/marker gate
+
+```sh
+node --check Source/ui/public/js/index.js
+rg -n -i "(ambisonic|\\bhoa\\b|b-format|\\bfoa\\b|rend_ambi|rendererAmbi|ambi_)" Source/PluginProcessor.cpp Source/SpatialRenderer.h Source/ui/public/js/index.js
+```
+
+Result: `PASS`
+- Added explicit `rendererAmbi*` scene-state telemetry placeholders to support deterministic BL-018 strict gating.
+
+4. Integrated spatial lane run (`BL-009` + `BL-018`) after remediation
+
+```sh
+./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh
+```
+
+Result: `PASS`
+- `BL-009`: `PASS`.
+- `BL-018`: `PASS`.
+- artifacts: `TestEvidence/bl009_headphone_contract_20260222T200016Z/`, `TestEvidence/bl018_ambisonic_contract_20260222T200026Z/`.
+
+5. Strict BL-018 integration gate rerun
+
+```sh
+bash scripts/qa-bl018-ambisonic-contract-mac.sh --strict-integration
+```
+
+Result: `PASS`
+- key steps: `integration_probe=pass`, `binaural_runtime_contract=pass`.
+- artifact: `TestEvidence/bl018_ambisonic_contract_20260222T200040Z/`.
+
+6. Docs freshness gate after BL-018 strict remediations
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+7. Compile sanity for `rendererAmbi*` scene-state telemetry patch
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS` (`LocusQ_Standalone` built successfully; warnings unchanged).
+
+## BL-018 Spatial Profile Matrix Remediation (UTC 2026-02-22)
+
+1. QA spatial adapter mapping fix for profile lane
+
+- root cause: scenario engine rejected `parameter_variations.rend_spatial_profile` because `qa/locusq_adapter` did not expose the parameter name/index.
+- fix: added `rend_spatial_profile` mapping to `LocusQSpatialAdapter` (`kNumParameters` 35 -> 36).
+
+2. Rebuild QA binary
+
+```sh
+cmake --build build_local --config Release --target locusq_qa -j 8
+```
+
+Result: `PASS`
+
+3. Failing scenario repro rerun
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_bl018_profile_virtual3d_stereo.json --sample-rate 48000 --block-size 512 --channels 2
+```
+
+Result: `PASS`
+
+4. Full BL-018 ambisonic/layout contract lane rerun (with profile matrix enabled)
+
+```sh
+./scripts/qa-bl018-ambisonic-contract-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl018_ambisonic_contract_20260222T202029Z/`
+- profile matrix rows now all `pass` in `status.tsv` (`virtual3d_stereo`, `ambisonic_foa`, `ambisonic_hoa`, `surround_5_2_1`, `surround_7_2_1`, `surround_7_4_2`, `codec_iamf`, `codec_adm`).
+
+5. Integrated spatial wrapper rerun (`BL-009` + `BL-018`)
+
+```sh
+./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh
+```
+
+Result: `PASS`
+- artifacts: `TestEvidence/bl009_headphone_contract_20260222T202233Z/`, `TestEvidence/bl018_ambisonic_contract_20260222T202244Z/`.
+
+## BL-009 Headphone Profile Lane Addendum (UTC 2026-02-22)
+
+1. Renderer/profile wiring compile guard
+
+```sh
+node --check Source/ui/public/js/index.js
+bash -n scripts/qa-bl009-headphone-profile-contract-mac.sh
+cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+2. Baseline BL-009 regression lane rerun
+
+```sh
+./scripts/qa-bl009-headphone-contract-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl009_headphone_contract_20260222T204437Z/`
+
+3. New BL-009 headphone profile contract lane
+
+```sh
+./scripts/qa-bl009-headphone-profile-contract-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl009_headphone_profile_contract_20260222T204451Z/`
+- checks:
+  - deterministic baseline (`generic` repeat hash stable)
+  - profile divergence (`generic` vs `airpods_pro_2`; `generic` vs `sony_wh1000xm5`)
+  - UI BL-009 diagnostics include profile request/active detail string
+
+4. Integrated spatial lanes rerun
+
+```sh
+./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh
+```
+
+Result: `PASS`
+- artifacts: `TestEvidence/bl009_headphone_contract_20260222T204505Z/`, `TestEvidence/bl018_ambisonic_contract_20260222T204516Z/`.
+
+## Spatial Profile Usage Guide Docs Sync (UTC 2026-02-22)
+
+1. Added canonical operator guide for spatial audio profile usage
+
+- new doc: `Documentation/spatial-audio-profiles-usage.md`
+- index update: `Documentation/README.md`
+- scope: profile matrix (`rend_spatial_profile`), headphone modes/profiles, mono/stereo/multichannel behavior, and validation command references.
+
+2. Docs freshness gate
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-009 Steam Headphone Contract Closeout (UTC 2026-02-23)
+
+1. Rebuild standalone after BL-009 self-test timeout and diagnostics fallback hardening
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+- Updated BL-009/BL-011 opt-in self-test timeout budget in `Source/PluginEditor.cpp` (30s poll horizon for extended lanes).
+- Added Steam diagnostics fallback capture/restore in `Source/ui/public/js/index.js` so BL-009 checks remain deterministic after synthetic viewport injections.
+
+2. BL-009 opt-in production self-test verification
+
+```sh
+LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260223T020559Z.json`
+- key check: `UI-P1-009` passed with deterministic detail string including `request=steam_binaural`, `active=steam_binaural`, `steamAvailable=true`, `stage=ready`.
+
+3. BL-009 deterministic headphone contract lane rerun
+
+```sh
+./scripts/qa-bl009-headphone-contract-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl009_headphone_contract_20260223T020702Z/`
+- deterministic hashes:
+  - downmix: `0e6c96dd6e0ee2c6ae654b0d768bbb2adc56420103b22dd9513f89f26d2f4ccb`
+  - steam request: `0f6f56d418470c92563a598549fa64dc49520e721de190364924a7753c9e9240`
+- cross-mode assertion: `cross_mode_divergence=pass` (`steamAvailable=true hashes_diverge`).
+
+4. BL-009 deterministic headphone profile contract lane rerun
+
+```sh
+./scripts/qa-bl009-headphone-profile-contract-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl009_headphone_profile_contract_20260223T020906Z/`
+- profile determinism/divergence assertions all passed (`generic`, `airpods`, `sony`).
+- UI profile diagnostics assertion passed (`ui_selftest_profile_diag=pass`).
+
+5. Required production baseline self-test rerun
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260223T020923Z.json`
+
+6. Docs freshness gate after BL-009 closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-011 CLAP Lifecycle and Host/CI Closeout (UTC 2026-02-23)
+
+1. Deterministic BL-011 closeout bundle
+
+```sh
+./scripts/qa-bl011-clap-closeout-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl011_clap_closeout_20260223T032730Z/`
+- key lane assertions from `status.tsv`:
+  - `clap_info=pass`
+  - `clap_validator=pass`
+  - `qa_smoke_suite=pass`
+  - `qa_phase_2_6_acceptance_suite=pass`
+  - `ui_selftest_bl011=pass` (`UI-P2-011`; artifact reused deterministically from `TestEvidence/locusq_production_p0_selftest_20260223T032004Z.json`)
+  - `cmake_build_nonclap_vst3_guard=pass`
+  - `reaper_clap_discovery=pass` (`TestEvidence/reaper_clap_discovery_probe_20260223T023314Z.json`; `matchedFxName=CLAP: LocusQ (Noizefield)`)
+  - `docs_freshness=pass`
+
+2. CLAP documentation consolidation and ADR closure
+
+- canonical closeout doc: `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
+- ADR: `Documentation/adr/ADR-0009-clap-closeout-documentation-consolidation.md`
+- archived CLAP references/PDFs: `Documentation/archive/2026-02-23-clap-reference-bundle/`
+- backlog/status surfaces moved BL-011 from `In Validation`/`In Progress` to `Done (2026-02-23)`.
+
+3. Final docs freshness gate after BL-011 closeout + CLAP docs consolidation sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+## BL-015 All-Emitter Realtime Rendering Closeout (UTC 2026-02-23)
+
+1. Rebuild standalone and QA binaries before closeout rerun
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+```
+
+Result: `PASS`
+
+2. Production self-test rerun (BL-015 contract)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260223T034704Z.json`
+- BL-015 gate: `UI-P1-015` passed (`selected vs non-selected emitter styling verified`).
+- companion downstream checks in same run remained green (`UI-P1-014`, `UI-P1-019`, `UI-P1-022`).
+
+3. Spatial smoke-suite companion rerun
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `PASS_WITH_WARNING` (baseline retained)
+- artifact: `TestEvidence/locusq_smoke_suite_spatial_bl015_20260223T034751Z.log`
+- summary: `3 PASS / 1 WARN / 0 FAIL / 0 ERROR`.
+
+4. BL-015 closeout synchronization
+
+- backlog/status promoted BL-015 from `In Validation` to `Done (2026-02-23)` with dependency graph preserved for BL-014/BL-019/BL-021.
+
+## HX-01 shared_ptr Atomic Migration Guard Closeout (UTC 2026-02-23)
+
+1. Rebuild with HX-01 migration patch (`SharedPtrAtomicContract`)
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`
+
+2. QA adapter smoke verification (spatial adapter)
+
+```sh
+build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_renderer_spatial_output.json
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`
+
+3. Deprecated call-site scan (excluding contract wrapper implementation fallback)
+
+```sh
+rg -n "std::atomic_(store|load)(_explicit)?\\s*\\(" Source --glob '!Source/SharedPtrAtomicContract.h'
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/hx01_sharedptr_atomic_deprecation_scan_excluding_wrapper_20260223T034931Z.log`
+- note: no direct deprecated call sites remain outside the contract wrapper.
+
+4. Docs freshness gate after HX-01 sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_hx01_20260223T035128Z.log`
+
+5. Final docs freshness gate after BL-015 closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_bl015_20260223T035149Z.log`
+
+6. Final docs freshness gate after status timestamp sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
