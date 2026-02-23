@@ -6,88 +6,119 @@ Last Modified Date: 2026-02-23
 
 # LocusQ
 
-LocusQ is a JUCE 8 spatial-audio plugin with a WebView UI, focused on deterministic runtime behavior, reproducible validation lanes, and documented phase contracts.
+LocusQ is a JUCE 8 spatial-audio plugin for designing, animating, and rendering 3D sound scenes with a WebView-based UI and deterministic real-time behavior.
 
-## Current Posture (UTC 2026-02-23)
+## What LocusQ Does
 
-- Version target: `v1.0.0-ga`
-- Active phase: `code`
-- UI framework gate: `webview`
-- Canonical backlog/spec: `Documentation/backlog-post-v1-agentic-sprints.md`
-- Canonical state surface: `status.json`
-- Recent closeout: `BL-019` is `Done` (2026-02-23) with refreshed physics-lens evidence (`TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`, `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`). `BL-015`, `BL-011`, `BL-016`, and `BL-010` remain `Done` with their validated evidence bundles.
-- Hardening closeout: `HX-01` and `HX-04` are `Done` (2026-02-23); HX-01 migrated SceneGraph shared_ptr publication to `Source/SharedPtrAtomicContract.h` (`TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`) and HX-04 added scenario parity drift guards via manifest/suite/audit lanes (`TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv`, `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`).
+LocusQ uses a three-mode workflow:
 
-## Quick Start (macOS)
+- `CALIBRATE`: measure your room/speaker setup and generate a room profile.
+- `EMITTER`: turn source tracks into spatial emitters with position, directivity, physics, and timeline automation.
+- `RENDERER`: collect all active emitters, apply spatial rendering + room processing, and output to mono/stereo/quad layouts.
+
+## Feature Overview
+
+- Multi-instance spatial workflow with a shared scene graph inside the DAW process.
+- WebView + Three.js UI for interactive 3D scene visualization.
+- Positioning in spherical or cartesian coordinates.
+- Physics-enabled motion (gravity, drag, collisions, velocity-based movement).
+- Timeline/keyframe animation and preset save/load workflow.
+- Spatial processing controls for distance, directivity, spread, doppler, and air absorption.
+- Room rendering controls (reflections/room mix/size/damping).
+- Output profiles for studio speakers and headphone workflows (including optional Steam Audio path).
+- Deterministic QA lanes and scripted validation workflows.
+
+## Supported Platforms and Formats
+
+- macOS: `VST3`, `AU`, `Standalone`
+- Windows: `VST3`, `Standalone`
+- Linux: `VST3`, `LV2`, `Standalone`
+
+## Install and Setup
+
+### Recommended (macOS)
 
 1. Build and install plugin binaries:
    - `./scripts/build-and-install-mac.sh`
-2. Optional standalone app install:
+2. Optional: also install standalone app to `~/Applications`:
    - `LOCUSQ_INSTALL_STANDALONE=1 ./scripts/build-and-install-mac.sh`
-3. Run primary UI gate:
-   - `./scripts/ui-pr-gate-mac.sh`
-4. Run production P0 self-test lane:
-   - `./scripts/standalone-ui-selftest-production-p0-mac.sh`
-5. Run docs freshness gate before closeout:
-   - `./scripts/validate-docs-freshness.sh`
+3. Optional: enable/install CLAP during build:
+   - `LOCUSQ_ENABLE_CLAP=1 LOCUSQ_INSTALL_CLAP=1 ./scripts/build-and-install-mac.sh`
 
-## Validation Ladder
+Installed plugin locations:
+- `~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3`
+- `~/Library/Audio/Plug-Ins/Components/LocusQ.component`
+- `~/Library/Audio/Plug-Ins/CLAP/LocusQ.clap` (when CLAP is enabled)
 
-Use the smallest meaningful lane first, then broaden:
+### Build Prerequisites
 
-1. Build/install
-   - `./scripts/build-and-install-mac.sh`
-2. UI gate
-   - `./scripts/ui-pr-gate-mac.sh`
-3. Production P0 UI self-test
-   - `./scripts/standalone-ui-selftest-production-p0-mac.sh`
-4. Host smoke (optional, deeper)
-   - `./scripts/reaper-headless-render-smoke-mac.sh`
-5. Docs contract
-   - `./scripts/validate-docs-freshness.sh`
+- CMake `>= 3.22`
+- C++20-capable toolchain
+- JUCE checkout available via:
+  - `JUCE_DIR`, or
+  - sibling path `../audio-plugin-coder/_tools/JUCE`
 
-## Release and Docs Sync Contract
+## Quick Start Workflow
 
-When acceptance or status claims change, update these in the same change set:
+1. Open LocusQ in your DAW (or standalone).
+2. In `CALIBRATE`, set mic/speaker routing and run measurement to establish room context.
+3. Insert LocusQ on source tracks in `EMITTER` mode and shape each source:
+   - position/size/directivity
+   - gain/mute/solo
+   - animation/physics behavior
+4. Insert one `RENDERER` instance on your spatial bus/master and tune:
+   - renderer quality and distance model
+   - room + headphone profile settings
+   - visualization overlays (trails, vectors, physics lens)
+5. Save emitter presets and session state through your DAW project/preset flow.
 
-- `status.json`
-- `README.md`
-- `CHANGELOG.md`
-- `TestEvidence/build-summary.md`
-- `TestEvidence/validation-trend.md`
-- `Documentation/backlog-post-v1-agentic-sprints.md` (if backlog state/priority changed)
+## Architecture
 
-## Canonical References
+### System Topology
 
-- Backlog and execution spec:
-  - `Documentation/backlog-post-v1-agentic-sprints.md`
-- CLAP closeout contract (BL-011):
-  - `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
-  - `Documentation/plans/LocusQClapContract.h`
-- Architecture and planning intent:
-  - `.ideas/plan.md`
-  - `.ideas/architecture.md`
-  - `.ideas/parameter-spec.md`
-- Invariants, ADRs, and scene contracts:
-  - `Documentation/invariants.md`
-  - `Documentation/adr/`
-  - `Documentation/scene-state-contract.md`
-- Implementation traceability:
-  - `Documentation/implementation-traceability.md`
-- Validation evidence surfaces:
-  - `TestEvidence/build-summary.md`
-  - `TestEvidence/validation-trend.md`
+```mermaid
+flowchart LR
+    subgraph DAW["DAW Process"]
+        E1["Emitter Instance A"]
+        E2["Emitter Instance B..N"]
+        C["Calibrate Instance"]
+        SG["Shared SceneGraph (singleton)"]
+        R["Renderer Instance"]
+    end
 
-## Root Docs Scope
+    E1 --> SG
+    E2 --> SG
+    C --> SG
+    SG --> R
+    R --> OUT["Host Output (Mono/Stereo/Quad)"]
+```
 
-- `README.md`: operator quickstart, current posture, and canonical entrypoints.
-- `CHANGELOG.md`: release/history deltas (no live backlog source-of-truth).
-- `AGENTS.md`: routing and execution contract.
-- `CODEX.md` / `CLAUDE.md`: model-specific behavior deltas from `AGENTS.md`.
-- `SKILLS.md`: skill index, triggers, and load order.
-- `AGENT_RULE.md`: canonical parity source for `.codex/` and `.claude/` rule copies.
+### Runtime Data Flow
 
-## UI State Screenshots (Build Local)
+```mermaid
+sequenceDiagram
+    participant UI as WebView UI
+    participant P as PluginProcessor
+    participant SG as SceneGraph
+    participant SR as SpatialRenderer
+    participant H as Host/Audio Output
+
+    UI->>P: parameter edits / mode actions
+    P->>SG: publish emitter + calibration state
+    SG-->>SR: lock-free scene snapshot read
+    SR->>H: rendered spatial audio block
+    P-->>UI: status + scene JSON for visualization
+```
+
+## Modes at a Glance
+
+| Mode | Primary Goal | Typical Controls |
+|---|---|---|
+| `CALIBRATE` | Speaker/mic routing and room profiling | `cal_mic_channel`, `cal_spk*_out`, `cal_test_level`, `cal_test_type` |
+| `EMITTER` | Per-source spatial authoring | position, size, gain, directivity, animation, physics |
+| `RENDERER` | Final scene rendering and monitoring | quality, distance, room, headphone, visualization |
+
+## UI Screenshots
 
 ### CALIBRATE
 
@@ -101,12 +132,22 @@ When acceptance or status claims change, update these in the same change set:
 
 ![LocusQ RENDERER state](Documentation/images/readme/locusq-state-renderer.png)
 
-## Historical and Deep-Dive Records
+## Validation Commands
 
-Use these for detailed phase history and long-form evidence:
+- Primary UI gate: `./scripts/ui-pr-gate-mac.sh`
+- Production self-test lane: `./scripts/standalone-ui-selftest-production-p0-mac.sh`
+- Host smoke lane: `./scripts/reaper-headless-render-smoke-mac.sh`
+- Docs freshness gate: `./scripts/validate-docs-freshness.sh`
 
-- `status.json`
-- `TestEvidence/build-summary.md`
-- `TestEvidence/validation-trend.md`
-- `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md`
-- `Documentation/archive/2026-02-23-historical-review-bundles/stage14-comprehensive-review-2026-02-20.md`
+## Deep-Dive References
+
+- Architecture and parameters:
+  - `.ideas/architecture.md`
+  - `.ideas/parameter-spec.md`
+- Contracts and invariants:
+  - `Documentation/invariants.md`
+  - `Documentation/scene-state-contract.md`
+  - `Documentation/adr/`
+- Current state and release history:
+  - `status.json`
+  - `CHANGELOG.md`
