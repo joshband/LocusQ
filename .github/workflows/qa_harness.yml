@@ -73,6 +73,7 @@ jobs:
         run: |
           cmake -S . -B build-qa \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_LOCUSQ_QA=ON \
             -DQA_HARNESS_DIR="${GITHUB_WORKSPACE}/audio-dsp-qa-harness" \
             -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE"
@@ -339,6 +340,7 @@ jobs:
         run: |
           cmake -S . -B build-qa \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DBUILD_LOCUSQ_QA=ON \
             -DQA_HARNESS_DIR="${GITHUB_WORKSPACE}/audio-dsp-qa-harness" \
             -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE"
