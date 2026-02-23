@@ -1,5 +1,8 @@
 # Build
 build/
+build_*/
+build_bl*/
+build_no_clap_check/
 cmake-build-*/
 out/
 
@@ -79,3 +82,5 @@ TestEvidence/pluginval_blocked_note.txt
 TestEvidence/thread-contracts.tsv
 TestEvidence/thread-heartbeats.tsv
 TestEvidence/suite_result_*.json
+TestEvidence/**/*.wav
+TestEvidence/**/*.gz

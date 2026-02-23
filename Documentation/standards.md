@@ -76,6 +76,12 @@ Per `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`, any phas
 ## Minimalism Rule
 Prefer updating canonical docs over creating new files. New docs require a clear owner and purpose.
 
+## Artifact Tracking Rule
+Apply artifact tracking and retention policy from `Documentation/adr/ADR-0010-repository-artifact-tracking-and-retention-policy.md`:
+1. classify by artifact class first;
+2. keep generated/heavy artifacts local-only by default;
+3. track only canonical decision-grade evidence.
+
 ## Archival Rule
 When documentation bloat or ambiguity appears:
 1. Classify docs into Tier 0-3 (per `Documentation/README.md`).
