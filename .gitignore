@@ -62,6 +62,7 @@ qa_output/focused_matrix_runs.tsv
 qa_output/locusq_emitter/
 qa_output/locusq_spatial/
 qa_output/locusq_spatial_contract_pack/
+qa_output/
 
 TestEvidence/appium_source.xml
 TestEvidence/appium_accessibility_probe/
@@ -73,6 +74,7 @@ TestEvidence/ui_debug_*/
 TestEvidence/ui_pr_gate_*/
 TestEvidence/stage13_acceptance_sweep_*/
 TestEvidence/stage16a_scenario_validation_*/
+TestEvidence/*_20??????T??????Z/
 
 TestEvidence/*_20??????T??????Z.json
 TestEvidence/*_20??????T??????Z.png
