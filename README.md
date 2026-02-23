@@ -77,37 +77,36 @@ Installed plugin locations:
 ### System Topology
 
 ```mermaid
-flowchart LR
-    subgraph DAW["DAW Process"]
-        E1["Emitter Instance A"]
-        E2["Emitter Instance B..N"]
-        C["Calibrate Instance"]
-        SG["Shared SceneGraph (singleton)"]
-        R["Renderer Instance"]
-    end
+flowchart TD
+    E1[Emitter Instance A]
+    E2[Emitter Instance B to N]
+    C[Calibrate Instance]
+    SG[Shared SceneGraph]
+    R[Renderer Instance]
+    OUT[Host Output Mono Stereo Quad]
 
     E1 --> SG
     E2 --> SG
     C --> SG
     SG --> R
-    R --> OUT["Host Output (Mono/Stereo/Quad)"]
+    R --> OUT
 ```
 
 ### Runtime Data Flow
 
 ```mermaid
 sequenceDiagram
-    participant UI as WebView UI
-    participant P as PluginProcessor
-    participant SG as SceneGraph
-    participant SR as SpatialRenderer
-    participant H as Host/Audio Output
+    participant UI
+    participant Processor
+    participant SceneGraph
+    participant Renderer
+    participant Host
 
-    UI->>P: parameter edits / mode actions
-    P->>SG: publish emitter + calibration state
-    SG-->>SR: lock-free scene snapshot read
-    SR->>H: rendered spatial audio block
-    P-->>UI: status + scene JSON for visualization
+    UI->>Processor: Parameter edits and mode actions
+    Processor->>SceneGraph: Publish emitter and calibration state
+    SceneGraph->>Renderer: Read lock free scene snapshot
+    Renderer->>Host: Rendered spatial audio block
+    Processor-->>UI: Scene and status JSON
 ```
 
 ## Modes at a Glance
