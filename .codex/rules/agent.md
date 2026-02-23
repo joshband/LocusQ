@@ -2,7 +2,7 @@ Title: APC Agent Rule Contract
 Document Type: Rule
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
+Last Modified Date: 2026-02-23
 
 # AGENT_RULE.md
 
@@ -13,8 +13,8 @@ This file is the single source for:
 - `.codex/rules/agent.md`
 - `.claude/rules/agent.md`
 
-Do not edit those copies directly. After editing this file, run:
-`./scripts/sync-agent-contract.sh` (or `pwsh ./scripts/sync-agent-contract.ps1`)
+Do not edit those copies directly. After editing this file, sync both copies with:
+`cp AGENT_RULE.md .codex/rules/agent.md && cp AGENT_RULE.md .claude/rules/agent.md`
 
 ## Priority Order
 1. User request
@@ -37,12 +37,12 @@ For phase execution, always load in this order:
 
 ## State Contract
 Before phase work:
-- Read `plugins/[PluginName]/status.json`.
-- Validate prerequisites with `scripts/state-management.ps1` and `Test-PluginState`.
+- Read `status.json`.
+- Validate prerequisites against the selected workflow and documented phase gates.
 
 During phase work:
 - Keep edits in phase scope.
-- Update state through state-management functions.
+- Update state directly in `status.json` with explicit rationale in notes/evidence surfaces.
 
 After phase work:
 - Validate required artifacts exist.
@@ -59,7 +59,10 @@ After phase work:
 - Generated reports under `qa_output/` are exempt and must not be manually edited for metadata.
 - Keep docs concise: update canonical docs instead of creating parallel duplicates.
 - Follow folder and naming conventions in `Documentation/standards.md`.
+- Follow source-of-truth tiers in `Documentation/README.md` (`Tier 0..3`).
+- Keep `Documentation/reports/` and `Documentation/exports/` empty/absent at closeout; archive outputs under `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
 - Record validation snapshots and trend entries in `TestEvidence/validation-trend.md`.
+- Run `./scripts/validate-docs-freshness.sh`; populated generated doc output dirs must be treated as closeout blockers.
 
 ## Framework Gate
 `ui_framework` in `status.json` is binding:

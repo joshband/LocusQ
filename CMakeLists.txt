@@ -56,6 +56,57 @@ message(STATUS "LocusQ: WebView backend: ${WEBVIEW_BACKEND}")
 # UI DEBUG/POC MODE
 # ============================================
 option(LOCUSQ_UI_POC "Load focused WebView POC UI by default" OFF)
+option(LOCUSQ_ENABLE_STEAM_AUDIO "Enable Steam Audio headphone backend integration hook" OFF)
+option(LOCUSQ_ENABLE_CLAP "Enable CLAP target generation via clap-juce-extensions" OFF)
+option(LOCUSQ_CLAP_FETCH "Fetch clap-juce-extensions from Git if local path is missing" ON)
+set(LOCUSQ_STEAM_AUDIO_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/steam-audio/sdk/steamaudio"
+    CACHE PATH "Path to Steam Audio SDK root (contains include/phonon.h and lib/)")
+set(LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/clap-juce-extensions"
+    CACHE PATH "Path to clap-juce-extensions root")
+set(LOCUSQ_CLAP_JUCE_EXTENSIONS_TAG "02f91b7988298f7f1f05c706da16e1d9da852a87"
+    CACHE STRING "Tag/commit to fetch for clap-juce-extensions")
+set(LOCUSQ_CLAP_ID "com.noizefield.locusq"
+    CACHE STRING "Stable CLAP plugin ID")
+set(LOCUSQ_CLAP_FEATURES "audio-effect;spatial"
+    CACHE STRING "Semicolon-separated CLAP feature list")
+set(LOCUSQ_CLAP_MANUAL_URL "https://github.com/noizefield/audio-plugin-coder/LocusQ"
+    CACHE STRING "CLAP manual URL")
+set(LOCUSQ_CLAP_SUPPORT_URL "https://github.com/noizefield/audio-plugin-coder/LocusQ/issues"
+    CACHE STRING "CLAP support URL")
+
+set(LOCUSQ_STEAM_AUDIO_RUNTIME_LIB "")
+set(LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED "")
+set(LOCUSQ_CLAP_EXTENSIONS_READY FALSE)
+
+if(LOCUSQ_ENABLE_CLAP)
+    set(CLAP_JUCE_EXTENSIONS_BUILD_EXAMPLES OFF CACHE BOOL "Disable clap-juce-extensions example targets" FORCE)
+
+    if(EXISTS "${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR}/CMakeLists.txt")
+        message(STATUS "LocusQ: using local clap-juce-extensions at ${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR}")
+        add_subdirectory("${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR}"
+                         "${CMAKE_CURRENT_BINARY_DIR}/clap-juce-extensions"
+                         EXCLUDE_FROM_ALL)
+        set(LOCUSQ_CLAP_EXTENSIONS_READY TRUE)
+    elseif(LOCUSQ_CLAP_FETCH)
+        include(FetchContent)
+        message(STATUS "LocusQ: fetching clap-juce-extensions (${LOCUSQ_CLAP_JUCE_EXTENSIONS_TAG})")
+        FetchContent_Declare(
+            locusq_clap_juce_extensions
+            GIT_REPOSITORY https://github.com/free-audio/clap-juce-extensions.git
+            GIT_TAG ${LOCUSQ_CLAP_JUCE_EXTENSIONS_TAG}
+            GIT_SHALLOW TRUE
+            GIT_SUBMODULES "clap-libs/clap;clap-libs/clap-helpers"
+            GIT_SUBMODULES_RECURSE TRUE
+        )
+        FetchContent_MakeAvailable(locusq_clap_juce_extensions)
+        set(LOCUSQ_CLAP_EXTENSIONS_READY TRUE)
+    else()
+        message(FATAL_ERROR
+            "LOCUSQ_ENABLE_CLAP=ON but clap-juce-extensions was not found at "
+            "${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR}. Set LOCUSQ_CLAP_FETCH=ON or point "
+            "LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR to a checkout.")
+    endif()
+endif()
 
 # ============================================
 # BINARY DATA (Web UI Resources)
@@ -144,6 +195,49 @@ target_include_directories(LocusQ
         Source
 )
 
+if(LOCUSQ_CLAP_EXTENSIONS_READY)
+    if(NOT COMMAND clap_juce_extensions_plugin)
+        message(FATAL_ERROR "LocusQ: clap-juce-extensions loaded but clap_juce_extensions_plugin() is unavailable")
+    endif()
+
+    set(_locusq_clap_features ${LOCUSQ_CLAP_FEATURES})
+    if("${_locusq_clap_features}" STREQUAL "")
+        set(_locusq_clap_features audio-effect spatial)
+    endif()
+
+    clap_juce_extensions_plugin(
+        TARGET LocusQ
+        CLAP_ID "${LOCUSQ_CLAP_ID}"
+        CLAP_FEATURES ${_locusq_clap_features}
+        CLAP_MANUAL_URL "${LOCUSQ_CLAP_MANUAL_URL}"
+        CLAP_SUPPORT_URL "${LOCUSQ_CLAP_SUPPORT_URL}"
+    )
+    message(STATUS "LocusQ: CLAP target enabled (LocusQ_CLAP)")
+endif()
+
+if(LOCUSQ_ENABLE_STEAM_AUDIO)
+    if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+        target_include_directories(LocusQ PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+    else()
+        message(FATAL_ERROR "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at ${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+    endif()
+
+    if(APPLE)
+        set(LOCUSQ_STEAM_AUDIO_RUNTIME_LIB "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/lib/osx/libphonon.dylib")
+    elseif(WIN32)
+        set(LOCUSQ_STEAM_AUDIO_RUNTIME_LIB "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/lib/windows-x64/phonon.dll")
+    elseif(UNIX)
+        set(LOCUSQ_STEAM_AUDIO_RUNTIME_LIB "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/lib/linux-x64/libphonon.so")
+    endif()
+
+    if(LOCUSQ_STEAM_AUDIO_RUNTIME_LIB)
+        file(TO_CMAKE_PATH "${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB}" LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        if(NOT EXISTS "${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB}")
+            message(WARNING "Steam Audio runtime library path configured but file is missing: ${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB}")
+        endif()
+    endif()
+endif()
+
 # ============================================
 # LINK LIBRARIES
 # ============================================
@@ -178,7 +272,16 @@ target_compile_definitions(LocusQ
         JUCE_VST3_CAN_REPLACE_VST2=0
         _USE_MATH_DEFINES=1
         LOCUSQ_UI_POC_DEFAULT=$<IF:$<BOOL:${LOCUSQ_UI_POC}>,1,0>
+        LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+        LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
 )
+
+if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+    target_compile_definitions(LocusQ
+        PUBLIC
+            LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+    )
+endif()
 
 if(WIN32)
     target_compile_definitions(LocusQ
@@ -278,9 +381,21 @@ if(BUILD_LOCUSQ_QA)
             "${QA_HARNESS_DIR}"                   # for core/, runners/, scenario_engine/
     )
 
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_qa PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_qa")
+        endif()
+    endif()
+
     target_compile_definitions(locusq_qa
         PRIVATE
             LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
             JUCE_WEB_BROWSER=0
             JUCE_USE_CURL=0
             JUCE_VST3_CAN_REPLACE_VST2=0
@@ -311,6 +426,13 @@ if(BUILD_LOCUSQ_QA)
             JucePlugin_MaxNumOutputChannels=4
             JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
     )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_qa
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
 
     target_link_libraries(locusq_qa
         PRIVATE

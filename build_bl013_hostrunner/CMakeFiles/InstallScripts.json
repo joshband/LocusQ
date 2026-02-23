@@ -1,0 +1,36 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/JUCE/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/JUCE/modules/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/JUCE/extras/Build/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/JUCE/extras/Build/juceaide/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/qa_harness/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/qa_harness/qa_state/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/yaml-cpp-build/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/qa_harness/external/saf/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/qa_harness/external/saf/framework/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/qa_harness/external/saf/framework/modules/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/qa_harness/external/saf/framework/resources/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/clap-build/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/VSTGUI.build/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/VSTGUI.build/vstgui/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/VSTGUI.build/vstgui/lib/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/VSTGUI.build/vstgui/uidescription/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/VSTGUI.build/vstgui/standalone/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/pluginterfaces/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/base/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/source/vst/interappaudio/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-hosting/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-hosting/audiohost/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-hosting/editorhost/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-hosting/inspectorapp/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-hosting/validator/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-utilities/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/_deps/vst3sdk-build/public.sdk/samples/vst-utilities/moduleinfotool/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

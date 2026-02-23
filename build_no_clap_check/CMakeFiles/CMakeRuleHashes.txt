@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+c2a6c46541aed2b1ab5448056d9ee01b LocusQ_artefacts/JuceLibraryCode/LocusQ_AU/PkgInfo
+d82223159d0f290862e6df778a0ff4db LocusQ_artefacts/JuceLibraryCode/LocusQ_Standalone/PkgInfo
+9f94f3881079060dab6b16081439ac11 LocusQ_artefacts/JuceLibraryCode/LocusQ_VST3/PkgInfo
+c9868d7afd5805905b58968e61193f60 juce_binarydata_LocusQ_WebUI/JuceLibraryCode/BinaryData1.cpp

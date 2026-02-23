@@ -1,0 +1,7 @@
+step	status	detail
+tool_jq	pass	/usr/bin/jq
+manifest_json	pass	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_hx04_required_scenarios.json
+suite_json	pass	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_hx04_component_parity_suite.json
+manifest_id	pass	locusq_hx04_required_scenarios
+suite_id	pass	locusq_hx04_component_parity_suite
+minimum_suite_membership	pass	1

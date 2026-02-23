@@ -1,0 +1,144 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_210c_fdn_modulated_deterministic",
+  "name": "LocusQ 2.10c Modulated FDN Deterministic RT Guard",
+  "category": "performance",
+  "description": "Phase 2.10c BL-010 validation: high-quality modulated FDN tail remains finite, decaying, deadline-safe, and allocation-free under deterministic runtime conditions.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.30,
+      "duration_seconds": 3.0
+    }
+  },
+
+  "parameter_variations": {
+    "qa_emitter_instances": 1.0,
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.10,
+    "emit_gain": 0.55,
+    "emit_spread": 0.20,
+    "emit_directivity": 0.30,
+    "rend_master_gain": 0.50,
+    "rend_quality": 1.0,
+    "rend_room_enable": 1.0,
+    "rend_room_mix": 0.55,
+    "rend_room_size": 0.70,
+    "rend_room_damping": 0.30,
+    "rend_room_er_only": 0.0,
+    "rend_doppler": 0.0,
+    "rend_doppler_scale": 0.0,
+    "rend_air_absorb": 0.0,
+    "phys_enable": 0.0,
+    "anim_enable": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.10,
+      "end_seconds": 3.0,
+      "description": "High-quality modulated FDN verification window"
+    }
+  },
+
+  "expected_invariants": {
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "max": -0.1
+      },
+      "severity": "hard_fail"
+    },
+    "room_decay_present": {
+      "metric": "rt60",
+      "window": "full",
+      "threshold": {
+        "min": 0.05,
+        "max": 8.0
+      },
+      "severity": "hard_fail"
+    },
+    "rms_variance_bounded": {
+      "metric": "rms_variance",
+      "window": "full",
+      "threshold": {
+        "max": 0.20
+      },
+      "severity": "soft_warn"
+    },
+    "discontinuity_guard": {
+      "metric": "discontinuity_count",
+      "window": "full",
+      "threshold": {
+        "max_count": 50,
+        "detection_threshold_db": 12.0
+      },
+      "severity": "soft_warn"
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Modulated FDN path must remain real-time safe."
+    },
+    "avg_block_time": {
+      "metric": "perf_avg_block_time_ms",
+      "threshold": {
+        "max": 6.0
+      },
+      "severity": "hard_fail"
+    },
+    "p95_block_time": {
+      "metric": "perf_p95_block_time_ms",
+      "threshold": {
+        "max": 7.5
+      },
+      "severity": "soft_warn"
+    },
+    "allocation_free": {
+      "metric": "perf_allocation_free",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "soft_warn"
+    },
+    "allocation_total": {
+      "metric": "perf_total_allocations",
+      "threshold": {
+        "max": 0
+      },
+      "severity": "soft_warn"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}

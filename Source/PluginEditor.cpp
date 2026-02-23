@@ -5,18 +5,6 @@
 
 namespace
 {
-juce::String getInitialUiResourcePath()
-{
-    return "/incremental/index.html";
-}
-
-juce::String getStandaloneWindowTitle()
-{
-    return juce::String (JucePlugin_Name)
-        + " v" + juce::String (JucePlugin_VersionString)
-        + " [incremental-stage12]";
-}
-
 bool isUiSelfTestEnabled()
 {
     if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST"))
@@ -27,6 +15,93 @@ bool isUiSelfTestEnabled()
     }
 
     return false;
+}
+
+bool isUiSelfTestBl009Enabled()
+{
+    if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST_BL009"))
+    {
+        const auto value = juce::String (flag).trim().toLowerCase();
+        if (value.isNotEmpty() && value != "0" && value != "false" && value != "off")
+            return true;
+    }
+
+    return false;
+}
+
+bool isUiSelfTestBl011Enabled()
+{
+    if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST_BL011"))
+    {
+        const auto value = juce::String (flag).trim().toLowerCase();
+        if (value.isNotEmpty() && value != "0" && value != "false" && value != "off")
+            return true;
+    }
+
+    return false;
+}
+
+juce::String getUiSelfTestScope()
+{
+    if (const auto* scope = std::getenv ("LOCUSQ_UI_SELFTEST_SCOPE"))
+    {
+        const auto value = juce::String (scope).trim().toLowerCase();
+        juce::String sanitized;
+        sanitized.preallocateBytes (value.getNumBytesAsUTF8());
+
+        for (const auto ch : value)
+        {
+            if (juce::CharacterFunctions::isLetterOrDigit (ch) || ch == '_' || ch == '-')
+                sanitized << ch;
+        }
+
+        if (sanitized.isNotEmpty())
+            return sanitized;
+    }
+
+    return {};
+}
+
+int getUiSelfTestTimeoutTicks()
+{
+    // BL-009/BL-011 opt-in checks execute additional deterministic lanes and can
+    // exceed the default timeout budget under production self-test load.
+    if (isUiSelfTestBl009Enabled() || isUiSelfTestBl011Enabled())
+        return 900; // ~30 seconds at 30 Hz
+
+    return 300; // ~10 seconds at 30 Hz
+}
+
+bool shouldUseIncrementalUi()
+{
+    if (const auto* variant = std::getenv ("LOCUSQ_UI_VARIANT"))
+    {
+        const auto value = juce::String (variant).trim().toLowerCase();
+        if (value == "incremental" || value == "stage12")
+            return true;
+        if (value == "production" || value == "index")
+            return false;
+    }
+
+    if (isUiSelfTestEnabled())
+        return true;
+
+    return false;
+}
+
+juce::String getInitialUiResourcePath()
+{
+    return shouldUseIncrementalUi() ? "/incremental/index.html"
+                                    : "/index.html";
+}
+
+juce::String getStandaloneWindowTitle()
+{
+    const auto uiLabel = shouldUseIncrementalUi() ? "incremental-stage12"
+                                                  : "production-ui";
+    return juce::String (JucePlugin_Name)
+        + " v" + juce::String (JucePlugin_VersionString)
+        + " [" + uiLabel + "]";
 }
 
 juce::File getUiSelfTestResultFile()
@@ -145,6 +220,20 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
                                  const juce::var options = args.isEmpty() ? juce::var() : args[0];
                                  completion (audioProcessor.loadEmitterPresetFromUI (options));
                              })
+        .withNativeFunction ("locusqRenameEmitterPreset",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                 completion (audioProcessor.renameEmitterPresetFromUI (options));
+                             })
+        .withNativeFunction ("locusqDeleteEmitterPreset",
+                             [this] (const juce::Array<juce::var>& args,
+                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
+                                 completion (audioProcessor.deleteEmitterPresetFromUI (options));
+                             })
         .withNativeFunction ("locusqGetUiState",
                              [this] (const juce::Array<juce::var>&,
                                      juce::WebBrowserComponent::NativeFunctionCompletion completion)
@@ -262,6 +351,7 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         .withOptionsFrom (spk4DelayRelay)
         .withOptionsFrom (qualityRelay)
         .withOptionsFrom (distanceModelRelay)
+        .withOptionsFrom (headphoneModeRelay)
         .withOptionsFrom (distanceRefRelay)
         .withOptionsFrom (distanceMaxRelay)
         .withOptionsFrom (dopplerRelay)
@@ -280,6 +370,8 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         .withOptionsFrom (vizTrailsRelay)
         .withOptionsFrom (vizTrailLenRelay)
         .withOptionsFrom (vizVectorsRelay)
+        .withOptionsFrom (vizPhysicsLensRelay)
+        .withOptionsFrom (vizDiagMixRelay)
         .withOptionsFrom (vizGridRelay)
         .withOptionsFrom (vizLabelsRelay);
 
@@ -403,6 +495,10 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("rend_quality"), qualityRelay);
     distanceModelAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_distance_model"), distanceModelRelay);
+    headphoneModeAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_headphone_mode"), headphoneModeRelay);
+    headphoneProfileAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_headphone_profile"), headphoneProfileRelay);
     distanceRefAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_distance_ref"), distanceRefRelay);
     distanceMaxAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
@@ -439,6 +535,10 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("rend_viz_trail_len"), vizTrailLenRelay);
     vizVectorsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_viz_vectors"), vizVectorsRelay);
+    vizPhysicsLensAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_physics_lens"), vizPhysicsLensRelay);
+    vizDiagMixAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_viz_diag_mix"), vizDiagMixRelay);
     vizGridAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_viz_grid"), vizGridRelay);
     vizLabelsAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
@@ -454,6 +554,16 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     if (isUiSelfTestEnabled())
         initialUrl += "&selftest=1";
+
+    if (isUiSelfTestBl009Enabled())
+        initialUrl += "&selftest_bl009=1";
+
+    if (isUiSelfTestBl011Enabled())
+        initialUrl += "&selftest_bl011=1";
+
+    const auto selfTestScope = getUiSelfTestScope();
+    if (selfTestScope.isNotEmpty())
+        initialUrl += "&selftest_scope=" + selfTestScope;
 
     DBG ("LocusQ: Loading UI path " + initialResourcePath);
     webView->goToURL (initialUrl);
@@ -575,6 +685,7 @@ void LocusQAudioProcessorEditor::timerCallback()
     if (isUiSelfTestEnabled() && ! uiSelfTestResultWritten)
     {
         ++uiSelfTestPollTicks;
+        const auto uiSelfTestTimeoutTicks = getUiSelfTestTimeoutTicks();
 
         if (uiSelfTestPollTicks >= 30 && ! uiSelfTestProbeInFlight && (uiSelfTestPollTicks % 6) == 0)
         {
@@ -585,11 +696,29 @@ void LocusQAudioProcessorEditor::timerCallback()
                 (() => {
                     const value = window.__LQ_SELFTEST_RESULT__;
                     if (!value || typeof value !== 'object')
-                        return { ready: false };
+                        return {
+                            ready: false,
+                            status: 'missing',
+                            search: String(window.location && window.location.search ? window.location.search : ''),
+                            href: String(window.location && window.location.href ? window.location.href : ''),
+                            hasUpdateSceneState: typeof window.updateSceneState === 'function',
+                            hasUpdateCalibrationStatus: typeof window.updateCalibrationStatus === 'function',
+                            scriptSrcs: Array.from(document.scripts || []).map(s => String(s.src || '')),
+                            bootErrors: Array.isArray(window.__LQ_BOOT_ERRORS__) ? window.__LQ_BOOT_ERRORS__ : []
+                        };
 
                     const status = String(value.status || '');
                     if (status !== 'pass' && status !== 'fail')
-                        return { ready: false, status };
+                        return {
+                            ready: false,
+                            status,
+                            search: String(window.location && window.location.search ? window.location.search : ''),
+                            href: String(window.location && window.location.href ? window.location.href : ''),
+                            hasUpdateSceneState: typeof window.updateSceneState === 'function',
+                            hasUpdateCalibrationStatus: typeof window.updateCalibrationStatus === 'function',
+                            scriptSrcs: Array.from(document.scripts || []).map(s => String(s.src || '')),
+                            bootErrors: Array.isArray(window.__LQ_BOOT_ERRORS__) ? window.__LQ_BOOT_ERRORS__ : []
+                        };
 
                     return {
                         ready: true,
@@ -602,7 +731,7 @@ void LocusQAudioProcessorEditor::timerCallback()
 
             juce::Component::SafePointer<LocusQAudioProcessorEditor> safeThis (this);
             webView->evaluateJavascript (selfTestPollScript,
-                [safeThis, resultFile] (juce::WebBrowserComponent::EvaluationResult result)
+                [safeThis, resultFile, uiSelfTestTimeoutTicks] (juce::WebBrowserComponent::EvaluationResult result)
                 {
                     if (safeThis == nullptr)
                         return;
@@ -618,7 +747,40 @@ void LocusQAudioProcessorEditor::timerCallback()
                         return;
 
                     if (! static_cast<bool> (root->getProperty ("ready")))
+                    {
+                        if (safeThis->uiSelfTestPollTicks >= uiSelfTestTimeoutTicks)
+                        {
+                            juce::var payloadVar (new juce::DynamicObject());
+                            if (auto* payload = payloadVar.getDynamicObject())
+                            {
+                                payload->setProperty ("timestampUtc", juce::Time::getCurrentTime().toISO8601 (true));
+                                payload->setProperty ("selftestEnabled", true);
+                                payload->setProperty ("status", "fail");
+                                payload->setProperty ("ok", false);
+
+                                juce::var resultVar (new juce::DynamicObject());
+                                if (auto* result = resultVar.getDynamicObject())
+                                {
+                                    result->setProperty ("status", root->getProperty ("status"));
+                                    result->setProperty ("error", "ui_selftest_timeout_before_pass_or_fail");
+                                    result->setProperty ("search", root->getProperty ("search"));
+                                    result->setProperty ("href", root->getProperty ("href"));
+                                    result->setProperty ("hasUpdateSceneState", root->getProperty ("hasUpdateSceneState"));
+                                    result->setProperty ("hasUpdateCalibrationStatus", root->getProperty ("hasUpdateCalibrationStatus"));
+                                    result->setProperty ("scriptSrcs", root->getProperty ("scriptSrcs"));
+                                    result->setProperty ("bootErrors", root->getProperty ("bootErrors"));
+                                }
+
+                                payload->setProperty ("result", resultVar);
+                            }
+
+                            resultFile.getParentDirectory().createDirectory();
+                            const auto writeOk = resultFile.replaceWithText (juce::JSON::toString (payloadVar, true));
+                            safeThis->uiSelfTestResultWritten = writeOk;
+                        }
+
                         return;
+                    }
 
                     juce::var payloadVar (new juce::DynamicObject());
                     if (auto* payload = payloadVar.getDynamicObject())

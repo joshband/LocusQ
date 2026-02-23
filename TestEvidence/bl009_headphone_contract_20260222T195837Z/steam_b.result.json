@@ -1,0 +1,60 @@
+{
+  "artifacts": {
+    "dry_wav": "dry.wav",
+    "wet_wav": "wet.wav"
+  },
+  "audio_config": {
+    "block_size": 512,
+    "duration_seconds": 2.0,
+    "num_channels": 2,
+    "sample_rate": 48000
+  },
+  "category": "spatial",
+  "duration_ms": 2000.0,
+  "metrics": {
+    "default_peak_level": {
+      "message": "peak=-48.532242 dBFS (max: -0.300000) (Output should not clip [auto-applied])",
+      "metric": "peak_level",
+      "severity": "soft_warn",
+      "status": "PASS",
+      "threshold": {},
+      "value": -48.53224182128906
+    },
+    "no_clipping": {
+      "message": "peak=-48.532242 dBFS (max: -0.100000) (Steam-request render must stay below clipping.)",
+      "metric": "clipping",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "max": -0.1
+      },
+      "value": -48.53224182128906
+    },
+    "no_nan_inf": {
+      "message": "0 non-finite samples (max: 0) (Render output must remain finite.)",
+      "metric": "non_finite",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "max_count": 0
+      },
+      "value": 0.0
+    },
+    "signal_present": {
+      "message": "rms=-57.798424 dBFS (min: -90.000000) (Steam-request render must produce stable output.)",
+      "metric": "rms_energy",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "min": -90.0
+      },
+      "value": -57.798423767089844
+    }
+  },
+  "report_version": "1.0",
+  "scenario_id": "locusq_bl009_headphone_steam_request",
+  "scenario_name": "LocusQ BL-009 Headphone Steam Request",
+  "status": "PASS",
+  "timestamp": "2026-02-22T19:58:37Z",
+  "warnings": []
+}

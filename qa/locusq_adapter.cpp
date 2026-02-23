@@ -323,6 +323,9 @@ void LocusQSpatialAdapter::applyStoredParametersToRenderer()
     apply(17, "rend_room_size");
     apply(18, "rend_room_damping");
     apply(19, "rend_room_er_only");
+    apply(34, "rend_headphone_mode");
+    apply(35, "rend_headphone_profile");
+    apply(36, "rend_spatial_profile");
 }
 
 void LocusQSpatialAdapter::prepare(double sampleRate, int maxBlockSize, int numChannels)
@@ -467,6 +470,15 @@ void LocusQSpatialAdapter::setParameter(int index, ::qa::NormalizedParam value) 
         case 33:
             snapshotMigrationMode_ = normalized;
             break;
+        case 34:
+            setRendererParam     ("rend_headphone_mode", normalized);
+            break;
+        case 35:
+            setRendererParam     ("rend_headphone_profile", normalized);
+            break;
+        case 36:
+            setRendererParam     ("rend_spatial_profile", normalized);
+            break;
         default:
             break;
     }
@@ -484,7 +496,9 @@ const char* LocusQSpatialAdapter::getParameterName(int index) const
         "rend_room_er_only", "phys_enable", "phys_vel_x", "phys_vel_y", "phys_vel_z",
         "phys_throw", "phys_drag", "phys_gravity",
         "anim_enable", "anim_mode", "anim_loop", "anim_speed", "anim_sync",
-        "qa_emitter_instances", "qa_snapshot_migration_mode"
+        "qa_emitter_instances", "qa_snapshot_migration_mode", "rend_headphone_mode",
+        "rend_headphone_profile",
+        "rend_spatial_profile"
     };
     if (index >= 0 && index < kNumParameters) return names[index];
     return nullptr;

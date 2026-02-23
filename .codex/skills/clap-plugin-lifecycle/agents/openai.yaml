@@ -1,0 +1,4 @@
+interface:
+  display_name: "CLAP Plugin Lifecycle"
+  short_description: "Guide CLAP plugin design, migration, QA, and shipping"
+  default_prompt: "Use this skill to plan and execute BL-011 CLAP support for LocusQ end-to-end."

@@ -116,6 +116,9 @@ private:
  *   33: qa_snapshot_migration_mode
  *       (0=off, 0.25=legacy-strip, 0.5=force-mono-layout-metadata,
  *        0.75=force-stereo-layout-metadata, 1.0=force-quad-layout-metadata)
+ *   34: rend_headphone_mode    (choice: 0=Stereo Downmix, 1=Steam Binaural request)
+ *   35: rend_headphone_profile (choice: Generic/AirPods Pro 2/Sony WH-1000XM5/Custom SOFA)
+ *   36: rend_spatial_profile   (choice: Auto/Stereo/Quad/5.2.1/7.2.1/7.4.2/FOA/HOA/Atmos/Virtual3D/IAMF/ADM)
  */
 class LocusQSpatialAdapter : public ::qa::DspUnderTest
 {
@@ -139,7 +142,7 @@ public:
     bool loadState(const std::vector<std::uint8_t>& state);
 
 private:
-    static constexpr int kNumParameters = 34;
+    static constexpr int kNumParameters = 37;
     static constexpr int kMaxQaEmitters = 16;
 
     // Emitters + renderer sharing the same process-wide SceneGraph singleton

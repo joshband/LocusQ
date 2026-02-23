@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/artbox/Documents/Repos/LocusQ/build_no_clap_check/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_no_clap_check/JUCE/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_no_clap_check/JUCE/modules/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_no_clap_check/JUCE/extras/Build/cmake_install.cmake",
+		"/Users/artbox/Documents/Repos/LocusQ/build_no_clap_check/JUCE/extras/Build/juceaide/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

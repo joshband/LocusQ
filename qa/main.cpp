@@ -11,6 +11,8 @@
 
 #include "locusq_adapter.h"
 #include "core/qa_runner.h"
+#include "core/texture_qa/SweepTypes.h"
+#include "core/texture_qa/TextureQASpec.h"
 #include "scenario_engine/scenario_executor.h"
 #include "scenario_engine/scenario_loader.h"
 #include "scenario_engine/test_suite_loader.h"
@@ -19,12 +21,23 @@
 #include "runners/in_process_runner.h"
 #include "runners/performance_profiler.h"
 
+#if defined(QA_HOST_RUNNER_AVAILABLE)
+#include "runners/host_runner.h"
+#include "runners/plugin_host_interface.h"
+#include "runners/vst3_plugin_host.h"
+#if defined(__APPLE__)
+#include "runners/au_plugin_host.h"
+#endif
+#endif
+
 #include <juce_events/juce_events.h>
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -69,6 +82,14 @@ struct RunOptions
     int numChannels = 2;
 };
 
+struct HostRunnerOptions
+{
+    bool enabled = false;
+    std::string format;
+    std::string pluginPath;
+    std::string outputDir;
+};
+
 qa::scenario::ExecutionConfig makeConfig(bool useSpatial, const RunOptions& options)
 {
     qa::scenario::ExecutionConfig cfg;
@@ -78,6 +99,154 @@ qa::scenario::ExecutionConfig makeConfig(bool useSpatial, const RunOptions& opti
     cfg.outputDir    = "qa_output/locusq" + std::string(useSpatial ? "_spatial" : "_emitter");
     return cfg;
 }
+
+#if defined(QA_HOST_RUNNER_AVAILABLE)
+std::string normalizedHostFormat(std::string format)
+{
+    std::transform(format.begin(), format.end(), format.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return format;
+}
+
+std::optional<qa::PluginFormat> parseHostFormat(const std::string& format)
+{
+    const std::string normalized = normalizedHostFormat(format);
+    if (normalized == "vst3")
+        return qa::PluginFormat::VST3;
+    if (normalized == "au")
+        return qa::PluginFormat::AU;
+    return std::nullopt;
+}
+
+std::unique_ptr<qa::PluginHostInterface> createHostBackend(qa::PluginFormat format)
+{
+    switch (format)
+    {
+        case qa::PluginFormat::VST3:
+            return std::make_unique<qa::VST3PluginHost>();
+        case qa::PluginFormat::CLAP:
+            return nullptr;
+        case qa::PluginFormat::AU:
+#if defined(__APPLE__)
+            return std::make_unique<qa::AUPluginHost>();
+#else
+            return nullptr;
+#endif
+    }
+
+    return nullptr;
+}
+
+qa::TestSpec createHostRunnerSmokeSpec(const std::filesystem::path& outputDir,
+                                       const RunOptions& options)
+{
+    static qa::texture::PresetSpec preset;
+    static qa::texture::StimulusSpec stimulus;
+    static qa::texture::KeyScaleSpec key;
+    static qa::texture::GlobalConfig globalConfig;
+
+    globalConfig.sampleRateHz = options.sampleRate;
+    globalConfig.blockSizeSamples = options.blockSize;
+    globalConfig.renderChannels = options.numChannels;
+    globalConfig.barsTotal = 1;
+    globalConfig.bpm = 120;
+    globalConfig.seed = 1337;
+
+    stimulus.type = "Impulse";
+    key.midiRoot = 60;
+    key.scale = "major";
+
+    qa::TestSpec spec;
+    spec.preset = &preset;
+    spec.stimulus = &stimulus;
+    spec.key = &key;
+    spec.globalConfig = &globalConfig;
+    spec.outputDir = outputDir;
+    return spec;
+}
+
+int runHostRunnerSmoke(const HostRunnerOptions& hostOptions, const RunOptions& runOptions)
+{
+    const auto parsedFormat = parseHostFormat(hostOptions.format);
+    if (!parsedFormat.has_value())
+    {
+        std::cerr << "ERROR: --host-format must be one of: vst3, au\n";
+        return 1;
+    }
+
+    const qa::PluginFormat format = *parsedFormat;
+    if (format == qa::PluginFormat::AU)
+    {
+#if !defined(__APPLE__)
+        std::cerr << "ERROR: AU HostRunner probe is only supported on macOS\n";
+        return 1;
+#endif
+    }
+
+    const auto pluginPath = std::filesystem::path(hostOptions.pluginPath);
+    if (!std::filesystem::exists(pluginPath))
+    {
+        std::cerr << "ERROR: --host-plugin path does not exist: " << pluginPath << "\n";
+        return 1;
+    }
+
+    const std::filesystem::path outputDir = hostOptions.outputDir.empty()
+        ? std::filesystem::path("qa_output/locusq_hostrunner_smoke")
+        : std::filesystem::path(hostOptions.outputDir);
+
+    std::filesystem::create_directories(outputDir);
+
+    qa::HostConfig hostConfig;
+    hostConfig.pluginPath = pluginPath;
+    hostConfig.format = format;
+    hostConfig.sampleRate = runOptions.sampleRate;
+    hostConfig.blockSize = runOptions.blockSize;
+    hostConfig.numChannels = runOptions.numChannels;
+
+    qa::PluginHostFactory hostFactory = [format]() {
+        return createHostBackend(format);
+    };
+
+    qa::HostRunner runner(hostConfig, hostFactory);
+
+    qa::AudioConfig audioConfig;
+    audioConfig.sampleRate = runOptions.sampleRate;
+    audioConfig.blockSize = runOptions.blockSize;
+    audioConfig.numChannels = runOptions.numChannels;
+    audioConfig.totalSamples = runOptions.sampleRate; // 1 second probe buffer
+
+    if (!runner.prepare(audioConfig))
+    {
+        std::cerr << "ERROR: HostRunner prepare failed for " << pluginPath << "\n";
+        return 1;
+    }
+
+    const auto spec = createHostRunnerSmokeSpec(outputDir, runOptions);
+    const auto result = runner.renderTest(spec);
+    runner.release();
+
+    if (result.status != qa::RenderResult::Status::SUCCESS)
+    {
+        std::cerr << "ERROR: HostRunner render failed (status="
+                  << static_cast<int>(result.status)
+                  << ", error=" << result.errorMessage << ")\n";
+        return 1;
+    }
+
+    if (!std::filesystem::exists(result.dryPath) || !std::filesystem::exists(result.wetPath))
+    {
+        std::cerr << "ERROR: HostRunner did not emit dry/wet output files\n";
+        return 1;
+    }
+
+    std::cout << "HOSTRUNNER_SMOKE_PASS format=" << qa::pluginFormatToString(format)
+              << " plugin=" << pluginPath
+              << " dry=" << result.dryPath
+              << " wet=" << result.wetPath << "\n";
+    return 0;
+}
+#endif
 
 bool scenarioRequestsPerfMetrics(const qa::scenario::ScenarioSpec& scenario)
 {
@@ -407,6 +576,10 @@ void printUsage(const char* prog)
               << "  " << prog << " --sample-rate N          Override runtime sample rate (default 48000)\n"
               << "  " << prog << " --block-size N           Override runtime block size (default 512)\n"
               << "  " << prog << " --channels N             Override runtime channel count (default 2)\n"
+              << "  " << prog << " --host-runner-smoke      Run HostRunner smoke probe (requires BUILD_HOST_RUNNER=ON)\n"
+              << "  " << prog << " --host-format FMT        HostRunner format: vst3|au\n"
+              << "  " << prog << " --host-plugin PATH       Plugin path for HostRunner smoke probe\n"
+              << "  " << prog << " --host-output DIR        Output directory for HostRunner smoke probe\n"
               << "  " << prog << " --help                   Show this help\n";
 }
 
@@ -424,6 +597,7 @@ int main(int argc, char** argv)
         bool discoverMode = false;
         std::string discoverDir;
         RunOptions runOptions;
+        HostRunnerOptions hostRunnerOptions;
 
         for (int i = 1; i < argc; )
         {
@@ -505,6 +679,41 @@ int main(int argc, char** argv)
                 runOptions.numChannels = std::max(1, std::stoi(argv[i + 1]));
                 i += 2;
             }
+            else if (arg == "--host-runner-smoke")
+            {
+                hostRunnerOptions.enabled = true;
+                ++i;
+            }
+            else if (arg == "--host-format")
+            {
+                if (i + 1 >= argc)
+                {
+                    std::cerr << "ERROR: --host-format requires a format\n";
+                    return 1;
+                }
+                hostRunnerOptions.format = argv[i + 1];
+                i += 2;
+            }
+            else if (arg == "--host-plugin")
+            {
+                if (i + 1 >= argc)
+                {
+                    std::cerr << "ERROR: --host-plugin requires a path\n";
+                    return 1;
+                }
+                hostRunnerOptions.pluginPath = argv[i + 1];
+                i += 2;
+            }
+            else if (arg == "--host-output")
+            {
+                if (i + 1 >= argc)
+                {
+                    std::cerr << "ERROR: --host-output requires a directory\n";
+                    return 1;
+                }
+                hostRunnerOptions.outputDir = argv[i + 1];
+                i += 2;
+            }
             else if (arg[0] == '-')
             {
                 std::cerr << "ERROR: Unknown option: " << arg << "\n";
@@ -515,6 +724,23 @@ int main(int argc, char** argv)
                 inputPath = arg;
                 ++i;
             }
+        }
+
+        if (hostRunnerOptions.enabled)
+        {
+            if (hostRunnerOptions.format.empty() || hostRunnerOptions.pluginPath.empty())
+            {
+                std::cerr << "ERROR: --host-runner-smoke requires --host-format and --host-plugin\n";
+                return 1;
+            }
+
+#if defined(QA_HOST_RUNNER_AVAILABLE)
+            return runHostRunnerSmoke(hostRunnerOptions, runOptions);
+#else
+            std::cerr << "ERROR: HostRunner support not available in this build. "
+                      << "Reconfigure with -DBUILD_HOST_RUNNER=ON.\n";
+            return 1;
+#endif
         }
 
         if (discoverMode)

@@ -72,6 +72,6 @@ Feature classification:
 - `.ideas/architecture.md`
 - `Source/ui/public/index.html`
 - `Source/ui/public/js/index.js`
-- `Documentation/full-project-review-2026-02-20.md`
+- `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md`
 - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
 - `Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md`
