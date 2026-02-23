@@ -1,0 +1,5 @@
+component	scenario_id	scenario_file	suite_count	suite_ids
+AirAbsorption	locusq_air_absorption_distance	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_air_absorption_distance.json	1	locusq_hx04_component_parity_suite
+CalibrationEngine	locusq_calibration_sweep_capture	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_calibration_sweep_capture.json	1	locusq_hx04_component_parity_suite
+DirectivityFilter	locusq_emit_dir_spatial_effect	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_emit_dir_spatial_effect.json	1	locusq_hx04_component_parity_suite
+DirectivityFilter	locusq_directivity_aim	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_directivity_aim.json	1	locusq_hx04_component_parity_suite

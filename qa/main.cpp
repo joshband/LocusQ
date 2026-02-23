@@ -85,6 +85,7 @@ struct RunOptions
 struct HostRunnerOptions
 {
     bool enabled = false;
+    bool skeletonMode = false;
     std::string format;
     std::string pluginPath;
     std::string outputDir;
@@ -204,47 +205,92 @@ int runHostRunnerSmoke(const HostRunnerOptions& hostOptions, const RunOptions& r
     hostConfig.blockSize = runOptions.blockSize;
     hostConfig.numChannels = runOptions.numChannels;
 
-    qa::PluginHostFactory hostFactory = [format]() {
-        return createHostBackend(format);
-    };
-
-    qa::HostRunner runner(hostConfig, hostFactory);
-
     qa::AudioConfig audioConfig;
     audioConfig.sampleRate = runOptions.sampleRate;
     audioConfig.blockSize = runOptions.blockSize;
     audioConfig.numChannels = runOptions.numChannels;
     audioConfig.totalSamples = runOptions.sampleRate; // 1 second probe buffer
 
-    if (!runner.prepare(audioConfig))
+    auto logStage = [&](const std::string& stage, const std::string& detail = std::string()) {
+        std::cerr << "HOSTRUNNER_STAGE " << stage;
+        if (!detail.empty())
+            std::cerr << " detail=\"" << detail << "\"";
+        std::cerr << "\n";
+    };
+
+    std::cerr << std::unitbuf;
+    logStage("init",
+             std::string("format=") + qa::pluginFormatToString(format)
+                 + " plugin=" + pluginPath.string());
+
+    auto runProbe = [&](qa::HostRunner& runner) -> int
     {
-        std::cerr << "ERROR: HostRunner prepare failed for " << pluginPath << "\n";
-        return 1;
+        logStage("prepare_begin");
+        if (!runner.prepare(audioConfig))
+        {
+            logStage("prepare_failed");
+            std::cerr << "ERROR: HostRunner prepare failed for " << pluginPath << "\n";
+            return 1;
+        }
+        logStage("prepare_ok");
+
+        const auto spec = createHostRunnerSmokeSpec(outputDir, runOptions);
+        logStage("render_begin");
+        const auto result = runner.renderTest(spec);
+        logStage("render_done",
+                 std::string("status=") + std::to_string(static_cast<int>(result.status))
+                     + " error=" + result.errorMessage);
+        logStage("release_begin");
+        runner.release();
+        logStage("release_done");
+
+        if (hostOptions.skeletonMode)
+        {
+            if (result.status != qa::RenderResult::Status::SKIPPED)
+            {
+                std::cerr << "ERROR: HostRunner skeleton mode expected SKIPPED status, got "
+                          << static_cast<int>(result.status) << "\n";
+                return 1;
+            }
+
+            std::cout << "HOSTRUNNER_SKELETON_PASS format=" << qa::pluginFormatToString(format)
+                      << " plugin=" << pluginPath
+                      << " reason=" << result.errorMessage << "\n";
+            return 0;
+        }
+
+        if (result.status != qa::RenderResult::Status::SUCCESS)
+        {
+            std::cerr << "ERROR: HostRunner render failed (status="
+                      << static_cast<int>(result.status)
+                      << ", error=" << result.errorMessage << ")\n";
+            return 1;
+        }
+
+        if (!std::filesystem::exists(result.dryPath) || !std::filesystem::exists(result.wetPath))
+        {
+            std::cerr << "ERROR: HostRunner did not emit dry/wet output files\n";
+            return 1;
+        }
+
+        std::cout << "HOSTRUNNER_SMOKE_PASS format=" << qa::pluginFormatToString(format)
+                  << " plugin=" << pluginPath
+                  << " dry=" << result.dryPath
+                  << " wet=" << result.wetPath << "\n";
+        return 0;
+    };
+
+    if (hostOptions.skeletonMode)
+    {
+        qa::HostRunner runner(hostConfig);
+        return runProbe(runner);
     }
 
-    const auto spec = createHostRunnerSmokeSpec(outputDir, runOptions);
-    const auto result = runner.renderTest(spec);
-    runner.release();
-
-    if (result.status != qa::RenderResult::Status::SUCCESS)
-    {
-        std::cerr << "ERROR: HostRunner render failed (status="
-                  << static_cast<int>(result.status)
-                  << ", error=" << result.errorMessage << ")\n";
-        return 1;
-    }
-
-    if (!std::filesystem::exists(result.dryPath) || !std::filesystem::exists(result.wetPath))
-    {
-        std::cerr << "ERROR: HostRunner did not emit dry/wet output files\n";
-        return 1;
-    }
-
-    std::cout << "HOSTRUNNER_SMOKE_PASS format=" << qa::pluginFormatToString(format)
-              << " plugin=" << pluginPath
-              << " dry=" << result.dryPath
-              << " wet=" << result.wetPath << "\n";
-    return 0;
+    qa::PluginHostFactory hostFactory = [format]() {
+        return createHostBackend(format);
+    };
+    qa::HostRunner runner(hostConfig, hostFactory);
+    return runProbe(runner);
 }
 #endif
 
@@ -580,6 +626,7 @@ void printUsage(const char* prog)
               << "  " << prog << " --host-format FMT        HostRunner format: vst3|au\n"
               << "  " << prog << " --host-plugin PATH       Plugin path for HostRunner smoke probe\n"
               << "  " << prog << " --host-output DIR        Output directory for HostRunner smoke probe\n"
+              << "  " << prog << " --host-skeleton          Run HostRunner without backend (expects SKIPPED)\n"
               << "  " << prog << " --help                   Show this help\n";
 }
 
@@ -713,6 +760,11 @@ int main(int argc, char** argv)
                 }
                 hostRunnerOptions.outputDir = argv[i + 1];
                 i += 2;
+            }
+            else if (arg == "--host-skeleton")
+            {
+                hostRunnerOptions.skeletonMode = true;
+                ++i;
             }
             else if (arg[0] == '-')
             {

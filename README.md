@@ -15,8 +15,8 @@ LocusQ is a JUCE 8 spatial-audio plugin with a WebView UI, focused on determinis
 - UI framework gate: `webview`
 - Canonical backlog/spec: `Documentation/backlog-post-v1-agentic-sprints.md`
 - Canonical state surface: `status.json`
-- Recent closeout: `BL-015` is `Done` (2026-02-23) with refreshed all-emitter baseline evidence (`TestEvidence/locusq_production_p0_selftest_20260223T034704Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl015_20260223T034751Z.log`). `BL-011`, `BL-016`, and `BL-010` remain `Done` with their validated evidence bundles.
-- Hardening closeout: `HX-01` is `Done` (2026-02-23) after migrating SceneGraph shared_ptr publication to `Source/SharedPtrAtomicContract.h` with passing build/smoke evidence (`TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`).
+- Recent closeout: `BL-019` is `Done` (2026-02-23) with refreshed physics-lens evidence (`TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`, `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`). `BL-015`, `BL-011`, `BL-016`, and `BL-010` remain `Done` with their validated evidence bundles.
+- Hardening closeout: `HX-01` and `HX-04` are `Done` (2026-02-23); HX-01 migrated SceneGraph shared_ptr publication to `Source/SharedPtrAtomicContract.h` (`TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`) and HX-04 added scenario parity drift guards via manifest/suite/audit lanes (`TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv`, `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`).
 
 ## Quick Start (macOS)
 

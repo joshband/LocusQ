@@ -1,0 +1,24 @@
+step	status	detail
+init	pass	ts=20260223T172301Z
+config	pass	build_dir=build_bl010; build_config=Release; run_harness_sanity=0; run_hx04_audit=1; harness_path=/Users/artbox/Documents/Repos/audio-dsp-qa-harness
+tool_cmake	pass	/opt/homebrew/bin/cmake
+tool_jq	pass	/usr/bin/jq
+harness_path	pass	/Users/artbox/Documents/Repos/audio-dsp-qa-harness
+harness_sanity	warn	skipped_by_env=LQ_BL012_RUN_HARNESS_SANITY
+locusq_qa_build	pass	log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/locusq_qa_build.log
+qa_bin	pass	build_bl010/locusq_qa_artefacts/Release/locusq_qa
+contract_suite	pass	qa/scenarios/locusq_contract_pack_suite.json
+perf_scenario	pass	qa/scenarios/locusq_26_full_system_cpu_draft.json
+suite_runtime_config	pass	output_dir=qa_output/locusq_spatial_contract_pack; sample_rate=48000; block_size=512; channels=2
+contract_pack_baseline_run	pass	log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/contract_pack_baseline.log
+contract_pack_coverage	pass	status=PASS; latency=1; smoothing=1; state=1; total=3
+contract_pack_override_probe_run	pass	log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/contract_pack_override_probe.log
+runtime_config_probe_locusq_latency_processing_contract	pass	sample_rate=48000; block_size=512; channels=2
+runtime_config_probe_locusq_parameter_smoothing_contract	pass	sample_rate=48000; block_size=512; channels=2
+runtime_config_probe_locusq_state_roundtrip_contract	pass	sample_rate=48000; block_size=512; channels=2
+runtime_config_probe_summary	pass	mismatch_count=0; report=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/runtime_config_probe.tsv
+perf_metric_probe_run	pass	log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/perf_metric_auto_profile_probe.log
+perf_metric_probe_assert	pass	perf_metric_count=4
+hx04_audit_script	pass	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-hx04-scenario-audit.sh
+hx04_audit_run	pass	log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/hx04_scenario_audit.log; artifacts=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl012_harness_backport_20260223T172301Z/hx04_scenario_audit
+qa_output_suite_result_sync	pass	qa_output/suite_result.json refreshed from /Users/artbox/Documents/Repos/LocusQ/qa_output/locusq_spatial_contract_pack/suite_result.json

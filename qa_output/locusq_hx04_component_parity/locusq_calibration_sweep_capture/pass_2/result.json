@@ -1,0 +1,76 @@
+{
+  "artifacts": {
+    "wet_wav": "wet.wav"
+  },
+  "audio_config": {
+    "block_size": 512,
+    "duration_seconds": 6.0,
+    "num_channels": 2,
+    "sample_rate": 48000
+  },
+  "category": "stability",
+  "duration_ms": 6000.0,
+  "metrics": {
+    "capture_continuity": {
+      "message": "4949 discontinuities (max: 12000)",
+      "metric": "discontinuity_count",
+      "severity": "soft_warn",
+      "status": "PASS",
+      "threshold": {
+        "detection_threshold_db": -18.0,
+        "max_count": 12000
+      },
+      "value": 4949.0
+    },
+    "default_peak_level": {
+      "message": "peak=-66.063110 dBFS (max: -0.300000) (Output should not clip [auto-applied])",
+      "metric": "peak_level",
+      "severity": "soft_warn",
+      "status": "PASS",
+      "threshold": {},
+      "value": -66.0631103515625
+    },
+    "no_nan_inf": {
+      "message": "0 non-finite samples (max: 0)",
+      "metric": "non_finite",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "max_count": 0
+      },
+      "value": 0.0
+    },
+    "signal_present_late": {
+      "message": "rms=-69.073418 dBFS (min: -95.000000)",
+      "metric": "rms_energy",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "min": -95.0
+      },
+      "value": -69.07341766357422
+    },
+    "state_roundtrip_post_restore_stability": {
+      "message": "0 non-finite samples (max: 0) (Post-restore stability check [auto-applied state_roundtrip helper])",
+      "metric": "non_finite",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {},
+      "value": 0.0
+    },
+    "state_roundtrip_restore_continuity": {
+      "message": "0 discontinuities (max: 6) (Post-restore continuity check [auto-applied state_roundtrip helper])",
+      "metric": "discontinuity_count",
+      "severity": "soft_warn",
+      "status": "PASS",
+      "threshold": {},
+      "value": 0.0
+    }
+  },
+  "report_version": "1.0",
+  "scenario_id": "locusq_calibration_sweep_capture",
+  "scenario_name": "LocusQ Calibration Sweep Capture",
+  "status": "PASS",
+  "timestamp": "2026-02-23T17:23:12Z",
+  "warnings": []
+}
