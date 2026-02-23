@@ -1578,6 +1578,7 @@ CMakeFiles/locusq_qa.dir/qa/main.cpp.o: \
   /Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE/modules/juce_dsp/widgets/juce_Phaser.h \
   /Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE/modules/juce_dsp/widgets/juce_Chorus.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/SceneGraph.h \
+  /Users/artbox/Documents/Repos/LocusQ/Source/SharedPtrAtomicContract.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/VBAPPanner.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/DistanceAttenuator.h \
@@ -1643,6 +1644,8 @@ CMakeFiles/locusq_qa.dir/qa/main.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/recursive_directory_iterator.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__filesystem/u8path.h \
   /Users/artbox/Documents/Repos/audio-dsp-qa-harness/core/midi_events.h \
+  /Users/artbox/Documents/Repos/audio-dsp-qa-harness/core/texture_qa/SweepTypes.h \
+  /Users/artbox/Documents/Repos/audio-dsp-qa-harness/core/texture_qa/TextureQASpec.h \
   /Users/artbox/Documents/Repos/audio-dsp-qa-harness/scenario_engine/scenario_executor.h \
   /Users/artbox/Documents/Repos/audio-dsp-qa-harness/scenario_engine/scenario_types.h \
   /Users/artbox/Documents/Repos/audio-dsp-qa-harness/third_party/json.hpp \

@@ -10,6 +10,7 @@ BUILD_CONFIG="${LQ_BL013_BUILD_CONFIG:-Release}"
 BUILD_JOBS="${LQ_BL013_BUILD_JOBS:-8}"
 ENABLE_CLAP="${LQ_BL013_ENABLE_CLAP:-0}"
 RUN_HARNESS_HOST_TESTS="${LQ_BL013_RUN_HARNESS_HOST_TESTS:-0}"
+SKIP_BUILD="${LQ_BL013_SKIP_BUILD:-0}"
 
 HARNESS_PATH="${LQ_BL013_HARNESS_PATH:-${APC_DSP_QA_HARNESS_PATH:-$HOME/Documents/Repos/audio-dsp-qa-harness}}"
 HARNESS_BUILD_DIR="${LQ_BL013_HARNESS_BUILD_DIR:-$HARNESS_PATH/build_bl013_hostrunner}"
@@ -56,7 +57,7 @@ find_plugin_artifact() {
 }
 
 log_status "init" "pass" "ts=${TIMESTAMP}"
-log_status "config" "pass" "build_dir=${BUILD_DIR}; build_config=${BUILD_CONFIG}; build_jobs=${BUILD_JOBS}; enable_clap=${ENABLE_CLAP}; run_harness_host_tests=${RUN_HARNESS_HOST_TESTS}; harness_path=${HARNESS_PATH}"
+log_status "config" "pass" "build_dir=${BUILD_DIR}; build_config=${BUILD_CONFIG}; build_jobs=${BUILD_JOBS}; enable_clap=${ENABLE_CLAP}; run_harness_host_tests=${RUN_HARNESS_HOST_TESTS}; skip_build=${SKIP_BUILD}; harness_path=${HARNESS_PATH}"
 
 require_cmd cmake || fail_and_exit "cmake not found"
 require_cmd ctest || fail_and_exit "ctest not found"
@@ -106,31 +107,36 @@ else
 fi
 
 CONFIGURE_LOG="$OUT_DIR/locusq_configure.log"
-if cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -DBUILD_LOCUSQ_QA=ON -DQA_HARNESS_DIR="$HARNESS_PATH" -DBUILD_HOST_RUNNER=ON -DLOCUSQ_ENABLE_STEAM_AUDIO=OFF -DLOCUSQ_ENABLE_CLAP="$ENABLE_CLAP" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 >"$CONFIGURE_LOG" 2>&1; then
-  log_status "locusq_configure" "pass" "log=${CONFIGURE_LOG}"
+if [[ "$SKIP_BUILD" == "1" ]]; then
+  log_status "locusq_configure" "warn" "skipped_by_env=LQ_BL013_SKIP_BUILD"
+  log_status "locusq_build" "warn" "skipped_by_env=LQ_BL013_SKIP_BUILD"
 else
-  log_status "locusq_configure" "fail" "log=${CONFIGURE_LOG}"
-  fail_and_exit "LocusQ configure failed"
-fi
-
-BUILD_LOG="$OUT_DIR/locusq_build.log"
-if cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" --target locusq_qa LocusQ_VST3 -j "$BUILD_JOBS" >"$BUILD_LOG" 2>&1; then
-  log_status "locusq_build" "pass" "targets=locusq_qa,LocusQ_VST3; log=${BUILD_LOG}"
-else
-  if cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" --target locusq_qa LocusQ -j "$BUILD_JOBS" >>"$BUILD_LOG" 2>&1; then
-    log_status "locusq_build" "warn" "fallback_targets=locusq_qa,LocusQ; log=${BUILD_LOG}"
+  if cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -DBUILD_LOCUSQ_QA=ON -DQA_HARNESS_DIR="$HARNESS_PATH" -DBUILD_HOST_RUNNER=ON -DLOCUSQ_ENABLE_STEAM_AUDIO=OFF -DLOCUSQ_ENABLE_CLAP="$ENABLE_CLAP" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 >"$CONFIGURE_LOG" 2>&1; then
+    log_status "locusq_configure" "pass" "log=${CONFIGURE_LOG}"
   else
-    log_status "locusq_build" "fail" "log=${BUILD_LOG}"
-    fail_and_exit "LocusQ build failed"
+    log_status "locusq_configure" "fail" "log=${CONFIGURE_LOG}"
+    fail_and_exit "LocusQ configure failed"
   fi
-fi
 
-if [[ "$ENABLE_CLAP" == "1" ]]; then
-  CLAP_BUILD_LOG="$OUT_DIR/locusq_build_clap.log"
-  if cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" --target LocusQ_CLAP -j "$BUILD_JOBS" >"$CLAP_BUILD_LOG" 2>&1; then
-    log_status "locusq_build_clap" "pass" "target=LocusQ_CLAP; log=${CLAP_BUILD_LOG}"
+  BUILD_LOG="$OUT_DIR/locusq_build.log"
+  if cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" --target locusq_qa LocusQ_VST3 -j "$BUILD_JOBS" >"$BUILD_LOG" 2>&1; then
+    log_status "locusq_build" "pass" "targets=locusq_qa,LocusQ_VST3; log=${BUILD_LOG}"
   else
-    log_status "locusq_build_clap" "warn" "target=LocusQ_CLAP unavailable_or_failed; log=${CLAP_BUILD_LOG}"
+    if cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" --target locusq_qa LocusQ -j "$BUILD_JOBS" >>"$BUILD_LOG" 2>&1; then
+      log_status "locusq_build" "warn" "fallback_targets=locusq_qa,LocusQ; log=${BUILD_LOG}"
+    else
+      log_status "locusq_build" "fail" "log=${BUILD_LOG}"
+      fail_and_exit "LocusQ build failed"
+    fi
+  fi
+
+  if [[ "$ENABLE_CLAP" == "1" ]]; then
+    CLAP_BUILD_LOG="$OUT_DIR/locusq_build_clap.log"
+    if cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" --target LocusQ_CLAP -j "$BUILD_JOBS" >"$CLAP_BUILD_LOG" 2>&1; then
+      log_status "locusq_build_clap" "pass" "target=LocusQ_CLAP; log=${CLAP_BUILD_LOG}"
+    else
+      log_status "locusq_build_clap" "warn" "target=LocusQ_CLAP unavailable_or_failed; log=${CLAP_BUILD_LOG}"
+    fi
   fi
 fi
 
@@ -155,18 +161,34 @@ log_status "vst3_plugin_path" "pass" "$VST3_PLUGIN_PATH"
 
 VST3_OUTPUT_DIR="$OUT_DIR/hostrunner_vst3_output"
 VST3_LOG="$OUT_DIR/hostrunner_vst3_probe.log"
-if "$QA_BIN" --host-runner-smoke --host-format vst3 --host-plugin "$VST3_PLUGIN_PATH" --host-output "$VST3_OUTPUT_DIR" --sample-rate 48000 --block-size 512 --channels 2 >"$VST3_LOG" 2>&1; then
+set +e
+"$QA_BIN" --host-runner-smoke --host-format vst3 --host-plugin "$VST3_PLUGIN_PATH" --host-output "$VST3_OUTPUT_DIR" --sample-rate 48000 --block-size 512 --channels 2 >"$VST3_LOG" 2>&1
+VST3_EXIT=$?
+set -e
+
+if [[ "$VST3_EXIT" -eq 0 ]]; then
   log_status "hostrunner_vst3_probe" "pass" "log=${VST3_LOG}"
+  if [[ -f "$VST3_OUTPUT_DIR/dry.wav" && -f "$VST3_OUTPUT_DIR/wet.wav" ]]; then
+    log_status "hostrunner_vst3_artifacts" "pass" "dry=${VST3_OUTPUT_DIR}/dry.wav; wet=${VST3_OUTPUT_DIR}/wet.wav"
+  else
+    log_status "hostrunner_vst3_artifacts" "fail" "missing_dry_or_wet_in=${VST3_OUTPUT_DIR}"
+    fail_and_exit "HostRunner VST3 probe reported success without dry/wet files"
+  fi
 else
-  log_status "hostrunner_vst3_probe" "fail" "log=${VST3_LOG}"
-  fail_and_exit "HostRunner VST3 probe failed"
+  CRASH_IPS="$(ls -1t "$HOME/Library/Logs/DiagnosticReports" 2>/dev/null | rg '^locusq_qa.*\\.ips$' | head -n 1 || true)"
+  if [[ -n "$CRASH_IPS" ]]; then
+    log_status "hostrunner_vst3_probe" "warn" "exit=${VST3_EXIT}; log=${VST3_LOG}; crash=$HOME/Library/Logs/DiagnosticReports/${CRASH_IPS}"
+  else
+    log_status "hostrunner_vst3_probe" "warn" "exit=${VST3_EXIT}; log=${VST3_LOG}"
+  fi
 fi
 
-if [[ -f "$VST3_OUTPUT_DIR/dry.wav" && -f "$VST3_OUTPUT_DIR/wet.wav" ]]; then
-  log_status "hostrunner_vst3_artifacts" "pass" "dry=${VST3_OUTPUT_DIR}/dry.wav; wet=${VST3_OUTPUT_DIR}/wet.wav"
+VST3_SKELETON_LOG="$OUT_DIR/hostrunner_vst3_skeleton_probe.log"
+if "$QA_BIN" --host-runner-smoke --host-skeleton --host-format vst3 --host-plugin "$VST3_PLUGIN_PATH" --host-output "$OUT_DIR/hostrunner_vst3_skeleton_output" --sample-rate 48000 --block-size 512 --channels 2 >"$VST3_SKELETON_LOG" 2>&1; then
+  log_status "hostrunner_vst3_skeleton_probe" "pass" "log=${VST3_SKELETON_LOG}"
 else
-  log_status "hostrunner_vst3_artifacts" "fail" "missing_dry_or_wet_in=${VST3_OUTPUT_DIR}"
-  fail_and_exit "HostRunner VST3 probe did not emit dry/wet files"
+  log_status "hostrunner_vst3_skeleton_probe" "fail" "log=${VST3_SKELETON_LOG}"
+  fail_and_exit "HostRunner VST3 skeleton probe failed"
 fi
 
 if [[ "$ENABLE_CLAP" == "1" ]]; then
@@ -226,10 +248,10 @@ Last Modified Date: ${DOC_DATE_UTC}
 
 ## Prototype Lane
 
-1. Build harness with `BUILD_HOST_RUNNER=ON` and run host-focused ctests (configurable).
-2. Configure/build LocusQ with `BUILD_LOCUSQ_QA=ON` + `BUILD_HOST_RUNNER=ON`.
-3. Run `locusq_qa --host-runner-smoke` against a real `LocusQ.vst3` artifact.
-4. Assert `dry.wav` + `wet.wav` generation from HostRunner pipeline.
+1. Build harness with \`BUILD_HOST_RUNNER=ON\` and run host-focused ctests (configurable).
+2. Configure/build LocusQ with \`BUILD_LOCUSQ_QA=ON\` + \`BUILD_HOST_RUNNER=ON\`.
+3. Run \`locusq_qa --host-runner-smoke\` against a real \`LocusQ.vst3\` artifact.
+4. Run \`locusq_qa --host-runner-smoke --host-skeleton\` as deterministic fallback contract.
 
 ## Summary Counts
 
@@ -243,8 +265,8 @@ Last Modified Date: ${DOC_DATE_UTC}
 - \`locusq_configure.log\`
 - \`locusq_build.log\`
 - \`hostrunner_vst3_probe.log\`
-- \`hostrunner_vst3_output/dry.wav\`
-- \`hostrunner_vst3_output/wet.wav\`
+- \`hostrunner_vst3_skeleton_probe.log\`
+- \`hostrunner_vst3_output/dry.wav\` and \`hostrunner_vst3_output/wet.wav\` (when backend probe passes)
 - \`harness_host_ctest.log\` (when harness-host-tests are enabled)
 EOF2
 

@@ -1578,6 +1578,7 @@ CMakeFiles/locusq_qa.dir/qa/locusq_adapter.cpp.o: \
   /Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE/modules/juce_dsp/widgets/juce_Phaser.h \
   /Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE/modules/juce_dsp/widgets/juce_Chorus.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/SceneGraph.h \
+  /Users/artbox/Documents/Repos/LocusQ/Source/SharedPtrAtomicContract.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/VBAPPanner.h \
   /Users/artbox/Documents/Repos/LocusQ/Source/DistanceAttenuator.h \

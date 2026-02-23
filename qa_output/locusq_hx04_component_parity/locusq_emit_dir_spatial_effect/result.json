@@ -1,0 +1,85 @@
+{
+  "artifacts": {
+    "dry_wav": "dry.wav",
+    "wet_wav": "wet.wav"
+  },
+  "audio_config": {
+    "block_size": 512,
+    "duration_seconds": 6.0,
+    "num_channels": 2,
+    "sample_rate": 48000
+  },
+  "category": "spatial",
+  "duration_ms": 6000.0,
+  "metrics": {
+    "aim_modulates_spatial_output": {
+      "message": "flux_rate=0.002167 (range: 0.000020 to 10.000000) (Aim motion should cause measurable spectral/spatial modulation.)",
+      "metric": "flux_rate",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "max": 10.0,
+        "min": 2e-05
+      },
+      "value": 0.002166544320061803
+    },
+    "aim_sweep_continuity": {
+      "message": "2999 discontinuities (max: 2000)",
+      "metric": "discontinuity_count",
+      "severity": "soft_warn",
+      "status": "FAIL",
+      "threshold": {
+        "detection_threshold_db": -16.0,
+        "max_count": 2000
+      },
+      "value": 2999.0
+    },
+    "default_peak_level": {
+      "message": "peak=-62.062038 dBFS (max: -0.300000) (Output should not clip [auto-applied])",
+      "metric": "peak_level",
+      "severity": "soft_warn",
+      "status": "PASS",
+      "threshold": {},
+      "value": -62.06203842163086
+    },
+    "directional_contrast": {
+      "message": "ILD=0.144015 dB (range: 0.100000 to 60.000000 dB)",
+      "metric": "ild_max_db",
+      "severity": "soft_warn",
+      "status": "PASS",
+      "threshold": {
+        "max": 60.0,
+        "min": 0.1
+      },
+      "value": 0.1440146907535462
+    },
+    "no_nan_inf": {
+      "message": "0 non-finite samples (max: 0)",
+      "metric": "non_finite",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "max_count": 0
+      },
+      "value": 0.0
+    },
+    "signal_present": {
+      "message": "rms=-72.249741 dBFS (min: -85.000000)",
+      "metric": "rms_energy",
+      "severity": "hard_fail",
+      "status": "PASS",
+      "threshold": {
+        "min": -85.0
+      },
+      "value": -72.24974060058594
+    }
+  },
+  "report_version": "1.0",
+  "scenario_id": "locusq_emit_dir_spatial_effect",
+  "scenario_name": "LocusQ Emit Dir Spatial Effect",
+  "status": "WARN",
+  "timestamp": "2026-02-23T17:23:12Z",
+  "warnings": [
+    "[aim_sweep_continuity] 2999 discontinuities (max: 2000)"
+  ]
+}

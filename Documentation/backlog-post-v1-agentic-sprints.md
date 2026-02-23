@@ -95,12 +95,12 @@ Default specialist composition order for mixed tasks:
 12. Supporting execution and closure: `skill_impl`, `skill_test`, `skill_testing`, `skill_troubleshooting`
 
 ## Status Snapshot (2026-02-23)
-- `Done`: BL-001..BL-011, BL-015, BL-016, BL-024
+- `Done`: BL-001..BL-011, BL-015, BL-016, BL-019, BL-024
 - `In Progress`: BL-025
-- `In Validation`: BL-012, BL-014, BL-018, BL-019, BL-022
+- `In Validation`: BL-012, BL-013, BL-014, BL-018, BL-022
 - `In Planning`: BL-017, BL-026, BL-027
-- `Todo`: BL-013, BL-020, BL-021, BL-023
-- `HX`: HX-01 and HX-03 are done; HX-02/HX-04/HX-05 remain open.
+- `Todo`: BL-020, BL-021, BL-023
+- `HX`: HX-01, HX-03, and HX-04 are done; HX-02/HX-05 remain open.
 
 ## UI/UX V2 Status Ledger (2026-02-23)
 | BL | Surface | State | Complete | In Review | Remaining |
@@ -134,12 +134,12 @@ Band mapping:
 | 7 | P1 | BL-018 | In Validation | Strict lane exists; finalize clean pass baseline after BL-014 stabilization. | BL-014 stable | BL-017 integration confidence |
 | 8 | P1 | BL-010 | Done (2026-02-23) | Validation bundle was already green; promotion completed once BL-009 closed. | none | DSP roadmap tranche |
 | 9 | P1 | BL-022 | In Validation | Existing validation green; guard against BL-025 regressions and close cleanly. | BL-003/004 done | BL-025 confidence |
-| 10 | P1 | BL-019 | In Validation | Existing validation green; keep deterministic visual diagnostics stable. | BL-015, BL-016 | BL-020 |
+| 10 | P1 | BL-019 | Done (2026-02-23) | Closeout bundle refreshed with fresh `UI-P1-019` pass plus companion smoke/docs gates (`TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`, `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`). | BL-015, BL-016 | BL-020 |
 | 11 | P1 | BL-024 | Done (2026-02-23) | Strict REAPER automation wrapper passed (`3/3`), manual runbook evidence row is logged, and HX-03 clean/warm multi-instance lane passed (`TestEvidence/hx03_reaper_multi_instance_20260223T031450Z/status.tsv`). | BL-009 Done | QA platform maturity and ongoing host-stability regression |
-| 12 | P1 | BL-012 | In Validation (2026-02-23 tranche-1 lane green) | Tranche-1 backport lane now passes with harness sanity + contract-pack coverage + runtime-config precedence + perf auto-profile checks (`TestEvidence/bl012_harness_backport_20260223T032945Z/status.tsv`). | none | BL-013 |
+| 12 | P1 | BL-012 | In Validation (2026-02-23 tranche-1 lane green + HX-04 guard wired) | Tranche-1 backport lane now passes with contract-pack coverage, runtime-config precedence, perf auto-profile checks, and embedded HX-04 scenario audit enforcement (`TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`). | none | BL-013 |
 | 13 | P1 | BL-026 | In Planning (spec complete) | CALIBRATE surface currently handles baseline 4-speaker flows but needs profile-driven multi-topology workflow. | BL-025 baseline + BL-009/BL-018 diagnostics stability | Multi-configuration calibration reliability (mono/stereo/quad/surround/ambisonic/binaural/downmix) |
 | 14 | P2 | BL-017 | In Planning | Architecture is defined; implementation should start only after core lane stability. | BL-009 and BL-018 stable | Head-tracking roadmap |
-| 15 | P2 | BL-013 | Todo | HostRunner R&D depends on BL-012 baseline contracts. | BL-012 | Future format-validation lane |
+| 15 | P2 | BL-013 | In Validation (2026-02-23 VST3 + skeleton lane green) | Feasibility lane is now fully green with harness host tests, backend VST3 probe pass (`dry.wav`/`wet.wav`), skeleton fallback pass, and stage diagnostics (`HOSTRUNNER_STAGE`) captured (`TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/status.tsv`). | BL-012 | Future format-validation lane |
 | 16 | P2 | BL-020 | Todo | Confidence/masking overlay requires stable listener/physics overlays first. | BL-014, BL-019 | Perception layer |
 | 17 | P2 | BL-021 | Todo | Room story visuals require stable scene and speaker/listener foundations. | BL-014, BL-015 | Advanced visualization |
 | 18 | P2 | BL-023 | Todo | Resize hardening should follow BL-025 finalized responsive architecture. | BL-025 baseline | Windowing/DPI resilience |
@@ -166,7 +166,7 @@ Band mapping:
 | 1 | P1 | HX-01 | Done (2026-02-23): migrated SceneGraph room-profile publication to a C++20-safe contract wrapper (`Source/SharedPtrAtomicContract.h`) and removed direct deprecated call sites from SceneGraph (`TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`, `TestEvidence/hx01_sharedptr_atomic_deprecation_scan_excluding_wrapper_20260223T034931Z.log`). | BL-012 | none | `skill_impl`, `skill_testing`, `skill_docs` |
 | 2 | P1 | HX-02 | Audit/lock contract for renderer registration semantics and memory-order expectations | BL-016 | BL-016 baseline | `skill_plan`, `skill_impl`, `skill_docs` |
 | 3 | P1 | HX-03 | Done (2026-02-23): deterministic clean/warm REAPER multi-instance crash regression lane added (`scripts/qa-hx03-reaper-multi-instance-mac.sh`) with passing evidence (`TestEvidence/hx03_reaper_multi_instance_20260223T031450Z/status.tsv`) | BL-024 | BL-009 Done + BL-024 scaffold | `skill_test`, `skill_testing`, `skill_troubleshooting` |
-| 4 | P1 | HX-04 | Audit and enforce scenario coverage for AirAbsorption/Calibration/directivity parity | BL-012 | none | `skill_testing`, `skill_docs`, `skill_plan` |
+| 4 | P1 | HX-04 | Done (2026-02-23): scenario parity guard shipped with manifest (`qa/scenarios/locusq_hx04_required_scenarios.json`), parity suite (`qa/scenarios/locusq_hx04_component_parity_suite.json`), and audit lane (`scripts/qa-hx04-scenario-audit.sh`), validated via `TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv` and BL-012 embedded rerun (`TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`) | BL-012 | none | `skill_testing`, `skill_docs`, `skill_plan` |
 | 5 | P2 | HX-05 | Add scene-state payload budget and throttle contract for UI responsiveness | BL-025 and BL-016 | BL-016 stable | `juce-webview-runtime`, `reactive-av`, `skill_impl` |
 
 ## Dependency and Ordering
@@ -178,7 +178,7 @@ Band mapping:
 4. Start BL-018 strict closeout only after BL-014 behavior is stable.
 5. Keep BL-017 implementation behind stable BL-009 and BL-018 lanes.
 6. Start BL-023 only after BL-025 final responsive and authority contracts are fixed.
-7. Close HX-04 before BL-013 feasibility decisions are finalized (HX-01 closed on 2026-02-23).
+7. HX-04 closure gate for BL-013 is complete (2026-02-23); preserve the embedded drift guard in BL-012 reruns.
 8. BL-024 closure gate on HX-03 is complete (`2026-02-23`); keep HX-03 in recurring host-stability regression cadence.
 9. Keep HX-05 tied to BL-016 and BL-025 closeout so scene payload growth stays bounded.
 10. Start BL-026 implementation after BL-025 baseline is stable and BL-009/BL-018 diagnostics are deterministic.
@@ -605,6 +605,7 @@ DELIVER: closure recommendation and any required follow-on notes for BL-025.
 ```
 
 ### BL-019 - Physics Interaction Lens Closure (P1-04)
+- Status: `Done (2026-02-23)` with fresh deterministic closeout evidence (`UI-P1-019` pass in `TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`), companion smoke-suite rerun (`TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`), and docs freshness pass (`TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`).
 - Objective: finalize BL-019 visual diagnostics and maintain deterministic behavior.
 - Dependencies: BL-015 and BL-016.
 - Skills: `threejs`, `reactive-av`, `physics-reactive-audio`, `juce-webview-runtime`.
@@ -665,14 +666,14 @@ DELIVER: acceptance review and recommended final gate wording for backlog closur
 ```
 
 ### BL-012 - Harness Backport Tranche 1 (P1-06)
-- Status: `In Validation (2026-02-23)` with deterministic tranche-1 lane pass at `TestEvidence/bl012_harness_backport_20260223T032945Z/status.tsv`.
+- Status: `In Validation (2026-02-23)` with deterministic tranche-1 lane pass and embedded HX-04 guard at `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`.
 - Objective: deliver first concrete upstream/backport integration slice.
 - Dependencies: none.
 - Skills: `skill_testing`, `skill_test`, `skill_troubleshooting`, `skill_docs`.
 - Validation bundle:
   - `./scripts/qa-bl012-harness-backport-tranche1-mac.sh`
-  - `TestEvidence/bl012_harness_backport_20260223T032945Z/status.tsv`
-  - `TestEvidence/bl012_harness_backport_20260223T032945Z/report.md`
+  - `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`
+  - `TestEvidence/bl012_harness_backport_20260223T172301Z/report.md`
 
 #### Codex Mega-Prompt - BL-012
 ```text
@@ -720,9 +721,18 @@ DELIVER: architecture acceptance review with explicit next-slice gates.
 ```
 
 ### BL-013 - HostRunner Productionization Feasibility (P2-02)
+- Status: `In Validation (2026-02-23)` after clean feasibility rerun with harness host tests + VST3 backend probe + skeleton fallback (`TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/status.tsv`, `Documentation/plans/bl-013-hostrunner-feasibility-2026-02-23.md`).
 - Objective: produce feasibility package after BL-012 tranche.
 - Dependencies: BL-012.
 - Skills: `skill_plan`, `skill_testing`, `skill_debug`.
+- Validation bundle:
+  - `./scripts/qa-bl013-hostrunner-feasibility-mac.sh`
+  - `TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/status.tsv`
+  - `TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/report.md`
+  - `Documentation/plans/bl-013-hostrunner-feasibility-2026-02-23.md`
+- External harness fixes used in this green run:
+  - `/Users/artbox/Documents/Repos/audio-dsp-qa-harness/runners/vst3_plugin_host.cpp` (`processData_` lifecycle fix for reconfigure path)
+  - `/Users/artbox/Documents/Repos/audio-dsp-qa-harness/tests/host_runner_unit_test.cpp` (`sendMidiEvents` mock parity fix)
 
 #### Codex Mega-Prompt - BL-013
 ```text
@@ -900,6 +910,7 @@ DELIVER: go/no-go and reliability improvements if coverage is weak.
 ```
 
 ### HX-04 - Scenario Coverage Audit and Drift Guard (P1-HX04)
+- Status: `Done (2026-02-23)` with deterministic audit evidence (`TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv`) and BL-012 embedded enforcement evidence (`TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`).
 - Objective: ensure component-level scenarios remain complete for AirAbsorption/Calibration/directivity paths.
 - Dependencies: none.
 - Skills: `skill_testing`, `skill_docs`, `skill_plan`.
@@ -964,6 +975,7 @@ DELIVER: approval/risk notes and tuning recommendations.
 | BL-010 | FDN expansion promotion | Done (2026-02-23) |
 | BL-011 | CLAP lifecycle and CI/host closeout | Done (2026-02-23) |
 | BL-015 | All-emitter realtime rendering closure | Done (2026-02-23) |
+| BL-019 | Physics interaction lens closure | Done (2026-02-23) |
 
 ## Definition of Ready
 1. BL objective and scope are explicit.

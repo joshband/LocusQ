@@ -1,0 +1,13 @@
+step	status	detail
+init	pass	ts=20260223T171843Z
+config	pass	build_dir=/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner; build_config=Release; build_jobs=8; enable_clap=0; run_harness_host_tests=0; skip_build=1; harness_path=/Users/artbox/Documents/Repos/audio-dsp-qa-harness
+tool_cmake	pass	/opt/homebrew/bin/cmake
+tool_ctest	pass	/opt/homebrew/bin/ctest
+tool_jq	pass	/usr/bin/jq
+harness_path	pass	/Users/artbox/Documents/Repos/audio-dsp-qa-harness
+harness_host_ctest	warn	skipped_by_env=LQ_BL013_RUN_HARNESS_HOST_TESTS
+locusq_configure	warn	skipped_by_env=LQ_BL013_SKIP_BUILD
+locusq_build	warn	skipped_by_env=LQ_BL013_SKIP_BUILD
+qa_bin	pass	/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/locusq_qa_artefacts/Release/locusq_qa
+vst3_plugin_path	pass	/Users/artbox/Documents/Repos/LocusQ/build_bl013_hostrunner/LocusQ_artefacts/Release/VST3/LocusQ.vst3
+hostrunner_vst3_probe	fail	log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl013_hostrunner_feasibility_20260223T171843Z/hostrunner_vst3_probe.log
