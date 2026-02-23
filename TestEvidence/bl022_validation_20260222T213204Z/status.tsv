@@ -1,6 +1,0 @@
-step	command	result	artifact
-node_check	node --check Source/ui/public/js/index.js	PASS	TestEvidence/bl022_validation_20260222T213204Z/node_check.log
-build_release_targets	cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8	PASS	TestEvidence/bl022_validation_20260222T213204Z/build_release_targets.log
-selftest_production_p0	./scripts/standalone-ui-selftest-production-p0-mac.sh	PASS	TestEvidence/bl022_validation_20260222T213204Z/selftest_production_p0.log
-qa_smoke_spatial	build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json	PASS	TestEvidence/bl022_validation_20260222T213204Z/qa_smoke_spatial.log
-docs_freshness	./scripts/validate-docs-freshness.sh	PASS	TestEvidence/bl022_validation_20260222T213204Z/docs_freshness.log

@@ -1,4 +1,0 @@
-step	result	exit_code	log
-ui_stage12_selftest	PASS	0	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/ui_pr_gate_20260220T193031Z/ui_stage12_selftest.log
-ui_smoke_fast_gate	SKIP	0	-
-ui_regression_appium	SKIP	0	-

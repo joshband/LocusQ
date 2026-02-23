@@ -1,8 +1,0 @@
-step	status	detail
-init	pass	ts=20260223T025451Z
-run_count	pass	1
-require_locusq	pass	1
-reaper_bin	pass	/Applications/REAPER.app/Contents/MacOS/REAPER
-preflight_jq	pass	jq_available
-build_install	warn	skipped_by_env=LQ_BL024_SKIP_INSTALL
-headless_run_1	fail	exit=1; status=fail; locusqFxFound=true; renderOutputDetected=true; renderExitCode=0; log=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl024_reaper_automation_20260223T025451Z/headless_run_1.log; artifact=/Users/artbox/Documents/Repos/LocusQ/TestEvidence/reaper_headless_render_20260223T025451Z/status.json
