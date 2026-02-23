@@ -31,12 +31,20 @@ jobs:
           repository: juce-framework/JUCE
           path: JUCE
 
+      - name: Require QA harness access token
+        if: ${{ secrets.SUBMODULE_TOKEN == '' }}
+        run: |
+          echo "Missing SUBMODULE_TOKEN secret for joshband/audio-dsp-qa-harness checkout." >&2
+          echo "Create a PAT with read access to that repository and store it as SUBMODULE_TOKEN." >&2
+          exit 1
+
       - name: Checkout QA harness
         uses: actions/checkout@v4
         with:
           repository: joshband/audio-dsp-qa-harness
           path: audio-dsp-qa-harness
-          token: ${{ secrets.SUBMODULE_TOKEN != '' && secrets.SUBMODULE_TOKEN || github.token }}
+          ref: master
+          token: ${{ secrets.SUBMODULE_TOKEN }}
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -272,6 +280,7 @@ jobs:
   qa-perf-trend:
     name: QA Perf Trend (Ubuntu)
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     continue-on-error: true
 
     steps:
@@ -286,12 +295,20 @@ jobs:
           repository: juce-framework/JUCE
           path: JUCE
 
+      - name: Require QA harness access token
+        if: ${{ secrets.SUBMODULE_TOKEN == '' }}
+        run: |
+          echo "Missing SUBMODULE_TOKEN secret for joshband/audio-dsp-qa-harness checkout." >&2
+          echo "Create a PAT with read access to that repository and store it as SUBMODULE_TOKEN." >&2
+          exit 1
+
       - name: Checkout QA harness
         uses: actions/checkout@v4
         with:
           repository: joshband/audio-dsp-qa-harness
           path: audio-dsp-qa-harness
-          token: ${{ secrets.SUBMODULE_TOKEN != '' && secrets.SUBMODULE_TOKEN || github.token }}
+          ref: master
+          token: ${{ secrets.SUBMODULE_TOKEN }}
 
       - name: Install Linux dependencies
         run: |
