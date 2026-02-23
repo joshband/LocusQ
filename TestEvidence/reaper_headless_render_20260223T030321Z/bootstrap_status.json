@@ -1,9 +1,0 @@
-{
-  "status": "ok",
-  "synthFxFound": true,
-  "locusqFxFound": true,
-  "sendCreated": true,
-  "midiClipCreated": true,
-  "synthFxName": "VSTi: ReaSynth (Cockos)",
-  "locusqFxName": "VST3: LocusQ"
-}
