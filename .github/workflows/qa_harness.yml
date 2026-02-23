@@ -350,8 +350,21 @@ jobs:
 
       - name: Run performance trend scenarios
         run: |
-          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --profile --profile-iterations 2000 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_perf_phase_2_6_full_system.log
-          ./build-qa/locusq_qa_artefacts/locusq_qa --spatial --profile --profile-iterations 2000 qa/scenarios/locusq_25_cpu_budget_draft.json | tee qa_output/ci_perf_phase_2_5_cpu.log
+          set -euo pipefail
+          mkdir -p qa_output
+
+          LOCUSQ_QA_BIN="./build-qa/locusq_qa_artefacts/locusq_qa"
+          if [ ! -x "${LOCUSQ_QA_BIN}" ]; then
+            LOCUSQ_QA_BIN="./build-qa/locusq_qa_artefacts/Release/locusq_qa"
+          fi
+          if [ ! -x "${LOCUSQ_QA_BIN}" ]; then
+            echo "Unable to find locusq_qa executable" >&2
+            find build-qa -maxdepth 5 -name locusq_qa -type f || true
+            exit 1
+          fi
+
+          "${LOCUSQ_QA_BIN}" --spatial --profile --profile-iterations 2000 qa/scenarios/locusq_26_full_system_cpu_draft.json | tee qa_output/ci_perf_phase_2_6_full_system.log
+          "${LOCUSQ_QA_BIN}" --spatial --profile --profile-iterations 2000 qa/scenarios/locusq_25_cpu_budget_draft.json | tee qa_output/ci_perf_phase_2_5_cpu.log
 
       - name: Publish CI summary
         if: always()
