@@ -3335,3 +3335,188 @@ Result: `PASS` (`0 warning(s)`).
 ```
 
 Result: `PASS` (`0 warning(s)`).
+
+## HX-04 Scenario Coverage Drift Guard Closeout (UTC 2026-02-23)
+
+1. Run standalone HX-04 audit lane
+
+```sh
+./scripts/qa-hx04-scenario-audit.sh --qa-bin build_bl010/locusq_qa_artefacts/Release/locusq_qa
+```
+
+Result: `PASS_WITH_WARNINGS`
+- artifact: `TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv`
+- matrix: `TestEvidence/hx04_scenario_audit_20260223T172312Z/coverage_matrix.tsv`
+- summary: required AirAbsorption/Calibration/directivity scenarios are present, mapped, and executed in the parity suite (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`).
+
+2. Run targeted directivity sample lane
+
+```sh
+build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_directivity_aim.json
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/hx04_sample_directivity_aim_20260223T172316Z.log`
+
+3. Rerun BL-012 tranche-1 lane with HX-04 embedded enforcement
+
+```sh
+LQ_BL012_BUILD_DIR=build_bl010 LQ_BL012_RUN_HARNESS_SANITY=0 LQ_BL012_QA_BIN=build_bl010/locusq_qa_artefacts/Release/locusq_qa ./scripts/qa-bl012-harness-backport-tranche1-mac.sh
+```
+
+Result: `PASS_WITH_WARNINGS`
+- artifact: `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`
+- note: `hx04_audit_run=pass` is now a native BL-012 lane assertion.
+
+4. Docs freshness gate after HX-04 closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_hx04_20260223T035938Z.log`
+
+5. Final docs freshness gate after HX-04 backlog/root/status synchronization
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_hx04_20260223T171851Z.log`
+
+6. Final docs freshness gate after README + Documentation index sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_hx04_20260223T172010Z.log`
+
+## BL-019 Physics Interaction Lens Closeout (UTC 2026-02-23)
+
+1. Production self-test lane attempt 1 (`UI-P1-019`)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh build_bl019/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `FAIL` (`ui_selftest_timeout_before_pass_or_fail`)
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260223T171504Z.json`
+- note: transient boot error (`NotFoundError`).
+
+2. Production self-test lane rerun (`UI-P1-019`)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh build_bl019/LocusQ_artefacts/Release/Standalone/LocusQ.app
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`
+- BL-019 gate: `UI-P1-019` passed (`physics lens overlays verified (force/collision/trajectory)`).
+
+3. Spatial smoke-suite companion rerun
+
+```sh
+build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+```
+
+Result: `PASS_WITH_WARNING` (baseline retained)
+- artifact: `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`
+- summary: `3 PASS / 1 WARN / 0 FAIL / 0 ERROR`.
+
+4. BL-019 closeout docs freshness gate
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_bl019_20260223T121618.log`
+
+5. BL-019 final docs freshness gate after backlog/status/root synchronization
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`
+
+## BL-013 HostRunner Feasibility Bundle (UTC 2026-02-23)
+
+1. Configure HostRunner-enabled LocusQ QA build (local harness path pinned)
+
+```sh
+cmake -S . -B build_bl013_hostrunner -DBUILD_LOCUSQ_QA=ON -DQA_HARNESS_DIR="$HOME/Documents/Repos/audio-dsp-qa-harness" -DBUILD_HOST_RUNNER=ON -DLOCUSQ_ENABLE_STEAM_AUDIO=OFF -DLOCUSQ_ENABLE_CLAP=0 -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+```
+
+Result: `PASS`
+
+2. Build HostRunner-enabled QA binary and VST3 artifact
+
+```sh
+cmake --build build_bl013_hostrunner --config Release --target locusq_qa LocusQ_VST3 -j 8
+```
+
+Result: `PASS`
+
+3. Run BL-013 feasibility lane (fast rerun mode)
+
+```sh
+LQ_BL013_SKIP_BUILD=1 ./scripts/qa-bl013-hostrunner-feasibility-mac.sh
+```
+
+Result: `PASS_WITH_WARNINGS`
+- artifact: `TestEvidence/bl013_hostrunner_feasibility_20260223T172005Z/status.tsv`
+- report: `TestEvidence/bl013_hostrunner_feasibility_20260223T172005Z/report.md`
+- key signal: backend VST3 probe warns (`exit=139`, deterministic segfault), while skeleton fallback probe passes.
+
+4. BL-013 plan package published
+
+- `Documentation/plans/bl-013-hostrunner-feasibility-2026-02-23.md`
+
+5. BL-013 docs freshness gate after backlog/status/evidence sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+6. BL-013 crash root-cause patch in HostRunner VST3 backend
+
+- `/Users/artbox/Documents/Repos/audio-dsp-qa-harness/runners/vst3_plugin_host.cpp`
+- Fix: preserve/reinitialize `processData_` lifecycle across `loadPlugin()` -> `unloadPlugin()` -> `configure()` so backend prepare no longer dereferences null.
+
+7. BL-013 harness host-test interface parity patch
+
+- `/Users/artbox/Documents/Repos/audio-dsp-qa-harness/tests/host_runner_unit_test.cpp`
+- Fix: added `sendMidiEvents(...)` override in `MockPluginHost` to satisfy `PluginHostInterface` and restore host-runner unit-test build.
+
+8. BL-013 clean feasibility rerun with harness host tests enabled
+
+```sh
+LQ_BL013_RUN_HARNESS_HOST_TESTS=1 ./scripts/qa-bl013-hostrunner-feasibility-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/status.tsv`
+- report: `TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/report.md`
+- key signal: `hostrunner_vst3_probe=pass` (`dry.wav` + `wet.wav`), `hostrunner_vst3_skeleton_probe=pass`, `harness_host_ctest=pass`.
+
+9. BL-013 staged diagnostics emission in `locusq_qa`
+
+- `qa/main.cpp`: added `HOSTRUNNER_STAGE` markers for `init`, `prepare`, `render`, and `release` phases.
+- verification log: `TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/hostrunner_vst3_probe.log`
+
+10. BL-013 promotion final docs freshness gate
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_bl013_20260223T173744Z.log`

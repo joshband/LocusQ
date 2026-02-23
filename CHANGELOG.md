@@ -43,6 +43,9 @@ Operational snapshot:
   - backlog/state promoted to `Done` after fresh production self-test and smoke-suite reruns.
   - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T034704Z.json` (`UI-P1-015` pass: selected vs non-selected styling), `TestEvidence/locusq_smoke_suite_spatial_bl015_20260223T034751Z.log` (`3 PASS / 1 WARN / 0 FAIL` baseline retained).
   - companion checks in the same self-test remain green (`UI-P1-014`, `UI-P1-019`, `UI-P1-022`) to protect downstream overlay lanes.
+- BL-019 physics interaction lens closeout completed (2026-02-23):
+  - backlog/state promoted to `Done` after refreshing the required closeout bundle.
+  - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json` (`UI-P1-019` pass: `physics lens overlays verified (force/collision/trajectory)`), `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log` (`3 PASS / 1 WARN / 0 FAIL` baseline retained), `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log` (`PASS`).
 - BL-011 CLAP lifecycle and host/CI closeout completed (2026-02-23):
   - backlog/state promoted to `Done` after deterministic CLAP closeout lane pass.
   - closeout artifact: `TestEvidence/bl011_clap_closeout_20260223T032730Z/` (CLAP build/install, `clap-info`, `clap-validator`, QA smoke, phase 2.6 suite, BL-011 self-test, non-CLAP guard, REAPER discoverability probe).
@@ -50,6 +53,12 @@ Operational snapshot:
 - HX-01 shared_ptr atomic migration guard completed (2026-02-23):
   - direct deprecated SceneGraph call sites were migrated to the contract wrapper path (`Source/SharedPtrAtomicContract.h`, `Source/SceneGraph.h`).
   - validation artifacts: `TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`, `TestEvidence/hx01_sharedptr_atomic_deprecation_scan_excluding_wrapper_20260223T034931Z.log`.
+- HX-04 scenario coverage hardening completed (2026-02-23):
+  - Added required scenario manifest: `qa/scenarios/locusq_hx04_required_scenarios.json`.
+  - Added parity suite: `qa/scenarios/locusq_hx04_component_parity_suite.json`.
+  - Added reusable audit lane: `scripts/qa-hx04-scenario-audit.sh`.
+  - Wired BL-012 tranche-1 lane to execute HX-04 audit by default (`LQ_BL012_RUN_HX04_AUDIT=1`) with evidence at `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`.
+  - Standalone audit evidence: `TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv`.
 - CLAP documentation consolidation for BL-011:
   - new canonical closeout plan: `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
   - governance ADR: `Documentation/adr/ADR-0009-clap-closeout-documentation-consolidation.md`

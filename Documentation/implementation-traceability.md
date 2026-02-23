@@ -229,6 +229,21 @@ This document tracks end-to-end parameter wiring for implementation phases compl
   - Run artifact: `TestEvidence/locusq_phase_2_6_acceptance_suite_phase_2_6c_allocation_free_refresh.log`
   - Outcome: suite pass (`3 PASS / 0 WARN / 0 FAIL`).
 
+## HX-04 Scenario Coverage Drift Guard
+
+- Required scenario manifest: `qa/scenarios/locusq_hx04_required_scenarios.json`
+  - Declares required component-level parity for `AirAbsorption`, `CalibrationEngine`, and directivity (`emit_dir` + aim).
+- Dedicated parity suite: `qa/scenarios/locusq_hx04_component_parity_suite.json`
+  - Executes `locusq_air_absorption_distance`, `locusq_calibration_sweep_capture`, `locusq_emit_dir_spatial_effect`, and `locusq_directivity_aim` under fixed runtime config.
+- Audit command: `scripts/qa-hx04-scenario-audit.sh`
+  - Validates manifest presence, scenario membership, required suite wiring, and suite execution output.
+  - Emits deterministic artifact bundle under `TestEvidence/hx04_scenario_audit_<timestamp>/` with `status.tsv` + `coverage_matrix.tsv`.
+- BL-012 lane wiring: `scripts/qa-bl012-harness-backport-tranche1-mac.sh`
+  - Runs HX-04 audit by default (`LQ_BL012_RUN_HX04_AUDIT=1`) so tranche-1 backport validation fails loudly on scenario parity drift.
+- Latest evidence:
+  - `TestEvidence/hx04_scenario_audit_20260223T035254Z/status.tsv`
+  - `TestEvidence/bl012_harness_backport_20260223T035318Z/status.tsv`
+
 ## Phase 2.7e Pluginval Stability Guard Coverage
 
 - Registration consistency guard:
