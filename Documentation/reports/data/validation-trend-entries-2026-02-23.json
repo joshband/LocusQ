@@ -1,0 +1,2970 @@
+[
+  {
+    "timestamp_utc": "2026-02-18T17:55:45Z",
+    "phase_context": "Phase 2.4 acceptance closeout configure",
+    "command": "`cmake -S plugins/LocusQ -B plugins/LocusQ/build -DBUILD_LOCUSQ_QA=ON -DJUCE_DIR=.../_tools/JUCE`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T17:56:00Z",
+    "phase_context": "Phase 2.4 acceptance closeout build",
+    "command": "`cmake --build plugins/LocusQ/build --target locusq_physics_probe locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T17:56:23Z",
+    "phase_context": "Phase 2.4 deterministic physics probe",
+    "command": "`./plugins/LocusQ/build/locusq_physics_probe_artefacts/locusq_physics_probe`",
+    "result": "PASS (`5/5` checks)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-18T17:56:43Z",
+    "phase_context": "Phase 2.4 physics spatial motion scenario",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_24_physics_spatial_motion.json`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T18:02:01Z",
+    "phase_context": "Phase 2.4 zero-g drift scenario",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_24_physics_zero_g_drift.json`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T18:02:01Z",
+    "phase_context": "Phase 2.4 acceptance suite rollup (phase-pure)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_4_acceptance_suite.json`",
+    "result": "PASS (`2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T22:41:30Z",
+    "phase_context": "Phase 2.1-2.3 validation",
+    "command": "`locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (4/4)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T23:07:35Z",
+    "phase_context": "Phase 2.5 start validation",
+    "command": "`locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (4/4)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-18T23:19:39Z",
+    "phase_context": "Documentation standardization",
+    "command": "`doxygen Documentation/Doxyfile`",
+    "result": "PASS (HTML generated in `build/docs_api/html`)",
+    "outcome": "pass",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-18T23:24:55Z",
+    "phase_context": "Phase 2.5 build verification",
+    "command": "`cmake --build build --target LocusQ_VST3 LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-18T23:26:28Z",
+    "phase_context": "Phase 2.5 host-load verification",
+    "command": "`pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-18T23:27:12Z",
+    "phase_context": "Phase 2.5 standalone smoke",
+    "command": "`open build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS (process observed/terminated)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-18T23:43:12Z",
+    "phase_context": "Phase 2.5 acceptance suite",
+    "command": "`locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json`",
+    "result": "PASS (`9` scenarios: `8 PASS`, `1 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:01:22Z",
+    "phase_context": "Phase 2.6 QA build",
+    "command": "`cmake --build plugins/LocusQ/build --target locusq_qa -j 8`",
+    "result": "PASS (warnings only)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:01:28Z",
+    "phase_context": "Phase 2.6 smoke suite",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4` scenarios: `4 PASS`, `0 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:01:48Z",
+    "phase_context": "Phase 2.6 animation smoke",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_animation_internal_smoke.json`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:01:53Z",
+    "phase_context": "Phase 2.5 regression (from Phase 2.6 branch)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_5_acceptance_suite.json`",
+    "result": "WARN (`9` scenarios: `8 PASS`, `1 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:02:43Z",
+    "phase_context": "Phase 2.6 plugin build",
+    "command": "`cmake --build plugins/LocusQ/build --target LocusQ_VST3 LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:02:54Z",
+    "phase_context": "Phase 2.6 host-load verification",
+    "command": "`pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:02:59Z",
+    "phase_context": "Phase 2.6 standalone smoke",
+    "command": "`open plugins/LocusQ/build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS (process observed/terminated)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:03:04Z",
+    "phase_context": "Phase 2.6 API docs snapshot",
+    "command": "`doxygen plugins/LocusQ/Documentation/Doxyfile`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:12Z",
+    "phase_context": "Phase 2.6 acceptance/tuning QA build",
+    "command": "`cmake --build build --target locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:14Z",
+    "phase_context": "Phase 2.6 acceptance/tuning smoke suite",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4` scenarios: `4 PASS`, `0 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:20Z",
+    "phase_context": "Phase 2.6 acceptance/tuning animation smoke",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json`",
+    "result": "PASS (`perf_avg_block_time=0.0659 ms`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:25Z",
+    "phase_context": "Phase 2.6 acceptance/tuning Phase 2.5 regression",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json`",
+    "result": "WARN (`9` scenarios: `8 PASS`, `1 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:31Z",
+    "phase_context": "Phase 2.6 acceptance/tuning plugin build",
+    "command": "`cmake --build build --target LocusQ_VST3 LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:37Z",
+    "phase_context": "Phase 2.6 acceptance/tuning host-load verification",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:49Z",
+    "phase_context": "Phase 2.6 acceptance/tuning standalone smoke",
+    "command": "`open build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS (process observed/terminated)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-19T00:26:52Z",
+    "phase_context": "Phase 2.6 acceptance/tuning API docs snapshot",
+    "command": "`doxygen Documentation/Doxyfile`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:31:55Z",
+    "phase_context": "Phase 2.6 acceptance closeout QA build",
+    "command": "`cmake --build plugins/LocusQ/build --target locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:31:58Z",
+    "phase_context": "Phase 2.6 full-system CPU gate",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`",
+    "result": "WARN (hard gates PASS; allocation soft warning)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:00Z",
+    "phase_context": "Phase 2.6 host edge matrix (`44.1k/256`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 44100 --block-size 256`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:01Z",
+    "phase_context": "Phase 2.6 host edge matrix (`48k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:02Z",
+    "phase_context": "Phase 2.6 host edge matrix (`48k/1024`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 48000 --block-size 1024`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:03Z",
+    "phase_context": "Phase 2.6 host edge matrix (`96k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 96000 --block-size 512`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:05Z",
+    "phase_context": "Phase 2.6 acceptance suite rollup",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`2 PASS / 1 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:09Z",
+    "phase_context": "Phase 2.6 closeout plugin build",
+    "command": "`cmake --build plugins/LocusQ/build --target LocusQ_VST3 LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:15Z",
+    "phase_context": "Phase 2.6 closeout host-load verification",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:24Z",
+    "phase_context": "Phase 2.6 closeout standalone smoke",
+    "command": "`open plugins/LocusQ/build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:32:30Z",
+    "phase_context": "Phase 2.6 closeout WebView checklist (manual fallback)",
+    "command": "Source/CMake verification of checklist items (PowerShell validator unavailable)",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:36:45Z",
+    "phase_context": "`/test` harness configure/build/ctest",
+    "command": "`cmake -S $HARNESS -B $HARNESS/build_test ...; cmake --build $HARNESS/build_test; ctest --test-dir $HARNESS/build_test --output-on-failure`",
+    "result": "PASS (`45/45`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:40:11Z",
+    "phase_context": "`/test` focused acceptance matrix suite (`2.6`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "WARN (`3` scenarios: `2 PASS`, `1 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:40:15Z",
+    "phase_context": "`/test` focused acceptance matrix regression suite (`2.5`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_5_acceptance_suite.json`",
+    "result": "WARN (`9` scenarios: `8 PASS`, `1 WARN`, `0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:40:20Z",
+    "phase_context": "`/test` focused full-system CPU gate",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`",
+    "result": "WARN (hard gates PASS; `perf_avg_block_time_ms=0.434559`, delta `+0.006446`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:40:24Z",
+    "phase_context": "`/test` focused host-edge matrix (`44.1k/256, 48k/512, 48k/1024, 96k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate ... --block-size ...`",
+    "result": "PASS (`4/4`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:41:28Z",
+    "phase_context": "`/test` pluginval host validation",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:41:33Z",
+    "phase_context": "`/test` standalone smoke",
+    "command": "`open plugins/LocusQ/build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS (process observed/terminated)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-19T01:42:38Z",
+    "phase_context": "`/test` trend delta publication",
+    "command": "`jq ... plugins/LocusQ/qa_output/suite_result.json`",
+    "result": "PASS (`overall=PASS_WITH_WARNING`; suite deltas unchanged, CPU delta published)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T02:08:14Z",
+    "phase_context": "`/ship` universal configure",
+    "command": "`cmake -S plugins/LocusQ -B plugins/LocusQ/build_ship_universal -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=\\\"arm64;x86_64\\\" -DJUCE_DIR=.../_tools/JUCE`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T02:10:36Z",
+    "phase_context": "`/ship` universal build",
+    "command": "`cmake --build plugins/LocusQ/build_ship_universal --target LocusQ_VST3 LocusQ_AU LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T02:27:33Z",
+    "phase_context": "`/ship` package + archive",
+    "command": "`ditto -c -k --sequesterRsrc --keepParent dist/LocusQ-v0.1.0-macOS dist/LocusQ-v0.1.0-macOS.zip`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T02:30:05Z",
+    "phase_context": "`/ship` pluginval on universal VST3",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build_ship_universal/LocusQ_artefacts/Release/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T02:30:28Z",
+    "phase_context": "`/ship` standalone smoke on universal app",
+    "command": "`open plugins/LocusQ/build_ship_universal/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (process observed/terminated)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:07:13Z",
+    "phase_context": "`2.7a` UI runtime resilience syntax gate",
+    "command": "`node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:07:13Z",
+    "phase_context": "`2.7a` UI runtime resilience rebuild",
+    "command": "`cmake --build plugins/LocusQ/build --target LocusQ_VST3 -j 8`",
+    "result": "PASS (warnings unchanged)",
+    "outcome": "warn",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` harness configure",
+    "command": "`cmake -S $HARNESS_PATH -B $HARNESS_PATH/build_test -DBUILD_QA_TESTS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` harness build",
+    "command": "`cmake --build $HARNESS_PATH/build_test`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` harness ctest",
+    "command": "`ctest --test-dir $HARNESS_PATH/build_test --output-on-failure`",
+    "result": "PASS (`45/45`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` LocusQ QA build (`2.7 UI matrix`)",
+    "command": "`cmake --build plugins/LocusQ/build --target locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` smoke suite (Emitter adapter)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` animation smoke (`48k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_animation_internal_smoke.json`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` phase 2.6 acceptance suite (`UI proxy`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "WARN (`2 PASS / 1 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` full-system CPU gate (`48k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`",
+    "result": "WARN (hard gates pass; allocation warning trend retained)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` host-edge matrix (`44.1k/256,48k/512,48k/1024,96k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate ... --block-size ...`",
+    "result": "PASS (`4/4`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` pluginval host validation (`2.7 UI matrix`)",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit code 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` standalone smoke (`2.7 UI matrix`)",
+    "command": "`open plugins/LocusQ/build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:16:55Z",
+    "phase_context": "`/test` trend delta publication (`2.7 UI matrix`)",
+    "command": "`updated plugins/LocusQ/qa_output/suite_result.json + plugins/LocusQ/TestEvidence/test-summary.md`",
+    "result": "PASS (`overall=PASS_WITH_WARNING`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T03:30:15Z",
+    "phase_context": "`2.7a` manual host UI checklist handoff",
+    "command": "`created plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md + synced status/plan/readme`",
+    "result": "PASS (pending user-run DAW validation)",
+    "outcome": "pending",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:38:37Z",
+    "phase_context": "`2.7b` viewport/calibration JS syntax gate",
+    "command": "`node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:38:37Z",
+    "phase_context": "`2.7b` VST3 rebuild",
+    "command": "`cmake --build plugins/LocusQ/build --target LocusQ_VST3 -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:41:31Z",
+    "phase_context": "`2.7b` smoke regression suite",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:45:25Z",
+    "phase_context": "`/test` full acceptance rerun harness sanity",
+    "command": "`cmake -S $HARNESS_PATH -B $HARNESS_PATH/build_test ...; cmake --build $HARNESS_PATH/build_test; ctest --test-dir $HARNESS_PATH/build_test --output-on-failure`",
+    "result": "PASS (`45/45`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:45:25Z",
+    "phase_context": "`/test` full acceptance rerun suite matrix",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json; ./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_5_acceptance_suite.json; ./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS_WITH_WARNING (`2 suites WARN-only; no FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:45:25Z",
+    "phase_context": "`/test` full acceptance rerun perf/host matrix",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512; host edge multipass @ 44.1k/256, 48k/512, 48k/1024, 96k/512`",
+    "result": "PASS_WITH_WARNING (CPU allocation warning retained; host-edge `4/4` pass)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:45:25Z",
+    "phase_context": "`/test` full acceptance rerun host validation",
+    "command": "`cmake --build plugins/LocusQ/build --target LocusQ_VST3 LocusQ_Standalone -j 8; /Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3; open plugins/LocusQ/build/LocusQ_artefacts/Standalone/LocusQ.app`",
+    "result": "PASS (`pluginval exit 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:49:13Z",
+    "phase_context": "`/test` full acceptance rerun evidence publication",
+    "command": "`updated plugins/LocusQ/qa_output/suite_result.json + plugins/LocusQ/TestEvidence/test-summary.md + plugins/LocusQ/status.json`",
+    "result": "PASS (`overall=PASS_WITH_WARNING`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T04:49:13Z",
+    "phase_context": "`/test` manual host UI checklist scheduling",
+    "command": "`manual checklist deferred by user`",
+    "result": "DEFERRED (`run on 2026-02-20`)",
+    "outcome": "pending",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:19:40Z",
+    "phase_context": "`2.6c` QA build for allocation-free closeout",
+    "command": "`cmake --build plugins/LocusQ/build --target locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:19:42Z",
+    "phase_context": "`2.6c` full-system CPU gate (`48k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS (`perf_avg_block_time_ms=0.304457`, `perf_p95_block_time_ms=0.318466`, `perf_allocation_free=true`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:19:43Z",
+    "phase_context": "`2.6c` Phase 2.6 acceptance suite refresh",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:56:00Z",
+    "phase_context": "`skill_plan` ADR/docs freshness gate closeout sync",
+    "command": "`updated ADR-0005 + standards/plan/readme/changelog/status/build-summary/validation-trend`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:33:02Z",
+    "phase_context": "`2.7d` acceptance rebaseline harness + suites + host-edge",
+    "command": "`harness ctest (45/45) + phase_2_5 suite + phase_2_6 suite + full-system CPU + host-edge 4-run matrix`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:33:23Z",
+    "phase_context": "`2.7d` acceptance rebaseline pluginval run",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests plugins/LocusQ/build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "FAIL (`exit 9`, segfault in automation test)",
+    "outcome": "fail",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:34:59Z",
+    "phase_context": "`2.7d` acceptance rebaseline pluginval retry",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:58:40Z",
+    "phase_context": "`2.7d` JS syntax gate",
+    "command": "`node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:58:45Z",
+    "phase_context": "`2.7d` VST3 + QA build",
+    "command": "`cmake --build plugins/LocusQ/build --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS (warnings unchanged)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:58:48Z",
+    "phase_context": "`2.7d` smoke suite",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:58:50Z",
+    "phase_context": "`2.7d` animation smoke",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_animation_internal_smoke.json`",
+    "result": "PASS (`perf_avg_block_time_ms=0.0534585`, deadline pass)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:58:52Z",
+    "phase_context": "`2.7d` Phase 2.6 acceptance suite",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T05:58:54Z",
+    "phase_context": "`2.7d` host-edge roundtrip check (`48k/512`)",
+    "command": "`./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:12:25Z",
+    "phase_context": "`pluginval` flake probe (`5` repeats)",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`5/5`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:12:42Z",
+    "phase_context": "`pluginval` long probe (random seeds)",
+    "command": "repeated `pluginval` runs (`20` cap)",
+    "result": "FAIL on run `9` (`exit 9`, segfault)",
+    "outcome": "fail",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:13:53Z",
+    "phase_context": "`pluginval` deterministic repro seed",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "FAIL (`exit 9`)",
+    "outcome": "fail",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:14:00Z",
+    "phase_context": "`pluginval` crash backtrace capture",
+    "command": "`lldb --batch ... --random-seed 0x2a331c6 ...`",
+    "result": "FAIL (top frame `SpatialRenderer::process`)",
+    "outcome": "fail",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:14:20Z",
+    "phase_context": "pluginval mitigation build",
+    "command": "`cmake --build build --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:15:05Z",
+    "phase_context": "`pluginval` deterministic seed after fix",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:15:44Z",
+    "phase_context": "`pluginval` post-fix stability probe",
+    "command": "`10x pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build/LocusQ_artefacts/VST3/LocusQ.vst3`",
+    "result": "PASS (`10/10`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:16:06Z",
+    "phase_context": "post-fix QA regression refresh",
+    "command": "`locusq_smoke_suite + locusq_phase_2_6_acceptance_suite + locusq_phase_2_5_acceptance_suite + host_edge(48k/512) + full_system(48k/512)`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:21:22Z",
+    "phase_context": "continue checkpoint build",
+    "command": "`cmake --build build --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:21:36Z",
+    "phase_context": "continue checkpoint smoke suite",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:22:04Z",
+    "phase_context": "continue checkpoint docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:28:49Z",
+    "phase_context": "phase 2.8 bus-layout expansion build",
+    "command": "`cmake --build build --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:28:49Z",
+    "phase_context": "phase 2.8 renderer 4-channel scenario",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:28:49Z",
+    "phase_context": "phase 2.8 smoke suite 4-channel mode",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json --channels 4`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:37:25Z",
+    "phase_context": "phase 2.8 output telemetry JS check",
+    "command": "`node --input-type=module --check < Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:37:25Z",
+    "phase_context": "phase 2.8 output mapping build",
+    "command": "`cmake --build build --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:37:25Z",
+    "phase_context": "phase 2.8 stereo layout suite",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:37:25Z",
+    "phase_context": "phase 2.8 quad layout suite",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:43:56Z",
+    "phase_context": "phase 2.8 mono layout suite",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:44:06Z",
+    "phase_context": "phase 2.11 snapshot migration QA build",
+    "command": "`cmake --build build --target locusq_qa -j 1`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:44:07Z",
+    "phase_context": "phase 2.11 snapshot migration suite (stereo)",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`",
+    "result": "PASS (`2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:44:08Z",
+    "phase_context": "phase 2.11 snapshot migration legacy-layout scenario (quad)",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json --channels 4`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:44:13Z",
+    "phase_context": "phase 2.9 CI quad/pluginval lane definition check",
+    "command": "`rg -n \"qa-pluginval-seeded-stress\\",
+    "result": "--channels 4\\",
+    "outcome": "other",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:44:13Z",
+    "phase_context": "phase 2.9 docs freshness gate check",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:45:52Z",
+    "phase_context": "phase 2.10 renderer guardrail build",
+    "command": "`cmake --build build --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:45:58Z",
+    "phase_context": "phase 2.10 full-system CPU baseline (`8` emitters, `48k/512`)",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS (`perf_avg_block_time_ms=0.304505`, `perf_p95_block_time_ms=0.323633`, `perf_allocation_free=true`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:45:59Z",
+    "phase_context": "phase 2.10 high-emitter guardrail stress (`16` emitters, `48k/512`)",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:46:00Z",
+    "phase_context": "phase 2.10 renderer CPU guardrail suite",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS (`2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T19:46:01Z",
+    "phase_context": "phase 2.10 smoke suite regression",
+    "command": "`./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:26:03Z",
+    "phase_context": "phase 2.10b renderer trend build (`build_local`)",
+    "command": "`cmake --build build_local --target LocusQ_VST3 locusq_qa -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:25:24Z",
+    "phase_context": "phase 2.10b draft high-emitter matrix (`48k/512,96k/512` x `2ch/4ch`)",
+    "command": "`./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial .../locusq_29_renderer_guardrail_high_emitters.json --sample-rate {48000,96000} --block-size 512 [--channels 4]`",
+    "result": "PASS (`4/4`, allocation-free)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:25:24Z",
+    "phase_context": "phase 2.10b final-quality high-emitter matrix (`48k/512,96k/512` x `2ch/4ch`)",
+    "command": "`./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial .../locusq_210b_renderer_guardrail_high_emitters_final_quality.json --sample-rate {48000,96000} --block-size 512 [--channels 4]`",
+    "result": "PASS (`4/4`, allocation-free, `perf_total_allocations=0`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:25:24Z",
+    "phase_context": "phase 2.10b trend suite matrix (`48k/512,96k/512` x `2ch/4ch`)",
+    "command": "`./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial .../locusq_phase_2_10b_renderer_cpu_trend_suite.json --sample-rate {48000,96000} --block-size 512 [--channels 4]`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL` in each run)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:25:51Z",
+    "phase_context": "phase 2.11b snapshot migration matrix configure",
+    "command": "`cmake -S . -B build -DBUILD_LOCUSQ_QA=ON -DJUCE_DIR=/Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE -DQA_HARNESS_DIR=/Users/artbox/Documents/Repos/audio-dsp-qa-harness -DCMAKE_POLICY_VERSION_MINIMUM=3.5`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:25:51Z",
+    "phase_context": "phase 2.11b snapshot migration matrix QA build",
+    "command": "`cmake --build build --target locusq_qa -j 1`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:27:42Z",
+    "phase_context": "phase 2.11b snapshot migration mono suite",
+    "command": "`./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`",
+    "result": "PASS (`2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:27:42Z",
+    "phase_context": "phase 2.11b snapshot migration stereo suite",
+    "command": "`./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`",
+    "result": "PASS (`2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:27:42Z",
+    "phase_context": "phase 2.11b snapshot migration quad suite",
+    "command": "`./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`",
+    "result": "PASS (`2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:24:24Z",
+    "phase_context": "`/test` non-manual acceptance matrix harness sanity",
+    "command": "`cmake -S /Users/artbox/Documents/Repos/audio-dsp-qa-harness -B /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test -DBUILD_QA_TESTS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cmake --build /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test && ctest --test-dir /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_test --output-on-failure`",
+    "result": "PASS (`45/45`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:25:12Z",
+    "phase_context": "`/test` non-manual acceptance matrix plugin build recovery",
+    "command": "`cmake -S . -B build -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cmake --build build --target LocusQ_VST3 LocusQ_Standalone locusq_qa -j 8`",
+    "result": "PASS (reconfigured after stale cache path mismatch)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:26:07Z",
+    "phase_context": "`/test` non-manual acceptance matrix core suites",
+    "command": "`./build/locusq_qa_artefacts/Release/locusq_qa qa/scenarios/locusq_smoke_suite.json; ./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json; ./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "FAIL (`phase_2_5`: `8 PASS / 0 WARN / 1 FAIL`; `phase_2_6`: `3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:26:07Z",
+    "phase_context": "`/test` non-manual acceptance matrix perf/host matrix",
+    "command": "`full_system(48k/512) + high_emitter(48k/512) + host_edge(44.1k/256,48k/512,48k/1024,96k/512)`",
+    "result": "PASS (`full_system perf_allocation_free=true`; host-edge `4/4` pass)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:26:09Z",
+    "phase_context": "`/test` non-manual acceptance matrix output/snapshot suites",
+    "command": "`phase_2_8_output_layout_{mono,stereo,quad} + phase_2_9_renderer_cpu_suite + phase_2_11_snapshot_migration_suite + 2.11 legacy quad4`",
+    "result": "PASS_WITH_WARNING (`2.8 stereo/quad`: `2 PASS / 1 WARN / 0 FAIL`; `2.9`: `2 PASS / 0 WARN / 0 FAIL`; `2.11`: `2 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:26:44Z",
+    "phase_context": "`/test` regression recheck (`phase_2_5`)",
+    "command": "`./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json; ./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_25_room_depth_no_coloring.json`",
+    "result": "FAIL (reproducible `signal_present` miss: `rms=-81.8862 dBFS`, min `-80 dBFS`)",
+    "outcome": "fail",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:27:22Z",
+    "phase_context": "`/test` host validation",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build/LocusQ_artefacts/Release/VST3/LocusQ.vst3; open build/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`pluginval SUCCESS`, exit `0`; standalone open exit `0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:31:15Z",
+    "phase_context": "`/test` trend delta publication (`non-manual matrix rerun`)",
+    "command": "`updated plugins/LocusQ/qa_output/suite_result.json + plugins/LocusQ/TestEvidence/test-summary.md + plugins/LocusQ/status.json`",
+    "result": "FAIL (`overall=FAIL`; blocking Phase 2.5 regression, with 2.8 stereo/quad warning deltas)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:41:17Z",
+    "phase_context": "Phase 2.5 blocker fix verification",
+    "command": "`./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_25_room_depth_no_coloring.json; ./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json`",
+    "result": "PASS (`room_depth rms=-78.2862`; `phase_2_5`: `9 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:41:49Z",
+    "phase_context": "`/test` non-manual matrix post-fix rerun",
+    "command": "`TestEvidence/test_non_manual_acceptance_matrix_post_25_fix_20260219T204149Z_status.tsv`",
+    "result": "PASS_WITH_WARNING (`0` hard failures; retained `phase_2_8` stereo/quad soft warnings)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T20:41:49Z",
+    "phase_context": "`/test` post-fix perf + host validation",
+    "command": "`qa_full_system_48k512 + qa_guardrail_48k512 + pluginval_strict5 + standalone_open`",
+    "result": "PASS (`full_system avg/p95=0.0669724/0.0832101 ms allocation-free`; `pluginval SUCCESS`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T21:26:13Z",
+    "phase_context": "Bridge-fix full acceptance rerun harness sanity",
+    "command": "`cmake -S $HARNESS_PATH -B $HARNESS_PATH/build_test ... && cmake --build $HARNESS_PATH/build_test && ctest --test-dir $HARNESS_PATH/build_test --output-on-failure`",
+    "result": "PASS (retry pass `45/45`; initial run had transient `performance_profiler_test` failure)",
+    "outcome": "fail",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-19T21:26:13Z",
+    "phase_context": "Bridge-fix full acceptance rerun suite matrix",
+    "command": "`locusq_smoke_suite + phase_2_5 + phase_2_6 + phase_2_8(stereo/quad) + phase_2_9 + phase_2_11 + full_system(48k/512) + host_edge_roundtrip`",
+    "result": "PASS_WITH_WARNING (`phase_2_5/2_6/2_9/2_11` hard-pass; `phase_2_8` remains warn-only)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T21:26:13Z",
+    "phase_context": "Bridge-fix host validation (skip GUI)",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3`",
+    "result": "PASS (`exit 0`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T21:31:42Z",
+    "phase_context": "Bridge-fix host validation (with editor automation)",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3`",
+    "result": "PASS (`Editor Automation` completed; `SUCCESS`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-19T21:32:12Z",
+    "phase_context": "Bridge-fix matrix publication",
+    "command": "`updated plugins/LocusQ/qa_output/suite_result.json + plugins/LocusQ/TestEvidence/test-summary.md + plugins/LocusQ/status.json`",
+    "result": "PASS_WITH_WARNING (`manual DAW checklist rerun still pending`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-19T22:00:36Z",
+    "phase_context": "Standalone UI smoke automation (macOS) initial run",
+    "command": "`./scripts/standalone-ui-smoke-mac.sh`",
+    "result": "BLOCKED (`osascript` assistive access denied: `-25211`)",
+    "outcome": "other",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-19T22:01:02Z",
+    "phase_context": "Standalone UI smoke automation permission-gate check",
+    "command": "`./scripts/standalone-ui-smoke-mac.sh`",
+    "result": "BLOCKED (fails fast with explicit Accessibility prerequisite message)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T01:53:53Z",
+    "phase_context": "Incremental Stage 2 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage2_20260220T015353Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T01:57:02Z",
+    "phase_context": "Incremental Stage 2 standalone launch/title smoke",
+    "command": "`open build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app; pgrep -x LocusQ; osascript window probe`",
+    "result": "PASS (`process_count=1`, title `LocusQ v0.1.0 [incremental-stage2]`; `TestEvidence/locusq_standalone_incremental_stage2_smoke_20260220T015702Z.log`)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:08:21Z",
+    "phase_context": "Incremental Stage 3 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage3_20260220T020821Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:08:54Z",
+    "phase_context": "Incremental Stage 3 standalone smoke",
+    "command": "`pkill -x LocusQ; open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app; pgrep -x LocusQ; osascript window probe`",
+    "result": "PASS (`process_count=1`; `TestEvidence/locusq_standalone_incremental_stage3_smoke_20260220T020854Z.log`)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:09:38Z",
+    "phase_context": "Incremental Stage 3 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage3_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:17:38Z",
+    "phase_context": "Incremental Stage 4 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage4_20260220T021738Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:18:04Z",
+    "phase_context": "Incremental Stage 4 standalone smoke",
+    "command": "`pkill -x LocusQ; open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app; pgrep -x LocusQ; osascript window probe`",
+    "result": "PASS (`process_count=1`; `TestEvidence/locusq_standalone_incremental_stage4_smoke_20260220T021804Z.log`)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:18:14Z",
+    "phase_context": "Incremental Stage 4 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage4_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:37:06Z",
+    "phase_context": "Incremental Stage 4 self-test hook rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage4_selftestclean_20260220T023706Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:37:30Z",
+    "phase_context": "Incremental Stage 4 automated UI self-test",
+    "command": "`scripts/standalone-ui-selftest-stage4-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage4_selftest_20260220T023730Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:41:29Z",
+    "phase_context": "Incremental Stage 4 self-test (`.app` path input)",
+    "command": "`scripts/standalone-ui-selftest-stage4-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage4_selftest_20260220T024129Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:42:15Z",
+    "phase_context": "Incremental UI PR gate (self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage4_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T024215Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:50:40Z",
+    "phase_context": "Incremental Stage 5 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage5_20260220T025040Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:51:03Z",
+    "phase_context": "Incremental Stage 5 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage5-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage5_selftest_20260220T025103Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:51:11Z",
+    "phase_context": "Incremental UI PR gate (Stage 5 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage5_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T025111Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T02:51:22Z",
+    "phase_context": "Incremental Stage 5 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage5_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:00:58Z",
+    "phase_context": "Incremental Stage 6 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage6_20260220T030058Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:01:23Z",
+    "phase_context": "Incremental Stage 6 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage6-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage6_selftest_20260220T030123Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:01:33Z",
+    "phase_context": "Incremental UI PR gate (Stage 6 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage6_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T030133Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:01:44Z",
+    "phase_context": "Incremental Stage 6 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage6_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:11:52Z",
+    "phase_context": "Incremental Stage 7 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage7_20260220T031152Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:12:17Z",
+    "phase_context": "Incremental Stage 7 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage7-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage7_selftest_20260220T031217Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:12:26Z",
+    "phase_context": "Incremental UI PR gate (Stage 7 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage7_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T031226Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:12:34Z",
+    "phase_context": "Incremental Stage 7 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage7_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:29:53Z",
+    "phase_context": "Incremental Stage 8 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage8_20260220T032953Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:30:17Z",
+    "phase_context": "Incremental Stage 8 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage8-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage8_selftest_20260220T033017Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:30:31Z",
+    "phase_context": "Incremental UI PR gate (Stage 8 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage8_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T033031Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T03:30:40Z",
+    "phase_context": "Incremental Stage 8 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage8_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T06:02:33Z",
+    "phase_context": "Stage 9+ parity checklist documentation freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:32:55Z",
+    "phase_context": "Incremental Stage 10 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage10_20260220T173255Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:33:21Z",
+    "phase_context": "Incremental Stage 10 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage10-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage10_selftest_20260220T173321Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:33:32Z",
+    "phase_context": "Incremental UI PR gate (Stage 10 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage10_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:33:44Z",
+    "phase_context": "Incremental Stage 10 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage10_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:47:25Z",
+    "phase_context": "Incremental Stage 11 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage11_20260220T174725Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:47:48Z",
+    "phase_context": "Incremental Stage 11 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage11-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage11_selftest_20260220T174748Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:47:57Z",
+    "phase_context": "Incremental UI PR gate (Stage 11 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage11_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T174757Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:48:08Z",
+    "phase_context": "Incremental Stage 11 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage11_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:54:54Z",
+    "phase_context": "Incremental Stage 12 standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/locusq_build_incremental_stage12_20260220T175454Z.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:55:17Z",
+    "phase_context": "Incremental Stage 12 automated UI self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage12_selftest_20260220T175517Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:55:30Z",
+    "phase_context": "Incremental UI PR gate (Stage 12 self-test default)",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage12_selftest=PASS`, smoke/Appium skipped by default; `TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv`)",
+    "outcome": "pending",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T17:55:39Z",
+    "phase_context": "Incremental Stage 12 resource probe",
+    "command": "`rg -n \"incremental/index.html",
+    "result": "incremental/js/stage12_ui.js\" \"$HOME/Library/LocusQ/resource_requests.log\"`",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:14Z",
+    "phase_context": "Stage 13 automated self-test (`.app` path)",
+    "command": "`scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage12_selftest_20260220T180204Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:23Z",
+    "phase_context": "Stage 13 automated UI PR gate",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:23Z",
+    "phase_context": "Stage 13 targeted smoke suite",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS (`4 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:24Z",
+    "phase_context": "Stage 13 targeted Phase 2.5 acceptance suite",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_5_acceptance_suite.json`",
+    "result": "PASS (`9 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:25Z",
+    "phase_context": "Stage 13 targeted Phase 2.6 acceptance suite",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:27Z",
+    "phase_context": "Stage 13 host-edge matrix (`44.1k/256, 48k/512, 48k/1024, 96k/512`)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json --sample-rate ... --block-size ...`",
+    "result": "PASS (`4/4`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:28Z",
+    "phase_context": "Stage 13 pluginval strictness-5 host validation",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3`",
+    "result": "PASS (`SUCCESS`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:02:28Z",
+    "phase_context": "Stage 13 standalone smoke",
+    "command": "`open -g build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (process launch observed; `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/standalone_open_smoke.log`)",
+    "outcome": "pass",
+    "command_family": "standalone-smoke"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:06:18Z",
+    "phase_context": "Stage 13 docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:24:17Z",
+    "phase_context": "Stage 14 contract-alignment docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:57:55Z",
+    "phase_context": "Contract-pack backport QA build",
+    "command": "`cmake --build build_local --config Release --target locusq_qa -j 8`",
+    "result": "PASS (`TestEvidence/locusq_qa_contract_pack_build_20260220T185755Z.log`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:58:30Z",
+    "phase_context": "Contract-pack suite (spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_contract_pack_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_contract_pack_suite_20260220T185830Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-20T18:58:57Z",
+    "phase_context": "Contract-pack docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:08:08Z",
+    "phase_context": "Stage 14 macOS build/install automation + cache hygiene",
+    "command": "`LOCUSQ_REAPER_AUTO_QUIT=0 ./scripts/build-and-install-mac.sh`",
+    "result": "PASS (AU registrar refreshed, REAPER cache rows pruned/backed up, installed AU/VST3 hashes match build artefacts)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:08:20Z",
+    "phase_context": "Stage 14 REAPER cache prune verification",
+    "command": "`rg -n \"LocusQ",
+    "result": "LcQd",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:08:25Z",
+    "phase_context": "Stage 14 docs freshness gate after review/install automation sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:30:20Z",
+    "phase_context": "Stage 14 `rend_phys_interact` self-test verification",
+    "command": "`scripts/standalone-ui-selftest-stage12-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_incremental_stage12_selftest_20260220T193020Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:30:31Z",
+    "phase_context": "Stage 14 `rend_phys_interact` UI PR gate verification",
+    "command": "`scripts/ui-pr-gate-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260220T193031Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:35:54Z",
+    "phase_context": "Stage 14 standalone rebuild after runtime/UI interaction binding",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:35:50Z",
+    "phase_context": "Stage 14 installed-binary match verification (AU/VST3)",
+    "command": "`sha256 + mtime verification between build_local and ~/Library/Audio/Plug-Ins targets`",
+    "result": "PASS (`match_vst3=true`, `match_au=true`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-20T19:35:58Z",
+    "phase_context": "Stage 14 docs freshness gate after interaction + checklist sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-20T22:08:23Z",
+    "phase_context": "Stage 15 manual DAW acceptance (DEV-01..DEV-06)",
+    "command": "`Manual operator execution in Standalone/Reaper; updated TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`",
+    "result": "PASS_WITH_NA (`DEV-01..DEV-05=PASS`, `DEV-06=N/A` external mic unavailable)",
+    "outcome": "pass",
+    "command_family": "reaper"
+  },
+  {
+    "timestamp_utc": "2026-02-20T23:18:40Z",
+    "phase_context": "Stage 17-A fresh build/install prerequisite",
+    "command": "`./scripts/build-and-install-mac.sh`",
+    "result": "PASS (`TestEvidence/stage17a_portable_acceptance_20260220T231840Z/build_and_install.log`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-20T23:19:17Z",
+    "phase_context": "Stage 17-A manual portable-device rerun gate (`DEV-01..DEV-06`)",
+    "command": "`Manual operator rerun required in Standalone/Reaper (headphone + laptop speaker focus)`",
+    "result": "PENDING_OPERATOR_RERUN (GA remains blocked until manual rows are re-executed)",
+    "outcome": "pending",
+    "command_family": "reaper"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:15:35Z",
+    "phase_context": "P0 runtime patch compile",
+    "command": "`cmake --build build_local --config Release --target LocusQ_VST3 LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:15:57Z",
+    "phase_context": "P0 incremental fallback gate",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:16:08Z",
+    "phase_context": "P0 production standalone smoke",
+    "command": "`./scripts/standalone-ui-smoke-mac.sh`",
+    "result": "FAIL (`0/6`; stale click-coordinate assumptions)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:16:41Z",
+    "phase_context": "P0 phase 2.6 suite (Emitter adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "ERROR (`3/3`; runner-prep failure without spatial adapter)",
+    "outcome": "fail",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:17:10Z",
+    "phase_context": "P0 smoke suite (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "WARN (`3 PASS / 1 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:17:10Z",
+    "phase_context": "P0 phase 2.6 suite (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:50:50Z",
+    "phase_context": "Production P0 self-test (`UI-04/UI-06/UI-07/UI-12`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-12` save completion timeout; `TestEvidence/locusq_production_p0_selftest_20260221T005050Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:51:45Z",
+    "phase_context": "Production P0 self-test rerun after preset-save harness fix",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260221T005145Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:52:11Z",
+    "phase_context": "P0 shared gate rerun (incremental fallback)",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T005211Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:52:21Z",
+    "phase_context": "P0 smoke suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "WARN (`3 PASS / 1 WARN / 0 FAIL`; `TestEvidence/locusq_smoke_suite_spatial_p0_20260221T005221Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:52:21Z",
+    "phase_context": "P0 phase 2.6 acceptance suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_p0_20260221T005221Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T00:52:22Z",
+    "phase_context": "P0 docs freshness gate rerun",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:31:40Z",
+    "phase_context": "BL-016 transport-contract regression check (production self-test)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260221T013140Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:32:08Z",
+    "phase_context": "BL-016 shared gate rerun (incremental fallback)",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T013208Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:31:52Z",
+    "phase_context": "BL-016 smoke suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "WARN (`3 PASS / 1 WARN / 0 FAIL`; `TestEvidence/locusq_smoke_suite_spatial_bl016_20260221T013152Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:31:52Z",
+    "phase_context": "BL-016 phase 2.6 acceptance suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl016_20260221T013152Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:32:09Z",
+    "phase_context": "BL-016 docs freshness gate rerun",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:44:05Z",
+    "phase_context": "P1 viewport self-test expansion dry run 1 (`UI-P1-*`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-P1-015` synthetic multi-emitter mesh creation timeout; `TestEvidence/locusq_production_p0_selftest_20260221T014405Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:45:27Z",
+    "phase_context": "P1 viewport self-test expansion dry run 2 (`UI-P1-*`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-P1-015` synthetic multi-emitter mesh creation timeout; `TestEvidence/locusq_production_p0_selftest_20260221T014527Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:46:16Z",
+    "phase_context": "P1 viewport self-test expansion dry run 3 (`UI-P1-*`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-P1-015` synthetic multi-emitter mesh creation timeout; `TestEvidence/locusq_production_p0_selftest_20260221T014616Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:47:24Z",
+    "phase_context": "P1 viewport self-test expansion rerun after synthetic-scene hold/fallback hardening",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260221T014724Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:47:38Z",
+    "phase_context": "P1 shared gate rerun (incremental fallback)",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T014738Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:47:56Z",
+    "phase_context": "P1 smoke suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "WARN (`3 PASS / 1 WARN / 0 FAIL`; `TestEvidence/locusq_smoke_suite_spatial_p1_20260221T014756Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:47:56Z",
+    "phase_context": "P1 phase 2.6 acceptance suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_p1_20260221T014756Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T01:47:56Z",
+    "phase_context": "P1 docs freshness gate rerun",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; `TestEvidence/validate_docs_freshness_p1_20260221T014756Z.log`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T03:15:50Z",
+    "phase_context": "BL-008 production self-test (`UI-P1-008` RMS telemetry assertion)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; includes `UI-P1-008`; `TestEvidence/locusq_production_p0_selftest_20260221T031550Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T03:16:09Z",
+    "phase_context": "BL-008 shared gate rerun (incremental fallback)",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T031609Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T03:16:23Z",
+    "phase_context": "BL-008 smoke suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "WARN (`3 PASS / 1 WARN / 0 FAIL`; `TestEvidence/locusq_smoke_suite_spatial_bl008_20260221T0316Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T03:16:24Z",
+    "phase_context": "BL-008 phase 2.6 acceptance suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`; `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl008_20260221T0316Z.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T03:16:24Z",
+    "phase_context": "BL-008 docs freshness gate rerun",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; `TestEvidence/validate_docs_freshness_bl008_20260221T0316Z.log`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:36:13Z",
+    "phase_context": "Resume baseline production self-test (pre-patch)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`headphone mode request timed out`; `TestEvidence/locusq_production_p0_selftest_20260221T083613Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:36:32Z",
+    "phase_context": "Resume baseline production self-test rerun (pre-patch)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`headphone mode request timed out`; `TestEvidence/locusq_production_p0_selftest_20260221T083632Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:38:39Z",
+    "phase_context": "Resume baseline standalone rebuild after self-test scope alignment",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:39:05Z",
+    "phase_context": "Resume baseline production self-test (post-patch)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260221T083905Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:39:26Z",
+    "phase_context": "Resume baseline shared gate rerun",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T083926Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:39:26Z",
+    "phase_context": "Resume baseline smoke suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "WARN (`3 PASS / 1 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:39:26Z",
+    "phase_context": "Resume baseline phase 2.6 suite rerun (Spatial adapter)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:39:26Z",
+    "phase_context": "Resume baseline docs freshness rerun",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:41:56Z",
+    "phase_context": "Resume baseline docs freshness rerun after evidence/status sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T08:44:59Z",
+    "phase_context": "Manual rerun prerequisite build/install + host cache refresh",
+    "command": "`./scripts/build-and-install-mac.sh`",
+    "result": "PASS (VST3/AU install hash match + AU registrar refresh + REAPER cache prune)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:10:44Z",
+    "phase_context": "P0 manual DAW blocker rerun (`UI-04/UI-06/UI-07/UI-12`)",
+    "command": "Manual operator execution in Reaper with blocker-only checklist and host screenshot evidence",
+    "result": "PARTIAL_PASS (`UI-04` PASS, `UI-12` PASS, `UI-06` FAIL, `UI-07` FAIL; timeline defects remain blocking)",
+    "outcome": "fail",
+    "command_family": "reaper"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:23:29Z",
+    "phase_context": "Transport/layout patch validation self-test (production route)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; includes `UI-06` and `UI-07` pass checks; `TestEvidence/locusq_production_p0_selftest_20260221T092320Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:23:42Z",
+    "phase_context": "Transport/layout patch shared gate rerun",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T092337Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:26:24Z",
+    "phase_context": "P0 manual DAW blocker rerun follow-up (`UI-06/UI-07`)",
+    "command": "Manual operator confirmation in Reaper; checklist updated in `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`",
+    "result": "PASS (`UI-06` PASS, `UI-07` PASS; blockers cleared)",
+    "outcome": "pass",
+    "command_family": "reaper"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:29:15Z",
+    "phase_context": "P0 closeout docs freshness sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:41:13Z",
+    "phase_context": "BL-006/BL-007/BL-008 coordinator closeout sync",
+    "command": "Updated backlog/state to mark trails, vectors, and RMS telemetry rows `Done` from existing automated evidence (`UI-P1-006`/`UI-P1-007`/`UI-P1-008`)",
+    "result": "PASS (documentation/state closure completed)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:41:13Z",
+    "phase_context": "BL-006/BL-007/BL-008 docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T09:42:10Z",
+    "phase_context": "BL-006/BL-007/BL-008 final docs freshness confirmation",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:20:14Z",
+    "phase_context": "BL-009 opt-in production self-test (`UI-P1-009`)",
+    "command": "`LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260221T102014Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:20:31Z",
+    "phase_context": "BL-009 baseline production self-test regression check",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260221T102031Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:20:57Z",
+    "phase_context": "BL-009 shared UI gate rerun",
+    "command": "`./scripts/ui-pr-gate-mac.sh`",
+    "result": "PASS (`ui_stage12_selftest=PASS`; `TestEvidence/ui_pr_gate_20260221T102057Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:21:40Z",
+    "phase_context": "BL-009 docs freshness gate (post-sync)",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; `CLAP_References.md` metadata added, `third_party/` excluded from repo-owned metadata scope)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:41:12Z",
+    "phase_context": "BL-009 diagnostics pass 1 (scene-state telemetry wiring check)",
+    "command": "`LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; check detail showed missing native diagnostics due synthetic snapshot sequence hold; `TestEvidence/locusq_production_p0_selftest_20260221T104112Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:44:29Z",
+    "phase_context": "BL-009 diagnostics rerun after synthetic sequence restore patch",
+    "command": "`LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-P1-015` synthetic mesh bootstrap regression; `TestEvidence/locusq_production_p0_selftest_20260221T104429Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:45:57Z",
+    "phase_context": "BL-009 diagnostics rerun after request-path hardening",
+    "command": "`LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-P1-009` requested mode mismatch while diagnostics wiring stabilized; `TestEvidence/locusq_production_p0_selftest_20260221T104557Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-21T10:47:08Z",
+    "phase_context": "BL-009 diagnostics closeout rerun",
+    "command": "`LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `UI-P1-009` detail: `steamAvailable=true`, `steamCompiled=true`, `stage=ready`; `TestEvidence/locusq_production_p0_selftest_20260221T104708Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T01:22:21Z",
+    "phase_context": "Baseline production self-test after BL-009 diagnostics + BL-024 planning artifacts",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `TestEvidence/locusq_production_p0_selftest_20260222T012221Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T01:22:53Z",
+    "phase_context": "Docs freshness gate after BL-009 diagnostics + BL-024 artifact sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:11:55Z",
+    "phase_context": "BL-011 CLAP target build attempt (`0.26.0` pin)",
+    "command": "`cmake --build build_local --config Release --target LocusQ_CLAP -j 8`",
+    "result": "FAIL (wrapper include path mismatch against JUCE 8: missing `juce_VST_Wrapper.mm` / `juce_LegacyAudioParameter.cpp`; pin updated to JUCE 8-compatible commit)",
+    "outcome": "fail",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:14:52Z",
+    "phase_context": "BL-011 CLAP configure with JUCE 8-compatible pin",
+    "command": "`cmake -S . -B build_local -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=ON -DLOCUSQ_CLAP_FETCH=ON -DLOCUSQ_CLAP_JUCE_EXTENSIONS_TAG=02f91b7988298f7f1f05c706da16e1d9da852a87 -DBUILD_LOCUSQ_QA=ON`",
+    "result": "PASS (`LocusQ_CLAP` generated; CLAP helper reports `CLAP version: 1.2.7`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:15:35Z",
+    "phase_context": "BL-011 CLAP target build (pinned commit)",
+    "command": "`cmake --build build_local --config Release --target LocusQ_CLAP -j 8`",
+    "result": "PASS (`[100%] Built target LocusQ_CLAP`; artifact at `build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:16:48Z",
+    "phase_context": "BL-011 CLAP target discovery confirmation",
+    "command": "`cmake --build build_local --config Release --target help",
+    "result": "rg -n \"LocusQ_CLAP\"`",
+    "outcome": "other",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:17:03Z",
+    "phase_context": "BL-011 docs freshness gate after CLAP scaffolding sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:18:12Z",
+    "phase_context": "BL-011 non-CLAP guard configure",
+    "command": "`cmake -S . -B build_no_clap_check -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=OFF -DBUILD_LOCUSQ_QA=OFF`",
+    "result": "PASS (baseline configure path remains valid with CLAP disabled)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:18:50Z",
+    "phase_context": "BL-011 final docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:23:54Z",
+    "phase_context": "BL-011 Slice 2 syntax guards (self-test lane wiring)",
+    "command": "`node --check Source/ui/public/js/index.js` + `bash -n scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:24:41Z",
+    "phase_context": "BL-011 Slice 2 CLAP-enabled reconfigure",
+    "command": "`cmake -S . -B build_local -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=ON -DLOCUSQ_CLAP_FETCH=ON -DLOCUSQ_CLAP_JUCE_EXTENSIONS_TAG=02f91b7988298f7f1f05c706da16e1d9da852a87 -DBUILD_LOCUSQ_QA=ON`",
+    "result": "PASS (`LocusQ_CLAP` regenerated with telemetry patch set)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:27:12Z",
+    "phase_context": "BL-011 Slice 2 CLAP target rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_CLAP -j 8`",
+    "result": "PASS (`[100%] Built target LocusQ_CLAP`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:27:44Z",
+    "phase_context": "BL-011 Slice 2 CLAP artifact verification",
+    "command": "`ls -la build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap/Contents/MacOS` + `file build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap/Contents/MacOS/LocusQ`",
+    "result": "PASS (`Mach-O 64-bit bundle arm64`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:28:07Z",
+    "phase_context": "BL-011 Slice 2 standalone rebuild for production self-test",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:28:15Z",
+    "phase_context": "BL-011 Slice 2 production self-test with CLAP diagnostics lane",
+    "command": "`LOCUSQ_UI_SELFTEST_BL011=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `UI-P2-011` pass; artifact `TestEvidence/locusq_production_p0_selftest_20260222T172815Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:29:17Z",
+    "phase_context": "BL-011 Slice 2 CLAP-disabled compile regression guard",
+    "command": "`cmake --build build_no_clap_check --config Release --target LocusQ_VST3 -j 8`",
+    "result": "PASS (`[100%] Built target LocusQ_VST3`)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:29:29Z",
+    "phase_context": "BL-011 toolchain availability check (`clap-info`/`clap-validator`)",
+    "command": "`command -v clap-info` + `command -v clap-validator`",
+    "result": "INFO (`not available` in current environment)",
+    "outcome": "other",
+    "command_family": "clap-validation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T17:29:35Z",
+    "phase_context": "BL-011 Slice 2 docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T18:15:04Z",
+    "phase_context": "BL-011 CLAP toolchain availability check (post-install)",
+    "command": "`command -v clap-info` + `command -v clap-validator`",
+    "result": "PASS (`/Users/artbox/.local/bin/clap-info`, `/Users/artbox/.local/bin/clap-validator`)",
+    "outcome": "pass",
+    "command_family": "clap-validation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T18:15:04Z",
+    "phase_context": "BL-011 CLAP descriptor snapshot",
+    "command": "`clap-info build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap`",
+    "result": "PASS (`plugin_count=1`; `id=com.noizefield.locusq`; artifact `TestEvidence/clap_validation_20260222T181504Z/clap-info.json`)",
+    "outcome": "pass",
+    "command_family": "clap-validation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T18:15:04Z",
+    "phase_context": "BL-011 CLAP validator suite",
+    "command": "`clap-validator validate build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap` + `clap-validator validate --json ...`",
+    "result": "FAIL (`21 run / 15 pass / 1 fail / 5 skipped`; failing test `param-set-wrong-namespace`; artifacts under `TestEvidence/clap_validation_20260222T181504Z/`)",
+    "outcome": "fail",
+    "command_family": "clap-validation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T18:23:58Z",
+    "phase_context": "BL-011 CLAP namespace remediation build",
+    "command": "`cmake --build build_local --config Release --target LocusQ_CLAP -j 8`",
+    "result": "PASS (fix in `Source/PluginProcessor.cpp` to avoid CLAP activation-time `emit_color` host parameter seeding)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T18:26:19Z",
+    "phase_context": "BL-011 CLAP validator suite re-run",
+    "command": "`clap-validator validate build_local/LocusQ_artefacts/Release/CLAP/LocusQ.clap` + `clap-validator validate --json ...`",
+    "result": "PASS (`21 run / 16 pass / 0 fail / 5 skipped`; `param-set-wrong-namespace` now PASS; artifacts under `TestEvidence/clap_validation_20260222T182619Z/`)",
+    "outcome": "fail",
+    "command_family": "clap-validation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:11:02Z",
+    "phase_context": "BL-010 isolated validation lane configure/build (`build_bl010`)",
+    "command": "`cmake -S . -B build_bl010 ... -DLOCUSQ_ENABLE_STEAM_AUDIO=OFF -DQA_HARNESS_DIR=/Users/artbox/Documents/Repos/audio-dsp-qa-harness -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cmake --build build_bl010 --config Release --target locusq_qa LocusQ_VST3 -j 8`",
+    "result": "PASS (`locusq_qa` + `LocusQ.vst3` built in isolated lane; avoids Steam-enabled `build_local` QA include-path coupling)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:11:56Z",
+    "phase_context": "BL-010 new deterministic FDN scenario (`48k/512`)",
+    "command": "`./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_210c_fdn_modulated_deterministic.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS (`Status: PASS`; `rt60=4.24773`; `perf_avg_block_time_ms=0.062053`; `perf_meets_deadline=true`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:12:18Z",
+    "phase_context": "BL-010 new deterministic FDN scenario (`96k/512`, `4ch`)",
+    "command": "`./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_210c_fdn_modulated_deterministic.json --sample-rate 96000 --block-size 512 --channels 4`",
+    "result": "PASS (`Status: PASS`; `rt60=4.26626`; `perf_avg_block_time_ms=0.0636573`; `perf_meets_deadline=true`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:12:36Z",
+    "phase_context": "BL-010 renderer CPU trend regression suite (`48k/512`)",
+    "command": "`./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json --sample-rate 48000 --block-size 512`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:12:53Z",
+    "phase_context": "BL-010 renderer CPU trend regression suite (`96k/512`, `4ch`)",
+    "command": "`./build_bl010/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json --sample-rate 96000 --block-size 512 --channels 4`",
+    "result": "PASS (`3 PASS / 0 WARN / 0 FAIL`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:13:20Z",
+    "phase_context": "BL-010 deterministic replay hash check",
+    "command": "`2x scenario rerun + shasum -a 256 wet.wav`",
+    "result": "PASS (`match=true`; `TestEvidence/bl010_validation_20260222T191102Z/qa_210c_determinism_hashes.txt`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:13:52Z",
+    "phase_context": "BL-010 seeded plugin host regression",
+    "command": "`/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --random-seed 0x2a331c6 build_bl010/LocusQ_artefacts/Release/VST3/LocusQ.vst3`",
+    "result": "PASS (`SUCCESS`)",
+    "outcome": "pass",
+    "command_family": "pluginval"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:14:11Z",
+    "phase_context": "BL-010 RT-safety audit grep",
+    "command": "`rg -n \"new",
+    "result": "std::vector",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:15:58Z",
+    "phase_context": "BL-010 docs freshness gate after backlog/status/evidence sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; `TestEvidence/bl010_validation_20260222T191102Z/docs_freshness.log`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:36:28Z",
+    "phase_context": "BL-009 Steam-enabled QA target rebuild after include/runtime propagation",
+    "command": "`cmake --build build_local --config Release --target locusq_qa -j 8`",
+    "result": "PASS (`locusq_qa` compiles in Steam-enabled lane; `phonon.h` include resolved)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:38:57Z",
+    "phase_context": "BL-009 deterministic headphone contract lane",
+    "command": "`./scripts/qa-bl009-headphone-contract-mac.sh`",
+    "result": "PASS (`downmix/steam deterministic hashes stable; UI-P1-009 shows steamAvailable=true stage=ready active=steam_binaural; cross-mode divergence pass`; `TestEvidence/bl009_headphone_contract_20260222T193857Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:41:04Z",
+    "phase_context": "BL-009 automation docs freshness sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:54:16Z",
+    "phase_context": "BL-018 ambisonic/layout contract lane (lightweight run)",
+    "command": "`bash scripts/qa-bl018-ambisonic-contract-mac.sh --no-binaural-runtime`",
+    "result": "PASS_WITH_WARNING (`integration_probe=warn` pending backend markers; `binaural_runtime_contract=warn` disabled by flag; `TestEvidence/bl018_ambisonic_contract_20260222T195416Z/status.tsv`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:54:48Z",
+    "phase_context": "Spatial lane wrapper smoke (`skill` script)",
+    "command": "`RUN_BINAURAL_RUNTIME=0 ./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh --skip-bl009`",
+    "result": "PASS_WITH_WARNING (BL-018 lane completes and publishes artifacts in `TestEvidence/bl018_ambisonic_contract_20260222T195448Z/`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:55:08Z",
+    "phase_context": "Spatial skill/docs registration freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:58:26Z",
+    "phase_context": "Spatial integrated lane rerun (`BL-009` + `BL-018`)",
+    "command": "`./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh`",
+    "result": "PASS_WITH_WARNING (`BL-009` PASS; `BL-018` warns on missing ambisonic markers before remediation; artifacts `TestEvidence/bl009_headphone_contract_20260222T195826Z/` and `TestEvidence/bl018_ambisonic_contract_20260222T195837Z/`)",
+    "outcome": "warn",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:58:52Z",
+    "phase_context": "BL-018 strict integration gate (pre-remediation)",
+    "command": "`bash scripts/qa-bl018-ambisonic-contract-mac.sh --strict-integration`",
+    "result": "FAIL (`integration_probe=fail`; no ambisonic backend markers; artifact `TestEvidence/bl018_ambisonic_contract_20260222T195852Z/status.tsv`)",
+    "outcome": "fail",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T19:59:44Z",
+    "phase_context": "BL-018 ambisonic telemetry marker syntax gate",
+    "command": "`node --check Source/ui/public/js/index.js` + `rg -n -i \"(ambisonic",
+    "result": "\\\\bhoa\\\\b",
+    "outcome": "other",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:00:26Z",
+    "phase_context": "Spatial integrated lane rerun after ambi marker patch",
+    "command": "`./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh`",
+    "result": "PASS (`BL-009` PASS; `BL-018` PASS; artifacts `TestEvidence/bl009_headphone_contract_20260222T200016Z/` and `TestEvidence/bl018_ambisonic_contract_20260222T200026Z/`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:00:40Z",
+    "phase_context": "BL-018 strict integration gate rerun after ambi marker patch",
+    "command": "`bash scripts/qa-bl018-ambisonic-contract-mac.sh --strict-integration`",
+    "result": "PASS (`integration_probe=pass`, `binaural_runtime_contract=pass`; artifact `TestEvidence/bl018_ambisonic_contract_20260222T200040Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:02:10Z",
+    "phase_context": "Spatial marker/docs sync freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:02:42Z",
+    "phase_context": "Spatial marker compile sanity (`rendererAmbi*` telemetry patch)",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`LocusQ_Standalone` built; existing warnings unchanged)",
+    "outcome": "warn",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:03:09Z",
+    "phase_context": "Post-sync docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:18:34Z",
+    "phase_context": "BL-018 profile matrix adapter fix rebuild",
+    "command": "`cmake --build build_local --config Release --target locusq_qa -j 8`",
+    "result": "PASS (`locusq_qa` rebuilt with `qa/locusq_adapter` exposing `rend_spatial_profile`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:18:51Z",
+    "phase_context": "BL-018 targeted failing scenario rerun (`virtual3d_stereo`)",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_bl018_profile_virtual3d_stereo.json --sample-rate 48000 --block-size 512 --channels 2`",
+    "result": "PASS (`Status: PASS`; previous runner-prep error resolved)",
+    "outcome": "fail",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:20:29Z",
+    "phase_context": "BL-018 full profile-matrix contract lane rerun",
+    "command": "`./scripts/qa-bl018-ambisonic-contract-mac.sh`",
+    "result": "PASS (`profile_* matrix rows all pass`; artifact `TestEvidence/bl018_ambisonic_contract_20260222T202029Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:22:14Z",
+    "phase_context": "BL-018 docs freshness gate after adapter + backlog sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:22:59Z",
+    "phase_context": "Spatial integrated lane rerun after profile-matrix remediation (`BL-009` + `BL-018`)",
+    "command": "`./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh`",
+    "result": "PASS (`BL-009` PASS + `BL-018` PASS; artifacts `TestEvidence/bl009_headphone_contract_20260222T202233Z/` and `TestEvidence/bl018_ambisonic_contract_20260222T202244Z/`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:23:43Z",
+    "phase_context": "Final docs freshness gate after BL-018 profile-matrix evidence sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:43:10Z",
+    "phase_context": "BL-009 headphone-profile wiring compile guard",
+    "command": "`node --check Source/ui/public/js/index.js` + `bash -n scripts/qa-bl009-headphone-profile-contract-mac.sh` + `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:44:37Z",
+    "phase_context": "BL-009 baseline headphone contract rerun after profile integration",
+    "command": "`./scripts/qa-bl009-headphone-contract-mac.sh`",
+    "result": "PASS (`TestEvidence/bl009_headphone_contract_20260222T204437Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:44:51Z",
+    "phase_context": "BL-009 headphone profile contract lane",
+    "command": "`./scripts/qa-bl009-headphone-profile-contract-mac.sh`",
+    "result": "PASS (`TestEvidence/bl009_headphone_profile_contract_20260222T204451Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:45:16Z",
+    "phase_context": "Spatial integrated lane rerun after BL-009 profile lane",
+    "command": "`./.codex/skills/spatial-audio-engineering/scripts/run_spatial_lanes.sh`",
+    "result": "PASS (`BL-009` PASS + `BL-018` PASS; artifacts `TestEvidence/bl009_headphone_contract_20260222T204505Z/` and `TestEvidence/bl018_ambisonic_contract_20260222T204516Z/`)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T20:46:40Z",
+    "phase_context": "Docs freshness gate after BL-009 headphone-profile lane sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:00:00Z",
+    "phase_context": "Spatial profile usage guide docs sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; new guide `Documentation/spatial-audio-profiles-usage.md`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:20:00Z",
+    "phase_context": "BL-017 planning kickoff docs sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; BL-017 moved to In Planning with companion bridge plan doc)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:21:16Z",
+    "phase_context": "BL-019 physics-lens compile/syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js` + `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:21:49Z",
+    "phase_context": "BL-019 production self-test lane (`UI-P1-019`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `UI-P1-019` pass detail: `physics lens overlays verified (force/collision/trajectory)`; artifact `TestEvidence/locusq_production_p0_selftest_20260222T211349Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:22:58Z",
+    "phase_context": "BL-019 backlog/status/evidence docs freshness sync",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:32:04Z",
+    "phase_context": "BL-022 multipass compile/syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js` + `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`",
+    "result": "PASS (`TestEvidence/bl022_validation_20260222T213204Z/status.tsv`)",
+    "outcome": "pass",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:32:05Z",
+    "phase_context": "BL-022 production self-test lane (`UI-P1-022`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `UI-P1-022` pass detail: `orbit choreography pack apply/save/load verified`; artifact `TestEvidence/locusq_production_p0_selftest_20260222T213205Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:32:17Z",
+    "phase_context": "BL-022 spatial smoke regression",
+    "command": "`build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`",
+    "result": "PASS_WITH_WARNING (`3 PASS / 1 WARN / 0 FAIL`; artifact `TestEvidence/bl022_validation_20260222T213204Z/qa_smoke_spatial.log`)",
+    "outcome": "warn",
+    "command_family": "qa-harness"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:32:18Z",
+    "phase_context": "BL-022 docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; artifact `TestEvidence/bl022_validation_20260222T213204Z/docs_freshness.log`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:34:07Z",
+    "phase_context": "BL-022 post-sync docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; artifact `TestEvidence/bl022_validation_20260222T213204Z/docs_freshness_postsync.log`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T21:34:50Z",
+    "phase_context": "BL-022 final docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`; artifact `TestEvidence/bl022_validation_20260222T213204Z/docs_freshness_final.log`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T22:39:28Z",
+    "phase_context": "BL-025 EMITTER V2 planning spec + backlog/status sync",
+    "command": "Added `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`; updated BL-025 row and kickoff mapping in backlog; synced `status.json` phase notes",
+    "result": "PASS (planning artifacts recorded)",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T22:39:30Z",
+    "phase_context": "BL-025 planning docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T22:58:46Z",
+    "phase_context": "BL-025 Slice A syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T22:59:22Z",
+    "phase_context": "BL-025 Slice A production self-test regression",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; includes `UI-06`, `UI-07`, `UI-12`, `UI-P1-019`, and `UI-P1-022` pass assertions; artifact `TestEvidence/locusq_production_p0_selftest_20260222T225912Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:00:48Z",
+    "phase_context": "BL-025 Slice A docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:01:50Z",
+    "phase_context": "BL-025 Slice A docs freshness gate (post-backlog progress sync)",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:02:16Z",
+    "phase_context": "BL-025 Slice A final syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:09:55Z",
+    "phase_context": "BL-025 Slice B standalone rebuild for embedded Web UI refresh",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (completed with warnings only; target `LocusQ_Standalone` built)",
+    "outcome": "warn",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:11:01Z",
+    "phase_context": "BL-025 Slice B production self-test regression (`UI-P1-025A`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; new lane `UI-P1-025A` pass detail: `position mode contract and emitter slice-a scaffold controls verified`; artifact `TestEvidence/locusq_production_p0_selftest_20260222T231051Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:12:12Z",
+    "phase_context": "BL-025 Slice B docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:25:58Z",
+    "phase_context": "BL-025 Slice C syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:26:20Z",
+    "phase_context": "BL-025 Slice C standalone rebuild for embedded Web UI refresh",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (`LocusQ_Standalone` rebuilt with motion-source/transport consolidation patchset)",
+    "outcome": "pass",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:26:22Z",
+    "phase_context": "BL-025 Slice C production self-test regression (`UI-P1-025A` + `UI-P1-025B`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; new lane `UI-P1-025B` pass detail: `motion source contract and shared transport mirroring verified`; artifact `TestEvidence/locusq_production_p0_selftest_20260222T232612Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:26:51Z",
+    "phase_context": "BL-025 Slice C docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:28:24Z",
+    "phase_context": "BL-025 Slice C post-sync docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:28:46Z",
+    "phase_context": "BL-025 Slice C final docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-22T23:29:21Z",
+    "phase_context": "BL-025 Slice C docs freshness gate (final state)",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:35:40Z",
+    "phase_context": "BL-025 Slice D syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:35:53Z",
+    "phase_context": "BL-025 Slice D standalone rebuild for typed preset lifecycle wiring",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (warnings only; target `LocusQ_Standalone` built)",
+    "outcome": "warn",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:35:58Z",
+    "phase_context": "BL-025 Slice D production self-test regression (`UI-P1-025A` + `UI-P1-025B` + `UI-P1-025C`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; new lane `UI-P1-025C` pass detail: `typed preset save/rename/delete lifecycle verified`; artifact `TestEvidence/locusq_production_p0_selftest_20260223T003553Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:39:01Z",
+    "phase_context": "BL-025 Slice D docs freshness gate (pre-final sync)",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "FAIL (`3` date-hygiene issues: `README.md`, `CHANGELOG.md`, `TestEvidence/build-summary.md`)",
+    "outcome": "fail",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:39:20Z",
+    "phase_context": "BL-025 Slice D docs freshness gate (final)",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:47:59Z",
+    "phase_context": "BL-025 Slice E syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:48:10Z",
+    "phase_context": "BL-025 Slice E standalone rebuild for authority lock + responsive polish",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (warnings only; target `LocusQ_Standalone` built)",
+    "outcome": "warn",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:48:30Z",
+    "phase_context": "BL-025 Slice E production self-test regression (`UI-P1-025A` + `UI-P1-025B` + `UI-P1-025C` + `UI-P1-025D`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; new lane `UI-P1-025D` pass detail: `remote authority lock/unlock contract verified`; artifact `TestEvidence/locusq_production_p0_selftest_20260223T004830Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:50:11Z",
+    "phase_context": "BL-025 Slice E docs freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:50:32Z",
+    "phase_context": "BL-025 Slice E docs freshness gate (post-status sync)",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:55:52Z",
+    "phase_context": "BL-025 responsive lane first run (`UI-P1-025E`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`UI-P1-025E` failed with `compact emitter rail did not shrink`; artifact `TestEvidence/locusq_production_p0_selftest_20260223T005552Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:56:23Z",
+    "phase_context": "BL-025 responsive lane timing-fix syntax guard",
+    "command": "`node --check Source/ui/public/js/index.js`",
+    "result": "PASS",
+    "outcome": "pass",
+    "command_family": "other"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:57:12Z",
+    "phase_context": "BL-025 responsive lane timing-fix standalone rebuild",
+    "command": "`cmake --build build_local --config Release --target LocusQ_Standalone -j 8`",
+    "result": "PASS (warnings only; target `LocusQ_Standalone` built)",
+    "outcome": "warn",
+    "command_family": "build"
+  },
+  {
+    "timestamp_utc": "2026-02-23T00:57:25Z",
+    "phase_context": "BL-025 responsive lane regression (`UI-P1-025E`)",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; `UI-P1-025E` detail `responsive emitter layout verified (rail base=356px compact=308px tight=288px)`; artifact `TestEvidence/locusq_production_p0_selftest_20260223T005725Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-23T01:00:02Z",
+    "phase_context": "BL-025 resize evidence/docs sync freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  },
+  {
+    "timestamp_utc": "2026-02-23T01:03:07Z",
+    "phase_context": "BL-025 host spot-check standalone run during parallel host launch",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "FAIL (`ui_selftest_timeout_before_pass_or_fail`; boot error `NotFoundError`; artifact `TestEvidence/locusq_production_p0_selftest_20260223T010307Z.json`)",
+    "outcome": "fail",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-23T01:03:07Z",
+    "phase_context": "BL-024/BL-025 host automation spot-check (REAPER headless auto-bootstrap)",
+    "command": "`./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap`",
+    "result": "PASS (`locusqFxFound=true`, `renderOutputDetected=true`; artifact `TestEvidence/reaper_headless_render_20260223T010307Z/status.json`)",
+    "outcome": "pass",
+    "command_family": "reaper"
+  },
+  {
+    "timestamp_utc": "2026-02-23T01:04:22Z",
+    "phase_context": "BL-025 host spot-check standalone isolated rerun",
+    "command": "`./scripts/standalone-ui-selftest-production-p0-mac.sh`",
+    "result": "PASS (`status=pass`, `ok=true`; includes `UI-06`, `UI-07`, `UI-P1-025E`; artifact `TestEvidence/locusq_production_p0_selftest_20260223T010422Z.json`)",
+    "outcome": "pass",
+    "command_family": "ui-automation"
+  },
+  {
+    "timestamp_utc": "2026-02-23T01:06:10Z",
+    "phase_context": "BL-025 host spot-check docs/status sync freshness gate",
+    "command": "`./scripts/validate-docs-freshness.sh`",
+    "result": "PASS (`0 warning(s)`)",
+    "outcome": "warn",
+    "command_family": "docs-governance"
+  }
+]

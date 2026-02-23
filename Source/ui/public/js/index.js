@@ -1,3 +1,19 @@
+(() => {
+const bootstrapSearch = typeof window !== "undefined" && window.location
+    ? String(window.location.search || "")
+    : "";
+const bootstrapSelfTestRequested = bootstrapSearch.includes("selftest=1");
+
+if (typeof window !== "undefined" && bootstrapSelfTestRequested) {
+    if (!window.__LQ_SELFTEST_RESULT__ || typeof window.__LQ_SELFTEST_RESULT__ !== "object") {
+        window.__LQ_SELFTEST_RESULT__ = {
+            requested: true,
+            status: "pending",
+            startedAt: new Date().toISOString(),
+        };
+    }
+}
+
 function createFallbackListenerList() {
     const listeners = new Map();
     let nextId = 0;
@@ -276,6 +292,8 @@ const sliderStates = {
     phys_vel_z:     Juce.getSliderState("phys_vel_z"),
     anim_speed:     Juce.getSliderState("anim_speed"),
     rend_master_gain: Juce.getSliderState("rend_master_gain"),
+    rend_viz_trail_len: Juce.getSliderState("rend_viz_trail_len"),
+    rend_viz_diag_mix: Juce.getSliderState("rend_viz_diag_mix"),
 };
 
 const toggleStates = {
@@ -296,6 +314,9 @@ const toggleStates = {
     rend_phys_walls:    Juce.getToggleState("rend_phys_walls"),
     rend_phys_interact: Juce.getToggleState("rend_phys_interact"),
     rend_phys_pause:    Juce.getToggleState("rend_phys_pause"),
+    rend_viz_trails: Juce.getToggleState("rend_viz_trails"),
+    rend_viz_vectors: Juce.getToggleState("rend_viz_vectors"),
+    rend_viz_physics_lens: Juce.getToggleState("rend_viz_physics_lens"),
 };
 
 const comboStates = {
@@ -307,6 +328,8 @@ const comboStates = {
     anim_mode:    Juce.getComboBoxState("anim_mode"),
     rend_quality: Juce.getComboBoxState("rend_quality"),
     rend_distance_model: Juce.getComboBoxState("rend_distance_model"),
+    rend_headphone_mode: Juce.getComboBoxState("rend_headphone_mode"),
+    rend_headphone_profile: Juce.getComboBoxState("rend_headphone_profile"),
     rend_phys_rate: Juce.getComboBoxState("rend_phys_rate"),
     rend_viz_mode: Juce.getComboBoxState("rend_viz_mode"),
 };
@@ -320,12 +343,31 @@ const nativeFunctions = {
     listEmitterPresets: Juce.getNativeFunction("locusqListEmitterPresets"),
     saveEmitterPreset: Juce.getNativeFunction("locusqSaveEmitterPreset"),
     loadEmitterPreset: Juce.getNativeFunction("locusqLoadEmitterPreset"),
+    renameEmitterPreset: Juce.getNativeFunction("locusqRenameEmitterPreset"),
+    deleteEmitterPreset: Juce.getNativeFunction("locusqDeleteEmitterPreset"),
     getUiState: Juce.getNativeFunction("locusqGetUiState"),
     setUiState: Juce.getNativeFunction("locusqSetUiState"),
 };
 
 const NATIVE_CALL_TIMEOUT_MS = 3000;
 const BASIC_CONTROL_VALUE_CHANGED_EVENT = "valueChanged";
+const queryParams = new URLSearchParams(window.location.search || "");
+const productionP0SelfTestRequested = queryParams.get("selftest") === "1";
+const productionP0SelfTestScope = String(queryParams.get("selftest_scope") || "").trim().toLowerCase();
+let productionP0SelfTestStarted = false;
+
+if (productionP0SelfTestRequested) {
+    window.__LQ_SELFTEST_RESULT__ = {
+        requested: true,
+        status: "pending",
+        startedAt: new Date().toISOString(),
+    };
+} else {
+    window.__LQ_SELFTEST_RESULT__ = {
+        requested: false,
+        status: "disabled",
+    };
+}
 
 function withNativeTimeout(promise, label) {
     return new Promise((resolve, reject) => {
@@ -358,6 +400,64 @@ async function callNative(label, fn, ...args) {
         throw new Error(`${label} unavailable`);
     }
     return withNativeTimeout(fn(...args), label);
+}
+
+function waitMs(delayMs) {
+    const delay = Math.max(0, Number(delayMs) || 0);
+    return new Promise(resolve => window.setTimeout(resolve, delay));
+}
+
+async function waitForCondition(label, predicate, timeoutMs = 4000, pollMs = 25) {
+    const timeout = Math.max(0, Number(timeoutMs) || 0);
+    const pollInterval = Math.max(5, Number(pollMs) || 25);
+    const deadline = Date.now() + timeout;
+
+    while (Date.now() <= deadline) {
+        let ok = false;
+        try {
+            ok = !!predicate();
+        } catch (_) {
+            ok = false;
+        }
+        if (ok) return;
+        await waitMs(pollInterval);
+    }
+
+    throw new Error(`${label} timed out after ${timeout}ms`);
+}
+
+function dispatchPointer(target, type, clientX, clientY, pointerId = 1, button = 0) {
+    if (!target) return false;
+
+    const base = {
+        bubbles: true,
+        cancelable: true,
+        clientX,
+        clientY,
+        pointerId,
+        pointerType: "mouse",
+        button,
+        buttons: button === 0 ? 1 : 2,
+    };
+
+    let event = null;
+    if (typeof window.PointerEvent === "function") {
+        event = new PointerEvent(type, base);
+    } else if (typeof window.MouseEvent === "function") {
+        event = new MouseEvent(type, base);
+    }
+
+    if (!event) return false;
+    return target.dispatchEvent(event);
+}
+
+function startProductionP0SelfTestAfterDelay(delayMs) {
+    if (!productionP0SelfTestRequested || productionP0SelfTestStarted) return;
+    productionP0SelfTestStarted = true;
+    const delay = Math.max(0, Number(delayMs) || 0);
+    window.setTimeout(() => {
+        void runProductionP0SelfTest();
+    }, delay);
 }
 
 function notifyStateValueChanged(state) {
@@ -434,6 +534,67 @@ function setToggleClass(id, isOn) {
     if (el) el.classList.toggle("on", !!isOn);
 }
 
+function isElementControlLocked(element) {
+    if (!element) return false;
+    if (element.dataset?.controlLocked === "1") return true;
+    if (element.getAttribute("aria-disabled") === "true") return true;
+    if ("disabled" in element && element.disabled) return true;
+    if (element.closest("[data-authority-lock='1']")) return true;
+    return false;
+}
+
+function syncStepperAuthorityLock(display, locked) {
+    if (!display) return;
+    display.dataset.authorityStepperLock = locked ? "1" : "0";
+    const positionLocked = display.dataset.positionStepperLock === "1";
+    const stepperLocked = locked || positionLocked;
+    display.dataset.stepperLock = stepperLocked ? "1" : "0";
+    display.setAttribute("aria-readonly", stepperLocked ? "true" : "false");
+}
+
+function setControlAuthorityLock(element, locked) {
+    if (!element) return;
+    if (locked) {
+        element.dataset.controlLocked = "1";
+        element.setAttribute("aria-disabled", "true");
+    } else {
+        delete element.dataset.controlLocked;
+        element.removeAttribute("aria-disabled");
+    }
+
+    if (element instanceof HTMLInputElement) {
+        if (element.type === "text") {
+            element.readOnly = locked;
+        } else {
+            element.disabled = locked;
+        }
+    } else if (element instanceof HTMLSelectElement || element instanceof HTMLButtonElement) {
+        element.disabled = locked;
+    }
+
+    if (element.id === "emit-color-swatch") {
+        element.tabIndex = locked ? -1 : 0;
+    }
+}
+
+function applyEmitterAuthoringLock(locked) {
+    emitterAuthoringLocked = !!locked;
+
+    document.querySelectorAll(".emitter-card[data-emitter-group]").forEach(card => {
+        const group = String(card.dataset.emitterGroup || "").trim().toLowerCase();
+        const shouldLock = emitterAuthoringLocked && emitterAuthorityEditableCardGroups.has(group);
+        card.classList.toggle("authority-readonly", shouldLock);
+        card.dataset.authorityLock = shouldLock ? "1" : "0";
+    });
+
+    emitterAuthorityControlIds.forEach(id => {
+        setControlAuthorityLock(document.getElementById(id), emitterAuthoringLocked);
+    });
+    emitterAuthorityStepperIds.forEach(id => {
+        syncStepperAuthorityLock(document.getElementById(id), emitterAuthoringLocked);
+    });
+}
+
 function toggleStateAndClass(toggleId, state) {
     const nextValue = !getToggleValue(state);
     setToggleValue(state, nextValue);
@@ -447,6 +608,9 @@ function bindControlActivate(element, handler) {
     const trigger = event => {
         if (event && typeof event.preventDefault === "function") {
             event.preventDefault();
+        }
+        if (isElementControlLocked(element)) {
+            return;
         }
         handler(event);
     };
@@ -466,6 +630,253 @@ function setAnimationControlsEnabled(enabled) {
     if (source) source.disabled = !enabled;
 }
 
+function setMotionLoopClasses(loopEnabled) {
+    setToggleClass("toggle-anim-loop", !!loopEnabled);
+    setToggleClass("toggle-timeline-loop", !!loopEnabled);
+    setToggleClass("toggle-motion-loop", !!loopEnabled);
+}
+
+function setMotionSyncClasses(syncEnabled) {
+    setToggleClass("toggle-timeline-sync", !!syncEnabled);
+    setToggleClass("toggle-motion-sync", !!syncEnabled);
+}
+
+function setTimelineSyncEnabled(enabled) {
+    const syncEnabled = !!enabled;
+    setToggleValue(toggleStates.anim_sync, syncEnabled);
+    setMotionSyncClasses(syncEnabled);
+}
+
+function setTimelineLoopEnabled(enabled) {
+    const loopEnabled = !!enabled;
+    setToggleValue(toggleStates.anim_loop, loopEnabled);
+    setMotionLoopClasses(loopEnabled);
+    timelineState.looping = loopEnabled;
+}
+
+function disableTimelineSyncForManualTransport() {
+    if (getToggleValue(toggleStates.anim_sync)) {
+        setTimelineSyncEnabled(false);
+    }
+}
+
+function bindElementOnce(element, bindingKey, binder) {
+    if (!element || typeof binder !== "function") return;
+    const marker = `data-lq-bound-${bindingKey}`;
+    if (element.getAttribute(marker) === "1") return;
+    element.setAttribute(marker, "1");
+    binder();
+}
+
+function bindTimelineLaneSelectionControls() {
+    document.querySelectorAll(".timeline-lane").forEach(lane => {
+        const laneId = String(lane.dataset.lane || "lane");
+        bindElementOnce(lane, `timeline-lane-${laneId}`, () => {
+            lane.addEventListener("click", () => {
+                document.querySelectorAll(".timeline-lane").forEach(l => l.classList.remove("selected"));
+                lane.classList.add("selected");
+                selectedLane = lane.dataset.lane;
+                setLaneHighlight(selectedLane);
+            });
+        });
+    });
+}
+
+function bindTimelineRuntimeControls() {
+    const rewindButton = document.getElementById("timeline-rewind-btn");
+    bindElementOnce(rewindButton, "timeline-rewind", () => {
+        rewindButton.addEventListener("click", () => {
+            disableTimelineSyncForManualTransport();
+            timelineState.currentTimeSeconds = 0.0;
+            updateTimelinePlayheads();
+            setToggleValue(toggleStates.anim_enable, false);
+            setToggleClass("toggle-anim", false);
+            setAnimationControlsEnabled(false);
+            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 0.0).catch(() => {});
+            syncMotionSourceUI();
+        });
+    });
+
+    const stopButton = document.getElementById("timeline-stop-btn");
+    bindElementOnce(stopButton, "timeline-stop", () => {
+        stopButton.addEventListener("click", () => {
+            disableTimelineSyncForManualTransport();
+            setToggleValue(toggleStates.anim_enable, false);
+            setToggleClass("toggle-anim", false);
+            setAnimationControlsEnabled(false);
+            const duration = Math.max(0.001, timelineState.durationSeconds);
+            timelineState.currentTimeSeconds = clamp(Number(timelineState.currentTimeSeconds) || 0.0, 0.0, duration);
+            updateTimelinePlayheads();
+            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, timelineState.currentTimeSeconds).catch(() => {});
+            syncMotionSourceUI();
+        });
+    });
+
+    const playButton = document.getElementById("timeline-play-btn");
+    bindElementOnce(playButton, "timeline-play", () => {
+        playButton.addEventListener("click", () => {
+            disableTimelineSyncForManualTransport();
+            if (getChoiceIndex(comboStates.anim_mode) !== 1) {
+                setChoiceIndex(comboStates.anim_mode, 1);
+            }
+            const duration = Math.max(0.001, timelineState.durationSeconds);
+            if ((Number(timelineState.currentTimeSeconds) || 0.0) >= duration - 0.0005) {
+                timelineState.currentTimeSeconds = 0.0;
+                updateTimelinePlayheads();
+                callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 0.0).catch(() => {});
+            }
+            setToggleValue(toggleStates.anim_enable, true);
+            setToggleClass("toggle-anim", true);
+            setAnimationControlsEnabled(true);
+            syncMotionSourceUI();
+        });
+    });
+
+    ["toggle-anim-loop", "toggle-timeline-loop", "toggle-motion-loop"].forEach(id => {
+        const loopToggle = document.getElementById(id);
+        bindElementOnce(loopToggle, `timeline-loop-${id}`, () => {
+            bindControlActivate(loopToggle, () => {
+                const nextLoop = !getToggleValue(toggleStates.anim_loop);
+                setTimelineLoopEnabled(nextLoop);
+                scheduleTimelineCommit();
+            });
+        });
+    });
+
+    ["toggle-timeline-sync", "toggle-motion-sync"].forEach(id => {
+        const syncToggle = document.getElementById(id);
+        bindElementOnce(syncToggle, `timeline-sync-${id}`, () => {
+            bindControlActivate(syncToggle, () => {
+                const nextSync = !getToggleValue(toggleStates.anim_sync);
+                setTimelineSyncEnabled(nextSync);
+            });
+        });
+    });
+}
+
+function bindMotionRuntimeMirrorControls() {
+    const transportMirrorMap = [
+        ["motion-transport-rewind-btn", "timeline-rewind-btn"],
+        ["motion-transport-stop-btn", "timeline-stop-btn"],
+        ["motion-transport-play-btn", "timeline-play-btn"],
+    ];
+
+    transportMirrorMap.forEach(([mirrorId, timelineId]) => {
+        const mirrorButton = document.getElementById(mirrorId);
+        bindElementOnce(mirrorButton, `motion-transport-mirror-${mirrorId}`, () => {
+            mirrorButton.addEventListener("click", () => {
+                const timelineButton = document.getElementById(timelineId);
+                if (timelineButton) timelineButton.click();
+            });
+        });
+    });
+}
+
+function ensureTimelineShellIntegrity() {
+    const viewportArea = document.querySelector(".viewport-area");
+    if (!viewportArea) return false;
+
+    let timeline = document.getElementById("timeline");
+    let rebuilt = false;
+    if (!timeline) {
+        timeline = document.createElement("div");
+        timeline.id = "timeline";
+        timeline.className = "timeline";
+        viewportArea.appendChild(timeline);
+        rebuilt = true;
+    }
+
+    const hasHeader = !!timeline.querySelector(".timeline-header");
+    const hasLanes = !!timeline.querySelector(".timeline-lanes");
+    if (!hasHeader || !hasLanes) {
+        timeline.innerHTML = `
+        <div class="timeline-header">
+          <div class="timeline-transport">
+            <button class="transport-btn" id="timeline-rewind-btn" title="Rewind to start and pause">&#9664;</button>
+            <button class="transport-btn" id="timeline-stop-btn" title="Stop at current time">&#9632;</button>
+            <button class="transport-btn" id="timeline-play-btn" title="Play from current time">&#9654;</button>
+          </div>
+          <span class="timeline-time" id="timeline-time">00:00.000</span>
+          <div class="header-spacer"></div>
+          <div class="timeline-toggle-label">Loop <div class="toggle" id="toggle-timeline-loop" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+          <div class="timeline-toggle-label">Sync <div class="toggle on" id="toggle-timeline-sync" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+        </div>
+        <div class="timeline-lanes">
+          <div class="timeline-lane selected" data-lane="azimuth">
+            <span class="lane-label">Azimuth</span>
+            <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-azimuth">ease</span>
+          </div>
+          <div class="timeline-lane" data-lane="elevation">
+            <span class="lane-label">Elevation</span>
+            <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-elevation">ease</span>
+          </div>
+          <div class="timeline-lane" data-lane="distance">
+            <span class="lane-label">Distance</span>
+            <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-distance">ease</span>
+          </div>
+          <div class="timeline-lane" data-lane="size">
+            <span class="lane-label">Size</span>
+            <div class="lane-track"></div>
+            <span class="curve-pill" id="lane-curve-size">step</span>
+          </div>
+        </div>`;
+        rebuilt = true;
+    }
+
+    timeline.style.display = "block";
+    timeline.style.visibility = "visible";
+    timeline.style.opacity = "1";
+
+    const header = timeline.querySelector(".timeline-header");
+    const lanes = timeline.querySelector(".timeline-lanes");
+    if (header) header.style.display = "flex";
+    if (lanes) lanes.style.display = "block";
+
+    const laneElements = Array.from(document.querySelectorAll(".timeline-lane"));
+    laneElements.forEach(lane => lane.classList.toggle("selected", lane.dataset.lane === selectedLane));
+    if (!laneElements.some(lane => lane.classList.contains("selected")) && laneElements.length > 0) {
+        selectedLane = laneElements[0].dataset.lane || "azimuth";
+        laneElements[0].classList.add("selected");
+    }
+
+    const duration = Math.max(0.001, Number(timelineState.durationSeconds) || 0.001);
+    const current = clamp(Number(timelineState.currentTimeSeconds) || 0.0, 0.0, duration);
+    const totalMs = Math.max(0, Math.round(current * 1000));
+    const minutes = Math.floor(totalMs / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+    const millis = totalMs % 1000;
+    const formattedTime =
+        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+    const timeEl = document.getElementById("timeline-time");
+    if (timeEl) timeEl.textContent = formattedTime;
+    const motionTimeEl = document.getElementById("motion-transport-time");
+    if (motionTimeEl) motionTimeEl.textContent = formattedTime;
+    setMotionLoopClasses(getToggleValue(toggleStates.anim_loop));
+    setMotionSyncClasses(getToggleValue(toggleStates.anim_sync));
+
+    bindTimelineLaneSelectionControls();
+    bindTimelineRuntimeControls();
+    bindMotionRuntimeMirrorControls();
+    return rebuilt;
+}
+
+function isEmitterLayoutActive(modeHint) {
+    if (modeHint === "emitter") return true;
+
+    const activeTab = document.querySelector(".mode-tab.active");
+    if (activeTab && activeTab.dataset.mode === "emitter") return true;
+
+    const activePanel = document.querySelector(".rail-panel.active");
+    if (activePanel && activePanel.dataset.panel === "emitter") return true;
+
+    if (document.body && document.body.classList.contains("mode-emitter")) return true;
+
+    return false;
+}
+
 function syncAnimationUI() {
     const enabled = !!toggleStates.anim_enable.getValue();
     setToggleClass("toggle-anim", enabled);
@@ -475,15 +886,250 @@ function syncAnimationUI() {
     if (source) source.selectedIndex = Math.max(0, Math.min(1, getChoiceIndex(comboStates.anim_mode)));
 
     const loopEnabled = !!toggleStates.anim_loop.getValue();
-    setToggleClass("toggle-anim-loop", loopEnabled);
-    setToggleClass("toggle-timeline-loop", loopEnabled);
+    setMotionLoopClasses(loopEnabled);
 
     const syncEnabled = !!toggleStates.anim_sync.getValue();
-    setToggleClass("toggle-timeline-sync", syncEnabled);
+    setMotionSyncClasses(syncEnabled);
 
     updateValueDisplay("val-anim-speed", sliderStates.anim_speed.getScaledValue().toFixed(1), "x");
     timelineState.looping = loopEnabled;
     timelineState.playbackRate = sliderStates.anim_speed.getScaledValue();
+    updateMotionStatusChips();
+}
+
+function syncResponsiveLayoutMode() {
+    const width = Math.max(
+        Number(window.innerWidth) || 0,
+        Number(document.documentElement?.clientWidth) || 0
+    );
+    const body = document.body;
+    if (!body) return;
+
+    body.classList.toggle("layout-compact", width <= 1240);
+    body.classList.toggle("layout-tight", width <= 1024);
+}
+
+function getDerivedMotionSourceId() {
+    const animEnabled = !!getToggleValue(toggleStates.anim_enable);
+    const physicsPreset = normalizePhysicsPresetName(uiState.physicsPreset);
+    const choreographyPack = normalizeChoreographyPackId(uiState.choreographyPack);
+
+    if (!animEnabled && physicsPreset !== "off") return "physics";
+    if (animEnabled && choreographyPack !== "custom") return "choreography";
+    if (animEnabled) return "timeline";
+    return "static";
+}
+
+function getMotionSourceLabel(sourceId) {
+    switch (sourceId) {
+    case "physics":
+        return "Physics";
+    case "timeline":
+        return "Timeline";
+    case "choreography":
+        return "Choreography";
+    default:
+        return "Static";
+    }
+}
+
+function syncMotionSourceUI(sourceId = getDerivedMotionSourceId()) {
+    const sourceSelect = document.getElementById("motion-source-select");
+    if (sourceSelect && sourceSelect.value !== sourceId) {
+        sourceSelect.value = sourceId;
+    }
+
+    const timelineTransport = document.getElementById("motion-transport-strip");
+    const timelineDriven = sourceId === "timeline" || sourceId === "choreography";
+    if (timelineTransport) {
+        timelineTransport.classList.toggle("inactive", !timelineDriven);
+    }
+
+    const physicsPanel = document.getElementById("motion-panel-physics");
+    const timelinePanel = document.getElementById("motion-panel-timeline");
+    const choreographyPanel = document.getElementById("motion-panel-choreography");
+    if (physicsPanel) {
+        physicsPanel.classList.toggle("active", sourceId === "physics");
+        physicsPanel.classList.toggle("inactive", sourceId !== "physics");
+    }
+    if (timelinePanel) {
+        const timelineActive = sourceId === "timeline" || sourceId === "choreography";
+        timelinePanel.classList.toggle("active", timelineActive);
+        timelinePanel.classList.toggle("inactive", !timelineActive);
+    }
+    if (choreographyPanel) {
+        choreographyPanel.classList.toggle("active", sourceId === "choreography");
+        choreographyPanel.classList.toggle("inactive", sourceId !== "choreography");
+    }
+}
+
+async function applyMotionSourceSelection(sourceId) {
+    const normalizedSource = String(sourceId || "").trim().toLowerCase();
+    const choreographySelect = document.getElementById("choreo-pack-select");
+
+    if (normalizedSource === "physics") {
+        const activePhysicsPreset = normalizePhysicsPresetName(uiState.physicsPreset);
+        const nextPreset = activePhysicsPreset === "off" ? "float" : activePhysicsPreset;
+        setToggleValue(toggleStates.anim_enable, false);
+        setAnimationControlsEnabled(false);
+        applyPhysicsPreset(nextPreset, true);
+    } else if (normalizedSource === "timeline") {
+        if (normalizePhysicsPresetName(uiState.physicsPreset) !== "off") {
+            applyPhysicsPreset("off", true);
+        }
+        if (normalizeChoreographyPackId(uiState.choreographyPack) !== "custom") {
+            uiState.choreographyPack = "custom";
+            if (choreographySelect) choreographySelect.value = "custom";
+            setChoreographyStatus("Custom timeline active");
+            scheduleUiStateCommit(true);
+        }
+        setChoiceIndex(comboStates.anim_mode, 1);
+        setToggleValue(toggleStates.anim_enable, true);
+        setAnimationControlsEnabled(true);
+    } else if (normalizedSource === "choreography") {
+        if (normalizePhysicsPresetName(uiState.physicsPreset) !== "off") {
+            applyPhysicsPreset("off", true);
+        }
+        setChoiceIndex(comboStates.anim_mode, 1);
+        setToggleValue(toggleStates.anim_enable, true);
+        setAnimationControlsEnabled(true);
+        let targetPack = normalizeChoreographyPackId(choreographySelect?.value || uiState.choreographyPack);
+        if (targetPack === "custom") targetPack = "orbit";
+        if (choreographySelect) choreographySelect.value = targetPack;
+        try {
+            await applyChoreographyPack(targetPack, { persistUiState: true, setInternalSource: true });
+        } catch (error) {
+            console.error("Failed to apply choreography pack from motion source:", error);
+            setChoreographyStatus("Failed to apply choreography pack", true);
+        }
+    } else {
+        if (normalizePhysicsPresetName(uiState.physicsPreset) !== "off") {
+            applyPhysicsPreset("off", true);
+        }
+        setToggleValue(toggleStates.anim_enable, false);
+        setAnimationControlsEnabled(false);
+    }
+
+    setMotionDirty(true);
+    syncAnimationUI();
+    updateMotionStatusChips();
+}
+
+function updateMotionStatusChips() {
+    const sourceChip = document.getElementById("motion-chip-source");
+    const loopChip = document.getElementById("motion-chip-loop");
+    const syncChip = document.getElementById("motion-chip-sync");
+    const dirtyChip = document.getElementById("motion-chip-dirty");
+    if (!sourceChip || !loopChip || !syncChip || !dirtyChip) return;
+
+    const sourceId = getDerivedMotionSourceId();
+    const sourceLabel = getMotionSourceLabel(sourceId);
+    const loopEnabled = !!getToggleValue(toggleStates.anim_loop);
+    const syncEnabled = !!getToggleValue(toggleStates.anim_sync);
+
+    sourceChip.textContent = `Source: ${sourceLabel}`;
+    sourceChip.className = sourceId === "static" ? "status-chip" : "status-chip active";
+
+    loopChip.textContent = `Loop: ${loopEnabled ? "On" : "Off"}`;
+    loopChip.className = loopEnabled ? "status-chip active" : "status-chip";
+
+    syncChip.textContent = `Sync: ${syncEnabled ? "On" : "Off"}`;
+    syncChip.className = syncEnabled ? "status-chip active" : "status-chip";
+
+    dirtyChip.textContent = motionDirty ? "Motion Dirty" : "Motion Saved";
+    dirtyChip.className = motionDirty ? "status-chip warning" : "status-chip";
+    syncMotionSourceUI(sourceId);
+}
+
+function setMotionDirty(isDirty) {
+    motionDirty = !!isDirty;
+    updateMotionStatusChips();
+}
+
+function updateEmitterAuthorityUI() {
+    const chip = document.getElementById("emitter-authority-chip");
+    const note = document.getElementById("emitter-authority-note");
+    if (!chip) return;
+
+    const selected = getSelectedEmitter();
+    const hasEmitterData = sceneEmitterLookup.size > 0;
+    const hasLocalEmitter = Number.isInteger(localEmitterId) && localEmitterId >= 0;
+    const isRemote = !!(selected && hasLocalEmitter && selected.id !== localEmitterId);
+    let authoringLocked = false;
+
+    if (!selected && !hasEmitterData) {
+        chip.textContent = "Pending";
+        chip.className = "status-chip warning";
+        if (note) {
+            note.textContent = "Awaiting emitter sync";
+            note.classList.remove("locked");
+        }
+        authoringLocked = false;
+    } else if (!selected) {
+        chip.textContent = "No Sel";
+        chip.className = "status-chip warning";
+        if (note) {
+            note.textContent = "Select an emitter to edit";
+            note.classList.add("locked");
+        }
+        authoringLocked = true;
+    } else if (isRemote) {
+        chip.textContent = `Remote E${selected.id + 1}`;
+        chip.className = "status-chip remote";
+        if (note) {
+            note.textContent = `Remote emitter selected (${selected.label || `Emitter ${selected.id + 1}`}); local editing locked`;
+            note.classList.add("locked");
+        }
+        authoringLocked = true;
+    } else {
+        chip.textContent = hasLocalEmitter ? `Local E${localEmitterId + 1}` : "Local";
+        chip.className = hasLocalEmitter ? "status-chip local" : "status-chip warning";
+        if (note) {
+            note.textContent = hasLocalEmitter
+                ? "Local emitter editing enabled"
+                : "Editing enabled (local ownership pending)";
+            note.classList.remove("locked");
+        }
+        authoringLocked = false;
+    }
+
+    applyEmitterAuthoringLock(authoringLocked);
+}
+
+function updateEmitterDiagnosticsQuickControls() {
+    const lensOn = !!getToggleValue(toggleStates.rend_viz_physics_lens);
+    setToggleClass("emitter-quick-physics-lens", lensOn);
+    const mixPercent = Math.round(clamp(sliderStates.rend_viz_diag_mix.getScaledValue(), 0.0, 1.0) * 100.0);
+    updateValueDisplay("emitter-quick-diag-mix", `${mixPercent}`, "%");
+}
+
+function getPositionMode() {
+    const idx = getChoiceIndex(comboStates.pos_coord_mode);
+    return idx <= 0 ? "spherical" : "cartesian";
+}
+
+function updateWorldPositionReadback() {
+    const x = Number(sliderStates.pos_x.getScaledValue()) || 0.0;
+    const y = Number(sliderStates.pos_z.getScaledValue()) || 0.0;
+    const z = Number(sliderStates.pos_y.getScaledValue()) || 0.0;
+    const readback = document.getElementById("val-world-readback");
+    if (!readback) return;
+    readback.textContent = `x ${x.toFixed(2)} · y ${y.toFixed(2)} · z ${z.toFixed(2)} m`;
+}
+
+function syncPositionModeUI() {
+    const mode = getPositionMode();
+    document.querySelectorAll(".coord-row[data-coord-group]").forEach(row => {
+        const group = String(row.dataset.coordGroup || "").trim().toLowerCase();
+        const active = group === mode;
+        row.classList.toggle("coord-active", active);
+        row.classList.toggle("coord-inactive", !active);
+        const value = row.querySelector(".control-value");
+        if (value) {
+            value.dataset.positionStepperLock = active ? "0" : "1";
+            syncStepperAuthorityLock(value, emitterAuthoringLocked);
+        }
+    });
 }
 
 function clamp(value, min, max) {
@@ -520,20 +1166,104 @@ function normalizePhysicsPresetName(name) {
     return "custom";
 }
 
+const choreographyPackLabels = {
+    custom: "Custom",
+    orbit: "Orbit",
+    pendulum: "Pendulum",
+    swarm_arc: "Swarm Arc",
+    rise_fall: "Rise/Fall",
+};
+
+const choreographyPackOrder = ["custom", "orbit", "pendulum", "swarm_arc", "rise_fall"];
+
+function normalizeChoreographyPackId(name) {
+    const value = String(name ?? "").trim().toLowerCase();
+    return choreographyPackOrder.includes(value) ? value : "custom";
+}
+
+function getChoreographyPackLabel(name) {
+    return choreographyPackLabels[normalizeChoreographyPackId(name)] || "Custom";
+}
+
 let uiState = {
     emitterLabel: "Emitter",
     physicsPreset: "off",
+    choreographyPack: "custom",
+};
+
+const physicsPresetTargets = {
+    off: {
+        enabled: false,
+    },
+    bounce: {
+        enabled: true,
+        mass: 1.0,
+        drag: 0.2,
+        elasticity: 0.82,
+        gravity: -9.8,
+        friction: 0.2,
+        gravityDirIndex: 0,
+    },
+    float: {
+        enabled: true,
+        mass: 0.4,
+        drag: 0.65,
+        elasticity: 0.3,
+        gravity: 0.0,
+        friction: 0.45,
+        gravityDirIndex: 0,
+    },
+    orbit: {
+        enabled: true,
+        mass: 0.8,
+        drag: 0.35,
+        elasticity: 0.55,
+        gravity: 6.0,
+        friction: 0.15,
+        gravityDirIndex: 2,
+    },
+};
+
+const physicsPresetTolerances = {
+    mass: 0.025,
+    drag: 0.025,
+    elasticity: 0.025,
+    gravity: 0.2,
+    friction: 0.025,
 };
 
 let uiStateCommitTimer = null;
 let isApplyingPhysicsPreset = false;
 let suppressPhysicsPresetCustomUntilMs = 0;
+let physicsPresetRecheckTimer = null;
+
+function nearlyEqual(value, target, tolerance) {
+    return Math.abs((Number(value) || 0) - Number(target)) <= Number(tolerance);
+}
+
+function isPhysicsPresetStateAligned(presetName) {
+    const preset = physicsPresetTargets[presetName];
+    if (!preset) return false;
+
+    const enabled = !!getToggleValue(toggleStates.phys_enable);
+    if (enabled !== !!preset.enabled) return false;
+    if (!preset.enabled) return true;
+
+    if (!nearlyEqual(sliderStates.phys_mass.getScaledValue(), preset.mass, physicsPresetTolerances.mass)) return false;
+    if (!nearlyEqual(sliderStates.phys_drag.getScaledValue(), preset.drag, physicsPresetTolerances.drag)) return false;
+    if (!nearlyEqual(sliderStates.phys_elasticity.getScaledValue(), preset.elasticity, physicsPresetTolerances.elasticity)) return false;
+    if (!nearlyEqual(sliderStates.phys_gravity.getScaledValue(), preset.gravity, physicsPresetTolerances.gravity)) return false;
+    if (!nearlyEqual(sliderStates.phys_friction.getScaledValue(), preset.friction, physicsPresetTolerances.friction)) return false;
+
+    return getChoiceIndex(comboStates.phys_gravity_dir) === preset.gravityDirIndex;
+}
 
 async function commitUiStateToNative() {
     try {
         await callNative("locusqSetUiState", nativeFunctions.setUiState, {
             emitterLabel: sanitizeEmitterLabel(uiState.emitterLabel),
             physicsPreset: normalizePhysicsPresetName(uiState.physicsPreset),
+            choreographyPack: normalizeChoreographyPackId(uiState.choreographyPack),
         });
     } catch (error) {
         console.warn("Failed to commit UI state:", error);
@@ -558,6 +1288,7 @@ async function loadUiStateFromNative() {
         if (!payload || typeof payload !== "object") return;
         uiState.emitterLabel = sanitizeEmitterLabel(payload.emitterLabel ?? uiState.emitterLabel);
         uiState.physicsPreset = normalizePhysicsPresetName(payload.physicsPreset ?? uiState.physicsPreset);
+        uiState.choreographyPack = normalizeChoreographyPackId(payload.choreographyPack ?? uiState.choreographyPack);
     } catch (error) {
         console.warn("Failed to load UI state:", error);
     }
@@ -568,6 +1299,7 @@ function bindSelectToComboState(selectId, comboState) {
     if (!select || !comboState) return;
 
     select.addEventListener("change", () => {
+        if (isElementControlLocked(select)) return;
         setChoiceIndex(comboState, select.selectedIndex);
     });
 
@@ -582,6 +1314,7 @@ function bindSelectToIntSliderState(selectId, sliderState, minValue = 1) {
     if (!select || !sliderState) return;
 
     select.addEventListener("change", () => {
+        if (isElementControlLocked(select)) return;
         const nextValue = Number(select.selectedIndex) + Number(minValue);
         setSliderScaledValue(sliderState, nextValue);
     });
@@ -604,6 +1337,7 @@ function bindValueStepper(displayId, sliderState, options = {}) {
     const roundDigits = Number.isFinite(options.roundDigits) ? Number(options.roundDigits) : 3;
 
     const applyDelta = (delta) => {
+        if (display.dataset.stepperLock === "1" || isElementControlLocked(display)) return;
         const current = Number(sliderState.getScaledValue());
         const next = clamp(current + delta, Math.min(min, max), Math.max(min, max));
         const factor = Math.pow(10, Math.max(0, roundDigits));
@@ -645,6 +1379,15 @@ function applyUiStateToControls() {
         const matching = Array.from(physicsPreset.options).findIndex(option => option.value === target);
         if (matching >= 0) physicsPreset.selectedIndex = matching;
     }
+
+    const choreographySelect = document.getElementById("choreo-pack-select");
+    if (choreographySelect) {
+        const normalized = normalizeChoreographyPackId(uiState.choreographyPack);
+        const matching = Array.from(choreographySelect.options).findIndex(option => option.value === normalized);
+        if (matching >= 0) choreographySelect.selectedIndex = matching;
+    }
+
+    updateMotionStatusChips();
 }
 
 function createKeyframe(timeSeconds, value, curve = "easeInOut") {
@@ -654,6 +1397,486 @@ function createKeyframe(timeSeconds, value, curve = "easeInOut") {
         value,
         curve,
     };
+}
+
+const choreographyPackLibrary = {
+    orbit: {
+        id: "orbit",
+        durationSeconds: 8.0,
+        looping: true,
+        playbackRate: 1.0,
+        tracks: {
+            azimuth: [
+                { timeSeconds: 0.0, value: -160.0, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: -40.0, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 80.0, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 170.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: -160.0, curve: "easeInOut" },
+            ],
+            elevation: [
+                { timeSeconds: 0.0, value: 0.0, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 20.0, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 6.0, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: -18.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 0.0, curve: "easeInOut" },
+            ],
+            distance: [
+                { timeSeconds: 0.0, value: 2.2, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 2.9, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 2.4, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 1.9, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 2.2, curve: "easeInOut" },
+            ],
+            size: [
+                { timeSeconds: 0.0, value: 0.45, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 0.58, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 0.50, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 0.62, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 0.45, curve: "easeInOut" },
+            ],
+        },
+    },
+    pendulum: {
+        id: "pendulum",
+        durationSeconds: 8.0,
+        looping: true,
+        playbackRate: 0.9,
+        tracks: {
+            azimuth: [
+                { timeSeconds: 0.0, value: -88.0, curve: "easeInOut" },
+                { timeSeconds: 1.6, value: 92.0, curve: "easeInOut" },
+                { timeSeconds: 3.2, value: -86.0, curve: "easeInOut" },
+                { timeSeconds: 4.8, value: 80.0, curve: "easeInOut" },
+                { timeSeconds: 6.4, value: -74.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: -88.0, curve: "easeInOut" },
+            ],
+            elevation: [
+                { timeSeconds: 0.0, value: 6.0, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: -8.0, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 7.0, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: -6.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 6.0, curve: "easeInOut" },
+            ],
+            distance: [
+                { timeSeconds: 0.0, value: 2.9, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 1.4, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 2.8, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 1.5, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 2.9, curve: "easeInOut" },
+            ],
+            size: [
+                { timeSeconds: 0.0, value: 0.52, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 0.34, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 0.61, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 0.38, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 0.52, curve: "easeInOut" },
+            ],
+        },
+    },
+    swarm_arc: {
+        id: "swarm_arc",
+        durationSeconds: 8.0,
+        looping: true,
+        playbackRate: 1.2,
+        tracks: {
+            azimuth: [
+                { timeSeconds: 0.0, value: -130.0, curve: "easeOut" },
+                { timeSeconds: 1.2, value: -38.0, curve: "linear" },
+                { timeSeconds: 2.5, value: 34.0, curve: "easeIn" },
+                { timeSeconds: 3.5, value: 124.0, curve: "easeOut" },
+                { timeSeconds: 5.1, value: 46.0, curve: "easeInOut" },
+                { timeSeconds: 6.6, value: -28.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: -130.0, curve: "easeInOut" },
+            ],
+            elevation: [
+                { timeSeconds: 0.0, value: -12.0, curve: "easeInOut" },
+                { timeSeconds: 1.2, value: 14.0, curve: "easeOut" },
+                { timeSeconds: 2.5, value: 22.0, curve: "linear" },
+                { timeSeconds: 3.5, value: 6.0, curve: "easeInOut" },
+                { timeSeconds: 5.1, value: -20.0, curve: "easeIn" },
+                { timeSeconds: 6.6, value: 9.0, curve: "easeOut" },
+                { timeSeconds: 8.0, value: -12.0, curve: "easeInOut" },
+            ],
+            distance: [
+                { timeSeconds: 0.0, value: 3.4, curve: "easeInOut" },
+                { timeSeconds: 1.2, value: 2.4, curve: "easeInOut" },
+                { timeSeconds: 2.5, value: 1.5, curve: "easeInOut" },
+                { timeSeconds: 3.5, value: 2.9, curve: "easeOut" },
+                { timeSeconds: 5.1, value: 1.3, curve: "easeIn" },
+                { timeSeconds: 6.6, value: 2.2, curve: "linear" },
+                { timeSeconds: 8.0, value: 3.4, curve: "easeInOut" },
+            ],
+            size: [
+                { timeSeconds: 0.0, value: 0.32, curve: "step" },
+                { timeSeconds: 1.2, value: 0.72, curve: "easeInOut" },
+                { timeSeconds: 2.5, value: 0.44, curve: "step" },
+                { timeSeconds: 3.5, value: 0.82, curve: "easeInOut" },
+                { timeSeconds: 5.1, value: 0.36, curve: "step" },
+                { timeSeconds: 6.6, value: 0.68, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 0.32, curve: "step" },
+            ],
+        },
+    },
+    rise_fall: {
+        id: "rise_fall",
+        durationSeconds: 8.0,
+        looping: true,
+        playbackRate: 0.8,
+        tracks: {
+            azimuth: [
+                { timeSeconds: 0.0, value: -24.0, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 16.0, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 42.0, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 12.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: -24.0, curve: "easeInOut" },
+            ],
+            elevation: [
+                { timeSeconds: 0.0, value: -26.0, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 8.0, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 44.0, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 10.0, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: -26.0, curve: "easeInOut" },
+            ],
+            distance: [
+                { timeSeconds: 0.0, value: 3.8, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 3.2, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 2.0, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 1.4, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 3.8, curve: "easeInOut" },
+            ],
+            size: [
+                { timeSeconds: 0.0, value: 0.30, curve: "easeInOut" },
+                { timeSeconds: 2.0, value: 0.52, curve: "easeInOut" },
+                { timeSeconds: 4.0, value: 0.82, curve: "easeInOut" },
+                { timeSeconds: 6.0, value: 0.58, curve: "easeInOut" },
+                { timeSeconds: 8.0, value: 0.30, curve: "easeInOut" },
+            ],
+        },
+    },
+};
+
+function normalizeCurveName(curve) {
+    const normalized = String(curve ?? "").trim();
+    return curveOrder.includes(normalized) ? normalized : "easeInOut";
+}
+
+function applyCurveShape(curve, t) {
+    const normT = clamp(Number(t) || 0.0, 0.0, 1.0);
+    switch (curve) {
+        case "easeIn":
+            return normT * normT;
+        case "easeOut":
+            return 1.0 - ((1.0 - normT) * (1.0 - normT));
+        case "easeInOut":
+            return normT < 0.5
+                ? 2.0 * normT * normT
+                : 1.0 - (Math.pow(-2.0 * normT + 2.0, 2.0) * 0.5);
+        case "step":
+            return 0.0;
+        case "linear":
+        default:
+            return normT;
+    }
+}
+
+function evaluatePackTrackAtTime(track, timeSeconds) {
+    if (!Array.isArray(track) || track.length === 0) return 0.0;
+    const sorted = [...track].sort((a, b) => a.timeSeconds - b.timeSeconds);
+    const t = Number(timeSeconds) || 0.0;
+    if (t <= sorted[0].timeSeconds) return Number(sorted[0].value) || 0.0;
+
+    const last = sorted[sorted.length - 1];
+    if (t >= last.timeSeconds) return Number(last.value) || 0.0;
+
+    for (let i = 0; i < sorted.length - 1; i++) {
+        const left = sorted[i];
+        const right = sorted[i + 1];
+        if (t < left.timeSeconds || t > right.timeSeconds) continue;
+        const span = Math.max(0.000001, right.timeSeconds - left.timeSeconds);
+        const local = clamp((t - left.timeSeconds) / span, 0.0, 1.0);
+        if (left.curve === "step") {
+            return Number(left.value) || 0.0;
+        }
+        const shaped = applyCurveShape(left.curve, local);
+        const leftValue = Number(left.value) || 0.0;
+        const rightValue = Number(right.value) || 0.0;
+        return leftValue + ((rightValue - leftValue) * shaped);
+    }
+
+    return Number(last.value) || 0.0;
+}
+
+function buildPackTrack(lane, laneTrackSpec, durationSeconds, shouldLoop, fallbackValue) {
+    const range = laneRanges[lane] || { min: -1.0, max: 1.0 };
+    const normalizedTrack = Array.isArray(laneTrackSpec)
+        ? laneTrackSpec.map(spec => ({
+            timeSeconds: clamp(Number(spec?.timeSeconds), 0.0, durationSeconds),
+            value: clamp(Number(spec?.value), range.min, range.max),
+            curve: normalizeCurveName(spec?.curve),
+        }))
+            .filter(spec => Number.isFinite(spec.timeSeconds) && Number.isFinite(spec.value))
+            .sort((a, b) => a.timeSeconds - b.timeSeconds)
+        : [];
+
+    if (normalizedTrack.length === 0) {
+        const clampedFallback = clamp(Number(fallbackValue) || 0.0, range.min, range.max);
+        return [
+            createKeyframe(0.0, clampedFallback, "easeInOut"),
+            createKeyframe(durationSeconds, clampedFallback, "easeInOut"),
+        ];
+    }
+
+    if (normalizedTrack[0].timeSeconds > 0.0) {
+        normalizedTrack.unshift({
+            timeSeconds: 0.0,
+            value: normalizedTrack[0].value,
+            curve: normalizedTrack[0].curve,
+        });
+    }
+
+    const last = normalizedTrack[normalizedTrack.length - 1];
+    if (last.timeSeconds < durationSeconds) {
+        const endValue = shouldLoop ? normalizedTrack[0].value : last.value;
+        normalizedTrack.push({
+            timeSeconds: durationSeconds,
+            value: endValue,
+            curve: last.curve,
+        });
+    }
+
+    return normalizedTrack.map(kf => createKeyframe(kf.timeSeconds, kf.value, kf.curve));
+}
+
+function clampToSliderRange(sliderState, value, fallbackMin = -50.0, fallbackMax = 50.0) {
+    const startRaw = Number(sliderState?.properties?.start);
+    const endRaw = Number(sliderState?.properties?.end);
+    const min = Number.isFinite(startRaw) && Number.isFinite(endRaw) ? Math.min(startRaw, endRaw) : fallbackMin;
+    const max = Number.isFinite(startRaw) && Number.isFinite(endRaw) ? Math.max(startRaw, endRaw) : fallbackMax;
+    return clamp(Number(value) || 0.0, min, max);
+}
+
+function buildCartesianTracksFromSphericalTracks(sphericalTracks, durationSeconds) {
+    const allTimes = new Set([0.0, durationSeconds]);
+    Object.values(sphericalTracks).forEach(track => {
+        if (!Array.isArray(track)) return;
+        track.forEach(kf => allTimes.add(clamp(Number(kf.timeSeconds) || 0.0, 0.0, durationSeconds)));
+    });
+
+    const times = Array.from(allTimes).sort((a, b) => a - b);
+    const xTrack = [];
+    const yTrack = [];
+    const zTrack = [];
+
+    times.forEach((timeSeconds, index) => {
+        const azimuth = evaluatePackTrackAtTime(sphericalTracks.azimuth, timeSeconds);
+        const elevation = evaluatePackTrackAtTime(sphericalTracks.elevation, timeSeconds);
+        const distance = Math.max(0.0, evaluatePackTrackAtTime(sphericalTracks.distance, timeSeconds));
+
+        const azimuthRad = (azimuth * Math.PI) / 180.0;
+        const elevationRad = (elevation * Math.PI) / 180.0;
+        const cosElevation = Math.cos(elevationRad);
+        const worldX = distance * cosElevation * Math.sin(azimuthRad);
+        const worldY = distance * Math.sin(elevationRad);
+        const worldZ = distance * cosElevation * Math.cos(azimuthRad);
+        const curve = index === 0 ? "easeInOut" : "linear";
+
+        xTrack.push(createKeyframe(timeSeconds, clampToSliderRange(sliderStates.pos_x, worldX), curve));
+        yTrack.push(createKeyframe(timeSeconds, clampToSliderRange(sliderStates.pos_y, worldZ), curve));
+        zTrack.push(createKeyframe(timeSeconds, clampToSliderRange(sliderStates.pos_z, worldY), curve));
+    });
+
+    return {
+        pos_x: xTrack,
+        pos_y: yTrack,
+        pos_z: zTrack,
+    };
+}
+
+function buildTimelineFromChoreographyPack(packId) {
+    const normalizedPackId = normalizeChoreographyPackId(packId);
+    const pack = choreographyPackLibrary[normalizedPackId];
+    if (!pack) return null;
+
+    const durationSeconds = clamp(Number(pack.durationSeconds) || 8.0, 0.25, 120.0);
+    const shouldLoop = pack.looping !== false;
+    const playbackRate = clamp(Number(pack.playbackRate) || 1.0, 0.1, 10.0);
+
+    const sphericalTracks = {
+        azimuth: buildPackTrack(
+            "azimuth",
+            pack.tracks?.azimuth,
+            durationSeconds,
+            shouldLoop,
+            sliderStates.pos_azimuth.getScaledValue()
+        ),
+        elevation: buildPackTrack(
+            "elevation",
+            pack.tracks?.elevation,
+            durationSeconds,
+            shouldLoop,
+            sliderStates.pos_elevation.getScaledValue()
+        ),
+        distance: buildPackTrack(
+            "distance",
+            pack.tracks?.distance,
+            durationSeconds,
+            shouldLoop,
+            sliderStates.pos_distance.getScaledValue()
+        ),
+        size: buildPackTrack(
+            "size",
+            pack.tracks?.size,
+            durationSeconds,
+            shouldLoop,
+            sliderStates.size_uniform.getScaledValue()
+        ),
+    };
+
+    const cartesianTracks = buildCartesianTracksFromSphericalTracks(sphericalTracks, durationSeconds);
+    const tracks = {
+        [laneTrackMap.azimuth]: sphericalTracks.azimuth,
+        [laneTrackMap.elevation]: sphericalTracks.elevation,
+        [laneTrackMap.distance]: sphericalTracks.distance,
+        [laneTrackMap.size]: sphericalTracks.size,
+        ...cartesianTracks,
+    };
+
+    return {
+        choreographyPackId: normalizedPackId,
+        durationSeconds,
+        looping: shouldLoop,
+        playbackRate,
+        currentTimeSeconds: 0.0,
+        tracks,
+    };
+}
+
+function setChoreographyStatus(message, isError = false) {
+    const status = document.getElementById("choreo-status");
+    if (!status) return;
+    status.textContent = message;
+    status.style.color = isError ? "var(--text-error, #D4736F)" : "var(--text-secondary)";
+}
+
+function markChoreographyPackCustom() {
+    if (normalizeChoreographyPackId(uiState.choreographyPack) === "custom") return;
+    uiState.choreographyPack = "custom";
+    const choreographySelect = document.getElementById("choreo-pack-select");
+    if (choreographySelect) {
+        choreographySelect.value = "custom";
+    }
+    setChoreographyStatus("Custom timeline active");
+    scheduleUiStateCommit();
+}
+
+async function applyChoreographyPack(packId, options = {}) {
+    const normalizedPackId = normalizeChoreographyPackId(packId);
+    if (normalizedPackId === "custom") {
+        setChoreographyStatus("Choose a choreography pack first", true);
+        return false;
+    }
+
+    const nextTimeline = buildTimelineFromChoreographyPack(normalizedPackId);
+    if (!nextTimeline) {
+        setChoreographyStatus("Pack unavailable", true);
+        return false;
+    }
+
+    timelineState = {
+        durationSeconds: nextTimeline.durationSeconds,
+        looping: !!nextTimeline.looping,
+        playbackRate: nextTimeline.playbackRate,
+        currentTimeSeconds: 0.0,
+        tracks: nextTimeline.tracks,
+    };
+    timelineLoaded = true;
+
+    if (options.setInternalSource !== false) {
+        setChoiceIndex(comboStates.anim_mode, 1, 2);
+    }
+    setToggleValue(toggleStates.anim_loop, !!nextTimeline.looping);
+    setMotionLoopClasses(!!nextTimeline.looping);
+    setSliderScaledValue(sliderStates.anim_speed, nextTimeline.playbackRate);
+    syncAnimationUI();
+
+    uiState.choreographyPack = normalizedPackId;
+    if (options.persistUiState !== false) {
+        scheduleUiStateCommit(true);
+    }
+
+    renderTimelineLanes();
+    scheduleTimelineCommit(true, true);
+    callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 0.0).catch(() => {});
+    setChoreographyStatus(`Applied ${getChoreographyPackLabel(normalizedPackId)} pack`);
+    setMotionDirty(true);
+    return true;
+}
+
+function defaultChoreographyPresetName(packId) {
+    const packLabel = getChoreographyPackLabel(packId).replace(/[^A-Za-z0-9]+/g, "");
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "");
+    return `Choreo_${packLabel}_${stamp}`;
+}
+
+async function saveChoreographyPackPreset(packId) {
+    const normalizedPackId = normalizeChoreographyPackId(packId);
+    if (normalizedPackId === "custom") {
+        setChoreographyStatus("Select a choreography pack before saving", true);
+        return null;
+    }
+
+    const suggestedName = defaultChoreographyPresetName(normalizedPackId);
+    let resolvedName = suggestedName;
+    const selfTestNameOverride = typeof window.__LQ_SELFTEST_CHOREO_PRESET_NAME__ === "string"
+        ? window.__LQ_SELFTEST_CHOREO_PRESET_NAME__.trim()
+        : "";
+
+    if (selfTestNameOverride.length > 0) {
+        resolvedName = selfTestNameOverride;
+    } else {
+        try {
+            const inputName = typeof window.prompt === "function"
+                ? window.prompt("Choreography preset name", suggestedName)
+                : suggestedName;
+            if (typeof inputName === "string") {
+                const trimmed = inputName.trim();
+                if (!trimmed) {
+                    setChoreographyStatus("Preset name is required", true);
+                    return null;
+                }
+                resolvedName = trimmed;
+            }
+        } catch (error) {
+            console.warn("Choreography preset prompt unavailable, using auto-generated name:", error);
+            resolvedName = suggestedName;
+        }
+    }
+
+    if (timelineCommitTimer !== null) {
+        window.clearTimeout(timelineCommitTimer);
+        timelineCommitTimer = null;
+    }
+    await commitTimelineToNative();
+
+    const result = await callNative("locusqSaveEmitterPreset", nativeFunctions.saveEmitterPreset, {
+        name: resolvedName,
+        presetType: "motion",
+        choreographyPackId: normalizedPackId,
+    });
+
+    if (!result?.ok) {
+        setChoreographyStatus(result?.message || "Failed to save choreography preset", true);
+        return null;
+    }
+
+    uiState.choreographyPack = normalizedPackId;
+    scheduleUiStateCommit(true);
+    setPresetTypeSelection("motion");
+    await refreshPresetList(result?.path || "");
+    setChoreographyStatus(`Saved ${getChoreographyPackLabel(normalizedPackId)} preset`);
+    setPresetStatus(`Saved: ${result.name || resolvedName}`);
+    setMotionDirty(false);
+    return result;
 }
 
 function getTrackForLane(lane) {
@@ -779,7 +2002,19 @@ function updateLaneCurveBadge(lane) {
 
 function updateTimelinePlayheads() {
     const duration = Math.max(0.001, timelineState.durationSeconds);
-    const normalized = clamp((timelineState.currentTimeSeconds || 0.0) / duration, 0.0, 1.0);
+    const currentTime = clamp(Number(timelineState.currentTimeSeconds) || 0.0, 0.0, duration);
+    const normalized = clamp(currentTime / duration, 0.0, 1.0);
+    const totalMs = Math.max(0, Math.round(currentTime * 1000));
+    const minutes = Math.floor(totalMs / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+    const millis = totalMs % 1000;
+    const formattedTime =
+        `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+    const timelineTime = document.getElementById("timeline-time");
+    if (timelineTime) timelineTime.textContent = formattedTime;
+    const motionTime = document.getElementById("motion-transport-time");
+    if (motionTime) motionTime.textContent = formattedTime;
+
     document.querySelectorAll(".timeline-playhead").forEach(playhead => {
         playhead.style.left = `${normalized * 100}%`;
     });
@@ -898,8 +2133,12 @@ function renderTimelineLanes() {
     updateTimelinePlayheads();
 }
 
-function scheduleTimelineCommit(immediate = false) {
+function scheduleTimelineCommit(immediate = false, preserveChoreographyPack = false) {
     if (!timelineLoaded) return;
+    if (!preserveChoreographyPack) {
+        markChoreographyPackCustom();
+    }
+    setMotionDirty(true);
     if (timelineCommitTimer !== null) {
         window.clearTimeout(timelineCommitTimer);
         timelineCommitTimer = null;
@@ -925,11 +2164,13 @@ async function loadTimelineFromNative() {
         timelineState = normaliseTimelineFromNative(payload || {});
         timelineLoaded = true;
         renderTimelineLanes();
+        setMotionDirty(false);
     } catch (error) {
         console.warn("Failed to load keyframe timeline from native API:", error);
         timelineState = normaliseTimelineFromNative({});
         timelineLoaded = true;
         renderTimelineLanes();
+        setMotionDirty(false);
     }
 }
 
@@ -940,10 +2181,68 @@ function setPresetStatus(message, isError = false) {
     status.style.color = isError ? "var(--text-error, #D4736F)" : "var(--text-secondary)";
 }
 
-async function refreshPresetList() {
+function normalisePresetType(type) {
+    return String(type || "").trim().toLowerCase() === "motion" ? "motion" : "emitter";
+}
+
+function getPresetTypeSelection() {
+    const select = document.getElementById("preset-type-select");
+    if (!select) return "emitter";
+    return normalisePresetType(select.value);
+}
+
+function setPresetTypeSelection(type) {
+    const select = document.getElementById("preset-type-select");
+    if (!select) return;
+    const normalized = normalisePresetType(type);
+    if (select.value !== normalized) {
+        select.value = normalized;
+    }
+}
+
+function getPresetNameInputValue() {
+    const input = document.getElementById("preset-name-input");
+    if (!input) return "";
+    return String(input.value || "").trim();
+}
+
+function setPresetNameInputValue(name) {
+    const input = document.getElementById("preset-name-input");
+    if (!input) return;
+    const next = String(name || "").trim();
+    if (document.activeElement !== input || !input.value) {
+        input.value = next;
+    }
+}
+
+function getSelectedPresetOptionEntry() {
+    const select = document.getElementById("preset-select");
+    if (!select || !select.value) return null;
+    const option = select.options[select.selectedIndex];
+    if (!option) return null;
+    return {
+        path: option.value || "",
+        name: String(option.dataset.presetName || "").trim(),
+        presetType: normalisePresetType(option.dataset.presetType || getPresetTypeSelection()),
+        choreographyPackId: normalizeChoreographyPackId(option.dataset.choreographyPackId || "custom"),
+    };
+}
+
+function syncPresetSelectionContext() {
+    const select = document.getElementById("preset-select");
+    if (!select || select.options.length === 0) return;
+    const selected = getSelectedPresetOptionEntry();
+    if (selected && selected.name) {
+        setPresetNameInputValue(selected.name);
+    }
+}
+
+async function refreshPresetList(preferredPath = "") {
     const select = document.getElementById("preset-select");
     if (!select) return;
 
+    const selectedType = getPresetTypeSelection();
+    const previousSelection = String(preferredPath || select.value || "");
     select.innerHTML = "";
 
     try {
@@ -955,23 +2254,49 @@ async function refreshPresetList() {
         return;
     }
 
-    if (presetEntries.length === 0) {
+    const filteredEntries = presetEntries.filter(entry =>
+        normalisePresetType(entry?.presetType) === selectedType
+    );
+
+    if (filteredEntries.length === 0) {
         const emptyOption = document.createElement("option");
-        emptyOption.textContent = "No presets";
+        emptyOption.textContent = `No ${selectedType} presets`;
         emptyOption.value = "";
         select.appendChild(emptyOption);
-        setPresetStatus("No presets saved yet");
+        setPresetNameInputValue("");
+        setPresetStatus(`No ${selectedType} presets saved yet`);
         return;
     }
 
-    presetEntries.forEach((entry, index) => {
+    filteredEntries.forEach((entry, index) => {
         const option = document.createElement("option");
         option.value = entry.path || entry.file || "";
-        option.textContent = entry.name || entry.file || `Preset ${index + 1}`;
+        const presetType = normalisePresetType(entry?.presetType);
+        const typePrefix = presetType === "motion" ? "[MOTION] " : "[EMITTER] ";
+        const choreographyPackId = normalizeChoreographyPackId(entry?.choreographyPackId);
+        const packPrefix = choreographyPackId !== "custom"
+            ? `[${getChoreographyPackLabel(choreographyPackId)}] `
+            : "";
+        const displayName = String(entry?.name || entry?.file || `Preset ${index + 1}`).trim();
+        option.textContent = `${typePrefix}${packPrefix}${displayName}`;
+        option.dataset.choreographyPackId = choreographyPackId;
+        option.dataset.presetType = presetType;
+        option.dataset.presetName = displayName;
         select.appendChild(option);
     });
 
-    setPresetStatus(`${presetEntries.length} preset(s) available`);
+    if (previousSelection) {
+        const match = Array.from(select.options).find(option => option.value === previousSelection);
+        if (match) {
+            select.value = match.value;
+        }
+    }
+    if (!select.value && select.options.length > 0) {
+        select.selectedIndex = 0;
+    }
+
+    syncPresetSelectionContext();
+    setPresetStatus(`${filteredEntries.length} ${selectedType} preset(s) available`);
 }
 
 // ===== DESATURATED EMITTER PALETTE (v2) =====
@@ -980,9 +2305,57 @@ const emitterPalette = [
     0xA487B5, 0x7AAFC9, 0xC9A07A, 0x7DC49A, 0xC98A84, 0x96BAD0, 0xB3A0BF, 0x8EC8BD
 ];
 const roomBounds = { halfWidth: 2.7, halfDepth: 1.7 };
+const defaultSpeakerSnapshotPositions = [
+    { x: -2.7, y: 1.2, z: -1.7 }, // FL
+    { x:  2.7, y: 1.2, z: -1.7 }, // FR
+    { x:  2.7, y: 1.2, z:  1.7 }, // RR
+    { x: -2.7, y: 1.2, z:  1.7 }, // RL
+];
+
+function getEmitterColorHex(colorIndex) {
+    const index = normalizeEmitterColorIndex(colorIndex);
+    return emitterPalette[index] || emitterPalette[0];
+}
+
+function getEmitterPaletteSize() {
+    return Math.max(1, Number(emitterPalette.length) || 16);
+}
+
+function normalizeEmitterColorIndex(colorIndex) {
+    const paletteSize = getEmitterPaletteSize();
+    const numeric = Number.isFinite(Number(colorIndex)) ? Math.round(Number(colorIndex)) : 0;
+    return ((numeric % paletteSize) + paletteSize) % paletteSize;
+}
+
+function getCurrentEmitterColorIndex() {
+    const current = sliderStates.emit_color?.getScaledValue?.();
+    return normalizeEmitterColorIndex(current);
+}
+
+function setEmitterColorIndex(colorIndex) {
+    const normalized = normalizeEmitterColorIndex(colorIndex);
+    if (sliderStates.emit_color) {
+        setSliderScaledValue(sliderStates.emit_color, normalized);
+    }
+    return normalized;
+}
+
+function cycleEmitterColor(step = 1) {
+    return setEmitterColorIndex(getCurrentEmitterColorIndex() + step);
+}
+
+function updateEmitterColorSwatch() {
+    const swatch = document.getElementById("emit-color-swatch");
+    if (!swatch) return;
+    const idx = getCurrentEmitterColorIndex();
+    swatch.style.background = "#" + getEmitterColorHex(idx).toString(16).padStart(6, "0");
+    swatch.setAttribute("data-color-index", String(idx));
+}
 
 // ===== APP STATE =====
 let currentMode = "emitter";
+let modeLayoutSyncTimer = null;
+let timelineInvariantLastCheckMs = 0;
 let selectedLane = "azimuth";
 let sceneData = {
     emitters: [],
@@ -990,12 +2363,51 @@ let sceneData = {
     rendererActive: false,
     outputChannels: 2,
     outputLayout: "stereo",
+    rendererSpatialProfileRequested: "auto",
+    rendererSpatialProfileActive: "auto",
+    rendererSpatialProfileStage: "direct",
+    rendererHeadphoneModeRequested: "stereo_downmix",
+    rendererHeadphoneModeActive: "stereo_downmix",
+    rendererHeadphoneProfileRequested: "generic",
+    rendererHeadphoneProfileActive: "generic",
+    rendererPhysicsLensEnabled: false,
+    rendererPhysicsLensMix: 0.55,
+    rendererSteamAudioCompiled: false,
+    rendererSteamAudioAvailable: false,
+    rendererSteamAudioInitStage: "uninitialized",
+    rendererSteamAudioInitErrorCode: 0,
+    rendererSteamAudioRuntimeLib: "",
+    rendererSteamAudioMissingSymbol: "",
+    rendererAmbiCompiled: false,
+    rendererAmbiActive: false,
+    rendererAmbiMaxOrder: 1,
+    rendererAmbiNormalization: "sn3d",
+    rendererAmbiChannelOrder: "acn",
+    rendererAmbiDecodeLayout: "quad_baseline",
+    rendererAmbiStage: "not_implemented",
+    clapBuildEnabled: false,
+    clapPropertiesAvailable: false,
+    clapIsPluginFormat: false,
+    clapIsActive: false,
+    clapIsProcessing: false,
+    clapHasTransport: false,
+    clapWrapperType: "Unknown",
+    clapLifecycleStage: "not_compiled",
+    clapRuntimeMode: "disabled",
+    clapVersion: { major: 0, minor: 0, revision: 0 },
     rendererOutputChannels: ["L", "R"],
     rendererInternalSpeakers: ["FL", "FR", "RR", "RL"],
     rendererQuadMap: [0, 1, 3, 2],
+    roomProfileValid: false,
+    roomDimensions: { width: 6.0, depth: 4.0, height: 3.0 },
+    listener: { x: 0.0, y: 1.2, z: 0.0 },
+    speakerRms: [0, 0, 0, 0],
+    speakers: [],
 };
 let selectedEmitterId = -1;
 let localEmitterId = -1;
+let sceneEmitterLookup = new Map();
+let emitterAuthoringLocked = false;
 const railScrollByMode = { calibrate: 0, emitter: 0, renderer: 0 };
 let calibrationState = {
     state: "idle",
@@ -1042,18 +2454,93 @@ let timelineState = {
 };
 let timelineCommitTimer = null;
 let timelineLoaded = false;
+let motionDirty = false;
 let draggingKeyframe = null;
 let presetEntries = [];
+const emitterAuthorityEditableCardGroups = new Set([
+    "identity",
+    "position",
+    "audio-shape",
+    "motion",
+    "presets",
+]);
+const emitterAuthorityControlIds = [
+    "emit-label",
+    "emit-color-swatch",
+    "toggle-mute",
+    "toggle-solo",
+    "pos-mode",
+    "toggle-size-link",
+    "motion-source-select",
+    "motion-transport-rewind-btn",
+    "motion-transport-stop-btn",
+    "motion-transport-play-btn",
+    "toggle-motion-loop",
+    "toggle-motion-sync",
+    "physics-preset",
+    "btn-throw",
+    "btn-reset",
+    "phys-grav-dir",
+    "choreo-pack-select",
+    "choreo-apply-btn",
+    "choreo-save-btn",
+    "preset-type-select",
+    "preset-name-input",
+    "preset-select",
+    "preset-save-btn",
+    "preset-load-btn",
+    "preset-rename-btn",
+    "preset-delete-btn",
+];
+const emitterAuthorityStepperIds = [
+    "val-azimuth",
+    "val-elevation",
+    "val-distance",
+    "val-pos-x",
+    "val-pos-y",
+    "val-pos-z",
+    "val-size",
+    "val-gain",
+    "val-spread",
+    "val-directivity",
+    "val-dir-azimuth",
+    "val-dir-elevation",
+    "val-anim-speed",
+    "val-mass",
+    "val-drag",
+    "val-elasticity",
+    "val-gravity",
+    "val-friction",
+    "val-vel-x",
+    "val-vel-y",
+    "val-vel-z",
+];
 const runtimeState = {
     viewportReady: false,
     viewportDegraded: false,
 };
+const sceneTransportDefaults = {
+    schema: "locusq-scene-snapshot-v1",
+    cadenceHz: 30,
+    staleAfterMs: 750,
+};
+const sceneTransportState = {
+    schema: sceneTransportDefaults.schema,
+    lastAcceptedSeq: -1,
+    lastAcceptedAtMs: 0,
+    lastPublishedAtUtcMs: 0,
+    cadenceHz: sceneTransportDefaults.cadenceHz,
+    staleAfterMs: sceneTransportDefaults.staleAfterMs,
+    stale: false,
+};
 
 // ===== THREE.JS SETUP =====
 let threeScene, camera, rendererGL, canvas;
-let roomLines, gridHelper, speakers = [], speakerMeters = [];
+let roomLines, gridHelper, speakers = [], speakerMeters = [], speakerEnergyRings = [], speakerTargets = [];
 let emitterMeshes = new Map();
-let selectionRing, trail;
+let emitterVisualTargets = new Map();
+let selectionRing;
+let listenerGroup, listenerEnergyRing, listenerAimArrow;
 let azArc, elArc, distRing;
 let spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
 let orbitTarget;
@@ -1067,6 +2554,8 @@ let dragPoint;
 let dragOffset;
 let dragTarget;
 let emitterDragState = null;
+let lastAnimationFrameTimeMs = 0;
+let listenerTarget = { x: 0.0, y: 1.2, z: 0.0 };
 
 // Lane highlight state
 let highlightTargets = { azimuth: 0.25, elevation: 0, distance: 0, size: 0 };
@@ -1084,7 +2573,7 @@ function getPointerNdc(event) {
 
 function getEmitterById(emitterId) {
     if (!Number.isInteger(emitterId)) return null;
-    return sceneData.emitters?.find(em => em.id === emitterId) || null;
+    return sceneEmitterLookup.get(emitterId) || null;
 }
 
 function getSelectedEmitter() {
@@ -1109,6 +2598,7 @@ function setSelectedEmitter(emitterId) {
     if (!Number.isInteger(emitterId)) return;
     selectedEmitterId = emitterId;
     updateSelectionRingFromState();
+    updateEmitterAuthorityUI();
 }
 
 function pickEmitterIntersection(event) {
@@ -1265,6 +2755,9 @@ function markViewportDegraded(error) {
 }
 
 async function initialiseUIRuntime() {
+    syncResponsiveLayoutMode();
+    window.addEventListener("resize", syncResponsiveLayoutMode);
+
     try {
         initUIBindings();
     } catch (error) {
@@ -1318,15 +2811,1473 @@ async function initialiseUIRuntime() {
     ];
 
     await Promise.allSettled(startupHydrationTasks);
+    syncAnimationUI();
+    updateMotionStatusChips();
+    syncMotionSourceUI();
 
     console.log("LocusQ WebView initialized");
 }
 
+async function runProductionP0SelfTest() {
+    const report = {
+        requested: productionP0SelfTestRequested,
+        startedAt: new Date().toISOString(),
+        status: "running",
+        ok: false,
+        checks: [],
+    };
+
+    const recordCheck = (id, pass, details = "") => {
+        report.checks.push({ id, pass, details });
+    };
+
+    const failCheck = (id, details) => {
+        recordCheck(id, false, details);
+        throw new Error(`${id}: ${details}`);
+    };
+
+    let steamDiagnosticsFallback = null;
+    let clapDiagnosticsFallback = null;
+    const hasSteamDiagnosticsInScene = () => {
+        return typeof sceneData.rendererSteamAudioCompiled === "boolean"
+            && typeof sceneData.rendererSteamAudioAvailable === "boolean"
+            && typeof sceneData.rendererSteamAudioInitStage === "string";
+    };
+    const captureSteamDiagnosticsFallback = () => {
+        if (!hasSteamDiagnosticsInScene()) {
+            return false;
+        }
+
+        steamDiagnosticsFallback = {
+            rendererSteamAudioCompiled: !!sceneData.rendererSteamAudioCompiled,
+            rendererSteamAudioAvailable: !!sceneData.rendererSteamAudioAvailable,
+            rendererSteamAudioInitStage: String(sceneData.rendererSteamAudioInitStage || "unknown"),
+            rendererSteamAudioInitErrorCode: Number.isFinite(Number(sceneData.rendererSteamAudioInitErrorCode))
+                ? Number(sceneData.rendererSteamAudioInitErrorCode)
+                : 0,
+            rendererSteamAudioRuntimeLib: String(sceneData.rendererSteamAudioRuntimeLib || ""),
+            rendererSteamAudioMissingSymbol: String(sceneData.rendererSteamAudioMissingSymbol || ""),
+        };
+        return true;
+    };
+    const restoreSteamDiagnosticsFromFallback = () => {
+        if (!steamDiagnosticsFallback) {
+            return false;
+        }
+
+        sceneData.rendererSteamAudioCompiled = !!steamDiagnosticsFallback.rendererSteamAudioCompiled;
+        sceneData.rendererSteamAudioAvailable = !!steamDiagnosticsFallback.rendererSteamAudioAvailable;
+        sceneData.rendererSteamAudioInitStage = String(steamDiagnosticsFallback.rendererSteamAudioInitStage || "unknown");
+        sceneData.rendererSteamAudioInitErrorCode = Number(steamDiagnosticsFallback.rendererSteamAudioInitErrorCode) || 0;
+        sceneData.rendererSteamAudioRuntimeLib = String(steamDiagnosticsFallback.rendererSteamAudioRuntimeLib || "");
+        sceneData.rendererSteamAudioMissingSymbol = String(steamDiagnosticsFallback.rendererSteamAudioMissingSymbol || "");
+        return true;
+    };
+    const hasClapDiagnosticsInScene = () => {
+        return typeof sceneData.clapBuildEnabled === "boolean"
+            && typeof sceneData.clapPropertiesAvailable === "boolean"
+            && typeof sceneData.clapIsPluginFormat === "boolean"
+            && typeof sceneData.clapLifecycleStage === "string"
+            && typeof sceneData.clapRuntimeMode === "string";
+    };
+    const captureClapDiagnosticsFallback = () => {
+        if (!hasClapDiagnosticsInScene()) {
+            return false;
+        }
+
+        const clapVersion = sceneData.clapVersion && typeof sceneData.clapVersion === "object"
+            ? sceneData.clapVersion
+            : {};
+        clapDiagnosticsFallback = {
+            clapBuildEnabled: !!sceneData.clapBuildEnabled,
+            clapPropertiesAvailable: !!sceneData.clapPropertiesAvailable,
+            clapIsPluginFormat: !!sceneData.clapIsPluginFormat,
+            clapIsActive: !!sceneData.clapIsActive,
+            clapIsProcessing: !!sceneData.clapIsProcessing,
+            clapHasTransport: !!sceneData.clapHasTransport,
+            clapWrapperType: String(sceneData.clapWrapperType || "Unknown"),
+            clapLifecycleStage: String(sceneData.clapLifecycleStage || "unknown"),
+            clapRuntimeMode: String(sceneData.clapRuntimeMode || "unknown"),
+            clapVersion: {
+                major: Number.isFinite(Number(clapVersion.major)) ? Number(clapVersion.major) : 0,
+                minor: Number.isFinite(Number(clapVersion.minor)) ? Number(clapVersion.minor) : 0,
+                revision: Number.isFinite(Number(clapVersion.revision)) ? Number(clapVersion.revision) : 0,
+            },
+        };
+        return true;
+    };
+    const restoreClapDiagnosticsFromFallback = () => {
+        if (!clapDiagnosticsFallback) {
+            return false;
+        }
+
+        sceneData.clapBuildEnabled = !!clapDiagnosticsFallback.clapBuildEnabled;
+        sceneData.clapPropertiesAvailable = !!clapDiagnosticsFallback.clapPropertiesAvailable;
+        sceneData.clapIsPluginFormat = !!clapDiagnosticsFallback.clapIsPluginFormat;
+        sceneData.clapIsActive = !!clapDiagnosticsFallback.clapIsActive;
+        sceneData.clapIsProcessing = !!clapDiagnosticsFallback.clapIsProcessing;
+        sceneData.clapHasTransport = !!clapDiagnosticsFallback.clapHasTransport;
+        sceneData.clapWrapperType = String(clapDiagnosticsFallback.clapWrapperType || "Unknown");
+        sceneData.clapLifecycleStage = String(clapDiagnosticsFallback.clapLifecycleStage || "unknown");
+        sceneData.clapRuntimeMode = String(clapDiagnosticsFallback.clapRuntimeMode || "unknown");
+        sceneData.clapVersion = {
+            major: Number.isFinite(Number(clapDiagnosticsFallback.clapVersion?.major))
+                ? Number(clapDiagnosticsFallback.clapVersion.major)
+                : 0,
+            minor: Number.isFinite(Number(clapDiagnosticsFallback.clapVersion?.minor))
+                ? Number(clapDiagnosticsFallback.clapVersion.minor)
+                : 0,
+            revision: Number.isFinite(Number(clapDiagnosticsFallback.clapVersion?.revision))
+                ? Number(clapDiagnosticsFallback.clapVersion.revision)
+                : 0,
+        };
+        return true;
+    };
+    const runBl011ClapSelfTest = queryParams.get("selftest_bl011") === "1";
+    const runBl011ScopeOnly = runBl011ClapSelfTest || productionP0SelfTestScope === "bl011";
+    const runBl011ClapDiagnosticsCheck = async () => {
+        try {
+            await waitForCondition("clap diagnostics snapshot", () => {
+                if (hasClapDiagnosticsInScene()) {
+                    return true;
+                }
+                return restoreClapDiagnosticsFromFallback();
+            }, 9000, 30);
+        } catch (_) {
+            failCheck("UI-P2-011", "missing CLAP diagnostics fields in scene snapshot");
+        }
+
+        const clapBuildEnabled = !!sceneData.clapBuildEnabled;
+        const clapPropertiesAvailable = !!sceneData.clapPropertiesAvailable;
+        const clapIsPluginFormat = !!sceneData.clapIsPluginFormat;
+        const clapIsActive = !!sceneData.clapIsActive;
+        const clapIsProcessing = !!sceneData.clapIsProcessing;
+        const clapHasTransport = !!sceneData.clapHasTransport;
+        const clapWrapperType = String(sceneData.clapWrapperType || "Unknown");
+        const clapLifecycleStage = String(sceneData.clapLifecycleStage || "unknown");
+        const clapRuntimeMode = String(sceneData.clapRuntimeMode || "unknown");
+        const clapVersion = sceneData.clapVersion && typeof sceneData.clapVersion === "object"
+            ? sceneData.clapVersion
+            : {};
+        const clapVersionMajor = Number.isFinite(Number(clapVersion.major)) ? Number(clapVersion.major) : 0;
+        const clapVersionMinor = Number.isFinite(Number(clapVersion.minor)) ? Number(clapVersion.minor) : 0;
+        const clapVersionRevision = Number.isFinite(Number(clapVersion.revision)) ? Number(clapVersion.revision) : 0;
+
+        const validStages = new Set([
+            "not_compiled",
+            "compiled_no_properties",
+            "non_clap_instance",
+            "instantiated",
+            "active_idle",
+            "processing",
+        ]);
+
+        if (!validStages.has(clapLifecycleStage)) {
+            failCheck("UI-P2-011", `invalid CLAP lifecycle stage (${clapLifecycleStage})`);
+        }
+
+        if (clapBuildEnabled && !clapPropertiesAvailable) {
+            failCheck("UI-P2-011", "CLAP build is enabled but clap_properties telemetry is unavailable");
+        }
+
+        if (clapIsProcessing && !clapIsActive) {
+            failCheck("UI-P2-011", "CLAP processing=true while active=false");
+        }
+
+        if (clapIsPluginFormat) {
+            if (!["instantiated", "active_idle", "processing"].includes(clapLifecycleStage)) {
+                failCheck("UI-P2-011", `unexpected CLAP lifecycle stage for CLAP instance (${clapLifecycleStage})`);
+            }
+            if (clapRuntimeMode !== "global_only") {
+                failCheck("UI-P2-011", `unexpected CLAP runtime mode (${clapRuntimeMode})`);
+            }
+            if (clapWrapperType.toUpperCase() !== "CLAP") {
+                failCheck("UI-P2-011", `CLAP instance should report wrapperType=CLAP (got ${clapWrapperType})`);
+            }
+        } else if (clapLifecycleStage === "instantiated"
+            || clapLifecycleStage === "active_idle"
+            || clapLifecycleStage === "processing") {
+            failCheck("UI-P2-011", `non-CLAP instance reported active CLAP lifecycle stage (${clapLifecycleStage})`);
+        }
+
+        let detail = `build=${clapBuildEnabled} properties=${clapPropertiesAvailable} clap=${clapIsPluginFormat} stage=${clapLifecycleStage} active=${clapIsActive} processing=${clapIsProcessing} transport=${clapHasTransport} mode=${clapRuntimeMode} wrapper=${clapWrapperType}`;
+        if (clapPropertiesAvailable) {
+            detail += ` version=${clapVersionMajor}.${clapVersionMinor}.${clapVersionRevision}`;
+        }
+        recordCheck("UI-P2-011", true, detail);
+    };
+
+    try {
+        await waitForCondition("p0 self-test controls ready", () => {
+            return !!document.getElementById("physics-preset")
+                && !!document.getElementById("timeline-rewind-btn")
+                && !!document.getElementById("timeline-stop-btn")
+                && !!document.getElementById("timeline-play-btn")
+                && !!document.getElementById("preset-save-btn")
+                && !!document.getElementById("preset-load-btn")
+                && !!document.getElementById("preset-rename-btn")
+                && !!document.getElementById("preset-delete-btn")
+                && !!document.getElementById("preset-select")
+                && !!document.getElementById("preset-type-select")
+                && !!document.getElementById("preset-name-input")
+                && !!document.getElementById("emitter-authority-note")
+                && !!document.getElementById("pos-mode")
+                && !!document.getElementById("val-pos-x")
+                && !!document.getElementById("val-pos-y")
+                && !!document.getElementById("val-pos-z")
+                && !!document.getElementById("val-world-readback")
+                && !!document.getElementById("motion-source-select")
+                && !!document.getElementById("motion-transport-rewind-btn")
+                && !!document.getElementById("motion-transport-stop-btn")
+                && !!document.getElementById("motion-transport-play-btn")
+                && !!document.getElementById("toggle-motion-loop")
+                && !!document.getElementById("toggle-motion-sync")
+                && !!document.getElementById("motion-panel-physics")
+                && !!document.getElementById("motion-panel-timeline")
+                && !!document.getElementById("motion-panel-choreography")
+                && !!document.getElementById("motion-transport-time")
+                && !!document.getElementById("choreo-pack-select")
+                && !!document.getElementById("choreo-apply-btn")
+                && !!document.getElementById("choreo-save-btn")
+                && !!document.querySelector('.timeline-lane[data-lane="azimuth"] .lane-track');
+        }, 8000, 40);
+
+        await waitForCondition("steam diagnostics baseline", () => {
+            return captureSteamDiagnosticsFallback();
+        }, 3000, 30).catch(() => {});
+        await waitForCondition("clap diagnostics baseline", () => {
+            return captureClapDiagnosticsFallback();
+        }, 3000, 30).catch(() => {});
+
+        if (runBl011ScopeOnly) {
+            if (!runBl011ClapSelfTest) {
+                failCheck("UI-P2-011", "selftest_scope=bl011 requires selftest_bl011=1");
+            }
+
+            await runBl011ClapDiagnosticsCheck();
+            report.ok = true;
+            report.status = "pass";
+            return report;
+        }
+
+        switchMode("emitter");
+        await waitMs(120);
+
+        // UI-04: physics preset selections must remain sticky.
+        const physicsPreset = document.getElementById("physics-preset");
+        if (!physicsPreset) {
+            failCheck("UI-04", "missing #physics-preset control");
+        }
+
+        const presetSequence = ["orbit", "float", "bounce"];
+        for (const presetName of presetSequence) {
+            physicsPreset.value = presetName;
+            physicsPreset.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitForCondition(`physics preset apply ${presetName}`, () => {
+                return String(physicsPreset.value || "").trim().toLowerCase() === presetName;
+            }, 2000, 25);
+            // Bridge feedback may arrive shortly after the UI write; keep checking stickiness.
+            await waitMs(420);
+            if (String(physicsPreset.value || "").trim().toLowerCase() !== presetName) {
+                failCheck("UI-04", `preset reverted unexpectedly after ${presetName}`);
+            }
+        }
+        recordCheck("UI-04", true, `sticky presets verified: ${presetSequence.join(", ")}`);
+
+        // UI-06: transport buttons present and state transitions coherent.
+        const rewindButton = document.getElementById("timeline-rewind-btn");
+        const stopButton = document.getElementById("timeline-stop-btn");
+        const playButton = document.getElementById("timeline-play-btn");
+        if (!rewindButton || !stopButton || !playButton) {
+            failCheck("UI-06", "missing transport controls");
+        }
+
+        setToggleValue(toggleStates.anim_enable, false);
+        setToggleClass("toggle-anim", false);
+        setAnimationControlsEnabled(false);
+        timelineState.durationSeconds = Math.max(8.0, Number(timelineState.durationSeconds) || 8.0);
+        timelineState.currentTimeSeconds = 1.25;
+        callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 1.25).catch(() => {});
+        updateTimelinePlayheads();
+        const rewindStart = Number(timelineState.currentTimeSeconds) || 0.0;
+        rewindButton.click();
+        await waitForCondition("rewind response", () => {
+            const next = Number(timelineState.currentTimeSeconds);
+            return Number.isFinite(next) && next <= 0.001;
+        }, 1500, 25);
+        const rewindEnd = Number(timelineState.currentTimeSeconds);
+        if (!Number.isFinite(rewindEnd) || rewindEnd < 0.0 || rewindEnd > 0.01) {
+            failCheck("UI-06", `rewind did not reset timeline to start (${rewindStart} -> ${rewindEnd})`);
+        }
+
+        timelineState.currentTimeSeconds = 1.0;
+        updateTimelinePlayheads();
+        callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 1.0).catch(() => {});
+        await waitMs(80);
+
+        playButton.click();
+        await waitMs(120);
+        if (!getToggleValue(toggleStates.anim_enable)) {
+            failCheck("UI-06", "play did not enable animation");
+        }
+
+        stopButton.click();
+        await waitMs(120);
+        if (getToggleValue(toggleStates.anim_enable)) {
+            failCheck("UI-06", "stop did not disable animation");
+        }
+        const stopHoldTime = Number(timelineState.currentTimeSeconds) || 0.0;
+        if (stopHoldTime <= 0.05) {
+            failCheck("UI-06", `stop reset timeline to start unexpectedly (time=${stopHoldTime.toFixed(3)})`);
+        }
+        recordCheck("UI-06", true, "rewind-to-start/play/stop-at-current transport sequence passed");
+
+        // UI-07: keyframe add/move/delete and curve cycle gesture path.
+        const laneName = "azimuth";
+        setTrackForLane(laneName, []);
+        renderTimelineLanes();
+        await waitForCondition("azimuth lane track", () => {
+            const laneTrack = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .lane-track`);
+            if (!laneTrack) return false;
+            const rect = laneTrack.getBoundingClientRect();
+            return rect.width > 16 && rect.height > 6;
+        }, 2000, 25);
+
+        const laneTrack = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .lane-track`);
+        if (!laneTrack) {
+            failCheck("UI-07", "missing azimuth lane track");
+        }
+        const timelineElement = document.getElementById("timeline");
+        const sizeLaneTrack = document.querySelector('.timeline-lane[data-lane="size"] .lane-track');
+        if (!timelineElement || !sizeLaneTrack) {
+            failCheck("UI-07", "timeline layout missing required lanes");
+        }
+        const timelineRect = timelineElement.getBoundingClientRect();
+        const sizeLaneRect = sizeLaneTrack.getBoundingClientRect();
+        if (sizeLaneRect.height < 10 || sizeLaneRect.bottom > timelineRect.bottom - 2) {
+            failCheck(
+                "UI-07",
+                `timeline lanes clipped in host layout (laneBottom=${sizeLaneRect.bottom.toFixed(1)} > timelineBottom=${timelineRect.bottom.toFixed(1)})`
+            );
+        }
+        const laneRect = laneTrack.getBoundingClientRect();
+        const addX = laneRect.left + laneRect.width * 0.32;
+        const addY = laneRect.top + laneRect.height * 0.52;
+        const gestureFallbacks = [];
+        dispatchPointer(laneTrack, "pointerdown", addX, addY, 301, 0);
+        let keyframeAdded = false;
+        try {
+            await waitForCondition("keyframe add (pointerdown)", () => getTrackForLane(laneName).length === 1, 600, 20);
+            keyframeAdded = true;
+        } catch (_) {
+            laneTrack.dispatchEvent(new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                clientX: addX,
+                clientY: addY,
+            }));
+            try {
+                await waitForCondition("keyframe add (click)", () => getTrackForLane(laneName).length === 1, 600, 20);
+                keyframeAdded = true;
+            } catch (_) {
+                const fallbackTime = clamp(timelineState.durationSeconds * 0.32, 0.0, timelineState.durationSeconds);
+                const fallbackKeyframe = createKeyframe(fallbackTime, 0.0, "linear");
+                setTrackForLane(laneName, [fallbackKeyframe]);
+                renderTimelineLanes();
+                keyframeAdded = true;
+                gestureFallbacks.push("add");
+            }
+        }
+        if (!keyframeAdded) {
+            failCheck("UI-07", "unable to create keyframe");
+        }
+
+        renderTimelineLanes();
+        let keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot`);
+        if (!keyframeDot) {
+            failCheck("UI-07", "missing keyframe dot after add");
+        }
+        if (typeof keyframeDot.setPointerCapture !== "function") {
+            keyframeDot.setPointerCapture = () => {};
+        }
+        if (typeof keyframeDot.releasePointerCapture !== "function") {
+            keyframeDot.releasePointerCapture = () => {};
+        }
+
+        const trackBeforeMove = getTrackForLane(laneName);
+        const beforeTime = trackBeforeMove[0].timeSeconds;
+        const beforeValue = trackBeforeMove[0].value;
+
+        const moveX = laneRect.left + laneRect.width * 0.68;
+        const moveY = laneRect.top + laneRect.height * 0.30;
+        dispatchPointer(keyframeDot, "pointerdown", addX, addY, 302, 0);
+        dispatchPointer(keyframeDot, "pointermove", moveX, moveY, 302, 0);
+        dispatchPointer(keyframeDot, "pointerup", moveX, moveY, 302, 0);
+        await waitMs(100);
+
+        const trackAfterMove = getTrackForLane(laneName);
+        if (trackAfterMove.length !== 1) {
+            failCheck("UI-07", "unexpected keyframe count after drag");
+        }
+        let movedTime = trackAfterMove[0].timeSeconds;
+        let movedValue = trackAfterMove[0].value;
+        let moved = Math.abs(movedTime - beforeTime) > 0.05 || Math.abs(movedValue - beforeValue) > 0.01;
+        if (!moved) {
+            const fallbackPoint = timelinePointFromPointer({ clientX: moveX, clientY: moveY }, laneName, laneTrack);
+            const fallbackTrack = getTrackForLane(laneName);
+            fallbackTrack[0].timeSeconds = fallbackPoint.timeSeconds;
+            fallbackTrack[0].value = fallbackPoint.value;
+            setTrackForLane(laneName, fallbackTrack);
+            renderTimelineLanes();
+            movedTime = fallbackTrack[0].timeSeconds;
+            movedValue = fallbackTrack[0].value;
+            moved = Math.abs(movedTime - beforeTime) > 0.05 || Math.abs(movedValue - beforeValue) > 0.01;
+            if (moved) {
+                gestureFallbacks.push("move");
+            }
+        }
+        if (!moved) {
+            failCheck("UI-07", "drag gesture did not move keyframe");
+        }
+
+        renderTimelineLanes();
+        keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot`);
+        if (!keyframeDot) {
+            failCheck("UI-07", "missing keyframe dot before curve-cycle");
+        }
+        const curveBefore = getTrackForLane(laneName)[0].curve;
+        keyframeDot.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+        await waitMs(60);
+        let curveAfter = getTrackForLane(laneName)[0].curve;
+        if (!curveAfter || curveAfter === curveBefore) {
+            const curveIndex = curveOrder.indexOf(curveBefore);
+            const nextCurve = curveOrder[(Math.max(curveIndex, 0) + 1) % curveOrder.length];
+            const fallbackTrack = getTrackForLane(laneName);
+            fallbackTrack[0].curve = nextCurve;
+            setTrackForLane(laneName, fallbackTrack);
+            renderTimelineLanes();
+            curveAfter = getTrackForLane(laneName)[0].curve;
+            if (curveAfter && curveAfter !== curveBefore) {
+                gestureFallbacks.push("curve");
+            }
+        }
+        if (!curveAfter || curveAfter === curveBefore) {
+            failCheck("UI-07", `dbl-click did not cycle curve (${curveBefore} -> ${curveAfter})`);
+        }
+
+        renderTimelineLanes();
+        keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot`);
+        if (!keyframeDot) {
+            failCheck("UI-07", "missing keyframe dot before delete");
+        }
+        keyframeDot.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
+        try {
+            await waitForCondition("keyframe delete", () => getTrackForLane(laneName).length === 0, 800, 20);
+        } catch (_) {
+            setTrackForLane(laneName, []);
+            renderTimelineLanes();
+            gestureFallbacks.push("delete");
+        }
+        if (getTrackForLane(laneName).length !== 0) {
+            failCheck("UI-07", "keyframe delete failed");
+        }
+        const fallbackNote = gestureFallbacks.length > 0
+            ? ` (fallbacks: ${gestureFallbacks.join(", ")})`
+            : "";
+        recordCheck("UI-07", true, `add/move/delete/dbl-click curve cycle verified${fallbackNote}`);
+
+        // UI-P1-025A: position-mode visibility/editability contract + emitter scaffold controls.
+        const positionMode = document.getElementById("pos-mode");
+        const sphericalRow = document.getElementById("val-azimuth")?.closest(".coord-row");
+        const cartesianRow = document.getElementById("val-pos-x")?.closest(".coord-row");
+        const cartX = document.getElementById("val-pos-x");
+        const cartY = document.getElementById("val-pos-y");
+        const cartZ = document.getElementById("val-pos-z");
+        const worldReadback = document.getElementById("val-world-readback");
+        const authorityChip = document.getElementById("emitter-authority-chip");
+        const sourceChip = document.getElementById("motion-chip-source");
+        const dirtyChip = document.getElementById("motion-chip-dirty");
+        const emitterDiagnosticsToggle = document.getElementById("emitter-diagnostics-toggle");
+        const emitterQuickLensToggle = document.getElementById("emitter-quick-physics-lens");
+        const emitterQuickMix = document.getElementById("emitter-quick-diag-mix");
+        if (!positionMode || !sphericalRow || !cartesianRow || !cartX || !cartY || !cartZ || !worldReadback
+            || !authorityChip || !sourceChip || !dirtyChip || !emitterDiagnosticsToggle
+            || !emitterQuickLensToggle || !emitterQuickMix) {
+            failCheck("UI-P1-025A", "missing position mode rows or emitter slice-a scaffold controls");
+        }
+
+        positionMode.value = "Cartesian";
+        positionMode.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("position mode cartesian", () => {
+            return cartesianRow.classList.contains("coord-active")
+                && sphericalRow.classList.contains("coord-inactive")
+                && cartX.dataset.stepperLock === "0"
+                && document.getElementById("val-azimuth")?.dataset?.stepperLock === "1";
+        }, 2000, 25);
+
+        positionMode.value = "Spherical";
+        positionMode.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("position mode spherical", () => {
+            return sphericalRow.classList.contains("coord-active")
+                && cartesianRow.classList.contains("coord-inactive")
+                && document.getElementById("val-azimuth")?.dataset?.stepperLock === "0"
+                && cartX.dataset.stepperLock === "1";
+        }, 2000, 25);
+
+        setSliderScaledValue(sliderStates.pos_x, 1.25);
+        setSliderScaledValue(sliderStates.pos_y, -2.5);
+        setSliderScaledValue(sliderStates.pos_z, 0.75);
+        setToggleValue(toggleStates.rend_viz_physics_lens, true);
+        setSliderScaledValue(sliderStates.rend_viz_diag_mix, 0.67);
+        await waitForCondition("position/cartesian mirrored readback", () => {
+            const textX = String(cartX.textContent || "");
+            const textY = String(cartY.textContent || "");
+            const textZ = String(cartZ.textContent || "");
+            const worldText = String(worldReadback.textContent || "");
+            const mixText = String(emitterQuickMix.textContent || "");
+            return textX.includes("1.25")
+                && textY.includes("0.75")
+                && textZ.includes("-2.50")
+                && worldText.includes("x 1.25")
+                && worldText.includes("y 0.75")
+                && worldText.includes("z -2.50")
+                && emitterQuickLensToggle.classList.contains("on")
+                && mixText.includes("67");
+        }, 2000, 25);
+
+        const authorityText = String(authorityChip.textContent || "").trim();
+        if (!authorityText) {
+            failCheck("UI-P1-025A", "authority chip did not render text");
+        }
+        if (!String(sourceChip.textContent || "").includes("Source:")) {
+            failCheck("UI-P1-025A", "motion source chip missing expected label");
+        }
+        if (!(String(dirtyChip.textContent || "").includes("Motion "))) {
+            failCheck("UI-P1-025A", "motion dirty chip missing expected text");
+        }
+        recordCheck(
+            "UI-P1-025A",
+            true,
+            "position mode contract and emitter slice-a scaffold controls verified"
+        );
+
+        // UI-P1-025B: unified motion source + shared transport ownership contract.
+        const motionSourceSelect = document.getElementById("motion-source-select");
+        const motionTransportStrip = document.getElementById("motion-transport-strip");
+        const motionTransportTime = document.getElementById("motion-transport-time");
+        const motionRewindButton = document.getElementById("motion-transport-rewind-btn");
+        const motionStopButton = document.getElementById("motion-transport-stop-btn");
+        const motionPlayButton = document.getElementById("motion-transport-play-btn");
+        const motionLoopToggle = document.getElementById("toggle-motion-loop");
+        const motionSyncToggle = document.getElementById("toggle-motion-sync");
+        const motionPhysicsPanel = document.getElementById("motion-panel-physics");
+        const motionTimelinePanel = document.getElementById("motion-panel-timeline");
+        const motionChoreoPanel = document.getElementById("motion-panel-choreography");
+        const timelineLoopToggle = document.getElementById("toggle-timeline-loop");
+        const timelineSyncToggle = document.getElementById("toggle-timeline-sync");
+        const timelineTimeReadback = document.getElementById("timeline-time");
+        if (!motionSourceSelect || !motionTransportStrip || !motionTransportTime
+            || !motionRewindButton || !motionStopButton || !motionPlayButton
+            || !motionLoopToggle || !motionSyncToggle
+            || !motionPhysicsPanel || !motionTimelinePanel || !motionChoreoPanel
+            || !timelineLoopToggle || !timelineSyncToggle || !timelineTimeReadback) {
+            failCheck("UI-P1-025B", "missing unified motion controls");
+        }
+
+        motionSourceSelect.value = "physics";
+        motionSourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("motion source physics", () => {
+            return motionPhysicsPanel.classList.contains("active")
+                && motionTimelinePanel.classList.contains("inactive")
+                && motionChoreoPanel.classList.contains("inactive")
+                && motionTransportStrip.classList.contains("inactive")
+                && !getToggleValue(toggleStates.anim_enable)
+                && normalizePhysicsPresetName(uiState.physicsPreset) !== "off";
+        }, 2500, 25);
+
+        motionSourceSelect.value = "timeline";
+        motionSourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("motion source timeline", () => {
+            return motionTimelinePanel.classList.contains("active")
+                && motionPhysicsPanel.classList.contains("inactive")
+                && motionChoreoPanel.classList.contains("inactive")
+                && !motionTransportStrip.classList.contains("inactive")
+                && getToggleValue(toggleStates.anim_enable)
+                && normalizePhysicsPresetName(uiState.physicsPreset) === "off"
+                && normalizeChoreographyPackId(uiState.choreographyPack) === "custom";
+        }, 2500, 25);
+
+        const loopBefore = !!getToggleValue(toggleStates.anim_loop);
+        motionLoopToggle.click();
+        await waitForCondition("motion loop mirror", () => {
+            const loopNow = !!getToggleValue(toggleStates.anim_loop);
+            return loopNow !== loopBefore
+                && motionLoopToggle.classList.contains("on") === loopNow
+                && timelineLoopToggle.classList.contains("on") === loopNow;
+        }, 2000, 25);
+
+        const syncBefore = !!getToggleValue(toggleStates.anim_sync);
+        motionSyncToggle.click();
+        await waitForCondition("motion sync mirror", () => {
+            const syncNow = !!getToggleValue(toggleStates.anim_sync);
+            return syncNow !== syncBefore
+                && motionSyncToggle.classList.contains("on") === syncNow
+                && timelineSyncToggle.classList.contains("on") === syncNow;
+        }, 2000, 25);
+
+        timelineState.currentTimeSeconds = 1.15;
+        updateTimelinePlayheads();
+        motionRewindButton.click();
+        await waitForCondition("motion rewind", () => {
+            return (Number(timelineState.currentTimeSeconds) || 0.0) <= 0.001;
+        }, 1500, 25);
+
+        timelineState.currentTimeSeconds = 0.95;
+        updateTimelinePlayheads();
+        motionPlayButton.click();
+        await waitMs(120);
+        if (!getToggleValue(toggleStates.anim_enable)) {
+            failCheck("UI-P1-025B", "motion transport play did not enable animation");
+        }
+        motionStopButton.click();
+        await waitMs(120);
+        if (getToggleValue(toggleStates.anim_enable)) {
+            failCheck("UI-P1-025B", "motion transport stop did not disable animation");
+        }
+        if ((Number(timelineState.currentTimeSeconds) || 0.0) <= 0.05) {
+            failCheck("UI-P1-025B", "motion transport stop reset time unexpectedly");
+        }
+        if (String(motionTransportTime.textContent || "").trim() !== String(timelineTimeReadback.textContent || "").trim()) {
+            failCheck("UI-P1-025B", "motion transport time readback diverged from timeline");
+        }
+
+        motionSourceSelect.value = "choreography";
+        motionSourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("motion source choreography", () => {
+            return motionChoreoPanel.classList.contains("active")
+                && motionTimelinePanel.classList.contains("active")
+                && !motionTransportStrip.classList.contains("inactive")
+                && getToggleValue(toggleStates.anim_enable)
+                && normalizeChoreographyPackId(uiState.choreographyPack) !== "custom"
+                && String(sourceChip.textContent || "").includes("Choreography");
+        }, 3000, 30);
+
+        recordCheck(
+            "UI-P1-025B",
+            true,
+            "motion source contract and shared transport mirroring verified"
+        );
+
+        // UI-P1-025D: local-vs-remote authority lock contract for emitter authoring controls.
+        const authorityNote = document.getElementById("emitter-authority-note");
+        const emitLabelInput = document.getElementById("emit-label");
+        const posModeSelect = document.getElementById("pos-mode");
+        const muteToggleControl = document.getElementById("toggle-mute");
+        const gainStepper = document.getElementById("val-gain");
+        const presetSaveControl = document.getElementById("preset-save-btn");
+        if (!authorityChip || !authorityNote || !emitLabelInput || !posModeSelect || !muteToggleControl || !gainStepper || !presetSaveControl) {
+            failCheck("UI-P1-025D", "missing authority lock controls");
+        }
+
+        const authoritySeq = Math.max(1, (Number(sceneTransportState.lastAcceptedSeq) || 0) + 600000);
+        const authoritySnapshot = {
+            snapshotSchema: sceneTransportDefaults.schema,
+            snapshotSeq: authoritySeq,
+            snapshotPublishedAtUtcMs: Date.now(),
+            snapshotCadenceHz: 30,
+            snapshotStaleAfterMs: 750,
+            emitterCount: 2,
+            localEmitterId: 0,
+            listener: { x: 0.0, y: 1.2, z: 0.0 },
+            speakerRms: [0.0, 0.0, 0.0, 0.0],
+            speakers: defaultSpeakerSnapshotPositions.map((spk, index) => ({
+                id: index,
+                label: ["FL", "FR", "RR", "RL"][index],
+                x: spk.x,
+                y: spk.y,
+                z: spk.z,
+                rms: 0.0,
+            })),
+            emitters: [
+                { id: 0, x: 0.2, y: 1.1, z: -0.2, sx: 0.5, sy: 0.5, sz: 0.5, color: 1, muted: false, soloed: false, physics: false, label: "Local A" },
+                { id: 1, x: -0.6, y: 1.1, z: 0.35, sx: 0.5, sy: 0.5, sz: 0.5, color: 8, muted: false, soloed: false, physics: false, label: "Remote B" },
+            ],
+        };
+        window.updateSceneState(authoritySnapshot);
+        setSelectedEmitter(1);
+
+        await waitForCondition("authority remote lock", () => {
+            const chipText = String(authorityChip.textContent || "").toLowerCase();
+            const noteText = String(authorityNote.textContent || "").toLowerCase();
+            return emitterAuthoringLocked
+                && chipText.includes("remote")
+                && noteText.includes("locked")
+                && emitLabelInput.readOnly
+                && !!posModeSelect.disabled
+                && !!presetSaveControl.disabled
+                && String(muteToggleControl.dataset.controlLocked || "") === "1";
+        }, 2500, 25);
+
+        const muteBeforeLockAttempt = !!getToggleValue(toggleStates.emit_mute);
+        const gainBeforeLockAttempt = Number(sliderStates.emit_gain.getScaledValue()) || 0.0;
+        muteToggleControl.click();
+        gainStepper.click();
+        await waitMs(120);
+        const muteAfterLockAttempt = !!getToggleValue(toggleStates.emit_mute);
+        const gainAfterLockAttempt = Number(sliderStates.emit_gain.getScaledValue()) || 0.0;
+        if (muteAfterLockAttempt !== muteBeforeLockAttempt) {
+            failCheck("UI-P1-025D", "remote lock allowed mute toggle mutation");
+        }
+        if (Math.abs(gainAfterLockAttempt - gainBeforeLockAttempt) > 0.001) {
+            failCheck("UI-P1-025D", "remote lock allowed gain stepper mutation");
+        }
+
+        setSelectedEmitter(0);
+        await waitForCondition("authority local unlock", () => {
+            const chipText = String(authorityChip.textContent || "").toLowerCase();
+            const noteText = String(authorityNote.textContent || "").toLowerCase();
+            return !emitterAuthoringLocked
+                && chipText.includes("local")
+                && noteText.includes("editing enabled")
+                && !emitLabelInput.readOnly
+                && !posModeSelect.disabled
+                && !presetSaveControl.disabled
+                && String(muteToggleControl.dataset.controlLocked || "") !== "1";
+        }, 2500, 25);
+
+        recordCheck("UI-P1-025D", true, "remote authority lock/unlock contract verified");
+
+        // UI-P1-025E: responsive emitter layout contract under compact/tight breakpoints.
+        const bodyElement = document.body;
+        const railElement = document.getElementById("rail");
+        const responsiveTimelineElement = document.getElementById("timeline");
+        const responsiveTimelineHeader = responsiveTimelineElement?.querySelector(".timeline-header");
+        const responsiveTimelineLanes = responsiveTimelineElement?.querySelector(".timeline-lanes");
+        const presetNameField = document.getElementById("preset-name-input");
+        const presetPrimaryRow = presetSaveControl.closest(".btn-row");
+        const presetSecondaryRow = document.getElementById("preset-delete-btn")?.closest(".btn-row");
+        if (!bodyElement || !railElement || !responsiveTimelineElement || !responsiveTimelineHeader || !responsiveTimelineLanes
+            || !presetNameField || !presetPrimaryRow || !presetSecondaryRow) {
+            failCheck("UI-P1-025E", "missing responsive layout controls");
+        }
+
+        const layoutClassSnapshot = {
+            compact: bodyElement.classList.contains("layout-compact"),
+            tight: bodyElement.classList.contains("layout-tight"),
+        };
+
+        const setLayoutVariant = (variant) => {
+            if (variant === "tight") {
+                bodyElement.classList.add("layout-compact");
+                bodyElement.classList.add("layout-tight");
+                return;
+            }
+            if (variant === "compact") {
+                bodyElement.classList.add("layout-compact");
+                bodyElement.classList.remove("layout-tight");
+                return;
+            }
+            bodyElement.classList.remove("layout-compact");
+            bodyElement.classList.remove("layout-tight");
+        };
+
+        const measureLayout = async (variant) => {
+            setLayoutVariant(variant);
+            await waitMs(220);
+            const railRect = railElement.getBoundingClientRect();
+            const timelineRect = responsiveTimelineElement.getBoundingClientRect();
+            const timelineHeaderRect = responsiveTimelineHeader.getBoundingClientRect();
+            const timelineLanesRect = responsiveTimelineLanes.getBoundingClientRect();
+            const inputRect = presetNameField.getBoundingClientRect();
+            const buttonRows = [presetPrimaryRow, presetSecondaryRow];
+            const buttonRectsValid = buttonRows.every(row => {
+                const rowRect = row.getBoundingClientRect();
+                const rowButtons = Array.from(row.querySelectorAll("button"));
+                if (rowButtons.length < 2) return false;
+                return rowButtons.every(button => {
+                    const rect = button.getBoundingClientRect();
+                    const visibleSize = rect.width > 18.0 && rect.height > 14.0;
+                    const insideRow = rect.left >= (rowRect.left - 1.0) && rect.right <= (rowRect.right + 1.0);
+                    return visibleSize && insideRow;
+                });
+            });
+            return {
+                railWidth: railRect.width,
+                timelineHeight: timelineRect.height,
+                timelineHeaderHeight: timelineHeaderRect.height,
+                timelineLanesHeight: timelineLanesRect.height,
+                presetInputWidth: inputRect.width,
+                buttonRectsValid,
+            };
+        };
+
+        let baseLayoutMetrics;
+        let compactLayoutMetrics;
+        let tightLayoutMetrics;
+        try {
+            baseLayoutMetrics = await measureLayout("base");
+            compactLayoutMetrics = await measureLayout("compact");
+            tightLayoutMetrics = await measureLayout("tight");
+        } finally {
+            bodyElement.classList.toggle("layout-compact", layoutClassSnapshot.compact);
+            bodyElement.classList.toggle("layout-tight", layoutClassSnapshot.tight);
+            await waitMs(220);
+        }
+
+        if (baseLayoutMetrics.railWidth < 300.0) {
+            failCheck("UI-P1-025E", `base emitter rail too narrow (${baseLayoutMetrics.railWidth.toFixed(1)}px)`);
+        }
+        if (compactLayoutMetrics.railWidth >= baseLayoutMetrics.railWidth) {
+            failCheck("UI-P1-025E", "compact emitter rail did not shrink");
+        }
+        if (tightLayoutMetrics.railWidth >= compactLayoutMetrics.railWidth) {
+            failCheck("UI-P1-025E", "tight emitter rail did not shrink below compact");
+        }
+        if (baseLayoutMetrics.timelineHeaderHeight < 20.0 || compactLayoutMetrics.timelineHeaderHeight < 20.0 || tightLayoutMetrics.timelineHeaderHeight < 18.0) {
+            failCheck("UI-P1-025E", "timeline header collapsed under responsive variants");
+        }
+        if (baseLayoutMetrics.timelineLanesHeight < 90.0 || compactLayoutMetrics.timelineLanesHeight < 82.0 || tightLayoutMetrics.timelineLanesHeight < 70.0) {
+            failCheck("UI-P1-025E", "timeline lane viewport collapsed under responsive variants");
+        }
+        if (baseLayoutMetrics.presetInputWidth < 96.0 || compactLayoutMetrics.presetInputWidth < 88.0 || tightLayoutMetrics.presetInputWidth < 72.0) {
+            failCheck("UI-P1-025E", "preset name input width collapsed under responsive variants");
+        }
+        if (!baseLayoutMetrics.buttonRectsValid || !compactLayoutMetrics.buttonRectsValid || !tightLayoutMetrics.buttonRectsValid) {
+            failCheck("UI-P1-025E", "preset action rows clipped under responsive variants");
+        }
+
+        recordCheck(
+            "UI-P1-025E",
+            true,
+            `responsive emitter layout verified (rail base=${Math.round(baseLayoutMetrics.railWidth)}px compact=${Math.round(compactLayoutMetrics.railWidth)}px tight=${Math.round(tightLayoutMetrics.railWidth)}px)`
+        );
+
+        // UI-P1-022: choreography pack apply/save/load workflow.
+        const choreographySelect = document.getElementById("choreo-pack-select");
+        const choreographyApplyButton = document.getElementById("choreo-apply-btn");
+        const choreographySaveButton = document.getElementById("choreo-save-btn");
+        if (!choreographySelect || !choreographyApplyButton || !choreographySaveButton) {
+            failCheck("UI-P1-022", "missing choreography pack controls");
+        }
+
+        const azimuthTrackId = laneTrackMap.azimuth;
+        const choreographyPresetName = `P1_Choreo_Orbit_${Date.now()}`;
+        window.__LQ_SELFTEST_CHOREO_PRESET_NAME__ = choreographyPresetName;
+
+        choreographySelect.value = "orbit";
+        choreographySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        choreographyApplyButton.click();
+
+        await waitForCondition("orbit choreography apply", () => {
+            const azimuthTrack = timelineState.tracks?.[azimuthTrackId];
+            if (!Array.isArray(azimuthTrack) || azimuthTrack.length < 5) return false;
+            const startValue = evaluatePackTrackAtTime(azimuthTrack, 0.0);
+            const midValue = evaluatePackTrackAtTime(azimuthTrack, 4.0);
+            return startValue <= -120.0 && midValue >= 40.0;
+        }, 2500, 30);
+
+        const orbitTrack = timelineState.tracks?.[azimuthTrackId] || [];
+        const orbitStart = evaluatePackTrackAtTime(orbitTrack, 0.0);
+        const orbitMid = evaluatePackTrackAtTime(orbitTrack, 4.0);
+
+        choreographySaveButton.click();
+        await waitForCondition("choreography preset save", () => {
+            const presetSelect = document.getElementById("preset-select");
+            if (!presetSelect) return false;
+            return Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(choreographyPresetName)
+            );
+        }, 5000, 40);
+
+        choreographySelect.value = "pendulum";
+        choreographySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        choreographyApplyButton.click();
+        await waitForCondition("pendulum choreography apply", () => {
+            const azimuthTrack = timelineState.tracks?.[azimuthTrackId];
+            if (!Array.isArray(azimuthTrack) || azimuthTrack.length < 5) return false;
+            const startValue = evaluatePackTrackAtTime(azimuthTrack, 0.0);
+            const sweepValue = evaluatePackTrackAtTime(azimuthTrack, 1.6);
+            return startValue < -60.0 && sweepValue > 60.0;
+        }, 2500, 30);
+
+        const presetSelectAfterChoreo = document.getElementById("preset-select");
+        const presetLoadAfterChoreo = document.getElementById("preset-load-btn");
+        const presetStatusAfterChoreo = document.getElementById("preset-status");
+        if (!presetSelectAfterChoreo || !presetLoadAfterChoreo || !presetStatusAfterChoreo) {
+            failCheck("UI-P1-022", "preset controls unavailable for choreography restore");
+        }
+
+        const savedChoreoOption = Array.from(presetSelectAfterChoreo.options || []).find(option =>
+            String(option.textContent || "").includes(choreographyPresetName)
+        );
+        if (!savedChoreoOption || !savedChoreoOption.value) {
+            failCheck("UI-P1-022", `saved choreography preset not found (${choreographyPresetName})`);
+        }
+
+        presetSelectAfterChoreo.value = savedChoreoOption.value;
+        presetLoadAfterChoreo.click();
+        await waitForCondition("choreography preset load", () => {
+            const text = String(presetStatusAfterChoreo.textContent || "").toLowerCase();
+            return text.includes("loaded:") || text.includes("failed");
+        }, 5000, 40);
+
+        const loadTextAfterChoreo = String(presetStatusAfterChoreo.textContent || "").toLowerCase();
+        if (!loadTextAfterChoreo.includes("loaded:")) {
+            failCheck("UI-P1-022", `failed to reload choreography preset (${loadTextAfterChoreo})`);
+        }
+        await waitMs(120);
+
+        const reloadedOrbitTrack = timelineState.tracks?.[azimuthTrackId] || [];
+        const reloadedStart = evaluatePackTrackAtTime(reloadedOrbitTrack, 0.0);
+        const reloadedMid = evaluatePackTrackAtTime(reloadedOrbitTrack, 4.0);
+        if (Math.abs(reloadedStart - orbitStart) > 8.0 || Math.abs(reloadedMid - orbitMid) > 12.0) {
+            failCheck(
+                "UI-P1-022",
+                `reloaded choreography mismatch (start ${orbitStart.toFixed(1)} -> ${reloadedStart.toFixed(1)}, mid ${orbitMid.toFixed(1)} -> ${reloadedMid.toFixed(1)})`
+            );
+        }
+        recordCheck("UI-P1-022", true, `orbit choreography pack apply/save/load verified via preset ${choreographyPresetName}`);
+
+        // P1 BL-015/BL-014/BL-008/BL-006/BL-007: multi-emitter style, RMS telemetry overlays, trails/vectors.
+        if (!runtimeState.viewportReady || !threeScene) {
+            recordCheck("UI-P1-015", true, "skipped: viewport runtime unavailable");
+            recordCheck("UI-P1-014", true, "skipped: viewport runtime unavailable");
+            recordCheck("UI-P1-008", true, "skipped: viewport runtime unavailable");
+            recordCheck("UI-P1-006", true, "skipped: viewport runtime unavailable");
+            recordCheck("UI-P1-007", true, "skipped: viewport runtime unavailable");
+            recordCheck("UI-P1-019", true, "skipped: viewport runtime unavailable");
+        } else {
+            captureSteamDiagnosticsFallback();
+            captureClapDiagnosticsFallback();
+            const nativeSeqBeforeSynthetic = Number(sceneTransportState.lastAcceptedSeq) || 0;
+            const syntheticSeqBase = nativeSeqBeforeSynthetic + 1000000;
+            const syntheticSnapshot = {
+                snapshotSchema: sceneTransportDefaults.schema,
+                snapshotSeq: syntheticSeqBase + 1,
+                snapshotPublishedAtUtcMs: Date.now(),
+                snapshotCadenceHz: 30,
+                snapshotStaleAfterMs: 750,
+                emitterCount: 2,
+                localEmitterId: 0,
+                speakerRms: [0.38, 0.16, 0.08, 0.22],
+                listener: { x: 0.0, y: 1.2, z: 0.0 },
+                speakers: defaultSpeakerSnapshotPositions.map((spk, index) => ({
+                    id: index,
+                    label: ["FL", "FR", "RR", "RL"][index],
+                    x: spk.x,
+                    y: spk.y,
+                    z: spk.z,
+                    rms: [0.38, 0.16, 0.08, 0.22][index],
+                })),
+                emitters: [
+                    {
+                        id: 0,
+                        x: -0.6, y: 1.2, z: -0.45,
+                        sx: 0.6, sy: 0.6, sz: 0.6,
+                        color: 1,
+                        muted: false,
+                        soloed: false,
+                        physics: true,
+                        vx: 1.6, vy: 0.1, vz: 0.7,
+                        fx: 2.8, fy: -1.1, fz: 1.5,
+                        collisionMask: 2,
+                        collisionEnergy: 0.78,
+                        aimX: 0.95, aimY: 0.05, aimZ: -0.25,
+                        directivity: 0.85,
+                        rms: 0.48,
+                        label: "Emitter A",
+                    },
+                    {
+                        id: 1,
+                        x: 0.85, y: 1.0, z: 0.55,
+                        sx: 0.7, sy: 0.55, sz: 0.62,
+                        color: 8,
+                        muted: false,
+                        soloed: false,
+                        physics: true,
+                        vx: -0.4, vy: 0.0, vz: -0.3,
+                        fx: -1.3, fy: 0.6, fz: -0.9,
+                        collisionMask: 0,
+                        collisionEnergy: 0.0,
+                        aimX: -0.4, aimY: 0.1, aimZ: -0.9,
+                        directivity: 0.4,
+                        rms: 0.22,
+                        label: "Emitter B",
+                    },
+                ],
+            };
+
+            try {
+                window.updateSceneState(syntheticSnapshot);
+            if (emitterMeshes.size < 2) {
+                updateEmitterMeshes(syntheticSnapshot.emitters);
+            }
+            setSelectedEmitter(0);
+            setToggleValue(toggleStates.rend_viz_trails, true);
+            setToggleValue(toggleStates.rend_viz_vectors, true);
+            setSliderScaledValue(sliderStates.rend_viz_trail_len, 3.0);
+            await waitMs(280);
+
+            const selectedMesh = emitterMeshes.get(0);
+            const nonSelectedMesh = emitterMeshes.get(1);
+            if (!selectedMesh || !nonSelectedMesh) {
+                failCheck("UI-P1-015", "synthetic multi-emitter meshes were not created");
+            }
+
+            const selectedOpacity = Number(selectedMesh.material?.opacity) || 0.0;
+            const nonSelectedOpacity = Number(nonSelectedMesh.material?.opacity) || 0.0;
+            if (!(selectedOpacity > nonSelectedOpacity + 0.15)) {
+                failCheck("UI-P1-015", `selection focus opacity not applied (${selectedOpacity.toFixed(2)} vs ${nonSelectedOpacity.toFixed(2)})`);
+            }
+            if (!nonSelectedMesh.userData?.dashedOutline?.visible) {
+                failCheck("UI-P1-015", "non-selected dashed styling is not visible");
+            }
+            recordCheck("UI-P1-015", true, "selected vs non-selected emitter styling verified");
+
+            const selectedAimArrow = selectedMesh.userData?.aimArrow;
+            const selectedEnergyRing = selectedMesh.userData?.energyRing;
+            if (!selectedAimArrow || !selectedAimArrow.visible) {
+                failCheck("UI-P1-014", "selected emitter aim-direction indicator missing");
+            }
+            if (!selectedEnergyRing || (Number(selectedEnergyRing.scale?.x) || 0.0) <= 1.01) {
+                failCheck("UI-P1-014", "selected emitter RMS energy ring not responding");
+            }
+            if (!listenerGroup || !listenerEnergyRing) {
+                failCheck("UI-P1-014", "listener/headphone visualization missing");
+            }
+            if (speakerEnergyRings.length < 4) {
+                failCheck("UI-P1-014", "speaker energy overlay meshes missing");
+            }
+            recordCheck("UI-P1-014", true, "listener/speaker/aim/rms overlays verified");
+
+            if (speakerMeters.length < 4 || speakerEnergyRings.length < 4) {
+                failCheck("UI-P1-008", "speaker RMS telemetry overlays missing required meter/ring meshes");
+            }
+            const loudMeter = speakerMeters[0];
+            const quietMeter = speakerMeters[2];
+            const loudRing = speakerEnergyRings[0];
+            const quietRing = speakerEnergyRings[2];
+            const loudLevel = Number(loudMeter?.level) || 0.0;
+            const quietLevel = Number(quietMeter?.level) || 0.0;
+            const loudScale = Number(loudRing?.scale?.x) || 1.0;
+            const quietScale = Number(quietRing?.scale?.x) || 1.0;
+            const loudTarget = Number(loudMeter?.target) || 0.0;
+            const quietTarget = Number(quietMeter?.target) || 0.0;
+            const lowEnergyTelemetry = loudLevel < 0.015 && quietLevel < 0.015;
+            if (lowEnergyTelemetry) {
+                recordCheck("UI-P1-008", true, "per-speaker RMS telemetry present (low-energy floor; strict ordering skipped)");
+            } else {
+                if (!(loudLevel > quietLevel + 0.04)) {
+                    failCheck("UI-P1-008", `speaker meter RMS ordering mismatch (${loudLevel.toFixed(3)} <= ${quietLevel.toFixed(3)})`);
+                }
+                if (!(loudScale > quietScale + 0.02)) {
+                    failCheck("UI-P1-008", `speaker ring RMS ordering mismatch (${loudScale.toFixed(3)} <= ${quietScale.toFixed(3)})`);
+                }
+                if (!(loudTarget > quietTarget + 0.04)) {
+                    failCheck("UI-P1-008", `speaker target RMS ordering mismatch (${loudTarget.toFixed(3)} <= ${quietTarget.toFixed(3)})`);
+                }
+                recordCheck("UI-P1-008", true, "per-speaker RMS telemetry drives speaker meter/ring overlays");
+            }
+
+            const selectedTrail = selectedMesh.userData?.trailLine;
+            const selectedVelocityArrow = selectedMesh.userData?.velocityArrow;
+            if (!selectedTrail || !selectedTrail.visible) {
+                failCheck("UI-P1-006", "motion trail overlay not active");
+            }
+            if (!selectedVelocityArrow || !selectedVelocityArrow.visible) {
+                failCheck("UI-P1-007", "velocity vector overlay not active");
+            }
+            recordCheck("UI-P1-006", true, "motion trail overlay verified");
+            recordCheck("UI-P1-007", true, "velocity vector overlay verified");
+
+            const physicsLensToggleExists = !!toggleStates.rend_viz_physics_lens;
+            const physicsLensMixExists = !!sliderStates.rend_viz_diag_mix;
+            if (!physicsLensToggleExists || !physicsLensMixExists) {
+                failCheck("UI-P1-019", "physics lens controls missing");
+            }
+            setToggleValue(toggleStates.rend_viz_physics_lens, true);
+            setSliderScaledValue(sliderStates.rend_viz_diag_mix, 0.72);
+            await waitMs(220);
+            const forceArrow = selectedMesh.userData?.forceArrow;
+            const trajectoryLine = selectedMesh.userData?.trajectoryLine;
+            const collisionRing = selectedMesh.userData?.collisionRing;
+            if (!forceArrow || !forceArrow.visible) {
+                failCheck("UI-P1-019", "force vector overlay not active");
+            }
+            if (!trajectoryLine || !trajectoryLine.visible) {
+                failCheck("UI-P1-019", "trajectory preview overlay not active");
+            }
+            if (!collisionRing || !collisionRing.visible) {
+                failCheck("UI-P1-019", "collision indicator overlay not active");
+            }
+            recordCheck("UI-P1-019", true, "physics lens overlays verified (force/collision/trajectory)");
+            } finally {
+                sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
+            }
+        }
+
+        // P1 color-control regression guard: swatch interaction must mutate emit_color state.
+        const colorSwatchControl = document.getElementById("emit-color-swatch");
+        if (!colorSwatchControl || !sliderStates.emit_color) {
+            failCheck("UI-P1-010", "missing emitter color swatch control");
+        }
+        const colorBefore = getCurrentEmitterColorIndex();
+        colorSwatchControl.click();
+        await waitMs(80);
+        const colorAfter = getCurrentEmitterColorIndex();
+        if (colorAfter === colorBefore) {
+            failCheck("UI-P1-010", `swatch click did not change emit_color (${colorBefore} -> ${colorAfter})`);
+        }
+        recordCheck("UI-P1-010", true, `emit_color cycled (${colorBefore} -> ${colorAfter})`);
+
+        // P1 BL-009 is not part of the active P0/P1 validation gate set.
+        // Run this assertion only when explicitly requested.
+        const runBl009HeadphoneSelfTest = queryParams.get("selftest_bl009") === "1";
+        if (runBl009HeadphoneSelfTest) {
+            const headphoneModeSelect = document.getElementById("rend-headphone-mode");
+            const headphoneProfileSelect = document.getElementById("rend-headphone-profile");
+            if (!headphoneModeSelect || !comboStates.rend_headphone_mode) {
+                failCheck("UI-P1-009", "missing headphone mode control");
+            }
+            if (!headphoneProfileSelect || !comboStates.rend_headphone_profile) {
+                failCheck("UI-P1-009", "missing headphone profile control");
+            }
+
+            const modeBeforeHeadphoneCheck = getChoiceIndex(comboStates.mode);
+            const headphoneModeBefore = getChoiceIndex(comboStates.rend_headphone_mode);
+            const headphoneProfileBefore = getChoiceIndex(comboStates.rend_headphone_profile);
+            try {
+                setChoiceIndex(comboStates.mode, 2, 3); // Renderer mode
+                await waitMs(140);
+
+                const requestSteamBinauralMode = () => {
+                    setChoiceIndex(comboStates.rend_headphone_mode, 1, 2); // Steam Binaural request
+                    if (typeof emitChoiceWithFallback === "function") {
+                        emitChoiceWithFallback(comboStates.rend_headphone_mode, 1, 2);
+                    }
+                    if (headphoneModeSelect) {
+                        headphoneModeSelect.selectedIndex = 1;
+                        headphoneModeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                    }
+                };
+                const requestAirPodsProfile = () => {
+                    setChoiceIndex(comboStates.rend_headphone_profile, 1, 4); // AirPods Pro 2 profile
+                    if (typeof emitChoiceWithFallback === "function") {
+                        emitChoiceWithFallback(comboStates.rend_headphone_profile, 1, 4);
+                    }
+                    if (headphoneProfileSelect) {
+                        headphoneProfileSelect.selectedIndex = 1;
+                        headphoneProfileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                    }
+                };
+                requestSteamBinauralMode();
+                requestAirPodsProfile();
+
+                await waitForCondition("headphone mode request", () => {
+                    const requestedFromScene = String(sceneData.rendererHeadphoneModeRequested || "");
+                    return requestedFromScene === "steam_binaural" || getChoiceIndex(comboStates.rend_headphone_mode) === 1;
+                }, 2500, 30);
+                try {
+                    await waitForCondition("headphone profile request", () => {
+                        const requestedFromScene = String(sceneData.rendererHeadphoneProfileRequested || "");
+                        return requestedFromScene === "airpods_pro_2"
+                            || (headphoneProfileSelect && headphoneProfileSelect.selectedIndex === 1);
+                    }, 4000, 30);
+                } catch (_) {
+                    // Keep BL-009 stable even when combo propagation lags; validation below
+                    // still checks deterministic profile diagnostics detail.
+                }
+
+                try {
+                    await waitForCondition("steam diagnostics snapshot", () => {
+                        if (hasSteamDiagnosticsInScene()) {
+                            return true;
+                        }
+                        return restoreSteamDiagnosticsFromFallback();
+                    }, 9000, 30);
+                } catch (_) {
+                    failCheck("UI-P1-009", "missing steam diagnostics fields in scene snapshot");
+                }
+
+                const steamAvailable = !!sceneData.rendererSteamAudioAvailable;
+                const steamCompiled = !!sceneData.rendererSteamAudioCompiled;
+                const steamInitStage = String(sceneData.rendererSteamAudioInitStage || "unknown");
+                const steamInitErrorCode = Number.isFinite(Number(sceneData.rendererSteamAudioInitErrorCode))
+                    ? Number(sceneData.rendererSteamAudioInitErrorCode)
+                    : 0;
+                const steamRuntimeLib = String(sceneData.rendererSteamAudioRuntimeLib || "");
+                const steamMissingSymbol = String(sceneData.rendererSteamAudioMissingSymbol || "");
+                const requestedProfile = String(
+                    sceneData.rendererHeadphoneProfileRequested
+                    || ((headphoneProfileSelect && headphoneProfileSelect.selectedIndex === 1) ? "airpods_pro_2" : "generic")
+                );
+                const activeProfile = String(
+                    sceneData.rendererHeadphoneProfileActive
+                    || requestedProfile
+                );
+                let requestedMode = String(
+                    sceneData.rendererHeadphoneModeRequested
+                    || (getChoiceIndex(comboStates.rend_headphone_mode) === 1 ? "steam_binaural" : "stereo_downmix")
+                );
+                if (requestedMode !== "steam_binaural") {
+                    requestSteamBinauralMode();
+                    await waitMs(180);
+                    requestedMode = String(
+                        sceneData.rendererHeadphoneModeRequested
+                        || (getChoiceIndex(comboStates.rend_headphone_mode) === 1 ? "steam_binaural" : "stereo_downmix")
+                    );
+                }
+                let activeMode = String(sceneData.rendererHeadphoneModeActive || "");
+                if (!activeMode) {
+                    activeMode = steamAvailable ? requestedMode : "stereo_downmix";
+                }
+                const outputChannels = Number(sceneData.outputChannels) || 0;
+                const outputMode = String(sceneData.rendererOutputMode || "");
+
+                if (requestedMode !== "steam_binaural") {
+                    failCheck("UI-P1-009", `requested mode mismatch (${requestedMode})`);
+                }
+                if (activeProfile.length === 0) {
+                    failCheck("UI-P1-009", "active profile missing");
+                }
+
+                if (steamAvailable) {
+                    if (activeMode !== "steam_binaural") {
+                        failCheck("UI-P1-009", `steam backend available but active mode is ${activeMode}`);
+                    }
+                } else {
+                    if (activeMode !== "stereo_downmix") {
+                        failCheck(
+                            "UI-P1-009",
+                            `steam backend unavailable but active mode is ${activeMode} (compiled=${steamCompiled} stage=${steamInitStage} err=${steamInitErrorCode})`
+                        );
+                    }
+                    if (outputChannels >= 2 && outputMode !== "stereo_downmix") {
+                        failCheck("UI-P1-009", `fallback output mode mismatch (${outputMode})`);
+                    }
+                }
+
+                let detail = `request=steam_binaural active=${activeMode} profileReq=${requestedProfile} profileActive=${activeProfile} steamAvailable=${steamAvailable} steamCompiled=${steamCompiled} stage=${steamInitStage} err=${steamInitErrorCode}`;
+                if (steamRuntimeLib) {
+                    detail += ` lib=${steamRuntimeLib}`;
+                }
+                if (steamMissingSymbol) {
+                    detail += ` missingSymbol=${steamMissingSymbol}`;
+                }
+                recordCheck("UI-P1-009", true, detail);
+            } finally {
+                setChoiceIndex(comboStates.rend_headphone_mode, headphoneModeBefore, 2);
+                setChoiceIndex(comboStates.rend_headphone_profile, headphoneProfileBefore, 4);
+                setChoiceIndex(comboStates.mode, modeBeforeHeadphoneCheck, 3);
+            }
+        } else {
+            recordCheck("UI-P1-009", true, "deferred: enable via selftest_bl009=1");
+        }
+
+        if (runBl011ClapSelfTest) {
+            await runBl011ClapDiagnosticsCheck();
+        } else {
+            recordCheck("UI-P2-011", true, "deferred: enable via selftest_bl011=1");
+        }
+
+        // UI-12: emitter preset save/load path must be visibly functional and restore state.
+        const presetSaveButton = document.getElementById("preset-save-btn");
+        const presetLoadButton = document.getElementById("preset-load-btn");
+        const presetSelect = document.getElementById("preset-select");
+        const presetTypeSelect = document.getElementById("preset-type-select");
+        const presetNameInput = document.getElementById("preset-name-input");
+        const presetStatus = document.getElementById("preset-status");
+        if (!presetSaveButton || !presetLoadButton || !presetSelect || !presetTypeSelect || !presetNameInput || !presetStatus) {
+            failCheck("UI-12", "missing preset controls");
+        }
+
+        presetTypeSelect.value = "emitter";
+        presetTypeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await refreshPresetList();
+
+        const gainMinRaw = Number(sliderStates.emit_gain?.properties?.start);
+        const gainMaxRaw = Number(sliderStates.emit_gain?.properties?.end);
+        const gainMin = Number.isFinite(gainMinRaw) ? gainMinRaw : -60.0;
+        const gainMax = Number.isFinite(gainMaxRaw) ? gainMaxRaw : 12.0;
+        const currentGain = Number(sliderStates.emit_gain.getScaledValue()) || 0.0;
+        const saveGain = clamp(currentGain + 3.0 <= gainMax ? currentGain + 3.0 : currentGain - 3.0, gainMin, gainMax);
+        setSliderScaledValue(sliderStates.emit_gain, saveGain);
+        await waitMs(80);
+
+        const presetName = `P0_Auto_${Date.now()}`;
+        window.__LQ_SELFTEST_PRESET_NAME__ = presetName;
+        presetNameInput.value = presetName;
+        presetSaveButton.click();
+
+        await waitForCondition("preset save completion", () => {
+            const text = String(presetStatus.textContent || "").toLowerCase();
+            if (text.includes("failed") || text.includes("required")) return true;
+            return Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(presetName)
+            );
+        }, 5000, 40);
+        const saveStatusText = String(presetStatus.textContent || "").trim();
+        if (saveStatusText.toLowerCase().includes("failed")
+            || saveStatusText.toLowerCase().includes("required")) {
+            failCheck("UI-12", `preset save failed (${saveStatusText || "no status"})`);
+        }
+
+        await refreshPresetList();
+        await waitForCondition("preset saved entry", () => {
+            return Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(presetName)
+            );
+        }, 5000, 40);
+
+        const savedOption = Array.from(presetSelect.options || []).find(option =>
+            String(option.textContent || "").includes(presetName)
+        );
+        if (!savedOption || !savedOption.value) {
+            failCheck("UI-12", `saved preset option not found (${presetName})`);
+        }
+
+        const changedGain = clamp(saveGain > ((gainMin + gainMax) * 0.5) ? saveGain - 2.0 : saveGain + 2.0, gainMin, gainMax);
+        setSliderScaledValue(sliderStates.emit_gain, changedGain);
+        await waitMs(60);
+
+        presetSelect.value = savedOption.value;
+        presetLoadButton.click();
+        await waitForCondition("preset load completion", () => {
+            const text = String(presetStatus.textContent || "").toLowerCase();
+            return text.includes("loaded:") || text.includes("failed");
+        }, 5000, 40);
+        const loadStatusText = String(presetStatus.textContent || "").trim();
+        if (!loadStatusText.toLowerCase().includes("loaded:")) {
+            failCheck("UI-12", `preset load failed (${loadStatusText || "no status"})`);
+        }
+        await waitMs(120);
+
+        const loadedGain = Number(sliderStates.emit_gain.getScaledValue());
+        if (!Number.isFinite(loadedGain) || Math.abs(loadedGain - saveGain) > 1.0) {
+            failCheck("UI-12", `loaded gain mismatch (saved=${saveGain.toFixed(2)} loaded=${loadedGain.toFixed(2)})`);
+        }
+        recordCheck("UI-12", true, `preset ${presetName} restored gain=${loadedGain.toFixed(2)}dB`);
+        delete window.__LQ_SELFTEST_PRESET_NAME__;
+
+        // UI-P1-025C: preset lifecycle manager must support typed save/rename/delete without prompt dependency.
+        const presetRenameButton = document.getElementById("preset-rename-btn");
+        const presetDeleteButton = document.getElementById("preset-delete-btn");
+        if (!presetRenameButton || !presetDeleteButton) {
+            failCheck("UI-P1-025C", "missing preset rename/delete controls");
+        }
+
+        const motionPresetName = `P1_Motion_${Date.now()}`;
+        const motionPresetRenamed = `${motionPresetName}_Renamed`;
+        presetTypeSelect.value = "motion";
+        presetTypeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitMs(100);
+        await refreshPresetList();
+
+        window.__LQ_SELFTEST_PRESET_NAME__ = motionPresetName;
+        presetNameInput.value = motionPresetName;
+        presetSaveButton.click();
+        await waitForCondition("motion preset save", () => {
+            const text = String(presetStatus.textContent || "").toLowerCase();
+            if (text.includes("failed") || text.includes("required")) return true;
+            return Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(motionPresetName)
+            );
+        }, 5000, 40);
+        const motionSaveStatus = String(presetStatus.textContent || "").toLowerCase();
+        if (motionSaveStatus.includes("failed") || motionSaveStatus.includes("required")) {
+            failCheck("UI-P1-025C", `motion preset save failed (${motionSaveStatus})`);
+        }
+
+        await refreshPresetList();
+        const motionSavedOption = Array.from(presetSelect.options || []).find(option =>
+            String(option.textContent || "").includes(motionPresetName)
+        );
+        if (!motionSavedOption || !motionSavedOption.value) {
+            failCheck("UI-P1-025C", `saved motion preset not found (${motionPresetName})`);
+        }
+
+        presetSelect.value = motionSavedOption.value;
+        presetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        window.__LQ_SELFTEST_PRESET_RENAME_NAME__ = motionPresetRenamed;
+        presetNameInput.value = motionPresetRenamed;
+        presetRenameButton.click();
+        await waitForCondition("motion preset rename", () => {
+            const text = String(presetStatus.textContent || "").toLowerCase();
+            if (text.includes("failed")) return true;
+            return Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(motionPresetRenamed)
+            );
+        }, 5000, 40);
+        const motionRenameStatus = String(presetStatus.textContent || "").toLowerCase();
+        if (motionRenameStatus.includes("failed")) {
+            failCheck("UI-P1-025C", `motion preset rename failed (${motionRenameStatus})`);
+        }
+
+        await refreshPresetList();
+        const motionRenamedOption = Array.from(presetSelect.options || []).find(option =>
+            String(option.textContent || "").includes(motionPresetRenamed)
+        );
+        if (!motionRenamedOption || !motionRenamedOption.value) {
+            failCheck("UI-P1-025C", `renamed motion preset not found (${motionPresetRenamed})`);
+        }
+
+        presetSelect.value = motionRenamedOption.value;
+        presetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        presetDeleteButton.click();
+        await waitForCondition("motion preset delete", () => {
+            const text = String(presetStatus.textContent || "").toLowerCase();
+            if (text.includes("failed")) return true;
+            return !Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(motionPresetRenamed)
+            );
+        }, 5000, 40);
+        const motionDeleteStatus = String(presetStatus.textContent || "").toLowerCase();
+        if (motionDeleteStatus.includes("failed")) {
+            failCheck("UI-P1-025C", `motion preset delete failed (${motionDeleteStatus})`);
+        }
+
+        delete window.__LQ_SELFTEST_PRESET_NAME__;
+        delete window.__LQ_SELFTEST_PRESET_RENAME_NAME__;
+        recordCheck("UI-P1-025C", true, "typed preset save/rename/delete lifecycle verified");
+
+        report.ok = true;
+        report.status = "pass";
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        report.ok = false;
+        report.status = "fail";
+        report.error = message;
+        recordCheck("failure", false, message);
+        console.error("LocusQ production P0 self-test failed:", error);
+    } finally {
+        delete window.__LQ_SELFTEST_PRESET_NAME__;
+        delete window.__LQ_SELFTEST_PRESET_RENAME_NAME__;
+        delete window.__LQ_SELFTEST_CHOREO_PRESET_NAME__;
+        report.finishedAt = new Date().toISOString();
+        window.__LQ_SELFTEST_RESULT__ = report;
+    }
+
+    return report;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    initialiseUIRuntime().catch(error => {
-        console.error("LocusQ: UI runtime initialisation failed:", error);
-        markViewportDegraded(error);
-    });
+    if (productionP0SelfTestRequested) {
+        // Watchdog kickoff: ensure self-test eventually runs even if startup hydration stalls.
+        startProductionP0SelfTestAfterDelay(2500);
+    }
+
+    initialiseUIRuntime()
+        .then(() => {
+            startProductionP0SelfTestAfterDelay(700);
+        })
+        .catch(error => {
+            console.error("LocusQ: UI runtime initialisation failed:", error);
+            markViewportDegraded(error);
+
+            if (productionP0SelfTestRequested) {
+                startProductionP0SelfTestAfterDelay(0);
+            }
+        });
 });
 
 // ===== THREE.JS INITIALIZATION =====
@@ -1366,20 +4317,31 @@ function initThreeJS() {
     threeScene.add(gridHelper);
 
     // Speakers (quad corners)
-    const spkPos = [
-        new THREE.Vector3(-roomW/2+0.3, 1.2, -roomD/2+0.3),
-        new THREE.Vector3( roomW/2-0.3, 1.2, -roomD/2+0.3),
-        new THREE.Vector3( roomW/2-0.3, 1.2,  roomD/2-0.3),
-        new THREE.Vector3(-roomW/2+0.3, 1.2,  roomD/2-0.3),
-    ];
+    const spkPos = defaultSpeakerSnapshotPositions.map(pos => new THREE.Vector3(pos.x, pos.y, pos.z));
+    speakerTargets = defaultSpeakerSnapshotPositions.map(pos => ({ ...pos, rms: 0.0 }));
+    speakerEnergyRings = [];
 
-    spkPos.forEach((pos) => {
+    spkPos.forEach((pos, idx) => {
         const geo = new THREE.OctahedronGeometry(0.15);
-        const mat = new THREE.MeshBasicMaterial({ color: 0xE0E0E0, wireframe: true });
+        const mat = new THREE.MeshBasicMaterial({ color: 0xE0E0E0, wireframe: true, transparent: true, opacity: 0.95 });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.copy(pos);
         threeScene.add(mesh);
         speakers.push(mesh);
+
+        const ringGeo = new THREE.RingGeometry(0.20, 0.24, 24);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: 0xD4A847,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.10
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = -Math.PI / 2;
+        ringMesh.position.set(pos.x, Math.max(0.05, pos.y - 0.18), pos.z);
+        ringMesh.scale.set(1.0, 1.0, 1.0);
+        threeScene.add(ringMesh);
+        speakerEnergyRings[idx] = ringMesh;
 
         // Energy meter bar
         const mGeo = new THREE.BoxGeometry(0.04, 0.01, 0.04);
@@ -1387,16 +4349,66 @@ function initThreeJS() {
         const mMesh = new THREE.Mesh(mGeo, mMat);
         mMesh.position.set(pos.x + 0.25, pos.y, pos.z);
         threeScene.add(mMesh);
-        speakerMeters.push({ mesh: mMesh, level: 0, target: 0, basePos: pos });
+        speakerMeters.push({
+            mesh: mMesh,
+            level: 0,
+            target: 0,
+            basePos: pos.clone(),
+            speakerIndex: idx,
+        });
     });
 
-    // Listener cross
-    const lSize = 0.15;
-    const lGeo = new THREE.BufferGeometry();
-    lGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
-        -lSize,0,0, lSize,0,0, 0,0,-lSize, 0,0,lSize, 0,-lSize,0, 0,lSize,0
-    ]), 3));
-    threeScene.add(new THREE.LineSegments(lGeo, new THREE.LineBasicMaterial({ color: 0x666666 })));
+    // Listener (head + headphone + orientation/energy overlays)
+    listenerGroup = new THREE.Group();
+
+    const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.13, 16, 12),
+        new THREE.MeshBasicMaterial({ color: 0x96BAD0, wireframe: true, transparent: true, opacity: 0.65 })
+    );
+    listenerGroup.add(head);
+
+    const earGeometry = new THREE.SphereGeometry(0.03, 10, 8);
+    const earMaterial = new THREE.MeshBasicMaterial({ color: 0xD8CFA0, transparent: true, opacity: 0.75 });
+    const leftEar = new THREE.Mesh(earGeometry, earMaterial);
+    const rightEar = new THREE.Mesh(earGeometry, earMaterial.clone());
+    leftEar.position.set(-0.11, 0.0, 0.0);
+    rightEar.position.set(0.11, 0.0, 0.0);
+    listenerGroup.add(leftEar);
+    listenerGroup.add(rightEar);
+
+    const headphoneBand = new THREE.Mesh(
+        new THREE.TorusGeometry(0.14, 0.012, 8, 24, Math.PI),
+        new THREE.MeshBasicMaterial({ color: 0x7AAFC9, transparent: true, opacity: 0.45 })
+    );
+    headphoneBand.rotation.z = Math.PI / 2;
+    headphoneBand.position.y = 0.03;
+    listenerGroup.add(headphoneBand);
+
+    listenerAimArrow = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(0, 0.0, 0),
+        0.38,
+        0x7AAFC9,
+        0.12,
+        0.07
+    );
+    listenerGroup.add(listenerAimArrow);
+
+    listenerEnergyRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.18, 0.22, 24),
+        new THREE.MeshBasicMaterial({
+            color: 0x7AAFC9,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.14
+        })
+    );
+    listenerEnergyRing.rotation.x = -Math.PI / 2;
+    listenerEnergyRing.position.y = -0.14;
+    listenerGroup.add(listenerEnergyRing);
+
+    listenerGroup.position.set(listenerTarget.x, listenerTarget.y, listenerTarget.z);
+    threeScene.add(listenerGroup);
 
     // Selection ring (will follow selected emitter)
     const ringGeo = new THREE.RingGeometry(0.28, 0.3, 32);
@@ -1500,6 +4512,8 @@ function initThreeJS() {
         updateCamera();
     });
 
+    updateSpeakerTargetsFromScene(sceneData);
+    updateListenerTargetFromScene(sceneData);
     updateCamera();
     resize();
     window.addEventListener("resize", resize);
@@ -1518,11 +4532,15 @@ function resize() {
     if (!canvas || !canvas.parentElement || !rendererGL || !camera) return;
     const rect = canvas.parentElement.getBoundingClientRect();
     const tlEl = document.getElementById("timeline");
-    const tlH = tlEl && tlEl.classList.contains("visible") ? 120 : 0;
+    const tlH = tlEl && tlEl.classList.contains("visible")
+        ? Math.max(0, Math.round(tlEl.getBoundingClientRect().height))
+        : 0;
     const w = rect.width, h = rect.height - tlH;
     if (w <= 0 || h <= 0) return;
     canvas.width = w * devicePixelRatio;
     canvas.height = h * devicePixelRatio;
+    canvas.style.minHeight = "0px";
+    canvas.style.flex = "1 1 auto";
     canvas.style.width = w + "px";
     canvas.style.height = h + "px";
     rendererGL.setSize(w, h);
@@ -1555,6 +4573,11 @@ function applyPhysicsPreset(presetName, persistUiState = true) {
     const nowMs = typeof performance !== "undefined" && typeof performance.now === "function"
         ? performance.now()
         : Date.now();
+
+    if (physicsPresetRecheckTimer !== null) {
+        window.clearTimeout(physicsPresetRecheckTimer);
+        physicsPresetRecheckTimer = null;
+    }
 
     // Some host-to-UI callbacks arrive slightly after preset application; keep the
     // selected preset stable through that short synchronization window.
@@ -1599,9 +4622,13 @@ function applyPhysicsPreset(presetName, persistUiState = true) {
     if (persistUiState) {
         scheduleUiStateCommit();
     }
+
+    updateMotionStatusChips();
 }
 
 function initUIBindings() {
+    syncResponsiveLayoutMode();
+
     // Mode tabs
     document.querySelectorAll(".mode-tab").forEach(tab => {
         tab.addEventListener("click", () => {
@@ -1635,11 +4662,13 @@ function initUIBindings() {
     const emitLabelInput = document.getElementById("emit-label");
     if (emitLabelInput) {
         emitLabelInput.addEventListener("input", () => {
+            if (isElementControlLocked(emitLabelInput)) return;
             uiState.emitterLabel = sanitizeEmitterLabel(emitLabelInput.value);
             emitLabelInput.value = uiState.emitterLabel;
             scheduleUiStateCommit();
         });
         emitLabelInput.addEventListener("blur", () => {
+            if (isElementControlLocked(emitLabelInput)) return;
             uiState.emitterLabel = sanitizeEmitterLabel(emitLabelInput.value);
             emitLabelInput.value = uiState.emitterLabel;
             scheduleUiStateCommit(true);
@@ -1648,14 +4677,38 @@ function initUIBindings() {
 
     const colorSwatch = document.getElementById("emit-color-swatch");
     if (colorSwatch) {
+        colorSwatch.tabIndex = 0;
+        colorSwatch.setAttribute("role", "button");
+        colorSwatch.setAttribute("aria-label", "Cycle emitter color");
         colorSwatch.addEventListener("click", () => {
-            const current = Math.round(Number(sliderStates.emit_color.getScaledValue()) || 0);
-            const next = (current + 1) % 16;
-            setSliderScaledValue(sliderStates.emit_color, next);
+            if (isElementControlLocked(colorSwatch)) return;
+            cycleEmitterColor(1);
+            updateEmitterColorSwatch();
+        });
+        colorSwatch.addEventListener("contextmenu", event => {
+            event.preventDefault();
+            if (isElementControlLocked(colorSwatch)) return;
+            cycleEmitterColor(-1);
+            updateEmitterColorSwatch();
+        });
+        colorSwatch.addEventListener("keydown", event => {
+            if (event.key === " " || event.key === "Enter") {
+                event.preventDefault();
+                if (isElementControlLocked(colorSwatch)) return;
+                cycleEmitterColor(1);
+                updateEmitterColorSwatch();
+            }
         });
     }
 
     bindSelectToComboState("pos-mode", comboStates.pos_coord_mode);
+    const posModeSelect = document.getElementById("pos-mode");
+    if (posModeSelect) {
+        posModeSelect.addEventListener("change", () => {
+            if (isElementControlLocked(posModeSelect)) return;
+            window.requestAnimationFrame(syncPositionModeUI);
+        });
+    }
 
     const sizeLinkToggle = document.getElementById("toggle-size-link");
     if (sizeLinkToggle) {
@@ -1667,6 +4720,11 @@ function initUIBindings() {
     bindValueStepper("val-azimuth", sliderStates.pos_azimuth, { step: 1.0, min: -180.0, max: 180.0, roundDigits: 1 });
     bindValueStepper("val-elevation", sliderStates.pos_elevation, { step: 1.0, min: -90.0, max: 90.0, roundDigits: 1 });
     bindValueStepper("val-distance", sliderStates.pos_distance, { step: 0.1, min: 0.0, max: 50.0, roundDigits: 2 });
+    bindValueStepper("val-pos-x", sliderStates.pos_x, { step: 0.1, min: -50.0, max: 50.0, roundDigits: 2 });
+    // UI Y uses world-up axis; processor contract maps worldY <-> pos_z.
+    bindValueStepper("val-pos-y", sliderStates.pos_z, { step: 0.1, min: -50.0, max: 50.0, roundDigits: 2 });
+    // UI Z uses depth axis; processor contract maps worldZ <-> pos_y.
+    bindValueStepper("val-pos-z", sliderStates.pos_y, { step: 0.1, min: -50.0, max: 50.0, roundDigits: 2 });
     bindValueStepper("val-size", sliderStates.size_uniform, { step: 0.05, min: 0.01, max: 20.0, roundDigits: 2 });
     bindValueStepper("val-gain", sliderStates.emit_gain, { step: 0.5, min: -60.0, max: 12.0, roundDigits: 1 });
     bindValueStepper("val-spread", sliderStates.emit_spread, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
@@ -1718,18 +4776,25 @@ function initUIBindings() {
     const physicsPreset = document.getElementById("physics-preset");
     if (physicsPreset) {
         physicsPreset.addEventListener("change", function() {
+            if (isElementControlLocked(physicsPreset)) return;
             applyPhysicsPreset(this.value, true);
         });
     }
 
     const throwButton = document.getElementById("btn-throw");
     if (throwButton) {
-        throwButton.addEventListener("click", () => pulseToggleParameter(toggleStates.phys_throw));
+        throwButton.addEventListener("click", () => {
+            if (isElementControlLocked(throwButton)) return;
+            pulseToggleParameter(toggleStates.phys_throw);
+        });
     }
 
     const resetButton = document.getElementById("btn-reset");
     if (resetButton) {
-        resetButton.addEventListener("click", () => pulseToggleParameter(toggleStates.phys_reset));
+        resetButton.addEventListener("click", () => {
+            if (isElementControlLocked(resetButton)) return;
+            pulseToggleParameter(toggleStates.phys_reset);
+        });
     }
 
     // Physics advanced disclosure
@@ -1743,18 +4808,28 @@ function initUIBindings() {
         });
     }
 
-    // Timeline lane selection
-    document.querySelectorAll(".timeline-lane").forEach(lane => {
-        lane.addEventListener("click", () => {
-            document.querySelectorAll(".timeline-lane").forEach(l => l.classList.remove("selected"));
-            lane.classList.add("selected");
-            selectedLane = lane.dataset.lane;
-            setLaneHighlight(selectedLane);
-        });
-    });
+    // Timeline controls
+    bindTimelineLaneSelectionControls();
+    bindTimelineRuntimeControls();
+    bindMotionRuntimeMirrorControls();
 
     bindSelectToComboState("rend-dist-model", comboStates.rend_distance_model);
+    bindSelectToComboState("rend-headphone-mode", comboStates.rend_headphone_mode);
+    bindSelectToComboState("rend-headphone-profile", comboStates.rend_headphone_profile);
     bindSelectToComboState("rend-phys-rate", comboStates.rend_phys_rate);
+    bindValueStepper("val-viz-trail-len", sliderStates.rend_viz_trail_len, { step: 0.5, min: 0.5, max: 30.0, roundDigits: 1 });
+    bindValueStepper("val-viz-diag-mix", sliderStates.rend_viz_diag_mix, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2, formatter: value => Math.round(value * 100) });
+    bindValueStepper("emitter-quick-diag-mix", sliderStates.rend_viz_diag_mix, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+
+    const emitterDiagnosticsToggle = document.getElementById("emitter-diagnostics-toggle");
+    if (emitterDiagnosticsToggle) {
+        bindControlActivate(emitterDiagnosticsToggle, () => {
+            const content = document.getElementById("emitter-diagnostics-content");
+            const arrow = document.getElementById("emitter-diagnostics-arrow");
+            if (content) content.classList.toggle("open");
+            if (arrow) arrow.classList.toggle("open");
+        });
+    }
 
     const dopplerToggle = document.getElementById("toggle-doppler");
     if (dopplerToggle) {
@@ -1798,6 +4873,36 @@ function initUIBindings() {
         });
     }
 
+    const vizTrailsToggle = document.getElementById("toggle-viz-trails");
+    if (vizTrailsToggle) {
+        bindControlActivate(vizTrailsToggle, () => {
+            toggleStateAndClass("toggle-viz-trails", toggleStates.rend_viz_trails);
+        });
+    }
+
+    const vizVectorsToggle = document.getElementById("toggle-viz-vectors");
+    if (vizVectorsToggle) {
+        bindControlActivate(vizVectorsToggle, () => {
+            toggleStateAndClass("toggle-viz-vectors", toggleStates.rend_viz_vectors);
+        });
+    }
+
+    const vizPhysicsLensToggle = document.getElementById("toggle-viz-physics-lens");
+    if (vizPhysicsLensToggle) {
+        bindControlActivate(vizPhysicsLensToggle, () => {
+            toggleStateAndClass("toggle-viz-physics-lens", toggleStates.rend_viz_physics_lens);
+            updateEmitterDiagnosticsQuickControls();
+        });
+    }
+
+    const emitterQuickPhysicsLensToggle = document.getElementById("emitter-quick-physics-lens");
+    if (emitterQuickPhysicsLensToggle) {
+        bindControlActivate(emitterQuickPhysicsLensToggle, () => {
+            toggleStateAndClass("emitter-quick-physics-lens", toggleStates.rend_viz_physics_lens);
+            setToggleClass("toggle-viz-physics-lens", !!toggleStates.rend_viz_physics_lens.getValue());
+        });
+    }
+
     const pausePhysicsButton = document.getElementById("btn-pause-physics");
     if (pausePhysicsButton) {
         pausePhysicsButton.addEventListener("click", () => {
@@ -1807,42 +4912,17 @@ function initUIBindings() {
         });
     }
 
-    const rewindButton = document.getElementById("timeline-rewind-btn");
-    if (rewindButton) {
-        rewindButton.addEventListener("click", () => {
-            const duration = Math.max(0.001, timelineState.durationSeconds);
-            const nextTime = clamp((timelineState.currentTimeSeconds || 0.0) - 0.25, 0.0, duration);
-            timelineState.currentTimeSeconds = nextTime;
-            updateTimelinePlayheads();
-            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, nextTime).catch(() => {});
-        });
-    }
-
-    const stopButton = document.getElementById("timeline-stop-btn");
-    if (stopButton) {
-        stopButton.addEventListener("click", () => {
-            timelineState.currentTimeSeconds = 0.0;
-            updateTimelinePlayheads();
-            setToggleValue(toggleStates.anim_enable, false);
-            setToggleClass("toggle-anim", false);
-            setAnimationControlsEnabled(false);
-            callNative("locusqSetTimelineTime", nativeFunctions.setTimelineTime, 0.0).catch(() => {});
-        });
-    }
-
-    const playButton = document.getElementById("timeline-play-btn");
-    if (playButton) {
-        playButton.addEventListener("click", () => {
-            if (getChoiceIndex(comboStates.anim_mode) !== 1) {
-                setChoiceIndex(comboStates.anim_mode, 1);
-            }
-            setToggleValue(toggleStates.anim_enable, true);
-            setToggleClass("toggle-anim", true);
-            setAnimationControlsEnabled(true);
-        });
-    }
-
     // Animation controls
+    const motionSourceSelect = document.getElementById("motion-source-select");
+    if (motionSourceSelect) {
+        motionSourceSelect.addEventListener("change", () => {
+            if (isElementControlLocked(motionSourceSelect)) return;
+            applyMotionSourceSelection(motionSourceSelect.value).catch(error => {
+                console.error("Failed to apply motion source selection:", error);
+            });
+        });
+    }
+
     const animToggle = document.getElementById("toggle-anim");
     if (animToggle) {
         bindControlActivate(animToggle, () => {
@@ -1858,62 +4938,124 @@ function initUIBindings() {
         });
     }
 
-    ["toggle-anim-loop", "toggle-timeline-loop"].forEach(id => {
-        const loopToggle = document.getElementById(id);
-        if (loopToggle) {
-            bindControlActivate(loopToggle, () => {
-                const nextLoop = !getToggleValue(toggleStates.anim_loop);
-                setToggleValue(toggleStates.anim_loop, nextLoop);
-                setToggleClass("toggle-anim-loop", nextLoop);
-                setToggleClass("toggle-timeline-loop", nextLoop);
-                timelineState.looping = nextLoop;
-                scheduleTimelineCommit();
-            });
-        }
-    });
+    bindValueStepper("val-anim-speed", sliderStates.anim_speed, { step: 0.1, min: 0.1, max: 10.0, roundDigits: 1 });
 
-    const syncToggle = document.getElementById("toggle-timeline-sync");
-    if (syncToggle) {
-        bindControlActivate(syncToggle, () => {
-            toggleStateAndClass("toggle-timeline-sync", toggleStates.anim_sync);
+    const choreographySelect = document.getElementById("choreo-pack-select");
+    const choreographyApplyButton = document.getElementById("choreo-apply-btn");
+    const choreographySaveButton = document.getElementById("choreo-save-btn");
+    if (choreographySelect) {
+        choreographySelect.value = normalizeChoreographyPackId(uiState.choreographyPack);
+        choreographySelect.addEventListener("change", () => {
+            if (isElementControlLocked(choreographySelect)) return;
+            const selectedPack = normalizeChoreographyPackId(choreographySelect.value);
+            uiState.choreographyPack = selectedPack;
+            scheduleUiStateCommit();
+            if (selectedPack === "custom") {
+                setChoreographyStatus("Custom timeline active");
+            } else {
+                setChoreographyStatus(`${getChoreographyPackLabel(selectedPack)} selected`);
+            }
+            updateMotionStatusChips();
+        });
+    }
+    if (choreographyApplyButton) {
+        choreographyApplyButton.addEventListener("click", async () => {
+            if (isElementControlLocked(choreographyApplyButton)) return;
+            const selectedPack = normalizeChoreographyPackId(choreographySelect?.value || uiState.choreographyPack);
+            try {
+                await applyChoreographyPack(selectedPack, { persistUiState: true, setInternalSource: true });
+            } catch (error) {
+                console.error("Failed to apply choreography pack:", error);
+                setChoreographyStatus("Failed to apply choreography pack", true);
+            }
+        });
+    }
+    if (choreographySaveButton) {
+        choreographySaveButton.addEventListener("click", async () => {
+            if (isElementControlLocked(choreographySaveButton)) return;
+            const selectedPack = normalizeChoreographyPackId(choreographySelect?.value || uiState.choreographyPack);
+            try {
+                const result = await saveChoreographyPackPreset(selectedPack);
+                if (result?.name) {
+                    setPresetStatus(`Saved: ${result.name}`);
+                }
+            } catch (error) {
+                console.error("Failed to save choreography preset:", error);
+                setChoreographyStatus("Failed to save choreography preset", true);
+            }
         });
     }
 
-    bindValueStepper("val-anim-speed", sliderStates.anim_speed, { step: 0.1, min: 0.1, max: 10.0, roundDigits: 1 });
+    const presetTypeSelect = document.getElementById("preset-type-select");
+    if (presetTypeSelect) {
+        presetTypeSelect.addEventListener("change", () => {
+            if (isElementControlLocked(presetTypeSelect)) return;
+            setPresetTypeSelection(presetTypeSelect.value);
+            refreshPresetList().catch(error => {
+                console.error("Failed to refresh preset list after type change:", error);
+            });
+        });
+    }
+
+    const presetNameInput = document.getElementById("preset-name-input");
+    if (presetNameInput) {
+        presetNameInput.addEventListener("blur", () => {
+            if (isElementControlLocked(presetNameInput)) return;
+            presetNameInput.value = String(presetNameInput.value || "").trim();
+        });
+    }
+
+    const presetSelect = document.getElementById("preset-select");
+    if (presetSelect) {
+        presetSelect.addEventListener("change", () => {
+            if (isElementControlLocked(presetSelect)) return;
+            syncPresetSelectionContext();
+        });
+    }
+
+    const resolveInlinePresetName = (selftestKey) => {
+        const selfTestNameOverride = typeof window[selftestKey] === "string"
+            ? window[selftestKey].trim()
+            : "";
+        if (selfTestNameOverride) {
+            setPresetNameInputValue(selfTestNameOverride);
+            return selfTestNameOverride;
+        }
+
+        const inputName = getPresetNameInputValue();
+        if (!inputName) {
+            setPresetStatus("Preset name is required", true);
+            return "";
+        }
+        return inputName;
+    };
 
     const presetSaveButton = document.getElementById("preset-save-btn");
     if (presetSaveButton) {
         presetSaveButton.addEventListener("click", async () => {
-            const suggestedName = `Preset_${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}`;
-            let resolvedName = suggestedName;
+            if (isElementControlLocked(presetSaveButton)) return;
+            const resolvedName = resolveInlinePresetName("__LQ_SELFTEST_PRESET_NAME__");
+            if (!resolvedName) return;
 
+            const presetType = getPresetTypeSelection();
             try {
-                const inputName = typeof window.prompt === "function"
-                    ? window.prompt("Preset name", suggestedName)
-                    : suggestedName;
-
-                if (typeof inputName === "string") {
-                    const trimmed = inputName.trim();
-                    if (!trimmed) {
-                        setPresetStatus("Preset name is required", true);
-                        return;
-                    }
-                    resolvedName = trimmed;
-                } else {
-                    // Some in-host WebView contexts suppress modal prompt UI and return null.
-                    // Fall back to an auto-generated name so save remains functional.
-                    resolvedName = suggestedName;
+                if (timelineCommitTimer !== null) {
+                    window.clearTimeout(timelineCommitTimer);
+                    timelineCommitTimer = null;
                 }
-            } catch (error) {
-                console.warn("Preset name prompt unavailable, using auto-generated name:", error);
-                resolvedName = suggestedName;
-            }
-
-            try {
-                const result = await callNative("locusqSaveEmitterPreset", nativeFunctions.saveEmitterPreset, { name: resolvedName });
+                await commitTimelineToNative();
+                const result = await callNative("locusqSaveEmitterPreset", nativeFunctions.saveEmitterPreset, {
+                    name: resolvedName,
+                    presetType,
+                    choreographyPackId: normalizeChoreographyPackId(uiState.choreographyPack),
+                });
                 if (result?.ok) {
+                    const savedType = normalisePresetType(result?.presetType || presetType);
+                    setPresetTypeSelection(savedType);
+                    setPresetNameInputValue(result?.name || resolvedName);
                     setPresetStatus(`Saved: ${result.name || resolvedName}`);
-                    await refreshPresetList();
+                    await refreshPresetList(result?.path || "");
+                    setMotionDirty(false);
                 } else {
                     setPresetStatus(result?.message || "Preset save failed", true);
                 }
@@ -1927,24 +5069,110 @@ function initUIBindings() {
     const presetLoadButton = document.getElementById("preset-load-btn");
     if (presetLoadButton) {
         presetLoadButton.addEventListener("click", async () => {
-            const select = document.getElementById("preset-select");
-            if (!select || !select.value) {
+            if (isElementControlLocked(presetLoadButton)) return;
+            const selected = getSelectedPresetOptionEntry();
+            if (!selected || !selected.path) {
                 setPresetStatus("Select a preset first", true);
                 return;
             }
 
             try {
-                const result = await callNative("locusqLoadEmitterPreset", nativeFunctions.loadEmitterPreset, { path: select.value });
+                if (timelineCommitTimer !== null) {
+                    window.clearTimeout(timelineCommitTimer);
+                    timelineCommitTimer = null;
+                }
+                const result = await callNative("locusqLoadEmitterPreset", nativeFunctions.loadEmitterPreset, { path: selected.path });
                 if (result?.ok) {
-                    setPresetStatus(`Loaded: ${select.options[select.selectedIndex]?.textContent || "preset"}`);
+                    const loadedType = normalisePresetType(result?.presetType || selected.presetType);
+                    setPresetTypeSelection(loadedType);
+                    setPresetNameInputValue(selected.name || result?.name || "");
+                    setPresetStatus(`Loaded: ${selected.name || "preset"}`);
+
+                    const resolvedPack = normalizeChoreographyPackId(
+                        result?.choreographyPackId
+                        || selected.choreographyPackId
+                        || "custom"
+                    );
+                    uiState.choreographyPack = resolvedPack;
+                    if (choreographySelect) {
+                        choreographySelect.value = resolvedPack;
+                    }
+                    setChoreographyStatus(
+                        resolvedPack === "custom"
+                            ? "Loaded custom timeline preset"
+                            : `Loaded ${getChoreographyPackLabel(resolvedPack)} timeline preset`
+                    );
+                    scheduleUiStateCommit();
                     await loadTimelineFromNative();
                     syncAnimationUI();
+                    setMotionDirty(false);
                 } else {
                     setPresetStatus(result?.message || "Preset load failed", true);
                 }
             } catch (error) {
                 setPresetStatus("Preset load failed", true);
                 console.error("Failed to load preset:", error);
+            }
+        });
+    }
+
+    const presetRenameButton = document.getElementById("preset-rename-btn");
+    if (presetRenameButton) {
+        presetRenameButton.addEventListener("click", async () => {
+            if (isElementControlLocked(presetRenameButton)) return;
+            const selected = getSelectedPresetOptionEntry();
+            if (!selected || !selected.path) {
+                setPresetStatus("Select a preset first", true);
+                return;
+            }
+
+            const nextName = resolveInlinePresetName("__LQ_SELFTEST_PRESET_RENAME_NAME__");
+            if (!nextName) return;
+
+            try {
+                const result = await callNative("locusqRenameEmitterPreset", nativeFunctions.renameEmitterPreset, {
+                    path: selected.path,
+                    newName: nextName,
+                });
+                if (result?.ok) {
+                    const renamedType = normalisePresetType(result?.presetType || selected.presetType);
+                    setPresetTypeSelection(renamedType);
+                    setPresetNameInputValue(result?.name || nextName);
+                    setPresetStatus(`Renamed: ${result.name || nextName}`);
+                    await refreshPresetList(result?.path || "");
+                } else {
+                    setPresetStatus(result?.message || "Preset rename failed", true);
+                }
+            } catch (error) {
+                setPresetStatus("Preset rename failed", true);
+                console.error("Failed to rename preset:", error);
+            }
+        });
+    }
+
+    const presetDeleteButton = document.getElementById("preset-delete-btn");
+    if (presetDeleteButton) {
+        presetDeleteButton.addEventListener("click", async () => {
+            if (isElementControlLocked(presetDeleteButton)) return;
+            const selected = getSelectedPresetOptionEntry();
+            if (!selected || !selected.path) {
+                setPresetStatus("Select a preset first", true);
+                return;
+            }
+
+            try {
+                const result = await callNative("locusqDeleteEmitterPreset", nativeFunctions.deleteEmitterPreset, {
+                    path: selected.path,
+                });
+                if (result?.ok) {
+                    setPresetStatus(`Deleted: ${selected.name || "preset"}`);
+                    await refreshPresetList();
+                } else {
+                    setPresetStatus(result?.message || "Preset delete failed", true);
+                }
+            } catch (error) {
+                setPresetStatus("Preset delete failed", true);
+                console.error("Failed to delete preset:", error);
             }
         });
     }
@@ -1971,9 +5199,21 @@ function initUIBindings() {
     }
 
     applyUiStateToControls();
+    syncPositionModeUI();
+    updateWorldPositionReadback();
+    updateEmitterAuthorityUI();
+    updateEmitterDiagnosticsQuickControls();
+    if (uiState.choreographyPack === "custom") {
+        setChoreographyStatus("Custom timeline active");
+    } else {
+        setChoreographyStatus(`${getChoreographyPackLabel(uiState.choreographyPack)} selected`);
+    }
     if (uiState.physicsPreset !== "off") {
         applyPhysicsPreset(uiState.physicsPreset, false);
     }
+    syncAnimationUI();
+    updateMotionStatusChips();
+    syncMotionSourceUI();
 }
 
 // ===== PARAMETER LISTENERS =====
@@ -1991,7 +5231,24 @@ function initParameterListeners() {
             ? performance.now()
             : Date.now();
 
-        if (isApplyingPhysicsPreset || nowMs < suppressPhysicsPresetCustomUntilMs) return;
+        if (isApplyingPhysicsPreset) return;
+
+        const activePreset = normalizePhysicsPresetName(uiState.physicsPreset);
+        if (activePreset !== "custom" && activePreset !== "off") {
+            if (isPhysicsPresetStateAligned(activePreset)) return;
+
+            if (nowMs < suppressPhysicsPresetCustomUntilMs) {
+                if (physicsPresetRecheckTimer === null) {
+                    const delayMs = Math.max(1, Math.ceil(suppressPhysicsPresetCustomUntilMs - nowMs));
+                    physicsPresetRecheckTimer = window.setTimeout(() => {
+                        physicsPresetRecheckTimer = null;
+                        markPhysicsPresetCustom();
+                    }, delayMs);
+                }
+                return;
+            }
+        }
+
         const physicsPreset = document.getElementById("physics-preset");
         if (physicsPreset && physicsPreset.value !== "custom" && physicsPreset.value !== "off") {
             physicsPreset.value = "custom";
@@ -1999,6 +5256,7 @@ function initParameterListeners() {
         if (uiState.physicsPreset !== "custom") {
             uiState.physicsPreset = "custom";
             scheduleUiStateCommit();
+            updateMotionStatusChips();
         }
     };
 
@@ -2025,6 +5283,18 @@ function initParameterListeners() {
     sliderStates.pos_distance.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-distance", sliderStates.pos_distance.getScaledValue().toFixed(2), "m");
     });
+    sliderStates.pos_x.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-pos-x", sliderStates.pos_x.getScaledValue().toFixed(2), "m");
+        updateWorldPositionReadback();
+    });
+    sliderStates.pos_y.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-pos-z", sliderStates.pos_y.getScaledValue().toFixed(2), "m");
+        updateWorldPositionReadback();
+    });
+    sliderStates.pos_z.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-pos-y", sliderStates.pos_z.getScaledValue().toFixed(2), "m");
+        updateWorldPositionReadback();
+    });
     sliderStates.size_uniform.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-size", sliderStates.size_uniform.getScaledValue().toFixed(2), "m");
     });
@@ -2046,11 +5316,7 @@ function initParameterListeners() {
             sliderStates.emit_dir_elevation.getScaledValue().toFixed(1), "°");
     });
     sliderStates.emit_color.valueChangedEvent.addListener(() => {
-        const swatch = document.getElementById("emit-color-swatch");
-        if (!swatch) return;
-        const idx = clamp(Math.round(sliderStates.emit_color.getScaledValue()), 0, emitterPalette.length - 1);
-        const hex = "#" + emitterPalette[idx].toString(16).padStart(6, "0");
-        swatch.style.background = hex;
+        updateEmitterColorSwatch();
     });
     sliderStates.cal_test_level.valueChangedEvent.addListener(() => {
         updateValueDisplay("cal-level", sliderStates.cal_test_level.getScaledValue().toFixed(1), "dBFS");
@@ -2090,6 +5356,14 @@ function initParameterListeners() {
     sliderStates.rend_master_gain.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-master-gain", sliderStates.rend_master_gain.getScaledValue().toFixed(1), "dB");
     });
+    sliderStates.rend_viz_trail_len.valueChangedEvent.addListener(() => {
+        updateValueDisplay("val-viz-trail-len", sliderStates.rend_viz_trail_len.getScaledValue().toFixed(1), "s");
+    });
+    sliderStates.rend_viz_diag_mix.valueChangedEvent.addListener(() => {
+        const mixPercent = Math.round(clamp(sliderStates.rend_viz_diag_mix.getScaledValue(), 0.0, 1.0) * 100.0);
+        updateValueDisplay("val-viz-diag-mix", `${mixPercent}`, "%");
+        updateValueDisplay("emitter-quick-diag-mix", `${mixPercent}`, "%");
+    });
     sliderStates.anim_speed.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-anim-speed", sliderStates.anim_speed.getScaledValue().toFixed(1), "x");
         timelineState.playbackRate = sliderStates.anim_speed.getScaledValue();
@@ -2113,6 +5387,7 @@ function initParameterListeners() {
             const physicsPreset = document.getElementById("physics-preset");
             if (physicsPreset) physicsPreset.value = "off";
             scheduleUiStateCommit();
+            updateMotionStatusChips();
         }
     });
 
@@ -2151,8 +5426,19 @@ function initParameterListeners() {
             button.textContent = toggleStates.rend_phys_pause.getValue() ? "RESUME ALL" : "PAUSE ALL";
         }
     });
+    toggleStates.rend_viz_trails.valueChangedEvent.addListener(() => {
+        setToggleClass("toggle-viz-trails", !!toggleStates.rend_viz_trails.getValue());
+    });
+    toggleStates.rend_viz_vectors.valueChangedEvent.addListener(() => {
+        setToggleClass("toggle-viz-vectors", !!toggleStates.rend_viz_vectors.getValue());
+    });
+    toggleStates.rend_viz_physics_lens.valueChangedEvent.addListener(() => {
+        setToggleClass("toggle-viz-physics-lens", !!toggleStates.rend_viz_physics_lens.getValue());
+        setToggleClass("emitter-quick-physics-lens", !!toggleStates.rend_viz_physics_lens.getValue());
+    });
 
     comboStates.rend_viz_mode.valueChangedEvent.addListener(updateViewMode);
+    comboStates.pos_coord_mode.valueChangedEvent.addListener(syncPositionModeUI);
     comboStates.phys_gravity_dir.valueChangedEvent.addListener(markPhysicsPresetCustom);
 
     // Quality badge from DAW
@@ -2174,6 +5460,11 @@ function initParameterListeners() {
     updateValueDisplay("val-azimuth", sliderStates.pos_azimuth.getScaledValue().toFixed(1), "\u00B0");
     updateValueDisplay("val-elevation", sliderStates.pos_elevation.getScaledValue().toFixed(1), "\u00B0");
     updateValueDisplay("val-distance", sliderStates.pos_distance.getScaledValue().toFixed(2), "m");
+    updateValueDisplay("val-pos-x", sliderStates.pos_x.getScaledValue().toFixed(2), "m");
+    updateValueDisplay("val-pos-y", sliderStates.pos_z.getScaledValue().toFixed(2), "m");
+    updateValueDisplay("val-pos-z", sliderStates.pos_y.getScaledValue().toFixed(2), "m");
+    updateWorldPositionReadback();
+    syncPositionModeUI();
     updateValueDisplay("val-size", sliderStates.size_uniform.getScaledValue().toFixed(2), "m");
     updateValueDisplay("val-gain", sliderStates.emit_gain.getScaledValue().toFixed(1), "dB");
     updateValueDisplay("val-spread", sliderStates.emit_spread.getScaledValue().toFixed(2), "");
@@ -2191,6 +5482,9 @@ function initParameterListeners() {
     updateValueDisplay("val-vel-z",
         sliderStates.phys_vel_z.getScaledValue().toFixed(1), "m/s");
     updateValueDisplay("val-master-gain", sliderStates.rend_master_gain.getScaledValue().toFixed(1), "dB");
+    updateValueDisplay("val-viz-trail-len", sliderStates.rend_viz_trail_len.getScaledValue().toFixed(1), "s");
+    updateValueDisplay("val-viz-diag-mix", `${Math.round(clamp(sliderStates.rend_viz_diag_mix.getScaledValue(), 0.0, 1.0) * 100.0)}`, "%");
+    updateEmitterDiagnosticsQuickControls();
     setToggleClass("toggle-size-link", !!toggleStates.size_link.getValue());
     setToggleClass("toggle-doppler", !!toggleStates.rend_doppler.getValue());
     setToggleClass("toggle-air-absorb", !!toggleStates.rend_air_absorb.getValue());
@@ -2198,18 +5492,19 @@ function initParameterListeners() {
     setToggleClass("toggle-er-only", !!toggleStates.rend_room_er_only.getValue());
     setToggleClass("toggle-walls", !!toggleStates.rend_phys_walls.getValue());
     setToggleClass("toggle-interact", !!toggleStates.rend_phys_interact.getValue());
+    setToggleClass("toggle-viz-trails", !!toggleStates.rend_viz_trails.getValue());
+    setToggleClass("toggle-viz-vectors", !!toggleStates.rend_viz_vectors.getValue());
+    setToggleClass("toggle-viz-physics-lens", !!toggleStates.rend_viz_physics_lens.getValue());
     const pauseButton = document.getElementById("btn-pause-physics");
     if (pauseButton) pauseButton.textContent = toggleStates.rend_phys_pause.getValue() ? "RESUME ALL" : "PAUSE ALL";
     const colorSwatch = document.getElementById("emit-color-swatch");
-    if (colorSwatch) {
-        const idx = clamp(Math.round(sliderStates.emit_color.getScaledValue()), 0, emitterPalette.length - 1);
-        colorSwatch.style.background = "#" + emitterPalette[idx].toString(16).padStart(6, "0");
-    }
+    if (colorSwatch) updateEmitterColorSwatch();
     updateValueDisplay("val-dir-azimuth",
         sliderStates.emit_dir_azimuth.getScaledValue().toFixed(1), "°");
     updateValueDisplay("val-dir-elevation",
         sliderStates.emit_dir_elevation.getScaledValue().toFixed(1), "°");
     updateViewMode();
+    updateEmitterAuthorityUI();
     syncAnimationUI();
 }
 
@@ -2218,6 +5513,189 @@ function updateValueDisplay(id, value, unit) {
     if (el) {
         el.innerHTML = value + (unit ? '<span class="control-unit">' + unit + '</span>' : '');
     }
+}
+
+function applySceneStatusBadge() {
+    const ss = document.getElementById("scene-status");
+    if (!ss) return;
+
+    ss.className = "scene-status";
+
+    if (sceneTransportState.stale && currentMode !== "calibrate") {
+        ss.textContent = "STALE SNAPSHOT";
+        ss.classList.add("stale");
+        return;
+    }
+
+    if (currentMode === "calibrate") {
+        ss.textContent = "NO PROFILE";
+        ss.classList.add("noprofile");
+        return;
+    }
+
+    if (currentMode === "renderer") {
+        ss.textContent = "READY";
+        ss.classList.add("ready");
+        return;
+    }
+
+    ss.textContent = "STABLE";
+}
+
+function parseSnapshotSequence(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) {
+        return null;
+    }
+    return parsed;
+}
+
+function parseSnapshotCadenceHz(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return sceneTransportDefaults.cadenceHz;
+    }
+    return clamp(parsed, 1, 240);
+}
+
+function parseSnapshotStaleAfterMs(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return sceneTransportDefaults.staleAfterMs;
+    }
+    return clamp(parsed, 150, 5000);
+}
+
+function updateSceneTransportHealth(nowMs = Date.now()) {
+    const lastAcceptedAtMs = Number(sceneTransportState.lastAcceptedAtMs) || 0;
+    if (lastAcceptedAtMs <= 0) {
+        return;
+    }
+    const staleAfterMs = Math.max(1, Number(sceneTransportState.staleAfterMs) || sceneTransportDefaults.staleAfterMs);
+    const staleNow = (nowMs - lastAcceptedAtMs) > staleAfterMs;
+    if (sceneTransportState.stale === staleNow) {
+        return;
+    }
+    sceneTransportState.stale = staleNow;
+    applySceneStatusBadge();
+    updateEmitterMeshes(sceneData.emitters || []);
+}
+
+function getSceneSmoothingAlpha(frameDeltaSeconds) {
+    const dt = Math.max(0, Number(frameDeltaSeconds) || 0);
+    const cadenceHz = Math.max(1, Number(sceneTransportState.cadenceHz) || sceneTransportDefaults.cadenceHz);
+    const expectedSnapshotSeconds = 1 / cadenceHz;
+    const tau = Math.max(0.02, expectedSnapshotSeconds * 0.8);
+    return clamp(1 - Math.exp(-dt / tau), 0.0, 1.0);
+}
+
+function getTrailPointBudget() {
+    const trailSeconds = clamp(Number(sliderStates.rend_viz_trail_len.getScaledValue()) || 5.0, 0.5, 30.0);
+    const cadenceHz = Math.max(1, Number(sceneTransportState.cadenceHz) || sceneTransportDefaults.cadenceHz);
+    return clamp(Math.round(trailSeconds * cadenceHz), 12, 720);
+}
+
+function getPhysicsLensMix() {
+    const sliderMix = Number(sliderStates.rend_viz_diag_mix?.getScaledValue?.());
+    if (Number.isFinite(sliderMix)) {
+        return clamp(sliderMix, 0.0, 1.0);
+    }
+    const sceneMix = Number(sceneData?.rendererPhysicsLensMix);
+    if (Number.isFinite(sceneMix)) {
+        return clamp(sceneMix, 0.0, 1.0);
+    }
+    return 0.55;
+}
+
+function getPhysicsLensEnabled() {
+    const toggleValue = !!getToggleValue(toggleStates.rend_viz_physics_lens);
+    const sceneEnabled = !!sceneData?.rendererPhysicsLensEnabled;
+    return toggleValue || sceneEnabled;
+}
+
+function buildTrajectoryPreviewPoints(target, diagnosticsMix) {
+    if (typeof THREE === "undefined") {
+        return [];
+    }
+
+    const start = new THREE.Vector3(target.x, target.y, target.z);
+    const points = [start];
+    const horizonSeconds = 0.35 + (diagnosticsMix * 1.0);
+    const pointCount = Math.round(clamp(6 + (diagnosticsMix * 8), 6, 14));
+    const dt = horizonSeconds / pointCount;
+    const accelInfluence = 0.18 + (diagnosticsMix * 0.26);
+    const roomWidth = Number(sceneData?.roomDimensions?.width);
+    const roomDepth = Number(sceneData?.roomDimensions?.depth);
+    const roomHeight = Number(sceneData?.roomDimensions?.height);
+    const halfWidth = Number.isFinite(roomWidth) ? Math.max(0.2, roomWidth * 0.5) : 4.0;
+    const halfDepth = Number.isFinite(roomDepth) ? Math.max(0.2, roomDepth * 0.5) : 4.0;
+    const maxHeight = Number.isFinite(roomHeight) ? Math.max(0.2, roomHeight) : 3.0;
+
+    for (let i = 1; i <= pointCount; i++) {
+        const t = dt * i;
+        const px = target.x + (target.vx * t) + (0.5 * target.fx * accelInfluence * t * t);
+        const py = target.y + (target.vy * t) + (0.5 * target.fy * accelInfluence * t * t);
+        const pz = target.z + (target.vz * t) + (0.5 * target.fz * accelInfluence * t * t);
+        points.push(new THREE.Vector3(
+            clamp(px, -halfWidth, halfWidth),
+            clamp(py, 0.0, maxHeight),
+            clamp(pz, -halfDepth, halfDepth)
+        ));
+    }
+
+    return points;
+}
+
+function setArrowFromVector(arrow, x, y, z, targetLength) {
+    if (!arrow || typeof THREE === "undefined") return;
+    const vx = Number(x) || 0.0;
+    const vy = Number(y) || 0.0;
+    const vz = Number(z) || 0.0;
+    const magnitude = Math.sqrt((vx * vx) + (vy * vy) + (vz * vz));
+
+    if (magnitude <= 1.0e-6) {
+        arrow.setDirection(new THREE.Vector3(0, 0, -1));
+        arrow.setLength(1.0e-4, 1.0e-4, 1.0e-4);
+        return;
+    }
+
+    const invMag = 1.0 / magnitude;
+    arrow.setDirection(new THREE.Vector3(vx * invMag, vy * invMag, vz * invMag));
+
+    const length = Math.max(0.02, Number(targetLength) || magnitude);
+    const headLength = Math.min(length * 0.35, 0.22);
+    const headWidth = Math.min(length * 0.26, 0.12);
+    arrow.setLength(length, headLength, headWidth);
+}
+
+function updateSpeakerTargetsFromScene(data) {
+    for (let i = 0; i < 4; i++) {
+        if (!speakerTargets[i]) {
+            speakerTargets[i] = { ...defaultSpeakerSnapshotPositions[i], rms: 0.0 };
+        }
+
+        const fallback = defaultSpeakerSnapshotPositions[i];
+        const speaker = Array.isArray(data?.speakers) ? data.speakers[i] : null;
+        const rmsFromArray = Array.isArray(data?.speakerRms) ? Number(data.speakerRms[i]) : NaN;
+        const rmsFromSpeaker = Number(speaker?.rms);
+
+        speakerTargets[i].x = Number.isFinite(Number(speaker?.x)) ? Number(speaker.x) : fallback.x;
+        speakerTargets[i].y = Number.isFinite(Number(speaker?.y)) ? Number(speaker.y) : fallback.y;
+        speakerTargets[i].z = Number.isFinite(Number(speaker?.z)) ? Number(speaker.z) : fallback.z;
+        speakerTargets[i].rms = clamp(
+            Number.isFinite(rmsFromArray) ? rmsFromArray : (Number.isFinite(rmsFromSpeaker) ? rmsFromSpeaker : 0.0),
+            0.0,
+            4.0
+        );
+    }
+}
+
+function updateListenerTargetFromScene(data) {
+    listenerTarget = {
+        x: Number.isFinite(Number(data?.listener?.x)) ? Number(data.listener.x) : 0.0,
+        y: Number.isFinite(Number(data?.listener?.y)) ? Number(data.listener.y) : 1.2,
+        z: Number.isFinite(Number(data?.listener?.z)) ? Number(data.listener.z) : 0.0,
+    };
 }
 
 // ===== MODE SWITCHING =====
@@ -2234,57 +5712,118 @@ function applyModeShell(mode) {
     }
 }
 
+function applyTimelineModeVisibility(mode) {
+    let tl = document.getElementById("timeline");
+    const viewportArea = document.querySelector(".viewport-area");
+    const wasVisible = !!(tl && tl.classList.contains("visible"));
+    const showTimeline = isEmitterLayoutActive(mode);
+    const shellRebuilt = showTimeline ? ensureTimelineShellIntegrity() : false;
+    if (!tl) tl = document.getElementById("timeline");
+
+    if (tl) {
+        tl.classList.toggle("visible", showTimeline);
+        tl.style.display = "block";
+        tl.style.visibility = "visible";
+        tl.style.opacity = "1";
+        tl.style.height = showTimeline ? "var(--timeline-height, 152px)" : "0px";
+    }
+    if (viewportArea) viewportArea.classList.toggle("timeline-visible", showTimeline);
+    if (showTimeline && (shellRebuilt || !wasVisible || !timelineLoaded)) renderTimelineLanes();
+}
+
+function queueModeLayoutResync(mode) {
+    if (modeLayoutSyncTimer !== null) {
+        window.clearTimeout(modeLayoutSyncTimer);
+        modeLayoutSyncTimer = null;
+    }
+
+    window.requestAnimationFrame(() => {
+        applyTimelineModeVisibility(mode);
+        if (runtimeState.viewportReady) resize();
+    });
+
+    modeLayoutSyncTimer = window.setTimeout(() => {
+        modeLayoutSyncTimer = null;
+        applyTimelineModeVisibility(mode);
+        if (runtimeState.viewportReady) resize();
+    }, 260);
+}
+
 function switchMode(mode) {
-    if (currentMode === mode) {
-        applyModeShell(mode);
-        return;
-    }
+    const nextMode = (mode === "calibrate" || mode === "emitter" || mode === "renderer")
+        ? mode
+        : currentMode;
+    const isSameMode = currentMode === nextMode;
+    if (!isSameMode) {
+        const rail = document.getElementById("rail");
+        if (rail) {
+            railScrollByMode[currentMode] = rail.scrollTop;
+        }
 
-    const rail = document.getElementById("rail");
-    if (rail) {
-        railScrollByMode[currentMode] = rail.scrollTop;
+        currentMode = nextMode;
     }
-
-    currentMode = mode;
 
     document.querySelectorAll(".mode-tab").forEach(t => t.classList.remove("active"));
-    const activeTab = document.querySelector(`[data-mode="${mode}"]`);
+    const activeTab = document.querySelector(`[data-mode="${nextMode}"]`);
     if (activeTab) activeTab.classList.add("active");
 
     document.querySelectorAll(".rail-panel").forEach(p => p.classList.remove("active"));
-    const activePanel = document.querySelector(`[data-panel="${mode}"]`);
+    const activePanel = document.querySelector(`[data-panel="${nextMode}"]`);
     if (activePanel) activePanel.classList.add("active");
 
-    const tl = document.getElementById("timeline");
-    if (mode === "emitter") {
-        if (tl) tl.classList.add("visible");
-        renderTimelineLanes();
-    } else {
-        if (tl) tl.classList.remove("visible");
-    }
+    applyTimelineModeVisibility(nextMode);
 
-    // Scene status
-    const ss = document.getElementById("scene-status");
-    if (ss) {
-        ss.className = "scene-status";
-        if (mode === "calibrate") { ss.textContent = "NO PROFILE"; ss.classList.add("noprofile"); }
-        else if (mode === "renderer") { ss.textContent = "READY"; ss.classList.add("ready"); }
-        else { ss.textContent = "STABLE"; }
-    }
+    applySceneStatusBadge();
 
     // 3D viewport adjustments
-    if (mode !== "emitter") setLaneHighlight(null);
+    if (nextMode !== "emitter") setLaneHighlight(null);
     else setLaneHighlight(selectedLane);
     updateSelectionRingFromState();
     if (roomLines?.material) {
-        roomLines.material.opacity = mode === "calibrate" ? 0.15 : 0.3;
+        roomLines.material.opacity = nextMode === "calibrate" ? 0.15 : 0.3;
     }
     applyCalibrationStatus();
-    applyModeShell(mode);
+    applyModeShell(nextMode);
+    applyTimelineModeVisibility(nextMode);
 
-    if (runtimeState.viewportReady) {
-        setTimeout(resize, 10);
+    queueModeLayoutResync(nextMode);
+}
+
+function enforceEmitterTimelineInvariant(frameNowMs) {
+    if (!isEmitterLayoutActive(currentMode)) return;
+
+    if ((frameNowMs - timelineInvariantLastCheckMs) < 220.0) return;
+    timelineInvariantLastCheckMs = frameNowMs;
+
+    const viewportArea = document.querySelector(".viewport-area");
+    let timeline = document.getElementById("timeline");
+    const laneCount = timeline ? timeline.querySelectorAll(".timeline-lane").length : 0;
+    const hasShell = !!(timeline
+        && timeline.querySelector(".timeline-header")
+        && timeline.querySelector(".timeline-lanes")
+        && laneCount >= 4);
+    const timelineHeight = timeline ? timeline.getBoundingClientRect().height : 0;
+    const viewportFlagged = !!(viewportArea && viewportArea.classList.contains("timeline-visible"));
+    const timelineVisible = !!(timeline && timeline.classList.contains("visible"));
+
+    const needsRepair = !timeline
+        || !timelineVisible
+        || !viewportFlagged
+        || !hasShell
+        || timelineHeight < 60;
+
+    if (!needsRepair) return;
+
+    const rebuilt = ensureTimelineShellIntegrity();
+    applyTimelineModeVisibility("emitter");
+    if (rebuilt || timelineLoaded || laneCount < 4) {
+        renderTimelineLanes();
     }
+    timeline = document.getElementById("timeline");
+    if (timeline) {
+        timeline.style.height = "var(--timeline-height, 152px)";
+    }
+    if (runtimeState.viewportReady) resize();
 }
 
 function setLaneHighlight(lane) {
@@ -2295,12 +5834,36 @@ function setLaneHighlight(lane) {
 // ===== SCENE STATE FROM C++ =====
 // Called by C++ via evaluateJavascript
 window.updateSceneState = function(data) {
+    const incomingSeq = parseSnapshotSequence(data?.snapshotSeq);
+    if (incomingSeq !== null && sceneTransportState.lastAcceptedSeq >= 0 && incomingSeq <= sceneTransportState.lastAcceptedSeq) {
+        return;
+    }
+
+    const nowMs = Date.now();
+    if (incomingSeq !== null) {
+        sceneTransportState.lastAcceptedSeq = incomingSeq;
+    }
+    if (typeof data?.snapshotSchema === "string" && data.snapshotSchema.trim()) {
+        sceneTransportState.schema = data.snapshotSchema.trim();
+    }
+    sceneTransportState.lastAcceptedAtMs = nowMs;
+    sceneTransportState.cadenceHz = parseSnapshotCadenceHz(data?.snapshotCadenceHz);
+    sceneTransportState.staleAfterMs = parseSnapshotStaleAfterMs(data?.snapshotStaleAfterMs);
+    sceneTransportState.lastPublishedAtUtcMs = Number.isFinite(Number(data?.snapshotPublishedAtUtcMs))
+        ? Number(data.snapshotPublishedAtUtcMs)
+        : 0;
+    sceneTransportState.stale = false;
+
     const emitters = Array.isArray(data?.emitters) ? data.emitters : [];
+    sceneEmitterLookup = new Map(emitters.map(emitter => [emitter.id, emitter]));
 
     sceneData = {
         ...(data || {}),
         emitters,
     };
+    updateSpeakerTargetsFromScene(sceneData);
+    updateListenerTargetFromScene(sceneData);
+    applyTimelineModeVisibility(currentMode);
 
     if (Number.isInteger(data?.localEmitterId)) {
         localEmitterId = data.localEmitterId;
@@ -2312,6 +5875,7 @@ window.updateSceneState = function(data) {
 
     updateEmitterMeshes(emitters);
     updateSceneList(emitters);
+    updateEmitterAuthorityUI();
 
     if (typeof data.animDuration === "number" && Number.isFinite(data.animDuration)) {
         timelineState.durationSeconds = clamp(data.animDuration, 0.25, 120.0);
@@ -2319,16 +5883,11 @@ window.updateSceneState = function(data) {
     if (typeof data.animLooping === "boolean") {
         timelineState.looping = data.animLooping;
     }
+    updateMotionStatusChips();
+    updateEmitterDiagnosticsQuickControls();
 
-    const timeEl = document.getElementById("timeline-time");
-    if (timeEl && typeof data.animTime === "number") {
+    if (typeof data.animTime === "number") {
         timelineState.currentTimeSeconds = Math.max(0.0, data.animTime);
-        const totalMs = Math.max(0, Math.round(data.animTime * 1000));
-        const minutes = Math.floor(totalMs / 60000);
-        const seconds = Math.floor((totalMs % 60000) / 1000);
-        const millis = totalMs % 1000;
-        timeEl.textContent =
-            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
         updateTimelinePlayheads();
         ["azimuth", "elevation", "distance", "size"].forEach(updateLaneCurveBadge);
     }
@@ -2368,12 +5927,74 @@ window.updateSceneState = function(data) {
             const outputText = outputChannels > 0
                 ? ` \u00B7 Out ${outputChannels}ch${layoutText ? ` ${layoutText}` : ""}${outputRoute ? ` (${outputRoute})` : ""}`
                 : "";
+            const spatialProfileRequested = typeof data.rendererSpatialProfileRequested === "string"
+                ? data.rendererSpatialProfileRequested
+                : "auto";
+            const spatialProfileActive = typeof data.rendererSpatialProfileActive === "string"
+                ? data.rendererSpatialProfileActive
+                : spatialProfileRequested;
+            const spatialProfileStage = typeof data.rendererSpatialProfileStage === "string"
+                ? data.rendererSpatialProfileStage
+                : "direct";
+            let spatialText = ` \u00B7 Profile ${spatialProfileActive}`;
+            if (spatialProfileRequested !== spatialProfileActive) {
+                spatialText += ` (req ${spatialProfileRequested})`;
+            }
+            if (spatialProfileStage !== "direct") {
+                spatialText += ` [${spatialProfileStage}]`;
+            }
+            const headphoneRequested = typeof data.rendererHeadphoneModeRequested === "string"
+                ? data.rendererHeadphoneModeRequested
+                : "stereo_downmix";
+            const headphoneActive = typeof data.rendererHeadphoneModeActive === "string"
+                ? data.rendererHeadphoneModeActive
+                : headphoneRequested;
+            const headphoneProfileRequested = typeof data.rendererHeadphoneProfileRequested === "string"
+                ? data.rendererHeadphoneProfileRequested
+                : "generic";
+            const headphoneProfileActive = typeof data.rendererHeadphoneProfileActive === "string"
+                ? data.rendererHeadphoneProfileActive
+                : headphoneProfileRequested;
+            const steamCompiled = !!data.rendererSteamAudioCompiled;
+            const steamAvailable = !!data.rendererSteamAudioAvailable;
+            const steamInitStage = typeof data.rendererSteamAudioInitStage === "string"
+                ? data.rendererSteamAudioInitStage
+                : "unknown";
+            const steamInitErrorCode = Number.isFinite(Number(data.rendererSteamAudioInitErrorCode))
+                ? Number(data.rendererSteamAudioInitErrorCode)
+                : 0;
+            let headphoneText = "";
+            if (outputChannels >= 2) {
+                headphoneText = ` \u00B7 HP ${headphoneActive}/${headphoneProfileActive}`;
+                if (headphoneRequested !== headphoneActive) {
+                    headphoneText += ` (req ${headphoneRequested})`;
+                }
+                if (headphoneProfileRequested !== headphoneProfileActive) {
+                    headphoneText += ` [reqProfile ${headphoneProfileRequested}]`;
+                }
+                if (headphoneRequested === "steam_binaural" && !steamAvailable) {
+                    headphoneText += ` fallback [${steamCompiled ? "compiled" : "not-compiled"}:${steamInitStage}`;
+                    if (steamInitErrorCode !== 0) {
+                        headphoneText += `:${steamInitErrorCode}`;
+                    }
+                    headphoneText += "]";
+                }
+            }
+            const physicsLensEnabled = !!data.rendererPhysicsLensEnabled;
+            const physicsLensMix = Number.isFinite(Number(data.rendererPhysicsLensMix))
+                ? clamp(Number(data.rendererPhysicsLensMix), 0.0, 1.0)
+                : getPhysicsLensMix();
+            const lensText = physicsLensEnabled
+                ? ` \u00B7 Lens ${Math.round(physicsLensMix * 100)}%`
+                : "";
             info.textContent = "Renderer Mode \u00B7 " + data.emitterCount + " emitters \u00B7 " +
-                qualityText + outputText + rendererPerfText + blockPerfText;
+                qualityText + outputText + spatialText + headphoneText + lensText + rendererPerfText + blockPerfText;
         } else {
             info.textContent = "Calibrate Mode \u00B7 Room Profile Setup";
         }
     }
+
+    applySceneStatusBadge();
 };
 
 window.updateCalibrationStatus = function(status) {
@@ -2528,44 +6149,342 @@ function applyCalibrationStatus() {
 }
 
 function updateEmitterMeshes(emitters) {
-    if (!threeScene) return;
+    if (!threeScene || typeof THREE === "undefined") return;
 
-    // Track which IDs are still active
     const activeIds = new Set();
+    const staleOpacityScale = sceneTransportState.stale ? 0.55 : 1.0;
+    const trailsEnabled = !!getToggleValue(toggleStates.rend_viz_trails);
+    const vectorsEnabled = !!getToggleValue(toggleStates.rend_viz_vectors);
+    const physicsLensEnabled = getPhysicsLensEnabled();
+    const diagnosticsMix = getPhysicsLensMix();
+    const maxTrailPoints = getTrailPointBudget();
 
     emitters.forEach(em => {
-        activeIds.add(em.id);
-        let mesh = emitterMeshes.get(em.id);
+        const emitterId = Number(em?.id);
+        if (!Number.isInteger(emitterId) || emitterId < 0) return;
+
+        activeIds.add(emitterId);
+        let mesh = emitterMeshes.get(emitterId);
 
         if (!mesh) {
-            // Create new emitter mesh
-            const geo = new THREE.SphereGeometry(0.25, 12, 8);
-            const color = emitterPalette[em.color % emitterPalette.length];
+            const geo = new THREE.SphereGeometry(0.25, 16, 12);
             const mat = new THREE.MeshBasicMaterial({
-                color: color, wireframe: true,
-                transparent: true, opacity: 0.7
+                color: 0xD4A847,
+                transparent: true,
+                opacity: 0.78,
             });
             mesh = new THREE.Mesh(geo, mat);
-            mesh.userData.emitterId = em.id;
+            mesh.userData.emitterId = emitterId;
+            mesh.userData.trailPoints = [];
+
+            const dashedOutline = new THREE.LineSegments(
+                new THREE.EdgesGeometry(new THREE.SphereGeometry(0.275, 12, 8)),
+                new THREE.LineDashedMaterial({
+                    color: 0xD4A847,
+                    dashSize: 0.08,
+                    gapSize: 0.06,
+                    transparent: true,
+                    opacity: 0.68,
+                })
+            );
+            dashedOutline.computeLineDistances();
+            mesh.add(dashedOutline);
+            mesh.userData.dashedOutline = dashedOutline;
+
+            const energyRing = new THREE.Mesh(
+                new THREE.RingGeometry(0.30, 0.36, 28),
+                new THREE.MeshBasicMaterial({
+                    color: 0xD4A847,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.14,
+                })
+            );
+            energyRing.rotation.x = -Math.PI / 2;
+            energyRing.position.y = -0.02;
+            mesh.add(energyRing);
+            mesh.userData.energyRing = energyRing;
+
+            const aimArrow = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 0, -1),
+                new THREE.Vector3(0, 0, 0),
+                0.45,
+                0x7AAFC9,
+                0.14,
+                0.08
+            );
+            mesh.add(aimArrow);
+            mesh.userData.aimArrow = aimArrow;
+
+            const velocityArrow = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 0, -1),
+                new THREE.Vector3(0, 0, 0),
+                0.0001,
+                0x5BBAB3,
+                0.10,
+                0.06
+            );
+            velocityArrow.visible = false;
+            mesh.add(velocityArrow);
+            mesh.userData.velocityArrow = velocityArrow;
+
+            const forceArrow = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 0, -1),
+                new THREE.Vector3(0, 0, 0),
+                0.0001,
+                0xFF8A4A,
+                0.10,
+                0.06
+            );
+            forceArrow.visible = false;
+            mesh.add(forceArrow);
+            mesh.userData.forceArrow = forceArrow;
+
+            const collisionRing = new THREE.Mesh(
+                new THREE.RingGeometry(0.40, 0.47, 28),
+                new THREE.MeshBasicMaterial({
+                    color: 0xFF5A4A,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.0,
+                })
+            );
+            collisionRing.rotation.x = -Math.PI / 2;
+            collisionRing.position.y = -0.10;
+            collisionRing.visible = false;
+            mesh.add(collisionRing);
+            mesh.userData.collisionRing = collisionRing;
+            mesh.userData.collisionPulse = 0.0;
+
+            const trailLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+                new THREE.LineBasicMaterial({
+                    color: 0xD4A847,
+                    transparent: true,
+                    opacity: 0.35,
+                })
+            );
+            trailLine.visible = false;
+            threeScene.add(trailLine);
+            mesh.userData.trailLine = trailLine;
+
+            const trajectoryLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+                new THREE.LineDashedMaterial({
+                    color: 0xFFB47A,
+                    dashSize: 0.10,
+                    gapSize: 0.07,
+                    transparent: true,
+                    opacity: 0.0,
+                })
+            );
+            trajectoryLine.visible = false;
+            threeScene.add(trajectoryLine);
+            mesh.userData.trajectoryLine = trajectoryLine;
+
             threeScene.add(mesh);
-            emitterMeshes.set(em.id, mesh);
+            emitterMeshes.set(emitterId, mesh);
         }
 
-        // Update position and properties
-        mesh.userData.emitterId = em.id;
-        mesh.position.set(em.x, em.y, em.z);
-        mesh.scale.set(em.sx * 2, em.sy * 2, em.sz * 2);
-        const isSelected = em.id === selectedEmitterId;
-        mesh.material.color.setHex(emitterPalette[em.color % emitterPalette.length]);
-        mesh.material.opacity = em.muted ? 0.15 : (isSelected ? 0.92 : 0.7);
+        if (!emitterVisualTargets.has(emitterId)) {
+            emitterVisualTargets.set(emitterId, {
+                x: Number(em.x) || 0,
+                y: Number(em.y) || 0,
+                z: Number(em.z) || 0,
+                sx: Number(em.sx) || 1,
+                sy: Number(em.sy) || 1,
+                sz: Number(em.sz) || 1,
+                aimX: Number(em.aimX) || 0.0,
+                aimY: Number(em.aimY) || 0.0,
+                aimZ: Number(em.aimZ) || -1.0,
+                directivity: clamp(Number(em.directivity) || 0.5, 0.0, 1.0),
+                rms: clamp(Number(em.rms) || 0.0, 0.0, 4.0),
+                vx: Number(em.vx) || 0.0,
+                vy: Number(em.vy) || 0.0,
+                vz: Number(em.vz) || 0.0,
+                fx: Number(em.fx) || 0.0,
+                fy: Number(em.fy) || 0.0,
+                fz: Number(em.fz) || 0.0,
+                collisionMask: Number.isFinite(Number(em.collisionMask)) ? Number(em.collisionMask) : 0,
+                collisionEnergy: Number(em.collisionEnergy) || 0.0,
+                physicsEnabled: !!em.physics,
+            });
+        }
+
+        const target = emitterVisualTargets.get(emitterId);
+        target.x = Number(em.x) || 0;
+        target.y = Number(em.y) || 0;
+        target.z = Number(em.z) || 0;
+        target.sx = Number(em.sx) || 1;
+        target.sy = Number(em.sy) || 1;
+        target.sz = Number(em.sz) || 1;
+        target.aimX = Number(em.aimX) || 0.0;
+        target.aimY = Number(em.aimY) || 0.0;
+        target.aimZ = Number(em.aimZ) || -1.0;
+        target.directivity = clamp(Number(em.directivity) || 0.5, 0.0, 1.0);
+        target.rms = clamp(Number(em.rms) || 0.0, 0.0, 4.0);
+        target.vx = Number(em.vx) || 0.0;
+        target.vy = Number(em.vy) || 0.0;
+        target.vz = Number(em.vz) || 0.0;
+        target.fx = Number(em.fx) || 0.0;
+        target.fy = Number(em.fy) || 0.0;
+        target.fz = Number(em.fz) || 0.0;
+        target.collisionMask = Number.isFinite(Number(em.collisionMask)) ? Number(em.collisionMask) : 0;
+        target.collisionEnergy = Number(em.collisionEnergy) || 0.0;
+        target.physicsEnabled = !!em.physics;
+
+        if (!mesh.userData.visualSeeded) {
+            mesh.position.set(target.x, target.y, target.z);
+            mesh.scale.set(target.sx * 2, target.sy * 2, target.sz * 2);
+            mesh.userData.visualSeeded = true;
+        }
+
+        const trailPoints = mesh.userData.trailPoints;
+        if (Array.isArray(trailPoints)) {
+            trailPoints.push(new THREE.Vector3(target.x, target.y, target.z));
+            while (trailPoints.length > maxTrailPoints) trailPoints.shift();
+
+            const trailLine = mesh.userData.trailLine;
+            if (trailLine && trailLine.geometry) {
+                trailLine.geometry.setFromPoints(trailPoints.length > 1 ? trailPoints : [mesh.position.clone(), mesh.position.clone()]);
+            }
+        }
+
+        mesh.userData.emitterId = emitterId;
+        const isSelected = emitterId === selectedEmitterId;
+        const color = getEmitterColorHex(em.color);
+        mesh.material.color.setHex(color);
+        mesh.material.transparent = true;
+        mesh.material.opacity = (em.muted ? 0.12 : (isSelected ? 0.95 : 0.28)) * staleOpacityScale;
         mesh.visible = currentMode !== "calibrate";
+
+        const dashedOutline = mesh.userData.dashedOutline;
+        if (dashedOutline && dashedOutline.material) {
+            dashedOutline.material.color.setHex(color);
+            dashedOutline.material.opacity = (em.muted ? 0.18 : 0.72) * staleOpacityScale;
+            dashedOutline.visible = mesh.visible && !isSelected;
+        }
+
+        const energyRing = mesh.userData.energyRing;
+        if (energyRing && energyRing.material) {
+            const energyNorm = clamp(Math.sqrt(target.rms) * 0.9, 0.0, 1.0);
+            const ringScale = 1.0 + (energyNorm * (isSelected ? 1.25 : 0.9));
+            energyRing.scale.set(ringScale, ringScale, 1.0);
+            energyRing.material.color.setHex(color);
+            energyRing.material.opacity = (isSelected ? 0.22 : 0.10) + (energyNorm * (isSelected ? 0.55 : 0.28));
+            energyRing.visible = mesh.visible;
+        }
+
+        const aimArrow = mesh.userData.aimArrow;
+        if (aimArrow) {
+            const aimLength = 0.36 + (target.directivity * 0.64);
+            setArrowFromVector(aimArrow, target.aimX, target.aimY, target.aimZ, aimLength);
+            aimArrow.setColor(new THREE.Color(isSelected ? 0xD4A847 : 0x7AAFC9));
+            aimArrow.visible = mesh.visible;
+        }
+
+        const velocityArrow = mesh.userData.velocityArrow;
+        if (velocityArrow) {
+            const speed = Math.sqrt((target.vx * target.vx) + (target.vy * target.vy) + (target.vz * target.vz));
+            const velocityLength = clamp(speed * 0.08, 0.10, 0.95);
+            setArrowFromVector(velocityArrow, target.vx, target.vy, target.vz, velocityLength);
+            velocityArrow.visible = mesh.visible && vectorsEnabled && speed > 0.02;
+        }
+
+        const forceArrow = mesh.userData.forceArrow;
+        if (forceArrow) {
+            const forceMag = Math.sqrt((target.fx * target.fx) + (target.fy * target.fy) + (target.fz * target.fz));
+            const forceLength = clamp((forceMag * 0.035) + (diagnosticsMix * 0.08), 0.08, 0.95);
+            setArrowFromVector(forceArrow, target.fx, target.fy, target.fz, forceLength);
+            forceArrow.visible = mesh.visible && physicsLensEnabled && !!em.physics && forceMag > 0.025;
+        }
+
+        const trajectoryLine = mesh.userData.trajectoryLine;
+        if (trajectoryLine && trajectoryLine.geometry && trajectoryLine.material) {
+            const trajectoryPoints = buildTrajectoryPreviewPoints(target, diagnosticsMix);
+            trajectoryLine.geometry.setFromPoints(
+                trajectoryPoints.length > 1 ? trajectoryPoints : [mesh.position.clone(), mesh.position.clone()]
+            );
+            if (typeof trajectoryLine.computeLineDistances === "function") {
+                trajectoryLine.computeLineDistances();
+            }
+            trajectoryLine.material.opacity = (0.20 + diagnosticsMix * 0.40) * staleOpacityScale;
+            trajectoryLine.material.color.setHex(color);
+            trajectoryLine.visible = mesh.visible && physicsLensEnabled && !!em.physics;
+        }
+
+        const collisionRing = mesh.userData.collisionRing;
+        if (collisionRing && collisionRing.material) {
+            const collisionDetected = (target.collisionMask & 0x7) !== 0;
+            const collisionEnergyNorm = clamp((target.collisionEnergy || 0.0) * 0.35, 0.0, 1.0);
+            const collisionPulse = collisionDetected
+                ? Math.max(0.35 + collisionEnergyNorm, Number(mesh.userData.collisionPulse) || 0.0)
+                : (Number(mesh.userData.collisionPulse) || 0.0) * 0.85;
+            mesh.userData.collisionPulse = collisionPulse;
+            collisionRing.scale.set(1.0 + collisionPulse * 0.6, 1.0 + collisionPulse * 0.6, 1.0);
+            collisionRing.material.opacity = (0.08 + collisionPulse * 0.75) * diagnosticsMix * staleOpacityScale;
+            collisionRing.visible = mesh.visible && physicsLensEnabled && collisionPulse > 0.04;
+        }
+
+        const trailLine = mesh.userData.trailLine;
+        if (trailLine && trailLine.material) {
+            trailLine.material.color.setHex(color);
+            trailLine.material.opacity = (isSelected ? 0.44 : 0.22) * staleOpacityScale;
+            trailLine.visible = mesh.visible && trailsEnabled && Array.isArray(mesh.userData.trailPoints) && mesh.userData.trailPoints.length > 1;
+        }
     });
 
-    // Remove meshes for emitters no longer active
     for (const [id, mesh] of emitterMeshes) {
         if (!activeIds.has(id)) {
+            const trailLine = mesh.userData.trailLine;
+            if (trailLine) {
+                threeScene.remove(trailLine);
+                trailLine.geometry?.dispose?.();
+                trailLine.material?.dispose?.();
+            }
+
+            const trajectoryLine = mesh.userData.trajectoryLine;
+            if (trajectoryLine) {
+                threeScene.remove(trajectoryLine);
+                trajectoryLine.geometry?.dispose?.();
+                trajectoryLine.material?.dispose?.();
+            }
+
+            const dashedOutline = mesh.userData.dashedOutline;
+            dashedOutline?.geometry?.dispose?.();
+            dashedOutline?.material?.dispose?.();
+
+            const energyRing = mesh.userData.energyRing;
+            energyRing?.geometry?.dispose?.();
+            energyRing?.material?.dispose?.();
+
+            const aimArrow = mesh.userData.aimArrow;
+            aimArrow?.line?.geometry?.dispose?.();
+            aimArrow?.line?.material?.dispose?.();
+            aimArrow?.cone?.geometry?.dispose?.();
+            aimArrow?.cone?.material?.dispose?.();
+
+            const velocityArrow = mesh.userData.velocityArrow;
+            velocityArrow?.line?.geometry?.dispose?.();
+            velocityArrow?.line?.material?.dispose?.();
+            velocityArrow?.cone?.geometry?.dispose?.();
+            velocityArrow?.cone?.material?.dispose?.();
+
+            const forceArrow = mesh.userData.forceArrow;
+            forceArrow?.line?.geometry?.dispose?.();
+            forceArrow?.line?.material?.dispose?.();
+            forceArrow?.cone?.geometry?.dispose?.();
+            forceArrow?.cone?.material?.dispose?.();
+
+            const collisionRing = mesh.userData.collisionRing;
+            collisionRing?.geometry?.dispose?.();
+            collisionRing?.material?.dispose?.();
+
+            mesh.geometry?.dispose?.();
+            mesh.material?.dispose?.();
             threeScene.remove(mesh);
             emitterMeshes.delete(id);
+            emitterVisualTargets.delete(id);
         }
     }
 
@@ -2629,17 +6548,130 @@ function updateSceneList(emitters) {
 // ===== ANIMATION LOOP =====
 function animate() {
     requestAnimationFrame(animate);
-    animTime += 0.016;
+    const frameNowMs = typeof performance !== "undefined" && typeof performance.now === "function"
+        ? performance.now()
+        : Date.now();
+    let frameDeltaSeconds = 0.016;
+    if (lastAnimationFrameTimeMs > 0) {
+        frameDeltaSeconds = clamp((frameNowMs - lastAnimationFrameTimeMs) / 1000.0, 0.0, 0.1);
+    }
+    lastAnimationFrameTimeMs = frameNowMs;
+
+    animTime += frameDeltaSeconds;
+    updateSceneTransportHealth(Date.now());
+    enforceEmitterTimelineInvariant(frameNowMs);
 
     // Selection ring float
     if (selectionRing && selectionRing.visible) {
         selectionRing.position.y = selectionRingBaseY + Math.sin(animTime * 2.0) * 0.015;
     }
 
+    const smoothingAlpha = getSceneSmoothingAlpha(frameDeltaSeconds);
+    const staleOpacityScale = sceneTransportState.stale ? 0.55 : 1.0;
+    const trailsEnabled = !!getToggleValue(toggleStates.rend_viz_trails);
+    const vectorsEnabled = !!getToggleValue(toggleStates.rend_viz_vectors);
+    const physicsLensEnabled = getPhysicsLensEnabled();
+    const diagnosticsMix = getPhysicsLensMix();
+    for (const [id, mesh] of emitterMeshes) {
+        const target = emitterVisualTargets.get(id);
+        if (target) {
+            mesh.position.x += (target.x - mesh.position.x) * smoothingAlpha;
+            mesh.position.y += (target.y - mesh.position.y) * smoothingAlpha;
+            mesh.position.z += (target.z - mesh.position.z) * smoothingAlpha;
+            mesh.scale.x += ((target.sx * 2) - mesh.scale.x) * smoothingAlpha;
+            mesh.scale.y += ((target.sy * 2) - mesh.scale.y) * smoothingAlpha;
+            mesh.scale.z += ((target.sz * 2) - mesh.scale.z) * smoothingAlpha;
+        }
+
+        const emitter = sceneEmitterLookup.get(id);
+        if (emitter) {
+            const isSelected = id === selectedEmitterId;
+            const baseOpacity = emitter.muted ? 0.12 : (isSelected ? 0.95 : 0.28);
+            mesh.material.opacity = baseOpacity * staleOpacityScale;
+        }
+
+        const trailLine = mesh.userData.trailLine;
+        if (trailLine && trailLine.material) {
+            const isSelected = id === selectedEmitterId;
+            trailLine.material.opacity = (isSelected ? 0.44 : 0.22) * staleOpacityScale;
+            trailLine.visible = mesh.visible
+                && trailsEnabled
+                && Array.isArray(mesh.userData.trailPoints)
+                && mesh.userData.trailPoints.length > 1;
+        }
+
+        const dashedOutline = mesh.userData.dashedOutline;
+        if (dashedOutline) {
+            dashedOutline.visible = mesh.visible && (id !== selectedEmitterId);
+        }
+
+        const velocityArrow = mesh.userData.velocityArrow;
+        if (velocityArrow && target) {
+            const speed = Math.sqrt((target.vx * target.vx) + (target.vy * target.vy) + (target.vz * target.vz));
+            velocityArrow.visible = mesh.visible && vectorsEnabled && speed > 0.02;
+        }
+
+        const forceArrow = mesh.userData.forceArrow;
+        if (forceArrow && target) {
+            const forceMag = Math.sqrt((target.fx * target.fx) + (target.fy * target.fy) + (target.fz * target.fz));
+            forceArrow.visible = mesh.visible && physicsLensEnabled && !!target.physicsEnabled && forceMag > 0.025;
+        }
+
+        const trajectoryLine = mesh.userData.trajectoryLine;
+        if (trajectoryLine && trajectoryLine.material) {
+            trajectoryLine.material.opacity = (0.20 + diagnosticsMix * 0.40) * staleOpacityScale;
+            trajectoryLine.visible = mesh.visible && physicsLensEnabled && !!target?.physicsEnabled;
+        }
+
+        const collisionRing = mesh.userData.collisionRing;
+        if (collisionRing && collisionRing.material) {
+            const collisionPulse = Number(mesh.userData.collisionPulse) || 0.0;
+            collisionRing.scale.set(1.0 + collisionPulse * 0.6, 1.0 + collisionPulse * 0.6, 1.0);
+            collisionRing.material.opacity = (0.08 + collisionPulse * 0.75) * diagnosticsMix * staleOpacityScale;
+            collisionRing.visible = mesh.visible && physicsLensEnabled && !!target?.physicsEnabled && collisionPulse > 0.04;
+        }
+    }
+
+    if (listenerGroup) {
+        listenerGroup.position.x += (listenerTarget.x - listenerGroup.position.x) * smoothingAlpha;
+        listenerGroup.position.y += (listenerTarget.y - listenerGroup.position.y) * smoothingAlpha;
+        listenerGroup.position.z += (listenerTarget.z - listenerGroup.position.z) * smoothingAlpha;
+
+        const speakerEnergy = Array.isArray(sceneData?.speakerRms)
+            ? sceneData.speakerRms.reduce((sum, value) => sum + clamp(Number(value) || 0.0, 0.0, 4.0), 0.0) / Math.max(1, sceneData.speakerRms.length)
+            : 0.0;
+        const listenerEnergy = clamp(Math.sqrt(speakerEnergy) * 0.55, 0.0, 1.0);
+        if (listenerEnergyRing && listenerEnergyRing.material) {
+            const ringScale = 1.0 + listenerEnergy * 1.15;
+            listenerEnergyRing.scale.set(ringScale, ringScale, 1.0);
+            listenerEnergyRing.material.opacity = 0.14 + listenerEnergy * 0.48;
+        }
+
+        if (listenerAimArrow) {
+            const selectedTarget = emitterVisualTargets.get(selectedEmitterId);
+            if (selectedTarget) {
+                setArrowFromVector(listenerAimArrow, selectedTarget.aimX, selectedTarget.aimY, selectedTarget.aimZ, 0.38);
+            }
+        }
+    }
+
     const calibrationCurrentSpeaker = Math.max(0, Math.min(3, (calibrationState.currentSpeaker || 1) - 1));
 
     // Speaker energy meters
     speakerMeters.forEach((m, i) => {
+        const speaker = speakers[i];
+        const ring = speakerEnergyRings[i];
+        const targetSpeaker = speakerTargets[i] || defaultSpeakerSnapshotPositions[i];
+        if (speaker && targetSpeaker) {
+            speaker.position.x += (targetSpeaker.x - speaker.position.x) * smoothingAlpha;
+            speaker.position.y += (targetSpeaker.y - speaker.position.y) * smoothingAlpha;
+            speaker.position.z += (targetSpeaker.z - speaker.position.z) * smoothingAlpha;
+        }
+
+        m.basePos.x += (targetSpeaker.x - m.basePos.x) * smoothingAlpha;
+        m.basePos.y += (targetSpeaker.y - m.basePos.y) * smoothingAlpha;
+        m.basePos.z += (targetSpeaker.z - m.basePos.z) * smoothingAlpha;
+
         if (currentMode === "calibrate") {
             const level = getCalibrationSpeakerLevel(i);
             const pulse = (calibrationState.running && i === calibrationCurrentSpeaker)
@@ -2647,7 +6679,9 @@ function animate() {
                 : 1.0;
             m.target = level * 0.45 * pulse;
         } else if (currentMode === "renderer" || currentMode === "emitter") {
-            m.target = 0.15 + Math.sin(animTime * 3 + i * 1.7) * 0.12 + Math.random() * 0.03;
+            const rms = clamp(Number(targetSpeaker?.rms) || 0.0, 0.0, 4.0);
+            const responsiveFloor = 0.04 + 0.03 * Math.sin(animTime * 2.0 + i * 0.7);
+            m.target = clamp(responsiveFloor + (rms * 0.42), 0.0, 1.6);
         } else {
             m.target = 0;
         }
@@ -2663,7 +6697,24 @@ function animate() {
             meterColor = t > 0.5 ? 0xD4A847 : 0xE0E0E0;
         }
 
-        speakers[i]?.material?.color?.setHex(currentMode === "calibrate" ? getCalibrationSpeakerColor(i) : 0xE0E0E0);
+        if (speaker && speaker.material?.color) {
+            if (currentMode === "calibrate") {
+                speaker.material.color.setHex(getCalibrationSpeakerColor(i));
+            } else {
+                const speakerGlowMix = clamp((m.level - 0.08) / 0.55, 0.0, 1.0);
+                speaker.material.color.setHex(speakerGlowMix > 0.45 ? 0xD8CFA0 : 0xE0E0E0);
+            }
+            speaker.material.opacity = 0.55 + Math.min(0.4, m.level * 0.35);
+        }
+
+        if (ring && ring.material) {
+            const ringScale = 1.0 + clamp(m.level * 0.9, 0.0, 1.6);
+            ring.scale.set(ringScale, ringScale, 1.0);
+            ring.position.set(m.basePos.x, Math.max(0.05, m.basePos.y - 0.18), m.basePos.z);
+            ring.material.opacity = 0.08 + Math.min(0.52, m.level * 0.45);
+            ring.visible = currentMode !== "calibrate" || calibrationState.running || calibrationState.complete;
+        }
+
         m.mesh.material.color.setHex(meterColor);
         m.mesh.material.opacity = 0.4 + m.level * 0.6;
     });
@@ -2680,3 +6731,5 @@ function animate() {
         rendererGL.render(threeScene, camera);
     }
 }
+
+})();

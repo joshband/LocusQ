@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-23
 
 # Documentation Standards
 
@@ -37,6 +37,12 @@ Every in-scope markdown file must include, in this order, at the top of file:
 - Stable reference docs/ADRs/invariants/traceability: `Documentation/`
 - Validation artifacts and run logs: `TestEvidence/`
 
+## Source-Of-Truth Tiering
+- Tier 0 canonical docs are listed in `Documentation/README.md` and are the only authority for status/closeout claims.
+- Tier 1 docs are active execution specs and may drive implementation detail, but they must not supersede Tier 0 status surfaces.
+- Tier 2 docs are historical/research references and are non-authoritative.
+- Tier 3 docs are archived artifacts under `Documentation/archive/`.
+
 ## Cross-Reference Requirements
 When code behavior changes, updated docs must reference:
 - `.ideas/architecture.md`
@@ -52,6 +58,7 @@ When code behavior changes, updated docs must reference:
 ## Phase Closeout Freshness Gate
 Per `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`, any phase closeout that changes acceptance/status claims must update this canonical bundle in the same change set:
 - `status.json`
+- `Documentation/backlog-post-v1-agentic-sprints.md`
 - `README.md`
 - `CHANGELOG.md`
 - `TestEvidence/build-summary.md`
@@ -68,3 +75,13 @@ Per `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`, any phas
 
 ## Minimalism Rule
 Prefer updating canonical docs over creating new files. New docs require a clear owner and purpose.
+
+## Archival Rule
+When documentation bloat or ambiguity appears:
+1. Classify docs into Tier 0-3 (per `Documentation/README.md`).
+2. Move generated snapshots and one-off operational bundles into `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
+3. Keep top-level generated scratch directory `Documentation/exports/` empty or absent; archive its outputs instead.
+4. Keep `Documentation/reports/` for active report artifacts that are intentionally referenceable from current docs.
+5. Keep historical docs in-place only if active docs/status surfaces still reference them; otherwise archive them.
+6. Update `Documentation/README.md` in the same change to reflect any tier changes.
+7. Run `./scripts/validate-docs-freshness.sh` after archival edits.

@@ -9,7 +9,7 @@ Last Modified Date: 2026-02-20
 > **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this
 > plan task-by-task.
 
-**Goal:** Produce `Documentation/full-project-review-2026-02-20.md` — a single navigable
+**Goal:** Produce `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md` — a single navigable
 document covering research landscape, system diagrams, domain reviews (arch/code/design/QA),
 model assignment rationale, phased mega-prompts (Stage 15–17), and a parallel agent
 dependency graph. Then execute Stage 15 implementation tasks.
@@ -23,7 +23,7 @@ the ADR record, and the existing Stage 14 review. Every finding gets an opiniona
 **Tech Stack:** JUCE 8 / C++ (PluginProcessor, PluginEditor), WebView HTML/JS (index.js,
 index.html), Mermaid diagrams (GitHub-renderable), Markdown with project metadata headers.
 
-**Design doc:** `Documentation/full-project-review-design-2026-02-20.md`
+**Design doc:** `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-design-2026-02-20.md`
 
 ---
 
@@ -115,7 +115,7 @@ Do not block on the research agent. Proceed immediately to Task 2.
 **Files to read first:**
 - `.ideas/architecture.md` (all diagrams)
 - `Source/SceneGraph.h` (thread model, slot structure)
-- `Documentation/full-project-review-design-2026-02-20.md`
+- `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-design-2026-02-20.md`
 - `status.json`
 - `.ideas/plan.md` (phase list)
 
@@ -129,7 +129,7 @@ Section 1 must contain:
 
 **Step 2: Create document with metadata header and Section 1**
 
-Create `Documentation/full-project-review-2026-02-20.md`.
+Create `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md`.
 
 ```markdown
 Title: LocusQ Full Project Review
@@ -336,7 +336,7 @@ Mermaid previewer before committing.
 **Step 8: Commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): add skeleton and Section 1 system map diagrams"
 ```
 
@@ -352,7 +352,7 @@ git commit -m "docs(review): add skeleton and Section 1 system map diagrams"
 - `Documentation/invariants.md`
 - `Documentation/adr/ADR-0002-routing-model-v1.md`
 - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
-- `Documentation/stage14-comprehensive-review-2026-02-20.md`
+- `Documentation/archive/2026-02-23-historical-review-bundles/stage14-comprehensive-review-2026-02-20.md`
 - `qa/scenarios/` (list all files)
 - `Source/ui/public/js/index.js` (line counts + structure only; full read for specific gaps)
 - `Source/ui/public/index.html`
@@ -450,7 +450,7 @@ Status: unexecuted. **Disposition: fix now (Stage 15-D, human task)**
 **Step 7: Commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): add Section 2 domain reviews"
 ```
 
@@ -460,7 +460,7 @@ git commit -m "docs(review): add Section 2 domain reviews"
 
 **Model:** Sonnet 4.6
 **Files to read first:**
-- `Documentation/full-project-review-design-2026-02-20.md` (Section 3 design)
+- `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-design-2026-02-20.md` (Section 3 design)
 
 **Step 1: Write Section 3**
 
@@ -513,7 +513,7 @@ not model tier, for well-scoped tasks.
 **Step 2: Commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): add Section 3 model assignment rationale"
 ```
 
@@ -906,7 +906,7 @@ git commit -m "docs(traceability): update emit_dir and phys_vel UI binding cover
 
 ```
 CONTEXT:
-LocusQ is at draft-pre-release hold per Documentation/stage14-comprehensive-review-2026-02-20.md.
+LocusQ is at draft-pre-release hold per Documentation/archive/2026-02-23-historical-review-bundles/stage14-comprehensive-review-2026-02-20.md.
 Stage 15 has closed: emit_dir/phys_vel UI gap, ADR-0007 recorded, manual DAW acceptance
 complete. Automated lanes are green.
 
@@ -919,7 +919,7 @@ GOAL:
 READ FIRST:
 1. CHANGELOG.md (last 3 entries for format)
 2. status.json
-3. Documentation/stage14-comprehensive-review-2026-02-20.md (release recommendation section)
+3. Documentation/archive/2026-02-23-historical-review-bundles/stage14-comprehensive-review-2026-02-20.md (release recommendation section)
 
 CONSTRAINTS:
 - Do NOT push to remote. Tag locally only. User will push when ready.
@@ -938,7 +938,7 @@ git tag -a v0.15.0-draft -m "Stage 15 closeout: emit_dir/phys_vel UI, manual DAW
 **Step 2: Commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): add Section 4 Stage 15 mega-prompts"
 ```
 
@@ -999,7 +999,7 @@ push tag `v1.0.0-ga` and publish GitHub release.
 **Step 3: Commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): add Section 4 Stage 16-17 mega-prompts"
 ```
 
@@ -1079,7 +1079,7 @@ sessions and run them simultaneously:
 **Step 2: Commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): add Section 5 parallel agent dependency graph"
 ```
 
@@ -1121,7 +1121,7 @@ For each Section 0 finding that affects a domain review, add a cross-reference l
 **Step 5: Final commit**
 
 ```bash
-git add Documentation/full-project-review-2026-02-20.md
+git add Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md
 git commit -m "docs(review): integrate research findings and finalize full project review"
 ```
 

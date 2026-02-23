@@ -6,6 +6,10 @@ BUILD_DIR="${LOCUSQ_BUILD_DIR:-$ROOT_DIR/build_local}"
 BUILD_CONFIG="${LOCUSQ_BUILD_CONFIG:-Release}"
 BUILD_JOBS="${LOCUSQ_BUILD_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 8)}"
 WITH_STANDALONE_INSTALL="${LOCUSQ_INSTALL_STANDALONE:-0}"
+ENABLE_CLAP="${LOCUSQ_ENABLE_CLAP:-0}"
+INSTALL_CLAP="${LOCUSQ_INSTALL_CLAP:-$ENABLE_CLAP}"
+CLAP_FETCH="${LOCUSQ_CLAP_FETCH:-1}"
+CLAP_EXTENSIONS_DIR="${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR:-}"
 REFRESH_AU_CACHE="${LOCUSQ_REFRESH_AU_CACHE:-1}"
 REFRESH_REAPER_CACHE="${LOCUSQ_REFRESH_REAPER_CACHE:-1}"
 REAPER_AUTO_QUIT="${LOCUSQ_REAPER_AUTO_QUIT:-1}"
@@ -22,12 +26,17 @@ Usage: scripts/build-and-install-mac.sh
 Builds LocusQ on macOS and installs plugin bundles to user plugin folders:
   ~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3
   ~/Library/Audio/Plug-Ins/Components/LocusQ.component
+  ~/Library/Audio/Plug-Ins/CLAP/LocusQ.clap (when CLAP is enabled)
 
 Environment overrides:
   LOCUSQ_BUILD_DIR            CMake build directory (default: build_local)
   LOCUSQ_BUILD_CONFIG         Build config (default: Release)
   LOCUSQ_BUILD_JOBS           Parallel jobs (default: hw.ncpu)
   LOCUSQ_INSTALL_STANDALONE   If 1, also copy LocusQ.app to ~/Applications
+  LOCUSQ_ENABLE_CLAP          If 1, configure/build LocusQ_CLAP target (default: 0)
+  LOCUSQ_INSTALL_CLAP         If 1, install LocusQ.clap to user CLAP folder (default: LOCUSQ_ENABLE_CLAP)
+  LOCUSQ_CLAP_FETCH           If 1, allow CMake to fetch clap-juce-extensions when missing (default: 1)
+  LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR  Optional local clap-juce-extensions checkout path
   LOCUSQ_REFRESH_AU_CACHE     If 1, refresh AU registrar cache (default: 1)
   LOCUSQ_REFRESH_REAPER_CACHE If 1, remove LocusQ entries from REAPER plugin caches (default: 1)
   LOCUSQ_REAPER_AUTO_QUIT     If 1, request REAPER quit before install (default: 1)
@@ -42,6 +51,16 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "ERROR: scripts/build-and-install-mac.sh is macOS-only."
   exit 2
 fi
+
+to_cmake_bool() {
+  case "${1:-0}" in
+    1|ON|on|TRUE|true|YES|yes) echo "ON" ;;
+    *) echo "OFF" ;;
+  esac
+}
+
+ENABLE_CLAP_CMAKE="$(to_cmake_bool "$ENABLE_CLAP")"
+CLAP_FETCH_CMAKE="$(to_cmake_bool "$CLAP_FETCH")"
 
 wait_for_reaper_exit() {
   local timeout_seconds="${1:-15}"
@@ -177,6 +196,9 @@ echo "build_dir: $BUILD_DIR"
 echo "build_config: $BUILD_CONFIG"
 echo "build_jobs: $BUILD_JOBS"
 echo "install_standalone: $WITH_STANDALONE_INSTALL"
+echo "enable_clap: $ENABLE_CLAP"
+echo "install_clap: $INSTALL_CLAP"
+echo "clap_fetch: $CLAP_FETCH"
 echo "refresh_au_cache: $REFRESH_AU_CACHE"
 echo "refresh_reaper_cache: $REFRESH_REAPER_CACHE"
 echo "reaper_auto_quit: $REAPER_AUTO_QUIT"
@@ -184,11 +206,22 @@ echo "reaper_force_kill: $REAPER_FORCE_KILL"
 echo "reaper_relaunch: $REAPER_RELAUNCH"
 echo
 
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
-  -DCMAKE_BUILD_TYPE="$BUILD_CONFIG" \
+CONFIGURE_ARGS=(
+  -DCMAKE_BUILD_TYPE="$BUILD_CONFIG"
+  -DLOCUSQ_ENABLE_CLAP="$ENABLE_CLAP_CMAKE"
+  -DLOCUSQ_CLAP_FETCH="$CLAP_FETCH_CMAKE"
   -DBUILD_LOCUSQ_QA=ON
+)
+if [[ -n "$CLAP_EXTENSIONS_DIR" ]]; then
+  CONFIGURE_ARGS+=(-DLOCUSQ_CLAP_JUCE_EXTENSIONS_DIR="$CLAP_EXTENSIONS_DIR")
+fi
+
+cmake -S "$ROOT_DIR" -B "$BUILD_DIR" "${CONFIGURE_ARGS[@]}"
 
 BUILD_TARGETS=(LocusQ_VST3 LocusQ_AU)
+if [[ "$ENABLE_CLAP_CMAKE" == "ON" ]]; then
+  BUILD_TARGETS+=(LocusQ_CLAP)
+fi
 if [[ "$WITH_STANDALONE_INSTALL" == "1" ]]; then
   BUILD_TARGETS+=(LocusQ_Standalone)
 fi
@@ -199,6 +232,7 @@ cmake --build "$BUILD_DIR" --config "$BUILD_CONFIG" \
 
 VST3_SRC="$BUILD_DIR/LocusQ_artefacts/$BUILD_CONFIG/VST3/LocusQ.vst3"
 AU_SRC="$BUILD_DIR/LocusQ_artefacts/$BUILD_CONFIG/AU/LocusQ.component"
+CLAP_SRC="$BUILD_DIR/LocusQ_artefacts/$BUILD_CONFIG/CLAP/LocusQ.clap"
 
 if [[ ! -d "$VST3_SRC" ]]; then
   echo "ERROR: missing build artifact: $VST3_SRC"
@@ -210,14 +244,26 @@ if [[ ! -d "$AU_SRC" ]]; then
   exit 3
 fi
 
+if [[ "$ENABLE_CLAP_CMAKE" == "ON" && ! -d "$CLAP_SRC" ]]; then
+  echo "ERROR: CLAP is enabled but build artifact is missing: $CLAP_SRC"
+  exit 3
+fi
+
 VST3_DST="$HOME/Library/Audio/Plug-Ins/VST3"
 AU_DST="$HOME/Library/Audio/Plug-Ins/Components"
+CLAP_DST="$HOME/Library/Audio/Plug-Ins/CLAP"
 
 mkdir -p "$VST3_DST" "$AU_DST"
 rsync -a --delete "$VST3_SRC" "$VST3_DST/"
 rsync -a --delete "$AU_SRC" "$AU_DST/"
 clear_bundle_quarantine "$VST3_DST/LocusQ.vst3"
 clear_bundle_quarantine "$AU_DST/LocusQ.component"
+
+if [[ "$ENABLE_CLAP_CMAKE" == "ON" && "$INSTALL_CLAP" == "1" ]]; then
+  mkdir -p "$CLAP_DST"
+  rsync -a --delete "$CLAP_SRC" "$CLAP_DST/"
+  clear_bundle_quarantine "$CLAP_DST/LocusQ.clap"
+fi
 
 if [[ "$WITH_STANDALONE_INSTALL" == "1" ]]; then
   APP_SRC="$BUILD_DIR/LocusQ_artefacts/$BUILD_CONFIG/Standalone/LocusQ.app"
@@ -249,11 +295,20 @@ print_binary_details() {
 
 print_binary_details "$VST3_SRC/Contents/MacOS/LocusQ"
 print_binary_details "$AU_SRC/Contents/MacOS/LocusQ"
+if [[ "$ENABLE_CLAP_CMAKE" == "ON" ]]; then
+  print_binary_details "$CLAP_SRC/Contents/MacOS/LocusQ"
+fi
 print_binary_details "$VST3_DST/LocusQ.vst3/Contents/MacOS/LocusQ"
 print_binary_details "$AU_DST/LocusQ.component/Contents/MacOS/LocusQ"
+if [[ "$ENABLE_CLAP_CMAKE" == "ON" && "$INSTALL_CLAP" == "1" ]]; then
+  print_binary_details "$CLAP_DST/LocusQ.clap/Contents/MacOS/LocusQ"
+fi
 
 verify_binary_match "$VST3_SRC/Contents/MacOS/LocusQ" "$VST3_DST/LocusQ.vst3/Contents/MacOS/LocusQ" "VST3"
 verify_binary_match "$AU_SRC/Contents/MacOS/LocusQ" "$AU_DST/LocusQ.component/Contents/MacOS/LocusQ" "AU"
+if [[ "$ENABLE_CLAP_CMAKE" == "ON" && "$INSTALL_CLAP" == "1" ]]; then
+  verify_binary_match "$CLAP_SRC/Contents/MacOS/LocusQ" "$CLAP_DST/LocusQ.clap/Contents/MacOS/LocusQ" "CLAP"
+fi
 
 if command -v auval >/dev/null 2>&1; then
   echo "auval_registry:"

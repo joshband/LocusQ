@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-22
 
 # LocusQ Implementation Traceability
 
@@ -33,6 +33,9 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.11: Preset/snapshot layout compatibility hardening (metadata versioning + migration checks)
 - Phase 2.11b: Snapshot migration matrix expansion (mono/stereo/quad runtime suites + extended metadata emulation modes)
 - Phase 2.12: Device-profile contract alignment and drift closure planning
+- Phase 2.13: Visualization transport contract hardening (sequence guard + stale fallback + smoothing)
+- Phase 2.14: Production viewport multi-emitter + listener/speaker overlays (BL-015/BL-014), RMS telemetry overlays (BL-008), and visual overlays (BL-006/BL-007)
+- BL-011 Slice 2: CLAP runtime lifecycle telemetry surfaced to scene snapshots + optional production self-test lane
 - Reference: `.ideas/plan.md`
 
 ## Stage 14 Drift Ledger (Open)
@@ -151,6 +154,29 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | App binding (`js/index.js`) | direct ES module import of JUCE bridge | consumes global `window.Juce` with explicit guard | `Source/ui/public/js/index.js` |
 | Editor backend selection (`PluginEditor.cpp`) | forced `webview2` backend on all platforms | platform-aware backend: `webview2` only on Windows; default backend on macOS/Linux | `Source/PluginEditor.cpp` |
 | CMake backend flags (`CMakeLists.txt`) | `NEEDS_WEB_BROWSER=FALSE` on Apple | `NEEDS_WEB_BROWSER=TRUE` on Apple (`WKWebView` path enabled) | `CMakeLists.txt` |
+
+## Phase 2.13 Visualization Transport Contract Hardening (BL-016)
+
+| Contract Surface | Runtime Publisher | UI Consumer | Behavior |
+|---|---|---|---|
+| Snapshot transport metadata (`snapshotSchema`, `snapshotSeq`, `snapshotPublishedAtUtcMs`, `snapshotCadenceHz`, `snapshotStaleAfterMs`) | `Source/PluginProcessor.cpp` (`getSceneStateJSON`) | `Source/ui/public/js/index.js` (`window.updateSceneState`) | Native snapshot payload now carries deterministic sequence/cadence/stale metadata for visualization transport. |
+| Sequence guard | `Source/PluginProcessor.cpp` (`sceneSnapshotSequence`) | `Source/ui/public/js/index.js` (`parseSnapshotSequence`, guard in `updateSceneState`) | Out-of-order snapshots are rejected (`incomingSeq <= lastAcceptedSeq`). |
+| Stale snapshot fallback | `Source/PluginProcessor.cpp` (`snapshotStaleAfterMs`) | `Source/ui/public/js/index.js` (`updateSceneTransportHealth`, `applySceneStatusBadge`) | UI enters warning state (`STALE SNAPSHOT`) and reduced visual confidence when snapshots exceed timeout budget. |
+| Snapshot smoothing | `Source/PluginProcessor.cpp` (`snapshotCadenceHz`) | `Source/ui/public/js/index.js` (`getSceneSmoothingAlpha`, `animate`, `updateEmitterMeshes`) | Emitters interpolate toward latest snapshot targets while preserving native snapshot authority. |
+| Contract specification | `Documentation/scene-state-contract.md` | `Documentation/invariants.md` | BL-016 transport contract is now documented as an explicit interface contract. |
+
+## Phase 2.14 Viewport Multi-Emitter + Overlay Expansion (BL-015/BL-014/BL-008/BL-006/BL-007)
+
+| Feature Surface | Runtime Publisher | UI Consumer | Behavior |
+|---|---|---|---|
+| All-emitter realtime rendering + selection styling (BL-015) | `Source/PluginProcessor.cpp` (`getSceneStateJSON`, emitter array publication) | `Source/ui/public/js/index.js` (`updateEmitterMeshes`) | All emitters in snapshot are rendered continuously; selected emitter keeps focus styling while non-selected emitters remain visible with transparent/dashed treatment. |
+| Per-emitter direction + energy overlays (BL-015/BL-014) | `Source/PluginProcessor.cpp` (per-emitter `directivity`, `aimX/Y/Z`, `rms`, `rmsDb`) | `Source/ui/public/js/index.js` (`setArrowFromVector`, emitter aim arrows, emitter energy rings) | Direction and RMS overlays are driven from native snapshot fields with clamped visual response. |
+| Per-speaker RMS telemetry overlays (BL-008) | `Source/PluginProcessor.cpp` (`speakerRms`, `speakers[].rms`) | `Source/ui/public/js/index.js` (`updateSpeakerTargetsFromScene`, animate speaker meter/ring response) | Speaker meter/ring visuals are audio-reactive and ordered by per-speaker RMS telemetry from native snapshots. |
+| Listener/speaker room overlays (BL-014) | `Source/PluginProcessor.cpp` (`roomProfileValid`, `roomDimensions`, `listener`, `speakerRms`, `speakers`) | `Source/ui/public/js/index.js` (`updateSpeakerTargetsFromScene`, `updateListenerTargetFromScene`, speaker/listener energy visuals) | Viewport listener/headphone and speaker overlays track scene telemetry with smoothing and safe defaults. |
+| Trail/vector toggles + trail-length control (BL-006/BL-007) | APVTS parameters (`rend_viz_trails`, `rend_viz_vectors`, `rend_viz_trail_len`) surfaced through relay state | `Source/ui/public/js/index.js` (toggle bindings + animate visibility gates) | Motion trails and velocity vectors are controlled by renderer UI toggles and remain visual-only overlays. |
+| Steam headphone runtime diagnostics (BL-009 closeout support) | `Source/SpatialRenderer.h` (`SteamInitStage`, init failure/error tracking) + `Source/PluginProcessor.cpp` (`getSceneStateJSON`) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest`, renderer status line) | Scene snapshots now expose deterministic Steam init stage/error/path data (`rendererSteamAudioInitStage`, `rendererSteamAudioInitErrorCode`, `rendererSteamAudioRuntimeLib`, `rendererSteamAudioMissingSymbol`). |
+| CLAP lifecycle/runtime diagnostics (BL-011 Slice 2) | `Source/PluginProcessor.h` / `Source/PluginProcessor.cpp` (`clap_properties` bridge + `getClapRuntimeDiagnostics` + scene snapshot fields) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest` optional `UI-P2-011`) + `Source/PluginEditor.cpp` (`selftest_bl011` query flag wiring) | Scene snapshots now expose deterministic CLAP status and lifecycle telemetry (`clapBuildEnabled`, `clapPropertiesAvailable`, `clapIsPluginFormat`, `clapLifecycleStage`, `clapRuntimeMode`, `clapVersion`) for host-format triage and closeout evidence. |
+| Automated production self-test coverage | Production self-test script (`scripts/standalone-ui-selftest-production-p0-mac.sh`) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest`) | Added P1 assertions: `UI-P1-015`, `UI-P1-014`, `UI-P1-008`, `UI-P1-006`, `UI-P1-007`; optional deterministic diagnostics lanes: `UI-P1-009` (`selftest_bl009=1`) and `UI-P2-011` (`selftest_bl011=1`). |
 
 ## Phase 2.5 Core Files
 

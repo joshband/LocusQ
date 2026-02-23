@@ -2,7 +2,7 @@ Title: LocusQ Invariants
 Document Type: Invariant Spec
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-21
 
 # LocusQ Invariants
 
@@ -23,6 +23,9 @@ Define non-negotiable constraints that code and docs must satisfy across impleme
 - Inter-instance state exchange must remain lock-free.
 - Renderer must tolerate inactive/missing emitter slots without faults.
 - Physics and spatial state handoff must avoid tearing/glitches.
+- UI scene-snapshot transport must be sequence-safe (monotonic acceptance) and degrade safely when snapshots become stale.
+- Snapshot payloads must publish finite per-emitter direction/energy fields and room/listener/speaker telemetry required by the production viewport.
+- Viewport overlays (selection styling, trails, vectors, RMS rings) are visual-only layers and must never mutate DSP/scene canonical state.
 
 ## DSP Chain Invariants (Renderer)
 - Order: emitter preprocessing -> panning/spread/directivity/distance -> room chain -> speaker compensation -> master/output.
@@ -39,3 +42,4 @@ Define non-negotiable constraints that code and docs must satisfy across impleme
 - Parameter IDs are stable and spec-aligned.
 - Any new parameter must be traceable in `Documentation/implementation-traceability.md`.
 - Architectural deviations require a recorded ADR in `Documentation/adr/`.
+- New UI self-test assertions that gate shipped behavior must be logged in `TestEvidence/validation-trend.md` and reflected in `status.json`.

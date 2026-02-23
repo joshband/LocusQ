@@ -1,0 +1,8 @@
+step	status	detail
+init	pass	ts=20260222T195448Z
+mode	pass	strict_integration=0; run_binaural_runtime=0
+python3	pass	/opt/homebrew/bin/python3
+jq	pass	/usr/bin/jq
+reference_contract	pass	quad_a=f77d8e9d8ed1ae7a0e671546b431e0fabf4a890313d97771cfcf1e8b12cbe2f2; quad_b=f77d8e9d8ed1ae7a0e671546b431e0fabf4a890313d97771cfcf1e8b12cbe2f2; bin=56831e3576a0614a53b5bb80d8d428c099e179de8a87af29ec31fbe5c41ab0ab
+integration_probe	warn	no_ambisonic_backend_markers_in_source_pending_backend_impl
+binaural_runtime_contract	warn	disabled_by_flag

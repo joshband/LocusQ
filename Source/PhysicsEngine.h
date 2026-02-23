@@ -36,6 +36,9 @@ public:
     {
         Vec3 position { 0.0f, 0.0f, 0.0f };
         Vec3 velocity { 0.0f, 0.0f, 0.0f };
+        Vec3 force { 0.0f, 0.0f, 0.0f };
+        std::uint8_t collisionMask = 0; // bit0=X wall, bit1=Y floor/ceiling, bit2=Z wall
+        float collisionEnergy = 0.0f;
         bool initialized = false;
     };
 
@@ -157,6 +160,9 @@ private:
         {
             state.position = restPosition;
             state.velocity = {};
+            state.force = {};
+            state.collisionMask = 0;
+            state.collisionEnergy = 0.0f;
             state.initialized = true;
             previousRestPosition = restPosition;
         }
@@ -167,6 +173,9 @@ private:
             handledResetSequence = latestResetSeq;
             state.position = restPosition;
             state.velocity = {};
+            state.force = {};
+            state.collisionMask = 0;
+            state.collisionEnergy = 0.0f;
             previousRestPosition = restPosition;
         }
 
@@ -174,6 +183,9 @@ private:
         {
             state.position = restPosition;
             state.velocity = {};
+            state.force = {};
+            state.collisionMask = 0;
+            state.collisionEnergy = 0.0f;
             previousRestPosition = restPosition;
             writeState (state);
             return;
@@ -204,6 +216,9 @@ private:
 
         if (simulationPaused.load (std::memory_order_acquire))
         {
+            state.force = {};
+            state.collisionMask = 0;
+            state.collisionEnergy = 0.0f;
             writeState (state);
             return;
         }
@@ -221,6 +236,11 @@ private:
             interactionForceZ.load (std::memory_order_acquire)
         };
         const float inverseMass = 1.0f / juce::jmax (0.01f, currentMass);
+        state.force.x = gravity.x + interactionForce.x;
+        state.force.y = gravity.y + interactionForce.y;
+        state.force.z = gravity.z + interactionForce.z;
+        state.collisionMask = 0;
+        state.collisionEnergy = 0.0f;
 
         state.velocity.x += gravity.x * inverseMass * dt;
         state.velocity.y += gravity.y * inverseMass * dt;
@@ -258,49 +278,70 @@ private:
 
         if (state.position.x < -halfWidth)
         {
+            const auto velocityBefore = state.velocity.x;
             state.position.x = -halfWidth;
             state.velocity.x = std::abs (state.velocity.x) * bounce;
             collideX = true;
+            state.collisionEnergy += std::abs (state.velocity.x - velocityBefore);
         }
         else if (state.position.x > halfWidth)
         {
+            const auto velocityBefore = state.velocity.x;
             state.position.x = halfWidth;
             state.velocity.x = -std::abs (state.velocity.x) * bounce;
             collideX = true;
+            state.collisionEnergy += std::abs (state.velocity.x - velocityBefore);
         }
 
         if (state.position.y < minY)
         {
+            const auto velocityBefore = state.velocity.y;
             state.position.y = minY;
             state.velocity.y = std::abs (state.velocity.y) * bounce;
             collideY = true;
+            state.collisionEnergy += std::abs (state.velocity.y - velocityBefore);
         }
         else if (state.position.y > maxY)
         {
+            const auto velocityBefore = state.velocity.y;
             state.position.y = maxY;
             state.velocity.y = -std::abs (state.velocity.y) * bounce;
             collideY = true;
+            state.collisionEnergy += std::abs (state.velocity.y - velocityBefore);
         }
 
         if (state.position.z < -halfDepth)
         {
+            const auto velocityBefore = state.velocity.z;
             state.position.z = -halfDepth;
             state.velocity.z = std::abs (state.velocity.z) * bounce;
             collideZ = true;
+            state.collisionEnergy += std::abs (state.velocity.z - velocityBefore);
         }
         else if (state.position.z > halfDepth)
         {
+            const auto velocityBefore = state.velocity.z;
             state.position.z = halfDepth;
             state.velocity.z = -std::abs (state.velocity.z) * bounce;
             collideZ = true;
+            state.collisionEnergy += std::abs (state.velocity.z - velocityBefore);
         }
 
         if (collideX)
+        {
             applySurfaceFriction (state.velocity.y, state.velocity.z, surfaceFriction, dt);
+            state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x1u);
+        }
         if (collideY)
+        {
             applySurfaceFriction (state.velocity.x, state.velocity.z, surfaceFriction, dt);
+            state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x2u);
+        }
         if (collideZ)
+        {
             applySurfaceFriction (state.velocity.x, state.velocity.y, surfaceFriction, dt);
+            state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x4u);
+        }
     }
 
     static void applySurfaceFriction (float& tangentA, float& tangentB, float frictionAmount, float dt)

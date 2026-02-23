@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spatial Audio Engineering"
+  short_description: "Build and validate LocusQ spatial audio lanes"
+  default_prompt: "Use this skill to implement and validate ambisonic, binaural, and multi-layout spatial audio workflows in LocusQ."

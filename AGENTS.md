@@ -2,7 +2,7 @@ Title: LocusQ Agent Dispatcher
 Document Type: Agent Routing Guide
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-23
 
 # AGENTS.md
 
@@ -55,6 +55,9 @@ Load order for phase execution:
   - `juce-webview-runtime`: WebView host/runtime interop, click/hit-target issues, bridge timeout/callback ordering, startup hydration faults.
   - `reactive-av`: audio-reactive or physics-reactive visualization mapping, smoothing, jitter control, render behavior validation.
   - `physics-reactive-audio`: simulation-driven DSP/audio behavior (flocking/herding/crowd/fluid/0G/gravity/drag/collision audio responses).
+  - `clap-plugin-lifecycle`: CLAP format architecture, JUCE migration/integration, capability negotiation, BL-011 execution, and host/CI validation lanes.
+  - `steam-audio-capi`: Steam Audio C API runtime loading, object lifecycle ownership, and BL-009 headphone-render integration/fallback verification.
+  - `spatial-audio-engineering`: spatial audio architecture/integration/testing across ambisonics, binaural/HRTF, multichannel layout contracts, and BL-018 automation lanes.
   - `threejs`: scene architecture/camera/materials/render loop/performance for 3D UI.
   - `skill_troubleshooting`: unresolved build/runtime failures and recurrent defects.
 - When multiple skills apply, state chosen skills and order at task start.
@@ -77,6 +80,9 @@ All currently supported repo skills that must be considered for routing:
 - `threejs` -> `.codex/skills/threejs/SKILL.md`
 - `reactive-av` -> `.codex/skills/reactive-av/SKILL.md`
 - `physics-reactive-audio` -> `.codex/skills/physics-reactive-audio/SKILL.md`
+- `steam-audio-capi` -> `.codex/skills/steam-audio-capi/SKILL.md`
+- `clap-plugin-lifecycle` -> `.codex/skills/clap-plugin-lifecycle/SKILL.md`
+- `spatial-audio-engineering` -> `.codex/skills/spatial-audio-engineering/SKILL.md`
 
 ## Phase Discipline
 - Enforce one phase at a time.
@@ -89,6 +95,25 @@ All currently supported repo skills that must be considered for routing:
 - Do not revert user work outside requested scope.
 - Prefer repository scripts over ad-hoc build flows.
 - Report validation status explicitly: `tested`, `partially tested`, or `not tested`.
+
+## Documentation Archive Contract
+- Use `Documentation/README.md` as the tiered source-of-truth map (`Tier 0..3`).
+- Treat `Documentation/reports/` and `Documentation/exports/` as generated scratch only; they must remain empty/absent at closeout.
+- Archive generated bundles under `Documentation/archive/<YYYY-MM-DD>-<slug>/` and record manifests in that archive set.
+- When docs are archived or promoted, update both:
+  - `Documentation/README.md`
+  - `Documentation/standards.md`
+- Run `./scripts/validate-docs-freshness.sh` before closeout; this gate now fails if generated top-level docs folders contain files.
+
+## Root Docs Sync
+When execution posture, routing, or acceptance claims change, keep these root docs aligned in the same change set:
+- `README.md`
+- `CHANGELOG.md`
+- `AGENTS.md`
+- `CODEX.md`
+- `CLAUDE.md`
+- `SKILLS.md`
+- `AGENT_RULE.md` (then sync with: `cp AGENT_RULE.md .codex/rules/agent.md && cp AGENT_RULE.md .claude/rules/agent.md`)
 
 ## Multi-Agent Runtime (Codex, Optional)
 - Disabled by default for normal Codex sessions in this repo.

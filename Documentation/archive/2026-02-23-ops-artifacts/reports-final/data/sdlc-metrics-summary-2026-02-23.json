@@ -1,0 +1,161 @@
+{
+  "generated_at_utc": "2026-02-23T01:57:30Z",
+  "project_window": {
+    "created_at": "2026-02-17T12:00:00Z",
+    "last_modified": "2026-02-23T01:06:10Z"
+  },
+  "repo_snapshot": {
+    "plugin_name": "LocusQ",
+    "current_phase": "code",
+    "ui_framework": "webview",
+    "version": "v1.0.0-ga",
+    "complexity_score": 5
+  },
+  "artifacts": {
+    "testevidence_total_files": 1798,
+    "status_tsv_files": 61
+  },
+  "status_tsv_overall": {
+    "pass": 48,
+    "fail": 8,
+    "warn": 5
+  },
+  "status_tsv_daily": {
+    "2026-02-19": {
+      "fail": 1
+    },
+    "2026-02-20": {
+      "pass": 16,
+      "fail": 2,
+      "warn": 1
+    },
+    "2026-02-21": {
+      "pass": 11
+    },
+    "2026-02-22": {
+      "pass": 21,
+      "fail": 4,
+      "warn": 4
+    },
+    "2026-02-23": {
+      "fail": 1
+    }
+  },
+  "status_tsv_categories": {
+    "ui_pr_gate": {
+      "total": 28,
+      "fail": 2,
+      "pass": 26
+    },
+    "bl009_headphone_contract": {
+      "total": 15,
+      "pass": 14,
+      "fail": 1
+    },
+    "bl018_ambisonic_contract": {
+      "total": 10,
+      "warn": 3,
+      "fail": 2,
+      "pass": 5
+    },
+    "bl009_headphone_profile_contract": {
+      "total": 3,
+      "fail": 2,
+      "pass": 1
+    },
+    "stage16a_scenario_validation": {
+      "total": 2,
+      "fail": 1,
+      "warn": 1
+    },
+    "bl010_validation": {
+      "total": 1,
+      "warn": 1
+    },
+    "bl022_validation": {
+      "total": 1,
+      "pass": 1
+    },
+    "stage13_acceptance_sweep": {
+      "total": 1,
+      "pass": 1
+    }
+  },
+  "validation_trend": {
+    "entries": 371,
+    "outcomes": {
+      "pass": 198,
+      "warn": 120,
+      "pending": 11,
+      "fail": 26,
+      "other": 16
+    },
+    "daily": {
+      "2026-02-18": {
+        "pass": 11,
+        "warn": 2
+      },
+      "2026-02-19": {
+        "warn": 44,
+        "pass": 78,
+        "pending": 2,
+        "fail": 7,
+        "other": 2
+      },
+      "2026-02-20": {
+        "pass": 36,
+        "other": 10,
+        "pending": 9,
+        "warn": 10
+      },
+      "2026-02-21": {
+        "pass": 23,
+        "fail": 11,
+        "warn": 22
+      },
+      "2026-02-22": {
+        "pass": 42,
+        "warn": 34,
+        "fail": 5,
+        "other": 4
+      },
+      "2026-02-23": {
+        "pass": 8,
+        "warn": 8,
+        "fail": 3
+      }
+    },
+    "command_families": {
+      "qa-harness": 115,
+      "other": 58,
+      "docs-governance": 53,
+      "build": 38,
+      "pluginval": 22,
+      "standalone-smoke": 11,
+      "ui-automation": 64,
+      "reaper": 5,
+      "clap-validation": 5
+    }
+  },
+  "phase_history_count": 62,
+  "git": {
+    "commits_since_2026_02_17": 63,
+    "commits_by_day": {
+      "2026-02-17": 2,
+      "2026-02-18": 2,
+      "2026-02-19": 13,
+      "2026-02-20": 46
+    }
+  },
+  "backlog_status_snapshot_2026_02_23": {
+    "`Done`": "BL-001..BL-008",
+    "`In Progress`": "BL-025",
+    "`In Validation`": "BL-009, BL-010, BL-011, BL-014, BL-015, BL-016, BL-018, BL-019, BL-022",
+    "`In Planning`": "BL-017, BL-026, BL-027",
+    "`Todo`": "BL-012, BL-013, BL-020, BL-021, BL-023, BL-024"
+  },
+  "fresh_visual_source": {
+    "run_id": "standalone_ui_smoke_20260223T015539Z",
+    "run_summary": "TestEvidence/standalone_ui_smoke_20260223T015539Z/summary.tsv"
+  }
+}

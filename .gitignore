@@ -45,6 +45,9 @@ _tools/JUCE/
 *.log
 *.tmp
 
+# Generated documentation outputs (non-canonical scratch)
+Documentation/exports/
+
 # Python
 __pycache__/
 *.pyc

@@ -1,0 +1,84 @@
+{
+  "created_at_utc": "2026-02-23T01:59:12Z",
+  "archive_path": "TestEvidence/archive/stale-evidence-2026-02-23.tar.gz",
+  "sha256_file": "TestEvidence/archive/stale-evidence-2026-02-23.sha256",
+  "count": 15,
+  "total_size_bytes": 32022528,
+  "entries": [
+    {
+      "run_name": "standalone_ui_smoke_20260222T162856Z",
+      "source_path": "TestEvidence/standalone_ui_smoke_20260222T162856Z",
+      "size_bytes": 4784128
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T204517Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T204517Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T201645Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T201645Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T202031Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T202031Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T202245Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T202245Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T195837Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T195837Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T195852Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T195852Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T200027Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T200027Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "bl009_headphone_contract_20260222T200040Z",
+      "source_path": "TestEvidence/bl009_headphone_contract_20260222T200040Z",
+      "size_bytes": 3129344
+    },
+    {
+      "run_name": "reaper_headless_render_20260223T011212Z",
+      "source_path": "TestEvidence/reaper_headless_render_20260223T011212Z",
+      "size_bytes": 2162688
+    },
+    {
+      "run_name": "ui_pr_gate_20260220T041501Z",
+      "source_path": "TestEvidence/ui_pr_gate_20260220T041501Z",
+      "size_bytes": 8192
+    },
+    {
+      "run_name": "ui_pr_gate_20260221T002339Z",
+      "source_path": "TestEvidence/ui_pr_gate_20260221T002339Z",
+      "size_bytes": 8192
+    },
+    {
+      "run_name": "ui_pr_gate_20260221T083650Z",
+      "source_path": "TestEvidence/ui_pr_gate_20260221T083650Z",
+      "size_bytes": 8192
+    },
+    {
+      "run_name": "ui_pr_gate_20260220T040540Z",
+      "source_path": "TestEvidence/ui_pr_gate_20260220T040540Z",
+      "size_bytes": 8192
+    },
+    {
+      "run_name": "ui_pr_gate_20260220T045202Z",
+      "source_path": "TestEvidence/ui_pr_gate_20260220T045202Z",
+      "size_bytes": 8192
+    }
+  ]
+}

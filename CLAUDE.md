@@ -2,7 +2,7 @@ Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-23
 
 # CLAUDE.md
 
@@ -12,12 +12,12 @@ Use this file for behavior and quality rules. Use `AGENTS.md` for routing.
 
 ## Priority Order
 1. User request.
-2. Safety and correctness.
+2. `AGENTS.md`.
 3. This file.
-4. `AGENTS.md`.
-5. `CODEX.md`.
-6. Workflow and skill files under `.codex/`.
-7. Existing code conventions.
+4. Workflow and skill files under `.codex/`.
+5. Existing code conventions.
+
+If directives conflict, preserve build/test stability, phase discipline, and state/evidence contract integrity.
 
 ## Default Mode
 - Execute directly with minimal, targeted edits.
@@ -41,6 +41,9 @@ Use this file for behavior and quality rules. Use `AGENTS.md` for routing.
   - WebView runtime/bridge/host interop issues -> `juce-webview-runtime`.
   - Audio-reactive or physics-reactive visualization behavior -> `reactive-av`.
   - Physics/simulation to DSP/audio behavior -> `physics-reactive-audio`.
+  - CLAP format integration/migration and host/CI validation lanes -> `clap-plugin-lifecycle`.
+  - Steam Audio C API runtime loading/lifecycle/fallback work -> `steam-audio-capi`.
+  - Spatial audio layout/ambisonic/binaural architecture and QA -> `spatial-audio-engineering`.
   - 3D scene/render architecture and performance -> `threejs`.
   - Unresolved failures and diagnostics -> `skill_troubleshooting`.
 - If multiple skills apply, declare selected skills and execution order in the response.
@@ -52,6 +55,7 @@ Claude must consider the full repo skill catalog:
 - `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
 - `juce-webview-windows`, `juce-webview-runtime`
 - `threejs`, `reactive-av`, `physics-reactive-audio`
+- `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
 
 Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 

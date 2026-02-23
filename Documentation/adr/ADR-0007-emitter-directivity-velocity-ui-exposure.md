@@ -61,4 +61,4 @@ Expose all five parameters in the production plugin UI path for v1, with no defe
 - `Documentation/invariants.md`
 - `Documentation/implementation-traceability.md`
 - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
-- `Documentation/full-project-review-2026-02-20.md`
+- `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md`

@@ -108,6 +108,8 @@ private:
     juce::WebSliderRelay spk4DelayRelay { "rend_spk4_delay" };
     juce::WebComboBoxRelay qualityRelay { "rend_quality" };
     juce::WebComboBoxRelay distanceModelRelay { "rend_distance_model" };
+    juce::WebComboBoxRelay headphoneModeRelay { "rend_headphone_mode" };
+    juce::WebComboBoxRelay headphoneProfileRelay { "rend_headphone_profile" };
     juce::WebSliderRelay distanceRefRelay { "rend_distance_ref" };
     juce::WebSliderRelay distanceMaxRelay { "rend_distance_max" };
     juce::WebToggleButtonRelay dopplerRelay { "rend_doppler" };
@@ -126,6 +128,8 @@ private:
     juce::WebToggleButtonRelay vizTrailsRelay { "rend_viz_trails" };
     juce::WebSliderRelay vizTrailLenRelay { "rend_viz_trail_len" };
     juce::WebToggleButtonRelay vizVectorsRelay { "rend_viz_vectors" };
+    juce::WebToggleButtonRelay vizPhysicsLensRelay { "rend_viz_physics_lens" };
+    juce::WebSliderRelay vizDiagMixRelay { "rend_viz_diag_mix" };
     juce::WebToggleButtonRelay vizGridRelay { "rend_viz_grid" };
     juce::WebToggleButtonRelay vizLabelsRelay { "rend_viz_labels" };
 
@@ -195,6 +199,8 @@ private:
     std::unique_ptr<juce::WebSliderParameterAttachment> spk4DelayAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> qualityAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> distanceModelAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> headphoneModeAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> headphoneProfileAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> distanceRefAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> distanceMaxAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> dopplerAttachment;
@@ -213,6 +219,8 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizTrailsAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> vizTrailLenAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizVectorsAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizPhysicsLensAttachment;
+    std::unique_ptr<juce::WebSliderParameterAttachment> vizDiagMixAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizGridAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizLabelsAttachment;
 

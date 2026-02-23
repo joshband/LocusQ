@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LocusQ</title>
+  <script>
+    window.__LQ_BOOT_ERRORS__ = [];
+    window.addEventListener("error", function (event) {
+      var message = "unknown";
+      if (event && event.message) message = event.message;
+      else if (event && event.error) message = String(event.error);
+      window.__LQ_BOOT_ERRORS__.push(message);
+    });
+  </script>
   <script defer src="js/three.min.js"></script>
   <script defer src="js/juce/check_native_interop.js"></script>
   <script defer src="js/juce/index.js"></script>
@@ -25,20 +34,34 @@
       --text-warning: #AA4444;
       --text-success: #44AA66;
       --wireframe: #E0E0E0;
-      --rail-width-calibrate: 320px;
-      --rail-width-emitter: 280px;
-      --rail-width-renderer: 304px;
+      --rail-width-calibrate: 340px;
+      --rail-width-emitter: 356px;
+      --rail-width-emitter-compact: 308px;
+      --rail-width-emitter-tight: 288px;
+      --rail-width-renderer: 340px;
       --rail-width: var(--rail-width-emitter);
       --header-height: 40px;
-      --timeline-height: 120px;
+      --timeline-height: 158px;
+      --timeline-height-compact: 140px;
+      --timeline-height-tight: 128px;
+      --emitter-row-height: 32px;
+      --emitter-section-gap: 14px;
+      --emitter-inline-input-width: 148px;
+      --emitter-inline-input-width-tight: 124px;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
     }
 
     body {
       background: var(--bg);
       color: var(--text-primary);
       font-family: var(--font);
-      width: 100vw; height: 100vh;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -47,6 +70,14 @@
     body.mode-calibrate { --rail-width: var(--rail-width-calibrate); }
     body.mode-emitter { --rail-width: var(--rail-width-emitter); }
     body.mode-renderer { --rail-width: var(--rail-width-renderer); }
+    body.layout-compact.mode-emitter {
+      --rail-width-emitter: var(--rail-width-emitter-compact);
+      --timeline-height: var(--timeline-height-compact);
+    }
+    body.layout-tight.mode-emitter {
+      --rail-width-emitter: var(--rail-width-emitter-tight);
+      --timeline-height: var(--timeline-height-tight);
+    }
 
     /* ===== HEADER ===== */
     .header {
@@ -98,6 +129,7 @@
     .scene-status.measuring { color: var(--gold); border-color: rgba(212,168,71,0.3); animation: statusPulse 1s ease infinite; }
     .scene-status.ready { color: var(--text-success); border-color: rgba(68,170,102,0.3); }
     .scene-status.noprofile { color: var(--text-warning); border-color: rgba(170,68,68,0.3); }
+    .scene-status.stale { color: var(--text-warning); border-color: rgba(212,168,71,0.4); animation: statusPulse 1.2s ease infinite; }
     .viewport-lock {
       font-size: 9px;
       font-weight: 600;
@@ -134,8 +166,14 @@
     /* ===== MAIN ===== */
     .main { display: flex; flex: 1; overflow: hidden; }
 
-    .viewport-area { flex: 1; display: flex; flex-direction: column; position: relative; }
-    #viewport-canvas { flex: 1; display: block; }
+    .viewport-area { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
+    #viewport-canvas {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: block;
+      position: relative;
+      z-index: 0;
+    }
 
     .view-buttons { position: absolute; top: 8px; left: 8px; display: flex; gap: 4px; }
     .view-btn {
@@ -155,14 +193,21 @@
       font-size: 11px; color: var(--text-dim);
       pointer-events: none;
     }
+    .viewport-area.timeline-visible .viewport-overlay {
+      bottom: calc(var(--timeline-height) + 12px);
+    }
 
     /* ===== TIMELINE ===== */
     .timeline {
       height: 0; background: var(--surface);
       border-top: 1px solid var(--border);
       overflow: hidden; transition: height 200ms ease-out;
+      position: relative;
+      z-index: 2;
     }
-    .timeline.visible { height: var(--timeline-height); }
+    .timeline.visible { height: var(--timeline-height, 152px); }
+    .viewport-area > .timeline > .timeline-header { display: flex !important; min-height: 28px; }
+    .viewport-area > .timeline > .timeline-lanes { display: block !important; }
 
     .timeline-header {
       height: 28px; display: flex; align-items: center;
@@ -189,7 +234,16 @@
       display: flex; align-items: center; gap: 4px;
     }
 
-    .timeline-lanes { padding: 4px 12px; }
+    .timeline-lanes {
+      height: calc(var(--timeline-height, 152px) - 28px);
+      min-height: 96px;
+      padding: 4px 12px 6px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .timeline-lanes::-webkit-scrollbar { width: 4px; }
+    .timeline-lanes::-webkit-scrollbar-track { background: transparent; }
+    .timeline-lanes::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
     .timeline-lane {
       display: flex; align-items: center;
       height: 24px; gap: 8px;
@@ -288,12 +342,244 @@
       border-top: 1px solid var(--border);
     }
 
+    .rail-panel[data-panel="emitter"] {
+      padding-bottom: 12px;
+    }
+    .rail-panel[data-panel="emitter"] .rail-mode-label {
+      padding: 10px 12px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .emitter-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--emitter-section-gap);
+      padding: 0 10px;
+    }
+    .emitter-card {
+      padding: 0 10px 10px;
+      border: 1px solid rgba(212, 168, 71, 0.12);
+      border-radius: 8px;
+      background: rgba(18, 18, 18, 0.65);
+    }
+    .emitter-card .section {
+      padding: 0;
+    }
+    .emitter-card .section-header {
+      border-top: none;
+      padding: 10px 0 8px;
+      font-size: 11px;
+      letter-spacing: 1.1px;
+    }
+    .rail-panel[data-panel="emitter"] .control-row {
+      min-height: var(--emitter-row-height);
+    }
+    .motion-chip-row {
+      padding: 0 12px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .emitter-authority-note {
+      margin: -4px 12px 2px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-dim);
+      font-size: 9px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .emitter-authority-note.locked {
+      border-color: rgba(212, 168, 71, 0.36);
+      background: rgba(212, 168, 71, 0.08);
+      color: var(--gold);
+    }
+    .status-chip {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9px;
+      border: 1px solid rgba(160, 160, 160, 0.22);
+      color: var(--text-secondary);
+      background: rgba(24, 24, 24, 0.7);
+      white-space: nowrap;
+    }
+    .status-chip.active {
+      border-color: rgba(212, 168, 71, 0.45);
+      color: var(--gold);
+      background: rgba(212, 168, 71, 0.12);
+    }
+    .status-chip.warning {
+      border-color: rgba(212, 168, 71, 0.42);
+      color: var(--gold);
+    }
+    .status-chip.local {
+      border-color: rgba(68, 170, 102, 0.45);
+      color: var(--text-success);
+      background: rgba(68, 170, 102, 0.1);
+    }
+    .status-chip.remote {
+      border-color: rgba(212, 168, 71, 0.42);
+      color: var(--gold);
+      background: rgba(212, 168, 71, 0.12);
+    }
+    .emitter-card.authority-readonly {
+      border-color: rgba(160, 160, 160, 0.14);
+      background: rgba(18, 18, 18, 0.52);
+    }
+    .emitter-card.authority-readonly .section-header {
+      color: #818181;
+    }
+    .emitter-card.authority-readonly .control-label {
+      color: #7a7a7a;
+    }
+    .emitter-card.authority-readonly .control-value {
+      color: #939393;
+    }
+    .emitter-card.authority-readonly .text-input,
+    .emitter-card.authority-readonly .dropdown,
+    .emitter-card.authority-readonly .btn-secondary {
+      opacity: 0.62;
+    }
+    .motion-subsection + .motion-subsection {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .motion-transport-strip {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      min-height: 32px;
+      border: 1px solid rgba(212, 168, 71, 0.22);
+      border-radius: 6px;
+      background: rgba(212, 168, 71, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      flex-wrap: wrap;
+    }
+    .motion-transport-strip .timeline-transport {
+      gap: 4px;
+    }
+    .motion-transport-strip .transport-btn {
+      width: 22px;
+      height: 22px;
+    }
+    .motion-transport-strip .timeline-time {
+      min-width: 72px;
+      font-size: 10px;
+      color: var(--text-primary);
+    }
+    .motion-transport-strip .timeline-toggle-label {
+      font-size: 9px;
+    }
+    .motion-transport-strip.inactive {
+      opacity: 0.45;
+      pointer-events: none;
+      filter: saturate(0.45);
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .motion-speed-block {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .motion-speed-label {
+      font-size: 9px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .motion-speed-value {
+      min-width: 56px;
+      justify-content: flex-end;
+    }
+    .motion-subsection-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding-bottom: 2px;
+    }
+    .motion-subsection.inactive {
+      opacity: 0.42;
+      pointer-events: none;
+      filter: saturate(0.5);
+    }
+    .motion-subsection.active {
+      opacity: 1.0;
+      pointer-events: auto;
+      filter: none;
+    }
+    .emitter-diagnostics-toggle {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .emitter-diagnostics-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 180ms ease-out;
+    }
+    .emitter-diagnostics-content.open {
+      max-height: 140px;
+    }
+    .coord-group-caption {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 6px 0 2px;
+    }
+    .coord-row.coord-inactive .control-label {
+      color: #777777;
+    }
+    .coord-row.coord-inactive .control-value {
+      color: #909090;
+      opacity: 0.7;
+      pointer-events: none;
+      cursor: default !important;
+    }
+    .coord-row.coord-active .control-value {
+      pointer-events: auto;
+      opacity: 1.0;
+    }
+    .position-readback-row .control-value {
+      font-size: 10px;
+      color: var(--text-secondary);
+      letter-spacing: 0.2px;
+    }
+
     .control-row {
       display: flex; align-items: center;
       justify-content: space-between;
-      height: 28px;
+      min-height: 28px;
+      gap: 10px;
     }
-    .control-label { font-size: 11px; color: var(--text-secondary); }
+    .control-label {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
     .control-value {
       font-size: 12px; font-weight: 500;
       font-variant-numeric: tabular-nums;
@@ -322,7 +608,7 @@
       border: 1px solid var(--border); border-radius: 4px;
       padding: 4px 8px; font-size: 11px;
       color: var(--text-primary);
-      cursor: pointer; min-width: 80px;
+      cursor: pointer; min-width: 104px;
       appearance: none; -webkit-appearance: none;
       font-family: var(--font);
       background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L4 4L7 1' stroke='%23666666' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -331,6 +617,11 @@
       padding-right: 22px;
     }
     .dropdown:focus { outline: none; border-color: var(--gold-dim); }
+    .dropdown:disabled {
+      opacity: 0.52;
+      cursor: not-allowed;
+      filter: saturate(0.5);
+    }
     .dropdown.wide { min-width: 120px; }
 
     .btn-primary {
@@ -355,6 +646,11 @@
       transition: all 150ms;
     }
     .btn-secondary:hover { border-color: var(--text-dim); }
+    .btn-secondary:disabled {
+      opacity: 0.52;
+      cursor: not-allowed;
+      border-color: rgba(170, 170, 170, 0.22);
+    }
 
     .btn-row { display: flex; gap: 8px; padding-top: 8px; }
     .btn-row .btn-secondary { flex: 1; text-align: center; }
@@ -385,6 +681,24 @@
       font-family: var(--font); width: 100%;
     }
     .text-input:focus { outline: none; border-color: var(--gold-dim); }
+    .text-input:disabled,
+    .text-input[readonly] {
+      opacity: 0.55;
+      cursor: not-allowed;
+      border-color: rgba(170, 170, 170, 0.22);
+    }
+    .emitter-inline-input {
+      width: min(var(--emitter-inline-input-width), 58%);
+      min-width: 104px;
+    }
+    [data-control-locked="1"],
+    [aria-disabled="true"] {
+      cursor: not-allowed !important;
+      opacity: 0.5;
+    }
+    #emit-color-swatch[aria-disabled="true"] {
+      filter: saturate(0.2);
+    }
 
     .disclosure {
       font-size: 10px; color: var(--text-dim);
@@ -422,6 +736,58 @@
     .rail-panel { display: none; }
     .rail-panel.active { display: block; }
 
+    body.layout-compact .emitter-panel {
+      gap: 10px;
+      padding: 0 8px;
+    }
+    body.layout-tight .emitter-panel {
+      gap: 8px;
+      padding: 0 6px;
+    }
+    body.layout-tight .emitter-card {
+      padding: 0 8px 8px;
+    }
+    body.layout-tight .motion-chip-row {
+      padding: 0 10px 8px;
+      gap: 4px;
+    }
+    body.layout-tight .status-chip {
+      font-size: 8px;
+      letter-spacing: 0.6px;
+      padding: 2px 6px;
+    }
+    body.layout-tight .dropdown.wide {
+      min-width: 104px;
+    }
+    body.layout-tight .emitter-inline-input {
+      width: min(var(--emitter-inline-input-width-tight), 56%);
+      min-width: 88px;
+    }
+    body.layout-tight .rail-panel[data-panel="emitter"] .btn-row {
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    body.layout-tight .rail-panel[data-panel="emitter"] .btn-row .btn-secondary {
+      flex: 1 1 calc(50% - 3px);
+      min-width: 0;
+      padding: 5px 8px;
+      font-size: 10px;
+    }
+    body.layout-tight .emitter-authority-note {
+      margin: -2px 10px 2px;
+      padding: 4px 6px;
+      font-size: 8px;
+      letter-spacing: 0.45px;
+    }
+    body.layout-tight .timeline-header {
+      gap: 8px;
+      padding: 0 8px;
+    }
+    body.layout-tight .lane-label {
+      width: 52px;
+      font-size: 9px;
+    }
+
     .status-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
     .status-dot.complete { background: var(--text-success); }
@@ -452,7 +818,7 @@
 
   <!-- MAIN -->
   <div class="main">
-    <div class="viewport-area">
+    <div class="viewport-area timeline-visible">
       <canvas id="viewport-canvas"></canvas>
 
       <div class="view-buttons">
@@ -468,9 +834,9 @@
       <div class="timeline visible" id="timeline">
         <div class="timeline-header">
           <div class="timeline-transport">
-            <button class="transport-btn" id="timeline-rewind-btn" title="Rewind 250ms">&#9664;</button>
-            <button class="transport-btn" id="timeline-stop-btn" title="Stop and reset">&#9632;</button>
-            <button class="transport-btn" id="timeline-play-btn" title="Enable animation">&#9654;</button>
+            <button class="transport-btn" id="timeline-rewind-btn" title="Rewind to start and pause">&#9664;</button>
+            <button class="transport-btn" id="timeline-stop-btn" title="Stop at current time">&#9632;</button>
+            <button class="transport-btn" id="timeline-play-btn" title="Play from current time">&#9654;</button>
           </div>
           <span class="timeline-time" id="timeline-time">00:00.000</span>
           <div class="header-spacer"></div>
@@ -543,94 +909,187 @@
 
       <!-- EMITTER PANEL -->
       <div class="rail-panel active" data-panel="emitter">
-        <div class="rail-mode-label">Emitter</div>
-        <div class="section">
-          <div class="control-row"><span class="control-label">Label</span><input class="text-input" style="width:140px;" id="emit-label" value="Emitter" /></div>
-          <div class="control-row"><span class="control-label">Color</span><span id="emit-color-swatch" style="width:16px; height:16px; border-radius:50%; background:#D4736F; cursor:pointer;"></span></div>
+        <div class="rail-mode-label">
+          <span>Emitter</span>
+          <span class="status-chip local" id="emitter-authority-chip">Local</span>
         </div>
-        <div class="section">
-          <div class="section-header">Position</div>
-          <div class="control-row"><span class="control-label">Mode</span><select class="dropdown" id="pos-mode"><option>Spherical</option><option>Cartesian</option></select></div>
-          <div class="control-row"><span class="control-label">Azimuth</span><span class="control-value" id="val-azimuth">0.0<span class="control-unit">&deg;</span></span></div>
-          <div class="control-row"><span class="control-label">Elevation</span><span class="control-value" id="val-elevation">0.0<span class="control-unit">&deg;</span></span></div>
-          <div class="control-row"><span class="control-label">Distance</span><span class="control-value" id="val-distance">2.0<span class="control-unit">m</span></span></div>
+        <div class="motion-chip-row" id="motion-chip-row">
+          <span class="status-chip" id="motion-chip-source">Source: Static</span>
+          <span class="status-chip" id="motion-chip-loop">Loop: Off</span>
+          <span class="status-chip active" id="motion-chip-sync">Sync: On</span>
+          <span class="status-chip" id="motion-chip-dirty">Motion Saved</span>
         </div>
-        <div class="section">
-          <div class="section-header">Size</div>
-          <div class="control-row"><span class="control-label">Link</span><div class="toggle on" id="toggle-size-link"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Scale</span><span class="control-value" id="val-size">0.5<span class="control-unit">m</span></span></div>
-        </div>
-        <div class="section">
-          <div class="section-header">Audio</div>
-          <div class="control-row"><span class="control-label">Gain</span><span class="control-value" id="val-gain">0.0<span class="control-unit">dB</span></span></div>
-          <div class="control-row"><span class="control-label">Spread</span><span class="control-value" id="val-spread">0.0</span></div>
-          <div class="control-row"><span class="control-label">Directivity</span><span class="control-value" id="val-directivity">0.5</span></div>
-          <div class="control-row"><span class="control-label">Aim Azimuth</span><span class="control-value" id="val-dir-azimuth">0.0<span class="control-unit">°</span></span></div>
-          <div class="control-row"><span class="control-label">Aim Elevation</span><span class="control-value" id="val-dir-elevation">0.0<span class="control-unit">°</span></span></div>
-          <div class="control-row"><span class="control-label">Mute</span><div class="toggle" id="toggle-mute"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Solo</span><div class="toggle" id="toggle-solo"><div class="toggle-thumb"></div></div></div>
-        </div>
-
-        <!-- Physics Preset-First -->
-        <div class="section">
-          <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
-            Physics
-            <select class="dropdown wide" id="physics-preset">
-              <option value="off">Off</option>
-              <option value="bounce">Bounce</option>
-              <option value="float">Float</option>
-              <option value="orbit">Orbit</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-          <div id="physics-active" style="display:none;">
-            <div class="control-row"><span class="control-label">Intensity</span><span class="control-value">0.5</span></div>
-            <div class="btn-row">
-              <button class="btn-secondary" id="btn-throw">THROW</button>
-              <button class="btn-secondary" id="btn-reset">RESET</button>
-            </div>
-            <div class="disclosure" id="physics-disclosure">
-              <span class="disclosure-arrow" id="physics-arrow">&#9654;</span>
-              Advanced
-            </div>
-            <div class="disclosure-content" id="physics-advanced">
-              <div class="control-row"><span class="control-label">Mass</span><span class="control-value" id="val-mass">1.0<span class="control-unit">kg</span></span></div>
-              <div class="control-row"><span class="control-label">Drag</span><span class="control-value" id="val-drag">0.5</span></div>
-              <div class="control-row"><span class="control-label">Elasticity</span><span class="control-value" id="val-elasticity">0.7</span></div>
-              <div class="control-row"><span class="control-label">Gravity</span><span class="control-value" id="val-gravity">0.0<span class="control-unit">m/s&sup2;</span></span></div>
-              <div class="control-row"><span class="control-label">Friction</span><span class="control-value" id="val-friction">0.3</span></div>
-              <div class="control-row"><span class="control-label">Direction</span><select class="dropdown" id="phys-grav-dir"><option>Down</option><option>Up</option><option>Center</option><option>From Center</option><option>Custom</option></select></div>
-              <div class="control-row"><span class="control-label">Init Vel X</span><span class="control-value" id="val-vel-x">0.0<span class="control-unit">m/s</span></span></div>
-              <div class="control-row"><span class="control-label">Init Vel Y</span><span class="control-value" id="val-vel-y">0.0<span class="control-unit">m/s</span></span></div>
-              <div class="control-row"><span class="control-label">Init Vel Z</span><span class="control-value" id="val-vel-z">0.0<span class="control-unit">m/s</span></span></div>
+        <div class="emitter-authority-note" id="emitter-authority-note">Local emitter editing enabled</div>
+        <div class="emitter-panel">
+          <div class="emitter-card" data-emitter-group="identity">
+            <div class="section">
+              <div class="section-header">Emitter Identity</div>
+              <div class="control-row"><span class="control-label">Label</span><input class="text-input emitter-inline-input" id="emit-label" value="Emitter" /></div>
+              <div class="control-row"><span class="control-label">Color</span><span id="emit-color-swatch" style="width:16px; height:16px; border-radius:50%; background:#D4736F; cursor:pointer;"></span></div>
+              <div class="control-row"><span class="control-label">Mute</span><div class="toggle" id="toggle-mute"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Solo</span><div class="toggle" id="toggle-solo"><div class="toggle-thumb"></div></div></div>
             </div>
           </div>
-        </div>
 
-        <div class="section">
-          <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
-            Animation
-            <div class="toggle" id="toggle-anim"><div class="toggle-thumb"></div></div>
+          <div class="emitter-card" data-emitter-group="position">
+            <div class="section">
+              <div class="section-header">Position</div>
+              <div class="control-row"><span class="control-label">Mode</span><select class="dropdown" id="pos-mode"><option>Spherical</option><option>Cartesian</option></select></div>
+              <div class="coord-group-caption">Spherical</div>
+              <div class="control-row coord-row coord-row-spherical coord-active" data-coord-group="spherical"><span class="control-label">Azimuth</span><span class="control-value" id="val-azimuth">0.0<span class="control-unit">&deg;</span></span></div>
+              <div class="control-row coord-row coord-row-spherical coord-active" data-coord-group="spherical"><span class="control-label">Elevation</span><span class="control-value" id="val-elevation">0.0<span class="control-unit">&deg;</span></span></div>
+              <div class="control-row coord-row coord-row-spherical coord-active" data-coord-group="spherical"><span class="control-label">Distance</span><span class="control-value" id="val-distance">2.0<span class="control-unit">m</span></span></div>
+              <div class="coord-group-caption">Cartesian</div>
+              <div class="control-row coord-row coord-row-cartesian coord-inactive" data-coord-group="cartesian"><span class="control-label">X</span><span class="control-value" id="val-pos-x" data-stepper-lock="1">0.00<span class="control-unit">m</span></span></div>
+              <div class="control-row coord-row coord-row-cartesian coord-inactive" data-coord-group="cartesian"><span class="control-label">Y</span><span class="control-value" id="val-pos-y" data-stepper-lock="1">0.00<span class="control-unit">m</span></span></div>
+              <div class="control-row coord-row coord-row-cartesian coord-inactive" data-coord-group="cartesian"><span class="control-label">Z</span><span class="control-value" id="val-pos-z" data-stepper-lock="1">0.00<span class="control-unit">m</span></span></div>
+              <div class="control-row position-readback-row"><span class="control-label">World</span><span class="control-value" id="val-world-readback">x 0.00 · y 0.00 · z 0.00 m</span></div>
+            </div>
           </div>
-          <div id="anim-controls" style="opacity:0.4;">
-            <div class="control-row"><span class="control-label">Source</span><select class="dropdown" id="anim-source" disabled><option>DAW</option><option>Internal</option></select></div>
-            <div class="control-row"><span class="control-label">Loop</span><div class="toggle" id="toggle-anim-loop"><div class="toggle-thumb"></div></div></div>
-            <div class="control-row"><span class="control-label">Speed</span><span class="control-value" id="val-anim-speed">1.0<span class="control-unit">x</span></span></div>
-          </div>
-        </div>
 
-        <div class="section">
-          <div class="section-header">Spatial Preset</div>
-          <div class="control-row">
-            <span class="control-label">Preset</span>
-            <select class="dropdown wide" id="preset-select"></select>
+          <div class="emitter-card" data-emitter-group="audio-shape">
+            <div class="section">
+              <div class="section-header">Audio Shape</div>
+              <div class="control-row"><span class="control-label">Size Link</span><div class="toggle on" id="toggle-size-link"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Size Scale</span><span class="control-value" id="val-size">0.5<span class="control-unit">m</span></span></div>
+              <div class="control-row"><span class="control-label">Gain</span><span class="control-value" id="val-gain">0.0<span class="control-unit">dB</span></span></div>
+              <div class="control-row"><span class="control-label">Spread</span><span class="control-value" id="val-spread">0.0</span></div>
+              <div class="control-row"><span class="control-label">Directivity</span><span class="control-value" id="val-directivity">0.5</span></div>
+              <div class="control-row"><span class="control-label">Aim Azimuth</span><span class="control-value" id="val-dir-azimuth">0.0<span class="control-unit">°</span></span></div>
+              <div class="control-row"><span class="control-label">Aim Elevation</span><span class="control-value" id="val-dir-elevation">0.0<span class="control-unit">°</span></span></div>
+            </div>
           </div>
-          <div class="btn-row">
-            <button class="btn-secondary" id="preset-save-btn">SAVE</button>
-            <button class="btn-secondary" id="preset-load-btn">LOAD</button>
+
+          <div class="emitter-card" data-emitter-group="motion">
+            <div class="section">
+              <div class="section-header">Motion</div>
+              <div class="control-row"><span class="control-label">Motion Source</span><select class="dropdown wide" id="motion-source-select"><option value="static">Static</option><option value="physics">Physics</option><option value="timeline">Timeline</option><option value="choreography">Choreography</option></select></div>
+              <div class="motion-transport-strip" id="motion-transport-strip">
+                <div class="timeline-transport">
+                  <button class="transport-btn" id="motion-transport-rewind-btn" title="Rewind to start and pause">&#9664;</button>
+                  <button class="transport-btn" id="motion-transport-stop-btn" title="Stop at current time">&#9632;</button>
+                  <button class="transport-btn" id="motion-transport-play-btn" title="Play from current time">&#9654;</button>
+                </div>
+                <span class="timeline-time" id="motion-transport-time">00:00.000</span>
+                <div class="timeline-toggle-label">Loop <div class="toggle" id="toggle-motion-loop" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+                <div class="timeline-toggle-label">Sync <div class="toggle on" id="toggle-motion-sync" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
+                <div class="motion-speed-block">
+                  <span class="motion-speed-label">Speed</span>
+                  <span class="control-value motion-speed-value" id="val-anim-speed">1.0<span class="control-unit">x</span></span>
+                </div>
+              </div>
+              <div class="motion-subsection active" id="motion-panel-physics" data-motion-panel="physics">
+                <div class="motion-subsection-title">
+                  <span>Physics</span>
+                  <select class="dropdown wide" id="physics-preset">
+                    <option value="off">Off</option>
+                    <option value="bounce">Bounce</option>
+                    <option value="float">Float</option>
+                    <option value="orbit">Orbit</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+                <div id="physics-active" style="display:none;">
+                  <div class="control-row"><span class="control-label">Intensity</span><span class="control-value">0.5</span></div>
+                  <div class="btn-row">
+                    <button class="btn-secondary" id="btn-throw">THROW</button>
+                    <button class="btn-secondary" id="btn-reset">RESET</button>
+                  </div>
+                  <div class="disclosure" id="physics-disclosure">
+                    <span class="disclosure-arrow" id="physics-arrow">&#9654;</span>
+                    Advanced
+                  </div>
+                  <div class="disclosure-content" id="physics-advanced">
+                    <div class="control-row"><span class="control-label">Mass</span><span class="control-value" id="val-mass">1.0<span class="control-unit">kg</span></span></div>
+                    <div class="control-row"><span class="control-label">Drag</span><span class="control-value" id="val-drag">0.5</span></div>
+                    <div class="control-row"><span class="control-label">Elasticity</span><span class="control-value" id="val-elasticity">0.7</span></div>
+                    <div class="control-row"><span class="control-label">Gravity</span><span class="control-value" id="val-gravity">0.0<span class="control-unit">m/s&sup2;</span></span></div>
+                    <div class="control-row"><span class="control-label">Friction</span><span class="control-value" id="val-friction">0.3</span></div>
+                    <div class="control-row"><span class="control-label">Direction</span><select class="dropdown" id="phys-grav-dir"><option>Down</option><option>Up</option><option>Center</option><option>From Center</option><option>Custom</option></select></div>
+                    <div class="control-row"><span class="control-label">Init Vel X</span><span class="control-value" id="val-vel-x">0.0<span class="control-unit">m/s</span></span></div>
+                    <div class="control-row"><span class="control-label">Init Vel Y</span><span class="control-value" id="val-vel-y">0.0<span class="control-unit">m/s</span></span></div>
+                    <div class="control-row"><span class="control-label">Init Vel Z</span><span class="control-value" id="val-vel-z">0.0<span class="control-unit">m/s</span></span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="motion-subsection inactive" id="motion-panel-timeline" data-motion-panel="timeline">
+                <div class="motion-subsection-title">
+                  <span>Timeline</span>
+                </div>
+                <div id="anim-controls" style="opacity:0.4;">
+                  <div class="control-row"><span class="control-label">Source</span><select class="dropdown" id="anim-source" disabled><option>DAW</option><option>Internal</option></select></div>
+                </div>
+              </div>
+
+              <div class="motion-subsection inactive" id="motion-panel-choreography" data-motion-panel="choreography">
+                <div class="motion-subsection-title">
+                  <span>Choreography</span>
+                </div>
+                <div class="control-row">
+                  <span class="control-label">Pack</span>
+                  <select class="dropdown wide" id="choreo-pack-select">
+                    <option value="custom">Custom</option>
+                    <option value="orbit">Orbit</option>
+                    <option value="pendulum">Pendulum</option>
+                    <option value="swarm_arc">Swarm Arc</option>
+                    <option value="rise_fall">Rise/Fall</option>
+                  </select>
+                </div>
+                <div class="btn-row">
+                  <button class="btn-secondary" id="choreo-apply-btn">APPLY</button>
+                  <button class="btn-secondary" id="choreo-save-btn">SAVE PACK</button>
+                </div>
+                <div class="control-row">
+                  <span class="control-value" id="choreo-status">Pack ready</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="control-row">
-            <span class="control-value" id="preset-status">No presets loaded</span>
+
+          <div class="emitter-card" data-emitter-group="presets">
+            <div class="section">
+              <div class="section-header">Presets</div>
+              <div class="control-row">
+                <span class="control-label">Type</span>
+                <select class="dropdown wide" id="preset-type-select">
+                  <option value="emitter">Emitter Preset</option>
+                  <option value="motion">Motion Preset</option>
+                </select>
+              </div>
+              <div class="control-row">
+                <span class="control-label">Name</span>
+                <input class="text-input emitter-inline-input" id="preset-name-input" placeholder="Preset name" value="" />
+              </div>
+              <div class="control-row">
+                <span class="control-label">Preset</span>
+                <select class="dropdown wide" id="preset-select"></select>
+              </div>
+              <div class="btn-row">
+                <button class="btn-secondary" id="preset-save-btn">SAVE</button>
+                <button class="btn-secondary" id="preset-load-btn">LOAD</button>
+              </div>
+              <div class="btn-row">
+                <button class="btn-secondary" id="preset-rename-btn">RENAME</button>
+                <button class="btn-secondary" id="preset-delete-btn">DELETE</button>
+              </div>
+              <div class="control-row">
+                <span class="control-value" id="preset-status">No presets loaded</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="emitter-card" data-emitter-group="diagnostics">
+            <div class="section">
+              <div class="section-header emitter-diagnostics-toggle" id="emitter-diagnostics-toggle">
+                <span>Diagnostics</span>
+                <span class="disclosure-arrow" id="emitter-diagnostics-arrow">&#9654;</span>
+              </div>
+              <div class="emitter-diagnostics-content" id="emitter-diagnostics-content">
+                <div class="control-row"><span class="control-label">Physics Lens</span><div class="toggle" id="emitter-quick-physics-lens"><div class="toggle-thumb"></div></div></div>
+                <div class="control-row"><span class="control-label">Diagnostic Mix</span><span class="control-value" id="emitter-quick-diag-mix">55<span class="control-unit">%</span></span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -648,14 +1107,16 @@
         </div>
         <div class="section">
           <div class="section-header">Speakers</div>
-          <div class="control-row"><span class="control-label">SPK1</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
-          <div class="control-row"><span class="control-label">SPK2</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
-          <div class="control-row"><span class="control-label">SPK3</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
-          <div class="control-row"><span class="control-label">SPK4</span><span class="control-value">0.0<span class="control-unit">dB</span></span><span class="control-value" style="margin-left:8px;">0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK1</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK2</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK3</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+          <div class="control-row"><span class="control-label">SPK4</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
         </div>
         <div class="section">
           <div class="section-header">Spatialization</div>
           <div class="control-row"><span class="control-label">Distance</span><select class="dropdown" id="rend-dist-model"><option>Inverse&sup2;</option><option>Linear</option><option>Log</option><option>Custom</option></select></div>
+          <div class="control-row"><span class="control-label">Headphone</span><select class="dropdown" id="rend-headphone-mode"><option>Stereo Downmix</option><option>Steam Binaural</option></select></div>
+          <div class="control-row"><span class="control-label">HP Profile</span><select class="dropdown" id="rend-headphone-profile"><option>Generic</option><option>AirPods Pro 2</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
           <div class="control-row"><span class="control-label">Ref Dist</span><span class="control-value">1.0<span class="control-unit">m</span></span></div>
           <div class="control-row"><span class="control-label">Doppler</span><div class="toggle" id="toggle-doppler"><div class="toggle-thumb"></div></div></div>
           <div class="control-row"><span class="control-label">Air Absorb</span><div class="toggle on" id="toggle-air-absorb"><div class="toggle-thumb"></div></div></div>
@@ -674,6 +1135,14 @@
           <div class="control-row"><span class="control-label">Walls</span><div class="toggle on" id="toggle-walls"><div class="toggle-thumb"></div></div></div>
           <div class="control-row"><span class="control-label">Object Interaction</span><div class="toggle" id="toggle-interact"><div class="toggle-thumb"></div></div></div>
           <div style="padding-top:8px;"><button class="btn-secondary" style="width:100%;" id="btn-pause-physics">PAUSE ALL</button></div>
+        </div>
+        <div class="section">
+          <div class="section-header">Viewport Telemetry</div>
+          <div class="control-row"><span class="control-label">Trails</span><div class="toggle on" id="toggle-viz-trails"><div class="toggle-thumb"></div></div></div>
+          <div class="control-row"><span class="control-label">Trail Len</span><span class="control-value" id="val-viz-trail-len">5.0<span class="control-unit">s</span></span></div>
+          <div class="control-row"><span class="control-label">Velocity Vectors</span><div class="toggle" id="toggle-viz-vectors"><div class="toggle-thumb"></div></div></div>
+          <div class="control-row"><span class="control-label">Physics Lens</span><div class="toggle" id="toggle-viz-physics-lens"><div class="toggle-thumb"></div></div></div>
+          <div class="control-row"><span class="control-label">Diagnostic Mix</span><span class="control-value" id="val-viz-diag-mix">55<span class="control-unit">%</span></span></div>
         </div>
       </div>
     </div>

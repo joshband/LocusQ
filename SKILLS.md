@@ -2,7 +2,7 @@ Title: APC Skills Index
 Document Type: Skill Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-23
 
 # SKILLS.md
 
@@ -33,7 +33,7 @@ For any phase execution:
 ## Specialist Skills
 | Skill | File | Use When |
 |---|---|---|
-| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation standardization, metadata compliance, ADR hygiene, traceability upkeep |
+| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation standardization, metadata compliance, ADR hygiene, traceability upkeep, archive-tier governance, and source-of-truth de-bloat |
 | `juce-webview-windows` | `.codex/skills/skill_design_webview/SKILL.md` | WebView implementation details or WebView crash/order hardening |
 | `juce-webview-runtime` | `.codex/skills/juce-webview-runtime/SKILL.md` | Host/runtime interop, WebView bridge timeouts, callback ordering, UI click/hit-target anomalies, startup hydration issues |
 | `skill_testing` | `.codex/skills/skill_testing/SKILL.md` | Detailed harness-first testing and plugin validation workflows |
@@ -42,6 +42,9 @@ For any phase execution:
 | `threejs` | `.codex/skills/threejs/SKILL.md` | Three.js scene architecture, JUCE WebView bridge integration, and spatial-audio UI workflows including Apple Spatial Audio, Atmos-style routing, `7.4.2` layout handling, and binaural monitoring |
 | `reactive-av` | `.codex/skills/reactive-av/SKILL.md` | Audio-reactive and physics-reactive visualization mapping, smoothing, stability, and visual QA |
 | `physics-reactive-audio` | `.codex/skills/physics-reactive-audio/SKILL.md` | Simulation-driven DSP behavior (flocking/herding/crowd/fluid/0G/gravity/drag/collision responses) with realtime safety requirements |
+| `clap-plugin-lifecycle` | `.codex/skills/clap-plugin-lifecycle/SKILL.md` | CLAP format architecture, JUCE migration/integration, capability negotiation, BL-011 implementation planning, and CLAP host/CI validation |
+| `steam-audio-capi` | `.codex/skills/steam-audio-capi/SKILL.md` | Steam Audio C API integration for runtime loading, lifecycle-safe effect ownership, and deterministic fallback validation |
+| `spatial-audio-engineering` | `.codex/skills/spatial-audio-engineering/SKILL.md` | Spatial audio architecture/integration/testing across ambisonics, binaural/HRTF, multichannel layouts, and BL-018 layout-expansion automation lanes |
 
 ## Three.js Skill Bundle
 The `threejs` skill is organized as one triggerable skill plus focused references:
@@ -72,21 +75,27 @@ When specialist intent is present, auto-load the matching specialist skill(s):
 - 3D scene/render loop/performance issue -> `threejs`
 - Audio-reactive or physics-reactive visual behavior -> `reactive-av`
 - Physics/simulation-driven DSP/audio behavior -> `physics-reactive-audio`
+- CLAP format integration/migration, BL-011 work, or CLAP host-validation lanes -> `clap-plugin-lifecycle`
+- Steam Audio C API runtime integration or BL-009 headphone-path work -> `steam-audio-capi`
+- Spatial audio system planning/integration/QA (ambisonics, binaural, multichannel layouts, BL-018) -> `spatial-audio-engineering`
 - Broad unresolved failures -> `skill_troubleshooting`
 
 If multiple specialist intents apply, compose skills in this order:
 1. `juce-webview-runtime`
 2. `reactive-av`
 3. `physics-reactive-audio`
-4. `threejs`
-5. `skill_troubleshooting`
+4. `clap-plugin-lifecycle`
+5. `steam-audio-capi`
+6. `spatial-audio-engineering`
+7. `threejs`
+8. `skill_troubleshooting`
 
 Canonical matrix and examples: `Documentation/skill-selection-matrix.md`.
 
 ## Skill Execution Checklist
 Before skill execution:
 1. Confirm plugin exists (except dream/new plugin entry).
-2. Read `plugins/[Name]/status.json`.
+2. Read repository state from `status.json`.
 3. Verify prerequisites from the selected workflow.
 4. Confirm `ui_framework` if framework-specific output is required.
 
@@ -100,8 +109,20 @@ After execution:
 2. Record test/build results where applicable.
 3. Stop and return the next expected command.
 
+## Documentation Hygiene Hooks
+- Canonical docs tiers and archive policy:
+  - `Documentation/README.md`
+  - `Documentation/standards.md`
+- Archive root:
+  - `Documentation/archive/`
+- Generated scratch directories (non-canonical):
+  - `Documentation/reports/`
+  - `Documentation/exports/`
+- Freshness gate (must pass before closeout):
+  - `./scripts/validate-docs-freshness.sh`
+
 ## State Contract Reference
-State is managed via `scripts/state-management.ps1` and template files:
+State is tracked in `status.json` with template references:
 - `.codex/templates/status-template.json`
 - `.claude/templates/status-template.json`
 
@@ -112,5 +133,6 @@ When adding or changing a skill:
 1. Update this `SKILLS.md` entry.
 2. Keep matching workflow references current in `.codex/workflows/`.
 3. Keep `AGENTS.md` routing aligned if command behavior changes.
-4. If phase/routing contracts change, update `AGENT_RULE.md` and run `pwsh ./scripts/sync-agent-contract.ps1`.
-5. For parity-managed files, update corresponding `.codex` and `.claude` entries and run `pwsh ./scripts/sync-agent-contract.ps1`.
+4. If phase/routing contracts change, update `AGENT_RULE.md` and sync parity copies:
+   - `cp AGENT_RULE.md .codex/rules/agent.md && cp AGENT_RULE.md .claude/rules/agent.md`
+5. For parity-managed files, update corresponding `.codex` and `.claude` entries in the same change set.
