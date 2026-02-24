@@ -2,7 +2,7 @@ Title: LocusQ Documentation Archive Index
 Document Type: Archive Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # Documentation Archive Index
 
@@ -37,8 +37,15 @@ Provide a stable archive location for non-canonical documentation artifacts whil
 - Reason:
   - BL-011 CLAP closeout now uses one canonical active plan (`Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`) plus ADR governance, while references remain preserved for traceability
 
+4. `Documentation/archive/2026-02-24-multi-agent-thread-watchdog/`
+- Contents:
+  - archived optional operational guide: `multi-agent-thread-watchdog.md`
+  - archive manifest: `README.md`
+- Reason:
+  - optional-by-default multi-agent watchdog guidance moved out of top-level `Documentation/` to reduce active surface noise while preserving traceability
+
 ## Next-Pass Candidates (review required before move)
 1. Historical planning drafts that are now reference-only:
 - `Documentation/plans/2026-02-20-full-project-review.md`
 2. Optional runtime/process notes if no longer active:
-- `Documentation/multi-agent-thread-watchdog.md`
+- none currently pending (watchdog guide archived on 2026-02-24)

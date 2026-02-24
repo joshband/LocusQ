@@ -2,7 +2,7 @@ Title: ADR-0010 Repository Artifact Tracking and Retention Policy
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # ADR-0010: Repository Artifact Tracking and Retention Policy
 
@@ -23,6 +23,11 @@ Adopt a class-first artifact governance model:
 2. Track only artifacts required for reproducibility, closeout claims, and traceability.
 3. Keep generated/heavy artifacts local-only by default.
 4. Require explicit exception documentation before tracking unusual or large generated assets.
+5. This ADR refines `ADR-0001` by defining artifact tracking/retention mechanics; it does not replace metadata, traceability, or doc-baseline governance.
+
+## Scope Boundary
+`ADR-0001` remains the baseline for documentation metadata, canonical placement, and traceability obligations.
+This ADR is limited to artifact lifecycle policy: classification, retention, promotion exceptions, and archive hygiene.
 
 ## Artifact Handling Matrix
 

@@ -2,7 +2,7 @@ Title: LocusQ Validation Trend
 Document Type: Validation Trend Log
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # Validation Trend
 
@@ -460,6 +460,12 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-23T17:34:20Z | BL-013 promotion docs freshness gate after external-harness note sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`; artifact `TestEvidence/validate_docs_freshness_bl013_20260223T173420Z.log`) |
 | 2026-02-23T17:36:42Z | BL-013 final feasibility rerun after stage-detail formatting cleanup | `LQ_BL013_RUN_HARNESS_HOST_TESTS=1 ./scripts/qa-bl013-hostrunner-feasibility-mac.sh` | PASS (`hostrunner_vst3_probe=pass`, `hostrunner_vst3_skeleton_probe=pass`, `harness_host_ctest=pass`; artifact `TestEvidence/bl013_hostrunner_feasibility_20260223T173642Z/status.tsv`) |
 | 2026-02-23T17:37:44Z | BL-013 final docs freshness gate after final artifact pointer sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`; artifact `TestEvidence/validate_docs_freshness_bl013_20260223T173744Z.log`) |
+| 2026-02-24T03:22:39Z | BL-025/BL-014 production self-test closeout refresh | `./scripts/standalone-ui-selftest-production-p0-mac.sh` | PASS (`status=pass`, `ok=true`; `UI-P1-025A..E` + `UI-P1-014` all pass; artifact `TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`) |
+| 2026-02-24T03:23:00Z | BL-025 host spot-check + BL-014 host smoke rerun | `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap` | PASS (`locusqFxFound=true`, `renderOutputDetected=true`; artifact `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`) |
+| 2026-02-24T03:23:55Z | BL-014 strict closeout companion smoke suite | `build_bl013_hostrunner/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` | PASS_WITH_WARNING (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`; artifact `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`) |
+| 2026-02-24T03:23:55Z | BL-014 strict closeout companion Phase 2.6 suite | `build_bl013_hostrunner/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json` | PASS (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`; artifact `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`) |
+| 2026-02-24T03:35:00Z | P0 closeout docs freshness gate after backlog/status/evidence sync | `./scripts/validate-docs-freshness.sh` | PASS (`0 warning(s)`; artifact `TestEvidence/validate_docs_freshness_p0_closeout_20260224T033500Z.log`) |
+| 2026-02-24T03:36:00Z | P0 closure state sync + testing lane guide publication | `Documentation/backlog-post-v1-agentic-sprints.md`, `status.json`, `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`, `Documentation/README.md`, `TestEvidence/build-summary.md` | PASS (BL-025 and BL-014 moved to `Done (2026-02-24)` across canonical status/evidence surfaces) |
 ## Notes
 - Use `TestEvidence/build-summary.md` for latest snapshot details.
 - Append one line per meaningful validation run; do not duplicate identical reruns unless outcome changes.

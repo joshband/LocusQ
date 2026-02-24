@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -3520,3 +3520,65 @@ Result: `PASS`
 
 Result: `PASS` (`0 warning(s)`).
 - artifact: `TestEvidence/validate_docs_freshness_bl013_20260223T173744Z.log`
+
+## P0 BL-025 + BL-014 Closeout Refresh (UTC 2026-02-24)
+
+1. Rebuild standalone before reruns
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
+```
+
+Result: `PASS`
+
+2. Production self-test rerun (BL-025 + BL-014 gates)
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`
+- key assertions: `UI-P1-025A`, `UI-P1-025B`, `UI-P1-025C`, `UI-P1-025D`, `UI-P1-025E`, `UI-P1-014` all `pass=true`.
+
+3. REAPER host smoke rerun
+
+```sh
+./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap
+```
+
+Result: `PASS`
+- artifact: `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`
+
+4. BL-014 strict companion suite refresh
+
+```sh
+build_bl013_hostrunner/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+build_bl013_hostrunner/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_6_acceptance_suite.json
+```
+
+Result:
+- `locusq_smoke_suite`: `PASS_WITH_WARNING` (`3 PASS / 1 WARN / 0 FAIL / 0 ERROR`)
+- `locusq_phase_2_6_acceptance_suite`: `PASS` (`3 PASS / 0 WARN / 0 FAIL / 0 ERROR`)
+- artifacts:
+  - `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`
+  - `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`
+
+5. Documentation update: plain-language lane explainer published
+
+- `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
+- linked from `Documentation/README.md` Tier 1 testing references.
+
+6. Canonical backlog/status synchronization for P0 closure
+
+- `Documentation/backlog-post-v1-agentic-sprints.md` updated: BL-025 and BL-014 moved to `Done (2026-02-24)`.
+- `status.json` updated with refreshed P0 evidence pointers and done-state flags.
+
+7. Final docs freshness gate after closeout sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+- artifact: `TestEvidence/validate_docs_freshness_p0_closeout_20260224T033500Z.log`
