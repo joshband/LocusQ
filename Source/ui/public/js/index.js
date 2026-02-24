@@ -317,10 +317,14 @@ const toggleStates = {
     rend_viz_trails: Juce.getToggleState("rend_viz_trails"),
     rend_viz_vectors: Juce.getToggleState("rend_viz_vectors"),
     rend_viz_physics_lens: Juce.getToggleState("rend_viz_physics_lens"),
+    rend_audition_enable: Juce.getToggleState("rend_audition_enable"),
 };
 
 const comboStates = {
     cal_spk_config: Juce.getComboBoxState("cal_spk_config"),
+    cal_topology_profile: Juce.getComboBoxState("cal_topology_profile"),
+    cal_monitoring_path: Juce.getComboBoxState("cal_monitoring_path"),
+    cal_device_profile: Juce.getComboBoxState("cal_device_profile"),
     cal_test_type: Juce.getComboBoxState("cal_test_type"),
     mode:         Juce.getComboBoxState("mode"),
     pos_coord_mode: Juce.getComboBoxState("pos_coord_mode"),
@@ -330,6 +334,9 @@ const comboStates = {
     rend_distance_model: Juce.getComboBoxState("rend_distance_model"),
     rend_headphone_mode: Juce.getComboBoxState("rend_headphone_mode"),
     rend_headphone_profile: Juce.getComboBoxState("rend_headphone_profile"),
+    rend_audition_signal: Juce.getComboBoxState("rend_audition_signal"),
+    rend_audition_motion: Juce.getComboBoxState("rend_audition_motion"),
+    rend_audition_level: Juce.getComboBoxState("rend_audition_level"),
     rend_phys_rate: Juce.getComboBoxState("rend_phys_rate"),
     rend_viz_mode: Juce.getComboBoxState("rend_viz_mode"),
 };
@@ -337,6 +344,12 @@ const comboStates = {
 const nativeFunctions = {
     startCalibration: Juce.getNativeFunction("locusqStartCalibration"),
     abortCalibration: Juce.getNativeFunction("locusqAbortCalibration"),
+    redetectCalibrationRouting: Juce.getNativeFunction("locusqRedetectCalibrationRouting"),
+    listCalibrationProfiles: Juce.getNativeFunction("locusqListCalibrationProfiles"),
+    saveCalibrationProfile: Juce.getNativeFunction("locusqSaveCalibrationProfile"),
+    loadCalibrationProfile: Juce.getNativeFunction("locusqLoadCalibrationProfile"),
+    renameCalibrationProfile: Juce.getNativeFunction("locusqRenameCalibrationProfile"),
+    deleteCalibrationProfile: Juce.getNativeFunction("locusqDeleteCalibrationProfile"),
     getKeyframeTimeline: Juce.getNativeFunction("locusqGetKeyframeTimeline"),
     setKeyframeTimeline: Juce.getNativeFunction("locusqSetKeyframeTimeline"),
     setTimelineTime: Juce.getNativeFunction("locusqSetTimelineTime"),
@@ -2398,6 +2411,17 @@ let sceneData = {
     rendererOutputChannels: ["L", "R"],
     rendererInternalSpeakers: ["FL", "FR", "RR", "RL"],
     rendererQuadMap: [0, 1, 3, 2],
+    calCurrentTopologyProfile: 2,
+    calCurrentTopologyId: "quadraphonic",
+    calCurrentMonitoringPath: 0,
+    calCurrentMonitoringPathId: "speakers",
+    calCurrentDeviceProfile: 0,
+    calCurrentDeviceProfileId: "generic",
+    calRequiredChannels: 4,
+    calWritableChannels: 4,
+    calMappingLimitedToFirst4: false,
+    calCurrentSpeakerMap: [1, 2, 3, 4],
+    calAutoRoutingMap: [1, 2, 3, 4],
     roomProfileValid: false,
     roomDimensions: { width: 6.0, depth: 4.0, height: 3.0 },
     listener: { x: 0.0, y: 1.2, z: 0.0 },
@@ -2409,6 +2433,139 @@ let localEmitterId = -1;
 let sceneEmitterLookup = new Map();
 let emitterAuthoringLocked = false;
 const railScrollByMode = { calibrate: 0, emitter: 0, renderer: 0 };
+const calibrationTopologyIds = [
+    "mono",
+    "stereo",
+    "quadraphonic",
+    "surround_5_1",
+    "surround_7_1_2",
+    "surround_7_4_2",
+    "ambisonic",
+    "binaural_headphone",
+    "multichannel_stereo_downmix",
+];
+const calibrationTopologyRequiredChannels = [1, 2, 4, 6, 10, 13, 4, 2, 2];
+const calibrationTopologyLabels = {
+    mono: "Mono",
+    stereo: "Stereo",
+    quadraphonic: "Quadraphonic",
+    surround_5_1: "5.1",
+    surround_7_1_2: "7.1.2",
+    surround_7_4_2: "7.4.2 / Atmos-style",
+    ambisonic: "Ambisonic (FOA/HOA)",
+    binaural_headphone: "Binaural / Headphone",
+    multichannel_stereo_downmix: "Multichannel -> Stereo Downmix",
+};
+const calibrationTopologyShortLabels = {
+    mono: "Mono",
+    stereo: "Stereo",
+    quadraphonic: "Quad",
+    surround_5_1: "5.1",
+    surround_7_1_2: "7.1.2",
+    surround_7_4_2: "7.4.2",
+    ambisonic: "Ambisonic",
+    binaural_headphone: "Binaural",
+    multichannel_stereo_downmix: "Downmix",
+};
+const calibrationMonitoringPathIds = [
+    "speakers",
+    "stereo_downmix",
+    "steam_binaural",
+    "virtual_binaural",
+];
+const calibrationMonitoringPathLabels = {
+    speakers: "Speakers",
+    stereo_downmix: "Stereo Downmix",
+    steam_binaural: "Steam Binaural",
+    virtual_binaural: "Virtual Binaural",
+};
+const calibrationDeviceProfileIds = [
+    "generic",
+    "airpods_pro_2",
+    "sony_wh1000xm5",
+    "custom_sofa",
+];
+const calibrationDeviceProfileLabels = {
+    generic: "Generic",
+    airpods_pro_2: "AirPods Pro 2",
+    sony_wh1000xm5: "Sony WH-1000XM5",
+    custom_sofa: "Custom SOFA",
+};
+const calibrationTopologyChannelLabels = {
+    mono: ["Main"],
+    stereo: ["L", "R"],
+    quadraphonic: ["FL", "FR", "RL", "RR"],
+    surround_5_1: ["L", "R", "C", "LFE", "Ls", "Rs"],
+    surround_7_1_2: ["L", "R", "C", "LFE", "Ls", "Rs", "Lrs", "Rrs", "TopL", "TopR"],
+    surround_7_4_2: ["L", "R", "C", "LFE1", "LFE2", "Ls", "Rs", "Lrs", "Rrs", "TopFL", "TopFR", "TopRL", "TopRR"],
+    ambisonic: ["W", "X", "Y", "Z"],
+    binaural_headphone: ["Left", "Right"],
+    multichannel_stereo_downmix: ["Downmix L", "Downmix R"],
+};
+const calibrationTopologyPreviewSpeakerPositions = {
+    mono: [
+        { x: 0.0, y: 1.2, z: -1.9 },
+    ],
+    stereo: [
+        { x: -2.3, y: 1.2, z: -1.8 },
+        { x: 2.3, y: 1.2, z: -1.8 },
+    ],
+    quadraphonic: [
+        { x: -2.7, y: 1.2, z: -1.7 },
+        { x: 2.7, y: 1.2, z: -1.7 },
+        { x: 2.7, y: 1.2, z: 1.7 },
+        { x: -2.7, y: 1.2, z: 1.7 },
+    ],
+    surround_5_1: [
+        { x: -2.2, y: 1.2, z: -1.8 }, // L
+        { x: 2.2, y: 1.2, z: -1.8 },  // R
+        { x: 0.0, y: 1.25, z: -2.15 }, // C
+        { x: 0.0, y: 0.8, z: -1.35 }, // LFE
+        { x: -2.55, y: 1.2, z: 1.45 }, // Ls
+        { x: 2.55, y: 1.2, z: 1.45 }, // Rs
+    ],
+    surround_7_1_2: [
+        { x: -2.2, y: 1.2, z: -1.8 }, // L
+        { x: 2.2, y: 1.2, z: -1.8 },  // R
+        { x: 0.0, y: 1.25, z: -2.15 }, // C
+        { x: 0.0, y: 0.8, z: -1.35 }, // LFE
+        { x: -2.55, y: 1.2, z: 0.6 }, // Ls
+        { x: 2.55, y: 1.2, z: 0.6 }, // Rs
+        { x: -2.55, y: 1.2, z: 1.65 }, // Lrs
+        { x: 2.55, y: 1.2, z: 1.65 }, // Rrs
+        { x: -1.35, y: 2.35, z: -0.9 }, // TopL
+        { x: 1.35, y: 2.35, z: -0.9 }, // TopR
+    ],
+    surround_7_4_2: [
+        { x: -2.2, y: 1.2, z: -1.8 }, // L
+        { x: 2.2, y: 1.2, z: -1.8 },  // R
+        { x: 0.0, y: 1.25, z: -2.15 }, // C
+        { x: -0.38, y: 0.8, z: -1.35 }, // LFE1
+        { x: 0.38, y: 0.8, z: -1.35 }, // LFE2
+        { x: -2.55, y: 1.2, z: 0.6 }, // Ls
+        { x: 2.55, y: 1.2, z: 0.6 }, // Rs
+        { x: -2.55, y: 1.2, z: 1.65 }, // Lrs
+        { x: 2.55, y: 1.2, z: 1.65 }, // Rrs
+        { x: -1.55, y: 2.35, z: -1.0 }, // TopFL
+        { x: 1.55, y: 2.35, z: -1.0 }, // TopFR
+        { x: -1.55, y: 2.35, z: 1.0 }, // TopRL
+        { x: 1.55, y: 2.35, z: 1.0 }, // TopRR
+    ],
+    ambisonic: [
+        { x: 0.0, y: 1.65, z: -1.0 }, // W
+        { x: 1.35, y: 1.15, z: 0.0 }, // X
+        { x: 0.0, y: 0.7, z: 1.0 }, // Y
+        { x: -1.35, y: 1.15, z: 0.0 }, // Z
+    ],
+    binaural_headphone: [
+        { x: -0.38, y: 1.2, z: 0.0 }, // Left ear
+        { x: 0.38, y: 1.2, z: 0.0 }, // Right ear
+    ],
+    multichannel_stereo_downmix: [
+        { x: -2.3, y: 1.2, z: -1.8 }, // Downmix L
+        { x: 2.3, y: 1.2, z: -1.8 }, // Downmix R
+    ],
+};
 let calibrationState = {
     state: "idle",
     running: false,
@@ -2419,7 +2576,25 @@ let calibrationState = {
     recordPercent: 0,
     overallPercent: 0,
     message: "Idle - press Start to begin calibration",
+    topologyProfileIndex: 2,
+    topologyProfile: "quadraphonic",
+    monitoringPathIndex: 0,
+    monitoringPath: "speakers",
+    deviceProfileIndex: 0,
+    deviceProfile: "generic",
+    requiredChannels: 4,
+    writableChannels: 4,
+    mappingLimitedToFirst4: false,
+    mappingDuplicateChannels: false,
+    mappingValid: false,
+    speakerRouting: [1, 2, 3, 4],
+    phasePass: false,
+    delayPass: false,
 };
+let calibrationProfileEntries = [];
+let calibrationMappingEditedByUser = false;
+let calibrationLastAutoRouting = [1, 2, 3, 4];
+let calibrationLegacyAliasSyncInFlight = false;
 
 const laneTrackMap = {
     azimuth: "pos_azimuth",
@@ -2701,6 +2876,248 @@ function updateEmitterDrag(event) {
     return true;
 }
 
+function getCalibrationTopologyId(index) {
+    const count = calibrationTopologyIds.length;
+    const resolved = Number.isFinite(Number(index))
+        ? Number(index)
+        : getChoiceIndex(comboStates.cal_topology_profile);
+    const clamped = clamp(Math.round(resolved), 0, Math.max(0, count - 1));
+    return calibrationTopologyIds[clamped] || calibrationTopologyIds[2];
+}
+
+function getCalibrationMonitoringPathId(index) {
+    const count = calibrationMonitoringPathIds.length;
+    const resolved = Number.isFinite(Number(index))
+        ? Number(index)
+        : getChoiceIndex(comboStates.cal_monitoring_path);
+    const clamped = clamp(Math.round(resolved), 0, Math.max(0, count - 1));
+    return calibrationMonitoringPathIds[clamped] || calibrationMonitoringPathIds[0];
+}
+
+function getCalibrationDeviceProfileId(index) {
+    const count = calibrationDeviceProfileIds.length;
+    const resolved = Number.isFinite(Number(index))
+        ? Number(index)
+        : getChoiceIndex(comboStates.cal_device_profile);
+    const clamped = clamp(Math.round(resolved), 0, Math.max(0, count - 1));
+    return calibrationDeviceProfileIds[clamped] || calibrationDeviceProfileIds[0];
+}
+
+function getCalibrationTopologyLabel(topologyId, shortLabel = false) {
+    const id = String(topologyId || "").trim().toLowerCase();
+    if (shortLabel) {
+        return calibrationTopologyShortLabels[id] || calibrationTopologyShortLabels.quadraphonic;
+    }
+    return calibrationTopologyLabels[id] || calibrationTopologyLabels.quadraphonic;
+}
+
+function getCalibrationMonitoringPathLabel(pathId) {
+    const id = String(pathId || "").trim().toLowerCase();
+    return calibrationMonitoringPathLabels[id] || calibrationMonitoringPathLabels.speakers;
+}
+
+function getCalibrationDeviceProfileLabel(profileId) {
+    const id = String(profileId || "").trim().toLowerCase();
+    return calibrationDeviceProfileLabels[id] || calibrationDeviceProfileLabels.generic;
+}
+
+function getCalibrationRequiredChannels(topologyId) {
+    const id = String(topologyId || "").trim().toLowerCase();
+    const idx = calibrationTopologyIds.indexOf(id);
+    if (idx < 0) return 4;
+    return Number(calibrationTopologyRequiredChannels[idx]) || 4;
+}
+
+function getCalibrationChannelLabel(topologyId, index) {
+    const id = String(topologyId || "").trim().toLowerCase();
+    const labels = calibrationTopologyChannelLabels[id] || calibrationTopologyChannelLabels.quadraphonic;
+    const idx = Math.max(0, Math.round(Number(index) || 0));
+    return labels[idx] || `Ch ${idx + 1}`;
+}
+
+function getLegacyConfigIndexForTopology(topologyId) {
+    const requiredChannels = getCalibrationRequiredChannels(topologyId);
+    return requiredChannels <= 2 ? 1 : 0;
+}
+
+function getTopologyIndexForLegacyConfig(configIndex) {
+    const clampedConfig = clamp(Math.round(Number(configIndex) || 0), 0, 1);
+    // Legacy 4x Mono maps to v2 quad profile; 2x Stereo maps to v2 stereo profile.
+    return clampedConfig === 1 ? 1 : 2;
+}
+
+function syncLegacyConfigAliasFromTopology(topologyId = "") {
+    if (calibrationLegacyAliasSyncInFlight) return;
+
+    const targetTopology = String(topologyId || getCalibrationViewportTopologyId()).trim().toLowerCase();
+    const desiredLegacyConfig = getLegacyConfigIndexForTopology(targetTopology);
+    const currentLegacyConfig = getChoiceIndex(comboStates.cal_spk_config);
+    if (currentLegacyConfig === desiredLegacyConfig) return;
+
+    calibrationLegacyAliasSyncInFlight = true;
+    try {
+        setChoiceIndex(comboStates.cal_spk_config, desiredLegacyConfig, 2);
+    } finally {
+        calibrationLegacyAliasSyncInFlight = false;
+    }
+}
+
+function syncTopologyFromLegacyConfigAlias(configIndex) {
+    if (calibrationLegacyAliasSyncInFlight) return;
+
+    const desiredTopologyIndex = getTopologyIndexForLegacyConfig(configIndex);
+    const currentTopologyIndex = getChoiceIndex(comboStates.cal_topology_profile);
+    if (currentTopologyIndex === desiredTopologyIndex) return;
+
+    calibrationLegacyAliasSyncInFlight = true;
+    try {
+        setChoiceIndex(comboStates.cal_topology_profile, desiredTopologyIndex, calibrationTopologyIds.length);
+    } finally {
+        calibrationLegacyAliasSyncInFlight = false;
+    }
+}
+
+function getCalibrationViewportTopologyId() {
+    const fromCombo = getCalibrationTopologyId();
+    if (calibrationTopologyIds.includes(fromCombo)) {
+        return fromCombo;
+    }
+
+    const fromStatus = String(calibrationState?.topologyProfile || "").trim().toLowerCase();
+    if (calibrationTopologyIds.includes(fromStatus)) {
+        return fromStatus;
+    }
+
+    const fromScene = String(sceneData?.calCurrentTopologyId || "").trim().toLowerCase();
+    if (calibrationTopologyIds.includes(fromScene)) {
+        return fromScene;
+    }
+
+    return calibrationTopologyIds[2];
+}
+
+function getCalibrationPreviewSpeakerCount(topologyId = "") {
+    const resolvedTopology = String(topologyId || getCalibrationViewportTopologyId()).trim().toLowerCase();
+    return clamp(getCalibrationRequiredChannels(resolvedTopology), 1, 4);
+}
+
+function getCalibrationPreviewSpeakerPosition(topologyId, index) {
+    const resolvedTopology = String(topologyId || getCalibrationViewportTopologyId()).trim().toLowerCase();
+    const blueprint = calibrationTopologyPreviewSpeakerPositions[resolvedTopology];
+    const fallback = defaultSpeakerSnapshotPositions[index] || defaultSpeakerSnapshotPositions[0];
+    if (!Array.isArray(blueprint) || blueprint.length === 0) {
+        return fallback;
+    }
+
+    const speaker = blueprint[index];
+    if (!speaker) {
+        return fallback;
+    }
+
+    return {
+        x: Number.isFinite(Number(speaker.x)) ? Number(speaker.x) : fallback.x,
+        y: Number.isFinite(Number(speaker.y)) ? Number(speaker.y) : fallback.y,
+        z: Number.isFinite(Number(speaker.z)) ? Number(speaker.z) : fallback.z,
+    };
+}
+
+function normaliseCalibrationRouting(routing, minLength = 4) {
+    const values = Array.isArray(routing) ? routing : [];
+    const out = [];
+    const length = Math.max(minLength, values.length, 4);
+    for (let i = 0; i < length; ++i) {
+        const fallback = (i % 8) + 1;
+        const value = Number.isFinite(Number(values[i])) ? Number(values[i]) : fallback;
+        out.push(clamp(Math.round(value), 1, 8));
+    }
+    return out;
+}
+
+function getCalibrationRoutingFromControls() {
+    const values = [];
+    for (let i = 1; i <= 4; ++i) {
+        const select = document.getElementById(`cal-spk${i}`);
+        const channel = select ? (select.selectedIndex + 1) : i;
+        values.push(clamp(channel, 1, 8));
+    }
+    return values;
+}
+
+function getCalibrationActiveRouting() {
+    const fromStatus = normaliseCalibrationRouting(calibrationState?.speakerRouting || [], 4);
+    if (fromStatus.length >= 4) return fromStatus;
+    return getCalibrationRoutingFromControls();
+}
+
+function compareCalibrationRouting(a, b, count = 4) {
+    const lhs = normaliseCalibrationRouting(a, count);
+    const rhs = normaliseCalibrationRouting(b, count);
+    for (let i = 0; i < count; ++i) {
+        if (lhs[i] !== rhs[i]) return false;
+    }
+    return true;
+}
+
+function getCalibrationExpectedAutoRouting() {
+    const fromScene = Array.isArray(sceneData?.calAutoRoutingMap) ? sceneData.calAutoRoutingMap : calibrationLastAutoRouting;
+    return normaliseCalibrationRouting(fromScene || [1, 2, 3, 4], 4);
+}
+
+function getCalibrationStatusChipText(status) {
+    if (status.running) return "Measuring";
+    if (status.complete) return "Complete";
+    if (status.mappingLimitedToFirst4) return "Limited";
+    if (status.mappingValid) return "Ready";
+    return "Idle";
+}
+
+function setCalibrationValidationChip(chipId, state, text) {
+    const chip = document.getElementById(chipId);
+    if (!chip) return;
+    chip.classList.remove("pass", "fail", "warn", "active");
+    if (state === "pass") chip.classList.add("pass");
+    else if (state === "fail") chip.classList.add("fail");
+    else if (state === "warn") chip.classList.add("warn");
+    else chip.classList.add("active");
+    chip.textContent = text;
+}
+
+function setCalibrationProfileStatus(message, isError = false) {
+    const status = document.getElementById("cal-profile-status");
+    if (!status) return;
+    status.textContent = String(message || "");
+    status.classList.toggle("error", !!isError);
+}
+
+function getCalibrationProfileNameInputValue() {
+    const input = document.getElementById("cal-profile-name");
+    if (!input) return "";
+    return String(input.value || "").trim();
+}
+
+function setCalibrationProfileNameInputValue(name) {
+    const input = document.getElementById("cal-profile-name");
+    if (!input) return;
+    const next = String(name || "").trim();
+    if (document.activeElement !== input || !input.value) {
+        input.value = next;
+    }
+}
+
+function getSelectedCalibrationProfileEntry() {
+    const select = document.getElementById("cal-profile-select");
+    if (!select || !select.value) return null;
+    const option = select.options[select.selectedIndex];
+    if (!option) return null;
+    return {
+        path: option.value || "",
+        name: String(option.dataset.profileName || "").trim(),
+        topologyProfile: String(option.dataset.topologyProfile || ""),
+        monitoringPath: String(option.dataset.monitoringPath || ""),
+        deviceProfile: String(option.dataset.deviceProfile || ""),
+    };
+}
+
 function getCalibrationSpeakerLevel(index) {
     const levels = calibrationState?.speakerLevels;
     if (Array.isArray(levels) && Number.isFinite(levels[index])) {
@@ -2806,6 +3223,13 @@ async function initialiseUIRuntime() {
                 await refreshPresetList();
             } catch (error) {
                 console.error("LocusQ: refreshPresetList failed:", error);
+            }
+        })(),
+        (async () => {
+            try {
+                await refreshCalibrationProfileList();
+            } catch (error) {
+                console.error("LocusQ: refreshCalibrationProfileList failed:", error);
             }
         })(),
     ];
@@ -2935,6 +3359,7 @@ async function runProductionP0SelfTest() {
     };
     const runBl011ClapSelfTest = queryParams.get("selftest_bl011") === "1";
     const runBl011ScopeOnly = runBl011ClapSelfTest || productionP0SelfTestScope === "bl011";
+    const runBl026ScopeOnly = productionP0SelfTestScope === "bl026";
     const runBl011ClapDiagnosticsCheck = async () => {
         try {
             await waitForCondition("clap diagnostics snapshot", () => {
@@ -3039,6 +3464,16 @@ async function runProductionP0SelfTest() {
                 && !!document.getElementById("choreo-pack-select")
                 && !!document.getElementById("choreo-apply-btn")
                 && !!document.getElementById("choreo-save-btn")
+                && !!document.getElementById("cal-topology")
+                && !!document.getElementById("cal-monitoring-path")
+                && !!document.getElementById("cal-device-profile")
+                && !!document.getElementById("cal-redetect-btn")
+                && !!document.getElementById("cal-start-btn")
+                && !!document.getElementById("cal-profile-save-btn")
+                && !!document.getElementById("cal-profile-load-btn")
+                && !!document.getElementById("cal-profile-rename-btn")
+                && !!document.getElementById("cal-profile-delete-btn")
+                && !!document.getElementById("cal-profile-select")
                 && !!document.querySelector('.timeline-lane[data-lane="azimuth"] .lane-track');
         }, 8000, 40);
 
@@ -3055,6 +3490,262 @@ async function runProductionP0SelfTest() {
             }
 
             await runBl011ClapDiagnosticsCheck();
+            report.ok = true;
+            report.status = "pass";
+            return report;
+        }
+
+        // UI-P1-026A..E: CALIBRATE v2 topology/mapping/run/diagnostics/profile-library contracts.
+        switchMode("calibrate");
+        setChoiceIndex(comboStates.mode, 0, 3);
+        await waitMs(160);
+
+        const calTopologySelect = document.getElementById("cal-topology");
+        const calConfigSelect = document.getElementById("cal-config");
+        const calMonitoringPathSelect = document.getElementById("cal-monitoring-path");
+        const calDeviceProfileSelect = document.getElementById("cal-device-profile");
+        const calRedetectButton = document.getElementById("cal-redetect-btn");
+        const calStartButton = document.getElementById("cal-start-btn");
+        const calProfileSaveButton = document.getElementById("cal-profile-save-btn");
+        const calProfileLoadButton = document.getElementById("cal-profile-load-btn");
+        const calProfileRenameButton = document.getElementById("cal-profile-rename-btn");
+        const calProfileDeleteButton = document.getElementById("cal-profile-delete-btn");
+        const calProfileSelect = document.getElementById("cal-profile-select");
+        const calProfileNameInput = document.getElementById("cal-profile-name");
+        const calAckLimited = document.getElementById("cal-ack-limited-check");
+        const calAckRedetect = document.getElementById("cal-ack-redetect-check");
+        const calibrationMappingRows = () => [1, 2, 3, 4].filter(index => {
+            const row = document.getElementById(`cal-map-row-${index}`);
+            return !!row && row.style.display !== "none";
+        }).length;
+
+        if (!calTopologySelect
+            || !calConfigSelect
+            || !calMonitoringPathSelect
+            || !calDeviceProfileSelect
+            || !calRedetectButton
+            || !calStartButton
+            || !calProfileSaveButton
+            || !calProfileLoadButton
+            || !calProfileRenameButton
+            || !calProfileDeleteButton
+            || !calProfileSelect
+            || !calProfileNameInput) {
+            failCheck("UI-P1-026A", "missing CALIBRATE v2 controls");
+        }
+
+        // UI-P1-026A: topology profile switch + matrix row-count contract.
+        setChoiceIndex(comboStates.cal_topology_profile, 1, 9); // stereo
+        calTopologySelect.selectedIndex = 1;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("calibrate topology stereo rows", () => calibrationMappingRows() === 2, 2000, 25);
+        await waitForCondition("legacy config follows stereo topology", () => getChoiceIndex(comboStates.cal_spk_config) === 1, 2000, 25);
+        setChoiceIndex(comboStates.cal_topology_profile, 2, 9); // quad
+        calTopologySelect.selectedIndex = 2;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("calibrate topology quad rows", () => calibrationMappingRows() === 4, 2000, 25);
+        await waitForCondition("legacy config follows quad topology", () => getChoiceIndex(comboStates.cal_spk_config) === 0, 2000, 25);
+        setChoiceIndex(comboStates.cal_topology_profile, 0, 9); // mono
+        calTopologySelect.selectedIndex = 0;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("calibrate topology mono rows", () => calibrationMappingRows() === 1, 2000, 25);
+        await waitForCondition("legacy config follows mono topology", () => getChoiceIndex(comboStates.cal_spk_config) === 1, 2000, 25);
+
+        calConfigSelect.selectedIndex = 1; // legacy 2x stereo
+        calConfigSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("legacy stereo maps topology stereo", () => getChoiceIndex(comboStates.cal_topology_profile) === 1, 2000, 25);
+        calConfigSelect.selectedIndex = 0; // legacy 4x mono (alias for quad in v2)
+        calConfigSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("legacy mono maps topology quad", () => getChoiceIndex(comboStates.cal_topology_profile) === 2, 2000, 25);
+
+        recordCheck("UI-P1-026A", true, "topology rows mono=1 stereo=2 quad=4 verified; legacy alias sync both directions");
+
+        // UI-P1-026B: redetect/custom-map protection contract.
+        setChoiceIndex(comboStates.cal_topology_profile, 2, 9); // quad
+        calTopologySelect.selectedIndex = 2;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitMs(120);
+        await runCalibrationRedetect();
+        const expectedAutoRouting = getCalibrationExpectedAutoRouting();
+        const calSpk1 = document.getElementById("cal-spk1");
+        if (!calSpk1) {
+            failCheck("UI-P1-026B", "missing cal-spk1 select");
+        }
+        calSpk1.selectedIndex = (calSpk1.selectedIndex + 1) % Math.max(1, calSpk1.options.length);
+        calSpk1.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitMs(80);
+        const routingCustom = getCalibrationRoutingFromControls();
+        if (calAckRedetect) calAckRedetect.checked = false;
+        const redetectBlocked = await runCalibrationRedetect();
+        if (redetectBlocked) {
+            failCheck("UI-P1-026B", "redetect unexpectedly overwrote custom routing without acknowledgement");
+        }
+        const routingAfterBlocked = getCalibrationRoutingFromControls();
+        const blockedStillCustom = !compareCalibrationRouting(routingAfterBlocked, expectedAutoRouting, 4) || calibrationMappingEditedByUser;
+        if (!blockedStillCustom) {
+            failCheck(
+                "UI-P1-026B",
+                `custom routing reverted to auto despite blocked redetect (auto=${expectedAutoRouting.join("/")} blocked=${routingAfterBlocked.join("/")})`
+            );
+        }
+        if (calAckRedetect) calAckRedetect.checked = true;
+        const redetectApplied = await runCalibrationRedetect();
+        if (!redetectApplied) {
+            failCheck("UI-P1-026B", "redetect failed after overwrite acknowledgement");
+        }
+        const routingAfterApply = getCalibrationRoutingFromControls();
+        if (calibrationMappingEditedByUser) {
+            failCheck(
+                "UI-P1-026B",
+                `custom-map flag remained active after acknowledged redetect (auto=${expectedAutoRouting.join("/")} applied=${routingAfterApply.join("/")})`
+            );
+        }
+        recordCheck(
+            "UI-P1-026B",
+            true,
+            `custom-map protection verified (auto=${expectedAutoRouting.join("/")} custom=${routingCustom.join("/")} postAck=${routingAfterApply.join("/")})`
+        );
+
+        // UI-P1-026C: run lifecycle preflight + start/abort determinism.
+        // Reset mapping to a deterministic non-duplicate baseline so this lane
+        // validates the high-channel acknowledgement contract (not duplicate-route gating).
+        [1, 2, 3, 4].forEach(index => {
+            const select = document.getElementById(`cal-spk${index}`);
+            if (!select) return;
+            select.selectedIndex = clamp(index - 1, 0, Math.max(0, select.options.length - 1));
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        await waitMs(100);
+        setChoiceIndex(comboStates.cal_topology_profile, 5, 9); // 7.4.2
+        calTopologySelect.selectedIndex = 5;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitMs(100);
+        if (calAckLimited) calAckLimited.checked = false;
+        const blockedMessage = validateCalibrationStartPreflight(collectCalibrationOptions());
+        if (!blockedMessage.toLowerCase().includes("requires")) {
+            failCheck("UI-P1-026C", "preflight did not block high-channel topology without acknowledgement");
+        }
+        if (calAckLimited) calAckLimited.checked = true;
+        const acknowledgedMessage = validateCalibrationStartPreflight(collectCalibrationOptions());
+        if (acknowledgedMessage) {
+            failCheck("UI-P1-026C", `preflight stayed blocked after acknowledgement (${acknowledgedMessage})`);
+        }
+
+        setChoiceIndex(comboStates.cal_topology_profile, 1, 9); // stereo for runnable lane
+        calTopologySelect.selectedIndex = 1;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        if (calAckLimited) calAckLimited.checked = false;
+        await waitMs(100);
+
+        calStartButton.click();
+        await waitForCondition("calibration start", () => calibrationState.running || String(calStartButton.textContent || "").includes("ABORT"), 2500, 25);
+        if (!calibrationState.running && !String(calStartButton.textContent || "").includes("ABORT")) {
+            failCheck("UI-P1-026C", "calibration did not enter running state");
+        }
+        calStartButton.click();
+        await waitForCondition("calibration abort", () => !calibrationState.running, 2500, 25);
+        if (calibrationState.running) {
+            failCheck("UI-P1-026C", "calibration abort did not stop run");
+        }
+        recordCheck("UI-P1-026C", true, "preflight gate + start/abort lifecycle verified");
+
+        // UI-P1-026D: headphone/spatial profile activation diagnostics contract.
+        setChoiceIndex(comboStates.cal_monitoring_path, 2, 4); // steam binaural path
+        calMonitoringPathSelect.selectedIndex = 2;
+        calMonitoringPathSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        setChoiceIndex(comboStates.cal_device_profile, 1, 4); // AirPods
+        calDeviceProfileSelect.selectedIndex = 1;
+        calDeviceProfileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitMs(180);
+        applyCalibrationStatus();
+        const profileChip = document.getElementById("cal-validation-profile-chip");
+        const profileChipText = String(profileChip?.textContent || "").trim().toUpperCase();
+        if (!profileChip || !profileChipText || profileChipText === "PENDING") {
+            failCheck("UI-P1-026D", "profile diagnostics chip did not update");
+        }
+        recordCheck(
+            "UI-P1-026D",
+            true,
+            `profileChip=${profileChipText} requested=${sceneData.rendererHeadphoneProfileRequested || "unknown"} active=${sceneData.rendererHeadphoneProfileActive || "unknown"}`
+        );
+
+        // UI-P1-026E: downmix validation path contract.
+        setChoiceIndex(comboStates.cal_topology_profile, 8, 9); // multichannel downmix target
+        calTopologySelect.selectedIndex = 8;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        setChoiceIndex(comboStates.cal_monitoring_path, 1, 4); // stereo downmix path
+        calMonitoringPathSelect.selectedIndex = 1;
+        calMonitoringPathSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitMs(180);
+        applyCalibrationStatus();
+        const downmixChip = document.getElementById("cal-validation-downmix-chip");
+        const downmixChipText = String(downmixChip?.textContent || "").trim().toUpperCase();
+        if (!downmixChip || !["PASS", "FAIL"].includes(downmixChipText)) {
+            failCheck("UI-P1-026E", `downmix diagnostics chip did not produce PASS/FAIL (${downmixChipText || "missing"})`);
+        }
+        const calProfileBaseName = `CalAuto_${Date.now()}`;
+        const calProfileRenamed = `${calProfileBaseName}_Renamed`;
+        calProfileNameInput.value = calProfileBaseName;
+        const profileSaved = await saveCalibrationProfile();
+        if (!profileSaved) {
+            failCheck("UI-P1-026E", "calibration profile save failed");
+        }
+        await refreshCalibrationProfileList();
+        const savedCalProfileOption = Array.from(calProfileSelect.options || []).find(option =>
+            String(option.dataset.profileName || option.textContent || "").includes(calProfileBaseName)
+        );
+        if (!savedCalProfileOption?.value) {
+            failCheck("UI-P1-026E", `saved calibration profile not found (${calProfileBaseName})`);
+        }
+        calProfileSelect.value = savedCalProfileOption.value;
+        calProfileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        const profileLoaded = await loadCalibrationProfile();
+        if (!profileLoaded) {
+            failCheck("UI-P1-026E", "calibration profile load failed");
+        }
+        calProfileNameInput.value = calProfileRenamed;
+        const profileRenamed = await renameCalibrationProfile();
+        if (!profileRenamed) {
+            failCheck("UI-P1-026E", "calibration profile rename failed");
+        }
+        await refreshCalibrationProfileList();
+        const renamedCalProfileOption = Array.from(calProfileSelect.options || []).find(option =>
+            String(option.dataset.profileName || option.textContent || "").includes(calProfileRenamed)
+        );
+        if (!renamedCalProfileOption?.value) {
+            failCheck("UI-P1-026E", `renamed calibration profile not found (${calProfileRenamed})`);
+        }
+        calProfileSelect.value = renamedCalProfileOption.value;
+        calProfileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        const profileDeleted = await deleteCalibrationProfile();
+        if (!profileDeleted) {
+            failCheck("UI-P1-026E", "calibration profile delete failed");
+        }
+        await refreshCalibrationProfileList();
+        const deletedStillPresent = Array.from(calProfileSelect.options || []).some(option =>
+            String(option.dataset.profileName || option.textContent || "").includes(calProfileRenamed)
+        );
+        if (deletedStillPresent) {
+            failCheck("UI-P1-026E", "deleted calibration profile still present in list");
+        }
+        recordCheck("UI-P1-026E", true, `downmixChip=${downmixChipText}; profileCRUD=save/load/rename/delete`);
+
+        // Restore defaults before continuing legacy P0/P1 checks.
+        setChoiceIndex(comboStates.cal_topology_profile, 2, 9);
+        setChoiceIndex(comboStates.cal_monitoring_path, 0, 4);
+        setChoiceIndex(comboStates.cal_device_profile, 0, 4);
+        calTopologySelect.selectedIndex = 2;
+        calMonitoringPathSelect.selectedIndex = 0;
+        calDeviceProfileSelect.selectedIndex = 0;
+        calTopologySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        calMonitoringPathSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        calDeviceProfileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        if (calAckLimited) calAckLimited.checked = false;
+        if (calAckRedetect) calAckRedetect.checked = false;
+        calibrationMappingEditedByUser = false;
+        await waitMs(120);
+
+        if (runBl026ScopeOnly) {
             report.ok = true;
             report.status = "pass";
             return report;
@@ -4651,6 +5342,9 @@ function initUIBindings() {
     }
 
     bindSelectToComboState("cal-config", comboStates.cal_spk_config);
+    bindSelectToComboState("cal-topology", comboStates.cal_topology_profile);
+    bindSelectToComboState("cal-monitoring-path", comboStates.cal_monitoring_path);
+    bindSelectToComboState("cal-device-profile", comboStates.cal_device_profile);
     bindSelectToIntSliderState("cal-mic", sliderStates.cal_mic_channel, 1);
     bindSelectToIntSliderState("cal-spk1", sliderStates.cal_spk1_out, 1);
     bindSelectToIntSliderState("cal-spk2", sliderStates.cal_spk2_out, 1);
@@ -4658,6 +5352,98 @@ function initUIBindings() {
     bindSelectToIntSliderState("cal-spk4", sliderStates.cal_spk4_out, 1);
     bindSelectToComboState("cal-type", comboStates.cal_test_type);
     bindValueStepper("cal-level", sliderStates.cal_test_level, { step: 1.0, min: -60.0, max: 0.0, roundDigits: 1 });
+
+    ["cal-spk1", "cal-spk2", "cal-spk3", "cal-spk4"].forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        select.addEventListener("change", () => {
+            if (isElementControlLocked(select)) return;
+            calibrationMappingEditedByUser = true;
+            applyCalibrationStatus();
+        });
+    });
+
+    const calConfigSelect = document.getElementById("cal-config");
+    if (calConfigSelect) {
+        calConfigSelect.addEventListener("change", () => {
+            if (isElementControlLocked(calConfigSelect)) return;
+            syncTopologyFromLegacyConfigAlias(calConfigSelect.selectedIndex);
+            applyCalibrationStatus();
+        });
+    }
+
+    ["cal-topology", "cal-monitoring-path", "cal-device-profile"].forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        select.addEventListener("change", () => {
+            if (isElementControlLocked(select)) return;
+            if (id === "cal-topology") {
+                const ackLimited = document.getElementById("cal-ack-limited-check");
+                if (ackLimited) ackLimited.checked = false;
+                syncLegacyConfigAliasFromTopology(getCalibrationTopologyId(select.selectedIndex));
+            }
+            applyCalibrationStatus();
+        });
+    });
+
+    const calRedetectButton = document.getElementById("cal-redetect-btn");
+    if (calRedetectButton) {
+        calRedetectButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calRedetectButton)) return;
+            await runCalibrationRedetect();
+        });
+    }
+
+    const calProfileNameInput = document.getElementById("cal-profile-name");
+    if (calProfileNameInput) {
+        calProfileNameInput.addEventListener("blur", () => {
+            if (isElementControlLocked(calProfileNameInput)) return;
+            calProfileNameInput.value = getCalibrationProfileNameInputValue();
+        });
+    }
+
+    const calProfileSelect = document.getElementById("cal-profile-select");
+    if (calProfileSelect) {
+        calProfileSelect.addEventListener("change", () => {
+            if (isElementControlLocked(calProfileSelect)) return;
+            const selected = getSelectedCalibrationProfileEntry();
+            if (selected?.name) {
+                setCalibrationProfileNameInputValue(selected.name);
+            }
+        });
+    }
+
+    const calProfileSaveButton = document.getElementById("cal-profile-save-btn");
+    if (calProfileSaveButton) {
+        calProfileSaveButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calProfileSaveButton)) return;
+            await saveCalibrationProfile();
+        });
+    }
+
+    const calProfileLoadButton = document.getElementById("cal-profile-load-btn");
+    if (calProfileLoadButton) {
+        calProfileLoadButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calProfileLoadButton)) return;
+            await loadCalibrationProfile();
+        });
+    }
+
+    const calProfileRenameButton = document.getElementById("cal-profile-rename-btn");
+    if (calProfileRenameButton) {
+        calProfileRenameButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calProfileRenameButton)) return;
+            await renameCalibrationProfile();
+        });
+    }
+
+    const calProfileDeleteButton = document.getElementById("cal-profile-delete-btn");
+    if (calProfileDeleteButton) {
+        calProfileDeleteButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calProfileDeleteButton)) return;
+            await deleteCalibrationProfile();
+        });
+    }
 
     const emitLabelInput = document.getElementById("emit-label");
     if (emitLabelInput) {
@@ -4816,6 +5602,9 @@ function initUIBindings() {
     bindSelectToComboState("rend-dist-model", comboStates.rend_distance_model);
     bindSelectToComboState("rend-headphone-mode", comboStates.rend_headphone_mode);
     bindSelectToComboState("rend-headphone-profile", comboStates.rend_headphone_profile);
+    bindSelectToComboState("rend-audition-signal", comboStates.rend_audition_signal);
+    bindSelectToComboState("rend-audition-motion", comboStates.rend_audition_motion);
+    bindSelectToComboState("rend-audition-level", comboStates.rend_audition_level);
     bindSelectToComboState("rend-phys-rate", comboStates.rend_phys_rate);
     bindValueStepper("val-viz-trail-len", sliderStates.rend_viz_trail_len, { step: 0.5, min: 0.5, max: 30.0, roundDigits: 1 });
     bindValueStepper("val-viz-diag-mix", sliderStates.rend_viz_diag_mix, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2, formatter: value => Math.round(value * 100) });
@@ -4842,6 +5631,13 @@ function initUIBindings() {
     if (airAbsorbToggle) {
         bindControlActivate(airAbsorbToggle, () => {
             toggleStateAndClass("toggle-air-absorb", toggleStates.rend_air_absorb);
+        });
+    }
+
+    const auditionToggle = document.getElementById("toggle-audition");
+    if (auditionToggle) {
+        bindControlActivate(auditionToggle, () => {
+            toggleStateAndClass("toggle-audition", toggleStates.rend_audition_enable);
         });
     }
 
@@ -5186,13 +5982,22 @@ function initUIBindings() {
             }
 
             const options = collectCalibrationOptions();
+            const preflightMessage = validateCalibrationStartPreflight(options);
+            if (preflightMessage) {
+                setCalibrationProfileStatus(preflightMessage, true);
+                return;
+            }
 
             try {
                 const started = await callNative("locusqStartCalibration", nativeFunctions.startCalibration, options);
                 if (!started) {
+                    setCalibrationProfileStatus("Calibration start rejected by runtime. Confirm CALIBRATE mode and mapping gate.", true);
                     console.warn("Calibration did not start. Ensure mode is Calibrate and engine is idle.");
+                } else {
+                    setCalibrationProfileStatus("Calibration run started.");
                 }
             } catch (error) {
+                setCalibrationProfileStatus("Failed to start calibration run.", true);
                 console.error("Failed to start calibration:", error);
             }
         });
@@ -5320,6 +6125,19 @@ function initParameterListeners() {
     });
     sliderStates.cal_test_level.valueChangedEvent.addListener(() => {
         updateValueDisplay("cal-level", sliderStates.cal_test_level.getScaledValue().toFixed(1), "dBFS");
+        applyCalibrationStatus();
+    });
+    sliderStates.cal_spk1_out.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
+    sliderStates.cal_spk2_out.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
+    sliderStates.cal_spk3_out.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
+    sliderStates.cal_spk4_out.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
     });
     sliderStates.phys_mass.valueChangedEvent.addListener(() => {
         updateValueDisplay("val-mass", sliderStates.phys_mass.getScaledValue().toFixed(2), "kg");
@@ -5408,6 +6226,9 @@ function initParameterListeners() {
     toggleStates.rend_air_absorb.valueChangedEvent.addListener(() => {
         setToggleClass("toggle-air-absorb", !!toggleStates.rend_air_absorb.getValue());
     });
+    toggleStates.rend_audition_enable.valueChangedEvent.addListener(() => {
+        setToggleClass("toggle-audition", !!toggleStates.rend_audition_enable.getValue());
+    });
     toggleStates.rend_room_enable.valueChangedEvent.addListener(() => {
         setToggleClass("toggle-room", !!toggleStates.rend_room_enable.getValue());
     });
@@ -5438,6 +6259,22 @@ function initParameterListeners() {
     });
 
     comboStates.rend_viz_mode.valueChangedEvent.addListener(updateViewMode);
+    comboStates.cal_spk_config.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
+    comboStates.cal_topology_profile.valueChangedEvent.addListener(() => {
+        syncLegacyConfigAliasFromTopology(getCalibrationTopologyId(getChoiceIndex(comboStates.cal_topology_profile)));
+        applyCalibrationStatus();
+    });
+    comboStates.cal_monitoring_path.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
+    comboStates.cal_device_profile.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
+    comboStates.cal_test_type.valueChangedEvent.addListener(() => {
+        applyCalibrationStatus();
+    });
     comboStates.pos_coord_mode.valueChangedEvent.addListener(syncPositionModeUI);
     comboStates.phys_gravity_dir.valueChangedEvent.addListener(markPhysicsPresetCustom);
 
@@ -5488,6 +6325,7 @@ function initParameterListeners() {
     setToggleClass("toggle-size-link", !!toggleStates.size_link.getValue());
     setToggleClass("toggle-doppler", !!toggleStates.rend_doppler.getValue());
     setToggleClass("toggle-air-absorb", !!toggleStates.rend_air_absorb.getValue());
+    setToggleClass("toggle-audition", !!toggleStates.rend_audition_enable.getValue());
     setToggleClass("toggle-room", !!toggleStates.rend_room_enable.getValue());
     setToggleClass("toggle-er-only", !!toggleStates.rend_room_er_only.getValue());
     setToggleClass("toggle-walls", !!toggleStates.rend_phys_walls.getValue());
@@ -5506,6 +6344,7 @@ function initParameterListeners() {
     updateViewMode();
     updateEmitterAuthorityUI();
     syncAnimationUI();
+    syncLegacyConfigAliasFromTopology(getCalibrationViewportTopologyId());
 }
 
 function updateValueDisplay(id, value, unit) {
@@ -5669,6 +6508,21 @@ function setArrowFromVector(arrow, x, y, z, targetLength) {
 }
 
 function updateSpeakerTargetsFromScene(data) {
+    if (currentMode === "calibrate") {
+        const topologyId = getCalibrationViewportTopologyId();
+        for (let i = 0; i < 4; i++) {
+            if (!speakerTargets[i]) {
+                speakerTargets[i] = { ...defaultSpeakerSnapshotPositions[i], rms: 0.0 };
+            }
+            const previewPosition = getCalibrationPreviewSpeakerPosition(topologyId, i);
+            speakerTargets[i].x = previewPosition.x;
+            speakerTargets[i].y = previewPosition.y;
+            speakerTargets[i].z = previewPosition.z;
+            speakerTargets[i].rms = 0.0;
+        }
+        return;
+    }
+
     for (let i = 0; i < 4; i++) {
         if (!speakerTargets[i]) {
             speakerTargets[i] = { ...defaultSpeakerSnapshotPositions[i], rms: 0.0 };
@@ -5987,14 +6841,28 @@ window.updateSceneState = function(data) {
             const lensText = physicsLensEnabled
                 ? ` \u00B7 Lens ${Math.round(physicsLensMix * 100)}%`
                 : "";
+            const auditionEnabled = !!data.rendererAuditionEnabled;
+            const auditionSignal = typeof data.rendererAuditionSignal === "string"
+                ? data.rendererAuditionSignal
+                : "sine_440";
+            const auditionMotion = typeof data.rendererAuditionMotion === "string"
+                ? data.rendererAuditionMotion
+                : "center";
+            const auditionLevelDb = Number.isFinite(Number(data.rendererAuditionLevelDb))
+                ? Number(data.rendererAuditionLevelDb)
+                : -24.0;
+            const auditionText = auditionEnabled
+                ? ` \u00B7 Audition ${auditionSignal}/${auditionMotion}/${auditionLevelDb.toFixed(0)}dBFS`
+                : "";
             info.textContent = "Renderer Mode \u00B7 " + data.emitterCount + " emitters \u00B7 " +
-                qualityText + outputText + spatialText + headphoneText + lensText + rendererPerfText + blockPerfText;
+                qualityText + outputText + spatialText + headphoneText + auditionText + lensText + rendererPerfText + blockPerfText;
         } else {
             info.textContent = "Calibrate Mode \u00B7 Room Profile Setup";
         }
     }
 
     applySceneStatusBadge();
+    applyCalibrationStatus();
 };
 
 window.updateCalibrationStatus = function(status) {
@@ -6005,8 +6873,267 @@ window.updateCalibrationStatus = function(status) {
         ...status,
     };
 
+    if (Array.isArray(status.routing)) {
+        calibrationLastAutoRouting = normaliseCalibrationRouting(status.routing, 4);
+    }
+
     applyCalibrationStatus();
 };
+
+function buildCalibrationValidationSummaryPayload(status = calibrationState) {
+    const source = status || {};
+    return {
+        mappingValid: !!source.mappingValid,
+        mappingLimitedToFirst4: !!source.mappingLimitedToFirst4,
+        mappingDuplicateChannels: !!source.mappingDuplicateChannels,
+        phasePass: !!source.phasePass,
+        delayPass: !!source.delayPass,
+        topologyProfile: String(source.topologyProfile || getCalibrationTopologyId(source.topologyProfileIndex)),
+        monitoringPath: String(source.monitoringPath || getCalibrationMonitoringPathId(source.monitoringPathIndex)),
+        deviceProfile: String(source.deviceProfile || getCalibrationDeviceProfileId(source.deviceProfileIndex)),
+        profileValid: !!source.profileValid,
+        capturedAtUtc: new Date().toISOString(),
+    };
+}
+
+async function refreshCalibrationProfileList(preferredPath = "") {
+    const select = document.getElementById("cal-profile-select");
+    if (!select) return;
+
+    const previousSelection = String(preferredPath || select.value || "");
+    select.innerHTML = "";
+
+    try {
+        const items = await callNative("locusqListCalibrationProfiles", nativeFunctions.listCalibrationProfiles);
+        calibrationProfileEntries = Array.isArray(items) ? items : [];
+    } catch (error) {
+        calibrationProfileEntries = [];
+        setCalibrationProfileStatus("Calibration profile listing failed.", true);
+        return;
+    }
+
+    if (calibrationProfileEntries.length === 0) {
+        const emptyOption = document.createElement("option");
+        emptyOption.textContent = "No profiles";
+        emptyOption.value = "";
+        select.appendChild(emptyOption);
+        setCalibrationProfileStatus("No calibration profiles saved yet.");
+        return;
+    }
+
+    calibrationProfileEntries.forEach((entry, index) => {
+        const option = document.createElement("option");
+        option.value = String(entry?.path || entry?.file || "");
+        const displayName = String(entry?.name || entry?.file || `Profile ${index + 1}`).trim();
+        const topologyId = String(entry?.topologyProfile || "");
+        const monitoringPathId = String(entry?.monitoringPath || "");
+        const deviceProfileId = String(entry?.deviceProfile || "");
+        option.textContent = `[${getCalibrationTopologyLabel(topologyId, true)}] ${displayName}`;
+        option.dataset.profileName = displayName;
+        option.dataset.topologyProfile = topologyId;
+        option.dataset.monitoringPath = monitoringPathId;
+        option.dataset.deviceProfile = deviceProfileId;
+        select.appendChild(option);
+    });
+
+    if (previousSelection) {
+        const match = Array.from(select.options).find(option => option.value === previousSelection);
+        if (match) {
+            select.value = match.value;
+        }
+    }
+    if (!select.value && select.options.length > 0) {
+        select.selectedIndex = 0;
+    }
+
+    const selected = getSelectedCalibrationProfileEntry();
+    if (selected?.name) {
+        setCalibrationProfileNameInputValue(selected.name);
+    }
+    setCalibrationProfileStatus(`${calibrationProfileEntries.length} calibration profile(s) available.`);
+}
+
+async function saveCalibrationProfile() {
+    const inputName = getCalibrationProfileNameInputValue();
+    const fallbackName = `Cal_${Date.now()}`;
+    const profileName = inputName || fallbackName;
+    setCalibrationProfileNameInputValue(profileName);
+
+    try {
+        const result = await callNative(
+            "locusqSaveCalibrationProfile",
+            nativeFunctions.saveCalibrationProfile,
+            {
+                name: profileName,
+                validationSummary: buildCalibrationValidationSummaryPayload(),
+            }
+        );
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile save failed.", true);
+            return false;
+        }
+
+        setCalibrationProfileStatus(`Saved profile: ${result.name || profileName}`);
+        await refreshCalibrationProfileList(result?.path || "");
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Calibration profile save failed.", true);
+        console.error("Failed to save calibration profile:", error);
+        return false;
+    }
+}
+
+async function loadCalibrationProfile() {
+    const selected = getSelectedCalibrationProfileEntry();
+    if (!selected || !selected.path) {
+        setCalibrationProfileStatus("Select a calibration profile first.", true);
+        return false;
+    }
+
+    try {
+        const result = await callNative("locusqLoadCalibrationProfile", nativeFunctions.loadCalibrationProfile, {
+            path: selected.path,
+        });
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile load failed.", true);
+            return false;
+        }
+
+        calibrationMappingEditedByUser = false;
+        const ackRedetect = document.getElementById("cal-ack-redetect-check");
+        if (ackRedetect) ackRedetect.checked = false;
+
+        setCalibrationProfileNameInputValue(result?.name || selected.name || "");
+        setCalibrationProfileStatus(`Loaded profile: ${result?.name || selected.name || "profile"}`);
+        await refreshCalibrationProfileList(result?.path || selected.path);
+        applyCalibrationStatus();
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Calibration profile load failed.", true);
+        console.error("Failed to load calibration profile:", error);
+        return false;
+    }
+}
+
+async function renameCalibrationProfile() {
+    const selected = getSelectedCalibrationProfileEntry();
+    if (!selected || !selected.path) {
+        setCalibrationProfileStatus("Select a calibration profile first.", true);
+        return false;
+    }
+
+    const nextName = getCalibrationProfileNameInputValue();
+    if (!nextName) {
+        setCalibrationProfileStatus("Calibration profile name is required.", true);
+        return false;
+    }
+
+    try {
+        const result = await callNative("locusqRenameCalibrationProfile", nativeFunctions.renameCalibrationProfile, {
+            path: selected.path,
+            newName: nextName,
+        });
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile rename failed.", true);
+            return false;
+        }
+
+        setCalibrationProfileStatus(`Renamed profile: ${result.name || nextName}`);
+        await refreshCalibrationProfileList(result?.path || "");
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Calibration profile rename failed.", true);
+        console.error("Failed to rename calibration profile:", error);
+        return false;
+    }
+}
+
+async function deleteCalibrationProfile() {
+    const selected = getSelectedCalibrationProfileEntry();
+    if (!selected || !selected.path) {
+        setCalibrationProfileStatus("Select a calibration profile first.", true);
+        return false;
+    }
+
+    try {
+        const result = await callNative("locusqDeleteCalibrationProfile", nativeFunctions.deleteCalibrationProfile, {
+            path: selected.path,
+        });
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile delete failed.", true);
+            return false;
+        }
+
+        setCalibrationProfileStatus(`Deleted profile: ${selected.name || "profile"}`);
+        await refreshCalibrationProfileList();
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Calibration profile delete failed.", true);
+        console.error("Failed to delete calibration profile:", error);
+        return false;
+    }
+}
+
+async function runCalibrationRedetect() {
+    if (calibrationState.running) {
+        setCalibrationProfileStatus("Stop calibration before routing redetect.", true);
+        return false;
+    }
+
+    const currentRouting = getCalibrationRoutingFromControls();
+    const expectedAutoRouting = getCalibrationExpectedAutoRouting();
+    const routeIsCustom = calibrationMappingEditedByUser || !compareCalibrationRouting(currentRouting, expectedAutoRouting, 4);
+    const ackRedetect = document.getElementById("cal-ack-redetect-check");
+    if (routeIsCustom && !(ackRedetect?.checked)) {
+        setCalibrationProfileStatus("Redetect blocked: acknowledge custom-map overwrite first.", true);
+        return false;
+    }
+
+    try {
+        const result = await callNative("locusqRedetectCalibrationRouting", nativeFunctions.redetectCalibrationRouting);
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Routing redetect failed.", true);
+            return false;
+        }
+
+        const routing = normaliseCalibrationRouting(result.routing || [], 4);
+        const mappingSelects = [
+            document.getElementById("cal-spk1"),
+            document.getElementById("cal-spk2"),
+            document.getElementById("cal-spk3"),
+            document.getElementById("cal-spk4"),
+        ];
+        mappingSelects.forEach((select, idx) => {
+            if (!select) return;
+            select.selectedIndex = clamp((routing[idx] || 1) - 1, 0, Math.max(0, select.options.length - 1));
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+
+        calibrationState = {
+            ...calibrationState,
+            topologyProfileIndex: Number(result.topologyProfileIndex ?? calibrationState.topologyProfileIndex),
+            topologyProfile: String(result.topologyProfile || calibrationState.topologyProfile),
+            monitoringPathIndex: Number(result.monitoringPathIndex ?? calibrationState.monitoringPathIndex),
+            monitoringPath: String(result.monitoringPath || calibrationState.monitoringPath),
+            deviceProfileIndex: Number(result.deviceProfileIndex ?? calibrationState.deviceProfileIndex),
+            deviceProfile: String(result.deviceProfile || calibrationState.deviceProfile),
+            requiredChannels: Number(result.requiredChannels ?? calibrationState.requiredChannels),
+            writableChannels: Number(result.writableChannels ?? calibrationState.writableChannels),
+            mappingLimitedToFirst4: !!result.mappingLimitedToFirst4,
+            speakerRouting: routing.slice(0, 4),
+        };
+        calibrationLastAutoRouting = routing.slice(0, 4);
+        calibrationMappingEditedByUser = false;
+        if (ackRedetect) ackRedetect.checked = false;
+        setCalibrationProfileStatus("Routing redetected from host output layout.");
+        applyCalibrationStatus();
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Routing redetect failed.", true);
+        console.error("Failed to redetect calibration routing:", error);
+        return false;
+    }
+}
 
 function collectCalibrationOptions() {
     const getSelectedIndex = (id, fallback = 0) => {
@@ -6016,6 +7143,11 @@ function collectCalibrationOptions() {
 
     const levelText = document.getElementById("cal-level")?.textContent || "-20.0";
     const parsedLevel = parseFloat(levelText);
+    const topologyProfileIndex = getSelectedIndex("cal-topology", getChoiceIndex(comboStates.cal_topology_profile));
+    const monitoringPathIndex = getSelectedIndex("cal-monitoring-path", getChoiceIndex(comboStates.cal_monitoring_path));
+    const deviceProfileIndex = getSelectedIndex("cal-device-profile", getChoiceIndex(comboStates.cal_device_profile));
+    const allowLimitedMapping = !!document.getElementById("cal-ack-limited-check")?.checked;
+    const routingOneBased = getCalibrationRoutingFromControls();
 
     return {
         testType: getSelectedIndex("cal-type", 0),
@@ -6023,13 +7155,43 @@ function collectCalibrationOptions() {
         sweepSeconds: 3.0,
         tailSeconds: 1.5,
         micChannel: getSelectedIndex("cal-mic", 0),
-        speakerChannels: [
-            getSelectedIndex("cal-spk1", 0),
-            getSelectedIndex("cal-spk2", 1),
-            getSelectedIndex("cal-spk3", 2),
-            getSelectedIndex("cal-spk4", 3),
-        ],
+        topologyProfileIndex,
+        topologyProfile: getCalibrationTopologyId(topologyProfileIndex),
+        monitoringPathIndex,
+        monitoringPath: getCalibrationMonitoringPathId(monitoringPathIndex),
+        deviceProfileIndex,
+        deviceProfile: getCalibrationDeviceProfileId(deviceProfileIndex),
+        allowLimitedMapping,
+        speakerChannels: routingOneBased.map(value => clamp((Number(value) || 1) - 1, 0, 7)),
     };
+}
+
+function validateCalibrationStartPreflight(options) {
+    const selectedOptions = options || collectCalibrationOptions();
+    const topologyId = getCalibrationTopologyId(selectedOptions.topologyProfileIndex);
+    const requiredChannels = getCalibrationRequiredChannels(topologyId);
+    const writableChannels = clamp(Number(calibrationState?.writableChannels) || 4, 1, 4);
+    const routing = normaliseCalibrationRouting(
+        Array.isArray(selectedOptions.speakerChannels)
+            ? selectedOptions.speakerChannels.map(value => (Number(value) || 0) + 1)
+            : getCalibrationRoutingFromControls(),
+        4
+    );
+    const rowsToValidate = Math.max(1, Math.min(4, requiredChannels, writableChannels));
+    const seen = new Set();
+    for (let i = 0; i < rowsToValidate; ++i) {
+        const channel = clamp(Math.round(Number(routing[i]) || (i + 1)), 1, 8);
+        if (seen.has(channel)) {
+            return `Routing preflight failed: duplicate output channel ${channel}.`;
+        }
+        seen.add(channel);
+    }
+
+    if (requiredChannels > writableChannels && !selectedOptions.allowLimitedMapping) {
+        return `Topology ${getCalibrationTopologyLabel(topologyId, true)} requires ${requiredChannels} channels, but only ${writableChannels} are writable. Enable limited-mapping acknowledgement to proceed.`;
+    }
+
+    return "";
 }
 
 async function abortCalibration() {
@@ -6042,6 +7204,14 @@ async function abortCalibration() {
 
 function applyCalibrationStatus() {
     const status = calibrationState || {};
+    const topologyId = String(status.topologyProfile || getCalibrationTopologyId(status.topologyProfileIndex));
+    const monitoringPathId = String(status.monitoringPath || getCalibrationMonitoringPathId(status.monitoringPathIndex));
+    const deviceProfileId = String(status.deviceProfile || getCalibrationDeviceProfileId(status.deviceProfileIndex));
+    const requiredChannels = Math.max(1, Number(status.requiredChannels) || getCalibrationRequiredChannels(topologyId));
+    const writableChannels = clamp(Number(status.writableChannels) || 4, 1, 4);
+    const mappingLimited = !!status.mappingLimitedToFirst4 || requiredChannels > writableChannels;
+    const mappingDuplicateChannels = !!status.mappingDuplicateChannels;
+    const mappingValid = !!status.mappingValid;
     const state = status.state || "idle";
     const running = !!status.running;
     const complete = !!status.complete;
@@ -6053,6 +7223,123 @@ function applyCalibrationStatus() {
         if (running) startButton.textContent = "ABORT";
         else if (complete) startButton.textContent = "MEASURE AGAIN";
         else startButton.textContent = "START MEASURE";
+    }
+
+    const stateChip = document.getElementById("cal-state-chip");
+    if (stateChip) {
+        stateChip.classList.remove("active", "warning", "local", "remote");
+        stateChip.textContent = getCalibrationStatusChipText(status);
+        if (running) stateChip.classList.add("active");
+        else if (complete) stateChip.classList.add("local");
+        else if (mappingLimited || mappingDuplicateChannels) stateChip.classList.add("warning");
+    }
+
+    const topologyChip = document.getElementById("cal-chip-topology");
+    if (topologyChip) {
+        topologyChip.textContent = `Topology: ${getCalibrationTopologyLabel(topologyId, true)}`;
+    }
+    const monitoringChip = document.getElementById("cal-chip-monitoring");
+    if (monitoringChip) {
+        monitoringChip.textContent = `Monitor: ${getCalibrationMonitoringPathLabel(monitoringPathId)}`;
+    }
+    const deviceChip = document.getElementById("cal-chip-device");
+    if (deviceChip) {
+        deviceChip.textContent = `Device: ${getCalibrationDeviceProfileLabel(deviceProfileId)}`;
+    }
+    const mappingChip = document.getElementById("cal-chip-mapping");
+    if (mappingChip) {
+        const mapped = Math.min(requiredChannels, writableChannels);
+        mappingChip.textContent = `Mapping: ${mapped}/${requiredChannels}`;
+        mappingChip.classList.toggle("warning", mappingLimited || mappingDuplicateChannels);
+    }
+
+    const mapRows = [
+        document.getElementById("cal-map-row-1"),
+        document.getElementById("cal-map-row-2"),
+        document.getElementById("cal-map-row-3"),
+        document.getElementById("cal-map-row-4"),
+    ];
+    const routingSource = calibrationMappingEditedByUser
+        ? getCalibrationRoutingFromControls()
+        : (status.speakerRouting || getCalibrationRoutingFromControls());
+    const routing = normaliseCalibrationRouting(routingSource, 4);
+    mapRows.forEach((row, idx) => {
+        if (!row) return;
+        const channelIndex = idx + 1;
+        const shouldShow = channelIndex <= Math.min(4, requiredChannels);
+        row.style.display = shouldShow ? "flex" : "none";
+        row.classList.toggle("readonly", channelIndex > writableChannels);
+
+        const label = document.getElementById(`cal-map-label-${channelIndex}`);
+        if (label) {
+            label.textContent = `${getCalibrationChannelLabel(topologyId, idx)} Out`;
+        }
+
+        const select = document.getElementById(`cal-spk${channelIndex}`);
+        if (select) {
+            const nextIndex = clamp((routing[idx] || channelIndex) - 1, 0, Math.max(0, select.options.length - 1));
+            if (select.selectedIndex !== nextIndex) {
+                select.selectedIndex = nextIndex;
+            }
+            select.disabled = channelIndex > writableChannels;
+        }
+    });
+
+    const extraRowsContainer = document.getElementById("cal-mapping-extra-rows");
+    if (extraRowsContainer) {
+        extraRowsContainer.innerHTML = "";
+        if (requiredChannels > 4) {
+            for (let idx = 4; idx < requiredChannels; ++idx) {
+                const row = document.createElement("div");
+                row.className = "cal-mapping-row readonly";
+
+                const label = document.createElement("span");
+                label.className = "control-label";
+                label.textContent = `${getCalibrationChannelLabel(topologyId, idx)} Out`;
+
+                const value = document.createElement("span");
+                value.className = "control-value";
+                value.textContent = "Read-only (first 4 routable)";
+
+                row.appendChild(label);
+                row.appendChild(value);
+                extraRowsContainer.appendChild(row);
+            }
+        }
+    }
+
+    const mappingNote = document.getElementById("cal-mapping-note");
+    if (mappingNote) {
+        mappingNote.classList.toggle("warning", mappingLimited || mappingDuplicateChannels);
+        if (mappingDuplicateChannels) {
+            mappingNote.textContent = "Routing duplicates detected. Use unique output channels.";
+        } else if (mappingLimited) {
+            mappingNote.textContent = `Topology requires ${requiredChannels} outputs but runtime exposes ${writableChannels} writable calibration channels.`;
+        } else {
+            mappingNote.textContent = `Routing contract satisfied for ${getCalibrationTopologyLabel(topologyId, true)} (${requiredChannels} required).`;
+        }
+    }
+
+    const ackLimitedRow = document.getElementById("cal-ack-limited-row");
+    const ackLimitedCheck = document.getElementById("cal-ack-limited-check");
+    if (ackLimitedRow) {
+        ackLimitedRow.style.display = mappingLimited ? "flex" : "none";
+    }
+    if (!mappingLimited && ackLimitedCheck) {
+        ackLimitedCheck.checked = false;
+    }
+
+    const currentRouting = getCalibrationRoutingFromControls();
+    const expectedAutoRouting = getCalibrationExpectedAutoRouting();
+    const routeIsCustom = calibrationMappingEditedByUser || !compareCalibrationRouting(currentRouting, expectedAutoRouting, 4);
+    const ackRedetectRow = document.getElementById("cal-ack-redetect-row");
+    const ackRedetectCheck = document.getElementById("cal-ack-redetect-check");
+    if (ackRedetectRow) {
+        ackRedetectRow.style.display = routeIsCustom ? "flex" : "none";
+    }
+    if (!routeIsCustom && ackRedetectCheck) {
+        ackRedetectCheck.checked = false;
+        calibrationMappingEditedByUser = false;
     }
 
     const meter = document.getElementById("capture-meter");
@@ -6073,6 +7360,58 @@ function applyCalibrationStatus() {
 
     if (captureLabel) {
         captureLabel.textContent = status.message || "Idle - press Start to begin calibration";
+    }
+
+    const requestedHeadphoneMode = (monitoringPathId === "steam_binaural" || monitoringPathId === "virtual_binaural")
+        ? "steam_binaural"
+        : "stereo_downmix";
+    const activeHeadphoneMode = String(sceneData.rendererHeadphoneModeActive || requestedHeadphoneMode);
+    const requestedHeadphoneProfile = deviceProfileId;
+    const activeHeadphoneProfile = String(sceneData.rendererHeadphoneProfileActive || requestedHeadphoneProfile);
+
+    if (mappingValid) {
+        setCalibrationValidationChip("cal-validation-map-chip", "pass", "PASS");
+    } else if (mappingDuplicateChannels) {
+        setCalibrationValidationChip("cal-validation-map-chip", "fail", "DUP");
+    } else if (mappingLimited) {
+        setCalibrationValidationChip("cal-validation-map-chip", "warn", "LIMITED");
+    } else {
+        setCalibrationValidationChip("cal-validation-map-chip", "warn", "PENDING");
+    }
+
+    if (status.phasePass) {
+        setCalibrationValidationChip("cal-validation-phase-chip", "pass", "PASS");
+    } else if (running) {
+        setCalibrationValidationChip("cal-validation-phase-chip", "warn", "IN RUN");
+    } else {
+        setCalibrationValidationChip("cal-validation-phase-chip", "warn", "PENDING");
+    }
+
+    if (status.delayPass) {
+        setCalibrationValidationChip("cal-validation-delay-chip", "pass", "PASS");
+    } else if (running) {
+        setCalibrationValidationChip("cal-validation-delay-chip", "warn", "MEASURING");
+    } else {
+        setCalibrationValidationChip("cal-validation-delay-chip", "warn", "PENDING");
+    }
+
+    if (monitoringPathId === "speakers") {
+        setCalibrationValidationChip("cal-validation-profile-chip", "pass", "SPEAKERS");
+    } else if (activeHeadphoneMode === requestedHeadphoneMode && activeHeadphoneProfile === requestedHeadphoneProfile) {
+        setCalibrationValidationChip("cal-validation-profile-chip", "pass", "ACTIVE");
+    } else if (activeHeadphoneMode === "stereo_downmix" && requestedHeadphoneMode !== "stereo_downmix") {
+        setCalibrationValidationChip("cal-validation-profile-chip", "warn", "FALLBACK");
+    } else {
+        setCalibrationValidationChip("cal-validation-profile-chip", "fail", "MISMATCH");
+    }
+
+    const downmixRequired = monitoringPathId === "stereo_downmix" || topologyId === "multichannel_stereo_downmix";
+    if (!downmixRequired) {
+        setCalibrationValidationChip("cal-validation-downmix-chip", "warn", "N/A");
+    } else if (activeHeadphoneMode === "stereo_downmix") {
+        setCalibrationValidationChip("cal-validation-downmix-chip", "pass", "PASS");
+    } else {
+        setCalibrationValidationChip("cal-validation-downmix-chip", "fail", "FAIL");
     }
 
     const statusRows = document.querySelectorAll("#cal-status .status-row");
@@ -6144,7 +7483,16 @@ function applyCalibrationStatus() {
 
     const viewportInfo = document.getElementById("viewport-info");
     if (viewportInfo && currentMode === "calibrate") {
-        viewportInfo.textContent = "Calibrate Mode \u00B7 " + (status.message || "Room Profile Setup");
+        viewportInfo.textContent = "Calibrate Mode \u00B7 "
+            + getCalibrationTopologyLabel(topologyId, true)
+            + " \u00B7 "
+            + getCalibrationMonitoringPathLabel(monitoringPathId)
+            + " \u00B7 "
+            + (status.message || "Room Profile Setup");
+    }
+
+    if (currentMode === "calibrate") {
+        updateSpeakerTargetsFromScene(sceneData);
     }
 }
 
@@ -6656,12 +8004,30 @@ function animate() {
     }
 
     const calibrationCurrentSpeaker = Math.max(0, Math.min(3, (calibrationState.currentSpeaker || 1) - 1));
+    const calibrationPreviewSpeakerCount = currentMode === "calibrate"
+        ? getCalibrationPreviewSpeakerCount()
+        : 4;
 
     // Speaker energy meters
     speakerMeters.forEach((m, i) => {
         const speaker = speakers[i];
         const ring = speakerEnergyRings[i];
         const targetSpeaker = speakerTargets[i] || defaultSpeakerSnapshotPositions[i];
+        const speakerVisible = currentMode !== "calibrate" || i < calibrationPreviewSpeakerCount;
+        if (speaker) {
+            speaker.visible = speakerVisible;
+        }
+        m.mesh.visible = speakerVisible;
+
+        if (!speakerVisible) {
+            m.target = 0.0;
+            m.level += (m.target - m.level) * 0.2;
+            if (ring) {
+                ring.visible = false;
+            }
+            return;
+        }
+
         if (speaker && targetSpeaker) {
             speaker.position.x += (targetSpeaker.x - speaker.position.x) * smoothingAlpha;
             speaker.position.y += (targetSpeaker.y - speaker.position.y) * smoothingAlpha;
@@ -6712,7 +8078,7 @@ function animate() {
             ring.scale.set(ringScale, ringScale, 1.0);
             ring.position.set(m.basePos.x, Math.max(0.05, m.basePos.y - 0.18), m.basePos.z);
             ring.material.opacity = 0.08 + Math.min(0.52, m.level * 0.45);
-            ring.visible = currentMode !== "calibrate" || calibrationState.running || calibrationState.complete;
+            ring.visible = speakerVisible && (currentMode !== "calibrate" || calibrationState.running || calibrationState.complete);
         }
 
         m.mesh.material.color.setHex(meterColor);
