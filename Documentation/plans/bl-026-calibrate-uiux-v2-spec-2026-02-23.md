@@ -19,6 +19,25 @@ Define a CALIBRATE v2 redesign that supports multiple monitoring/output configur
 2. Planned follow-on spec (next tranche):
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md` (authored; implementation pending)
 
+## Implementation Status Ledger (2026-02-23)
+
+### Complete (Planning Artifacts)
+1. Full BL-026 CALIBRATE v2 spec authored with IA, contracts, slices A-E, and validation lane definitions.
+2. BL-025 and BL-027 handoff assumptions are documented in companion specs and canonical backlog.
+3. Topology/profile scope is aligned to existing renderer diagnostics contracts (`requested`, `active`, `stage`).
+
+### Entry Gates (Must Hold Before Slice A Starts)
+1. BL-025 remains stable with deterministic self-test and host spot-check evidence in current cycle.
+2. BL-018 diagnostics path remains deterministic (no drift in spatial/headphone contract fields consumed by CALIBRATE validation).
+3. BL-019 and BL-022 production assertions stay green in baseline rerun.
+4. Docs freshness gate is green before and after BL-026 implementation tranche.
+
+### Remaining to Promote BL-026 to In Validation
+1. Implement slices A-E in production UI/runtime path.
+2. Add and pass `UI-P1-026A..E` in production self-test lane.
+3. Capture fresh host evidence (`reaper-headless-render-smoke`) and manual headphone verification notes.
+4. Synchronize backlog row, `status.json` notes, and TestEvidence ledgers in the same closeout change set.
+
 ## Problem Statement
 Current CALIBRATE UX is functional for baseline 4-speaker workflows, but it is not profile-driven and does not scale clearly to modern output topologies (headphones/binaural, surround variants, ambisonic, and downmix-validation paths). Operators cannot reliably calibrate and store multiple audio configuration profiles from one coherent workflow.
 
@@ -69,6 +88,23 @@ Current CALIBRATE UX is functional for baseline 4-speaker workflows, but it is n
 2. No mandatory break to current `cal_*` parameter IDs.
 3. No hard dependency on external companion apps for baseline calibration flow.
 
+## Execution Skill Contracts
+1. `skill_impl`
+- Maintain one-to-one coverage for new CALIBRATE controls:
+  - UI control -> APVTS/runtime state -> scene-state publication -> self-test assertion.
+- Keep realtime paths lock-free/allocation-free and avoid graph-shape mutation during active render.
+2. `skill_design`
+- Keep section rhythm and chip semantics aligned with BL-025 v2 language.
+- Ensure compact-width CALIBRATE readability with one primary action focus in run section.
+3. `threejs`
+- Reuse existing viewport/render-loop ownership; do not introduce a second render loop.
+- Keep CALIBRATE-driven visual updates unidirectional from scene-state snapshots.
+4. `spatial-audio-engineering`
+- Keep topology aliases deterministic and traceable to active renderer profile strings.
+- Surface requested/active/stage divergence for headphone/spatial validation without hidden fallback logic.
+5. `skill_docs`
+- Preserve metadata freshness and keep closeout evidence pointers synchronized across backlog/status/TestEvidence logs.
+
 ## CALIBRATE V2 IA Redesign
 Order in rail:
 1. `Profile Setup`
@@ -109,6 +145,26 @@ CALIBRATE v2 will present operator-facing topology labels with deterministic map
 Note:
 - Where naming differs between operator-facing topology labels and current renderer profile enum labels, UI must preserve a deterministic alias table and expose active resolved target in status.
 
+## Control and State Mapping Contract
+This section locks the minimum deterministic mapping surface for BL-026.
+
+| UI Surface | Current Contract (Observed) | BL-026 Contract | Runtime Source of Truth | Validation Lane |
+|---|---|---|---|---|
+| Topology selector | `cal_spk_config` (`4x Mono`, `2x Stereo`) | Add `cal_topology_profile` with alias fallback to legacy `cal_spk_config` during migration | APVTS + alias table in UI runtime | `UI-P1-026A` |
+| Monitoring path selector | none | Add `cal_monitoring_path` (`speakers`, `stereo_downmix`, `steam_binaural`, `virtual_binaural`) | APVTS + renderer diagnostics in scene snapshots | `UI-P1-026D`, `UI-P1-026E` |
+| Device profile selector | none | Add `cal_device_profile` (`generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`) | APVTS + renderer headphone profile diagnostics | `UI-P1-026D` |
+| Output mapping matrix | fixed `cal_spk1_out..cal_spk4_out` | Topology-driven rows; writable rows are bounded by supported routing width in current runtime | APVTS routing params + auto-routing output from `redetectCalibrationRoutingFromUI()` | `UI-P1-026B` |
+| Measurement transport | JS native bridge calls start/abort and status callback | Keep existing bridge function names; add mode/topology preflight validation before start | `getCalibrationStatus()` + native start/abort handlers | `UI-P1-026C` |
+| Validation block | basic progress/status messaging | Structured pass/fail rows for map, phase/polarity, delay, profile activation stage | Calibration status payload + scene snapshot diagnostics | `UI-P1-026D`, `UI-P1-026E` |
+
+Routing width contract for this tranche:
+1. Current writable calibration routing is four channels (`cal_spk1_out..cal_spk4_out`).
+2. When selected topology requires more than four routable outputs, UI must:
+- show all topology channels in read-only validation view,
+- show explicit `mapping_limited_to_first4` stage chip,
+- keep start action blocked unless fallback policy is acknowledged or supported width is restored.
+3. `redetect` must always report applied writable routing deterministically and never silently drop custom writable rows.
+
 ## Interaction Contracts
 
 ### Profile Authority Contract
@@ -141,6 +197,14 @@ Note:
 - expected stereo downmix behavior
 2. UI reports pass/fail with bounded tolerances and explicit fallback stage reporting.
 
+### Host Runtime Contract
+1. CALIBRATE behavior must be equivalent across:
+- Standalone app (WKWebView),
+- REAPER VST3 host lane,
+- REAPER CLAP host lane when CLAP build artifacts are present.
+2. JS/native bridge calls (`locusqStartCalibration`, `locusqAbortCalibration`, `locusqRedetectCalibrationRouting`, `updateCalibrationStatus`) must keep identical payload schema across host lanes.
+3. Host-specific quirks are tracked as evidence notes; they must not change payload keys or semantics.
+
 ## Visual Language and UX Rules
 1. Keep CALIBRATE visual language aligned with EMITTER v2 chips/status/section rhythm.
 2. Use one primary CTA in run section (`START` / `ABORT` / `MEASURE AGAIN`).
@@ -153,6 +217,12 @@ Note:
 5. Ensure compact-window behavior preserves full visibility of run status and validation summary blocks.
 
 ## Technical Implementation Plan (Patch Slices)
+
+### Execution Wave Order
+1. Wave 1 (UI shell and IA stability): Slice A.
+2. Wave 2 (topology and mapping contracts): Slice B and Slice C.
+3. Wave 3 (diagnostics and profile persistence): Slice D and Slice E.
+4. Wave closeout rule: run production self-test after each wave and block forward progress on any regression in BL-019/BL-022/BL-025 checks.
 
 ### Slice A: IA + profile scaffolding
 Files:
@@ -226,6 +296,10 @@ Acceptance:
 - `UI-P1-026E`: downmix validation path contract.
 3. Host automation:
 - `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap`
+4. Documentation freshness:
+- `./scripts/validate-docs-freshness.sh`
+5. Optional CLAP host parity check when CLAP artifacts are installed:
+- `REAPER -new` scripted lane with CLAP instance validation probe (same payload assertions as VST3 lane)
 
 ### Manual (Operator Required)
 1. Headphone listening validation for:
@@ -233,6 +307,26 @@ Acceptance:
 - Sony WH-1000XM5
 2. Binaural/spatial audibility A/B checks (`stereo_downmix` vs binaural path).
 3. Multi-topology session verification in host UI for map correctness and validation summary clarity.
+4. Calibration profile library CRUD checks across at least two topology/device tuples.
+
+## Evidence Bundle Contract
+1. Canonical bundle root:
+- `TestEvidence/bl026_calibrate_v2_<timestamp>/`
+2. Required artifacts in each closeout bundle:
+- `status.tsv`
+- `report.md`
+- `ui_selftest_production.json`
+- `reaper_headless_status.json`
+- `docs_freshness.log`
+- `manual_headphone_checks.md`
+3. Required report fields:
+- lane name and result for `UI-P1-026A..E`
+- host/runtime matrix used for reruns
+- unresolved warnings (if any) with disposition
+4. Required host matrix rows in report:
+- Standalone (WKWebView)
+- REAPER VST3
+- REAPER CLAP (or explicit `not-run` reason if CLAP artifacts unavailable)
 
 ## Risks and Mitigations
 1. Risk: topology sprawl creates confusing IA.
@@ -255,9 +349,11 @@ CALIBRATE v2 must hand clean contracts to RENDERER v2:
 2. Existing BL-025/BL-019/BL-022 assertions remain green.
 3. REAPER headless host lane passes with fresh evidence.
 4. Manual headphone listening checks logged as operator evidence.
-5. Backlog/status/evidence docs synchronized.
+5. Docs freshness gate passes with a fresh log artifact.
+6. Backlog/status/evidence docs synchronized.
 
 ## Deliverables
 1. This CALIBRATE v2 spec.
 2. Backlog row(s) for BL-026 and BL-027.
 3. Follow-on RENDERER v2 spec (`BL-027`) in the same plans folder.
+4. BL-026 closeout evidence bundle under `TestEvidence/bl026_calibrate_v2_<timestamp>/`.

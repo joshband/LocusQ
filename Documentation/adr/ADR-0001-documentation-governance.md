@@ -2,7 +2,7 @@ Title: ADR-0001 Documentation Governance Baseline
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
+Last Modified Date: 2026-02-24
 
 # ADR-0001: Documentation Governance Baseline
 
@@ -18,6 +18,11 @@ Adopt a single documentation baseline:
 - Canonical organization by folder (`.ideas/`, `Design/`, `Documentation/`, `TestEvidence/`).
 - Cross-reference obligations from code changes to specs, invariants, and ADRs.
 - Validation snapshot + trend logs required for meaningful build/test runs.
+- Artifact tracking and retention policy is delegated to `ADR-0010` and is not redefined here.
+
+## Scope Boundary
+This ADR defines documentation governance baseline and traceability requirements.
+Artifact classification, local-only versus tracked handling, retention windows, and exception workflow are defined by `Documentation/adr/ADR-0010-repository-artifact-tracking-and-retention-policy.md`.
 
 ## Consequences
 ### Positive

@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # Changelog
 
@@ -32,6 +32,12 @@ Operational snapshot:
 
 ### Changed
 
+- BL-025 and BL-014 closeout promotion completed (2026-02-24):
+  - backlog/state promoted both P0 rows to `Done`.
+  - refreshed evidence bundle: `TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`.
+- Added plain-language validation lane documentation for operators:
+  - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
+  - linked from `Documentation/README.md`.
 - P0 host UI baseline now targets production UI by default (`BL-003`, `BL-004`, `BL-005` execution track).
 - BL-010 closeout promotion completed (2026-02-23):
   - backlog state moved from `In Validation (blocked)` to `Done` after BL-009 dependency closure.

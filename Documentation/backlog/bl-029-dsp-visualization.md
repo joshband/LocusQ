@@ -1,0 +1,547 @@
+---
+Title: BL-029 DSP Visualization and Tooling
+Document Type: Runbook
+Author: APC Codex
+Created Date: 2026-02-23
+Last Modified Date: 2026-02-23
+---
+
+# BL-029 — DSP Visualization and Tooling
+
+## 1. Summary
+
+Deliver four visualization and tooling priorities for the LocusQ WebView UI: (1) a deterministic modulation visualizer driven by an SPSC ring buffer, (2) a spectral-spatial hybrid room view, (3) first-order reflection ghost modeling, and (4) an aspirational offline ML calibration assistant. Eight implementation slices, heavy dependency chain.
+
+| Field | Value |
+|---|---|
+| ID | BL-029 |
+| Status | In Planning |
+| Priority | P2 |
+| Track | B — Scene/UI Runtime |
+| Effort | Very High / XL |
+| Depends | BL-025, BL-026, BL-027, BL-028, BL-031 |
+| Blocks | none |
+| Annex | `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` |
+
+---
+
+## 2. Objective
+
+The LocusQ Three.js UI currently renders a static scene graph without DSP-reactive feedback. This item makes the scene data-driven:
+
+1. **Modulation Visualizer** — a base-vs-applied DSP overlay driven by a lock-free SPSC ring buffer that is written by processBlock() and consumed by the UI poll. Deterministic and RT-safe.
+2. **Spectral-Spatial Room View** — a spectral centroid/rolloff/flux computation in processBlock() feeding a spatial "heat map" overlay on the Three.js scene.
+3. **Reflection Ghost Modeling** — first-order image-source reflection geometry computed on the message thread and rendered as translucent ghost emitters in the Three.js viewport.
+4. **Offline ML Calibration Assistant** — aspirational: an export path from the plugin session and an offline Python/CLI tool that suggests calibration parameters from the exported data.
+
+RT invariant is absolute: Slices A, C, E, and G touch processBlock() or introduce new producer paths; all must be RT-safe. Slices B, D, F, and H are UI-side and must not block the audio thread.
+
+---
+
+## 3. Normative References
+
+- `Source/PluginProcessor.cpp` — processBlock() RT producer path, bridge serialization
+- `Source/SpatialRenderer.h` — spatial profile and renderer domain types
+- `Source/ui/public/js/index.js` — Three.js scene, UI event handlers, bridge calls
+- `Source/EarlyReflections.h` — early reflection geometry (if present), image source model
+- `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` — full slice spec
+- `Documentation/invariants.md` — RT invariant: no alloc/lock/blocking in processBlock()
+- `Documentation/scene-state-contract.md` — bridge payload schema
+- `Documentation/adr/ADR-0006.md` — device profile authority
+- `Documentation/adr/ADR-0012.md` — renderer domain exclusivity
+
+---
+
+## 4. Entry Criteria
+
+### Global Entry
+- BL-025 (scene graph and bridge foundation) merged.
+- BL-026 Slice A (alias dictionary) merged.
+- BL-027 Slice E (RENDERER cross-panel coherence) merged.
+- BL-028 Slice D (domain/tracking telemetry in bridge payload) merged.
+- BL-031 (tempo-locked visual token scheduler) merged or stub is available.
+- `status.json` reflects all dependencies in done/verified state.
+- No open RT-safety violations in `TestEvidence/build-summary.md`.
+
+### Per-Slice Entry
+| Slice | Entry Gate |
+|---|---|
+| A | Global entry; no prior slice dependency |
+| B | Slice A merged; ModulationTraceRing compiles and passes unit test |
+| C | Slices A-B merged or running in parallel (C is independent of B) |
+| D | Slice C merged; spectral fields in bridge payload |
+| E | Slices A-D merged; EarlyReflections.h (or stub) present |
+| F | Slice E merged; reflection geometry in bridge payload |
+| G | Slices A-F merged |
+| H | Slice G merged; aspirational — defer if timeline slips |
+
+---
+
+## 5. Slices
+
+### Slice A — SPSC Ring Buffer for Modulation Trace
+
+**Goal:** Implement a lock-free single-producer/single-consumer ring buffer (`ModulationTraceRing`) in a new header `Source/ModulationTraceRing.h`. processBlock() writes modulation trace frames (base_value, applied_value, parameter_id, sample_offset) at the audio thread rate. The UI poll thread reads available frames without blocking the audio thread.
+
+**Files:** `Source/PluginProcessor.cpp`, new `Source/ModulationTraceRing.h`
+
+**Ring design constraints:**
+- Fixed capacity (power of two, e.g., 4096 frames).
+- Single producer (audio thread), single consumer (message/poll thread).
+- No dynamic allocation after construction.
+- Write drops frame silently if ring is full (non-blocking producer).
+- Reader drains available frames between poll cycles.
+
+**Trace frame struct:**
+```cpp
+struct ModulationTraceFrame {
+    uint16_t parameter_id;
+    float    base_value;
+    float    applied_value;
+    uint32_t sample_offset; // offset within current buffer
+};
+```
+
+**Acceptance:**
+- ModulationTraceRing compiles with `-Wall -Wextra` and no warnings.
+- Unit test: producer writes 8192 frames, consumer reads all; no deadlock, no lost frames up to ring capacity.
+- processBlock() writes frames without any lock or allocation.
+- UI-P2-029A lane passes.
+
+---
+
+### Slice B — Modulation Visualizer UI
+
+**Goal:** A Three.js overlay in the EMITTER panel showing a scrolling time-series of base (grey) vs applied (colored by parameter) DSP values. The visualizer consumes frames from the bridge payload's `modulation_trace` array. Scrolls at the current tempo or at a fixed 60 fps fallback.
+
+**Files:** `Source/ui/public/js/index.js`
+
+**Bridge payload addition:**
+```json
+{
+  "modulation_trace": [
+    { "parameter_id": 3, "base_value": 0.5, "applied_value": 0.63, "sample_offset": 0 },
+    ...
+  ]
+}
+```
+
+**Acceptance:**
+- Visualizer renders without frame drops at 60 fps on reference hardware (M1 MacBook Air).
+- Base vs applied lines are visually distinct.
+- Visualizer is toggled on/off via a UI control without reloading the scene.
+- UI-P2-029B lane passes.
+
+---
+
+### Slice C — Spectral Centroid/Rolloff/Flux Computation
+
+**Goal:** In processBlock(), compute three spectral features per buffer: spectral centroid (Hz), spectral rolloff (Hz at 85% energy), and spectral flux (frame-to-frame magnitude change). Write results to a lock-free atomic snapshot readable by the bridge serialization path on the message thread.
+
+**Files:** `Source/PluginProcessor.cpp`
+
+**Implementation notes:**
+- Use a simple DFT or magnitude approximation; full FFT is acceptable if using a fixed-size power-of-two window already available.
+- Spectral computation must not allocate. Pre-allocate the magnitude buffer at construction time.
+- Atomic snapshot pattern: write to a double-buffer or std::atomic struct, message thread reads the last complete frame.
+
+**Acceptance:**
+- Spectral features are present in bridge payload as `spectral.centroid_hz`, `spectral.rolloff_hz`, `spectral.flux`.
+- No allocation in processBlock() for spectral computation path.
+- Feature values are stable (non-NaN, non-Inf) for silence and for a 440 Hz sine input.
+- UI-P2-029C lane passes.
+
+---
+
+### Slice D — Spectral-Spatial Room View UI
+
+**Goal:** A Three.js "heat map" overlay on the 3D room view that colors spatial zones by spectral centroid value. Low centroid = cool (blue), high centroid = warm (red/orange). Rolloff and flux drive opacity and animation speed respectively.
+
+**Files:** `Source/ui/public/js/index.js`
+
+**Acceptance:**
+- Heat map updates within one frame of a spectral bridge payload change.
+- Heat map is rendered as a semi-transparent mesh overlay, not as DOM elements.
+- Toggled on/off independently of the modulation visualizer.
+- UI-P2-029D lane passes.
+
+---
+
+### Slice E — Reflection Ghost Geometry Computation
+
+**Goal:** Compute first-order image-source reflection positions for up to six room surfaces on the message thread (not in processBlock()). Each reflection is represented as a `GhostEmitter` with position (x, y, z), surface normal, attenuation, and delay_ms. Results are written to the bridge payload as `reflections` array.
+
+**Files:** `Source/EarlyReflections.h` (or new file if absent), new `Source/ReflectionGhostMapper.h`
+
+**GhostEmitter struct:**
+```cpp
+struct GhostEmitter {
+    float x, y, z;
+    float nx, ny, nz;  // surface normal of reflection wall
+    float attenuation; // 0.0 - 1.0
+    float delay_ms;
+};
+```
+
+**Computation trigger:** Room geometry change event (APVTS listener) or emitter position change. Not triggered every processBlock() call. Debounced to at most 30 Hz.
+
+**Acceptance:**
+- Up to 6 first-order ghosts per emitter for a rectangular room.
+- Ghost positions are geometrically correct (image source method).
+- Bridge payload includes `reflections` array.
+- Computation does not occur in processBlock().
+- UI-P2-029E lane passes.
+
+---
+
+### Slice F — Reflection Ghost Viewport Rendering
+
+**Goal:** Render GhostEmitter objects in the Three.js viewport as translucent spheres with direction arrows pointing toward the listener. Opacity driven by attenuation; sphere scale by delay_ms (farther = slightly larger ghost). Ghost emitters animate with a subtle pulse at 1 Hz.
+
+**Files:** `Source/ui/public/js/index.js`
+
+**Acceptance:**
+- Ghosts are rendered in a separate Three.js layer (not occluded by room walls).
+- Ghost opacity and scale reflect attenuation and delay_ms values from bridge payload.
+- Toggle on/off independently.
+- Frame rate remains >= 60 fps with 6 ghosts active.
+- UI-P2-029F lane passes.
+
+---
+
+### Slice G — Export Session Data for Offline Analysis
+
+**Goal:** Add a "Export Session" action to the EMITTER panel that writes a JSON snapshot of the current session to a user-selected file path. Snapshot includes: room geometry, emitter positions, active profile, spectral features (last 60 seconds of 1-Hz samples), and head tracking history.
+
+**Files:** `Source/PluginProcessor.cpp`, `Source/ui/public/js/index.js`
+
+**Export payload schema (abbreviated):**
+```json
+{
+  "schema_version": "1.0",
+  "exported_at": "ISO8601",
+  "profile": { "id": "airpods_pro_2", "label": "AirPods Pro 2" },
+  "room": { "width": 5.0, "height": 3.0, "depth": 4.0 },
+  "emitters": [...],
+  "spectral_history": [...],
+  "tracking_history": [...]
+}
+```
+
+**Acceptance:**
+- Export completes without audio dropout (write is on message thread, not audio thread).
+- File is valid JSON parseable by Python `json.loads()`.
+- Export action is accessible via keyboard shortcut (Ctrl/Cmd+E) and UI button.
+- UI-P2-029G lane passes.
+
+---
+
+### Slice H — Offline ML Calibration Assistant (Aspirational)
+
+**Goal:** A standalone Python CLI tool (`tools/calibration_assistant/calibrate.py`) that reads an exported session JSON and recommends calibration parameter adjustments using a simple regression or heuristic model. Outputs a parameter patch JSON compatible with the PluginProcessor parameter schema.
+
+**Files:** new `tools/calibration_assistant/` directory
+
+**Status:** Aspirational. Defer if timeline slips. Does not block closeout of BL-029 if remaining slices A-G pass.
+
+**Acceptance (if pursued):**
+- CLI accepts `--input session.json` and `--output patch.json`.
+- Patch JSON is structurally valid (schema validated by a bundled JSON schema).
+- At least one calibration heuristic is implemented (e.g., spectral centroid rolloff suggests room absorption adjustment).
+
+---
+
+## 6. ADR Obligations
+
+| ADR | Obligation |
+|---|---|
+| ADR-0006 | Device profile authority: spectral and reflection computations must not change the active device profile |
+| ADR-0012 | Renderer domain exclusivity: reflection computation is domain-agnostic but must not activate a different domain |
+
+If the spectral computation or reflection ghost paths require a new architectural decision (e.g., whether spectral features are part of the RT data path or message-thread-only), record a new ADR.
+
+---
+
+## 7. RT-Safety Checklist
+
+For every code change touching `Source/PluginProcessor.cpp` in Slices A, C, and G:
+
+- [ ] No `new` / `delete` / `malloc` / `free` in processBlock()
+- [ ] No `std::mutex`, `std::lock_guard`, or any blocking primitive in processBlock()
+- [ ] ModulationTraceRing write path is lock-free (atomic index compare-and-swap)
+- [ ] Spectral computation magnitude buffer pre-allocated at construction time
+- [ ] No file I/O in processBlock() (Slice G export is on message thread only)
+- [ ] Reflection ghost computation (Slice E) triggered from APVTS listener, not processBlock()
+- [ ] Bridge payload serialization (all slices) occurs on message thread
+
+---
+
+## 8. Validation Lanes
+
+| Lane | Trigger | Pass Criteria |
+|---|---|---|
+| UI-P2-029A | Slice A merge | ModulationTraceRing unit test passes; no lock in processBlock() write path |
+| UI-P2-029B | Slice B merge | Modulation visualizer renders at >= 60 fps; toggle works |
+| UI-P2-029C | Slice C merge | Spectral features in bridge payload; no NaN/Inf for silence and 440 Hz sine |
+| UI-P2-029D | Slice D merge | Heat map renders and updates on spectral change |
+| UI-P2-029E | Slice E merge | 6 ghost positions correct for a 5x3x4m rectangular room |
+| UI-P2-029F | Slice F merge | Ghosts render at >= 60 fps; opacity/scale driven by attenuation/delay |
+| UI-P2-029G | Slice G merge | Export JSON is valid; no audio dropout during export |
+| SCHEMA | Each payload-adding slice | scene-state-contract.md updated to document new fields |
+| FRESHNESS | Each slice merge | `./scripts/validate-docs-freshness.sh` exits 0 |
+
+---
+
+## 9. Risks and Mitigations
+
+| Risk | Severity | Mitigation |
+|---|---|---|
+| Heaviest dependency chain in P2 — any upstream slip blocks entry | High | Start Slices A and C in parallel once global entry criteria are met; they are independent |
+| SPSC ring overflow under high modulation rate | High | Ring drops frames silently; UI visualizer interpolates gaps; document drop rate in diagnostics |
+| Slice H is aspirational; timeline pressure may cut it | Medium | Slices A-G are standalone complete; H is explicitly gated as aspirational |
+| Spectral FFT size impacts RT budget | Medium | Use a fixed 512-sample magnitude approximation first; full FFT only if quality requires it |
+| Reflection ghost geometry diverges from Steam Audio's own early reflection model | Medium | Document that ghosts are visualization-only; do not feed ghost positions back to Steam Audio |
+| BL-031 tempo scheduler not ready at BL-029 start | Medium | Modulation visualizer falls back to fixed 60 fps; integrate tempo sync in a follow-up |
+
+---
+
+## 10. Effort and Sequencing
+
+| Slice | Effort | Parallelizable | Notes |
+|---|---|---|---|
+| A | M | Yes (with C) | RT-safe foundation |
+| B | M | After A | UI consumer of A |
+| C | M | Yes (with A) | Independent RT producer |
+| D | M | After C | UI consumer of C |
+| E | L | After A-D | Most complex geometry |
+| F | M | After E | UI consumer of E |
+| G | S | After A-F | Export path |
+| H | XL | After G | Aspirational |
+
+Recommended approach: Run A and C in the same sprint. Run B and D in the next sprint. E and F in the following. G at closeout. H is post-v1.
+
+---
+
+## 11. Agent Mega-Prompts
+
+### Slice A — Skill-Aware Prompt
+
+```
+Skills: $reactive-av $skill_impl
+
+Context:
+- You are implementing BL-029 Slice A in the LocusQ JUCE spatial audio plugin.
+- RT invariant: processBlock() must never allocate, lock, or block.
+- The modulation trace ring must be a fixed-capacity SPSC (single-producer
+  single-consumer) ring buffer with no dynamic allocation after construction.
+- Source/PluginProcessor.cpp is the audio processor; processBlock() is the producer.
+- The UI poll thread (message thread timer) is the consumer.
+
+Task:
+1. Create Source/ModulationTraceRing.h with:
+   - ModulationTraceFrame struct: { uint16_t parameter_id; float base_value;
+     float applied_value; uint32_t sample_offset; }
+   - ModulationTraceRing<N> template (N must be a power of two):
+     - write(ModulationTraceFrame): lock-free, drops if full, never blocks.
+     - read_available(ModulationTraceFrame* out, int max_count) -> int: reads up to
+       max_count frames, returns actual count read. Lock-free. Called from consumer.
+     - size_t available() const: number of unread frames.
+   - Use std::atomic<size_t> for head and tail indices.
+   - Memory ordering: producer uses release on tail update; consumer uses acquire
+     on tail read.
+
+2. In Source/PluginProcessor.cpp:
+   a. Add a member: ModulationTraceRing<4096> m_modulation_ring;
+   b. In processBlock(), after applying modulation to each parameter, write a
+      ModulationTraceFrame per modulated parameter.
+   c. Confirm: no new/delete/malloc, no mutex, no lock_guard in processBlock().
+
+3. Write a unit test (inline or in a test harness file):
+   - Producer writes 8192 frames; consumer reads all; verify no frames lost up
+     to ring capacity (4096), and that overflow beyond capacity results in silent
+     drops only.
+   - Test compiles and passes.
+
+4. Run UI-P2-029A validation lane.
+5. Update status.json: BL-029 slice_a = "done".
+6. List changed files, test result, validation result.
+
+Constraints:
+- ModulationTraceRing.h must include no JUCE headers (portable C++17).
+- No dynamic allocation in the ring implementation.
+- write() must return immediately even if full.
+```
+
+### Slice A — Standalone Fallback Prompt
+
+```
+Context (no skills loaded):
+- Repository: LocusQ — JUCE VST3/AU/CLAP spatial audio plugin.
+- processBlock() in Source/PluginProcessor.cpp is the audio thread hot path.
+  It must never allocate, lock, or block.
+- You need a fixed-capacity SPSC ring buffer for modulation trace frames.
+
+Task:
+1. Create Source/ModulationTraceRing.h.
+   Include only standard C++ headers (atomic, cstdint, cstddef).
+   Define:
+     struct ModulationTraceFrame {
+         uint16_t parameter_id;
+         float base_value;
+         float applied_value;
+         uint32_t sample_offset;
+     };
+   Define a template class ModulationTraceRing<size_t N> where N is power of two.
+   Implement:
+     bool write(const ModulationTraceFrame& f); // returns false if full, never blocks
+     int read_available(ModulationTraceFrame* out, int max_count); // consumer thread
+   Use std::atomic<size_t> for head_ and tail_ with appropriate memory ordering.
+
+2. In Source/PluginProcessor.cpp:
+   Add member: ModulationTraceRing<4096> m_modulation_ring;
+   In processBlock(), call m_modulation_ring.write(...) for each modulated parameter.
+   Do not call any allocating or locking functions in processBlock().
+
+3. Describe in a comment block at the top of ModulationTraceRing.h:
+   - Memory ordering rationale (why acquire/release on tail).
+   - Drop behavior (silent, non-blocking).
+
+4. List all files changed with a one-sentence description per file.
+```
+
+### Slice B — Agent Prompt
+
+```
+Skills: $reactive-av $threejs $juce-webview-runtime
+
+Context:
+- BL-029 Slice A is merged. ModulationTraceRing is live.
+- The bridge payload now includes modulation_trace array (populated by message
+  thread draining ModulationTraceRing on each poll).
+- Source/ui/public/js/index.js hosts the Three.js scene and EMITTER panel.
+
+Task:
+1. In PluginProcessor.cpp message-thread timer, drain m_modulation_ring and
+   add frames to the bridge payload as modulation_trace array (max 256 frames
+   per poll to avoid large payloads).
+2. In index.js, implement a ModulationVisualizer component:
+   - Renders a canvas overlay in the EMITTER panel.
+   - Draws a scrolling time-series: grey line = base_value, colored line =
+     applied_value. Color is derived from parameter_id (HSL hue = parameter_id * 30°).
+   - Scrolls at BL-031 tempo (if available) or 60 fps fixed fallback.
+   - Toggle button hides/shows the overlay without disposing the component.
+3. Confirm frame rate >= 60 fps with 6 parameter traces active on reference hardware.
+4. Run UI-P2-029B lane.
+5. List changed files and validation result.
+```
+
+### Slice C — Agent Prompt
+
+```
+Skills: $physics-reactive-audio $skill_impl
+
+Context:
+- BL-029 Slices A-B are merged (or C can run in parallel with A if independent).
+- processBlock() in PluginProcessor.cpp processes audio buffers.
+- Spectral features must be computed in processBlock() but written via atomic
+  snapshot to avoid locking. The message thread reads the snapshot for bridging.
+- RT invariant: no alloc in processBlock().
+
+Task:
+1. In Source/PluginProcessor.cpp:
+   a. Pre-allocate a magnitude buffer (e.g., float m_mag_buf[512]) as a member.
+   b. In processBlock(), compute magnitude spectrum from the first 512 samples
+      (or the full buffer if < 512 samples) using a simple DFT or magnitude
+      estimation. Do not allocate.
+   c. Compute: centroid_hz, rolloff_hz (85% energy threshold), flux (L1 norm of
+      frame-to-frame magnitude delta).
+   d. Write results to a double-buffer atomic snapshot:
+      struct SpectralSnapshot { float centroid_hz; float rolloff_hz; float flux; };
+      std::atomic<int> m_spectral_write_idx { 0 };
+      SpectralSnapshot m_spectral_buf[2];
+      After writing buf[write_idx], atomically increment write_idx & 1.
+2. In the message-thread bridge serialization, read the last complete snapshot and
+   add spectral.centroid_hz, spectral.rolloff_hz, spectral.flux to the payload.
+3. Validate: for silence input, all three values are 0.0 (or defined sentinel).
+   For a 440 Hz sine, centroid_hz is approximately 440.
+4. Run UI-P2-029C lane.
+5. List changed files and validation result.
+```
+
+### Slices D-H — Agent Prompts (Abbreviated)
+
+```
+Slice D — Skills: $reactive-av $threejs
+Context: Slice C merged; spectral fields in bridge payload.
+Task: In index.js, implement a Three.js mesh overlay on the 3D room view.
+- Map spectral.centroid_hz to a cool-to-warm color ramp (blue=low, red=high).
+- Map spectral.flux to mesh animation speed.
+- Map spectral.rolloff_hz to mesh opacity.
+- Toggle independently of modulation visualizer.
+- Run UI-P2-029D lane.
+
+---
+
+Slice E — Skills: $spatial-audio-engineering $skill_impl
+Context: Slices A-D merged; EarlyReflections.h present or stubbed.
+Task: Create Source/ReflectionGhostMapper.h.
+- Implement image-source first-order reflection for 6 room surfaces.
+- GhostEmitter struct per runbook section 5, Slice E.
+- Trigger from APVTS listener (room geometry / emitter position change).
+- Debounce to 30 Hz maximum.
+- Write up to 6 GhostEmitters to bridge payload as reflections array.
+- Computation must not occur in processBlock().
+- Run UI-P2-029E lane with a 5x3x4m room, single emitter at center.
+
+---
+
+Slice F — Skills: $threejs $reactive-av
+Context: Slice E merged; reflections array in bridge payload.
+Task: In index.js, render GhostEmitters as translucent Three.js spheres.
+- Opacity = attenuation field.
+- Scale = delay_ms mapped to 0.1-0.5 range.
+- Direction arrow (ArrowHelper) pointing from ghost to listener position.
+- Pulse animation at 1 Hz using a sine envelope on opacity.
+- Render in a separate Three.js layer (renderOrder or layers bitmask).
+- Toggle on/off independently.
+- Run UI-P2-029F lane.
+
+---
+
+Slice G — Skills: $juce-webview-runtime $skill_ship
+Context: Slices A-F merged.
+Task: Add "Export Session" action.
+- UI: button in EMITTER panel + Ctrl/Cmd+E keyboard shortcut.
+- PluginProcessor: on export trigger, snapshot room geometry, emitter positions,
+  profile, last 60s of spectral samples (1 Hz), tracking history.
+  Write to user-selected file path on message thread via juce::FileChooser.
+  Do not block processBlock().
+- File is valid JSON (verify with JSON.parse in JS test).
+- Run UI-P2-029G lane.
+- Update status.json: BL-029 status = "done" (H is aspirational).
+
+---
+
+Slice H — Skills: $skill_impl (aspirational, post-v1)
+Context: Slice G merged. Session export JSON available.
+Task: Create tools/calibration_assistant/calibrate.py.
+- CLI: python calibrate.py --input session.json --output patch.json
+- Implement at least one heuristic: if spectral_history mean centroid_hz > 4000,
+  suggest increasing room absorption coefficient by 0.1.
+- Validate patch.json against a bundled JSON schema.
+- Run CLI on a sample session.json; confirm output is valid JSON patch.
+```
+
+---
+
+## 12. Closeout Criteria
+
+- [ ] Slices A-G merged and validation lanes passed.
+- [ ] Slice H status documented in status.json (aspirational, deferred if not done).
+- [ ] `status.json` updated: BL-029 status = "done" (or "partial" if H deferred), evidence references to TestEvidence entries.
+- [ ] `TestEvidence/validation-trend.md` updated with BL-029 row.
+- [ ] `TestEvidence/build-summary.md` updated with BL-029 build summary.
+- [ ] `Documentation/scene-state-contract.md` updated to document all new bridge payload fields: `modulation_trace`, `spectral`, `reflections`.
+- [ ] Annex spec (`Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`) updated to reflect implementation decisions.
+- [ ] No new RT-safety violations in build summary.
+- [ ] Docs freshness gate passes: `./scripts/validate-docs-freshness.sh` exits 0.
