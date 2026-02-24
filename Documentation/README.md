@@ -2,12 +2,14 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
+
 
 # Documentation Index
 
 ## Purpose
 Keep documentation lean, canonical, and current while preserving traceability from specs to code to validation evidence.
+Backlog model: `Documentation/backlog/index.md` is the single backlog catalog authority; individual runbook docs in `Documentation/backlog/` hold execution detail and agent prompts; annex plan specs in `Documentation/plans/` hold deep architecture.
 
 ## Source-of-Truth Tiers
 
@@ -20,7 +22,7 @@ Only these documents are normative for implementation, release status, and close
 - `Documentation/invariants.md`
 - `Documentation/scene-state-contract.md`
 - `Documentation/implementation-traceability.md`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
 - `Documentation/skill-selection-matrix.md`
 - `Documentation/spatial-audio-profiles-usage.md`
 - `Documentation/adr/` (all ADR files)
@@ -29,13 +31,18 @@ Only these documents are normative for implementation, release status, and close
 
 ### Tier 1: Active Execution Specs (current cycle, non-canonical status authority)
 Used for implementation planning and validation flow, but status truth remains Tier 0:
+- `Documentation/backlog/*.md` (individual runbook docs with agent prompts and validation plans)
 - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-017-head-tracked-monitoring-companion-bridge-plan-2026-02-22.md`
+- `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md`
+- `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`
+- `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md`
 - `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
 - `Documentation/reports/` (active report artifacts and companion data/visual bundles)
 - `Documentation/testing/`
+- `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
 
 ### Tier 2: Reference (historical/research context, not authoritative)
 Reference-only docs are retained for traceability but are not status authority:
@@ -46,10 +53,12 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
 - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
 - `Documentation/research/`
-- `Documentation/multi-agent-thread-watchdog.md`
+- `Documentation/archive/2026-02-24-multi-agent-thread-watchdog/`
 - `Documentation/lessons-learned.md`
 - `Documentation/plans/2026-02-20-full-project-review.md`
 - `Documentation/archive/2026-02-23-clap-reference-bundle/`
+- `Documentation/backlog-post-v1-agentic-sprints.md` (superseded by `Documentation/backlog/index.md`)
+- `Documentation/runbooks/backlog-execution-runbooks.md` (superseded by individual runbook docs)
 
 ### Tier 3: Archived (generated and operational snapshots)
 - `Documentation/archive/`
