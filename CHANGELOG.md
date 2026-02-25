@@ -43,10 +43,13 @@ Operational snapshot:
   - backlog/state promoted BL-022 to `Done` with queue handoff to BL-012 as next P1 lane.
   - closeout bundle: `TestEvidence/bl022_validation_20260224T184032Z/status.tsv`.
   - production self-test artifact: `TestEvidence/locusq_production_p0_selftest_20260224T184037Z.json` (`UI-P1-022` plus `UI-P1-025A..E` all pass).
+- BL-013 HostRunner feasibility promotion completed (2026-02-25):
+  - backlog/state promoted BL-013 to `Done` from Slice D promotion packet.
+  - closeout evidence: `TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv` and `TestEvidence/bl013_done_promotion_20260225T170341Z/promotion_decision.md`.
 - BL-030 release governance lanes progressed to validation baseline (2026-02-24):
   - Slice C CI integration landed at `.github/workflows/release-governance.yml` (tag/manual trigger, automated gates, explicit manual-device gate notice).
   - Slice D dry-run execution captured baseline gate outcomes at `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`.
-  - dry-run decision is currently `BLOCKED` on `RL-01`, `RL-05`, and `RL-09`; automation lanes `RL-02`, `RL-03`, `RL-04`, `RL-06`, `RL-08`, `RL-10` are passing.
+  - owner replay confirms required command lanes are green on current branch (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains blocked on governance gates `RL-05` and `RL-09`.
 - Added plain-language validation lane documentation for operators:
   - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
   - linked from `Documentation/README.md`.

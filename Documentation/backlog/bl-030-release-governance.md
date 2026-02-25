@@ -2,7 +2,7 @@ Title: BL-030 Release Governance and Device Rerun
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # BL-030: Release Governance and Device Rerun
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-24
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Validation (Slices A-D complete) |
+| Status | In Validation (Slice E worker FAIL not reproduced on owner replay; remaining blockers RL-05/RL-09) |
 | Owner Track | Track G — Release/Governance |
 | Depends On | BL-024 (Done), BL-025 (Done), HX-06 |
 | Blocks | — |
@@ -239,6 +239,26 @@ Evidence:
 | Device results | `TestEvidence/bl030_release_governance_<timestamp>/device_matrix_results.tsv` | dev_id, result, notes |
 | Status TSV | `TestEvidence/bl030_release_governance_<timestamp>/status.tsv` | lane, result, timestamp |
 
+## Slice E Release Unblock Packet (2026-02-25)
+
+- Packet directory: `TestEvidence/bl030_unblock_slice_e_20260225T170350Z`
+- Worker command lane results:
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh`: `FAIL` (exit `1`, app `ABRT` before result emit)
+  - `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap`: `FAIL` (exit `1`, bootstrap/render `ABRT`)
+  - `pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3`: `FAIL` (exit `134`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Owner replay directory: `TestEvidence/owner_bl030_unblock_replay_20260225T170650Z`
+- Owner replay command lane results (authoritative on current branch):
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh`: `PASS`
+  - `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap`: `PASS`
+  - `pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3`: `PASS`
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Current RL blocker replay:
+  - `RL-01`: `PASS` (`BL-013` promoted to `Done`)
+  - `RL-05`: `FAIL` (fresh passing DEV-01..DEV-06 rerun matrix still required)
+  - `RL-09`: `FAIL` (release-note closeout wording still not finalized for unblock promotion)
+- Owner disposition: worker Slice E fail was non-authoritative (runtime flake/stale branch behavior); BL-030 remains **In Validation** pending `RL-05` + `RL-09`.
+
 ## Closeout Checklist
 
 - [x] Release checklist template committed and reviewed
@@ -246,7 +266,7 @@ Evidence:
 - [x] CI release-gate job functional
 - [x] First dry run executed with evidence
 - [ ] All gates PASS or documented N/A
-- [ ] Evidence captured at designated paths
+- [x] Evidence captured at designated paths (including Slice E unblock packet)
 - [x] status.json updated
 - [x] Documentation/backlog/index.md row updated
 - [x] TestEvidence surfaces updated

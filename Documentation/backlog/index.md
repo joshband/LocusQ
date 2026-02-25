@@ -32,16 +32,15 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
-| 1 | BL-013 | HostRunner feasibility promotion | P1 | In Validation | D | BL-012 | — | [bl-013](bl-013-hostrunner-feasibility.md) |
-| 2 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028 | [bl-027](bl-027-renderer-uiux-v2.md) |
-| 3 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | — | [bl-028](bl-028-spatial-output-matrix.md) |
-| 4 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
-| 5 | BL-030 | Release governance and device rerun | P2 | In Validation (Slices A-D complete; release dry-run blocked on RL-01/RL-05/RL-09) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
-| 6 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Implementation (Slices A-B validated) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
-| 7 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
-| 8 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
-| 9 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
-| 10 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Planning | F | — | — | [bl-032](bl-032-source-modularization.md) |
+| 1 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028 | [bl-027](bl-027-renderer-uiux-v2.md) |
+| 2 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | — | [bl-028](bl-028-spatial-output-matrix.md) |
+| 3 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
+| 4 | BL-030 | Release governance and device rerun | P2 | In Validation (owner replay green on command lanes; blocked on RL-05/RL-09) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
+| 5 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Implementation (Slices A-B validated) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
+| 6 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
+| 7 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
+| 8 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
+| 9 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Planning | F | — | — | [bl-032](bl-032-source-modularization.md) |
 
 ## Dependency Graph
 
@@ -51,6 +50,7 @@ graph TD
         BL-003[BL-003 Done]
         BL-004[BL-004 Done]
         BL-009[BL-009 Done]
+        BL-013[BL-013 Done]
         BL-012[BL-012 Done]
         BL-026[BL-026 Calibrate v2 Done]
         BL-031[BL-031 Tempo Token Done]
@@ -68,7 +68,6 @@ graph TD
     end
 
     subgraph "In Validation"
-        BL-013[BL-013 HostRunner]
         BL-030[BL-030 Release Gov]
     end
 
@@ -188,6 +187,7 @@ Any status change must update in the same changeset:
 | BL-010 | FDN expansion promotion | 2026-02-23 | [bl-010](bl-010-fdn-expansion.md) |
 | BL-011 | CLAP lifecycle and CI/host closeout | 2026-02-23 | [bl-011](bl-011-clap-lifecycle.md) |
 | BL-012 | QA harness tranche closeout | 2026-02-24 | [bl-012](bl-012-qa-harness-tranche.md) |
+| BL-013 | HostRunner feasibility promotion | 2026-02-25 | [bl-013](bl-013-hostrunner-feasibility.md) |
 | BL-014 | Listener/speaker/aim/RMS overlay strict closeout | 2026-02-24 | [bl-014](bl-014-overlay-strict-closeout.md) |
 | BL-015 | All-emitter realtime rendering closure | 2026-02-23 | [bl-015](bl-015-all-emitter-rendering.md) |
 | BL-016 | Visualization transport contract closure | 2026-02-23 | [bl-016](bl-016-transport-contract.md) |
