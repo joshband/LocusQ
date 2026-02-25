@@ -46,10 +46,16 @@ Operational snapshot:
 - BL-013 HostRunner feasibility promotion completed (2026-02-25):
   - backlog/state promoted BL-013 to `Done` from Slice D promotion packet.
   - closeout evidence: `TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv` and `TestEvidence/bl013_done_promotion_20260225T170341Z/promotion_decision.md`.
+- BL-017 head-tracked monitoring companion bridge promotion completed (2026-02-25):
+  - backlog/state promoted BL-017 to `Done` from Slice E promotion packet.
+  - closeout evidence: `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv` and `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/promotion_decision.md`.
 - BL-030 release governance lanes progressed to validation baseline (2026-02-24):
   - Slice C CI integration landed at `.github/workflows/release-governance.yml` (tag/manual trigger, automated gates, explicit manual-device gate notice).
   - Slice D dry-run execution captured baseline gate outcomes at `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`.
   - owner replay confirms required command lanes are green on current branch (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains blocked on governance gates `RL-05` and `RL-09`.
+- HX-05 payload budget hardening advanced to Slice C harness contract (2026-02-25):
+  - deterministic soak harness added at `scripts/qa-hx05-payload-budget-soak-mac.sh`.
+  - fixture contract validated (`pass=>0`, `fail=>1`) and owner replay confirmed (`TestEvidence/owner_hx05_slice_c_replay_20260225T175333Z/status.tsv`).
 - Added plain-language validation lane documentation for operators:
   - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
   - linked from `Documentation/README.md`.

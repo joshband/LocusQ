@@ -29,6 +29,7 @@ LocusQ uses a three-mode workflow:
 - BL-018 strict spatial profile matrix closeout completed (mono/stereo/quad/5.1/7.1/binaural/ambisonic) with deterministic diagnostics evidence.
 - BL-022 choreography lane closeout completed (`UI-P1-022` plus `UI-P1-025A..E` regression guard) with refreshed deterministic evidence.
 - BL-013 HostRunner feasibility promotion is now Done with Slice D evidence (`TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv`).
+- BL-017 head-tracked monitoring companion bridge is now Done via Slice E promotion packet (`TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv`).
 - BL-030 release governance lanes include a dedicated CI workflow (`.github/workflows/release-governance.yml`) and owner replay confirms selftest/reaper/pluginval/docs lanes pass (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains in validation pending `RL-05` and `RL-09`.
 - Deterministic QA lanes and scripted validation workflows.
 
