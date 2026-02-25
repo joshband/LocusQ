@@ -2,7 +2,7 @@ Title: BL-026 CALIBRATE UI/UX V2 Multi-Topology
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # BL-026: CALIBRATE UI/UX V2 Multi-Topology
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-24
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Implementation (Slices A-C owner-validated; Slices D-E pending) |
+| Status | In Validation (Slices A-E owner-validated; D-E hard criteria pass on owner replay) |
 | Owner Track | Track C — UX Authoring |
 | Depends On | BL-025 (Done), BL-009 (Done), BL-018 |
 | Blocks | BL-027, BL-028, BL-029 |
@@ -311,25 +311,27 @@ Evidence:
 | Host smoke log | `TestEvidence/bl026_calibrate_v2_<timestamp>/host_smoke.log` | host, result |
 | Validation trend | `TestEvidence/validation-trend.md` | date, lane, result per slice |
 
-## Owner Validation Snapshot (2026-02-24)
+## Owner Validation Snapshot (2026-02-25)
 
 | Slice | Status | Evidence |
 |---|---|---|
 | Slice A | Implemented and owner-validated on current tree | `TestEvidence/bl026_calibrate_v2_20260224T190739Z/status.tsv` (implementation), `TestEvidence/bl026_slice_b_owner_replay_20260224T195300Z/status.tsv` (current-tree build/selftest pass) |
 | Slice B | Implemented and owner-validated | `TestEvidence/bl026_slice_b_20260224T194445Z/status.tsv` (worker failure from stale tree), `TestEvidence/bl026_slice_b_owner_replay_20260224T195300Z/status.tsv` (owner replay pass) |
 | Slice C | Implemented and owner-validated after scoped selftest timeout remediation | `TestEvidence/bl026_slice_c_20260224T200631Z/status.tsv` (worker lane blocked by startup timeout), `TestEvidence/owner_bl026_pending_timeout_fix_r2_20260224T214425Z/status.tsv` (owner replay pass), `TestEvidence/locusq_production_p0_selftest_20260224T214446Z.json` |
+| Slice D | Implemented and validated | `TestEvidence/bl026_slice_de_20260225T160531Z/status.tsv` (worker D/E bundle pass) |
+| Slice E | Implemented and validated | `TestEvidence/bl026_slice_de_20260225T160531Z/status.tsv` (worker D/E bundle pass), `TestEvidence/owner_parallel_integration_20260225T162457Z/selftest_bl026_runs.tsv` (owner replay x3 pass), `TestEvidence/owner_parallel_integration_20260225T162457Z/selftest_bl029_runs.tsv` (BL-026 regression guard x3 pass) |
 
 ## Closeout Checklist
 
 - [x] Slice A: Topology profile selector renders and selects all profiles
 - [x] Slice B: Dynamic speaker rows adapt to topology channel count
 - [x] Slice C: Profile library saves, recalls, and persists across sessions
-- [ ] Slice D: Diagnostic cards update through calibration lifecycle
-- [ ] Slice E: Host resize works, no clipping, REAPER smoke passes
-- [ ] All UI-P1-026A..E validation lanes pass
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] implementation-traceability.md updated with new parameters
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] Slice D: Diagnostic cards update through calibration lifecycle
+- [x] Slice E: Host resize works, no clipping, REAPER smoke passes
+- [x] All UI-P1-026A..E validation lanes pass
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] implementation-traceability.md updated with new parameters
+- [x] ./scripts/validate-docs-freshness.sh passes

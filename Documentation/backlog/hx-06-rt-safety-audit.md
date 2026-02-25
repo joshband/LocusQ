@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-25
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation |
+| Status | Done |
 | Owner Track | Track F — Hardening |
 | Depends On | BL-016 (Done) |
 | Blocks | BL-030 |
@@ -243,8 +243,10 @@ Evidence:
 - Owner Z2 replay confirms standalone aborts are cleared but line-map drift returned after subsequent source changes: `TestEvidence/owner_bl029_z2_replay_20260225T013944Z/` (`selftest_bl029` 3/3 pass, `selftest_bl009` pass, `qa-bl009-headphone-contract` pass, `rt_audit` fail with `non_allowlisted=103`).
 - Owner integrated closeout replay (Z2+Z3): `TestEvidence/owner_bl029_z2_z3_integrated_20260225T014638Z/` (all functional lanes pass; RT drift observed at `non_allowlisted=103` before reconciliation).
 - Owner post-Z2/Z3 finalizer: `TestEvidence/owner_bl029_rt_finalize_z2z3_20260225T014808Z/` (`freeze_guard=PASS`, `before_non_allowlisted=0`, `after_non_allowlisted=0`, `docs_freshness=PASS`).
-- Owner caveat: future source line movement can still require allowlist refresh, but current baseline is reconciled and green.
-- Validation state: partially tested (local script and wiring checks pass; first GitHub Actions execution pending).
+- Owner done-promotion packet (current branch verification): `TestEvidence/hx06_done_promotion_20260225T160025Z/` (`rt_audit.tsv`, `ci_wiring_check.log`, `docs_freshness.log`, `status.tsv`, `promotion_decision.md`; `non_allowlisted=0`).
+- Owner parallel integration replay confirms HX-06 done-state stability on current tree: `TestEvidence/owner_parallel_integration_20260225T162457Z/` (`rt_audit.tsv` summary `non_allowlisted=0`, `docs_freshness.log` pass).
+- Owner caveat: future source line movement can still require allowlist refresh, but baseline is green at promotion time.
+- Validation state: tested (local baseline pass + CI wiring contract parse + docs freshness pass).
 
 ## Closeout Checklist
 

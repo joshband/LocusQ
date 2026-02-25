@@ -39,6 +39,41 @@ Dry-run closeout bundle:
 - `TestEvidence/bl030_release_governance_20260224T204022Z/device_matrix_results.tsv`
 - `TestEvidence/bl030_release_governance_20260224T204022Z/status.tsv`
 
+## HX-06 Done Promotion Addendum (UTC 2026-02-25)
+
+1. Re-verify RT audit baseline on current tree
+
+```sh
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/hx06_done_promotion_20260225T160025Z/rt_audit.tsv
+```
+
+Result: `PASS` (`non_allowlisted=0`).
+
+2. Read-only CI wiring check for RT audit gate
+
+```sh
+ruby -e 'require "yaml"; YAML.load_file(".github/workflows/qa_harness.yml")'
+rg -n "rt-safety-audit|Run HX-06 RT-safety audit|needs:\\s*rt-safety-audit|HX-06-script" .github/workflows/qa_harness.yml
+```
+
+Result: `PASS` (`yaml_parse=PASS`; RT audit job + fail-fast dependency edges present).
+
+3. Docs freshness gate before promotion sync
+
+```sh
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (`0 warning(s)`).
+
+4. HX-06 promotion packet emitted
+
+```sh
+cat TestEvidence/hx06_done_promotion_20260225T160025Z/status.tsv
+```
+
+Result: `PASS` (`hx06_done_promotion_decision=PASS`; artifact bundle complete).
+
 ## HX-06 RT-Safety Addendum (UTC 2026-02-24)
 
 1. Run HX-06 static audit baseline and emit structured TSV
@@ -4283,3 +4318,38 @@ Owner replay commands/results:
   - `scripts/qa-bl029-reliability-gate-mac.sh` (local + CI)
   - `scripts/standalone-ui-selftest-production-p0-mac.sh` exit taxonomy semantics
   - periodic S2 ABRT probe retention for trend monitoring.
+
+## Owner Orchestration Sync: BL-026 D/E + BL-031 D + HX-06 Done Promotion (UTC 2026-02-25)
+
+1. Input handoff intake
+- BL-026 Slice D+E: `TestEvidence/bl026_slice_de_20260225T160531Z/status.tsv` -> `PASS`
+- BL-031 Slice D: `TestEvidence/bl031_slice_d_20260225T160932Z/status.tsv` -> `PASS`
+- HX-06 done promotion packet: `TestEvidence/hx06_done_promotion_20260225T160025Z/status.tsv` -> `PASS`
+
+2. Owner replay matrix (authoritative)
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+LOCUSQ_UI_SELFTEST_SCOPE=bl026 ./scripts/standalone-ui-selftest-production-p0-mac.sh  # x3
+LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh  # x3 (BL-026 regression guard)
+./scripts/qa-bl031-tempo-token-lane-mac.sh
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/owner_parallel_integration_20260225T162457Z/rt_audit.tsv
+./scripts/validate-docs-freshness.sh
+```
+
+- Matrix status: `PASS` (all required gates green)
+- Replay matrix artifact: `TestEvidence/owner_parallel_integration_20260225T162457Z/owner_replay_matrix.tsv`
+- RT summary: `total_hits=134`, `non_allowlisted=0`
+
+3. Owner decisions
+- BL-026: promoted to `In Validation`.
+- BL-031: promoted to `In Validation`.
+- HX-06: `Done` confirmed (remains promoted).
+
+4. Owner bundle
+- `TestEvidence/owner_parallel_integration_20260225T162457Z/status.tsv`
+- `TestEvidence/owner_parallel_integration_20260225T162457Z/handoff_resolution.md`
+- `TestEvidence/owner_parallel_integration_20260225T162457Z/promotion_decisions.md`
+- `TestEvidence/owner_parallel_integration_20260225T162457Z/rt_audit.tsv`
+- `TestEvidence/owner_parallel_integration_20260225T162457Z/docs_freshness.log`
