@@ -17,7 +17,7 @@ BL-029 started as a visualization/tooling backlog item and evolved into a larger
 
 Current status:
 1. **Feature delivery is strong** (major native/UI/contract/QA slices landed and validated).
-2. **Reliability recovered on latest branch replay** (`S1` + owner hard-criteria replay reached GO), while earlier `R1/R2/R3` NO-GO evidence is retained as historical regression context.
+2. **Reliability recovered on latest branch replay** (`S1` + `S3` + owner hard-criteria replay reached GO), while earlier `R1/R2/R3` NO-GO evidence is retained as historical regression context.
 
 ---
 

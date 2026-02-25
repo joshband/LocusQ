@@ -4195,3 +4195,15 @@ LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
 
 4. Owner disposition update
 - BL-029 reliability tranche is currently `GO` on latest owner replay; prior R1/R2/R3 `NO-GO` evidence is retained as historical regression context.
+
+5. S3 BL009 UI determinism handoff intake
+- artifact: `TestEvidence/bl029_bl009_ui_determinism_s3_20260225T033550Z/status.tsv`
+- result: `PASS`
+  - `node_check` PASS
+  - standalone build PASS
+  - `selftest_bl009` `10/10` PASS
+  - `selftest_bl029` `5/5` PASS
+  - docs freshness PASS
+- before/after fail-rate summary (from S3 notes):
+  - BL009: `80.0%` fail (`4/5` in R3 baseline) -> `0.0%` fail (`0/10` in S3)
+  - BL029: `90.0%` fail (`9/10` in R3 baseline) -> `0.0%` fail (`0/5` in S3 scoped smoke)
