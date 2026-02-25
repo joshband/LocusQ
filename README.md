@@ -26,6 +26,9 @@ LocusQ uses a three-mode workflow:
 - Spatial processing controls for distance, directivity, spread, doppler, and air absorption.
 - Room rendering controls (reflections/room mix/size/damping).
 - Output profiles for studio speakers and headphone workflows (including optional Steam Audio path).
+- BL-018 strict spatial profile matrix closeout completed (mono/stereo/quad/5.1/7.1/binaural/ambisonic) with deterministic diagnostics evidence.
+- BL-022 choreography lane closeout completed (`UI-P1-022` plus `UI-P1-025A..E` regression guard) with refreshed deterministic evidence.
+- BL-030 release governance lanes now include a dedicated CI workflow (`.github/workflows/release-governance.yml`) and first dry-run checklist evidence bundle (`TestEvidence/bl030_release_governance_20260224T204022Z/`).
 - Deterministic QA lanes and scripted validation workflows.
 
 ## Supported Platforms and Formats

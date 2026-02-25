@@ -2,7 +2,7 @@ Title: LocusQ Scene State Contract
 Document Type: Interface Contract
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-02-25
 
 # Scene State Contract
 
@@ -142,6 +142,61 @@ For production viewport rendering, scene snapshots must include:
     - `rendererSteamAudioInitErrorCode` (integer)
     - `rendererSteamAudioRuntimeLib` (string)
     - `rendererSteamAudioMissingSymbol` (string)
+  - Renderer audition cloud metadata (BL-029 Slice C):
+    - `rendererAuditionCloud.enabled` (bool)
+    - `rendererAuditionCloud.pattern` (string enum; current: `tone_core`, `dual_orbit`, `noise_halo`, `rain_sheet`, `snow_cloud`, `bounce_cluster`, `chime_constellation`)
+    - `rendererAuditionCloud.mode` (string enum; current: `single_core`, `dual_pair`, `noise_cluster`, `precipitation_rain`, `precipitation_snow`, `impact_swarm`, `chime_cluster`)
+    - `rendererAuditionCloud.emitterCount` (integer; bounded 0..8, 0 when cloud disabled)
+    - `rendererAuditionCloud.pointCount` (integer)
+    - `rendererAuditionCloud.spreadMeters` (float)
+    - `rendererAuditionCloud.seed` (unsigned integer; deterministic for current signal/motion/level state)
+    - `rendererAuditionCloud.pulseHz` (float)
+    - `rendererAuditionCloud.coherence` (float 0..1)
+    - `rendererAuditionCloud.emitters[]` (array of deterministic local cluster sources):
+      - `id` (integer)
+      - `weight` (float 0..1)
+      - `localOffsetX` / `localOffsetY` / `localOffsetZ` (float meters, local to `rendererAuditionVisual` centroid)
+      - `phase` (float 0..1)
+      - `activity` (float 0..1)
+  - Renderer audition authority metadata (BL-029 Slice B1; additive/non-breaking):
+    - `rendererAuditionSourceMode` (string enum; legacy standalone family, current values: `single`, `cloud`)
+    - `rendererAuditionRequestedMode` (string enum; current values: `single`, `cloud`, `bound_emitter`, `bound_choreography`, `bound_physics`)
+    - `rendererAuditionResolvedMode` (string enum; same domain as `rendererAuditionRequestedMode`, after native fallback resolution)
+    - `rendererAuditionBindingTarget` (string; current values: `none`, `emitter:<id>`, `timeline:global`)
+    - `rendererAuditionBindingAvailable` (bool; true only when resolved mode has a valid binding target)
+    - `rendererAuditionSeed` (unsigned integer; deterministic replay seed for renderer audition family)
+    - `rendererAuditionTransportSync` (bool; current default `false`)
+    - `rendererAuditionDensity` (float 0..1; normalized point-density envelope)
+    - `rendererAuditionReactivity` (float 0..1; normalized level/coherence response envelope)
+    - `rendererAuditionFallbackReason` (string enum; current values: `none`, `audition_disabled`, `renderer_mode_inactive`, `bound_emitter_unavailable`, `bound_choreography_unavailable`, `bound_physics_unavailable`, `visual_centroid_unavailable`, `visual_centroid_invalid`, `cloud_geometry_invalid`, `cloud_emitters_unavailable`, `cloud_bounds_clamped`, `reactive_payload_missing`, `reactive_payload_invalid`, `reactive_source_count_invalid`)
+  - Renderer audition reactive telemetry (BL-029 Slice G1; additive/non-breaking):
+    - `rendererAuditionReactive.rms` (float 0..1; mixed audition-source RMS envelope after native guard-rail sanitize)
+    - `rendererAuditionReactive.peak` (float 0..1; mixed audition-source peak envelope after native guard-rail sanitize)
+    - `rendererAuditionReactive.envFast` (float 0..1; fast-smoothed audition envelope after native guard-rail sanitize)
+    - `rendererAuditionReactive.envSlow` (float 0..1; slow-smoothed audition envelope after native guard-rail sanitize)
+    - `rendererAuditionReactive.onset` (float 0..1; positive fast-vs-slow onset detector)
+    - `rendererAuditionReactive.brightness` (float 0..1; high-frequency energy ratio proxy)
+    - `rendererAuditionReactive.rainFadeRate` (float 0..1; deterministic fade driver tuned for rain-family visuals)
+    - `rendererAuditionReactive.snowFadeRate` (float 0..1; deterministic fade driver tuned for snow-family visuals)
+    - `rendererAuditionReactive.physicsVelocity` (float 0..1; normalized physics-speed drive used by audition timbre/envelope coupling)
+    - `rendererAuditionReactive.physicsCollision` (float 0..1; normalized collision-energy drive used by audition transient coupling)
+    - `rendererAuditionReactive.physicsDensity` (float 0..1; normalized active-physics-emitter density used by audition cloud/timbre coupling)
+    - `rendererAuditionReactive.physicsCoupling` (float 0..1; composite deterministic coupling intensity from velocity/collision/density)
+    - `rendererAuditionReactive.headphoneOutputRms` (float 0..1; headphone render-output RMS envelope for BL-009 parity diagnostics)
+    - `rendererAuditionReactive.headphoneOutputPeak` (float 0..1; headphone render-output peak envelope for BL-009 parity diagnostics)
+    - `rendererAuditionReactive.headphoneParity` (float 0..1; deterministic parity confidence scalar after native guard-rail sanitize)
+    - `rendererAuditionReactive.headphoneFallback` (bool; true when headphone render path fell back for this snapshot)
+    - `rendererAuditionReactive.headphoneFallbackReason` (string enum; current values: `none`, `steam_unavailable`, `steam_render_failed`, `output_incompatible`)
+    - `rendererAuditionReactive.sourceEnergy[]` (array<float> 0..1, length 0..8; per-source normalized energy for active audition voices)
+    - `rendererAuditionReactive.reactiveActive` (bool; true only when renderer audition is active in renderer mode and a valid visual centroid exists)
+    - `rendererAuditionReactive.rmsNorm` / `peakNorm` / `envFastNorm` / `envSlowNorm` (float 0..1; explicit unit mirrors of the base reactive envelopes)
+    - `rendererAuditionReactive.onsetNorm` / `brightnessNorm` / `rainFadeRateNorm` / `snowFadeRateNorm` (float 0..1; explicit unit-range aliases for existing reactive drivers)
+    - `rendererAuditionReactive.physicsVelocityNorm` / `physicsCollisionNorm` / `physicsDensityNorm` / `physicsCouplingNorm` (float 0..1; explicit unit-range aliases for physics-coupled drivers)
+    - `rendererAuditionReactive.headphoneOutputRmsNorm` / `headphoneOutputPeakNorm` (float 0..1; explicit unit mirrors of headphone output envelopes)
+    - `rendererAuditionReactive.headphoneParityNorm` (float 0..1; explicit unit mirror of `headphoneParity`)
+    - `rendererAuditionReactive.sourceEnergyNorm[]` (array<float> 0..1, length 0..8; explicit unit-range alias of `sourceEnergy[]`)
+    - Coupling source contract: physics-coupled fields are derived from renderer-thread physics summaries (active physics emitters only) and are clamped before audition DSP mapping; no lock/heap/IO is permitted on this path.
+    - Fallback behavior: when internal audition is not the active renderer source for the block, scalar drive fields and normalized fields must publish neutral-safe values (`0` for envelopes/drivers/parity scalars), and `sourceEnergy`/`sourceEnergyNorm` must publish as empty arrays.
   - Spatial profile diagnostics:
     - `rendererSpatialProfileRequested` (string enum; APVTS `rend_spatial_profile`)
     - `rendererSpatialProfileActive` (string enum)
@@ -179,6 +234,38 @@ Rules:
 9. Spatial profile diagnostics must be present in every snapshot so QA can distinguish direct rendering from host-layout fallback behavior deterministically.
 10. Ambisonic diagnostics must be present in every snapshot so BL-018 strict integration checks can distinguish placeholder telemetry (`not_implemented`) from active ambisonic paths.
 11. CLAP diagnostics must be present in every snapshot (including non-CLAP runtime contexts) so self-tests can deterministically distinguish `not_compiled`, `non_clap_instance`, and active CLAP lifecycle states.
+12. `rendererAuditionCloud` is additive and backward-compatible; UI consumers must safely ignore unknown fields (including `mode`, `emitterCount`, and `emitters`) and fall back to existing `rendererAuditionVisual` behavior if cloud metadata is absent.
+13. BL-029 audition authority fields are additive and backward-compatible; when absent, UI consumers must preserve legacy `rendererAuditionVisual` + `rendererAuditionCloud` behavior with no hard dependency on these fields.
+14. Resolver semantics are deterministic for identical snapshot inputs: requested mode precedence is `bound_physics` -> `bound_choreography` -> `bound_emitter` -> standalone (`single`/`cloud`).
+15. `rendererAuditionReactive` is additive and backward-compatible; UI consumers that do not implement reactive fading must ignore the block and keep existing single/cloud visual behavior.
+
+### Audition Resolver Examples
+
+Bound emitter resolved:
+
+```json
+{
+  "rendererAuditionSourceMode": "single",
+  "rendererAuditionRequestedMode": "bound_emitter",
+  "rendererAuditionResolvedMode": "bound_emitter",
+  "rendererAuditionBindingTarget": "emitter:3",
+  "rendererAuditionBindingAvailable": true,
+  "rendererAuditionFallbackReason": "none"
+}
+```
+
+Bound physics fallback to standalone:
+
+```json
+{
+  "rendererAuditionSourceMode": "cloud",
+  "rendererAuditionRequestedMode": "bound_physics",
+  "rendererAuditionResolvedMode": "cloud",
+  "rendererAuditionBindingTarget": "none",
+  "rendererAuditionBindingAvailable": false,
+  "rendererAuditionFallbackReason": "bound_physics_unavailable"
+}
+```
 
 ## Determinism Contract
 

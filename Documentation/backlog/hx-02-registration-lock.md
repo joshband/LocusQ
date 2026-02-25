@@ -3,7 +3,7 @@ Title: HX-02 Registration Lock and Memory-Order Audit
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 ---
 
 # HX-02: Registration Lock and Memory-Order Audit
@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | Open |
+| Status | In Validation (Slices A-B complete; Slice C pending) |
 | Owner Track | Track F — Hardening |
 | Depends On | BL-016 (Done) |
 | Blocks | — |
@@ -202,13 +202,21 @@ Evidence:
 | Regression log | `TestEvidence/hx02_registration_audit_<timestamp>/regression.log` | test output |
 | Status TSV | `TestEvidence/hx02_registration_audit_<timestamp>/status.tsv` | lane, result, timestamp |
 
+## Owner Validation Snapshot (2026-02-24)
+
+| Slice | Status | Evidence |
+|---|---|---|
+| Slice A | Complete (audit produced actionable findings) | `TestEvidence/hx02_registration_audit_20260224_144643/atomic_audit.md`, `TestEvidence/hx02_registration_audit_20260224_144643/status.tsv` |
+| Slice B | Complete (fixes implemented and validated) | `TestEvidence/hx02_registration_audit_20260224T195130Z/status.tsv`, `TestEvidence/hx02_registration_audit_20260224T195130Z/fixes_applied.md` |
+| Slice C | Complete (regression lane pass) | `TestEvidence/hx02_slice_c_20260224T200311Z/status.tsv` |
+
 ## Closeout Checklist
 
-- [ ] All atomic operations audited and documented
-- [ ] All violations fixed
-- [ ] Regression suite passes (ctest, self-test, host smoke)
+- [x] All atomic operations audited and documented
+- [x] All violations fixed
+- [x] Regression suite passes (ctest, self-test, host smoke)
 - [ ] No multi-instance stability regressions
-- [ ] Evidence captured at designated paths
+- [x] Evidence captured at designated paths
 - [ ] status.json updated
 - [ ] Documentation/backlog/index.md row updated
 - [ ] TestEvidence surfaces updated

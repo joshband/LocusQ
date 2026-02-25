@@ -3,7 +3,7 @@ Title: BL-018 Spatial Format Matrix Strict Closeout
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 ---
 
 # BL-018: Spatial Format Matrix Strict Closeout
@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation |
+| Status | Done (2026-02-24 strict matrix pass) |
 | Owner Track | Track A — Runtime Formats |
 | Depends On | BL-014 |
 | Blocks | BL-026, BL-017 |
@@ -129,6 +129,21 @@ EVIDENCE:
 | BL-018-diag | Automated | Diagnostics field verification | requested/active/stage correct per profile |
 | BL-018-freshness | Automated | `./scripts/validate-docs-freshness.sh` | Exit 0 |
 
+## Latest Strict Validation (2026-02-24)
+
+- Build lane (fallback prompt step 1): `cmake --build build --target all` → `PASS` (warnings only)
+- Command: `./scripts/qa-bl018-profile-matrix-strict-mac.sh`
+- Result: `PASS`
+- Artifact directory: `TestEvidence/bl018_profile_matrix_20260224T183138Z`
+- Required evidence:
+  - `TestEvidence/bl018_profile_matrix_20260224T183138Z/per_profile_results.tsv`
+  - `TestEvidence/bl018_profile_matrix_20260224T183138Z/diagnostics_snapshot.json`
+- Profile outcomes (`mono`, `stereo`, `quadraphonic`, `5.1`, `7.1`, `binaural_generic`, `binaural_steam`, `ambisonic_1st`, `ambisonic_3rd`):
+  - `warnings=0`
+  - `fallback_triggered=false`
+  - `rt_safe=true`
+  - `diagnostics_match=true`
+
 ## Risks & Mitigations
 
 | Risk | Impact | Likelihood | Mitigation |
@@ -153,10 +168,10 @@ EVIDENCE:
 
 ## Closeout Checklist
 
-- [ ] All spatial profiles switch warning-free
-- [ ] Diagnostics fields correct for every profile
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] All spatial profiles switch warning-free
+- [x] Diagnostics fields correct for every profile
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes

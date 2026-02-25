@@ -3,7 +3,7 @@ Title: BL-012 QA Harness Tranche Closeout
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 ---
 
 # BL-012: QA Harness Tranche Closeout
@@ -13,10 +13,10 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation |
+| Status | Done (2026-02-24 closeout evidence refresh) |
 | Owner Track | Track D — QA Platform |
 | Depends On | — |
-| Blocks | BL-013 |
+| Blocks | — |
 | Annex Spec | (inline — no separate annex) |
 
 ## Effort Estimate
@@ -124,8 +124,8 @@ EVIDENCE:
 
 | Lane ID | Type | Command | Pass Criteria |
 |---|---|---|---|
-| BL-012-harness | Automated | `ctest --test-dir build --output-on-failure` | 45/45 pass |
-| BL-012-hx04 | Automated | HX-04 parity audit | No coverage drift |
+| BL-012-tranche | Automated | `./scripts/qa-bl012-harness-backport-tranche1-mac.sh` | Harness sanity pass; suite runtime-config precedence pass; contract coverage pass; `perf_*` metrics present; HX-04 audit pass |
+| BL-012-regression | Automated | `./scripts/standalone-ui-selftest-production-p0-mac.sh` | `status=pass` and choreography/emitter companion checks remain green |
 | BL-012-freshness | Automated | `./scripts/validate-docs-freshness.sh` | Exit 0 |
 
 ## Risks & Mitigations
@@ -145,17 +145,26 @@ EVIDENCE:
 
 | Artifact | Path | Required Fields |
 |---|---|---|
-| ctest log | `TestEvidence/bl012_harness_tranche_<timestamp>/ctest.log` | full ctest output |
-| Status TSV | `TestEvidence/bl012_harness_tranche_<timestamp>/status.tsv` | lane, result, timestamp |
+| Tranche status | `TestEvidence/bl012_harness_backport_<timestamp>/status.tsv` | lane, result, timestamp |
+| Tranche report | `TestEvidence/bl012_harness_backport_<timestamp>/report.md` | assertion summary + artifact pointers |
+| Runtime config probe | `TestEvidence/bl012_harness_backport_<timestamp>/runtime_config_probe.tsv` | per-scenario sample rate/block size/channel verification |
 | Validation trend | `TestEvidence/validation-trend.md` | date, lane, result, notes |
 | Build summary | `TestEvidence/build-summary.md` | date, build_type, result |
 
+## Latest Closeout Evidence (2026-02-24)
+
+- Bundle: `TestEvidence/bl012_harness_backport_20260224T184819Z/`
+- Tranche lane: `TestEvidence/bl012_harness_backport_20260224T184819Z/status.tsv`
+- Key checks: `harness_ctest=pass`, `contract_pack_coverage=pass`, `runtime_config_probe_summary=pass`, `perf_metric_probe_assert=pass`, `hx04_audit_run=pass`
+- Runtime precedence proof: `TestEvidence/bl012_harness_backport_20260224T184819Z/runtime_config_probe.tsv` (`48000/512/2` for all contract scenarios despite conflicting CLI flags)
+- Companion regression guard: `TestEvidence/locusq_production_p0_selftest_20260224T184847Z.json` (`status=pass`, includes `UI-P1-022` and `UI-P1-025A..E` pass checks)
+
 ## Closeout Checklist
 
-- [ ] Full harness rerun passes (45/45)
-- [ ] HX-04 parity audit green
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] Full harness rerun passes (45/45)
+- [x] HX-04 parity audit green
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes
