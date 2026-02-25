@@ -15,7 +15,7 @@ Deliver four visualization and tooling priorities for the LocusQ WebView UI: (1)
 | Field | Value |
 |---|---|
 | ID | BL-029 |
-| Status | In Implementation (audition-cloud tranche executed; D/E/F owner replay validated; reactive G-phase in owner triage) |
+| Status | In Implementation (audition-cloud/reactive platform delivered; reliability tranche recovered to GO on latest owner replay) |
 | Priority | P2 |
 | Track | B — Scene/UI Runtime |
 | Effort | Very High / XL |
@@ -55,8 +55,11 @@ Deliver four visualization and tooling priorities for the LocusQ WebView UI: (1)
 | Reliability Hardening Slice R1 | FAIL | `TestEvidence/bl029_reliability_native_r1_20260225T031132Z/status.tsv` | Build/smoke pass and `selftest_bl029` passes 5/5, but BL009 scoped selftest lane is flaky (`1/3` fail in required set). |
 | Selftest Harness Robustness Slice R2 | FAIL | `TestEvidence/bl029_selftest_harness_r2_20260225T030714Z/status.tsv` | Diagnostics improved, but runtime remains unstable in soak (`bl029 0/10`, `bl009 0/5`, repeated `app_exited_before_result`, `exit 134`, `ABRT`). |
 | Reliability Soak + Go/No-Go Slice R3 | FAIL (NO-GO) | `TestEvidence/bl029_reliability_soak_r3_20260225T030749Z/status.tsv` | QA contract lane deterministic PASS, but soak hard gates fail (`selftest_bl029 1/10`, `selftest_bl009 1/5`), decision `NO-GO`. |
+| Selftest Serialization Slice S1 | PASS | `TestEvidence/bl029_selftest_serialization_s1_20260225T033732Z/status.tsv` | Reliability harness serialization/locking lane now passes full matrix (`selftest_bl029 10/10`, `selftest_bl009 10/10`, wrapper lane pass, docs pass). |
+| ABRT Root-Cause Probe Slice S2 | PASS (diagnostic lane) | `TestEvidence/bl029_abrt_probe_s2_20260225T033613Z/status.tsv` | Probe tooling and taxonomy capture pass; captures earlier crash signature (`appkit_registration`, `app_exited_before_result`) for historical triage. |
+| Owner Reliability Replay (post-S1/S2) | PASS (GO) | `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/status.tsv` | Current-branch replay meets R3 hard criteria (`qa lane PASS`, `selftest_bl029 10/10`, `selftest_bl009 5/5`, docs pass), decision `GO`. |
 
-Current owner disposition: BL-029 remains `In Implementation`. Reactive feature lanes are functionally advanced, but reliability tranche is currently `NO-GO` due standalone selftest instability under soak (ABRT/app-exit-before-result patterns), despite RT/docs gates being green at snapshot time.
+Current owner disposition: BL-029 remains `In Implementation` (not promoted to done yet), but reliability tranche is currently `GO` on the latest owner replay set. Earlier `NO-GO` evidence (R1/R2/R3) remains preserved as historical regression context; S1 + owner replay supersede it for current branch state.
 
 ---
 
