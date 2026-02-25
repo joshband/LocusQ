@@ -2,7 +2,7 @@ Title: LocusQ Root README
 Document Type: Project README
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # LocusQ
 

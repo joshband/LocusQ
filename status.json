@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-24T03:36:00Z",
+  "last_modified": "2026-02-25T04:44:27Z",
   "notes": "P0 backlog items are now closed: BL-025 and BL-014 are Done (2026-02-24) after refreshed deterministic evidence (`TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`). Existing Done closures for BL-009/BL-010/BL-011/BL-015/BL-016/BL-019/BL-024 remain unchanged, and the active queue now starts at P1.",
   "phase_history": [
     {
@@ -1756,6 +1756,8 @@
     "bl013_hostrunner_stage_diag": "qa/main.cpp HOSTRUNNER_STAGE init/prepare/render/release",
     "bl013_hostrunner_docs_freshness_log": "TestEvidence/validate_docs_freshness_bl013_20260223T173744Z.log",
     "bl029_dsp_visualization_tooling_status": "in_planning_2026-02-24_spec_authored",
-    "bl029_dsp_visualization_tooling_spec": "Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md"
+    "bl029_dsp_visualization_tooling_spec": "Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md",
+    "bl032_source_modularization_status": "in_planning_2026-02-25_monolithic_processor_editor_refactor",
+    "bl032_source_modularization_runbook": "Documentation/backlog/bl-032-source-modularization.md"
   }
 }

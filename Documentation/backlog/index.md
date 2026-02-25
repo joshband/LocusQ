@@ -46,6 +46,7 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 | 12 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 13 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 14 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
+| 15 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Planning | F | — | — | [bl-032](bl-032-source-modularization.md) |
 
 ## Dependency Graph
 
@@ -81,6 +82,7 @@ graph TD
         BL-017[BL-017 Head Track]
         HX-02[HX-02 Reg Lock]
         HX-05[HX-05 Payload]
+        BL-032[BL-032 Source Modularization]
     end
 
     subgraph "Todo"
@@ -132,7 +134,7 @@ graph TD
 | C | UX Authoring | BL-026, BL-027, BL-023, BL-025 regression | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-012, BL-013, BL-024 cadence | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
 | E | R&D Expansion | BL-017, BL-020, BL-021 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
-| F | Hardening | HX-02, HX-05, HX-06 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
+| F | Hardening | HX-02, HX-05, HX-06, BL-032 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
 
 ## Intake Process
