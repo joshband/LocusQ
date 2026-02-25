@@ -17,7 +17,7 @@ BL-029 started as a visualization/tooling backlog item and evolved into a larger
 
 Current status:
 1. **Feature delivery is strong** (major native/UI/contract/QA slices landed and validated).
-2. **Reliability is not complete** (soak gates failed in R1/R2/R3; owner disposition is NO-GO for release-level reliability).
+2. **Reliability recovered on latest branch replay** (`S1` + owner hard-criteria replay reached GO), while earlier `R1/R2/R3` NO-GO evidence is retained as historical regression context.
 
 ---
 
@@ -94,12 +94,13 @@ timeline
                : G6 docs/design contract PASS (cinematic language)
                : Z3 reactive UI/QA consolidation PASS (5/5 scoped selftests)
                : Reliability tranche R1/R2/R3 executed; soak criteria failed -> NO-GO
+               : S1 serialization lane + owner replay restored hard-criteria pass -> GO on current branch
 ```
 
 Detailed interpretation:
 1. **Early tranche**: major capability implementation completed across native, bridge, and UI.
 2. **Middle tranche**: many “FAIL” outcomes were gate-related (RT allowlist drift or transient selftest aborts), not raw feature absence.
-3. **Latest tranche**: reliability hardening proved improvements, but not enough to meet strict soak exit criteria.
+3. **Latest tranche**: early reliability tranche failed, then later harness/runtime stabilization replay met hard criteria on current branch.
 
 ---
 
@@ -154,19 +155,23 @@ Why it matters:
 
 ---
 
-## 8) Why We Are Not Done Yet
+## 8) What Still Blocks Done
 
-The blocker is no longer “feature missing.” It is **release reliability**.
+The primary blocker is no longer functional reliability criteria; current replay is green. The remaining blocker is closeout hygiene and promotion discipline.
 
 Hard criteria (from QA contract) require:
 1. BL-029 selftest soak: **100% pass** (`10/10`)
 2. BL-009 parity soak: **100% pass** (`5/5`)
 3. Contract lane pass with deterministic artifacts
 
-R3 recorded:
+Historical R3 recorded:
 1. BL-029 soak `1/10`
 2. BL-009 soak `1/5`
 3. Decision: **NO-GO**
+
+Recovery evidence (current branch):
+1. `S1` pass: `TestEvidence/bl029_selftest_serialization_s1_20260225T033732Z/status.tsv`
+2. Owner hard-criteria replay GO: `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/status.tsv`
 
 Reference evidence:
 1. `TestEvidence/bl029_reliability_native_r1_20260225T031132Z/status.tsv`
@@ -188,11 +193,10 @@ stateDiagram-v2
 ```
 
 Remaining completion checklist:
-1. Eliminate ABRT/app-exit-before-result failures under repeated standalone selftest runs.
-2. Stabilize BL-009 compact rail/selftest parity behavior (no intermittent false negatives).
-3. Re-run strict soak matrix and meet 100% criteria.
-4. Keep RT/docs gates green at final replay and record synchronized owner evidence.
-5. Update BL-029 backlog state from “In Implementation (NO-GO reliability tranche)” to release-ready only after hard criteria pass.
+1. Preserve current reliability (keep soak replay green on integration branch, not only worker branch).
+2. Keep RT/docs gates green at final integrated replay and record synchronized owner evidence.
+3. Finalize BL-029 promotion packet (status/doc sync + closeout decision) once owner signs off no active blockers.
+4. Continue monitoring ABRT taxonomy tooling (S2) as regression guard even after green runs.
 
 ---
 
@@ -201,7 +205,7 @@ Remaining completion checklist:
 1. Additive schema + fallback-first design worked well for fast iteration without breaking older UI paths.
 2. Feature velocity can hide reliability debt unless soak criteria are treated as hard release gates.
 3. Renderer authority decision (ADR-0013) was correct: it allowed rich cross-mode behavior without architecture fork.
-4. The next value is operational robustness, not new visual feature breadth.
+4. Operational robustness gates can recover quickly when harness ownership and launch serialization are treated as first-class features.
 
 ---
 
@@ -222,4 +226,5 @@ Representative evidence bundles:
 5. `TestEvidence/bl029_reliability_native_r1_20260225T031132Z/`
 6. `TestEvidence/bl029_selftest_harness_r2_20260225T030714Z/`
 7. `TestEvidence/bl029_reliability_soak_r3_20260225T030749Z/`
-
+8. `TestEvidence/bl029_selftest_serialization_s1_20260225T033732Z/`
+9. `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/`

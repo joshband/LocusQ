@@ -39,7 +39,7 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 | 5 | HX-06 | Recurring RT-safety static audit | P1 | In Validation | F | BL-016 | BL-030 | [hx-06](hx-06-rt-safety-audit.md) |
 | 6 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028, BL-029 | [bl-027](bl-027-renderer-uiux-v2.md) |
 | 7 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | BL-029 | [bl-028](bl-028-spatial-output-matrix.md) |
-| 8 | BL-029 | DSP visualization and tooling | P2 | In Implementation (reactive tranche feature lanes advanced, but reliability tranche NO-GO: soak selftests unstable in R1/R2/R3 despite deterministic QA contract and RT/docs green snapshots) | B | BL-025, BL-026, BL-027, BL-028, BL-031 | — | [bl-029](bl-029-dsp-visualization.md) |
+| 8 | BL-029 | DSP visualization and tooling | P2 | In Implementation (reactive tranche feature lanes advanced; reliability tranche currently GO on S1 + owner replay, with R1/R2/R3 retained as historical instability context) | B | BL-025, BL-026, BL-027, BL-028, BL-031 | — | [bl-029](bl-029-dsp-visualization.md) |
 | 9 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
 | 10 | BL-030 | Release governance and device rerun | P2 | In Validation (Slices A-D complete; release dry-run blocked on RL-01/RL-05/RL-09) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
 | 11 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Implementation (Slices A-B validated) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |

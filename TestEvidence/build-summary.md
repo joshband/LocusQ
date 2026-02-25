@@ -4160,3 +4160,38 @@ LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
 
 4. Artifact
 - `TestEvidence/owner_bl029_z2_replay_20260225T013944Z/status.tsv`
+
+## BL-029 Reliability Recovery Intake S1/S2 + Owner Replay (UTC 2026-02-25)
+
+1. S1 selftest serialization handoff
+- artifact: `TestEvidence/bl029_selftest_serialization_s1_20260225T033732Z/status.tsv`
+- result: `PASS`
+  - `selftest_bl029` `10/10` PASS
+  - `selftest_bl009` `10/10` PASS
+  - `qa-bl009-headphone-contract` PASS
+  - docs freshness PASS
+
+2. S2 ABRT probe handoff
+- artifact: `TestEvidence/bl029_abrt_probe_s2_20260225T033613Z/status.tsv`
+- result: `PASS` (diagnostic lane)
+  - captures historical crash taxonomy (`appkit_registration`, `app_exited_before_result`) and reproducible probe commands.
+
+3. Owner reliability replay (hard-criteria recheck)
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./scripts/qa-bl029-audition-platform-lane-mac.sh
+LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh  # x10
+LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh     # x5
+./scripts/validate-docs-freshness.sh
+```
+
+- artifact: `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/status.tsv`
+- result: `PASS / GO`
+  - `qa_lane` PASS
+  - `selftest_bl029` pass count `10`
+  - `selftest_bl009` pass count `5`
+  - docs freshness PASS
+
+4. Owner disposition update
+- BL-029 reliability tranche is currently `GO` on latest owner replay; prior R1/R2/R3 `NO-GO` evidence is retained as historical regression context.
