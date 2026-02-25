@@ -39,6 +39,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -99,6 +101,72 @@ qa::scenario::ExecutionConfig makeConfig(bool useSpatial, const RunOptions& opti
     cfg.numChannels  = options.numChannels;
     cfg.outputDir    = "qa_output/locusq" + std::string(useSpatial ? "_spatial" : "_emitter");
     return cfg;
+}
+
+template <typename T, typename = void>
+struct HasRuntimeConfig : std::false_type {};
+template <typename T>
+struct HasRuntimeConfig<T, std::void_t<decltype(std::declval<const T&>().runtimeConfig)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct HasSampleRate : std::false_type {};
+template <typename T>
+struct HasSampleRate<T, std::void_t<decltype(std::declval<const T&>().sampleRate)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct HasBlockSize : std::false_type {};
+template <typename T>
+struct HasBlockSize<T, std::void_t<decltype(std::declval<const T&>().blockSize)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct HasNumChannels : std::false_type {};
+template <typename T>
+struct HasNumChannels<T, std::void_t<decltype(std::declval<const T&>().numChannels)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct HasSeed : std::false_type {};
+template <typename T>
+struct HasSeed<T, std::void_t<decltype(std::declval<const T&>().seed)>> : std::true_type {};
+
+template <typename T, typename = void>
+struct HasOutputDir : std::false_type {};
+template <typename T>
+struct HasOutputDir<T, std::void_t<decltype(std::declval<const T&>().outputDir)>> : std::true_type {};
+
+template <typename OptionalT, typename ValueT>
+void assignIfPresent(const OptionalT& value, ValueT& dst)
+{
+    if (value.has_value())
+        dst = *value;
+}
+
+template <typename SuiteT>
+qa::scenario::ExecutionConfig applySuiteRuntimeConfigManual(const qa::scenario::ExecutionConfig& base,
+                                                            const SuiteT& suite)
+{
+    qa::scenario::ExecutionConfig applied = base;
+    if constexpr (HasRuntimeConfig<SuiteT>::value)
+    {
+        const auto& runtime = suite.runtimeConfig;
+        if constexpr (HasSampleRate<decltype(runtime)>::value)
+            assignIfPresent(runtime.sampleRate, applied.sampleRate);
+        if constexpr (HasBlockSize<decltype(runtime)>::value)
+            assignIfPresent(runtime.blockSize, applied.blockSize);
+        if constexpr (HasNumChannels<decltype(runtime)>::value)
+            assignIfPresent(runtime.numChannels, applied.numChannels);
+        if constexpr (HasSeed<decltype(runtime)>::value)
+            assignIfPresent(runtime.seed, applied.seed);
+        if constexpr (HasOutputDir<decltype(runtime)>::value)
+            assignIfPresent(runtime.outputDir, applied.outputDir);
+    }
+    return applied;
+}
+
+template <typename SuiteT>
+qa::scenario::ExecutionConfig applySuiteRuntimeConfigCompat(const qa::scenario::ExecutionConfig& base,
+                                                            const SuiteT& suite)
+{
+    return applySuiteRuntimeConfigManual(base, suite);
 }
 
 #if defined(QA_HOST_RUNNER_AVAILABLE)
@@ -518,7 +586,7 @@ qa::scenario::TestSuiteResult executeSuite(const qa::scenario::TestSuite& suite,
                                            const RunOptions& options)
 {
     auto dutFactory = useSpatial ? createSpatialDut : createEmitterDut;
-    auto cfg = qa::scenario::applySuiteRuntimeConfig(makeConfig(useSpatial, options), suite);
+    auto cfg = applySuiteRuntimeConfigCompat(makeConfig(useSpatial, options), suite);
 
     qa::scenario::ScenarioExecutor executor(makeRunnerFactory(dutFactory), dutFactory, cfg);
     qa::scenario::InvariantEvaluator evaluator;

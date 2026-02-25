@@ -2,7 +2,7 @@ Title: ADR-0004 V1 AI Deferral
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-02-25
 
 # ADR-0004: V1 AI Deferral
 
@@ -41,5 +41,5 @@ For v1 and current Phase 2.x closure:
 ## Related
 
 - `.ideas/plan.md`
-- `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
+- `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md`
 - `Documentation/invariants.md`

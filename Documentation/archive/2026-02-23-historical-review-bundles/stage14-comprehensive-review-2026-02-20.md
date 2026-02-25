@@ -25,7 +25,7 @@ Comprehensive architecture, code, design, and QA review for Stage 14 closeout wi
 - `Source/ui/public/incremental/js/stage12_ui.js`
 - `Documentation/stage14-review-release-checklist.md`
 - `Documentation/implementation-traceability.md`
-- `Documentation/research/qa-harness-upstream-backport-opportunities-2026-02-20.md`
+- `Documentation/archive/2026-02-25-research-legacy/qa-harness-upstream-backport-opportunities-2026-02-20.md`
 - `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
 - `status.json`
 

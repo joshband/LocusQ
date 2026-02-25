@@ -16,6 +16,7 @@
 #include <atomic>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <vector>
@@ -45,6 +46,7 @@ class SpatialRenderer
 public:
     static constexpr int NUM_SPEAKERS = 4;
     static constexpr int MAX_DELAY_SAMPLES = 4410; // 50ms @ 88.2kHz
+    static constexpr int MAX_AUDITION_REACTIVE_SOURCES = 8;
     enum class HeadphoneRenderMode : int
     {
         StereoDownmix = 0,
@@ -103,6 +105,70 @@ public:
         0, 1, 3, 2 // Host quad output order: FL, FR, RL, RR
     };
 
+    struct alignas(16) PoseSnapshot
+    {
+        float qx = 0.0f;
+        float qy = 0.0f;
+        float qz = 0.0f;
+        float qw = 1.0f;
+        std::uint64_t timestampMs = 0;
+        std::uint32_t seq = 0;
+        std::uint32_t pad = 0;
+    };
+
+    static_assert (sizeof (PoseSnapshot) == 32, "PoseSnapshot size contract");
+
+    struct ListenerOrientation
+    {
+        std::array<float, 3> right { 1.0f, 0.0f, 0.0f };
+        std::array<float, 3> up { 0.0f, 1.0f, 0.0f };
+        std::array<float, 3> ahead { 0.0f, 0.0f, -1.0f };
+    };
+
+    struct AuditionReactiveSnapshot
+    {
+        float rms = 0.0f;
+        float peak = 0.0f;
+        float envFast = 0.0f;
+        float envSlow = 0.0f;
+        float onset = 0.0f;
+        float brightness = 0.0f;
+        float rainFadeRate = 0.0f;
+        float snowFadeRate = 0.0f;
+        float physicsVelocity = 0.0f;
+        float physicsCollision = 0.0f;
+        float physicsDensity = 0.0f;
+        float physicsCoupling = 0.0f;
+        float geometryScale = 0.0f;
+        float geometryWidth = 0.0f;
+        float geometryDepth = 0.0f;
+        float geometryHeight = 0.0f;
+        float precipitationFade = 0.0f;
+        float collisionBurst = 0.0f;
+        float densitySpread = 0.0f;
+        float headphoneOutputRms = 0.0f;
+        float headphoneOutputPeak = 0.0f;
+        float headphoneParity = 1.0f;
+        float rmsNorm = 0.0f;
+        float peakNorm = 0.0f;
+        float envFastNorm = 0.0f;
+        float envSlowNorm = 0.0f;
+        float headphoneOutputRmsNorm = 0.0f;
+        float headphoneOutputPeakNorm = 0.0f;
+        float headphoneParityNorm = 0.0f;
+        int headphoneFallbackReasonIndex = 0;
+        int sourceEnergyCount = 0;
+        std::array<float, MAX_AUDITION_REACTIVE_SOURCES> sourceEnergy {};
+    };
+
+    enum class AuditionReactiveHeadphoneFallbackReason : int
+    {
+        None = 0,
+        SteamUnavailable = 1,
+        SteamRenderFailed = 2,
+        OutputIncompatible = 3
+    };
+
     SpatialRenderer()
     {
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
@@ -139,6 +205,15 @@ public:
             delayWritePos[spk] = 0;
         }
 
+        for (auto& voiceGains : auditionSmoothedSpeakerGains)
+        {
+            for (auto& gain : voiceGains)
+            {
+                gain.reset (sampleRate, 0.015); // 15ms smoothing to avoid block-step buzzing.
+                gain.setCurrentAndTargetValue (0.0f);
+            }
+        }
+
         // Prepare accumulation buffer (4 channels)
         accumBuffer.setSize (NUM_SPEAKERS, maxBlockSize);
 
@@ -171,7 +246,17 @@ public:
 
         steamBinauralLeft.resize (static_cast<size_t> (maxBlockSize), 0.0f);
         steamBinauralRight.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+        for (auto& rotated : headPoseRotatedQuadScratch)
+            rotated.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+        resetHeadPoseState();
         resetHeadphoneCompensationState();
+        for (auto& voiceGains : auditionSmoothedSpeakerGains)
+            for (auto& gain : voiceGains)
+                gain.setCurrentAndTargetValue (0.0f);
+        std::fill (auditionHistoryBuffer.begin(), auditionHistoryBuffer.end(), 0.0f);
+        auditionHistoryWritePos = 0;
+        resetAuditionVoiceFieldStates();
+        resetAuditionReactiveTelemetry();
         updateHeadphoneCompensationForProfile (HeadphoneDeviceProfile::Generic);
         initialiseSteamAudioRuntimeIfEnabled();
     }
@@ -191,7 +276,15 @@ public:
 
         earlyReflections.reset();
         fdnReverb.reset();
+        resetHeadPoseState();
         resetHeadphoneCompensationState();
+        for (auto& voiceGains : auditionSmoothedSpeakerGains)
+            for (auto& gain : voiceGains)
+                gain.setCurrentAndTargetValue (0.0f);
+        std::fill (auditionHistoryBuffer.begin(), auditionHistoryBuffer.end(), 0.0f);
+        auditionHistoryWritePos = 0;
+        resetAuditionVoiceFieldStates();
+        resetAuditionReactiveTelemetry();
 
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
         if (steamVirtualSurroundEffect != nullptr && iplVirtualSurroundEffectResetFn != nullptr)
@@ -397,6 +490,74 @@ public:
         requestedSpatialProfileIndex.store (clamped, std::memory_order_relaxed);
     }
 
+    void applyHeadPose (const PoseSnapshot& pose) noexcept
+    {
+        if (! std::isfinite (pose.qx)
+            || ! std::isfinite (pose.qy)
+            || ! std::isfinite (pose.qz)
+            || ! std::isfinite (pose.qw))
+        {
+            return;
+        }
+
+        const float normSq = (pose.qx * pose.qx)
+                           + (pose.qy * pose.qy)
+                           + (pose.qz * pose.qz)
+                           + (pose.qw * pose.qw);
+        if (! std::isfinite (normSq) || normSq < 1.0e-12f)
+            return;
+
+        const float invNorm = 1.0f / std::sqrt (normSq);
+        headPoseSnapshot.qx = pose.qx * invNorm;
+        headPoseSnapshot.qy = pose.qy * invNorm;
+        headPoseSnapshot.qz = pose.qz * invNorm;
+        headPoseSnapshot.qw = pose.qw * invNorm;
+        headPoseSnapshot.timestampMs = pose.timestampMs;
+        headPoseSnapshot.seq = pose.seq;
+        headPoseSnapshot.pad = 0;
+        headPoseValid = true;
+
+        updateHeadPoseOrientationFromSnapshot();
+        rebuildHeadPoseSpeakerMix();
+    }
+
+    void setAuditionEnabled (bool enabled) noexcept
+    {
+        auditionEnabled = enabled;
+    }
+
+    void setAuditionSignalType (int signalTypeIndex) noexcept
+    {
+        const auto clamped = juce::jlimit (0, 12, signalTypeIndex);
+        if (auditionSignalTypeIndex == clamped)
+            return;
+
+        auditionSignalTypeIndex = clamped;
+        resetAuditionVoiceFieldStates();
+    }
+
+    void setAuditionMotionType (int motionTypeIndex) noexcept
+    {
+        auditionMotionTypeIndex = juce::jlimit (0, 5, motionTypeIndex);
+    }
+
+    void setAuditionLevelPreset (int levelPresetIndex) noexcept
+    {
+        auditionLevelPresetIndex = juce::jlimit (0, 4, levelPresetIndex);
+    }
+
+    void setAuditionPhysicsReactiveInput (
+        bool active,
+        float velocityNorm,
+        float collisionNorm,
+        float densityNorm) noexcept
+    {
+        auditionPhysicsReactiveInputActive = active;
+        auditionPhysicsReactiveVelocityTarget = sanitizeUnitScalar (velocityNorm);
+        auditionPhysicsReactiveCollisionTarget = sanitizeUnitScalar (collisionNorm);
+        auditionPhysicsReactiveDensityTarget = sanitizeUnitScalar (densityNorm);
+    }
+
     int getHeadphoneRenderModeRequestedIndex() const noexcept
     {
         return requestedHeadphoneModeIndex.load (std::memory_order_relaxed);
@@ -493,6 +654,20 @@ public:
             case SteamInitStage::CreatingVirtualSurround: return "creating_virtual_surround";
             case SteamInitStage::VirtualSurroundCreateFailed: return "virtual_surround_create_failed";
             case SteamInitStage::Ready: return "ready";
+            default: break;
+        }
+
+        return "unknown";
+    }
+
+    static const char* auditionReactiveHeadphoneFallbackReasonToString (int reasonIndex) noexcept
+    {
+        switch (static_cast<AuditionReactiveHeadphoneFallbackReason> (reasonIndex))
+        {
+            case AuditionReactiveHeadphoneFallbackReason::None: return "none";
+            case AuditionReactiveHeadphoneFallbackReason::SteamUnavailable: return "steam_unavailable";
+            case AuditionReactiveHeadphoneFallbackReason::SteamRenderFailed: return "steam_render_failed";
+            case AuditionReactiveHeadphoneFallbackReason::OutputIncompatible: return "output_incompatible";
             default: break;
         }
 
@@ -767,6 +942,20 @@ public:
             }
         }
 
+        bool renderedAuditionEmitter = false;
+        if (processedEmitterCount == 0 && auditionEnabled)
+        {
+            renderInternalAuditionEmitter (numSamples);
+            eligibleEmitterCount = juce::jmax (eligibleEmitterCount, 1);
+            processedEmitterCount = juce::jmax (processedEmitterCount, 1);
+            renderedAuditionEmitter = true;
+        }
+        else
+        {
+            resetAuditionReactiveTelemetry();
+        }
+        auditionVisualActive.store (renderedAuditionEmitter, std::memory_order_relaxed);
+
         lastEligibleEmitterCount.store (eligibleEmitterCount, std::memory_order_relaxed);
         lastProcessedEmitterCount.store (processedEmitterCount, std::memory_order_relaxed);
         lastBudgetCulledEmitterCount.store (budgetCulledEmitterCount, std::memory_order_relaxed);
@@ -818,6 +1007,9 @@ public:
         const auto steamBackendAvailable = isSteamAudioBackendAvailable();
         const bool profileAllowsHeadphoneRender = isStereoOrBinauralProfile (activeSpatialProfile)
                                                   || numOutputChannels <= 2;
+        headPoseInternalBinauralActive = profileAllowsHeadphoneRender
+                                         && numOutputChannels >= 2
+                                         && numOutputChannels < NUM_SPEAKERS;
         auto activeHeadphoneMode = (requestedHeadphoneMode == HeadphoneRenderMode::SteamBinaural
                                     && profileAllowsHeadphoneRender
                                     && numOutputChannels >= 2
@@ -845,6 +1037,31 @@ public:
         activeHeadphoneModeIndex.store (static_cast<int> (activeHeadphoneMode), std::memory_order_relaxed);
         activeHeadphoneProfileIndex.store (activeHeadphoneProfileIndexValue, std::memory_order_relaxed);
         steamAudioAvailable.store (steamBackendAvailable, std::memory_order_relaxed);
+
+        double auditionReactiveHeadphoneEnergy = 0.0;
+        double auditionReactiveHeadphoneReferenceEnergy = 0.0;
+        float auditionReactiveHeadphonePeak = 0.0f;
+        bool auditionReactiveHeadphoneSamplesCaptured = false;
+        int auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
+            AuditionReactiveHeadphoneFallbackReason::None);
+        if (renderedAuditionEmitter && requestedHeadphoneMode == HeadphoneRenderMode::SteamBinaural)
+        {
+            if (numOutputChannels < 2 || ! profileAllowsHeadphoneRender)
+            {
+                auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
+                    AuditionReactiveHeadphoneFallbackReason::OutputIncompatible);
+            }
+            else if (! steamBackendAvailable)
+            {
+                auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
+                    AuditionReactiveHeadphoneFallbackReason::SteamUnavailable);
+            }
+            else if (! steamRenderedThisBlock || activeHeadphoneMode != HeadphoneRenderMode::SteamBinaural)
+            {
+                auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
+                    AuditionReactiveHeadphoneFallbackReason::SteamRenderFailed);
+            }
+        }
 
         // Apply master gain and write to output
         for (int i = 0; i < numSamples; ++i)
@@ -911,11 +1128,16 @@ public:
             {
                 float left = 0.0f;
                 float right = 0.0f;
+                float referenceLeft = 0.0f;
+                float referenceRight = 0.0f;
+                bool referenceCaptured = false;
 
                 if (steamRenderedThisBlock && activeHeadphoneMode == HeadphoneRenderMode::SteamBinaural)
                 {
                     left = steamBinauralLeft[static_cast<size_t> (i)];
                     right = steamBinauralRight[static_cast<size_t> (i)];
+                    renderStereoDownmixSample (i, referenceLeft, referenceRight);
+                    referenceCaptured = true;
                 }
                 else if (activeSpatialProfile == SpatialOutputProfile::Virtual3dStereo)
                 {
@@ -924,10 +1146,11 @@ public:
                 else if (activeSpatialProfile == SpatialOutputProfile::AmbisonicFOA
                          || activeSpatialProfile == SpatialOutputProfile::AmbisonicHOA)
                 {
-                    const float fl = accumBuffer.getSample (0, i);
-                    const float fr = accumBuffer.getSample (1, i);
-                    const float rr = accumBuffer.getSample (2, i);
-                    const float rl = accumBuffer.getSample (3, i);
+                    float fl = 0.0f;
+                    float fr = 0.0f;
+                    float rr = 0.0f;
+                    float rl = 0.0f;
+                    getHeadPoseAdjustedQuadSample (i, fl, fr, rr, rl);
                     float w = 0.0f;
                     float x = 0.0f;
                     float y = 0.0f;
@@ -938,6 +1161,27 @@ public:
                 else
                 {
                     renderStereoDownmixSample (i, left, right);
+                }
+
+                if (renderedAuditionEmitter)
+                {
+                    const auto mono = 0.5f * (left + right);
+                    auditionReactiveHeadphoneEnergy += static_cast<double> (mono * mono);
+                    auditionReactiveHeadphonePeak = juce::jmax (
+                        auditionReactiveHeadphonePeak,
+                        juce::jmax (std::abs (left), std::abs (right)));
+
+                    if (referenceCaptured)
+                    {
+                        const auto referenceMono = 0.5f * (referenceLeft + referenceRight);
+                        auditionReactiveHeadphoneReferenceEnergy += static_cast<double> (referenceMono * referenceMono);
+                    }
+                    else
+                    {
+                        auditionReactiveHeadphoneReferenceEnergy += static_cast<double> (mono * mono);
+                    }
+
+                    auditionReactiveHeadphoneSamplesCaptured = true;
                 }
 
                 applyHeadphoneProfileCompensation (left, right);
@@ -953,6 +1197,36 @@ public:
                     mono += accumBuffer.getSample (spk, i);
                 outputBuffer.setSample (0, i, mono * 0.5f * masterGain);
             }
+        }
+
+        if (renderedAuditionEmitter && auditionReactiveHeadphoneSamplesCaptured && numSamples > 0)
+        {
+            const auto invNumSamples = 1.0f / static_cast<float> (numSamples);
+            const auto headphoneOutputRms = juce::jlimit (
+                0.0f,
+                2.0f,
+                std::sqrt (static_cast<float> (auditionReactiveHeadphoneEnergy * static_cast<double> (invNumSamples))));
+            const auto headphoneReferenceRms = juce::jlimit (
+                0.0f,
+                2.0f,
+                std::sqrt (static_cast<float> (auditionReactiveHeadphoneReferenceEnergy * static_cast<double> (invNumSamples))));
+            const auto headphoneParity = headphoneOutputRms > 1.0e-6f
+                ? juce::jlimit (0.5f, 2.0f, headphoneReferenceRms / headphoneOutputRms)
+                : 1.0f;
+
+            applyAuditionReactiveHeadphoneParity (
+                headphoneOutputRms,
+                auditionReactiveHeadphonePeak,
+                headphoneParity,
+                auditionReactiveHeadphoneFallbackReasonIndex);
+        }
+        else if (renderedAuditionEmitter)
+        {
+            applyAuditionReactiveHeadphoneParity (
+                0.0f,
+                0.0f,
+                1.0f,
+                auditionReactiveHeadphoneFallbackReasonIndex);
         }
     }
 
@@ -981,11 +1255,126 @@ public:
         return lastGuardrailActive.load (std::memory_order_relaxed);
     }
 
+    bool isAuditionVisualActive() const noexcept
+    {
+        return auditionVisualActive.load (std::memory_order_relaxed);
+    }
+
+    float getAuditionVisualX() const noexcept
+    {
+        return auditionVisualX.load (std::memory_order_relaxed);
+    }
+
+    float getAuditionVisualY() const noexcept
+    {
+        return auditionVisualY.load (std::memory_order_relaxed);
+    }
+
+    float getAuditionVisualZ() const noexcept
+    {
+        return auditionVisualZ.load (std::memory_order_relaxed);
+    }
+
+    AuditionReactiveSnapshot getAuditionReactiveSnapshot() const noexcept
+    {
+        AuditionReactiveSnapshot snapshot;
+        snapshot.rms = sanitizeUnitScalar (auditionReactiveRms.load (std::memory_order_relaxed));
+        snapshot.peak = sanitizeUnitScalar (auditionReactivePeak.load (std::memory_order_relaxed));
+        snapshot.envFast = sanitizeUnitScalar (auditionReactiveEnvFast.load (std::memory_order_relaxed));
+        snapshot.envSlow = sanitizeUnitScalar (auditionReactiveEnvSlow.load (std::memory_order_relaxed));
+        snapshot.onset = sanitizeUnitScalar (auditionReactiveOnset.load (std::memory_order_relaxed));
+        snapshot.brightness = sanitizeUnitScalar (auditionReactiveBrightness.load (std::memory_order_relaxed));
+        snapshot.rainFadeRate = sanitizeUnitScalar (auditionReactiveRainFadeRate.load (std::memory_order_relaxed));
+        snapshot.snowFadeRate = sanitizeUnitScalar (auditionReactiveSnowFadeRate.load (std::memory_order_relaxed));
+        snapshot.physicsVelocity = sanitizeUnitScalar (auditionReactivePhysicsVelocity.load (std::memory_order_relaxed));
+        snapshot.physicsCollision = sanitizeUnitScalar (auditionReactivePhysicsCollision.load (std::memory_order_relaxed));
+        snapshot.physicsDensity = sanitizeUnitScalar (auditionReactivePhysicsDensity.load (std::memory_order_relaxed));
+        snapshot.physicsCoupling = sanitizeUnitScalar (auditionReactivePhysicsCoupling.load (std::memory_order_relaxed));
+        snapshot.headphoneOutputRms = sanitizeUnitScalar (auditionReactiveHeadphoneOutputRms.load (std::memory_order_relaxed));
+        snapshot.headphoneOutputPeak = sanitizeUnitScalar (auditionReactiveHeadphoneOutputPeak.load (std::memory_order_relaxed));
+        snapshot.headphoneParity = sanitizeUnitScalar (auditionReactiveHeadphoneParity.load (std::memory_order_relaxed));
+        snapshot.rmsNorm = snapshot.rms;
+        snapshot.peakNorm = snapshot.peak;
+        snapshot.envFastNorm = snapshot.envFast;
+        snapshot.envSlowNorm = snapshot.envSlow;
+        snapshot.headphoneOutputRmsNorm = snapshot.headphoneOutputRms;
+        snapshot.headphoneOutputPeakNorm = snapshot.headphoneOutputPeak;
+        snapshot.headphoneParityNorm = snapshot.headphoneParity;
+        snapshot.headphoneFallbackReasonIndex = sanitizeHeadphoneFallbackReasonIndex (
+            auditionReactiveHeadphoneFallbackReasonIndex.load (std::memory_order_relaxed));
+        snapshot.sourceEnergyCount = sanitizeSourceCount (
+            auditionReactiveSourceCount.load (std::memory_order_relaxed));
+
+        for (int i = 0; i < MAX_AUDITION_REACTIVE_SOURCES; ++i)
+        {
+            snapshot.sourceEnergy[static_cast<size_t> (i)] = sanitizeUnitScalar (
+                auditionReactiveSourceEnergy[static_cast<size_t> (i)].load (std::memory_order_relaxed));
+        }
+
+        const auto sourceDensity = sanitizeUnitScalar (
+            static_cast<float> (snapshot.sourceEnergyCount)
+                / static_cast<float> (juce::jmax (1, MAX_AUDITION_REACTIVE_SOURCES)));
+        snapshot.geometryScale = sanitizeUnitScalar (
+            0.30f * snapshot.envFast
+                + 0.20f * snapshot.envSlow
+                + 0.20f * snapshot.physicsCoupling
+                + 0.20f * snapshot.headphoneParity
+                + 0.10f * sourceDensity);
+        snapshot.geometryWidth = sanitizeUnitScalar (
+            0.40f * snapshot.physicsDensity
+                + 0.25f * snapshot.physicsVelocity
+                + 0.20f * snapshot.brightness
+                + 0.15f * sourceDensity);
+        snapshot.geometryDepth = sanitizeUnitScalar (
+            0.35f * snapshot.envSlow
+                + 0.30f * (1.0f - snapshot.brightness)
+                + 0.20f * snapshot.physicsCoupling
+                + 0.15f * sourceDensity);
+        snapshot.geometryHeight = sanitizeUnitScalar (
+            0.45f * snapshot.onset
+                + 0.30f * snapshot.physicsCollision
+                + 0.15f * snapshot.envFast
+                + 0.10f * snapshot.headphoneOutputPeak);
+        snapshot.precipitationFade = sanitizeUnitScalar (
+            0.55f * snapshot.rainFadeRate
+                + 0.45f * snapshot.snowFadeRate);
+        snapshot.collisionBurst = sanitizeUnitScalar (
+            snapshot.physicsCollision * (0.55f + 0.45f * snapshot.onset));
+        snapshot.densitySpread = sanitizeUnitScalar (
+            0.60f * snapshot.physicsDensity
+                + 0.25f * sourceDensity
+                + 0.15f * snapshot.physicsVelocity);
+
+        return snapshot;
+    }
+
 private:
+    static float sanitizeUnitScalar (float value, float fallback = 0.0f) noexcept
+    {
+        if (! std::isfinite (value))
+            return juce::jlimit (0.0f, 1.0f, fallback);
+        return juce::jlimit (0.0f, 1.0f, value);
+    }
+
+    static int sanitizeSourceCount (int value) noexcept
+    {
+        return juce::jlimit (0, MAX_AUDITION_REACTIVE_SOURCES, value);
+    }
+
+    static int sanitizeHeadphoneFallbackReasonIndex (int value) noexcept
+    {
+        return juce::jlimit (
+            0,
+            static_cast<int> (AuditionReactiveHeadphoneFallbackReason::OutputIncompatible),
+            value);
+    }
+
     static constexpr int MAX_TRACKED_EMITTERS = 64; // Per-emitter smoothing/filtering
     static constexpr int MAX_RENDER_EMITTERS_PER_BLOCK = 8; // v1-tested CPU envelope
     static constexpr float COARSE_PRIORITY_GATE_LINEAR = 1.0e-5f; // ~ -100 dB
     static constexpr float ACTIVITY_PEAK_GATE_LINEAR = 1.0e-6f;   // ~ -120 dB
+    static constexpr int AUDITION_MAX_VOICES = MAX_AUDITION_REACTIVE_SOURCES;
+    static constexpr int AUDITION_HISTORY_BUFFER_SAMPLES = 8192;
 
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
@@ -1002,6 +1391,7 @@ private:
 
     // Per-emitter smoothed speaker gains (for click-free panning)
     std::array<std::array<juce::SmoothedValue<float>, NUM_SPEAKERS>, MAX_TRACKED_EMITTERS> smoothedSpeakerGains;
+    std::array<std::array<juce::SmoothedValue<float>, NUM_SPEAKERS>, AUDITION_MAX_VOICES> auditionSmoothedSpeakerGains;
 
     // Speaker delay lines
     std::array<std::vector<float>, NUM_SPEAKERS> speakerDelayLines;
@@ -1022,6 +1412,121 @@ private:
     int distanceModelIndex = 0;
     float referenceDistance = 1.0f;
     float maxDistance = 50.0f;
+    bool auditionEnabled = false;
+    int auditionSignalTypeIndex = 0;
+    int auditionMotionTypeIndex = 0;
+    int auditionLevelPresetIndex = 2;
+    double auditionPhasePrimary = 0.0;
+    double auditionPhaseSecondary = 0.0;
+    double auditionOrbitPhase = 0.0;
+    uint32_t auditionNoiseState = 0x13579BDFu;
+    float auditionNoiseOnePole = 0.0f;
+    float auditionRainBed = 0.0f;
+    float auditionRainDropEnv = 0.0f;
+    float auditionRainDropFreqHz = 1300.0f;
+    double auditionRainDropPhase = 0.0;
+    float auditionSnowBed = 0.0f;
+    float auditionSnowShimmer = 0.0f;
+    double auditionSnowFlutterPhase = 0.0;
+    float auditionBounceEnv = 0.0f;
+    float auditionBounceFreqHz = 320.0f;
+    double auditionBouncePhase = 0.0;
+    int auditionBounceClusterRemaining = 0;
+    int auditionBounceCountdownSamples = 0;
+    int auditionBounceCooldownSamples = 0;
+    float auditionBounceSpacingSamples = 0.0f;
+    float auditionChimeEnv = 0.0f;
+    float auditionChimeFreqA = 659.25f;
+    float auditionChimeFreqB = 987.77f;
+    double auditionChimePhaseA = 0.0;
+    double auditionChimePhaseB = 0.0;
+    float auditionChimeShimmer = 0.0f;
+    int auditionChimeCooldownSamples = 0;
+    float auditionCricketEnv = 0.0f;
+    float auditionCricketFreqHz = 4200.0f;
+    double auditionCricketPhase = 0.0;
+    int auditionCricketBurstSamples = 0;
+    int auditionCricketCooldownSamples = 0;
+    float auditionBirdEnv = 0.0f;
+    float auditionBirdFreqA = 1400.0f;
+    float auditionBirdFreqB = 2200.0f;
+    double auditionBirdPhaseA = 0.0;
+    double auditionBirdPhaseB = 0.0;
+    double auditionBirdWarblePhase = 0.0;
+    int auditionBirdPhraseSamples = 0;
+    int auditionBirdCooldownSamples = 0;
+    static constexpr int kAuditionKarplusMaxDelaySamples = 4096;
+    std::array<float, kAuditionKarplusMaxDelaySamples> auditionKarplusDelayLine {};
+    int auditionKarplusDelaySamples = 620;
+    int auditionKarplusWriteIndex = 0;
+    float auditionKarplusDamping = 0.985f;
+    float auditionKarplusEnv = 0.0f;
+    int auditionKarplusCooldownSamples = 0;
+    float auditionMembraneEnv = 0.0f;
+    float auditionMembraneFreqA = 180.0f;
+    float auditionMembraneFreqB = 280.0f;
+    double auditionMembranePhaseA = 0.0;
+    double auditionMembranePhaseB = 0.0;
+    int auditionMembraneCooldownSamples = 0;
+    float auditionKrellEnv = 0.0f;
+    float auditionKrellFreqCurrent = 220.0f;
+    float auditionKrellFreqTarget = 220.0f;
+    double auditionKrellPhase = 0.0;
+    int auditionKrellStepSamples = 0;
+    float auditionArpEnv = 0.0f;
+    float auditionArpFreqA = 330.0f;
+    float auditionArpFreqB = 495.0f;
+    double auditionArpPhaseA = 0.0;
+    double auditionArpPhaseB = 0.0;
+    int auditionArpGateSamples = 0;
+    int auditionArpStepIndex = 0;
+    float auditionWallPosX = 0.0f;
+    float auditionWallPosZ = -1.0f;
+    float auditionWallVelX = 0.92f;
+    float auditionWallVelZ = 0.71f;
+    std::array<float, AUDITION_HISTORY_BUFFER_SAMPLES> auditionHistoryBuffer {};
+    int auditionHistoryWritePos = 0;
+    std::array<double, AUDITION_MAX_VOICES> auditionVoiceModPhase {};
+    std::array<double, AUDITION_MAX_VOICES> auditionVoiceExciterPhaseA {};
+    std::array<double, AUDITION_MAX_VOICES> auditionVoiceExciterPhaseB {};
+    std::array<float, AUDITION_MAX_VOICES> auditionVoiceExciterEnv {};
+    std::array<int, AUDITION_MAX_VOICES> auditionVoiceExciterCooldownSamples {};
+    std::array<std::uint32_t, AUDITION_MAX_VOICES> auditionVoiceNoiseState {};
+    std::atomic<bool> auditionVisualActive { false };
+    std::atomic<float> auditionVisualX { 0.0f };
+    std::atomic<float> auditionVisualY { 1.2f };
+    std::atomic<float> auditionVisualZ { -1.0f };
+    float auditionReactiveEnvFastState = 0.0f;
+    float auditionReactiveEnvSlowState = 0.0f;
+    float auditionReactiveBrightnessLowpassState = 0.0f;
+    bool auditionPhysicsReactiveInputActive = false;
+    float auditionPhysicsReactiveVelocityTarget = 0.0f;
+    float auditionPhysicsReactiveCollisionTarget = 0.0f;
+    float auditionPhysicsReactiveDensityTarget = 0.0f;
+    float auditionPhysicsReactiveVelocityState = 0.0f;
+    float auditionPhysicsReactiveCollisionState = 0.0f;
+    float auditionPhysicsReactiveDensityState = 0.0f;
+    float auditionPhysicsReactiveTimbreLowpassState = 0.0f;
+    std::atomic<float> auditionReactiveRms { 0.0f };
+    std::atomic<float> auditionReactivePeak { 0.0f };
+    std::atomic<float> auditionReactiveEnvFast { 0.0f };
+    std::atomic<float> auditionReactiveEnvSlow { 0.0f };
+    std::atomic<float> auditionReactiveOnset { 0.0f };
+    std::atomic<float> auditionReactiveBrightness { 0.0f };
+    std::atomic<float> auditionReactiveRainFadeRate { 0.0f };
+    std::atomic<float> auditionReactiveSnowFadeRate { 0.0f };
+    std::atomic<float> auditionReactivePhysicsVelocity { 0.0f };
+    std::atomic<float> auditionReactivePhysicsCollision { 0.0f };
+    std::atomic<float> auditionReactivePhysicsDensity { 0.0f };
+    std::atomic<float> auditionReactivePhysicsCoupling { 0.0f };
+    std::atomic<float> auditionReactiveHeadphoneOutputRms { 0.0f };
+    std::atomic<float> auditionReactiveHeadphoneOutputPeak { 0.0f };
+    std::atomic<float> auditionReactiveHeadphoneParity { 1.0f };
+    std::atomic<int> auditionReactiveHeadphoneFallbackReasonIndex {
+        static_cast<int> (AuditionReactiveHeadphoneFallbackReason::None)
+    };
+    std::atomic<int> auditionReactiveSourceCount { 0 };
+    std::array<std::atomic<float>, AUDITION_MAX_VOICES> auditionReactiveSourceEnergy {};
     float masterGainDb = std::numeric_limits<float>::quiet_NaN();
     std::array<float, NUM_SPEAKERS> speakerTrimDb {
         std::numeric_limits<float>::quiet_NaN(),
@@ -1068,6 +1573,12 @@ private:
     // Steam Audio scratch/output buffers reused each block.
     std::vector<float> steamBinauralLeft;
     std::vector<float> steamBinauralRight;
+    std::array<std::vector<float>, NUM_SPEAKERS> headPoseRotatedQuadScratch;
+    std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS> headPoseSpeakerMix {};
+    PoseSnapshot headPoseSnapshot {};
+    ListenerOrientation headPoseOrientation {};
+    bool headPoseValid = false;
+    bool headPoseInternalBinauralActive = false;
     float headphoneCompLowAlpha = 0.0f;
     float headphoneCompLowGain = 1.0f;
     float headphoneCompHighGain = 1.0f;
@@ -1105,9 +1616,1649 @@ private:
 
     bool steamAudioRuntimeReady = false;
 
+    // World speaker vectors use scene coordinates where +Z is front.
+    static constexpr std::array<std::array<float, 3>, NUM_SPEAKERS> kQuadWorldSpeakerDirs
+    {{
+        { -0.70710678f, 0.0f,  0.70710678f }, // FL
+        {  0.70710678f, 0.0f,  0.70710678f }, // FR
+        {  0.70710678f, 0.0f, -0.70710678f }, // RR
+        { -0.70710678f, 0.0f, -0.70710678f }  // RL
+    }};
+
+    // Listener-local speaker vectors follow Steam canonical axes where -Z is ahead.
+    static constexpr std::array<std::array<float, 2>, NUM_SPEAKERS> kQuadListenerSpeakerDirsXZ
+    {{
+        { -0.70710678f, -0.70710678f }, // FL
+        {  0.70710678f, -0.70710678f }, // FR
+        {  0.70710678f,  0.70710678f }, // RR
+        { -0.70710678f,  0.70710678f }  // RL
+    }};
+
+    static float dot3 (const std::array<float, 3>& lhs, const std::array<float, 3>& rhs) noexcept
+    {
+        return (lhs[0] * rhs[0]) + (lhs[1] * rhs[1]) + (lhs[2] * rhs[2]);
+    }
+
+    void setHeadPoseIdentityMix() noexcept
+    {
+        for (int dst = 0; dst < NUM_SPEAKERS; ++dst)
+        {
+            for (int src = 0; src < NUM_SPEAKERS; ++src)
+                headPoseSpeakerMix[static_cast<size_t> (dst)][static_cast<size_t> (src)] = (dst == src) ? 1.0f : 0.0f;
+        }
+    }
+
+    void resetHeadPoseState() noexcept
+    {
+        headPoseSnapshot = PoseSnapshot {};
+        headPoseOrientation = ListenerOrientation {};
+        headPoseValid = false;
+        headPoseInternalBinauralActive = false;
+        setHeadPoseIdentityMix();
+    }
+
+    // Quaternion follows Steam canonical axes (right +X, up +Y, ahead -Z).
+    void updateHeadPoseOrientationFromSnapshot() noexcept
+    {
+        const float x = headPoseSnapshot.qx;
+        const float y = headPoseSnapshot.qy;
+        const float z = headPoseSnapshot.qz;
+        const float w = headPoseSnapshot.qw;
+
+        const float xx = x * x;
+        const float yy = y * y;
+        const float zz = z * z;
+        const float xy = x * y;
+        const float xz = x * z;
+        const float yz = y * z;
+        const float xw = x * w;
+        const float yw = y * w;
+        const float zw = z * w;
+
+        const float m00 = 1.0f - 2.0f * (yy + zz);
+        const float m10 = 2.0f * (xy + zw);
+        const float m20 = 2.0f * (xz - yw);
+
+        const float m01 = 2.0f * (xy - zw);
+        const float m11 = 1.0f - 2.0f * (xx + zz);
+        const float m21 = 2.0f * (yz + xw);
+
+        const float m02 = 2.0f * (xz + yw);
+        const float m12 = 2.0f * (yz - xw);
+        const float m22 = 1.0f - 2.0f * (xx + yy);
+
+        headPoseOrientation.right = { m00, m10, m20 };
+        headPoseOrientation.up = { m01, m11, m21 };
+        headPoseOrientation.ahead = { -m02, -m12, -m22 };
+    }
+
+    void rebuildHeadPoseSpeakerMix() noexcept
+    {
+        if (! headPoseValid)
+        {
+            setHeadPoseIdentityMix();
+            return;
+        }
+
+        for (int sourceSpeaker = 0; sourceSpeaker < NUM_SPEAKERS; ++sourceSpeaker)
+        {
+            const auto& worldDir = kQuadWorldSpeakerDirs[static_cast<size_t> (sourceSpeaker)];
+            const float relX = dot3 (worldDir, headPoseOrientation.right);
+            const float relZ = dot3 (worldDir, headPoseOrientation.ahead);
+            const float planarMag = std::sqrt ((relX * relX) + (relZ * relZ));
+
+            float planarX = 0.0f;
+            float planarZ = -1.0f;
+            if (planarMag > 1.0e-6f && std::isfinite (planarMag))
+            {
+                const float invPlanar = 1.0f / planarMag;
+                planarX = relX * invPlanar;
+                planarZ = relZ * invPlanar;
+            }
+
+            float weightSum = 0.0f;
+            float bestDot = -2.0f;
+            int bestSpeaker = 0;
+            for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+            {
+                const auto& targetDir = kQuadListenerSpeakerDirsXZ[static_cast<size_t> (targetSpeaker)];
+                const float projection = (planarX * targetDir[0]) + (planarZ * targetDir[1]);
+                if (projection > bestDot)
+                {
+                    bestDot = projection;
+                    bestSpeaker = targetSpeaker;
+                }
+
+                const float weight = juce::jmax (0.0f, projection);
+                headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] = weight;
+                weightSum += weight;
+            }
+
+            if (weightSum > 1.0e-6f && std::isfinite (weightSum))
+            {
+                const float invWeightSum = 1.0f / weightSum;
+                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+                {
+                    headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] *= invWeightSum;
+                }
+            }
+            else
+            {
+                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+                {
+                    headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] =
+                        (targetSpeaker == bestSpeaker) ? 1.0f : 0.0f;
+                }
+            }
+        }
+    }
+
+    inline void getHeadPoseAdjustedQuadSample (int sampleIndex, float& fl, float& fr, float& rr, float& rl) const noexcept
+    {
+        if (! headPoseInternalBinauralActive || ! headPoseValid)
+        {
+            fl = accumBuffer.getSample (0, sampleIndex);
+            fr = accumBuffer.getSample (1, sampleIndex);
+            rr = accumBuffer.getSample (2, sampleIndex);
+            rl = accumBuffer.getSample (3, sampleIndex);
+            return;
+        }
+
+        const float sourceFl = accumBuffer.getSample (0, sampleIndex);
+        const float sourceFr = accumBuffer.getSample (1, sampleIndex);
+        const float sourceRr = accumBuffer.getSample (2, sampleIndex);
+        const float sourceRl = accumBuffer.getSample (3, sampleIndex);
+
+        const auto mixSpeaker = [this, sourceFl, sourceFr, sourceRr, sourceRl] (int targetSpeaker) noexcept
+        {
+            const auto& mix = headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)];
+            return (mix[0] * sourceFl)
+                 + (mix[1] * sourceFr)
+                 + (mix[2] * sourceRr)
+                 + (mix[3] * sourceRl);
+        };
+
+        fl = mixSpeaker (0);
+        fr = mixSpeaker (1);
+        rr = mixSpeaker (2);
+        rl = mixSpeaker (3);
+    }
+
     //==========================================================================
     // Coordinate helpers
     //==========================================================================
+
+    static float auditionLevelDbForPreset (int presetIndex) noexcept
+    {
+        switch (presetIndex)
+        {
+            case 0: return -36.0f;
+            case 1: return -30.0f;
+            case 2: return -24.0f;
+            case 3: return -18.0f;
+            case 4: return -12.0f;
+            default: break;
+        }
+
+        return -24.0f;
+    }
+
+    float advanceAuditionOscillator (double frequencyHz, double& phase) const noexcept
+    {
+        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
+        const auto sample = std::sin (juce::MathConstants<double>::twoPi * phase);
+        phase += frequencyHz / sampleRate;
+        phase -= std::floor (phase);
+        return static_cast<float> (sample);
+    }
+
+    float nextAuditionWhiteNoise() noexcept
+    {
+        auditionNoiseState = auditionNoiseState * 1664525u + 1013904223u;
+        return static_cast<float> ((auditionNoiseState >> 8) & 0x00FFFFFFu) / 8388608.0f - 1.0f;
+    }
+
+    float nextAuditionRand01() noexcept
+    {
+        return 0.5f * (nextAuditionWhiteNoise() + 1.0f);
+    }
+
+    static float wrapAuditionAzimuthDegrees (float azimuthDeg) noexcept
+    {
+        while (azimuthDeg > 180.0f)
+            azimuthDeg -= 360.0f;
+        while (azimuthDeg < -180.0f)
+            azimuthDeg += 360.0f;
+        return azimuthDeg;
+    }
+
+    static float auditionVoiceHashUnit (int voiceIndex, std::uint32_t salt) noexcept
+    {
+        auto hash = static_cast<std::uint32_t> (voiceIndex + 1);
+        hash ^= salt;
+        hash ^= hash >> 16;
+        hash *= 0x7FEB352Du;
+        hash ^= hash >> 15;
+        hash *= 0x846CA68Bu;
+        hash ^= hash >> 16;
+        return static_cast<float> (hash & 0x00FFFFFFu) / 16777215.0f;
+    }
+
+    void resetAuditionVoiceFieldStates() noexcept
+    {
+        std::fill (auditionVoiceModPhase.begin(), auditionVoiceModPhase.end(), 0.0);
+        std::fill (auditionVoiceExciterPhaseA.begin(), auditionVoiceExciterPhaseA.end(), 0.0);
+        std::fill (auditionVoiceExciterPhaseB.begin(), auditionVoiceExciterPhaseB.end(), 0.0);
+        std::fill (auditionVoiceExciterEnv.begin(), auditionVoiceExciterEnv.end(), 0.0f);
+        std::fill (auditionVoiceExciterCooldownSamples.begin(), auditionVoiceExciterCooldownSamples.end(), 0);
+
+        for (int voice = 0; voice < AUDITION_MAX_VOICES; ++voice)
+        {
+            auto seed = 0x13579BDFu ^ (0x9E3779B9u * static_cast<std::uint32_t> (voice + 1));
+            seed ^= static_cast<std::uint32_t> (auditionSignalTypeIndex + 1) * 0x85EBCA6Bu;
+            auditionVoiceNoiseState[static_cast<size_t> (voice)] = seed;
+        }
+    }
+
+    bool isAuditionCloudBoundModeAvailable() const noexcept
+    {
+        if (currentSampleRate < 8000.0 || currentBlockSize <= 0)
+            return false;
+
+        return currentBlockSize <= 2048
+            && currentBlockSize <= (AUDITION_HISTORY_BUFFER_SAMPLES / 2);
+    }
+
+    float nextAuditionVoiceWhiteNoise (int voiceIndex) noexcept
+    {
+        const auto idx = static_cast<size_t> (juce::jlimit (0, AUDITION_MAX_VOICES - 1, voiceIndex));
+        auto& state = auditionVoiceNoiseState[idx];
+        state = state * 1664525u + 1013904223u;
+        const auto scrambled = state ^ (state >> 11) ^ (state << 7);
+        return static_cast<float> (scrambled & 0x00FFFFFFu) / 8388608.0f - 1.0f;
+    }
+
+    float renderAuditionVoiceExcitation (int voiceIndex, int activeVoices, float delayedSample) noexcept
+    {
+        if (activeVoices <= 1 || ! isAuditionMultiSourceSignal (auditionSignalTypeIndex))
+            return delayedSample;
+
+        const auto idx = static_cast<size_t> (juce::jlimit (0, AUDITION_MAX_VOICES - 1, voiceIndex));
+        auto& phaseA = auditionVoiceExciterPhaseA[idx];
+        auto& phaseB = auditionVoiceExciterPhaseB[idx];
+        auto& env = auditionVoiceExciterEnv[idx];
+        auto& cooldown = auditionVoiceExciterCooldownSamples[idx];
+        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
+        const auto hashA = auditionVoiceHashUnit (voiceIndex, 0xB5297A4Du);
+        const auto hashB = auditionVoiceHashUnit (voiceIndex, 0x68E31DA4u);
+
+        const auto advanceSine = [&sampleRate] (double& phase, double frequencyHz) noexcept -> float
+        {
+            phase += frequencyHz / sampleRate;
+            phase -= std::floor (phase);
+            return static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * phase));
+        };
+
+        if (cooldown > 0)
+            --cooldown;
+
+        switch (auditionSignalTypeIndex)
+        {
+            case 3: // rain
+            {
+                const auto toneA = advanceSine (phaseA, 740.0 + 2420.0 * (0.25 + 0.75 * hashA));
+                const auto toneB = advanceSine (phaseB, 520.0 + 1560.0 * (0.30 + 0.70 * hashB));
+                const auto triggerGate = qualityHigh ? 0.84f : 0.89f;
+                const auto voiceNoise = nextAuditionVoiceWhiteNoise (voiceIndex);
+                if (cooldown <= 0 && voiceNoise > triggerGate)
+                {
+                    const auto dropletPulse = 0.5f + 0.5f * toneB;
+                    env = juce::jmax (env, 0.24f + 0.72f * dropletPulse);
+                    const auto cooldownSeconds = 0.010f + 0.024f * hashB;
+                    cooldown = static_cast<int> (std::round (cooldownSeconds * static_cast<float> (sampleRate)));
+                }
+
+                env *= qualityHigh ? 0.9939f : 0.9920f;
+                const auto sparkle = toneA * std::abs (toneA);
+                const auto droplet = (0.66f * toneA + 0.34f * sparkle) * env;
+                const auto mist = 0.09f * voiceNoise * (0.35f + 0.65f * env);
+                return juce::jlimit (-2.0f, 2.0f, 0.76f * delayedSample + 0.24f * droplet + mist);
+            }
+            case 4: // snow
+            {
+                const auto drift = advanceSine (phaseA, 72.0 + 120.0 * hashA);
+                const auto flutter = advanceSine (phaseB, 0.38 + 0.44 * hashB);
+                const auto frostNoise = nextAuditionVoiceWhiteNoise (voiceIndex)
+                    * (0.26f + 0.74f * (0.5f + 0.5f * flutter));
+                const auto veil = 0.88f * delayedSample + 0.12f * frostNoise;
+                const auto shimmer = 0.17f * drift * (0.45f + 0.55f * std::abs (flutter));
+                return juce::jlimit (-2.0f, 2.0f, 0.84f * veil + shimmer);
+            }
+            case 5:  // bouncing balls
+            case 10: // membrane drops
+            {
+                const auto triggerGate = (auditionSignalTypeIndex == 5)
+                    ? (qualityHigh ? 0.80f : 0.86f)
+                    : (qualityHigh ? 0.78f : 0.84f);
+                const auto voiceNoise = nextAuditionVoiceWhiteNoise (voiceIndex);
+                if (cooldown <= 0 && voiceNoise > triggerGate)
+                {
+                    env = juce::jmax (env, 0.52f + 0.42f * (0.5f + 0.5f * voiceNoise));
+                    const auto cooldownSeconds = (auditionSignalTypeIndex == 5 ? 0.040f : 0.055f)
+                        + (auditionSignalTypeIndex == 5 ? 0.090f : 0.120f) * hashA;
+                    cooldown = static_cast<int> (std::round (cooldownSeconds * static_cast<float> (sampleRate)));
+                }
+
+                env *= qualityHigh ? 0.9898f : 0.9868f;
+                const auto modalA = advanceSine (phaseA, 130.0 + 410.0 * hashA + 170.0 * env);
+                const auto modalB = advanceSine (phaseB, 208.0 + 500.0 * hashB);
+                auto strikeEnv = env;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                const auto resonant = (0.70f * modalA + 0.30f * modalB) * env;
+                const auto click = 0.24f * voiceNoise * strikeEnv;
+                const auto blended = (auditionSignalTypeIndex == 5)
+                    ? (0.70f * delayedSample + 0.30f * resonant + click)
+                    : (0.76f * delayedSample + 0.24f * resonant + 0.16f * click);
+                return juce::jlimit (-2.0f, 2.0f, blended);
+            }
+            case 6: // chimes
+            {
+                const auto voiceNoise = nextAuditionVoiceWhiteNoise (voiceIndex);
+                if (cooldown <= 0 && voiceNoise > (qualityHigh ? 0.88f : 0.92f))
+                {
+                    env = juce::jmax (env, 0.48f + 0.48f * (0.5f + 0.5f * voiceNoise));
+                    const auto cooldownSeconds = (qualityHigh ? 0.11f : 0.15f) + 0.18f * hashA;
+                    cooldown = static_cast<int> (std::round (cooldownSeconds * static_cast<float> (sampleRate)));
+                }
+
+                env *= qualityHigh ? 0.99934f : 0.99886f;
+                const auto partialA = advanceSine (phaseA, 520.0 + 1080.0 * hashA);
+                const auto partialB = advanceSine (phaseB, 780.0 + 1540.0 * hashB);
+                const auto inharmonic = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * (phaseA * 1.618 + phaseB * 0.337)));
+                auto strikeEnv = env;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                const auto resonant = (0.58f * partialA + 0.29f * partialB + 0.13f * inharmonic) * env;
+                const auto strike = 0.18f * voiceNoise * strikeEnv;
+                return juce::jlimit (-2.0f, 2.0f, 0.64f * delayedSample + 0.36f * resonant + strike);
+            }
+            default:
+                return delayedSample;
+        }
+    }
+
+    bool isAuditionMultiSourceSignal (int signalIndex) const noexcept
+    {
+        switch (signalIndex)
+        {
+            case 3:  // rain
+            case 4:  // snow
+            case 5:  // bouncing balls
+            case 6:  // wind chimes
+            case 7:  // crickets
+            case 8:  // song birds
+            case 9:  // karplus plucks
+            case 10: // membrane drops
+            case 11: // krell patch
+            case 12: // generative arp
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    int getAuditionVoiceCountForSignal() const noexcept
+    {
+        if (! isAuditionMultiSourceSignal (auditionSignalTypeIndex))
+            return 1;
+
+        switch (auditionSignalTypeIndex)
+        {
+            case 3: // rain
+            case 4: // snow
+            case 7: // crickets
+            case 8: // song birds
+                return qualityHigh ? 7 : 5;
+            case 5: // bouncing
+                return qualityHigh ? 6 : 4;
+            case 6: // chimes
+            case 9: // karplus
+            case 10: // membrane
+            case 12: // arp
+                return qualityHigh ? 5 : 4;
+            case 11: // krell
+                return qualityHigh ? 4 : 3;
+            default:
+                return 1;
+        }
+    }
+
+    float getAuditionVoiceSpreadDegrees() const noexcept
+    {
+        switch (auditionSignalTypeIndex)
+        {
+            case 3: // rain
+            case 4: // snow
+            case 5: // bouncing balls
+            case 7: // crickets
+            case 8: // song birds
+                return 172.0f;
+            case 6: // chimes
+            case 9: // karplus plucks
+            case 10: // membrane drops
+            case 11: // krell patch
+            case 12: // generative arp
+                return 156.0f;
+            default:
+                return 0.0f;
+        }
+    }
+
+    int getAuditionVoiceDelaySamples (int voiceIndex, int voiceCount) const noexcept
+    {
+        if (voiceIndex <= 0 || voiceCount <= 1)
+            return 0;
+
+        int maxDelayMs = 18;
+        switch (auditionSignalTypeIndex)
+        {
+            case 3: // rain
+            case 4: // snow
+                maxDelayMs = qualityHigh ? 95 : 70;
+                break;
+            case 5: // bouncing balls
+                maxDelayMs = qualityHigh ? 140 : 95;
+                break;
+            case 7: // crickets
+            case 8: // birds
+                maxDelayMs = qualityHigh ? 82 : 56;
+                break;
+            case 6: // chimes
+            case 9: // plucks
+            case 10: // membrane
+            case 11: // krell
+            case 12: // arp
+                maxDelayMs = qualityHigh ? 62 : 44;
+                break;
+            default:
+                maxDelayMs = 18;
+                break;
+        }
+
+        const auto voiceNorm = static_cast<float> (voiceIndex) / static_cast<float> (juce::jmax (1, voiceCount - 1));
+        const auto jitterMs = 10.0f * auditionVoiceHashUnit (voiceIndex, 0xA53C9E11u);
+        const auto delayMs = juce::jlimit (0.0f, static_cast<float> (maxDelayMs), maxDelayMs * voiceNorm + jitterMs);
+        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
+        return juce::jlimit (
+            0,
+            AUDITION_HISTORY_BUFFER_SAMPLES - 1,
+            static_cast<int> (std::round (delayMs * static_cast<float> (sampleRate) * 0.001f)));
+    }
+
+    float readAuditionHistoryDelayed (int delaySamples) const noexcept
+    {
+        const auto boundedDelay = juce::jlimit (0, AUDITION_HISTORY_BUFFER_SAMPLES - 1, delaySamples);
+        auto readIndex = auditionHistoryWritePos - 1 - boundedDelay;
+        while (readIndex < 0)
+            readIndex += AUDITION_HISTORY_BUFFER_SAMPLES;
+        return auditionHistoryBuffer[static_cast<size_t> (readIndex)];
+    }
+
+    void publishAuditionReactiveTelemetry (
+        float rms,
+        float peak,
+        float envFast,
+        float envSlow,
+        float onset,
+        float brightness,
+        float rainFadeRate,
+        float snowFadeRate,
+        float physicsVelocity,
+        float physicsCollision,
+        float physicsDensity,
+        float physicsCoupling,
+        float headphoneOutputRms,
+        float headphoneOutputPeak,
+        float headphoneParity,
+        int headphoneFallbackReasonIndex,
+        const std::array<float, AUDITION_MAX_VOICES>& sourceEnergy,
+        int sourceCount) noexcept
+    {
+        auditionReactiveRms.store (sanitizeUnitScalar (rms), std::memory_order_relaxed);
+        auditionReactivePeak.store (sanitizeUnitScalar (peak), std::memory_order_relaxed);
+        auditionReactiveEnvFast.store (sanitizeUnitScalar (envFast), std::memory_order_relaxed);
+        auditionReactiveEnvSlow.store (sanitizeUnitScalar (envSlow), std::memory_order_relaxed);
+        auditionReactiveOnset.store (sanitizeUnitScalar (onset), std::memory_order_relaxed);
+        auditionReactiveBrightness.store (sanitizeUnitScalar (brightness), std::memory_order_relaxed);
+        auditionReactiveRainFadeRate.store (sanitizeUnitScalar (rainFadeRate), std::memory_order_relaxed);
+        auditionReactiveSnowFadeRate.store (sanitizeUnitScalar (snowFadeRate), std::memory_order_relaxed);
+        auditionReactivePhysicsVelocity.store (sanitizeUnitScalar (physicsVelocity), std::memory_order_relaxed);
+        auditionReactivePhysicsCollision.store (sanitizeUnitScalar (physicsCollision), std::memory_order_relaxed);
+        auditionReactivePhysicsDensity.store (sanitizeUnitScalar (physicsDensity), std::memory_order_relaxed);
+        auditionReactivePhysicsCoupling.store (sanitizeUnitScalar (physicsCoupling), std::memory_order_relaxed);
+        auditionReactiveHeadphoneOutputRms.store (
+            sanitizeUnitScalar (headphoneOutputRms),
+            std::memory_order_relaxed);
+        auditionReactiveHeadphoneOutputPeak.store (
+            sanitizeUnitScalar (headphoneOutputPeak),
+            std::memory_order_relaxed);
+        auditionReactiveHeadphoneParity.store (
+            sanitizeUnitScalar (headphoneParity),
+            std::memory_order_relaxed);
+        auditionReactiveHeadphoneFallbackReasonIndex.store (
+            sanitizeHeadphoneFallbackReasonIndex (headphoneFallbackReasonIndex),
+            std::memory_order_relaxed);
+        auditionReactiveSourceCount.store (
+            sanitizeSourceCount (sourceCount),
+            std::memory_order_relaxed);
+
+        for (int i = 0; i < AUDITION_MAX_VOICES; ++i)
+        {
+            auditionReactiveSourceEnergy[static_cast<size_t> (i)].store (
+                sanitizeUnitScalar (sourceEnergy[static_cast<size_t> (i)]),
+                std::memory_order_relaxed);
+        }
+    }
+
+    void resetAuditionReactiveTelemetry() noexcept
+    {
+        auditionReactiveEnvFastState = 0.0f;
+        auditionReactiveEnvSlowState = 0.0f;
+        auditionReactiveBrightnessLowpassState = 0.0f;
+        auditionPhysicsReactiveInputActive = false;
+        auditionPhysicsReactiveVelocityTarget = 0.0f;
+        auditionPhysicsReactiveCollisionTarget = 0.0f;
+        auditionPhysicsReactiveDensityTarget = 0.0f;
+        auditionPhysicsReactiveVelocityState = 0.0f;
+        auditionPhysicsReactiveCollisionState = 0.0f;
+        auditionPhysicsReactiveDensityState = 0.0f;
+        auditionPhysicsReactiveTimbreLowpassState = 0.0f;
+        std::array<float, AUDITION_MAX_VOICES> sourceEnergy {};
+        publishAuditionReactiveTelemetry (
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            static_cast<int> (AuditionReactiveHeadphoneFallbackReason::None),
+            sourceEnergy,
+            0);
+    }
+
+    void applyAuditionReactiveHeadphoneParity (
+        float headphoneOutputRms,
+        float headphoneOutputPeak,
+        float headphoneParity,
+        int headphoneFallbackReasonIndex) noexcept
+    {
+        const auto parity = sanitizeUnitScalar (headphoneParity, 1.0f);
+        const auto scaledRms = juce::jlimit (
+            0.0f,
+            1.0f,
+            auditionReactiveRms.load (std::memory_order_relaxed) * parity);
+        const auto scaledPeak = juce::jlimit (
+            0.0f,
+            1.0f,
+            auditionReactivePeak.load (std::memory_order_relaxed) * parity);
+        const auto scaledEnvFast = juce::jlimit (
+            0.0f,
+            1.0f,
+            auditionReactiveEnvFast.load (std::memory_order_relaxed) * parity);
+        const auto scaledEnvSlow = juce::jlimit (
+            0.0f,
+            1.0f,
+            auditionReactiveEnvSlow.load (std::memory_order_relaxed) * parity);
+        const auto onset = auditionReactiveOnset.load (std::memory_order_relaxed);
+        const auto brightness = auditionReactiveBrightness.load (std::memory_order_relaxed);
+        const auto parityBlend = 0.72f + 0.28f * parity;
+        const auto scaledRainFadeRate = juce::jlimit (
+            0.0f,
+            1.0f,
+            auditionReactiveRainFadeRate.load (std::memory_order_relaxed) * parityBlend);
+        const auto scaledSnowFadeRate = juce::jlimit (
+            0.0f,
+            1.0f,
+            auditionReactiveSnowFadeRate.load (std::memory_order_relaxed) * parityBlend);
+
+        auditionReactiveRms.store (scaledRms, std::memory_order_relaxed);
+        auditionReactivePeak.store (scaledPeak, std::memory_order_relaxed);
+        auditionReactiveEnvFast.store (scaledEnvFast, std::memory_order_relaxed);
+        auditionReactiveEnvSlow.store (scaledEnvSlow, std::memory_order_relaxed);
+        auditionReactiveOnset.store (juce::jlimit (0.0f, 1.0f, onset), std::memory_order_relaxed);
+        auditionReactiveBrightness.store (juce::jlimit (0.0f, 1.0f, brightness), std::memory_order_relaxed);
+        auditionReactiveRainFadeRate.store (scaledRainFadeRate, std::memory_order_relaxed);
+        auditionReactiveSnowFadeRate.store (scaledSnowFadeRate, std::memory_order_relaxed);
+        auditionReactiveHeadphoneOutputRms.store (
+            sanitizeUnitScalar (headphoneOutputRms),
+            std::memory_order_relaxed);
+        auditionReactiveHeadphoneOutputPeak.store (
+            sanitizeUnitScalar (headphoneOutputPeak),
+            std::memory_order_relaxed);
+        auditionReactiveHeadphoneParity.store (parity, std::memory_order_relaxed);
+        auditionReactiveHeadphoneFallbackReasonIndex.store (
+            sanitizeHeadphoneFallbackReasonIndex (headphoneFallbackReasonIndex),
+            std::memory_order_relaxed);
+    }
+
+    float applyAuditionPhysicsReactiveTimbre (
+        float sample,
+        float physicsVelocity,
+        float physicsCollision,
+        float physicsDensity,
+        float motionEnergy) noexcept
+    {
+        const auto couplingBlend = juce::jlimit (
+            0.0f,
+            1.0f,
+            0.44f * physicsVelocity + 0.36f * physicsCollision + 0.20f * physicsDensity);
+        if (couplingBlend <= 1.0e-5f)
+            return sample;
+
+        const auto lowpassAlpha = juce::jlimit (0.02f, 0.34f, 0.055f + 0.18f * physicsVelocity);
+        auditionPhysicsReactiveTimbreLowpassState += (sample - auditionPhysicsReactiveTimbreLowpassState) * lowpassAlpha;
+        const auto high = sample - auditionPhysicsReactiveTimbreLowpassState;
+        const auto transient = 1.0f + 0.85f * physicsCollision;
+        const auto densityBody = 0.92f + 0.28f * physicsDensity;
+        float shaped = sample;
+
+        switch (auditionSignalTypeIndex)
+        {
+            case 3: // rain
+                shaped = sample * densityBody
+                    + high * (0.18f + 0.44f * physicsVelocity)
+                    + high * (0.10f + 0.18f * motionEnergy) * transient;
+                break;
+            case 4: // snow
+                shaped = sample * (0.94f + 0.24f * physicsDensity)
+                    + high * (0.06f + 0.16f * physicsVelocity)
+                    - high * (0.04f + 0.10f * physicsCollision);
+                break;
+            case 5: // bouncing
+                shaped = std::tanh (sample * (1.0f + 0.56f * physicsCollision + 0.24f * physicsVelocity))
+                    + high * (0.10f + 0.16f * physicsVelocity);
+                break;
+            case 6: // chimes
+                shaped = sample * (1.0f + 0.26f * physicsCollision)
+                    + high * (0.14f + 0.26f * physicsVelocity + 0.08f * physicsDensity);
+                break;
+            default:
+                shaped = sample * (0.95f + 0.20f * couplingBlend)
+                    + high * (0.08f + 0.18f * physicsVelocity);
+                break;
+        }
+
+        const auto wet = juce::jlimit (
+            0.08f,
+            0.82f,
+            0.20f + 0.52f * couplingBlend + 0.10f * motionEnergy);
+        return juce::jlimit (-2.0f, 2.0f, sample + (shaped - sample) * wet);
+    }
+
+    float generateAuditionSignalSample() noexcept
+    {
+        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
+
+        switch (auditionSignalTypeIndex)
+        {
+            case 0: // Sine 440 Hz
+                return advanceAuditionOscillator (440.0, auditionPhasePrimary);
+            case 1: // Dual tone 220 + 880 Hz
+                return 0.7f * advanceAuditionOscillator (220.0, auditionPhasePrimary)
+                     + 0.3f * advanceAuditionOscillator (880.0, auditionPhaseSecondary);
+            case 2: // Soft pink-like noise (simple filtered white)
+            {
+                const auto white = nextAuditionWhiteNoise();
+                auditionNoiseOnePole = 0.985f * auditionNoiseOnePole + 0.015f * white;
+                return auditionNoiseOnePole;
+            }
+            case 3: // Rain field with random droplets
+            {
+                const auto white = nextAuditionWhiteNoise();
+                auditionRainBed = 0.9986f * auditionRainBed + 0.0014f * white;
+                const auto rainHissRaw = white - auditionRainBed;
+                auditionNoiseOnePole = 0.95f * auditionNoiseOnePole + 0.05f * rainHissRaw;
+
+                const auto triggerRateHz = qualityHigh ? 42.0f : 31.0f;
+                if (nextAuditionRand01() < triggerRateHz / static_cast<float> (sampleRate))
+                {
+                    auditionRainDropEnv = juce::jmin (1.0f, auditionRainDropEnv + (0.26f + 0.50f * nextAuditionRand01()));
+                    auto randSquared = nextAuditionRand01();
+                    randSquared *= randSquared;
+                    auditionRainDropFreqHz = 620.0f + (3600.0f * randSquared);
+                }
+
+                auditionRainDropPhase += static_cast<double> (auditionRainDropFreqHz) / sampleRate;
+                auditionRainDropPhase -= std::floor (auditionRainDropPhase);
+                const auto rainPhase = static_cast<float> (juce::MathConstants<double>::twoPi * auditionRainDropPhase);
+                const auto rainSine = static_cast<float> (std::sin (rainPhase));
+                const auto rainSparkle = rainSine * std::abs (rainSine);
+                const auto droplet = (0.72f * rainSine + 0.28f * rainSparkle) * auditionRainDropEnv;
+                const auto splash = 0.11f * nextAuditionWhiteNoise() * auditionRainDropEnv;
+                auditionRainDropEnv *= qualityHigh ? 0.9942f : 0.9930f;
+
+                return 0.52f * auditionNoiseOnePole + 0.58f * droplet + splash;
+            }
+            case 4: // Snow drift (soft airy noise)
+            {
+                const auto white = nextAuditionWhiteNoise();
+                auditionSnowBed = 0.99962f * auditionSnowBed + 0.00038f * white;
+                const auto airyResidual = white - auditionSnowBed;
+                auditionSnowShimmer = 0.9973f * auditionSnowShimmer + 0.0027f * airyResidual;
+
+                auditionSnowFlutterPhase += 0.075 / sampleRate;
+                auditionSnowFlutterPhase -= std::floor (auditionSnowFlutterPhase);
+                auditionPhaseSecondary += 0.24 / sampleRate;
+                auditionPhaseSecondary -= std::floor (auditionPhaseSecondary);
+
+                const auto flutter = 0.86f + 0.14f * static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * auditionSnowFlutterPhase));
+                const auto shimmerMod = 0.22f + 0.78f * (0.5f + 0.5f * static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * auditionPhaseSecondary)));
+                const auto airy = 0.66f * auditionSnowBed + 0.34f * (0.86f * auditionSnowShimmer + 0.14f * airyResidual);
+                const auto shimmer = 0.12f * auditionSnowShimmer * shimmerMod;
+                const auto lowJitterBreath = 0.05f * static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * (auditionSnowFlutterPhase + 0.17 * auditionPhaseSecondary)));
+
+                return airy * flutter + shimmer + lowJitterBreath;
+            }
+            case 5: // Bouncing balls (clustered impacts)
+            {
+                bool triggerBounce = false;
+                if (auditionBounceCountdownSamples > 0)
+                {
+                    --auditionBounceCountdownSamples;
+                }
+                else if (auditionBounceClusterRemaining > 0)
+                {
+                    triggerBounce = true;
+                    --auditionBounceClusterRemaining;
+                    if (auditionBounceClusterRemaining > 0)
+                    {
+                        auditionBounceSpacingSamples = juce::jmax (44.0f, auditionBounceSpacingSamples * (0.58f + 0.08f * nextAuditionRand01()));
+                        auditionBounceCountdownSamples = static_cast<int> (std::round (auditionBounceSpacingSamples));
+                    }
+                    else
+                    {
+                        auditionBounceCooldownSamples = static_cast<int> (
+                            std::round ((0.45f + 0.90f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                    }
+                }
+                else
+                {
+                    if (auditionBounceCooldownSamples > 0)
+                        --auditionBounceCooldownSamples;
+
+                    if (auditionBounceCooldownSamples <= 0 && nextAuditionRand01() < static_cast<float> (1.4 / sampleRate))
+                    {
+                        auditionBounceClusterRemaining = 3 + static_cast<int> (nextAuditionRand01() * 6.0f);
+                        auditionBounceSpacingSamples = (0.16f + 0.14f * nextAuditionRand01()) * static_cast<float> (sampleRate);
+                        triggerBounce = true;
+                        --auditionBounceClusterRemaining;
+                        if (auditionBounceClusterRemaining > 0)
+                            auditionBounceCountdownSamples = static_cast<int> (std::round (auditionBounceSpacingSamples));
+                    }
+                }
+
+                if (triggerBounce)
+                {
+                    const auto spacingNorm = juce::jlimit (0.0f, 1.0f, auditionBounceSpacingSamples / (0.36f * static_cast<float> (sampleRate)));
+                    const auto impact = 0.24f + 0.76f * spacingNorm;
+                    auditionBounceEnv = juce::jmax (auditionBounceEnv, impact);
+                    auto randSquared = nextAuditionRand01();
+                    randSquared *= randSquared;
+                    const auto targetFreq = 130.0f + (680.0f * spacingNorm) + (220.0f * randSquared);
+                    auditionBounceFreqHz = 0.55f * auditionBounceFreqHz + 0.45f * targetFreq;
+                }
+
+                auditionBouncePhase += static_cast<double> (auditionBounceFreqHz) / sampleRate;
+                auditionBouncePhase -= std::floor (auditionBouncePhase);
+                const auto bouncePhase = static_cast<float> (juce::MathConstants<double>::twoPi * auditionBouncePhase);
+                const auto tonal = (0.76f * static_cast<float> (std::sin (bouncePhase))
+                                  + 0.18f * static_cast<float> (std::sin (bouncePhase * 2.35f))
+                                  + 0.06f * static_cast<float> (std::sin (bouncePhase * 3.70f)))
+                    * auditionBounceEnv;
+                auditionNoiseOnePole = 0.90f * auditionNoiseOnePole + 0.10f * nextAuditionWhiteNoise();
+                const auto thud = auditionNoiseOnePole * (0.26f * auditionBounceEnv);
+                auto impactStrike = auditionBounceEnv;
+                impactStrike *= impactStrike;
+                impactStrike *= impactStrike;
+                const auto impactClick = 0.22f * nextAuditionWhiteNoise() * impactStrike;
+                auditionBounceEnv *= qualityHigh ? 0.9960f : 0.9948f;
+
+                return 0.74f * tonal + thud + impactClick;
+            }
+            case 6: // Wind chimes (metallic resonant pings)
+            {
+                if (auditionChimeCooldownSamples > 0)
+                    --auditionChimeCooldownSamples;
+
+                if (auditionChimeEnv < 1.0e-4f
+                    && auditionChimeCooldownSamples <= 0
+                    && nextAuditionRand01() < static_cast<float> ((qualityHigh ? 1.05f : 0.80f) / sampleRate))
+                {
+                    static constexpr std::array<float, 6> kChimeNotes {
+                        392.0f, 523.25f, 659.25f, 783.99f, 987.77f, 1174.66f
+                    };
+                    static constexpr std::array<float, 4> kChimeRatios {
+                        1.50f, 1.6666666f, 2.0f, 2.5f
+                    };
+                    const auto noteIndex = juce::jlimit (
+                        0,
+                        static_cast<int> (kChimeNotes.size()) - 1,
+                        static_cast<int> (nextAuditionRand01() * static_cast<float> (kChimeNotes.size())));
+                    const auto ratioIndex = juce::jlimit (
+                        0,
+                        static_cast<int> (kChimeRatios.size()) - 1,
+                        static_cast<int> (nextAuditionRand01() * static_cast<float> (kChimeRatios.size())));
+                    auditionChimeFreqA = kChimeNotes[static_cast<size_t> (noteIndex)];
+                    auditionChimeFreqB = auditionChimeFreqA * kChimeRatios[static_cast<size_t> (ratioIndex)];
+                    auditionChimeEnv = 0.88f + 0.12f * nextAuditionRand01();
+                    auditionChimeCooldownSamples = static_cast<int> (
+                        std::round ((0.14f + 0.44f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                }
+
+                auditionChimePhaseA += static_cast<double> (auditionChimeFreqA) / sampleRate;
+                auditionChimePhaseB += static_cast<double> (auditionChimeFreqB) / sampleRate;
+                auditionChimePhaseA -= std::floor (auditionChimePhaseA);
+                auditionChimePhaseB -= std::floor (auditionChimePhaseB);
+                const auto chimePhaseA = static_cast<float> (juce::MathConstants<double>::twoPi * auditionChimePhaseA);
+                const auto chimePhaseB = static_cast<float> (juce::MathConstants<double>::twoPi * auditionChimePhaseB);
+                const auto body = (0.58f * static_cast<float> (std::sin (chimePhaseA))
+                    + 0.26f * static_cast<float> (std::sin (chimePhaseB))
+                    + 0.10f * static_cast<float> (std::sin (0.5f * (chimePhaseA + chimePhaseB)))
+                    + 0.06f * static_cast<float> (std::sin (1.618f * chimePhaseA + 0.37f * chimePhaseB)))
+                    * auditionChimeEnv;
+                auto strikeEnv = auditionChimeEnv;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                const auto strike = (0.72f * static_cast<float> (std::sin (chimePhaseA * 2.75f))
+                    + 0.28f * static_cast<float> (std::sin (chimePhaseB * 1.90f)))
+                    * strikeEnv;
+                auditionChimeEnv *= qualityHigh ? 0.99976f : 0.99962f;
+                auditionChimeShimmer = 0.992f * auditionChimeShimmer + 0.008f * std::abs (body);
+                return 0.70f * body + 0.24f * strike + 0.10f * auditionChimeShimmer;
+            }
+            case 7: // Crickets (narrow-band chirp swarms)
+            {
+                if (auditionCricketCooldownSamples > 0)
+                    --auditionCricketCooldownSamples;
+
+                if (auditionCricketBurstSamples <= 0
+                    && auditionCricketCooldownSamples <= 0
+                    && nextAuditionRand01() < static_cast<float> (1.0 / sampleRate))
+                {
+                    auditionCricketBurstSamples = static_cast<int> (
+                        std::round ((0.06f + 0.12f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                    auditionCricketCooldownSamples = static_cast<int> (
+                        std::round ((0.20f + 0.58f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                    auditionCricketFreqHz = 3200.0f + 3800.0f * nextAuditionRand01();
+                    auditionCricketEnv = juce::jmax (auditionCricketEnv, 0.72f + 0.22f * nextAuditionRand01());
+                }
+
+                if (auditionCricketBurstSamples > 0)
+                {
+                    --auditionCricketBurstSamples;
+                    auditionCricketEnv = juce::jmin (1.0f, auditionCricketEnv + 0.016f);
+                }
+                else
+                {
+                    auditionCricketEnv *= 0.9975f;
+                }
+
+                auditionCricketPhase += static_cast<double> (auditionCricketFreqHz) / sampleRate;
+                auditionCricketPhase -= std::floor (auditionCricketPhase);
+                auditionPhaseSecondary += 34.0 / sampleRate;
+                auditionPhaseSecondary -= std::floor (auditionPhaseSecondary);
+
+                const auto cricketCarrier = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionCricketPhase));
+                const auto pulseRaw = 0.5f + 0.5f * static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionPhaseSecondary));
+                const auto pulse = pulseRaw * pulseRaw * pulseRaw;
+                const auto buzz = 0.18f * nextAuditionWhiteNoise();
+                return (0.82f * cricketCarrier + buzz) * auditionCricketEnv * pulse;
+            }
+            case 8: // Song birds (warbled chirp phrases)
+            {
+                if (auditionBirdCooldownSamples > 0)
+                    --auditionBirdCooldownSamples;
+
+                if (auditionBirdPhraseSamples <= 0
+                    && auditionBirdCooldownSamples <= 0
+                    && nextAuditionRand01() < static_cast<float> (0.72 / sampleRate))
+                {
+                    auditionBirdPhraseSamples = static_cast<int> (
+                        std::round ((0.16f + 0.34f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                    auditionBirdCooldownSamples = static_cast<int> (
+                        std::round ((0.26f + 0.66f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                    auditionBirdFreqA = 880.0f + 1900.0f * nextAuditionRand01();
+                    auditionBirdFreqB = auditionBirdFreqA * (1.42f + 0.36f * nextAuditionRand01());
+                    auditionBirdEnv = 1.0f;
+                }
+
+                if (auditionBirdPhraseSamples > 0)
+                    --auditionBirdPhraseSamples;
+
+                auditionBirdWarblePhase += (2.2 + 3.4 * nextAuditionRand01()) / sampleRate;
+                auditionBirdWarblePhase -= std::floor (auditionBirdWarblePhase);
+                const auto warble = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionBirdWarblePhase));
+                const auto trill = 0.5f + 0.5f * static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionBirdWarblePhase * 7.5));
+
+                const auto freqA = auditionBirdFreqA * (1.0f + 0.18f * warble);
+                const auto freqB = auditionBirdFreqB * (1.0f + 0.12f * static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionBirdWarblePhase * 1.7)));
+                auditionBirdPhaseA += static_cast<double> (freqA) / sampleRate;
+                auditionBirdPhaseB += static_cast<double> (freqB) / sampleRate;
+                auditionBirdPhaseA -= std::floor (auditionBirdPhaseA);
+                auditionBirdPhaseB -= std::floor (auditionBirdPhaseB);
+
+                const auto birdA = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionBirdPhaseA));
+                const auto birdB = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionBirdPhaseB));
+                const auto whistle = 0.72f * birdA + 0.28f * birdB;
+
+                if (auditionBirdPhraseSamples > 0)
+                    auditionBirdEnv *= 0.99935f;
+                else
+                    auditionBirdEnv *= 0.9958f;
+
+                const auto ambience = 0.06f * auditionSnowShimmer;
+                return whistle * auditionBirdEnv * (0.55f + 0.45f * trill) + ambience;
+            }
+            case 9: // Karplus plucks (physical string model)
+            {
+                if (auditionKarplusCooldownSamples > 0)
+                    --auditionKarplusCooldownSamples;
+
+                if (auditionKarplusCooldownSamples <= 0
+                    && nextAuditionRand01() < static_cast<float> (0.85 / sampleRate))
+                {
+                    static constexpr std::array<float, 10> kPluckNotes {
+                        110.0f, 123.47f, 146.83f, 164.81f, 196.0f,
+                        220.0f, 246.94f, 293.66f, 329.63f, 392.0f
+                    };
+                    const auto noteIndex = juce::jlimit (
+                        0,
+                        static_cast<int> (kPluckNotes.size()) - 1,
+                        static_cast<int> (nextAuditionRand01() * static_cast<float> (kPluckNotes.size())));
+                    const auto noteHz = kPluckNotes[static_cast<size_t> (noteIndex)] * (0.98f + 0.05f * nextAuditionRand01());
+                    auditionKarplusDelaySamples = juce::jlimit (
+                        24,
+                        kAuditionKarplusMaxDelaySamples - 2,
+                        static_cast<int> (std::round (sampleRate / juce::jmax (50.0f, noteHz))));
+                    auditionKarplusDamping = qualityHigh ? (0.992f + 0.004f * nextAuditionRand01())
+                                                         : (0.986f + 0.004f * nextAuditionRand01());
+                    for (int i = 0; i < auditionKarplusDelaySamples; ++i)
+                        auditionKarplusDelayLine[static_cast<size_t> (i)] = 0.78f * nextAuditionWhiteNoise();
+                    auditionKarplusWriteIndex = 0;
+                    auditionKarplusEnv = 1.0f;
+                    auditionKarplusCooldownSamples = static_cast<int> (
+                        std::round ((0.15f + 0.30f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                }
+
+                const auto delayLength = juce::jlimit (24, kAuditionKarplusMaxDelaySamples - 2, auditionKarplusDelaySamples);
+                int readIndex = auditionKarplusWriteIndex - delayLength;
+                if (readIndex < 0)
+                    readIndex += kAuditionKarplusMaxDelaySamples;
+                const int readNextIndex = (readIndex + 1) % kAuditionKarplusMaxDelaySamples;
+                const auto delayed = auditionKarplusDelayLine[static_cast<size_t> (readIndex)];
+                const auto delayedNext = auditionKarplusDelayLine[static_cast<size_t> (readNextIndex)];
+                const auto filtered = 0.5f * (delayed + delayedNext) * auditionKarplusDamping;
+                auditionKarplusDelayLine[static_cast<size_t> (auditionKarplusWriteIndex)] = filtered;
+                auditionKarplusWriteIndex = (auditionKarplusWriteIndex + 1) % kAuditionKarplusMaxDelaySamples;
+                auditionKarplusEnv *= 0.99970f;
+                return delayed * auditionKarplusEnv;
+            }
+            case 10: // Membrane drops (physical modal impacts)
+            {
+                if (auditionMembraneCooldownSamples > 0)
+                    --auditionMembraneCooldownSamples;
+
+                if (auditionMembraneCooldownSamples <= 0
+                    && nextAuditionRand01() < static_cast<float> (0.95 / sampleRate))
+                {
+                    auto randSquared = nextAuditionRand01();
+                    randSquared *= randSquared;
+                    auditionMembraneFreqA = 120.0f + 260.0f * randSquared;
+                    auditionMembraneFreqB = auditionMembraneFreqA * (1.55f + 0.25f * nextAuditionRand01());
+                    auditionMembraneEnv = 1.0f;
+                    auditionMembraneCooldownSamples = static_cast<int> (
+                        std::round ((0.24f + 0.44f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                }
+
+                auditionMembranePhaseA += static_cast<double> (auditionMembraneFreqA) / sampleRate;
+                auditionMembranePhaseB += static_cast<double> (auditionMembraneFreqB) / sampleRate;
+                auditionMembranePhaseA -= std::floor (auditionMembranePhaseA);
+                auditionMembranePhaseB -= std::floor (auditionMembranePhaseB);
+                const auto modeA = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionMembranePhaseA));
+                const auto modeB = static_cast<float> (std::sin (
+                    juce::MathConstants<double>::twoPi * auditionMembranePhaseB));
+                const auto body = (0.70f * modeA + 0.30f * modeB) * auditionMembraneEnv;
+                auto strikeEnv = auditionMembraneEnv;
+                strikeEnv *= strikeEnv;
+                strikeEnv *= strikeEnv;
+                const auto strike = 0.28f * nextAuditionWhiteNoise() * strikeEnv;
+                auditionMembraneEnv *= 0.99920f;
+                return body + strike;
+            }
+            case 11: // Krell patch (generative synth glide)
+            {
+                if (auditionKrellStepSamples <= 0)
+                {
+                    static constexpr std::array<float, 10> kKrellRatios {
+                        1.0f, 1.122462f, 1.189207f, 1.334840f, 1.414214f,
+                        1.587401f, 1.681793f, 1.887749f, 2.0f, 2.244924f
+                    };
+                    const auto ratioIndex = juce::jlimit (
+                        0,
+                        static_cast<int> (kKrellRatios.size()) - 1,
+                        static_cast<int> (nextAuditionRand01() * static_cast<float> (kKrellRatios.size())));
+                    auditionKrellFreqTarget = 82.41f * kKrellRatios[static_cast<size_t> (ratioIndex)] * (1.0f + 0.45f * nextAuditionRand01());
+                    auditionKrellEnv = 0.45f + 0.55f * nextAuditionRand01();
+                    auditionKrellStepSamples = static_cast<int> (
+                        std::round ((0.16f + 0.72f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                }
+                else
+                {
+                    --auditionKrellStepSamples;
+                }
+
+                auditionKrellFreqCurrent += (auditionKrellFreqTarget - auditionKrellFreqCurrent) * 0.0015f;
+                auditionKrellPhase += std::max (40.0, static_cast<double> (auditionKrellFreqCurrent)) / sampleRate;
+                auditionKrellPhase -= std::floor (auditionKrellPhase);
+                auditionPhaseSecondary += 0.18 / sampleRate;
+                auditionPhaseSecondary -= std::floor (auditionPhaseSecondary);
+                const auto lfo = static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * auditionPhaseSecondary));
+                const auto phase = juce::MathConstants<double>::twoPi * auditionKrellPhase;
+                const auto carrier = static_cast<float> (std::sin (phase + 0.45 * lfo));
+                const auto sub = static_cast<float> (std::sin (phase * 0.5));
+                const auto harmonics = static_cast<float> (std::sin (phase * (2.0 + 0.28 * lfo)));
+                auditionKrellEnv *= 0.99980f;
+                return std::tanh ((0.62f * carrier + 0.26f * sub + 0.18f * harmonics) * (0.65f + auditionKrellEnv));
+            }
+            case 12: // Generative arp patch
+            {
+                if (auditionArpGateSamples <= 0)
+                {
+                    static constexpr std::array<int, 12> kArpSemitones {
+                        0, 2, 3, 5, 7, 10, 12, 14, 15, 17, 19, 22
+                    };
+                    auditionArpStepIndex = (auditionArpStepIndex + 1 + static_cast<int> (nextAuditionRand01() * 3.0f))
+                        % static_cast<int> (kArpSemitones.size());
+                    const auto semitone = kArpSemitones[static_cast<size_t> (auditionArpStepIndex)];
+                    const auto freqBase = 110.0f * std::pow (2.0f, static_cast<float> (semitone) / 12.0f);
+                    auditionArpFreqA = freqBase;
+                    auditionArpFreqB = freqBase * (1.5f + 0.08f * nextAuditionRand01());
+                    auditionArpEnv = 1.0f;
+                    auditionArpGateSamples = static_cast<int> (
+                        std::round ((0.05f + 0.17f * nextAuditionRand01()) * static_cast<float> (sampleRate)));
+                }
+                else
+                {
+                    --auditionArpGateSamples;
+                }
+
+                auditionArpPhaseA += static_cast<double> (auditionArpFreqA) / sampleRate;
+                auditionArpPhaseB += static_cast<double> (auditionArpFreqB) / sampleRate;
+                auditionArpPhaseA -= std::floor (auditionArpPhaseA);
+                auditionArpPhaseB -= std::floor (auditionArpPhaseB);
+                const auto toneA = static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * auditionArpPhaseA));
+                const auto toneB = static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * auditionArpPhaseB));
+                const auto sparkle = 0.15f * nextAuditionWhiteNoise();
+                auditionArpEnv *= (auditionArpGateSamples > 0) ? 0.9968f : 0.9920f;
+                return (0.62f * toneA + 0.28f * toneB + sparkle) * auditionArpEnv;
+            }
+            default:
+                return advanceAuditionOscillator (440.0, auditionPhasePrimary);
+        }
+    }
+
+    void renderInternalAuditionEmitter (int numSamples) noexcept
+    {
+        if (numSamples <= 0)
+            return;
+
+        const auto levelDb = auditionLevelDbForPreset (auditionLevelPresetIndex);
+        const auto signalGain = juce::Decibels::decibelsToGain (levelDb);
+
+        float azimuth = 0.0f;
+        float elevation = 0.0f;
+        float auditionDistanceMeters = 1.0f;
+        double orbitHz = 0.0;
+        const auto phaseRadians = juce::MathConstants<double>::twoPi * auditionOrbitPhase;
+
+        switch (auditionMotionTypeIndex)
+        {
+            case 1:
+                orbitHz = 0.08;
+                azimuth = static_cast<float> (auditionOrbitPhase * 360.0 - 180.0);
+                elevation = static_cast<float> (14.0 * std::sin (phaseRadians * 0.75));
+                auditionDistanceMeters = 1.05f + 0.12f * static_cast<float> (0.5 + 0.5 * std::cos (phaseRadians * 0.5));
+                break;
+
+            case 2:
+                // Orbit Fast is an explicit 3D path, not just a flat azimuth sweep.
+                orbitHz = 0.20;
+                azimuth = static_cast<float> (auditionOrbitPhase * 360.0 - 180.0);
+                elevation = static_cast<float> (60.0 * std::sin (phaseRadians * 1.15));
+                auditionDistanceMeters = 0.95f + 0.55f * static_cast<float> (0.5 + 0.5 * std::cos (phaseRadians * 0.8));
+                break;
+            case 3: // figure8_flow
+                orbitHz = 0.13;
+                azimuth = 168.0f * static_cast<float> (std::sin (phaseRadians) * std::cos (phaseRadians * 0.5));
+                elevation = 30.0f * static_cast<float> (std::sin (phaseRadians * 2.0));
+                auditionDistanceMeters = 0.85f + 0.92f * static_cast<float> (0.5 + 0.5 * std::cos (phaseRadians * 1.1));
+                break;
+            case 4: // helix_rise
+                orbitHz = 0.17;
+                azimuth = static_cast<float> (auditionOrbitPhase * 360.0 - 180.0);
+                elevation = -46.0f + 92.0f * static_cast<float> (0.5 + 0.5 * std::sin (phaseRadians * 0.45));
+                auditionDistanceMeters = 0.72f + 1.12f * static_cast<float> (0.5 + 0.5 * std::sin (phaseRadians * 1.7 + 0.7));
+                break;
+            case 5: // wall_ricochet
+            {
+                const auto sampleRate = juce::jmax (1.0, currentSampleRate);
+                const float dt = static_cast<float> (numSamples / sampleRate);
+                const float bounds = qualityHigh ? 2.20f : 1.90f;
+                auditionWallPosX += auditionWallVelX * dt;
+                auditionWallPosZ += auditionWallVelZ * dt;
+
+                bool collision = false;
+                auto reflectAxis = [bounds, &collision, this] (float& pos, float& vel) noexcept
+                {
+                    if (pos > bounds)
+                    {
+                        pos = bounds - (pos - bounds);
+                        vel = -std::abs (vel) * (0.93f + 0.04f * nextAuditionRand01());
+                        collision = true;
+                    }
+                    else if (pos < -bounds)
+                    {
+                        pos = -bounds + (-bounds - pos);
+                        vel = std::abs (vel) * (0.93f + 0.04f * nextAuditionRand01());
+                        collision = true;
+                    }
+                };
+                reflectAxis (auditionWallPosX, auditionWallVelX);
+                reflectAxis (auditionWallPosZ, auditionWallVelZ);
+
+                if (collision)
+                    auditionBounceEnv = juce::jmax (auditionBounceEnv, 0.58f + 0.30f * nextAuditionRand01());
+
+                const float planarDistance = std::sqrt (
+                    auditionWallPosX * auditionWallPosX + auditionWallPosZ * auditionWallPosZ);
+                azimuth = juce::radiansToDegrees (std::atan2 (auditionWallPosX, -auditionWallPosZ));
+                elevation = -22.0f + 56.0f * juce::jlimit (0.0f, 1.0f, auditionBounceEnv)
+                    + 12.0f * static_cast<float> (std::sin (phaseRadians * 1.6));
+                auditionDistanceMeters = 0.58f + 0.62f * planarDistance;
+                break;
+            }
+
+            default:
+                break;
+        }
+
+        if (auditionMotionTypeIndex != 0)
+        {
+            const auto phase = static_cast<float> (phaseRadians);
+            const auto motionTier = (auditionMotionTypeIndex == 1) ? 0.62f
+                : (auditionMotionTypeIndex == 2) ? 1.0f
+                : (auditionMotionTypeIndex == 3) ? 1.18f
+                : (auditionMotionTypeIndex == 4) ? 1.32f
+                : 1.50f;
+            const auto qualitySpread = qualityHigh ? 1.0f : 0.72f;
+
+            switch (auditionSignalTypeIndex)
+            {
+                case 3: // rain_sheet
+                {
+                    const auto sweep = static_cast<float> (std::sin (phase * (0.90f + 0.35f * motionTier)));
+                    const auto billow = static_cast<float> (std::sin (phase * (1.85f + 0.20f * motionTier)));
+                    azimuth = 158.0f * qualitySpread * sweep + 26.0f * qualitySpread * billow;
+                    elevation = -10.0f + 20.0f * qualitySpread
+                        * static_cast<float> (std::sin (phase * (1.20f + 0.25f * motionTier)));
+                    auditionDistanceMeters = 1.08f + (0.42f + 0.24f * qualitySpread)
+                        * static_cast<float> (0.5 + 0.5 * std::cos (phase * (1.35f + 0.25f * motionTier)));
+                    break;
+                }
+                case 4: // snow_cloud
+                {
+                    const auto cloudA = static_cast<float> (std::sin (phase * (0.34f + 0.12f * motionTier) + 0.6f));
+                    const auto cloudB = static_cast<float> (std::sin (phase * (0.58f + 0.07f * motionTier) - 1.1f));
+                    const auto drift = 0.55f * cloudA + 0.45f * cloudB;
+                    azimuth = 128.0f * qualitySpread * drift;
+                    elevation = 16.0f + 30.0f * qualitySpread
+                        * (0.45f * cloudB
+                           + 0.55f * static_cast<float> (std::sin (phase * (0.42f + 0.09f * motionTier) + 0.9f)));
+                    auditionDistanceMeters = 1.28f + (0.42f + 0.20f * qualitySpread)
+                        * static_cast<float> (0.5 + 0.5 * std::sin (phase * (0.39f + 0.05f * motionTier) + 0.35f));
+                    break;
+                }
+                case 5: // bounce_cluster
+                {
+                    if (auditionMotionTypeIndex == 5)
+                    {
+                        const auto impact = juce::jlimit (0.0f, 1.0f, auditionBounceEnv);
+                        elevation = -18.0f + 62.0f * impact
+                            + 10.0f * static_cast<float> (std::sin (phase * 2.1f));
+                        auditionDistanceMeters += 0.18f * impact;
+                        break;
+                    }
+                    const auto impact = juce::jlimit (0.0f, 1.0f, auditionBounceEnv);
+                    const auto cluster = juce::jlimit (0.0f, 1.0f, static_cast<float> (auditionBounceClusterRemaining) / 6.0f);
+                    const auto rebound = std::abs (static_cast<float> (std::sin (phase * (1.65f + 0.65f * motionTier))));
+                    azimuth = 136.0f * qualitySpread * static_cast<float> (std::sin (phase * (0.95f + 0.45f * motionTier)))
+                        + 38.0f * cluster * static_cast<float> (std::sin (phase * (2.60f + 0.35f * motionTier)));
+                    elevation = -24.0f + (38.0f * impact + 16.0f * cluster) * rebound;
+                    auditionDistanceMeters = 0.96f
+                        + 0.72f * (1.0f - impact)
+                        + 0.34f * cluster * std::abs (static_cast<float> (std::cos (phase * (1.55f + 0.25f * motionTier))));
+                    if (qualityHigh)
+                        auditionDistanceMeters += 0.14f * cluster * rebound;
+                    break;
+                }
+                case 6: // chime_constellation
+                {
+                    const auto chimeA = static_cast<float> (juce::MathConstants<double>::twoPi * auditionChimePhaseA);
+                    const auto chimeB = static_cast<float> (juce::MathConstants<double>::twoPi * auditionChimePhaseB);
+                    const auto shimmer = juce::jlimit (0.0f, 1.0f, auditionChimeShimmer * 2.2f);
+                    const auto constellation = static_cast<float> (
+                        std::sin (phase * (1.10f + 0.30f * motionTier) + 0.35f * std::sin (chimeA)));
+                    azimuth = 138.0f * qualitySpread * constellation
+                        + 18.0f * qualitySpread * static_cast<float> (std::sin (chimeB * 0.5f));
+                    elevation = 18.0f + 34.0f * qualitySpread * std::abs (static_cast<float> (
+                        std::sin (chimeB * 0.45f + phase * (0.60f + 0.18f * motionTier))));
+                    auditionDistanceMeters = 0.82f + (0.30f + 0.12f * qualitySpread)
+                        * (0.45f + 0.55f * std::abs (static_cast<float> (std::sin (chimeA * 0.5f))));
+                    auditionDistanceMeters += 0.12f * shimmer * qualitySpread;
+                    break;
+                }
+                case 7: // crickets
+                {
+                    const auto chatter = static_cast<float> (std::sin (phase * (1.85f + 0.55f * motionTier)));
+                    azimuth = 172.0f * qualitySpread * chatter;
+                    elevation = -12.0f + 10.0f * static_cast<float> (std::sin (phase * 2.7f));
+                    auditionDistanceMeters = 1.18f + 0.82f * static_cast<float> (
+                        0.5f + 0.5f * std::sin (phase * (1.35f + 0.22f * motionTier)));
+                    break;
+                }
+                case 8: // song_birds
+                {
+                    const auto swirl = static_cast<float> (std::sin (phase * (0.86f + 0.30f * motionTier)));
+                    azimuth = 160.0f * qualitySpread * swirl;
+                    elevation = 26.0f + 34.0f * qualitySpread * std::abs (static_cast<float> (
+                        std::sin (phase * (1.40f + 0.35f * motionTier))));
+                    auditionDistanceMeters = 1.05f + 0.96f * static_cast<float> (
+                        0.5f + 0.5f * std::cos (phase * (1.05f + 0.18f * motionTier)));
+                    break;
+                }
+                case 9: // karplus_plucks
+                {
+                    const auto pluckWave = static_cast<float> (std::sin (phase * (1.20f + 0.28f * motionTier)));
+                    azimuth = 148.0f * qualitySpread * pluckWave;
+                    elevation = -6.0f + 18.0f * static_cast<float> (std::sin (phase * 1.9f));
+                    auditionDistanceMeters = 0.92f + 0.84f * static_cast<float> (
+                        0.5f + 0.5f * std::cos (phase * (1.25f + 0.24f * motionTier)));
+                    break;
+                }
+                case 10: // membrane_drops
+                {
+                    const auto throb = std::abs (static_cast<float> (std::sin (phase * (1.45f + 0.35f * motionTier))));
+                    azimuth = 164.0f * qualitySpread * static_cast<float> (std::sin (phase * 0.9f));
+                    elevation = -18.0f + 32.0f * throb;
+                    auditionDistanceMeters = 1.04f + 0.92f * static_cast<float> (
+                        0.5f + 0.5f * std::cos (phase * (1.55f + 0.20f * motionTier)));
+                    break;
+                }
+                case 11: // krell_patch
+                {
+                    const auto glide = static_cast<float> (std::sin (phase * (0.66f + 0.24f * motionTier)));
+                    azimuth = 170.0f * qualitySpread * glide;
+                    elevation = -4.0f + 40.0f * static_cast<float> (std::sin (phase * 1.25f + 0.6f));
+                    auditionDistanceMeters = 0.80f + 1.10f * static_cast<float> (
+                        0.5f + 0.5f * std::sin (phase * (1.15f + 0.20f * motionTier) + 0.35f));
+                    break;
+                }
+                case 12: // generative_arp
+                {
+                    const auto lattice = static_cast<float> (std::sin (phase * (1.45f + 0.34f * motionTier)));
+                    azimuth = 158.0f * qualitySpread * lattice;
+                    elevation = 4.0f + 28.0f * std::abs (static_cast<float> (
+                        std::sin (phase * (2.05f + 0.18f * motionTier))));
+                    auditionDistanceMeters = 0.88f + 1.04f * static_cast<float> (
+                        0.5f + 0.5f * std::cos (phase * (1.32f + 0.25f * motionTier)));
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            azimuth = juce::jlimit (-170.0f, 170.0f, azimuth);
+            elevation = juce::jlimit (-65.0f, 65.0f, elevation);
+            auditionDistanceMeters = juce::jlimit (0.55f, 2.20f, auditionDistanceMeters);
+        }
+
+        if (orbitHz > 0.0)
+        {
+            const auto sampleRate = juce::jmax (1.0, currentSampleRate);
+            auditionOrbitPhase += (orbitHz * static_cast<double> (numSamples)) / sampleRate;
+            auditionOrbitPhase -= std::floor (auditionOrbitPhase);
+        }
+
+        const auto azimuthRadians = juce::degreesToRadians (azimuth);
+        const auto elevationRadians = juce::degreesToRadians (elevation);
+        const auto cosElevation = std::cos (elevationRadians);
+        auditionVisualX.store (std::sin (azimuthRadians) * cosElevation * auditionDistanceMeters, std::memory_order_relaxed);
+        auditionVisualY.store (1.2f + std::sin (elevationRadians) * auditionDistanceMeters, std::memory_order_relaxed);
+        auditionVisualZ.store (-std::cos (azimuthRadians) * cosElevation * auditionDistanceMeters, std::memory_order_relaxed);
+
+        const auto cloudBoundAvailable = isAuditionCloudBoundModeAvailable();
+        const auto requestedVoiceCount = juce::jlimit (1, AUDITION_MAX_VOICES, getAuditionVoiceCountForSignal());
+        const auto activeVoices = cloudBoundAvailable ? requestedVoiceCount : 1;
+        const auto multiSourceSignal = cloudBoundAvailable && activeVoices > 1;
+        const auto spreadDegrees = getAuditionVoiceSpreadDegrees();
+        const auto motionSpreadBlend = auditionMotionTypeIndex == 0 ? 1.0f
+            : auditionMotionTypeIndex == 1 ? 0.72f
+            : auditionMotionTypeIndex == 2 ? 0.62f
+            : auditionMotionTypeIndex == 3 ? 0.56f
+            : auditionMotionTypeIndex == 4 ? 0.50f
+            : 0.42f;
+        const auto motionEnergy = auditionMotionTypeIndex == 0 ? 0.0f
+            : auditionMotionTypeIndex == 1 ? 0.28f
+            : auditionMotionTypeIndex == 2 ? 0.55f
+            : auditionMotionTypeIndex == 3 ? 0.72f
+            : auditionMotionTypeIndex == 4 ? 0.88f
+            : 1.0f;
+        const auto physicsVelocityTarget = auditionPhysicsReactiveInputActive ? auditionPhysicsReactiveVelocityTarget : 0.0f;
+        const auto physicsCollisionTarget = auditionPhysicsReactiveInputActive ? auditionPhysicsReactiveCollisionTarget : 0.0f;
+        const auto physicsDensityTarget = auditionPhysicsReactiveInputActive ? auditionPhysicsReactiveDensityTarget : 0.0f;
+        auditionPhysicsReactiveVelocityState += (physicsVelocityTarget - auditionPhysicsReactiveVelocityState) * 0.24f;
+        auditionPhysicsReactiveCollisionState += (physicsCollisionTarget - auditionPhysicsReactiveCollisionState) * 0.30f;
+        auditionPhysicsReactiveDensityState += (physicsDensityTarget - auditionPhysicsReactiveDensityState) * 0.18f;
+        const auto physicsVelocityNorm = juce::jlimit (0.0f, 1.0f, auditionPhysicsReactiveVelocityState);
+        const auto physicsCollisionNorm = juce::jlimit (0.0f, 1.0f, auditionPhysicsReactiveCollisionState);
+        const auto physicsDensityNorm = juce::jlimit (0.0f, 1.0f, auditionPhysicsReactiveDensityState);
+        const auto physicsCouplingNorm = juce::jlimit (
+            0.0f,
+            1.0f,
+            0.44f * physicsVelocityNorm + 0.36f * physicsCollisionNorm + 0.20f * physicsDensityNorm);
+        const auto phase = static_cast<float> (phaseRadians);
+
+        std::array<int, AUDITION_MAX_VOICES> voiceDelaySamples {};
+        std::array<float, AUDITION_MAX_VOICES> voiceLevelWeights {};
+        std::array<double, AUDITION_MAX_VOICES> voiceSquareSum {};
+        float voiceWeightSum = 0.0f;
+
+        for (int voice = 0; voice < AUDITION_MAX_VOICES; ++voice)
+        {
+            if (voice >= activeVoices)
+            {
+                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+                    auditionSmoothedSpeakerGains[static_cast<size_t> (voice)][static_cast<size_t> (spk)].setTargetValue (0.0f);
+                continue;
+            }
+
+            auto voiceAzimuth = azimuth;
+            auto voiceElevation = elevation;
+            auto voiceDistanceMeters = auditionDistanceMeters;
+            const auto hashA = auditionVoiceHashUnit (voice, 0xA53C9E11u);
+            const auto hashB = auditionVoiceHashUnit (voice, 0x3C6EF372u);
+            const auto hashC = auditionVoiceHashUnit (voice, 0xBB67AE85u);
+            const auto voiceNorm = activeVoices > 1
+                ? static_cast<float> (voice) / static_cast<float> (activeVoices - 1)
+                : 0.0f;
+            const auto ringAzimuth = -180.0f + (360.0f * voiceNorm) + (hashA - 0.5f) * 18.0f;
+
+            if (multiSourceSignal)
+            {
+                const auto ringRadians = juce::degreesToRadians (ringAzimuth);
+                const auto azimuthWobble = spreadDegrees
+                    * static_cast<float> (std::sin (phase * (0.65f + 0.22f * hashB)
+                                                      + ringRadians * (1.0f + 0.35f * motionEnergy)));
+                const auto mixedAzimuth = voiceAzimuth * (1.0f - motionSpreadBlend)
+                    + (ringAzimuth + azimuthWobble * (0.28f + 0.42f * motionEnergy)) * motionSpreadBlend;
+                voiceAzimuth = wrapAuditionAzimuthDegrees (mixedAzimuth);
+
+                const auto elevationSpread = (auditionSignalTypeIndex == 4 || auditionSignalTypeIndex == 8)
+                    ? 44.0f : 30.0f;
+                const auto elevationWobble = elevationSpread
+                    * static_cast<float> (std::sin (phase * (0.85f + 0.26f * hashC)
+                                                      + ringRadians * (0.65f + 0.22f * hashA)));
+                voiceElevation = juce::jlimit (
+                    -65.0f,
+                    65.0f,
+                    voiceElevation + (hashB - 0.5f) * elevationSpread * 0.6f
+                        + elevationWobble * (0.24f + 0.40f * motionEnergy));
+
+                const auto distanceSpread = 0.26f + 0.40f * hashC;
+                const auto distanceWobble = static_cast<float> (std::sin (
+                    phase * (0.52f + 0.28f * hashA) + ringRadians * (0.75f + 0.30f * hashB)));
+                voiceDistanceMeters = juce::jlimit (
+                    0.55f,
+                    2.20f,
+                    voiceDistanceMeters + distanceSpread * distanceWobble);
+            }
+
+            const auto panGains = vbapPanner.calculateGains (voiceAzimuth, voiceElevation);
+            const auto distanceGain = distanceAttenuator.calculateGain (voiceDistanceMeters);
+            for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+            {
+                auditionSmoothedSpeakerGains[static_cast<size_t> (voice)][static_cast<size_t> (spk)].setTargetValue (
+                    panGains.gains[static_cast<size_t> (spk)] * distanceGain);
+            }
+
+            voiceDelaySamples[static_cast<size_t> (voice)] = getAuditionVoiceDelaySamples (voice, activeVoices);
+            voiceLevelWeights[static_cast<size_t> (voice)] = multiSourceSignal
+                ? (0.62f + 0.38f * hashB)
+                : 1.0f;
+            voiceWeightSum += voiceLevelWeights[static_cast<size_t> (voice)];
+        }
+
+        if (voiceWeightSum > 0.0f)
+        {
+            const auto invVoiceWeightSum = 1.0f / voiceWeightSum;
+            for (int voice = 0; voice < activeVoices; ++voice)
+                voiceLevelWeights[static_cast<size_t> (voice)] *= invVoiceWeightSum;
+        }
+
+        for (int i = 0; i < numSamples; ++i)
+        {
+            auto generated = generateAuditionSignalSample();
+            generated = applyAuditionPhysicsReactiveTimbre (
+                generated,
+                physicsVelocityNorm,
+                physicsCollisionNorm,
+                physicsDensityNorm,
+                motionEnergy);
+            tempMonoBuffer[static_cast<size_t> (i)] = generated * signalGain;
+        }
+
+        double mixedSquareSum = 0.0;
+        double mixedHighSquareSum = 0.0;
+        float mixedPeak = 0.0f;
+
+        for (int i = 0; i < numSamples; ++i)
+        {
+            const auto drySample = tempMonoBuffer[static_cast<size_t> (i)];
+            auditionHistoryBuffer[static_cast<size_t> (auditionHistoryWritePos)] = drySample;
+            auditionHistoryWritePos = (auditionHistoryWritePos + 1) % AUDITION_HISTORY_BUFFER_SAMPLES;
+            float mixedVoiceSample = 0.0f;
+
+            for (int voice = 0; voice < AUDITION_MAX_VOICES; ++voice)
+            {
+                const auto delayedSample = readAuditionHistoryDelayed (voiceDelaySamples[static_cast<size_t> (voice)]);
+                const auto voiceBaseLevel = voiceLevelWeights[static_cast<size_t> (voice)];
+                auto& voiceModPhase = auditionVoiceModPhase[static_cast<size_t> (voice)];
+                const auto voiceLfoHz = 0.22 + 0.31 * auditionVoiceHashUnit (voice, 0xC2B2AE35u);
+                voiceModPhase += voiceLfoHz / juce::jmax (1.0, currentSampleRate);
+                voiceModPhase -= std::floor (voiceModPhase);
+                const auto modulation = 0.90f + 0.10f * static_cast<float> (
+                    std::sin (juce::MathConstants<double>::twoPi * voiceModPhase));
+                const auto voiceExcitedSample = (voice < activeVoices && multiSourceSignal)
+                    ? renderAuditionVoiceExcitation (voice, activeVoices, delayedSample)
+                    : delayedSample;
+                const auto voiceSample = voiceExcitedSample * voiceBaseLevel * modulation;
+                if (voice < activeVoices)
+                {
+                    mixedVoiceSample += voiceSample;
+                    voiceSquareSum[static_cast<size_t> (voice)] +=
+                        static_cast<double> (voiceSample) * static_cast<double> (voiceSample);
+                }
+
+                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+                {
+                    const auto gain = auditionSmoothedSpeakerGains[static_cast<size_t> (voice)][static_cast<size_t> (spk)].getNextValue();
+                    accumBuffer.addSample (spk, i, voiceSample * gain);
+                }
+            }
+
+            const auto mixedAbs = std::abs (mixedVoiceSample);
+            mixedPeak = juce::jmax (mixedPeak, mixedAbs);
+            mixedSquareSum += static_cast<double> (mixedVoiceSample) * static_cast<double> (mixedVoiceSample);
+            auditionReactiveBrightnessLowpassState += (mixedVoiceSample - auditionReactiveBrightnessLowpassState) * 0.08f;
+            const auto highComponent = mixedVoiceSample - auditionReactiveBrightnessLowpassState;
+            mixedHighSquareSum += static_cast<double> (highComponent) * static_cast<double> (highComponent);
+        }
+
+        const auto invNumSamples = 1.0f / static_cast<float> (numSamples);
+        const auto blockRms = juce::jlimit (
+            0.0f,
+            2.0f,
+            std::sqrt (static_cast<float> (mixedSquareSum * static_cast<double> (invNumSamples))));
+        const auto blockPeak = juce::jlimit (0.0f, 2.0f, mixedPeak);
+        const auto blockHighRms = juce::jlimit (
+            0.0f,
+            2.0f,
+            std::sqrt (static_cast<float> (mixedHighSquareSum * static_cast<double> (invNumSamples))));
+
+        const auto fastAlpha = qualityHigh ? 0.27f : 0.20f;
+        const auto slowAlpha = qualityHigh ? 0.08f : 0.06f;
+        auditionReactiveEnvFastState += (blockRms - auditionReactiveEnvFastState) * fastAlpha;
+        auditionReactiveEnvSlowState += (blockRms - auditionReactiveEnvSlowState) * slowAlpha;
+        auditionReactiveEnvFastState = juce::jlimit (0.0f, 2.0f, auditionReactiveEnvFastState);
+        auditionReactiveEnvSlowState = juce::jlimit (0.0f, 2.0f, auditionReactiveEnvSlowState);
+
+        auto onset = juce::jlimit (
+            0.0f,
+            1.0f,
+            (auditionReactiveEnvFastState - auditionReactiveEnvSlowState) * 5.0f);
+        auto brightness = juce::jlimit (
+            0.0f,
+            1.0f,
+            blockHighRms / juce::jmax (0.001f, blockRms * 1.8f + 0.05f));
+        const auto sourceDensityNorm = juce::jlimit (
+            0.0f,
+            1.0f,
+            static_cast<float> (activeVoices) / static_cast<float> (AUDITION_MAX_VOICES));
+        const auto coupledDensityNorm = juce::jlimit (
+            0.0f,
+            1.0f,
+            0.70f * sourceDensityNorm + 0.30f * physicsDensityNorm);
+
+        onset = juce::jlimit (
+            0.0f,
+            1.0f,
+            onset + 0.34f * physicsCollisionNorm * (0.40f + 0.60f * physicsVelocityNorm));
+        brightness = juce::jlimit (
+            0.0f,
+            1.0f,
+            brightness + 0.28f * physicsVelocityNorm + 0.10f * physicsCollisionNorm);
+
+        auto rainFadeRate = 0.10f
+            + 0.45f * auditionReactiveEnvFastState
+            + 0.25f * onset
+            + 0.10f * brightness
+            + 0.10f * motionEnergy
+            + 0.16f * physicsVelocityNorm
+            + 0.22f * physicsCollisionNorm
+            + 0.08f * coupledDensityNorm;
+        auto snowFadeRate = 0.12f
+            + 0.42f * auditionReactiveEnvSlowState
+            + 0.18f * (1.0f - brightness)
+            + 0.10f * (1.0f - onset)
+            + 0.12f * coupledDensityNorm
+            + 0.16f * physicsDensityNorm
+            + 0.08f * (1.0f - physicsVelocityNorm)
+            + 0.08f * physicsCollisionNorm;
+
+        if (auditionSignalTypeIndex == 3) // rain
+        {
+            rainFadeRate += 0.20f;
+            snowFadeRate *= 0.74f;
+        }
+        else if (auditionSignalTypeIndex == 4) // snow
+        {
+            snowFadeRate += 0.20f;
+            rainFadeRate *= 0.78f;
+        }
+
+        rainFadeRate = juce::jlimit (0.0f, 1.0f, rainFadeRate);
+        snowFadeRate = juce::jlimit (0.0f, 1.0f, snowFadeRate);
+
+        std::array<float, AUDITION_MAX_VOICES> sourceEnergy {};
+        float maxVoiceRms = 0.0f;
+        for (int voice = 0; voice < activeVoices; ++voice)
+        {
+            sourceEnergy[static_cast<size_t> (voice)] = juce::jlimit (
+                0.0f,
+                2.0f,
+                std::sqrt (static_cast<float> (voiceSquareSum[static_cast<size_t> (voice)] * static_cast<double> (invNumSamples))));
+            sourceEnergy[static_cast<size_t> (voice)] = juce::jlimit (
+                0.0f,
+                2.0f,
+                sourceEnergy[static_cast<size_t> (voice)] * (0.88f + 0.24f * physicsCouplingNorm));
+            maxVoiceRms = juce::jmax (maxVoiceRms, sourceEnergy[static_cast<size_t> (voice)]);
+        }
+
+        if (maxVoiceRms > 1.0e-6f)
+        {
+            const auto invMaxVoice = 1.0f / maxVoiceRms;
+            for (int voice = 0; voice < activeVoices; ++voice)
+            {
+                sourceEnergy[static_cast<size_t> (voice)] = juce::jlimit (
+                    0.0f,
+                    1.0f,
+                    sourceEnergy[static_cast<size_t> (voice)] * invMaxVoice);
+            }
+        }
+
+        publishAuditionReactiveTelemetry (
+            blockRms,
+            blockPeak,
+            auditionReactiveEnvFastState,
+            auditionReactiveEnvSlowState,
+            onset,
+            brightness,
+            rainFadeRate,
+            snowFadeRate,
+            physicsVelocityNorm,
+            physicsCollisionNorm,
+            coupledDensityNorm,
+            physicsCouplingNorm,
+            0.0f,
+            0.0f,
+            1.0f,
+            static_cast<int> (AuditionReactiveHeadphoneFallbackReason::None),
+            sourceEnergy,
+            activeVoices);
+    }
 
     static bool isSteamAudioBackendCompiled() noexcept
     {
@@ -1491,10 +3642,11 @@ private:
 
     inline void renderVirtual3dStereoSample (int sampleIndex, float& left, float& right) const noexcept
     {
-        const float fl = accumBuffer.getSample (0, sampleIndex);
-        const float fr = accumBuffer.getSample (1, sampleIndex);
-        const float rr = accumBuffer.getSample (2, sampleIndex);
-        const float rl = accumBuffer.getSample (3, sampleIndex);
+        float fl = 0.0f;
+        float fr = 0.0f;
+        float rr = 0.0f;
+        float rl = 0.0f;
+        getHeadPoseAdjustedQuadSample (sampleIndex, fl, fr, rr, rl);
         // Simple crossfeed/Haas-style stereo virtualization from quad bed.
         left = (0.74f * fl) + (0.46f * rl) + (0.12f * fr) + (0.08f * rr);
         right = (0.74f * fr) + (0.46f * rr) + (0.12f * fl) + (0.08f * rl);
@@ -1574,9 +3726,14 @@ private:
 
     inline void renderStereoDownmixSample (int sampleIndex, float& left, float& right) const noexcept
     {
+        float fl = 0.0f;
+        float fr = 0.0f;
+        float rr = 0.0f;
+        float rl = 0.0f;
+        getHeadPoseAdjustedQuadSample (sampleIndex, fl, fr, rr, rl);
         // Legacy headphone path: FL+RL -> Left, FR+RR -> Right.
-        left = (accumBuffer.getSample (0, sampleIndex) + accumBuffer.getSample (3, sampleIndex)) * 0.707f;
-        right = (accumBuffer.getSample (1, sampleIndex) + accumBuffer.getSample (2, sampleIndex)) * 0.707f;
+        left = (fl + rl) * 0.707f;
+        right = (fr + rr) * 0.707f;
     }
 
     void resetHeadphoneCompensationState() noexcept
@@ -1665,11 +3822,48 @@ private:
         std::fill (steamBinauralLeft.begin(), steamBinauralLeft.begin() + numSamples, 0.0f);
         std::fill (steamBinauralRight.begin(), steamBinauralRight.begin() + numSamples, 0.0f);
 
-        // Steam virtual surround expects quad order FL, FR, RL, RR.
-        steamInputChannelPtrs[0] = const_cast<float*> (accumBuffer.getReadPointer (0));
-        steamInputChannelPtrs[1] = const_cast<float*> (accumBuffer.getReadPointer (1));
-        steamInputChannelPtrs[2] = const_cast<float*> (accumBuffer.getReadPointer (3));
-        steamInputChannelPtrs[3] = const_cast<float*> (accumBuffer.getReadPointer (2));
+        const bool canUseHeadPoseRotation = headPoseInternalBinauralActive
+                                            && headPoseValid
+                                            && static_cast<int> (headPoseRotatedQuadScratch[0].size()) >= numSamples
+                                            && static_cast<int> (headPoseRotatedQuadScratch[1].size()) >= numSamples
+                                            && static_cast<int> (headPoseRotatedQuadScratch[2].size()) >= numSamples
+                                            && static_cast<int> (headPoseRotatedQuadScratch[3].size()) >= numSamples;
+
+        if (canUseHeadPoseRotation)
+        {
+            for (int i = 0; i < numSamples; ++i)
+            {
+                const float sourceFl = accumBuffer.getSample (0, i);
+                const float sourceFr = accumBuffer.getSample (1, i);
+                const float sourceRr = accumBuffer.getSample (2, i);
+                const float sourceRl = accumBuffer.getSample (3, i);
+
+                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+                {
+                    const auto& mix = headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)];
+                    headPoseRotatedQuadScratch[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (i)] =
+                        (mix[0] * sourceFl)
+                        + (mix[1] * sourceFr)
+                        + (mix[2] * sourceRr)
+                        + (mix[3] * sourceRl);
+                }
+            }
+
+            // Steam virtual surround expects quad order FL, FR, RL, RR.
+            steamInputChannelPtrs[0] = headPoseRotatedQuadScratch[0].data();
+            steamInputChannelPtrs[1] = headPoseRotatedQuadScratch[1].data();
+            steamInputChannelPtrs[2] = headPoseRotatedQuadScratch[3].data();
+            steamInputChannelPtrs[3] = headPoseRotatedQuadScratch[2].data();
+        }
+        else
+        {
+            // Steam virtual surround expects quad order FL, FR, RL, RR.
+            steamInputChannelPtrs[0] = const_cast<float*> (accumBuffer.getReadPointer (0));
+            steamInputChannelPtrs[1] = const_cast<float*> (accumBuffer.getReadPointer (1));
+            steamInputChannelPtrs[2] = const_cast<float*> (accumBuffer.getReadPointer (3));
+            steamInputChannelPtrs[3] = const_cast<float*> (accumBuffer.getReadPointer (2));
+        }
+
         steamOutputChannelPtrs[0] = steamBinauralLeft.data();
         steamOutputChannelPtrs[1] = steamBinauralRight.data();
 

@@ -34,12 +34,10 @@
       --text-warning: #AA4444;
       --text-success: #44AA66;
       --wireframe: #E0E0E0;
-      --rail-width-calibrate: 340px;
-      --rail-width-emitter: 356px;
-      --rail-width-emitter-compact: 308px;
-      --rail-width-emitter-tight: 288px;
-      --rail-width-renderer: 340px;
-      --rail-width: var(--rail-width-emitter);
+      --rail-width-base: 356px;
+      --rail-width-compact: 308px;
+      --rail-width-tight: 288px;
+      --rail-width: var(--rail-width-base);
       --header-height: 40px;
       --timeline-height: 158px;
       --timeline-height-compact: 140px;
@@ -67,15 +65,18 @@
       flex-direction: column;
       user-select: none;
     }
-    body.mode-calibrate { --rail-width: var(--rail-width-calibrate); }
-    body.mode-emitter { --rail-width: var(--rail-width-emitter); }
-    body.mode-renderer { --rail-width: var(--rail-width-renderer); }
+    /* Keep rail width consistent across CALIBRATE / EMITTER / RENDERER.
+       Only viewport-size breakpoints change rail width. */
+    body.layout-compact {
+      --rail-width: var(--rail-width-compact);
+    }
+    body.layout-tight {
+      --rail-width: var(--rail-width-tight);
+    }
     body.layout-compact.mode-emitter {
-      --rail-width-emitter: var(--rail-width-emitter-compact);
       --timeline-height: var(--timeline-height-compact);
     }
     body.layout-tight.mode-emitter {
-      --rail-width-emitter: var(--rail-width-emitter-tight);
       --timeline-height: var(--timeline-height-tight);
     }
 
@@ -164,9 +165,16 @@
     .quality-badge.final { border: 1px solid var(--gold); color: #0A0A0A; background: var(--gold); }
 
     /* ===== MAIN ===== */
-    .main { display: flex; flex: 1; overflow: hidden; }
+    .main { display: flex; flex: 1; overflow: hidden; min-width: 0; }
 
-    .viewport-area { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
+    .viewport-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 0;
+      min-width: 0;
+    }
     #viewport-canvas {
       flex: 1 1 auto;
       min-height: 0;
@@ -318,9 +326,11 @@
       width: var(--rail-width);
       background: var(--surface);
       border-left: 1px solid var(--border);
+      padding-right: 6px;
       overflow-y: auto; overflow-x: hidden;
       flex-shrink: 0;
       transition: width 180ms ease;
+      scrollbar-gutter: stable;
     }
     .rail::-webkit-scrollbar { width: 4px; }
     .rail::-webkit-scrollbar-track { background: transparent; }
@@ -429,6 +439,192 @@
       color: var(--gold);
       background: rgba(212, 168, 71, 0.12);
     }
+    .rail-panel[data-panel="calibrate"] {
+      padding-bottom: 12px;
+    }
+    .rail-panel[data-panel="calibrate"] .rail-mode-label {
+      padding: 10px 12px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .cal-chip-row {
+      padding: 0 12px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .calibrate-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 10px;
+    }
+    .cal-card {
+      padding: 0 10px 10px;
+      border: 1px solid rgba(122, 175, 201, 0.2);
+      border-radius: 8px;
+      background: rgba(16, 18, 22, 0.62);
+    }
+    .cal-card .section {
+      padding: 0;
+    }
+    .cal-card .section-header {
+      border-top: none;
+      padding: 10px 0 8px;
+      font-size: 11px;
+      letter-spacing: 1.1px;
+    }
+    .cal-card .control-row {
+      min-height: 30px;
+    }
+    .cal-mapping-matrix {
+      display: grid;
+      gap: 4px;
+      margin-top: 4px;
+      max-height: 212px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .cal-mapping-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+      padding: 0 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .cal-mapping-row.readonly {
+      opacity: 0.65;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .cal-mapping-row .control-label {
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .cal-mapping-row .dropdown {
+      min-width: 84px;
+    }
+    .cal-mapping-row .control-value {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+    .cal-mapping-note {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.3;
+      padding-top: 4px;
+    }
+    .cal-mapping-note.warning {
+      color: var(--gold);
+    }
+    .cal-validation-list {
+      display: grid;
+      gap: 6px;
+      padding-top: 6px;
+    }
+    .cal-diagnostic-card {
+      border: 1px solid rgba(122, 175, 201, 0.2);
+      border-radius: 6px;
+      padding: 6px 7px;
+      background: rgba(255, 255, 255, 0.03);
+      transition: border-color 120ms ease, background-color 120ms ease;
+    }
+    .cal-diagnostic-card[data-state="pass"] {
+      border-color: rgba(68, 170, 102, 0.35);
+      background: rgba(68, 170, 102, 0.08);
+    }
+    .cal-diagnostic-card[data-state="fail"] {
+      border-color: rgba(170, 68, 68, 0.35);
+      background: rgba(170, 68, 68, 0.1);
+    }
+    .cal-diagnostic-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 18px;
+    }
+    .cal-diagnostic-label {
+      font-size: 10px;
+      letter-spacing: 0.45px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+    .cal-diagnostic-card .status-chip {
+      font-size: 8px;
+      padding: 2px 7px;
+    }
+    .cal-diagnostic-card .status-chip.pass {
+      border-color: rgba(68, 170, 102, 0.42);
+      color: var(--text-success);
+      background: rgba(68, 170, 102, 0.12);
+    }
+    .cal-diagnostic-card .status-chip.fail {
+      border-color: rgba(170, 68, 68, 0.42);
+      color: #ffb2b2;
+      background: rgba(170, 68, 68, 0.16);
+    }
+    .cal-diagnostic-card .status-chip.untested {
+      border-color: rgba(212, 168, 71, 0.42);
+      color: var(--gold);
+      background: rgba(212, 168, 71, 0.12);
+    }
+    .cal-diagnostic-detail {
+      font-size: 9px;
+      color: var(--text-dim);
+      line-height: 1.3;
+      margin-top: 4px;
+      min-height: 12px;
+    }
+    .cal-profile-name-row {
+      gap: 8px;
+    }
+    .cal-profile-name-row .text-input {
+      min-width: 120px;
+    }
+    .cal-profile-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding-top: 6px;
+    }
+    .cal-profile-actions .btn-secondary {
+      flex: 1 1 calc(50% - 3px);
+      min-width: 0;
+      padding: 5px 8px;
+      font-size: 10px;
+    }
+    .cal-profile-status {
+      font-size: 10px;
+      color: var(--text-secondary);
+      min-height: 14px;
+      padding-top: 4px;
+    }
+    .cal-profile-status.error {
+      color: #ffb2b2;
+    }
+    .cal-ack-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 4px;
+    }
+    .cal-ack-label {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+    .cal-ack-check {
+      transform: scale(0.95);
+      accent-color: var(--gold);
+    }
     .emitter-card.authority-readonly {
       border-color: rgba(160, 160, 160, 0.14);
       background: rgba(18, 18, 18, 0.52);
@@ -446,6 +642,192 @@
     .emitter-card.authority-readonly .dropdown,
     .emitter-card.authority-readonly .btn-secondary {
       opacity: 0.62;
+    }
+    .rail-panel[data-panel="renderer"] {
+      padding-bottom: 12px;
+    }
+    .rail-panel[data-panel="renderer"] .rail-mode-label {
+      padding: 10px 12px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .renderer-chip-row {
+      padding: 0 12px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .renderer-fallback-note {
+      margin: -4px 12px 2px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-dim);
+      font-size: 9px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+    .renderer-fallback-note.warning {
+      border-color: rgba(212, 168, 71, 0.36);
+      background: rgba(212, 168, 71, 0.08);
+      color: var(--gold);
+    }
+    .renderer-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 10px;
+    }
+    .renderer-card {
+      padding: 0 10px 10px;
+      border: 1px solid rgba(212, 168, 71, 0.14);
+      border-radius: 8px;
+      background: rgba(18, 18, 18, 0.64);
+    }
+    .renderer-card .section {
+      padding: 0;
+    }
+    .renderer-card .section-header {
+      border-top: none;
+      padding: 10px 0 8px;
+      font-size: 11px;
+      letter-spacing: 1.1px;
+    }
+    .renderer-profile-grid {
+      display: grid;
+      gap: 6px;
+      padding-top: 2px;
+    }
+    .renderer-profile-line {
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 5px;
+      padding: 0 8px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .renderer-profile-label {
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .renderer-profile-value {
+      font-size: 11px;
+      color: var(--text-primary);
+      letter-spacing: 0.2px;
+      text-align: right;
+    }
+    .renderer-output-summary {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+      padding-top: 6px;
+    }
+    .renderer-diagnostic-list {
+      display: grid;
+      gap: 6px;
+      padding-top: 4px;
+    }
+    .renderer-diagnostic-card {
+      border: 1px solid rgba(212, 168, 71, 0.18);
+      border-radius: 6px;
+      padding: 6px 7px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .renderer-diagnostic-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 18px;
+    }
+    .renderer-diagnostic-label {
+      font-size: 10px;
+      letter-spacing: 0.45px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+    .renderer-diagnostic-detail {
+      font-size: 9px;
+      color: var(--text-dim);
+      line-height: 1.3;
+      margin-top: 4px;
+      min-height: 12px;
+      word-break: break-word;
+    }
+    .renderer-diagnostic-toggle {
+      border: none;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .renderer-diagnostic-toggle .disclosure-arrow {
+      font-size: 11px;
+      transform: rotate(0deg);
+      transition: transform 140ms ease;
+    }
+    .renderer-diagnostic-toggle .disclosure-arrow.open {
+      transform: rotate(90deg);
+    }
+    .renderer-diagnostic-content {
+      display: none;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 4px;
+    }
+    .renderer-diagnostic-content.open {
+      display: grid;
+    }
+    .renderer-diagnostic-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 18px;
+    }
+    .renderer-diagnostic-field-label {
+      font-size: 9px;
+      letter-spacing: 0.45px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .renderer-diagnostic-field-value {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-align: right;
+      word-break: break-word;
+    }
+    .renderer-diagnostic-field.error .renderer-diagnostic-field-value {
+      color: #ffb2b2;
+    }
+    .renderer-card .status-chip.ok {
+      border-color: rgba(68, 170, 102, 0.42);
+      color: var(--text-success);
+      background: rgba(68, 170, 102, 0.12);
+    }
+    .renderer-card .status-chip.error {
+      border-color: rgba(170, 68, 68, 0.42);
+      color: #ffb2b2;
+      background: rgba(170, 68, 68, 0.16);
+    }
+    .renderer-card .status-chip.neutral {
+      border-color: rgba(160, 160, 160, 0.26);
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.04);
     }
     .motion-subsection + .motion-subsection {
       margin-top: 10px;
@@ -787,6 +1169,61 @@
       width: 52px;
       font-size: 9px;
     }
+    body.layout-compact .rail-panel[data-panel="calibrate"] .calibrate-panel {
+      gap: 8px;
+      padding: 0 8px;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .cal-chip-row {
+      padding: 0 10px 8px;
+      gap: 4px;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .calibrate-panel {
+      gap: 8px;
+      padding: 0 6px;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .cal-card {
+      padding: 0 8px 8px;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .control-row {
+      min-height: 28px;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .control-label {
+      font-size: 10px;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .dropdown.wide {
+      min-width: 102px;
+      width: 100%;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .cal-profile-actions .btn-secondary {
+      flex: 1 1 100%;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .cal-diagnostic-header {
+      align-items: flex-start;
+      gap: 6px;
+    }
+    body.layout-tight .rail-panel[data-panel="calibrate"] .cal-diagnostic-detail {
+      font-size: 8px;
+    }
+    body.layout-tight .renderer-panel {
+      gap: 8px;
+      padding: 0 6px;
+    }
+    body.layout-tight .renderer-card {
+      padding: 0 8px 8px;
+    }
+    body.layout-tight .renderer-chip-row {
+      padding: 0 10px 8px;
+      gap: 4px;
+    }
+    body.layout-tight .renderer-fallback-note {
+      margin: -2px 10px 2px;
+      padding: 4px 6px;
+      font-size: 8px;
+      letter-spacing: 0.45px;
+    }
 
     .status-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); }
@@ -873,36 +1310,117 @@
 
       <!-- CALIBRATE PANEL -->
       <div class="rail-panel" data-panel="calibrate">
-        <div class="rail-mode-label">Calibration</div>
-        <div class="section">
-          <div class="section-header" style="border-top:none;">Speaker Setup</div>
-          <div class="control-row"><span class="control-label">Config</span><select class="dropdown" id="cal-config"><option>4x Mono</option><option>2x Stereo</option></select></div>
-          <div class="control-row"><span class="control-label">SPK1 Out</span><select class="dropdown" id="cal-spk1"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
-          <div class="control-row"><span class="control-label">SPK2 Out</span><select class="dropdown" id="cal-spk2"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
-          <div class="control-row"><span class="control-label">SPK3 Out</span><select class="dropdown" id="cal-spk3"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
-          <div class="control-row"><span class="control-label">SPK4 Out</span><select class="dropdown" id="cal-spk4"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
-
-          <div class="section-header">Mic Input</div>
-          <div class="control-row"><span class="control-label">Channel</span><select class="dropdown" id="cal-mic"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
-
-          <div class="capture-meter" id="capture-meter" style="display:none;">
-            <div class="capture-bar" id="capture-bar" style="height:0%;"></div>
-            <span class="capture-label">Capturing...</span>
+        <div class="rail-mode-label">
+          <span>Calibration</span>
+          <span class="status-chip" id="cal-state-chip">Idle</span>
+        </div>
+        <div class="cal-chip-row">
+          <span class="status-chip" id="cal-chip-topology">Topology: Stereo</span>
+          <span class="status-chip" id="cal-chip-monitoring">Monitor: Speakers</span>
+          <span class="status-chip" id="cal-chip-device">Device: Generic</span>
+          <span class="status-chip" id="cal-chip-mapping">Mapping: 4/4</span>
+        </div>
+        <div class="calibrate-panel">
+          <div class="cal-card">
+            <div class="section">
+              <div class="section-header">Profile Setup</div>
+              <div class="control-row"><span class="control-label">Topology</span><select class="dropdown wide" id="cal-topology"><option>Mono</option><option selected>Stereo</option><option>Quad</option><option>5.1</option><option>7.1</option><option>7.1.2</option><option>7.4.2 / Atmos-style</option><option>Binaural / Headphone</option><option>Ambisonic 1st Order</option><option>Ambisonic 3rd Order</option><option>Multichannel -&gt; Stereo Downmix</option></select></div>
+              <div class="control-row"><span class="control-label">Monitoring Path</span><select class="dropdown wide" id="cal-monitoring-path"><option selected>Speakers</option><option>Stereo Downmix</option><option>Steam Binaural</option><option>Virtual Binaural</option></select></div>
+              <div class="control-row"><span class="control-label">Device Profile</span><select class="dropdown wide" id="cal-device-profile"><option selected>Generic</option><option>AirPods Pro 2</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
+              <div class="control-row"><span class="control-label">Mic Channel</span><select class="dropdown" id="cal-mic"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
+            </div>
           </div>
 
-          <div class="section-header">Test Signal</div>
-          <div class="control-row"><span class="control-label">Type</span><select class="dropdown" id="cal-type"><option>Sweep</option><option>Pink</option><option>White</option><option>Impulse</option></select></div>
-          <div class="control-row"><span class="control-label">Level</span><span class="control-value" id="cal-level">-20.0 <span class="control-unit">dBFS</span></span></div>
-
-          <div style="padding-top:12px;">
-            <button class="btn-primary" id="cal-start-btn">START MEASURE</button>
+          <div class="cal-card">
+            <div class="section">
+              <div class="section-header">Output Mapping</div>
+              <div class="control-row"><span class="control-label">Legacy Config</span><select class="dropdown" id="cal-config"><option>4x Mono</option><option>2x Stereo</option></select></div>
+              <div class="control-row"><span class="control-label">Routing</span><button class="btn-secondary" id="cal-redetect-btn">REDETECT</button></div>
+              <div class="cal-mapping-matrix" id="cal-mapping-matrix"></div>
+              <div class="cal-mapping-note" id="cal-mapping-note">Routing width ready.</div>
+              <div class="cal-ack-row" id="cal-ack-redetect-row" style="display:none;">
+                <span class="cal-ack-label">Allow redetect to overwrite custom map</span>
+                <input class="cal-ack-check" type="checkbox" id="cal-ack-redetect-check" />
+              </div>
+              <div class="cal-ack-row" id="cal-ack-limited-row" style="display:none;">
+                <span class="cal-ack-label">Allow limited mapping for current topology</span>
+                <input class="cal-ack-check" type="checkbox" id="cal-ack-limited-check" />
+              </div>
+            </div>
           </div>
 
-          <div style="padding-top:12px;" id="cal-status">
-            <div class="status-row"><span class="status-dot" id="spk1-dot"></span><span class="status-text">SPK1: Not measured</span></div>
-            <div class="status-row"><span class="status-dot" id="spk2-dot"></span><span class="status-text">SPK2: Not measured</span></div>
-            <div class="status-row"><span class="status-dot" id="spk3-dot"></span><span class="status-text">SPK3: Not measured</span></div>
-            <div class="status-row"><span class="status-dot" id="spk4-dot"></span><span class="status-text">SPK4: Not measured</span></div>
+          <div class="cal-card">
+            <div class="section">
+              <div class="section-header">Run and Validation</div>
+              <div class="control-row"><span class="control-label">Test Type</span><select class="dropdown" id="cal-type"><option>Sweep</option><option>Pink</option><option>White</option><option>Impulse</option></select></div>
+              <div class="control-row"><span class="control-label">Test Level</span><span class="control-value" id="cal-level">-20.0 <span class="control-unit">dBFS</span></span></div>
+              <div style="padding-top:8px;"><button class="btn-primary" id="cal-start-btn">START MEASURE</button></div>
+
+              <div class="capture-meter" id="capture-meter" style="display:none;">
+                <div class="capture-bar" id="capture-bar" style="height:0%;"></div>
+                <span class="capture-label">Capturing...</span>
+              </div>
+
+              <div class="cal-validation-list">
+                <article class="cal-diagnostic-card" id="cal-diagnostic-map-card" data-state="untested">
+                  <div class="cal-diagnostic-header">
+                    <span class="cal-diagnostic-label">Channel Map Contract</span>
+                    <span class="status-chip untested" id="cal-validation-map-chip" data-state="untested">UNTESTED</span>
+                  </div>
+                  <div class="cal-diagnostic-detail" id="cal-validation-map-detail">Awaiting routing validation.</div>
+                </article>
+                <article class="cal-diagnostic-card" id="cal-diagnostic-phase-card" data-state="untested">
+                  <div class="cal-diagnostic-header">
+                    <span class="cal-diagnostic-label">Polarity and Phase</span>
+                    <span class="status-chip untested" id="cal-validation-phase-chip" data-state="untested">UNTESTED</span>
+                  </div>
+                  <div class="cal-diagnostic-detail" id="cal-validation-phase-detail">Run calibration to evaluate polarity.</div>
+                </article>
+                <article class="cal-diagnostic-card" id="cal-diagnostic-delay-card" data-state="untested">
+                  <div class="cal-diagnostic-header">
+                    <span class="cal-diagnostic-label">Delay Consistency</span>
+                    <span class="status-chip untested" id="cal-validation-delay-chip" data-state="untested">UNTESTED</span>
+                  </div>
+                  <div class="cal-diagnostic-detail" id="cal-validation-delay-detail">Run calibration to evaluate delay alignment.</div>
+                </article>
+                <article class="cal-diagnostic-card" id="cal-diagnostic-profile-card" data-state="untested">
+                  <div class="cal-diagnostic-header">
+                    <span class="cal-diagnostic-label">Profile Activation</span>
+                    <span class="status-chip untested" id="cal-validation-profile-chip" data-state="untested">UNTESTED</span>
+                  </div>
+                  <div class="cal-diagnostic-detail" id="cal-validation-profile-detail">Monitoring mode not validated yet.</div>
+                </article>
+                <article class="cal-diagnostic-card" id="cal-diagnostic-downmix-card" data-state="untested">
+                  <div class="cal-diagnostic-header">
+                    <span class="cal-diagnostic-label">Downmix Path</span>
+                    <span class="status-chip untested" id="cal-validation-downmix-chip" data-state="untested">UNTESTED</span>
+                  </div>
+                  <div class="cal-diagnostic-detail" id="cal-validation-downmix-detail">Downmix topology not requested.</div>
+                </article>
+              </div>
+
+              <div style="padding-top:10px;" id="cal-status">
+                <div class="status-row"><span class="status-dot" id="spk1-dot"></span><span class="status-text">SPK1: Not measured</span></div>
+                <div class="status-row"><span class="status-dot" id="spk2-dot"></span><span class="status-text">SPK2: Not measured</span></div>
+                <div class="status-row"><span class="status-dot" id="spk3-dot"></span><span class="status-text">SPK3: Not measured</span></div>
+                <div class="status-row"><span class="status-dot" id="spk4-dot"></span><span class="status-text">SPK4: Not measured</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cal-card">
+            <div class="section">
+              <div class="section-header">Calibration Library</div>
+              <div class="control-row cal-profile-name-row"><span class="control-label">Name</span><input class="text-input" id="cal-profile-name" placeholder="Profile name" value="" /></div>
+              <div class="control-row"><span class="control-label">Profile</span><select class="dropdown wide" id="cal-profile-select"></select></div>
+              <div class="cal-profile-actions">
+                <button class="btn-secondary" id="cal-profile-save-btn">SAVE</button>
+                <button class="btn-secondary" id="cal-profile-load-btn">LOAD</button>
+                <button class="btn-secondary" id="cal-profile-rename-btn">RENAME</button>
+                <button class="btn-secondary" id="cal-profile-delete-btn">DELETE</button>
+              </div>
+              <div class="cal-profile-status" id="cal-profile-status">No calibration profiles loaded.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -964,6 +1482,9 @@
             <div class="section">
               <div class="section-header">Motion</div>
               <div class="control-row"><span class="control-label">Motion Source</span><select class="dropdown wide" id="motion-source-select"><option value="static">Static</option><option value="physics">Physics</option><option value="timeline">Timeline</option><option value="choreography">Choreography</option></select></div>
+              <div class="control-row"><span class="control-label">Audition Authority</span><span class="status-chip active" id="audition-authority-chip">Renderer</span></div>
+              <div class="control-row"><span class="control-value" id="audition-authority-note">Renderer panel owns audition state.</span></div>
+              <div class="control-row"><span class="control-label">Emitter Proxy</span><button class="btn-secondary" id="audition-proxy-emitter-btn">AUDITION THIS</button></div>
               <div class="motion-transport-strip" id="motion-transport-strip">
                 <div class="timeline-transport">
                   <button class="transport-btn" id="motion-transport-rewind-btn" title="Rewind to start and pause">&#9664;</button>
@@ -989,6 +1510,7 @@
                     <option value="custom">Custom</option>
                   </select>
                 </div>
+                <div class="control-row"><span class="control-label">Proxy</span><button class="btn-secondary" id="audition-proxy-physics-btn">AUDITION PHYSICS</button></div>
                 <div id="physics-active" style="display:none;">
                   <div class="control-row"><span class="control-label">Intensity</span><span class="control-value">0.5</span></div>
                   <div class="btn-row">
@@ -1026,6 +1548,7 @@
                 <div class="motion-subsection-title">
                   <span>Choreography</span>
                 </div>
+                <div class="control-row"><span class="control-label">Proxy</span><button class="btn-secondary" id="audition-proxy-choreography-btn">AUDITION CHOREO</button></div>
                 <div class="control-row">
                   <span class="control-label">Pack</span>
                   <select class="dropdown wide" id="choreo-pack-select">
@@ -1096,53 +1619,172 @@
 
       <!-- RENDERER PANEL -->
       <div class="rail-panel" data-panel="renderer">
-        <div class="rail-mode-label">Renderer</div>
-        <div class="section">
-          <div class="section-header" style="border-top:none;">Scene</div>
-          <div id="scene-list"></div>
+        <div class="rail-mode-label">
+          <span>Renderer</span>
+          <span class="status-chip neutral" id="rend-chip-panel-state">Awaiting Payload</span>
         </div>
-        <div class="section">
-          <div class="section-header">Master</div>
-          <div class="control-row"><span class="control-label">Gain</span><span class="control-value" id="val-master-gain">0.0<span class="control-unit">dB</span></span></div>
+        <div class="renderer-chip-row">
+          <span class="status-chip neutral" id="rend-chip-profile-req">Req: Auto</span>
+          <span class="status-chip neutral" id="rend-chip-profile-active">Active: Auto</span>
+          <span class="status-chip neutral" id="rend-chip-profile-stage">Stage: Direct</span>
+          <span class="status-chip neutral" id="rend-chip-output">Out: 2ch Stereo</span>
         </div>
-        <div class="section">
-          <div class="section-header">Speakers</div>
-          <div class="control-row"><span class="control-label">SPK1</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-          <div class="control-row"><span class="control-label">SPK2</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-          <div class="control-row"><span class="control-label">SPK3</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-          <div class="control-row"><span class="control-label">SPK4</span><span class="control-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-        </div>
-        <div class="section">
-          <div class="section-header">Spatialization</div>
-          <div class="control-row"><span class="control-label">Distance</span><select class="dropdown" id="rend-dist-model"><option>Inverse&sup2;</option><option>Linear</option><option>Log</option><option>Custom</option></select></div>
-          <div class="control-row"><span class="control-label">Headphone</span><select class="dropdown" id="rend-headphone-mode"><option>Stereo Downmix</option><option>Steam Binaural</option></select></div>
-          <div class="control-row"><span class="control-label">HP Profile</span><select class="dropdown" id="rend-headphone-profile"><option>Generic</option><option>AirPods Pro 2</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
-          <div class="control-row"><span class="control-label">Ref Dist</span><span class="control-value">1.0<span class="control-unit">m</span></span></div>
-          <div class="control-row"><span class="control-label">Doppler</span><div class="toggle" id="toggle-doppler"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Air Absorb</span><div class="toggle on" id="toggle-air-absorb"><div class="toggle-thumb"></div></div></div>
-        </div>
-        <div class="section">
-          <div class="section-header">Room</div>
-          <div class="control-row"><span class="control-label">Enable</span><div class="toggle on" id="toggle-room"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Mix</span><span class="control-value">0.3</span></div>
-          <div class="control-row"><span class="control-label">Size</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
-          <div class="control-row"><span class="control-label">Damping</span><span class="control-value">0.5</span></div>
-          <div class="control-row"><span class="control-label">ER Only</span><div class="toggle" id="toggle-er-only"><div class="toggle-thumb"></div></div></div>
-        </div>
-        <div class="section">
-          <div class="section-header">Physics (Global)</div>
-          <div class="control-row"><span class="control-label">Rate</span><select class="dropdown" id="rend-phys-rate"><option>30 Hz</option><option selected>60 Hz</option><option>120 Hz</option><option>240 Hz</option></select></div>
-          <div class="control-row"><span class="control-label">Walls</span><div class="toggle on" id="toggle-walls"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Object Interaction</span><div class="toggle" id="toggle-interact"><div class="toggle-thumb"></div></div></div>
-          <div style="padding-top:8px;"><button class="btn-secondary" style="width:100%;" id="btn-pause-physics">PAUSE ALL</button></div>
-        </div>
-        <div class="section">
-          <div class="section-header">Viewport Telemetry</div>
-          <div class="control-row"><span class="control-label">Trails</span><div class="toggle on" id="toggle-viz-trails"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Trail Len</span><span class="control-value" id="val-viz-trail-len">5.0<span class="control-unit">s</span></span></div>
-          <div class="control-row"><span class="control-label">Velocity Vectors</span><div class="toggle" id="toggle-viz-vectors"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Physics Lens</span><div class="toggle" id="toggle-viz-physics-lens"><div class="toggle-thumb"></div></div></div>
-          <div class="control-row"><span class="control-label">Diagnostic Mix</span><span class="control-value" id="val-viz-diag-mix">55<span class="control-unit">%</span></span></div>
+        <div class="renderer-fallback-note warning" id="rend-fallback-note">Awaiting renderer payload from scene-state bridge.</div>
+        <div class="renderer-panel">
+          <div class="renderer-card" data-renderer-group="profile-authority">
+            <div class="section">
+              <div class="section-header">Profile Authority</div>
+              <div class="renderer-profile-grid">
+                <div class="renderer-profile-line"><span class="renderer-profile-label">Requested</span><span class="renderer-profile-value" id="rend-profile-requested">Auto</span></div>
+                <div class="renderer-profile-line"><span class="renderer-profile-label">Active</span><span class="renderer-profile-value" id="rend-profile-active">Auto</span></div>
+                <div class="renderer-profile-line"><span class="renderer-profile-label">Stage</span><span class="renderer-profile-value" id="rend-profile-stage">Direct</span></div>
+                <div class="renderer-profile-line"><span class="renderer-profile-label">Output Route</span><span class="renderer-profile-value" id="rend-output-route">L/R</span></div>
+              </div>
+              <div class="renderer-output-summary" id="rend-output-summary">Renderer payload unavailable. Showing fallback-safe control defaults.</div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="output">
+            <div class="section">
+              <div class="section-header">Output and Speakers</div>
+              <div class="control-row"><span class="control-label">Master Gain</span><span class="control-value" id="val-master-gain">0.0<span class="control-unit">dB</span></span></div>
+              <div class="control-row"><span class="control-label">Map</span><span class="control-value" id="rend-speaker-map">Stereo · L/R</span></div>
+              <div class="control-row"><span class="control-label">SPK1</span><span class="control-value" id="rend-spk1-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+              <div class="control-row"><span class="control-label">SPK2</span><span class="control-value" id="rend-spk2-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+              <div class="control-row"><span class="control-label">SPK3</span><span class="control-value" id="rend-spk3-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+              <div class="control-row"><span class="control-label">SPK4</span><span class="control-value" id="rend-spk4-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="spatialization">
+            <div class="section">
+              <div class="section-header">Spatialization</div>
+              <div class="control-row"><span class="control-label">Distance</span><select class="dropdown" id="rend-dist-model"><option>Inverse&sup2;</option><option>Linear</option><option>Log</option><option>Custom</option></select></div>
+              <div class="control-row"><span class="control-label">Headphone</span><select class="dropdown" id="rend-headphone-mode"><option>Stereo Downmix</option><option>Steam Binaural</option></select></div>
+              <div class="control-row"><span class="control-label">HP Profile</span><select class="dropdown" id="rend-headphone-profile"><option>Generic</option><option>AirPods Pro 2</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
+              <div class="control-row"><span class="control-label">Ref Dist</span><span class="control-value">1.0<span class="control-unit">m</span></span></div>
+              <div class="control-row"><span class="control-label">Doppler</span><div class="toggle" id="toggle-doppler"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Air Absorb</span><div class="toggle on" id="toggle-air-absorb"><div class="toggle-thumb"></div></div></div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="audition">
+            <div class="section">
+              <div class="section-header">Audition Source</div>
+              <div class="control-row"><span class="control-label">Enable</span><div class="toggle" id="toggle-audition"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Signal</span><select class="dropdown" id="rend-audition-signal"><option>Sine 440</option><option>Dual Tone</option><option>Pink Noise</option><option>Rain</option><option>Snow</option><option>Bouncing Balls</option><option>Wind Chimes</option><option>Crickets</option><option>Song Birds</option><option>Karplus Plucks</option><option>Membrane Drops</option><option>Krell Patch</option><option>Generative Arp</option></select></div>
+              <div class="control-row"><span class="control-label">Motion</span><select class="dropdown" id="rend-audition-motion"><option>Center</option><option>Orbit Slow</option><option>Orbit Fast</option><option>Figure8 Flow</option><option>Helix Rise</option><option>Wall Ricochet</option></select></div>
+              <div class="control-row"><span class="control-label">Level</span><select class="dropdown" id="rend-audition-level"><option>-36 dBFS</option><option>-30 dBFS</option><option>-24 dBFS</option><option>-18 dBFS</option><option>-12 dBFS</option></select></div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="room">
+            <div class="section">
+              <div class="section-header">Room Acoustics</div>
+              <div class="control-row"><span class="control-label">Enable</span><div class="toggle on" id="toggle-room"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Mix</span><span class="control-value">0.3</span></div>
+              <div class="control-row"><span class="control-label">Size</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
+              <div class="control-row"><span class="control-label">Damping</span><span class="control-value">0.5</span></div>
+              <div class="control-row"><span class="control-label">ER Only</span><div class="toggle" id="toggle-er-only"><div class="toggle-thumb"></div></div></div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="diagnostics">
+            <div class="section">
+              <div class="section-header">Diagnostics</div>
+              <div class="renderer-diagnostic-list">
+                <article class="renderer-diagnostic-card" id="rend-steam-card">
+                  <div class="renderer-diagnostic-header">
+                    <button class="renderer-diagnostic-toggle" id="rend-steam-toggle" aria-expanded="false" aria-controls="rend-steam-content">
+                      <span class="renderer-diagnostic-label">Steam Audio</span>
+                      <span class="disclosure-arrow" id="rend-steam-arrow">&#9654;</span>
+                    </button>
+                    <span class="status-chip neutral" id="rend-steam-chip">UNAVAILABLE</span>
+                  </div>
+                  <div class="renderer-diagnostic-detail" id="rend-steam-detail">Awaiting Steam diagnostics payload.</div>
+                  <div class="renderer-diagnostic-content" id="rend-steam-content" hidden>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">HRTF</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-steam-hrtf-status">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Binaural Tier</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-steam-binaural-tier">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Reflections</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-steam-reflections-state">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Convolution</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-steam-convolution-method">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field" id="rend-steam-last-error-row">
+                      <span class="renderer-diagnostic-field-label">Last Error</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-steam-last-error">None</span>
+                    </div>
+                  </div>
+                </article>
+                <article class="renderer-diagnostic-card" id="rend-ambi-card">
+                  <div class="renderer-diagnostic-header">
+                    <button class="renderer-diagnostic-toggle" id="rend-ambi-toggle" aria-expanded="false" aria-controls="rend-ambi-content">
+                      <span class="renderer-diagnostic-label">Ambisonic</span>
+                      <span class="disclosure-arrow" id="rend-ambi-arrow">&#9654;</span>
+                    </button>
+                    <span class="status-chip neutral" id="rend-ambi-chip">UNAVAILABLE</span>
+                  </div>
+                  <div class="renderer-diagnostic-detail" id="rend-ambi-detail">Awaiting ambisonic diagnostics payload.</div>
+                  <div class="renderer-diagnostic-content" id="rend-ambi-content" hidden>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Order</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-ambi-order">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Channel Count</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-ambi-channel-count">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Decoder State</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-ambi-decoder-state">Unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Decoder Type</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-ambi-decoder-type">Unknown</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div class="renderer-output-summary" id="rend-diagnostics-availability">Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults.</div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="physics">
+            <div class="section">
+              <div class="section-header">Physics (Global)</div>
+              <div class="control-row"><span class="control-label">Rate</span><select class="dropdown" id="rend-phys-rate"><option>30 Hz</option><option selected>60 Hz</option><option>120 Hz</option><option>240 Hz</option></select></div>
+              <div class="control-row"><span class="control-label">Walls</span><div class="toggle on" id="toggle-walls"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Object Interaction</span><div class="toggle" id="toggle-interact"><div class="toggle-thumb"></div></div></div>
+              <div style="padding-top:8px;"><button class="btn-secondary" style="width:100%;" id="btn-pause-physics">PAUSE ALL</button></div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="telemetry">
+            <div class="section">
+              <div class="section-header">Viewport Telemetry</div>
+              <div class="control-row"><span class="control-label">Trails</span><div class="toggle on" id="toggle-viz-trails"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Trail Len</span><span class="control-value" id="val-viz-trail-len">5.0<span class="control-unit">s</span></span></div>
+              <div class="control-row"><span class="control-label">Velocity Vectors</span><div class="toggle" id="toggle-viz-vectors"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Physics Lens</span><div class="toggle" id="toggle-viz-physics-lens"><div class="toggle-thumb"></div></div></div>
+              <div class="control-row"><span class="control-label">Diagnostic Mix</span><span class="control-value" id="val-viz-diag-mix">55<span class="control-unit">%</span></span></div>
+            </div>
+          </div>
+
+          <div class="renderer-card" data-renderer-group="scene">
+            <div class="section">
+              <div class="section-header">Scene Monitor</div>
+              <div id="scene-list"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

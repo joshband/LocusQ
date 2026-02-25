@@ -1298,7 +1298,7 @@ integration recommendations, each with:
 - Recommended timing (v1.1, v2, or never)
 
 Write recommendations to:
-Documentation/research/section0-integration-recommendations-2026-02-20.md
+Documentation/archive/2026-02-25-research-legacy/section0-integration-recommendations-2026-02-20.md
 
 READ FIRST:
 1. Documentation/full-project-review-2026-02-20.md (Section 0 — full)
@@ -1314,7 +1314,7 @@ git commit -m "docs(research): Section 0 integration recommendations for LocusQ"
 
 **Stage 16-C Execution Result (2026-02-20): complete**
 
-- Added: `Documentation/research/section0-integration-recommendations-2026-02-20.md`
+- Added: `Documentation/archive/2026-02-25-research-legacy/section0-integration-recommendations-2026-02-20.md`
 - Recommendations recorded: `5` (Steam Audio binaural mode, CLAP host format expansion,
   guarded FDNReverb quality ladder, viewport telemetry layering, PHASE bridge deferment)
 - Evidence commit: `856bde8`

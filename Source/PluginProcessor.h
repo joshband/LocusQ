@@ -6,8 +6,10 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include "VisualTokenScheduler.h"
 #include "SceneGraph.h"
 #include "SpatialRenderer.h"
+#include "HeadTrackingBridge.h"
 #include "CalibrationEngine.h"
 #include "PhysicsEngine.h"
 #include "KeyframeTimeline.h"
@@ -95,12 +97,18 @@ public:
 
     // Scene graph JSON for WebView (called from editor timer)
     juce::String getSceneStateJSON();
+    const VisualTokenSnapshot& getVisualTokenSnapshot() const noexcept { return visualTokenScheduler.getSnapshot(); }
 
     // Calibration control/status API for WebView bridge
     bool startCalibrationFromUI (const juce::var& options);
     void abortCalibrationFromUI();
     juce::var redetectCalibrationRoutingFromUI();
     juce::var getCalibrationStatus() const;
+    juce::var listCalibrationProfilesFromUI() const;
+    juce::var saveCalibrationProfileFromUI (const juce::var& options);
+    juce::var loadCalibrationProfileFromUI (const juce::var& options);
+    juce::var renameCalibrationProfileFromUI (const juce::var& options);
+    juce::var deleteCalibrationProfileFromUI (const juce::var& options);
 
     // Timeline and preset API for WebView bridge (Phase 2.6)
     juce::var getKeyframeTimelineForUI() const;
@@ -154,6 +162,7 @@ private:
     //==============================================================================
     // Spatialization engine (Phase 2.2)
     SpatialRenderer spatialRenderer;
+    HeadTrackingBridge headTrackingBridge;
 
     // Update renderer parameters from APVTS (called before processing)
     void updateRendererParameters();
@@ -183,14 +192,23 @@ private:
     static juce::String sanitisePresetName (const juce::String& presetName);
     static juce::String normalisePresetType (const juce::String& presetType);
     static juce::String normaliseChoreographyPackId (const juce::String& packId);
+    static juce::String normaliseCalibrationTopologyId (const juce::String& topologyId);
+    static juce::String normaliseCalibrationMonitoringPathId (const juce::String& monitoringPathId);
+    static juce::String normaliseCalibrationDeviceProfileId (const juce::String& deviceProfileId);
     static juce::String inferPresetTypeFromPayload (const juce::var& payload);
     juce::File getPresetDirectory() const;
     juce::File resolvePresetFileFromOptions (const juce::var& options) const;
+    juce::File getCalibrationProfileDirectory() const;
+    juce::File resolveCalibrationProfileFileFromOptions (const juce::var& options) const;
     juce::String getSnapshotOutputLayout() const;
     int getSnapshotOutputChannels() const;
     void migrateSnapshotLayoutIfNeeded (const juce::ValueTree& restoredState);
     std::array<int, SpatialRenderer::NUM_SPEAKERS> getCurrentCalibrationSpeakerRouting() const;
     int getCurrentCalibrationSpeakerConfigIndex() const;
+    int getCurrentCalibrationTopologyProfileIndex() const;
+    int getCurrentCalibrationMonitoringPathIndex() const;
+    int getCurrentCalibrationDeviceProfileIndex() const;
+    int getRequiredCalibrationChannelsForTopologyIndex (int topologyIndex) const;
     void applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force);
     void setIntegerParameterValueNotifyingHost (const char* parameterId, int value);
     juce::var buildEmitterPresetLocked (const juce::String& presetName,
@@ -198,7 +216,10 @@ private:
                                         const juce::String& choreographyPackId,
                                         bool includeParameters,
                                         bool includeTimeline) const;
+    juce::var buildCalibrationProfileState (const juce::String& profileName,
+                                            const juce::var& validationSummary) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
+    bool applyCalibrationProfileState (const juce::var& profileState);
     static juce::String keyframeCurveToString (KeyframeCurve curve);
     static KeyframeCurve keyframeCurveFromVar (const juce::var& value);
     static juce::String sanitiseEmitterLabel (const juce::String& label);
@@ -217,6 +238,7 @@ private:
     //==============================================================================
     // Sample rate tracking
     double currentSampleRate = 44100.0;
+    VisualTokenScheduler visualTokenScheduler;
 
     //==============================================================================
     // UI-only state persisted in plugin snapshot (non-APVTS)
@@ -227,6 +249,7 @@ private:
     bool hasAppliedAutoDetectedCalibrationRouting = false;
     int lastAutoDetectedOutputChannels = 0;
     int lastAutoDetectedSpeakerConfig = 0;
+    int lastAutoDetectedTopologyProfile = 2;
     std::array<int, SpatialRenderer::NUM_SPEAKERS> lastAutoDetectedSpeakerRouting { 1, 2, 3, 4 };
     bool hasRestoredSnapshotState = false;
     bool hasSeededInitialEmitterColor = false;

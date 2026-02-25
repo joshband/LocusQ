@@ -46,10 +46,20 @@ Operational snapshot:
 - BL-013 HostRunner feasibility promotion completed (2026-02-25):
   - backlog/state promoted BL-013 to `Done` from Slice D promotion packet.
   - closeout evidence: `TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv` and `TestEvidence/bl013_done_promotion_20260225T170341Z/promotion_decision.md`.
+- BL-017 head-tracked monitoring companion bridge promotion completed (2026-02-25):
+  - backlog/state promoted BL-017 to `Done` from Slice E promotion packet.
+  - closeout evidence: `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv` and `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/promotion_decision.md`.
 - BL-030 release governance lanes progressed to validation baseline (2026-02-24):
   - Slice C CI integration landed at `.github/workflows/release-governance.yml` (tag/manual trigger, automated gates, explicit manual-device gate notice).
   - Slice D dry-run execution captured baseline gate outcomes at `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`.
   - owner replay confirms required command lanes are green on current branch (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains blocked on governance gates `RL-05` and `RL-09`.
+- BL-030 RL-09 release-note closeout packet finalized (2026-02-25):
+  - RL-09 traceability evidence captured in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl09_traceability.md`.
+  - RL-09 decision state recorded as `PASS` in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl_gate_matrix.tsv`.
+  - Release governance remains `NO-GO` because RL-05 is still `FAIL` per `TestEvidence/bl030_rl05_clean_replay_g1_20260225T175856Z/dev_matrix_results.tsv`.
+- HX-05 payload budget hardening advanced to Slice C harness contract (2026-02-25):
+  - deterministic soak harness added at `scripts/qa-hx05-payload-budget-soak-mac.sh`.
+  - fixture contract validated (`pass=>0`, `fail=>1`) and owner replay confirmed (`TestEvidence/owner_hx05_slice_c_replay_20260225T175333Z/status.tsv`).
 - Added plain-language validation lane documentation for operators:
   - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
   - linked from `Documentation/README.md`.
@@ -117,7 +127,7 @@ Operational snapshot:
 - Local macOS build/install automation command:
   - `scripts/build-and-install-mac.sh` (builds `LocusQ_VST3` + `LocusQ_AU`, installs to `~/Library/Audio/Plug-Ins/{VST3,Components}`, prints hash/timestamp verification, and optionally installs standalone app with `LOCUSQ_INSTALL_STANDALONE=1`).
 - Harness comparison and backport analysis doc:
-  - `Documentation/research/qa-harness-upstream-backport-opportunities-2026-02-20.md`
+  - `Documentation/archive/2026-02-25-research-legacy/qa-harness-upstream-backport-opportunities-2026-02-20.md`
 - Stage 14 review/release planning artifacts:
   - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
   - `Documentation/archive/2026-02-23-historical-review-bundles/stage14-review-release-checklist.md`
@@ -148,7 +158,7 @@ Operational snapshot:
   - `Documentation/adr/ADR-0004-v1-ai-deferral.md`
   - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
   - `Documentation/scene-state-contract.md`
-  - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md` (skill-plan-ready execution matrix)
+  - `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md` (skill-plan-ready execution matrix)
 - Design v3 artifact set for persistent viewport + adaptive control rail enforcement:
   - `Design/v3-ui-spec.md`
   - `Design/v3-style-guide.md`
@@ -192,7 +202,7 @@ Operational snapshot:
 - Stage 16 hardening completed:
   - Task 16-A added dedicated QA scenarios for `AirAbsorption`, `CalibrationEngine`, `KeyframeTimeline` loop playback, and `emit_dir` spatial effect.
   - Task 16-B RT-safety audit confirmed processBlock allocation-free compliance (`0` RT-path violations).
-  - Task 16-C research integration recommendations published in `Documentation/research/section0-integration-recommendations-2026-02-20.md`.
+  - Task 16-C research integration recommendations published in `Documentation/archive/2026-02-25-research-legacy/section0-integration-recommendations-2026-02-20.md`.
   - Task 16-D viewport scope decision formalized via `Documentation/adr/ADR-0008-viewport-scope-v1-vs-post-v1.md` (telemetry deferred post-v1).
   - Task 16-E added directivity aim QA scenario `qa/scenarios/locusq_directivity_aim.json`.
 - Stage 17 GA-readiness progress:
@@ -241,7 +251,7 @@ Operational snapshot:
   - `.ideas/plan.md`
   - `Documentation/implementation-traceability.md`
 - Research synthesis execution matrix updated to current resolved/open state with command sequencing for design/impl/test handoff:
-  - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
+  - `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md`
 - WebView UI shell updated to enforce mode-adaptive rail behavior without viewport reset:
   - `Source/ui/public/index.html`
   - `Source/ui/public/js/index.js`
@@ -252,7 +262,7 @@ Operational snapshot:
   - `status.json`
   - `.ideas/plan.md`
   - `README.md`
-  - `Documentation/research/quadraphonic-audio-spatialization-next-steps.md`
+  - `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md`
 - `/test` focused acceptance matrix evidence and machine-readable suite output published:
   - `qa_output/suite_result.json`
   - `TestEvidence/test-summary.md`

@@ -2,7 +2,7 @@ Title: BL-017 Head-Tracked Headphone Monitoring Companion Bridge Plan
 Document Type: Planning
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-02-25
 
 # BL-017 Head-Tracked Headphone Monitoring Companion Bridge Plan
 
@@ -39,7 +39,8 @@ Out of scope:
 
 - `Documentation/backlog-post-v1-agentic-sprints.md` (`BL-017`)
 - `Documentation/archive/2026-02-23-historical-review-bundles/full-project-review-2026-02-20.md` (Section 0b)
-- `Documentation/research/section0-integration-recommendations-2026-02-20.md` (`R5`)
+- `Documentation/invariants.md` (canonical PHASE runtime exclusion invariant)
+- `Documentation/archive/2026-02-25-research-legacy/section0-integration-recommendations-2026-02-20.md` (`R5`, historical source)
 - `Documentation/scene-state-contract.md`
 - `Documentation/invariants.md`
 

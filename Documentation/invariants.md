@@ -2,7 +2,7 @@ Title: LocusQ Invariants
 Document Type: Invariant Spec
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-21
+Last Modified Date: 2026-02-25
 
 # LocusQ Invariants
 
@@ -37,6 +37,7 @@ Define non-negotiable constraints that code and docs must satisfy across impleme
 - Laptop speaker and headphone operation must not require alternate parameter schemas or separate preset formats.
 - Calibration input routing must remain explicit and deterministic for both built-in and external microphone paths.
 - Any parameter exposed as user-visible must either affect runtime behavior or be explicitly documented as deferred/no-op.
+- Apple PHASE must not be integrated into plugin `processBlock()` runtime; any PHASE experimentation is companion/standalone-only and outside the plugin audio thread path.
 
 ## State/Traceability Invariants
 - Parameter IDs are stable and spec-aligned.

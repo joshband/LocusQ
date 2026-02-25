@@ -13,6 +13,8 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 
 //==============================================================================
 /**
@@ -69,6 +71,16 @@ public:
         juce::String message         = "Idle";
     };
 
+    struct StartDiagnostics
+    {
+        bool         accepted       = false;
+        std::uint32_t seq           = 0;
+        int          stateAtRequest = static_cast<int> (State::Idle);
+        double       timestampMs    = 0.0;
+        juce::String code           = "none";
+        juce::String message;
+    };
+
     //==========================================================================
     CalibrationEngine() = default;
 
@@ -106,14 +118,46 @@ public:
         @param tailSeconds      Extra recording time for the reverb tail.
         @param speakerOutputCh  0-indexed output channel for each of the 4 speakers.
         @param micInputChannel  0-indexed input channel for the measurement mic. */
-    void startCalibration (TestSignalGenerator::Type type,
+    bool startCalibration (TestSignalGenerator::Type type,
                            float testLevelDb,
                            float sweepDurationSecs,
                            float tailSeconds,
                            const int speakerOutputCh[4],
                            int micInputChannel)
     {
-        if (state_.load() != State::Idle) return;
+        const auto stateAtRequest = state_.load (std::memory_order_acquire);
+        if (stateAtRequest != State::Idle)
+        {
+            recordStartAttempt (false,
+                                "engine_busy",
+                                "Calibration engine busy: stop current run before starting a new one.",
+                                stateAtRequest);
+            return false;
+        }
+
+        if (! std::isfinite (sampleRate_) || sampleRate_ <= 0.0)
+        {
+            recordStartAttempt (false,
+                                "engine_not_prepared",
+                                "Calibration engine not prepared: sample rate unavailable.",
+                                stateAtRequest);
+            return false;
+        }
+
+        if (! std::isfinite (testLevelDb)
+            || ! std::isfinite (sweepDurationSecs)
+            || ! std::isfinite (tailSeconds)
+            || sweepDurationSecs <= 0.0f
+            || tailSeconds < 0.0f
+            || micInputChannel < 0)
+        {
+            recordStartAttempt (false,
+                                "invalid_start_args",
+                                "Calibration start rejected: invalid start arguments.",
+                                stateAtRequest);
+            return false;
+        }
+
         abortRequested_.store (false, std::memory_order_release);
 
         type_          = type;
@@ -126,6 +170,16 @@ public:
 
         resultProfile_ = RoomProfile{};
         startSpeaker (0);
+        const bool started = state_.load (std::memory_order_acquire) == State::Playing;
+        if (started)
+            recordStartAttempt (true, "accepted", "Calibration run started.", stateAtRequest);
+        else
+            recordStartAttempt (false,
+                                "engine_start_failed",
+                                "Calibration start rejected: engine failed to enter Playing state.",
+                                stateAtRequest);
+
+        return started;
     }
 
     /** Abort calibration and return to Idle. */
@@ -242,8 +296,50 @@ public:
     bool              isComplete()   const { return state_.load() == State::Complete; }
     const RoomProfile& getResult()   const { return resultProfile_; }
     State             getState()     const { return state_.load(); }
+    StartDiagnostics  getLastStartDiagnostics() const
+    {
+        StartDiagnostics diagnostics;
+        diagnostics.accepted = startAccepted_.load (std::memory_order_acquire);
+        diagnostics.seq = startSeq_.load (std::memory_order_acquire);
+        diagnostics.stateAtRequest = static_cast<int> (startStateAtRequest_.load (std::memory_order_acquire));
+        diagnostics.timestampMs = startTimestampMs_.load (std::memory_order_acquire);
+        {
+            const juce::SpinLock::ScopedLockType lock (startMessageLock_);
+            diagnostics.code = startCode_;
+            diagnostics.message = startMessage_;
+        }
+        return diagnostics;
+    }
+
+    void recordExternalStartFailure (const juce::String& code, const juce::String& message)
+    {
+        recordStartAttempt (false, code, message, state_.load (std::memory_order_acquire));
+    }
+
+    void recordExternalStartAccepted (const juce::String& message)
+    {
+        recordStartAttempt (true, "accepted", message, state_.load (std::memory_order_acquire));
+    }
 
 private:
+    //==========================================================================
+    void recordStartAttempt (bool accepted,
+                             const juce::String& code,
+                             const juce::String& message,
+                             State stateAtRequest)
+    {
+        {
+            const juce::SpinLock::ScopedLockType lock (startMessageLock_);
+            startCode_ = code;
+            startMessage_ = message;
+        }
+
+        startAccepted_.store (accepted, std::memory_order_release);
+        startStateAtRequest_.store (stateAtRequest, std::memory_order_release);
+        startTimestampMs_.store (juce::Time::getMillisecondCounterHiRes(), std::memory_order_release);
+        startSeq_.fetch_add (1u, std::memory_order_acq_rel);
+    }
+
     //==========================================================================
     // Prepare generator and kick off Playing state for a specific speaker.
     // Called from the analysis background thread — allocations are fine here.
@@ -368,6 +464,15 @@ private:
     std::atomic<bool>  analysisRunning_   { false };
     std::atomic<bool>  analysisRequested_ { false };
     std::thread        analysisThread_;
+
+    // Start handshake diagnostics (UI-thread writes, UI timer reads).
+    std::atomic<bool> startAccepted_ { false };
+    std::atomic<std::uint32_t> startSeq_ { 0 };
+    std::atomic<State> startStateAtRequest_ { State::Idle };
+    std::atomic<double> startTimestampMs_ { 0.0 };
+    mutable juce::SpinLock startMessageLock_;
+    juce::String startCode_ { "none" };
+    juce::String startMessage_;
 
     // Configuration (set at startCalibration, read-only during calibration)
     double sampleRate_   = 44100.0;

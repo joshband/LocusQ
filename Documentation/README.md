@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 
 # Documentation Index
@@ -53,7 +53,9 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/archive/2026-02-23-historical-review-bundles/stage14-review-release-checklist.md`
 - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
 - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
-- `Documentation/research/`
+- `Documentation/research/README.md` (active research index)
+- `Documentation/research/` (active research files only)
+- `Documentation/archive/2026-02-25-research-legacy/`
 - `Documentation/archive/2026-02-24-multi-agent-thread-watchdog/`
 - `Documentation/lessons-learned.md`
 - `Documentation/plans/2026-02-20-full-project-review.md`
@@ -77,6 +79,7 @@ Completed:
 5. Enforced docs-freshness guard for scratch output: populated top-level `Documentation/exports/` fails closeout checks.
 6. Re-promoted the 2026-02-23 executive-brief report set into active `Documentation/reports/` for non-archived access.
 7. Archived CLAP reference markdown/PDF artifacts into `Documentation/archive/2026-02-23-clap-reference-bundle/` and promoted one canonical BL-011 CLAP closeout plan.
+8. Archived superseded quadraphonic and harness research artifacts into `Documentation/archive/2026-02-25-research-legacy/`; retained only active calibration research under `Documentation/research/`.
 
 ## Normative Inputs For Implementation
 - `.ideas/architecture.md`

@@ -1,0 +1,20 @@
+{
+  "selftestTs": "20260225T031339Z",
+  "appExec": "/Users/artbox/Documents/Repos/LocusQ/build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app/Contents/MacOS/LocusQ",
+  "resultJson": "/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260225T031339Z.json",
+  "runLog": "/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260225T031339Z.run.log",
+  "attemptStatusTable": "/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260225T031339Z.attempts.tsv",
+  "status": "fail",
+  "terminalFailureReason": "app_exited_before_result",
+  "appPid": "64679",
+  "appExitCode": "143",
+  "appSignal": "15",
+  "appSignalName": "TERM",
+  "crashReportPath": "",
+  "selftestScope": "bl029",
+  "selftestBl009": "0",
+  "selftestBl011": "0",
+  "timeoutSeconds": "75",
+  "maxAttempts": "1",
+  "attemptsRun": "1"
+}

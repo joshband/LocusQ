@@ -1,0 +1,252 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl031_tempo_ramp_suite",
+  "name": "LocusQ BL-031 Tempo-Ramp Token Scheduler Suite",
+  "category": "stability",
+  "description": "Deterministic BL-031 validation lane for tempo-ramp token scheduling behavior and token-stream monotonicity guards.",
+  "scenario_ids": [
+    "locusq_26_animation_internal_smoke",
+    "locusq_26_host_edge_roundtrip_multipass"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl031_tempo_token"
+  },
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.28,
+      "duration_seconds": 2.8
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.52,
+    "pos_elevation": 0.44,
+    "pos_distance": 0.12,
+    "emit_gain": 0.54,
+    "emit_mute": 0.0,
+    "emit_spread": 0.30,
+    "emit_directivity": 0.50,
+    "phys_enable": 0.0,
+    "anim_enable": 1.0,
+    "anim_mode": 1.0,
+    "anim_loop": 1.0,
+    "anim_speed": 0.19,
+    "anim_sync": 1.0,
+    "rend_master_gain": 0.50,
+    "rend_quality": 1.0,
+    "rend_room_enable": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.8
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "BL-031 suite must emit non-empty deterministic output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Output must remain finite."
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Scenario output must stay below clipping."
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Tempo-token path must remain deadline-safe."
+    }
+  },
+
+  "bl031_contract_checks": {
+    "source_contract": {
+      "scheduler_source": "Source/VisualTokenScheduler.h",
+      "required_tokens": [
+        "static constexpr std::uint32_t kMaxTokens = 32;",
+        "tokenCount >= VisualTokenSnapshot::kMaxTokens",
+        "snapshot.count.store (count, std::memory_order_release);",
+        "snapshot.seq.fetch_add (1, std::memory_order_release);",
+        "publishEmpty();"
+      ]
+    },
+    "simulation_defaults": {
+      "sample_rate_hz": 48000.0,
+      "block_size": 512,
+      "time_signature_numerator": 4,
+      "time_signature_denominator": 4,
+      "subdivision_per_beat": 4,
+      "max_tokens_per_block": 32
+    },
+    "acceptance_ids": [
+      {
+        "id": "UI-P2-031A",
+        "description": "token sequence monotonicity and bounded count under high tempo"
+      },
+      {
+        "id": "UI-P2-031B",
+        "description": "downbeat/beat alignment under fixed tempo"
+      },
+      {
+        "id": "UI-P2-031C",
+        "description": "stable deterministic behavior under tempo ramps and transport restarts"
+      },
+      {
+        "id": "UI-P2-031D",
+        "description": "missing host-time info path emits zero tokens"
+      }
+    ],
+    "cases": [
+      {
+        "id": "constant_120",
+        "acceptance_id": "UI-P2-031B",
+        "description": "Constant 120 BPM playback over 4 bars should produce deterministic beat spacing.",
+        "segments": [
+          {
+            "bars": 4.0,
+            "tempo_start_bpm": 120.0,
+            "tempo_end_bpm": 120.0,
+            "transport_playing": true,
+            "host_time_available": true
+          }
+        ],
+        "expectations": {
+          "ppq_non_decreasing": true,
+          "require_token_types": [0, 1, 2],
+          "min_total_tokens": 48,
+          "beat_interval_ppq": 1.0,
+          "beat_interval_tolerance": 0.002,
+          "max_tokens_per_block": 32
+        }
+      },
+      {
+        "id": "tempo_ramp_60_to_180",
+        "acceptance_id": "UI-P2-031C",
+        "description": "Tempo ramp should increase token density while preserving monotonic PPQ ordering.",
+        "segments": [
+          {
+            "bars": 4.0,
+            "tempo_start_bpm": 60.0,
+            "tempo_end_bpm": 180.0,
+            "transport_playing": true,
+            "host_time_available": true
+          }
+        ],
+        "expectations": {
+          "ppq_non_decreasing": true,
+          "min_total_tokens": 48,
+          "density_growth_min_ratio": 1.35,
+          "max_tokens_per_block": 32
+        }
+      },
+      {
+        "id": "transport_stop_start",
+        "acceptance_id": "UI-P2-031C",
+        "description": "Transport stop segment emits zero tokens and resume segment emits tokens again.",
+        "segments": [
+          {
+            "bars": 2.0,
+            "tempo_start_bpm": 120.0,
+            "tempo_end_bpm": 120.0,
+            "transport_playing": true,
+            "host_time_available": true
+          },
+          {
+            "blocks": 128,
+            "tempo_start_bpm": 120.0,
+            "tempo_end_bpm": 120.0,
+            "transport_playing": false,
+            "host_time_available": true
+          },
+          {
+            "bars": 2.0,
+            "tempo_start_bpm": 120.0,
+            "tempo_end_bpm": 120.0,
+            "transport_playing": true,
+            "host_time_available": true
+          }
+        ],
+        "expectations": {
+          "ppq_non_decreasing": true,
+          "stop_tokens_max": 0,
+          "resume_tokens_min": 16,
+          "max_tokens_per_block": 32
+        }
+      },
+      {
+        "id": "high_tempo_300",
+        "acceptance_id": "UI-P2-031A",
+        "description": "High-tempo playback must remain bounded by fixed-capacity token storage.",
+        "segments": [
+          {
+            "bars": 4.0,
+            "tempo_start_bpm": 300.0,
+            "tempo_end_bpm": 300.0,
+            "transport_playing": true,
+            "host_time_available": true
+          }
+        ],
+        "expectations": {
+          "ppq_non_decreasing": true,
+          "min_total_tokens": 64,
+          "max_tokens_per_block": 32
+        }
+      },
+      {
+        "id": "missing_host_time",
+        "acceptance_id": "UI-P2-031D",
+        "description": "Unavailable host time context must publish no timing tokens.",
+        "segments": [
+          {
+            "blocks": 96,
+            "tempo_start_bpm": 120.0,
+            "tempo_end_bpm": 120.0,
+            "transport_playing": true,
+            "host_time_available": false
+          }
+        ],
+        "expectations": {
+          "ppq_non_decreasing": true,
+          "total_tokens_equals": 0,
+          "max_tokens_per_block": 32
+        }
+      }
+    ]
+  },
+
+  "pass_criteria": "All hard_fail invariants and all bl031_contract_checks must pass."
+}

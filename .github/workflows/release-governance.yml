@@ -1,0 +1,183 @@
+name: Release Governance Gates
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_scope:
+        description: "Release scope label for audit trail"
+        required: false
+        default: "dry-run"
+        type: string
+      enable_clap_gate:
+        description: "Run optional CLAP validator gate"
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - "v*"
+      - "release-*"
+
+concurrency:
+  group: locusq-release-governance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-governance-automated:
+    name: Release Governance Automated Gates (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Checkout JUCE
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          path: JUCE
+
+      - name: Configure build
+        run: |
+          cmake -S . -B build-release-governance \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE"
+
+      - name: Build release-governance targets
+        run: |
+          cmake --build build-release-governance \
+            --target LocusQ_Standalone LocusQ_VST3 LocusQ_AU \
+            -j 4
+
+      - name: Run ctest
+        run: |
+          ctest --test-dir build-release-governance --output-on-failure
+
+      - name: Run docs freshness gate
+        run: |
+          chmod +x ./scripts/validate-docs-freshness.sh
+          ./scripts/validate-docs-freshness.sh
+
+      - name: Run production self-test gate (standalone)
+        run: |
+          chmod +x ./scripts/standalone-ui-selftest-production-p0-mac.sh
+          ./scripts/standalone-ui-selftest-production-p0-mac.sh
+
+      - name: Install pluginval
+        run: |
+          set -euo pipefail
+          mkdir -p _tools/pluginval-ci qa_output/release_governance
+          downloaded=0
+          for url in \
+            "https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip" \
+            "https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_mac.zip"; do
+            if curl -L --fail -o /tmp/pluginval_macOS.zip "${url}"; then
+              downloaded=1
+              break
+            fi
+          done
+          if [[ "${downloaded}" -ne 1 ]]; then
+            echo "Failed to download pluginval macOS release archive" >&2
+            exit 1
+          fi
+          unzip -q -o /tmp/pluginval_macOS.zip -d _tools/pluginval-ci
+          PLUGINVAL_BIN="$(find _tools/pluginval-ci -type f -path '*pluginval.app/Contents/MacOS/pluginval' | head -n 1)"
+          if [[ -z "${PLUGINVAL_BIN}" ]]; then
+            echo "pluginval binary not found after extraction" >&2
+            find _tools/pluginval-ci -maxdepth 6 -type f | sed -n '1,120p'
+            exit 1
+          fi
+          echo "PLUGINVAL_BIN=${PLUGINVAL_BIN}" >> "${GITHUB_ENV}"
+
+      - name: Run pluginval gate (VST3)
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/release_governance
+          VST3_PATH="./build-release-governance/LocusQ_artefacts/VST3/LocusQ.vst3"
+          if [[ ! -d "${VST3_PATH}" ]]; then
+            VST3_PATH="./build-release-governance/LocusQ_artefacts/Release/VST3/LocusQ.vst3"
+          fi
+          if [[ ! -d "${VST3_PATH}" ]]; then
+            echo "Unable to locate LocusQ.vst3 artifact" >&2
+            find ./build-release-governance -maxdepth 7 -name "LocusQ.vst3" -type d || true
+            exit 1
+          fi
+          "${PLUGINVAL_BIN}" \
+            --strictness-level 5 \
+            --validate-in-process \
+            --skip-gui-tests \
+            "${VST3_PATH}" | tee qa_output/release_governance/pluginval_vst3.log
+
+      - name: Run pluginval gate (AU)
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/release_governance
+          AU_PATH="./build-release-governance/LocusQ_artefacts/AU/LocusQ.component"
+          if [[ ! -d "${AU_PATH}" ]]; then
+            AU_PATH="./build-release-governance/LocusQ_artefacts/Release/AU/LocusQ.component"
+          fi
+          if [[ ! -d "${AU_PATH}" ]]; then
+            echo "Unable to locate LocusQ.component artifact" >&2
+            find ./build-release-governance -maxdepth 7 -name "LocusQ.component" -type d || true
+            exit 1
+          fi
+          "${PLUGINVAL_BIN}" \
+            --strictness-level 5 \
+            --validate-in-process \
+            --skip-gui-tests \
+            "${AU_PATH}" | tee qa_output/release_governance/pluginval_au.log
+
+      - name: Run optional CLAP validator gate
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enable_clap_gate == 'true' }}
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/release_governance
+          if ! command -v clap-info >/dev/null 2>&1; then
+            echo "clap-info is required when enable_clap_gate=true" >&2
+            exit 1
+          fi
+          if ! command -v clap-validator >/dev/null 2>&1; then
+            echo "clap-validator is required when enable_clap_gate=true" >&2
+            exit 1
+          fi
+
+          cmake -S . -B build-release-governance-clap \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" \
+            -DLOCUSQ_ENABLE_CLAP=ON
+          cmake --build build-release-governance-clap --target LocusQ_CLAP -j 4
+
+          CLAP_PATH="./build-release-governance-clap/LocusQ_artefacts/Release/CLAP/LocusQ.clap"
+          if [[ ! -d "${CLAP_PATH}" ]]; then
+            echo "Unable to locate LocusQ.clap artifact" >&2
+            find ./build-release-governance-clap -maxdepth 8 -name "LocusQ.clap" -type d || true
+            exit 1
+          fi
+          clap-info "${CLAP_PATH}" | tee qa_output/release_governance/clap_info.log
+          clap-validator validate "${CLAP_PATH}" | tee qa_output/release_governance/clap_validator.log
+
+      - name: Record manual-required gates
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/release_governance
+          {
+            echo "BL-030 manual-required gates"
+            echo "- RL-05 Device rerun matrix (DEV-01..DEV-06) remains operator-run hardware validation."
+            echo "- Release scope: ${GITHUB_EVENT_NAME} / ${GITHUB_REF}"
+            echo "- workflow_dispatch input release_scope=${{ github.event.inputs.release_scope || 'n/a' }}"
+            echo "- Optional CLAP gate enabled=${{ github.event.inputs.enable_clap_gate || 'false' }}"
+          } > qa_output/release_governance/manual_required_gates.txt
+
+      - name: Upload release-governance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusq-release-governance-gates
+          path: qa_output/release_governance/
+          retention-days: 14

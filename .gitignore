@@ -43,6 +43,7 @@ dist/
 
 # Dependencies (fetched by CMake)
 _tools/JUCE/
+third_party/steam-audio/steamaudio_*.zip
 
 # Temp
 *.log

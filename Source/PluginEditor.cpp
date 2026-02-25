@@ -1,126 +1,13 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "BinaryData.h"
-#include <cstdlib>
-
-namespace
-{
-bool isUiSelfTestEnabled()
-{
-    if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST"))
-    {
-        const auto value = juce::String (flag).trim().toLowerCase();
-        if (value.isNotEmpty() && value != "0" && value != "false" && value != "off")
-            return true;
-    }
-
-    return false;
-}
-
-bool isUiSelfTestBl009Enabled()
-{
-    if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST_BL009"))
-    {
-        const auto value = juce::String (flag).trim().toLowerCase();
-        if (value.isNotEmpty() && value != "0" && value != "false" && value != "off")
-            return true;
-    }
-
-    return false;
-}
-
-bool isUiSelfTestBl011Enabled()
-{
-    if (const auto* flag = std::getenv ("LOCUSQ_UI_SELFTEST_BL011"))
-    {
-        const auto value = juce::String (flag).trim().toLowerCase();
-        if (value.isNotEmpty() && value != "0" && value != "false" && value != "off")
-            return true;
-    }
-
-    return false;
-}
-
-juce::String getUiSelfTestScope()
-{
-    if (const auto* scope = std::getenv ("LOCUSQ_UI_SELFTEST_SCOPE"))
-    {
-        const auto value = juce::String (scope).trim().toLowerCase();
-        juce::String sanitized;
-        sanitized.preallocateBytes (value.getNumBytesAsUTF8());
-
-        for (const auto ch : value)
-        {
-            if (juce::CharacterFunctions::isLetterOrDigit (ch) || ch == '_' || ch == '-')
-                sanitized << ch;
-        }
-
-        if (sanitized.isNotEmpty())
-            return sanitized;
-    }
-
-    return {};
-}
-
-int getUiSelfTestTimeoutTicks()
-{
-    // BL-009/BL-011 opt-in checks execute additional deterministic lanes and can
-    // exceed the default timeout budget under production self-test load.
-    if (isUiSelfTestBl009Enabled() || isUiSelfTestBl011Enabled())
-        return 900; // ~30 seconds at 30 Hz
-
-    return 300; // ~10 seconds at 30 Hz
-}
-
-bool shouldUseIncrementalUi()
-{
-    if (const auto* variant = std::getenv ("LOCUSQ_UI_VARIANT"))
-    {
-        const auto value = juce::String (variant).trim().toLowerCase();
-        if (value == "incremental" || value == "stage12")
-            return true;
-        if (value == "production" || value == "index")
-            return false;
-    }
-
-    if (isUiSelfTestEnabled())
-        return true;
-
-    return false;
-}
-
-juce::String getInitialUiResourcePath()
-{
-    return shouldUseIncrementalUi() ? "/incremental/index.html"
-                                    : "/index.html";
-}
-
-juce::String getStandaloneWindowTitle()
-{
-    const auto uiLabel = shouldUseIncrementalUi() ? "incremental-stage12"
-                                                  : "production-ui";
-    return juce::String (JucePlugin_Name)
-        + " v" + juce::String (JucePlugin_VersionString)
-        + " [" + uiLabel + "]";
-}
-
-juce::File getUiSelfTestResultFile()
-{
-    if (const auto* path = std::getenv ("LOCUSQ_UI_SELFTEST_RESULT_PATH"))
-    {
-        const auto configuredPath = juce::String (path).trim();
-        if (configuredPath.isNotEmpty())
-            return juce::File (configuredPath);
-    }
-
-    return juce::File::getSpecialLocation (juce::File::tempDirectory)
-        .getChildFile ("locusq_incremental_ui_selftest_result.json");
-}
-} // namespace
+#include "editor_shell/EditorShellHelpers.h"
+#include "editor_webview/EditorWebViewRuntime.h"
 
 //==============================================================================
 LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p),
+      runtimeConfig (locusq::editor_webview::makeRuntimeConfig()),
+      audioProcessor (p)
 {
     DBG ("LocusQ: Editor constructor started");
 
@@ -134,176 +21,18 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     // Create WebBrowserComponent with platform-aware backend
     DBG ("LocusQ: Creating WebView");
-    auto webViewOptions = juce::WebBrowserComponent::Options{};
-
-#if JUCE_WINDOWS
-    webViewOptions = webViewOptions
-        .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
-        .withWinWebView2Options (
-            juce::WebBrowserComponent::Options::WinWebView2{}
-                .withUserDataFolder (juce::File::getSpecialLocation (
-                    juce::File::SpecialLocationType::tempDirectory)));
-#else
-    webViewOptions = webViewOptions
-        .withBackend (juce::WebBrowserComponent::Options::Backend::defaultBackend);
-#endif
-
-    webViewOptions = webViewOptions
-        .withNativeIntegrationEnabled()
-        .withNativeFunction ("locusqStartCalibration",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                 completion (audioProcessor.startCalibrationFromUI (options));
-                             })
-        .withNativeFunction ("locusqAbortCalibration",
-                             [this] (const juce::Array<juce::var>&,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 audioProcessor.abortCalibrationFromUI();
-                                 completion (true);
-                             })
-        .withNativeFunction ("locusqRedetectCalibrationRouting",
-                             [this] (const juce::Array<juce::var>&,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 completion (audioProcessor.redetectCalibrationRoutingFromUI());
-                             })
-        .withNativeFunction ("locusqGetKeyframeTimeline",
-                             [this] (const juce::Array<juce::var>&,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 completion (audioProcessor.getKeyframeTimelineForUI());
-                             })
-        .withNativeFunction ("locusqSetKeyframeTimeline",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 if (args.isEmpty())
-                                 {
-                                     completion (false);
-                                     return;
-                                 }
-
-                                 completion (audioProcessor.setKeyframeTimelineFromUI (args[0]));
-                             })
-        .withNativeFunction ("locusqSetTimelineTime",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 if (args.isEmpty())
-                                 {
-                                     completion (false);
-                                     return;
-                                 }
-
-                                 completion (audioProcessor.setTimelineCurrentTimeFromUI (static_cast<double> (args[0])));
-                             })
-        .withNativeFunction ("locusqListEmitterPresets",
-                             [this] (const juce::Array<juce::var>&,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 completion (audioProcessor.listEmitterPresetsFromUI());
-                             })
-        .withNativeFunction ("locusqSaveEmitterPreset",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                 completion (audioProcessor.saveEmitterPresetFromUI (options));
-                             })
-        .withNativeFunction ("locusqLoadEmitterPreset",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                 completion (audioProcessor.loadEmitterPresetFromUI (options));
-                             })
-        .withNativeFunction ("locusqRenameEmitterPreset",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                 completion (audioProcessor.renameEmitterPresetFromUI (options));
-                             })
-        .withNativeFunction ("locusqDeleteEmitterPreset",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 const juce::var options = args.isEmpty() ? juce::var() : args[0];
-                                 completion (audioProcessor.deleteEmitterPresetFromUI (options));
-                             })
-        .withNativeFunction ("locusqGetUiState",
-                             [this] (const juce::Array<juce::var>&,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 completion (audioProcessor.getUIStateFromUI());
-                             })
-        .withNativeFunction ("locusqSetUiState",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 if (args.isEmpty())
-                                 {
-                                     completion (false);
-                                     return;
-                                 }
-
-                                 completion (audioProcessor.setUIStateFromUI (args[0]));
-                             })
-        .withNativeFunction ("locusqGetChoiceItems",
-                             [this] (const juce::Array<juce::var>& args,
-                                     juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 juce::Array<juce::var> values;
-
-                                 if (! args.isEmpty() && args[0].isString())
-                                 {
-                                     const auto parameterId = args[0].toString();
-                                     if (auto* parameter = audioProcessor.apvts.getParameter (parameterId))
-                                     {
-                                         if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (parameter))
-                                         {
-                                             for (const auto& item : choice->choices)
-                                                 values.add (item);
-                                         }
-                                     }
-                                 }
-
-                                 completion (juce::var (values));
-                             })
-        .withNativeFunction ("locusqWriteUiSelfTestResult",
-                             [] (const juce::Array<juce::var>& args,
-                                 juce::WebBrowserComponent::NativeFunctionCompletion completion)
-                             {
-                                 const auto resultFile = getUiSelfTestResultFile();
-                                 resultFile.getParentDirectory().createDirectory();
-
-                                 juce::var payload (new juce::DynamicObject());
-                                 if (auto* object = payload.getDynamicObject())
-                                 {
-                                     object->setProperty ("timestampUtc", juce::Time::getCurrentTime().toISO8601 (true));
-                                     object->setProperty ("selftestEnabled", isUiSelfTestEnabled());
-                                     object->setProperty ("payload", args.isEmpty() ? juce::var() : args[0]);
-                                 }
-
-                                 const auto json = juce::JSON::toString (payload, true);
-                                 const auto writeOk = resultFile.replaceWithText (json);
-
-                                 juce::var response (new juce::DynamicObject());
-                                 if (auto* object = response.getDynamicObject())
-                                 {
-                                     object->setProperty ("ok", writeOk);
-                                     object->setProperty ("path", resultFile.getFullPathName());
-                                 }
-
-                                 completion (response);
-                             })
-        .withResourceProvider ([this] (const auto& url) { return getResource (url); })
+    auto webViewOptions = locusq::editor_webview::makeBaseWebViewOptions();
+    webViewOptions = locusq::editor_webview::withNativeBindings (std::move (webViewOptions),
+                                                                  audioProcessor,
+                                                                  runtimeConfig);
+    webViewOptions = std::move (webViewOptions)
+        .withResourceProvider ([] (const auto& url) { return locusq::editor_webview::getResource (url); })
         .withOptionsFrom (modeRelay)
         .withOptionsFrom (bypassRelay)
         .withOptionsFrom (calSpkConfigRelay)
+        .withOptionsFrom (calTopologyProfileRelay)
+        .withOptionsFrom (calMonitoringPathRelay)
+        .withOptionsFrom (calDeviceProfileRelay)
         .withOptionsFrom (calMicChannelRelay)
         .withOptionsFrom (calSpk1OutRelay)
         .withOptionsFrom (calSpk2OutRelay)
@@ -352,6 +81,11 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         .withOptionsFrom (qualityRelay)
         .withOptionsFrom (distanceModelRelay)
         .withOptionsFrom (headphoneModeRelay)
+        .withOptionsFrom (headphoneProfileRelay)
+        .withOptionsFrom (auditionEnableRelay)
+        .withOptionsFrom (auditionSignalRelay)
+        .withOptionsFrom (auditionMotionRelay)
+        .withOptionsFrom (auditionLevelRelay)
         .withOptionsFrom (distanceRefRelay)
         .withOptionsFrom (distanceMaxRelay)
         .withOptionsFrom (dopplerRelay)
@@ -385,6 +119,12 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     calSpkConfigAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("cal_spk_config"), calSpkConfigRelay);
+    calTopologyProfileAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_topology_profile"), calTopologyProfileRelay);
+    calMonitoringPathAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_monitoring_path"), calMonitoringPathRelay);
+    calDeviceProfileAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("cal_device_profile"), calDeviceProfileRelay);
     calMicChannelAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
         *audioProcessor.apvts.getParameter ("cal_mic_channel"), calMicChannelRelay);
     calSpk1OutAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
@@ -499,6 +239,14 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
         *audioProcessor.apvts.getParameter ("rend_headphone_mode"), headphoneModeRelay);
     headphoneProfileAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_headphone_profile"), headphoneProfileRelay);
+    auditionEnableAttachment = std::make_unique<juce::WebToggleButtonParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_audition_enable"), auditionEnableRelay);
+    auditionSignalAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_audition_signal"), auditionSignalRelay);
+    auditionMotionAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_audition_motion"), auditionMotionRelay);
+    auditionLevelAttachment = std::make_unique<juce::WebComboBoxParameterAttachment> (
+        *audioProcessor.apvts.getParameter ("rend_audition_level"), auditionLevelRelay);
     distanceRefAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
         *audioProcessor.apvts.getParameter ("rend_distance_ref"), distanceRefRelay);
     distanceMaxAttachment = std::make_unique<juce::WebSliderParameterAttachment> (
@@ -546,24 +294,8 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
 
     addAndMakeVisible (*webView);
 
-    const auto initialResourcePath = getInitialUiResourcePath();
-    const auto normalizedInitialPath = (initialResourcePath == "/") ? "/index.html" : initialResourcePath;
-    const auto cacheBust = juce::String (juce::Time::getCurrentTime().toMilliseconds());
-    auto initialUrl = juce::WebBrowserComponent::getResourceProviderRoot()
-        + normalizedInitialPath + "?cb=" + cacheBust;
-
-    if (isUiSelfTestEnabled())
-        initialUrl += "&selftest=1";
-
-    if (isUiSelfTestBl009Enabled())
-        initialUrl += "&selftest_bl009=1";
-
-    if (isUiSelfTestBl011Enabled())
-        initialUrl += "&selftest_bl011=1";
-
-    const auto selfTestScope = getUiSelfTestScope();
-    if (selfTestScope.isNotEmpty())
-        initialUrl += "&selftest_scope=" + selfTestScope;
+    const auto initialResourcePath = locusq::editor_webview::getInitialUiResourcePath (runtimeConfig);
+    const auto initialUrl = locusq::editor_webview::makeInitialUrl (runtimeConfig);
 
     DBG ("LocusQ: Loading UI path " + initialResourcePath);
     webView->goToURL (initialUrl);
@@ -588,8 +320,12 @@ void LocusQAudioProcessorEditor::paint (juce::Graphics& g)
 
 void LocusQAudioProcessorEditor::resized()
 {
-    if (webView)
-        webView->setBounds (getLocalBounds());
+    if (webView == nullptr)
+        return;
+
+    const auto bounds = getLocalBounds();
+    webView->setBounds (bounds);
+    locusq::editor_shell::notifyHostResized (*webView, bounds.getWidth(), bounds.getHeight());
 }
 
 //==============================================================================
@@ -599,14 +335,11 @@ void LocusQAudioProcessorEditor::timerCallback()
 
     updateStandaloneWindowTitle();
 
-    // Push scene state JSON to the WebView for 3D viewport updates
-    auto json = audioProcessor.getSceneStateJSON();
-    webView->evaluateJavascript (
-        "if(typeof updateSceneState==='function')updateSceneState(" + json + ");");
-
+    // Push scene + calibration payloads in one JS evaluation so panel updates stay
+    // deterministic under rapid profile switch bursts.
+    auto sceneJSON = audioProcessor.getSceneStateJSON();
     auto calibrationJSON = juce::JSON::toString (audioProcessor.getCalibrationStatus());
-    webView->evaluateJavascript (
-        "if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(" + calibrationJSON + ");");
+    locusq::editor_shell::pushSceneAndCalibrationUpdate (*webView, sceneJSON, calibrationJSON);
 
     if (! runtimeProbeDone)
     {
@@ -619,20 +352,7 @@ void LocusQAudioProcessorEditor::timerCallback()
             const auto probeFile = juce::File::getSpecialLocation (juce::File::tempDirectory)
                 .getChildFile ("locusq_webview_runtime_probe.json");
 
-            const juce::String probeScript = R"JS(
-                (() => {
-                    const badge = document.getElementById('quality-badge');
-                    return {
-                        hasJuce: typeof window.Juce !== 'undefined',
-                        hasBackend: typeof window.__JUCE__ !== 'undefined' && !!window.__JUCE__.backend,
-                        hasUpdateSceneState: typeof window.updateSceneState === 'function',
-                        hasUpdateCalibrationStatus: typeof window.updateCalibrationStatus === 'function',
-                        modeTabCount: document.querySelectorAll('.mode-tab').length,
-                        bodyClass: document.body ? document.body.className : '',
-                        qualityText: badge ? badge.textContent : ''
-                    };
-                })()
-            )JS";
+            const auto probeScript = locusq::editor_shell::getRuntimeProbeScript();
 
             juce::Component::SafePointer<LocusQAudioProcessorEditor> safeThis (this);
             webView->evaluateJavascript (probeScript,
@@ -682,52 +402,16 @@ void LocusQAudioProcessorEditor::timerCallback()
         }
     }
 
-    if (isUiSelfTestEnabled() && ! uiSelfTestResultWritten)
+    if (runtimeConfig.selfTestEnabled && ! uiSelfTestResultWritten)
     {
         ++uiSelfTestPollTicks;
-        const auto uiSelfTestTimeoutTicks = getUiSelfTestTimeoutTicks();
+        const auto uiSelfTestTimeoutTicks = runtimeConfig.selfTestTimeoutTicks;
 
         if (uiSelfTestPollTicks >= 30 && ! uiSelfTestProbeInFlight && (uiSelfTestPollTicks % 6) == 0)
         {
             uiSelfTestProbeInFlight = true;
-            const auto resultFile = getUiSelfTestResultFile();
-
-            const juce::String selfTestPollScript = R"JS(
-                (() => {
-                    const value = window.__LQ_SELFTEST_RESULT__;
-                    if (!value || typeof value !== 'object')
-                        return {
-                            ready: false,
-                            status: 'missing',
-                            search: String(window.location && window.location.search ? window.location.search : ''),
-                            href: String(window.location && window.location.href ? window.location.href : ''),
-                            hasUpdateSceneState: typeof window.updateSceneState === 'function',
-                            hasUpdateCalibrationStatus: typeof window.updateCalibrationStatus === 'function',
-                            scriptSrcs: Array.from(document.scripts || []).map(s => String(s.src || '')),
-                            bootErrors: Array.isArray(window.__LQ_BOOT_ERRORS__) ? window.__LQ_BOOT_ERRORS__ : []
-                        };
-
-                    const status = String(value.status || '');
-                    if (status !== 'pass' && status !== 'fail')
-                        return {
-                            ready: false,
-                            status,
-                            search: String(window.location && window.location.search ? window.location.search : ''),
-                            href: String(window.location && window.location.href ? window.location.href : ''),
-                            hasUpdateSceneState: typeof window.updateSceneState === 'function',
-                            hasUpdateCalibrationStatus: typeof window.updateCalibrationStatus === 'function',
-                            scriptSrcs: Array.from(document.scripts || []).map(s => String(s.src || '')),
-                            bootErrors: Array.isArray(window.__LQ_BOOT_ERRORS__) ? window.__LQ_BOOT_ERRORS__ : []
-                        };
-
-                    return {
-                        ready: true,
-                        status,
-                        ok: !!value.ok,
-                        result: value
-                    };
-                })()
-            )JS";
+            const auto resultFile = locusq::editor_webview::getUiSelfTestResultFile();
+            const auto selfTestPollScript = locusq::editor_shell::getSelfTestPollScript();
 
             juce::Component::SafePointer<LocusQAudioProcessorEditor> safeThis (this);
             webView->evaluateJavascript (selfTestPollScript,
@@ -807,292 +491,7 @@ void LocusQAudioProcessorEditor::updateStandaloneWindowTitle()
 
     if (auto* window = findParentComponentOfClass<juce::DocumentWindow>())
     {
-        window->setName (getStandaloneWindowTitle());
+        window->setName (locusq::editor_webview::getStandaloneWindowTitle (runtimeConfig));
         standaloneWindowTitleUpdated = true;
     }
-}
-
-//==============================================================================
-// RESOURCE PROVIDER IMPLEMENTATION
-//==============================================================================
-
-const char* LocusQAudioProcessorEditor::getMimeForExtension (const juce::String& extension)
-{
-    static const std::unordered_map<juce::String, const char*> mimeMap =
-    {
-        { "html", "text/html" },
-        { "css",  "text/css" },
-        { "js",   "text/javascript" },
-        { "mjs",  "text/javascript" },
-        { "json", "application/json" },
-        { "png",  "image/png" },
-        { "jpg",  "image/jpeg" },
-        { "svg",  "image/svg+xml" }
-    };
-
-    auto it = mimeMap.find (extension.toLowerCase());
-    if (it != mimeMap.end())
-        return it->second;
-
-    return "text/plain";
-}
-
-std::optional<juce::WebBrowserComponent::Resource> LocusQAudioProcessorEditor::getResource (
-    const juce::String& url)
-{
-    auto resourcePath = url.trim();
-
-    const auto stripKnownPrefix = [&resourcePath] (const juce::String& prefix)
-    {
-        if (resourcePath.startsWithIgnoreCase (prefix))
-            resourcePath = resourcePath.substring (prefix.length());
-    };
-
-    stripKnownPrefix ("juce://juce.backend");
-    stripKnownPrefix ("https://juce.backend");
-    stripKnownPrefix ("http://juce.backend");
-
-    while (resourcePath.startsWith ("//"))
-        resourcePath = resourcePath.substring (1);
-
-    if (resourcePath.isEmpty())
-        resourcePath = "/";
-
-    if (! resourcePath.startsWithChar ('/'))
-        resourcePath = "/" + resourcePath;
-
-    resourcePath = resourcePath.upToFirstOccurrenceOf ("?", false, false);
-    resourcePath = resourcePath.upToFirstOccurrenceOf ("#", false, false);
-    if (resourcePath.isEmpty() || resourcePath == "/")
-        resourcePath = "/index.html";
-
-    const auto logDirectory = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-        .getChildFile ("LocusQ");
-    logDirectory.createDirectory();
-    const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
-    resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
-        + " request url=" + url + " path=" + resourcePath + "\n");
-
-#if JUCE_DEBUG
-    DBG ("LocusQ resource requested: " + resourcePath);
-#endif
-
-    // Map URL paths to BinaryData resources
-    const char* resourceData = nullptr;
-    int resourceSize = 0;
-    juce::String mimeType;
-
-    auto path = resourcePath.substring (1); // Remove leading slash
-
-    if (path == "index.html")
-    {
-        resourceData = BinaryData::index_html;
-        resourceSize = BinaryData::index_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "js/index.js")
-    {
-        resourceData = BinaryData::index_js;
-        resourceSize = BinaryData::index_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "js/three.min.js")
-    {
-        resourceData = BinaryData::three_min_js;
-        resourceSize = BinaryData::three_min_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "js/juce/index.js")
-    {
-        // JUCE frontend library
-        resourceData = BinaryData::index_js2;
-        resourceSize = BinaryData::index_js2Size;
-        mimeType = "text/javascript";
-    }
-    else if (path == "js/juce/check_native_interop.js")
-    {
-        resourceData = BinaryData::check_native_interop_js;
-        resourceSize = BinaryData::check_native_interop_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "poc/index.html")
-    {
-        resourceData = BinaryData::index_poc_html;
-        resourceSize = BinaryData::index_poc_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/index.html")
-    {
-        resourceData = BinaryData::index_stage12_html;
-        resourceSize = BinaryData::index_stage12_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage1.html")
-    {
-        resourceData = BinaryData::index_poc_html;
-        resourceSize = BinaryData::index_poc_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage2.html")
-    {
-        resourceData = BinaryData::index_stage2_html;
-        resourceSize = BinaryData::index_stage2_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage3.html")
-    {
-        resourceData = BinaryData::index_stage3_html;
-        resourceSize = BinaryData::index_stage3_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage4.html")
-    {
-        resourceData = BinaryData::index_stage4_html;
-        resourceSize = BinaryData::index_stage4_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage5.html")
-    {
-        resourceData = BinaryData::index_stage5_html;
-        resourceSize = BinaryData::index_stage5_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage6.html")
-    {
-        resourceData = BinaryData::index_stage6_html;
-        resourceSize = BinaryData::index_stage6_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage7.html")
-    {
-        resourceData = BinaryData::index_stage7_html;
-        resourceSize = BinaryData::index_stage7_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage8.html")
-    {
-        resourceData = BinaryData::index_stage8_html;
-        resourceSize = BinaryData::index_stage8_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage9.html")
-    {
-        resourceData = BinaryData::index_stage9_html;
-        resourceSize = BinaryData::index_stage9_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage10.html")
-    {
-        resourceData = BinaryData::index_stage10_html;
-        resourceSize = BinaryData::index_stage10_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage11.html")
-    {
-        resourceData = BinaryData::index_stage11_html;
-        resourceSize = BinaryData::index_stage11_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage12.html")
-    {
-        resourceData = BinaryData::index_stage12_html;
-        resourceSize = BinaryData::index_stage12_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/js/stage2_ui.js")
-    {
-        resourceData = BinaryData::stage2_ui_js;
-        resourceSize = BinaryData::stage2_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage3_ui.js")
-    {
-        resourceData = BinaryData::stage3_ui_js;
-        resourceSize = BinaryData::stage3_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage4_ui.js")
-    {
-        resourceData = BinaryData::stage4_ui_js;
-        resourceSize = BinaryData::stage4_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage5_ui.js")
-    {
-        resourceData = BinaryData::stage5_ui_js;
-        resourceSize = BinaryData::stage5_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage6_ui.js")
-    {
-        resourceData = BinaryData::stage6_ui_js;
-        resourceSize = BinaryData::stage6_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage7_ui.js")
-    {
-        resourceData = BinaryData::stage7_ui_js;
-        resourceSize = BinaryData::stage7_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage8_ui.js")
-    {
-        resourceData = BinaryData::stage8_ui_js;
-        resourceSize = BinaryData::stage8_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage9_ui.js")
-    {
-        resourceData = BinaryData::stage9_ui_js;
-        resourceSize = BinaryData::stage9_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage10_ui.js")
-    {
-        resourceData = BinaryData::stage10_ui_js;
-        resourceSize = BinaryData::stage10_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage11_ui.js")
-    {
-        resourceData = BinaryData::stage11_ui_js;
-        resourceSize = BinaryData::stage11_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage12_ui.js")
-    {
-        resourceData = BinaryData::stage12_ui_js;
-        resourceSize = BinaryData::stage12_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "poc/js/poc_ui.js")
-    {
-        resourceData = BinaryData::poc_ui_js;
-        resourceSize = BinaryData::poc_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-
-#if JUCE_DEBUG
-    if (resourceData != nullptr)
-        DBG ("  -> FOUND (" + juce::String (resourceSize) + " bytes)");
-    else
-        DBG ("  -> NOT FOUND: " + path);
-#endif
-
-    resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
-        + " result path=" + path + " found=" + juce::String (resourceData != nullptr ? "1" : "0")
-        + " size=" + juce::String (resourceSize) + "\n");
-
-    if (resourceData != nullptr && resourceSize > 0)
-    {
-        std::vector<std::byte> data (static_cast<size_t> (resourceSize));
-        std::memcpy (data.data(), resourceData, static_cast<size_t> (resourceSize));
-
-        return juce::WebBrowserComponent::Resource {
-            std::move (data),
-            mimeType
-        };
-    }
-
-    return std::nullopt;
 }

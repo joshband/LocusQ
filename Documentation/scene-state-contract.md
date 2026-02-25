@@ -110,6 +110,51 @@ Rules:
 4. On next accepted snapshot, stale mode must clear deterministically.
 5. Contract changes to payload semantics require an ADR update.
 
+## Payload Budget Contract (HX-05 Slice A)
+
+The scene-state transport path is additionally bounded by the following payload/throughput policy.
+
+### Normative Limits
+
+| Dimension | Normal Target | Soft Limit | Hard Limit |
+|---|---:|---:|---:|
+| Serialized payload bytes per snapshot | <= 24,576 B | <= 32,768 B | <= 65,536 B |
+| Publication cadence | 30 Hz nominal | <= 45 Hz burst cap | 60 Hz absolute cap |
+| Soft-overage burst window | n/a | max 8 consecutive snapshots | must recover <= 500 ms |
+
+Rules:
+
+1. Transport must never exceed the hard payload limit (`65,536` bytes) or absolute cadence cap (`60 Hz`).
+2. Soft-limit overages are temporary and burst-governed; no soft-overage burst may exceed 8 snapshots or 500 ms.
+3. Hard-overage snapshots require immediate degrade behavior in the publisher path.
+
+### Degradation Tiers
+
+| Tier | Entry Condition | Required Behavior | Exit Condition |
+|---|---|---|---|
+| `normal` | Within soft limit and cadence target | Full payload at nominal cadence | n/a |
+| `degrade_t1` | Hard overage once OR soft burst overrun | Clamp cadence to <= 20 Hz and prioritize core fields (`emitters`, `listener`, `speakers`, diagnostics) | 120 consecutive compliant snapshots |
+| `degrade_t2_safe` | Hard overage in 3 of any 10 snapshots | Clamp cadence to <= 10 Hz and publish minimal deterministic transport subset | 240 consecutive compliant snapshots |
+
+### Additive Schema Guidance (Non-Breaking)
+
+Future HX-05 runtime telemetry fields must be additive/optional:
+
+- `snapshotPayloadBytes` (integer)
+- `snapshotBudgetTier` (string enum: `normal`, `degrade_t1`, `degrade_t2_safe`)
+- `snapshotBurstCount` (integer)
+- `snapshotBudgetPolicyVersion` (string; initial value `hx05-v1`)
+
+Compatibility rule: consumers must ignore unknown fields, and if HX-05 fields are absent, existing behavior remains valid.
+
+### Acceptance Hooks
+
+| Acceptance ID | Required Evidence |
+|---|---|
+| `HX05-AC-001` | This section contains explicit bytes/cadence/burst/degrade limits |
+| `HX05-AC-002` | Additive schema guidance and compatibility rule are present |
+| `HX05-AC-004` | `./scripts/validate-docs-freshness.sh` passes for the change set |
+
 ## Viewport Visualization Payload Contract (BL-015/BL-014/BL-008/BL-006/BL-007)
 
 For production viewport rendering, scene snapshots must include:
@@ -182,6 +227,13 @@ For production viewport rendering, scene snapshots must include:
     - `rendererAuditionReactive.physicsCollision` (float 0..1; normalized collision-energy drive used by audition transient coupling)
     - `rendererAuditionReactive.physicsDensity` (float 0..1; normalized active-physics-emitter density used by audition cloud/timbre coupling)
     - `rendererAuditionReactive.physicsCoupling` (float 0..1; composite deterministic coupling intensity from velocity/collision/density)
+    - `rendererAuditionReactive.geometryScale` (float 0..1; additive geometry morph scalar derived from reactive envelope + physics coupling + source density)
+    - `rendererAuditionReactive.geometryWidth` (float 0..1; additive width morph scalar derived from density/velocity/brightness coupling)
+    - `rendererAuditionReactive.geometryDepth` (float 0..1; additive depth morph scalar derived from slow envelope + coupling + inverse brightness)
+    - `rendererAuditionReactive.geometryHeight` (float 0..1; additive height morph scalar derived from onset/collision/fast envelope/peak)
+    - `rendererAuditionReactive.precipitationFade` (float 0..1; additive unified precipitation fade drive derived from rain/snow reactive rates)
+    - `rendererAuditionReactive.collisionBurst` (float 0..1; additive transient burst scalar derived from collision energy shaped by onset)
+    - `rendererAuditionReactive.densitySpread` (float 0..1; additive spread scalar derived from physics density + source-density + velocity)
     - `rendererAuditionReactive.headphoneOutputRms` (float 0..1; headphone render-output RMS envelope for BL-009 parity diagnostics)
     - `rendererAuditionReactive.headphoneOutputPeak` (float 0..1; headphone render-output peak envelope for BL-009 parity diagnostics)
     - `rendererAuditionReactive.headphoneParity` (float 0..1; deterministic parity confidence scalar after native guard-rail sanitize)
@@ -201,6 +253,24 @@ For production viewport rendering, scene snapshots must include:
     - `rendererSpatialProfileRequested` (string enum; APVTS `rend_spatial_profile`)
     - `rendererSpatialProfileActive` (string enum)
     - `rendererSpatialProfileStage` (string enum: `direct`, `fallback_stereo`, `fallback_quad`, `ambi_decode_stereo`, `codec_layout_placeholder`)
+  - Spatial output matrix diagnostics (BL-028 Slice C1, additive):
+    - `rendererMatrixRequestedDomain` (string enum: `InternalBinaural`, `Multichannel`, `ExternalSpatial`)
+    - `rendererMatrixActiveDomain` (string enum; same domain set as requested)
+    - `rendererMatrixRequestedLayout` (string enum: `stereo_2_0`, `quad_4_0`, `surround_5_1`, `surround_7_1`, `immersive_7_4_2`)
+    - `rendererMatrixActiveLayout` (string enum; same layout set as requested)
+    - `rendererMatrixRuleId` (string enum; current values include `SOM-028-01`..`SOM-028-11`)
+    - `rendererMatrixRuleState` (string enum: `allowed`, `blocked`)
+    - `rendererMatrixReasonCode` (string enum: `ok`, `binaural_requires_stereo`, `multichannel_requires_min_4ch`, `headtracking_not_supported_in_multichannel`, `external_spatial_requires_multichannel_bed`, `fallback_derived_from_layout`, `fallback_safe_stereo_passthrough`)
+    - `rendererMatrixFallbackMode` (string enum: `none`, `retain_last_legal`, `derive_from_host_layout`, `safe_stereo_passthrough`)
+    - `rendererMatrixFailSafeRoute` (string enum: `none`, `last_legal`, `layout_derived`, `stereo_passthrough`)
+    - `rendererMatrixStatusText` (string; deterministic reason-code mapped user-visible text)
+    - `rendererMatrixEventSeq` (uint64; monotonic matrix event sequence, currently aligned to snapshot sequence)
+    - `rendererMatrix` (object; additive mirror for matrix surfaces that consume grouped payloads)
+      - `requestedDomain`, `activeDomain`
+      - `requestedLayout`, `activeLayout`
+      - `ruleId`, `ruleState`
+      - `fallbackMode`, `reasonCode`, `statusText`
+      - Compatibility rule: `rendererMatrix.*` values must mirror the corresponding `rendererMatrix*` top-level fields in the same snapshot.
   - Ambisonic diagnostics (BL-018 planning gate):
     - `rendererAmbiCompiled` (bool)
     - `rendererAmbiActive` (bool)
@@ -238,6 +308,7 @@ Rules:
 13. BL-029 audition authority fields are additive and backward-compatible; when absent, UI consumers must preserve legacy `rendererAuditionVisual` + `rendererAuditionCloud` behavior with no hard dependency on these fields.
 14. Resolver semantics are deterministic for identical snapshot inputs: requested mode precedence is `bound_physics` -> `bound_choreography` -> `bound_emitter` -> standalone (`single`/`cloud`).
 15. `rendererAuditionReactive` is additive and backward-compatible; UI consumers that do not implement reactive fading must ignore the block and keep existing single/cloud visual behavior.
+16. `rendererMatrix*` diagnostics and the additive `rendererMatrix` object are backward-compatible; consumers that do not implement BL-028 matrix surfaces must ignore these fields without altering existing renderer profile/headphone diagnostics behavior.
 
 ### Audition Resolver Examples
 
