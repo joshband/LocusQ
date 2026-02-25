@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-25
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation (Slices A-D owner-validated; deterministic lane pass) |
+| Status | Done (2026-02-25 owner promotion sync complete) |
 | Owner Track | Track B — Scene/UI Runtime |
 | Depends On | BL-016 (Done), BL-025 (Done) |
 | Blocks | BL-029 |
@@ -280,6 +280,22 @@ Evidence:
 | Slice C | Covered under integrated deterministic lane contract checks | `TestEvidence/bl031_slice_d_20260225T160932Z/status.tsv` (lane contract and scenario checks), `TestEvidence/owner_parallel_integration_20260225T162457Z/qa_bl031_lane.log` (owner replay pass) |
 | Slice D | Implemented and validated | `TestEvidence/bl031_slice_d_20260225T160932Z/status.tsv` (worker lane pass), `TestEvidence/owner_parallel_integration_20260225T162457Z/qa_bl031_lane.log` (owner replay pass) |
 
+## Slice E Promotion Verifier Packet (2026-02-25)
+
+Worker promotion-verifier reran the required branch-state gates and emitted a promotion packet at:
+`TestEvidence/bl031_done_promotion_20260225T163524Z`
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Build (`locusq_qa` + `LocusQ_Standalone`) | PASS | `TestEvidence/bl031_done_promotion_20260225T163524Z/build.log` |
+| Deterministic BL-031 lane | PASS | `TestEvidence/bl031_done_promotion_20260225T163524Z/qa_lane.log`, `TestEvidence/bl031_done_promotion_20260225T163524Z/scenario_result.log`, `TestEvidence/bl031_done_promotion_20260225T163524Z/token_monotonicity.tsv` |
+| RT safety audit gate | PASS | `TestEvidence/bl031_done_promotion_20260225T163524Z/rt_audit.tsv`, `TestEvidence/bl031_done_promotion_20260225T163524Z/rt_audit.log` (`non_allowlisted=0`) |
+| Docs freshness gate | PASS | `TestEvidence/bl031_done_promotion_20260225T163524Z/docs_freshness.log` |
+
+Promotion recommendation from worker packet: **PASS** (eligible for `In Validation -> Done` promotion by owner-managed Tier 0 sync).
+
+Owner disposition: BL-031 is promoted to **Done** on 2026-02-25 after owner-managed sync of backlog/index/status/evidence surfaces.
+
 ## Closeout Checklist
 
 - [x] Slice A: VisualTokenScheduler emits tokens at beat boundaries in processBlock
@@ -289,6 +305,7 @@ Evidence:
 - [x] Sequence monotonicity holds under all test conditions
 - [x] No RT safety violations (zero allocations in processBlock)
 - [x] Evidence captured at designated paths
+- [x] Slice E promotion packet gates PASS (lane + RT + docs)
 - [x] status.json updated
 - [x] Documentation/backlog/index.md row updated
 - [x] TestEvidence surfaces updated

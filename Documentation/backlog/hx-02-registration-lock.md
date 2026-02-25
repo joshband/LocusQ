@@ -3,7 +3,7 @@ Title: HX-02 Registration Lock and Memory-Order Audit
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 ---
 
 # HX-02: Registration Lock and Memory-Order Audit
@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-24
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation (Slices A-B complete; Slice C pending) |
+| Status | Done (2026-02-25 owner replay confirms Slice D gate stability) |
 | Owner Track | Track F — Hardening |
 | Depends On | BL-016 (Done) |
 | Blocks | — |
@@ -210,14 +210,31 @@ Evidence:
 | Slice B | Complete (fixes implemented and validated) | `TestEvidence/hx02_registration_audit_20260224T195130Z/status.tsv`, `TestEvidence/hx02_registration_audit_20260224T195130Z/fixes_applied.md` |
 | Slice C | Complete (regression lane pass) | `TestEvidence/hx02_slice_c_20260224T200311Z/status.tsv` |
 
+## Promotion Verifier + Owner Replay Snapshot (2026-02-25)
+
+- Worker packet: `TestEvidence/hx02_done_promotion_20260225T163521Z/`
+- Worker decision: `DO NOT PROMOTE` from that run only
+- Worker gate results:
+  - `build`: PASS
+  - `qa_smoke`: PASS
+  - `rt_audit`: PASS
+  - `selftest_hx02`: FAIL (`terminal_failure_reason=app_exited_before_result`, `app_signal_name=ABRT`, metadata `TestEvidence/locusq_production_p0_selftest_20260225T163542Z.meta.json`)
+  - `docs_freshness`: PASS
+
+- Owner replay bundle: `TestEvidence/owner_hx02_done_replay_20260225T165720Z/`
+- Owner replay results:
+  - `LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x3 => PASS (3/3)
+  - `./scripts/validate-docs-freshness.sh` => PASS
+- Owner authoritative disposition: worker ABRT treated as transient flake; HX-02 promoted to **Done** on current branch after stable owner replay.
+
 ## Closeout Checklist
 
 - [x] All atomic operations audited and documented
 - [x] All violations fixed
 - [x] Regression suite passes (ctest, self-test, host smoke)
-- [ ] No multi-instance stability regressions
+- [x] No multi-instance stability regressions
 - [x] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes
