@@ -3,7 +3,7 @@ Title: BL-027 Renderer UX v2
 Document Type: Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-25
 ---
 
 # BL-027 — Renderer UX v2
@@ -15,13 +15,35 @@ Redesign the RENDERER panel to be profile-authoritative with explicit requested/
 | Field | Value |
 |---|---|
 | ID | BL-027 |
-| Status | In Planning |
+| Status | In Validation (Slices A-B PASS) |
 | Priority | P2 |
 | Track | C — UX Authoring |
 | Effort | High / XL total; Med / M per slice |
 | Depends | BL-026 |
 | Blocks | BL-028, BL-029 |
 | Annex | `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md` |
+
+### Slice A Execution Snapshot (2026-02-25)
+
+1. Implemented renderer v2 structural shell in WebView with profile-authority cards/chips and additive diagnostics cards while preserving all existing renderer control IDs.
+2. Added fallback-safe renderer UI state handling in `Source/ui/public/js/index.js` for absent or partial renderer payloads; no DSP/runtime behavior changes were made.
+3. Validation status:
+   - Worker lane (`TestEvidence/bl027_slice_a_20260225T171346Z/status.tsv`): `node --check` PASS, standalone build PASS, scoped BL-029 selftest FAIL (`app_exited_before_result` / `ABRT`), docs freshness PASS.
+   - Owner replay (`TestEvidence/owner_bl027_slice_a_replay_20260225T175000Z/status.tsv`): `node --check` PASS, standalone build PASS, scoped BL-029 selftest PASS x3, docs freshness PASS.
+4. Evidence bundles:
+   - Worker: `TestEvidence/bl027_slice_a_20260225T171346Z/`
+   - Owner replay (authoritative): `TestEvidence/owner_bl027_slice_a_replay_20260225T175000Z/`
+5. Contract notes: worker instability was non-reproducible on owner replay; Slice A disposition is `PASS_AFTER_REPLAY`.
+
+### Slice B Execution Snapshot (2026-02-25)
+
+1. Implemented dynamic renderer output/speaker presentation wiring in WebView runtime without changing native renderer contracts.
+2. Validation status (`TestEvidence/bl027_slice_b_impl_20260225T175738Z/status.tsv`):
+   - `node --check Source/ui/public/js/index.js` => PASS
+   - `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` => PASS
+   - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => PASS x3
+3. Evidence bundle: `TestEvidence/bl027_slice_b_impl_20260225T175738Z/`.
+4. Disposition: Slice B accepted with no blockers.
 
 ---
 

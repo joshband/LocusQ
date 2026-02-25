@@ -3,7 +3,7 @@ Title: BL-017 Head-Tracked Monitoring Companion Bridge
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 ---
 
 # BL-017 Head-Tracked Monitoring Companion Bridge
@@ -14,7 +14,7 @@ Last Modified Date: 2026-02-24
 |---|---|
 | ID | BL-017 |
 | Title | Head-Tracked Monitoring Companion Bridge |
-| Status | In Implementation (Slices A-B owner-validated; Slice C pending) |
+| Status | Done (Slice E promotion packet PASS) |
 | Priority | P2 |
 | Track | E — R&D Expansion |
 | Effort | High / L |
@@ -238,6 +238,44 @@ If any slice implementation must deviate from these ADRs, record a new ADR befor
 
 ---
 
+## 10.5 Slice D Reliability Intake (2026-02-25)
+
+Worker bundle: `TestEvidence/bl017_slice_d_20260225T171146Z/`
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| Companion build (`swift build -c release`) | PASS | `TestEvidence/bl017_slice_d_20260225T171146Z/companion_build.log` |
+| UDP soak run (`--seconds 30 --hz 30`) | PASS | `TestEvidence/bl017_slice_d_20260225T171146Z/udp_soak.log` |
+| README reliability checks (`rg reliability/soak/SIGINT/shutdown`) | PASS | `TestEvidence/bl017_slice_d_20260225T171146Z/readme_checks.md` |
+| Optional SIGINT smoke | PASS | `TestEvidence/bl017_slice_d_20260225T171146Z/sigint_smoke.log`, `.../sigint_smoke_status.txt` |
+
+Disposition: Slice D is accepted; BL-017 remains in implementation until promotion packet criteria are assembled.
+
+---
+
+## 10.6 Slice E Done Promotion Packet (2026-02-25)
+
+Worker packet: `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/`
+
+Promotion criteria:
+1. Consolidated Slice A-D evidence has at least one passing selected bundle per slice.
+2. Fresh replay lane passes in one packet:
+   - companion build + 30s UDP soak
+   - native `LocusQ_Standalone` + `locusq_qa` build
+   - `locusq_smoke_suite` QA replay
+   - RT audit with `non_allowlisted=0`
+   - docs freshness pass
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Slice A-D consolidated evidence | PASS | `.../validation_matrix.tsv` (`slice_history` rows) |
+| Fresh replay lane | PASS | `.../validation_matrix.tsv` (`slice_e_fresh` rows) |
+| Promotion decision | PASS | `.../promotion_decision.md` |
+
+Disposition: BL-017 is promoted to `Done` on owner sync.
+
+---
+
 ## 11. Agent Mega-Prompts
 
 ### Slice A — Skill-Aware Prompt
@@ -411,20 +449,24 @@ DELIVERABLES:
 
 ---
 
-## 12. Owner Validation Snapshot (2026-02-24)
+## 12. Owner/Worker Validation Snapshot (2026-02-25)
 
 | Slice | Status | Evidence |
 |---|---|---|
-| Slice A | Implemented and owner-validated | `TestEvidence/bl017_head_tracking_slice_a_20260224T190129Z/status.tsv` (implementation), `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/rt_audit.tsv` (current-tree RT audit pass) |
-| Slice B | Implemented and owner-validated | `TestEvidence/bl017_slice_b_20260224T194727Z/status.tsv`, `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/status.tsv` |
-| Slice C | Pending | Next execution lane: companion app MVP |
+| Slice A | Implemented and owner-validated | `TestEvidence/owner_closeout_20260224T193733Z/status.tsv` (`build_headtracking=PASS`, `qa_smoke=PASS`, `rt_audit=PASS`) |
+| Slice B | Implemented and owner-validated | `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/status.tsv` (`BL017-SliceB-rt-audit=PASS`) |
+| Slice C | Implemented and validated | `TestEvidence/bl017_slice_c_20260224T200747Z/status.tsv` |
+| Slice D | Implemented and validated | `TestEvidence/bl017_slice_d_20260225T171146Z/status.tsv` |
+| Slice E | Done promotion packet generated (worker) | `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv`, `.../promotion_decision.md` (`PASS`) |
 
 ## 13. Closeout Checklist
 
 - [x] Slice A: HeadTrackingBridge.h implemented, unit tested, RT audit clean
 - [x] Slice A: PluginProcessor.cpp integration merged under feature flag
 - [x] Slice B: SpatialRenderer::applyHeadPose() implemented, integration tested
-- [ ] Slice C: Companion app MVP in repository, system test documented
+- [x] Slice C: Companion app MVP in repository, system test documented
+- [x] Slice D: Companion reliability lane validated (soak + SIGINT shutdown hygiene)
+- [x] Slice E: Done promotion packet generated with PASS recommendation
 - [ ] ADR-0006 and ADR-0012 compliance confirmed in code review
 - [ ] `status.json` updated with BL-017 completion and BL-028 gate unblocked
 - [ ] `TestEvidence/validation-trend.md` updated with slice validation results

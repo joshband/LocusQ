@@ -80,6 +80,50 @@ Result: `PASS`
 - replay status: `TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`
 - disposition: Slice E worker fail treated as non-authoritative on current owner branch (remaining release blockers are governance gates, not command-lane crashes).
 
+## HX-05 Payload Budget Contract Slice A Addendum (UTC 2026-02-25)
+
+1. Intake HX-05 Slice A contract packet
+
+```sh
+cat TestEvidence/hx05_payload_budget_slice_a_20260225T171134Z/status.tsv
+```
+
+Result: `PASS`
+- lane summary: `hx05_contract_docs=PASS`, `docs_freshness=PASS`.
+
+2. Evidence pointers
+- `TestEvidence/hx05_payload_budget_slice_a_20260225T171134Z/budget_contract.md`
+- `TestEvidence/hx05_payload_budget_slice_a_20260225T171134Z/status.tsv`
+- `TestEvidence/hx05_payload_budget_slice_a_20260225T171134Z/docs_freshness.log`
+
+3. Owner disposition
+- HX-05 moved from `Open` to `In Validation (Slice A contract authored)` in backlog authority.
+- Runtime enforcement/stress lanes remain future HX-05 slices.
+
+## BL-017 Companion Reliability Slice D Addendum (UTC 2026-02-25)
+
+1. Intake BL-017 Slice D reliability packet
+
+```sh
+cat TestEvidence/bl017_slice_d_20260225T171146Z/status.tsv
+```
+
+Result: `PASS`
+- `swift build -c release` lane passed.
+- UDP soak lane passed (`--seconds 30 --hz 30`).
+- README reliability checks passed.
+- Optional SIGINT smoke passed.
+
+2. Evidence pointers
+- `TestEvidence/bl017_slice_d_20260225T171146Z/companion_build.log`
+- `TestEvidence/bl017_slice_d_20260225T171146Z/udp_soak.log`
+- `TestEvidence/bl017_slice_d_20260225T171146Z/readme_checks.md`
+- `TestEvidence/bl017_slice_d_20260225T171146Z/sigint_smoke.log`
+
+3. Owner disposition
+- BL-017 remains in implementation, now tracked as `Slices A-D validated`.
+- Promotion packet remains pending for BL-017 full closeout.
+
 ## HX-06 Done Promotion Addendum (UTC 2026-02-25)
 
 1. Re-verify RT audit baseline on current tree
@@ -4436,3 +4480,108 @@ LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac
 - BL-026 -> `Done (2026-02-25)`
 - BL-031 -> `Done (2026-02-25)`
 - HX-02 -> `Done (2026-02-25, owner replay authoritative)`
+
+## HX-05 Payload Budget Slice B Addendum (UTC 2026-02-25)
+
+1. Intake HX-05 Slice B QA lane contract packet
+- handoff artifact: `TestEvidence/hx05_payload_budget_slice_b_20260225T174310Z/status.tsv`
+- result: `PASS`
+- scope: docs-only lane spec update (no source changes)
+
+2. Validation evidence
+- `./scripts/validate-docs-freshness.sh` -> PASS
+- artifacts:
+  - `TestEvidence/hx05_payload_budget_slice_b_20260225T174310Z/qa_lane_contract.md`
+  - `TestEvidence/hx05_payload_budget_slice_b_20260225T174310Z/taxonomy_table.tsv`
+  - `TestEvidence/hx05_payload_budget_slice_b_20260225T174310Z/docs_freshness.log`
+
+3. Owner disposition
+- HX-05 remains `In Validation` with Slice A+B contract surfaces published.
+- Next slice should implement runtime enforcement + soak harness execution against the new schema.
+
+## BL-027 Slice A Owner Replay Reconciliation (UTC 2026-02-25)
+
+1. Intake worker handoff
+- worker bundle: `TestEvidence/bl027_slice_a_20260225T171346Z/status.tsv`
+- worker result: `FAIL`
+- failing lane: scoped BL-029 selftest (`app_exited_before_result`, `ABRT`)
+
+2. Owner replay matrix (authoritative)
+- bundle: `TestEvidence/owner_bl027_slice_a_replay_20260225T175000Z/status.tsv`
+- lanes:
+  - `node --check Source/ui/public/js/index.js` => PASS
+  - `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` => PASS
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => PASS x3
+  - `./scripts/validate-docs-freshness.sh` => PASS
+
+3. Owner disposition
+- Worker selftest instability is treated as non-reproducible on current branch.
+- BL-027 moved to `In Validation (Slice A owner replay PASS)`.
+- Authoritative evidence: `TestEvidence/owner_bl027_slice_a_replay_20260225T175000Z/owner_replay_matrix.tsv`.
+
+## HX-05 Payload Budget Slice C Owner Integration (UTC 2026-02-25)
+
+1. Intake worker handoff
+- worker bundle: `TestEvidence/hx05_payload_budget_slice_c_20260225T175148Z/status.tsv`
+- worker result: `PASS`
+- scope: deterministic soak harness implementation and fixture contract validation.
+
+2. Owner replay
+- owner bundle: `TestEvidence/owner_hx05_slice_c_replay_20260225T175333Z/status.tsv`
+- replay matrix:
+  - `bash -n scripts/qa-hx05-payload-budget-soak-mac.sh` => PASS
+  - `./scripts/qa-hx05-payload-budget-soak-mac.sh --help` => PASS
+  - pass fixture run => PASS (`exit 0`)
+  - fail fixture run => PASS (`expected exit 1`)
+  - `./scripts/validate-docs-freshness.sh` => PASS
+
+3. Owner disposition
+- HX-05 remains `In Validation`, now with Slice A-C contract/harness gates passing.
+- Next expected tranche is runtime publisher enforcement plus full stress lane execution against live snapshots.
+
+## BL-017 Done Promotion Packet Slice E Integration (UTC 2026-02-25)
+
+1. Intake worker handoff
+- packet: `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv`
+- result: `PASS`
+- gates: companion build+soak, native build, QA smoke, RT audit (`non_allowlisted=0`), docs freshness.
+
+2. Owner disposition
+- BL-017 promoted to `Done` on this owner sync.
+- authoritative decision evidence: `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/promotion_decision.md`.
+
+## BL-030 RL-05/RL-09 Decision Packet Slice F Intake (UTC 2026-02-25)
+
+1. Intake worker handoff
+- packet: `TestEvidence/bl030_rl05_rl09_slice_f_20260225T174918Z/status.tsv`
+- packet result: `PASS` (decision packet generated)
+- release decision in packet: `NO-GO`
+
+2. Gate interpretation
+- deterministic blockers retained:
+  - `RL-05`: fresh DEV-01..DEV-06 device matrix evidence not yet delivered in this window
+  - `RL-09`: release-note closeout wording/evidence unresolved
+- transient runtime flakes observed in packet:
+  - `RL-03` standalone selftest abort path
+  - `RL-04` REAPER smoke abort path
+  - `RL-06` pluginval abort path
+
+3. Owner disposition
+- BL-030 remains `In Validation`, unchanged from prior owner state.
+- Existing owner replay still establishes that command lanes can pass on current branch (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); governance blockers `RL-05` and `RL-09` remain the release-critical constraints.
+
+## BL-027 Slice B Implementation Intake (UTC 2026-02-25)
+
+1. Intake worker handoff
+- packet: `TestEvidence/bl027_slice_b_impl_20260225T175738Z/status.tsv`
+- result: `PASS`
+- scope: implementation-only update for dynamic renderer output/speaker map presentation.
+
+2. Validation summary
+- `node --check Source/ui/public/js/index.js` => PASS
+- `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` => PASS
+- `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => PASS x3
+
+3. Owner disposition
+- BL-027 status advanced to `In Validation (Slices A-B PASS)`.
+- Next tranche target: Slice C diagnostics card integration.

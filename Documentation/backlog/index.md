@@ -32,15 +32,14 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
-| 1 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028 | [bl-027](bl-027-renderer-uiux-v2.md) |
+| 1 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Validation (Slices A-B PASS) | C | BL-026 | BL-028 | [bl-027](bl-027-renderer-uiux-v2.md) |
 | 2 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | — | [bl-028](bl-028-spatial-output-matrix.md) |
-| 3 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
+| 3 | HX-05 | Payload budget and throttle contract | P2 | In Validation (Slice A-C contracts + harness PASS) | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
 | 4 | BL-030 | Release governance and device rerun | P2 | In Validation (owner replay green on command lanes; blocked on RL-05/RL-09) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
-| 5 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Implementation (Slices A-B validated) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
-| 6 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
-| 7 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
-| 8 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
-| 9 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Planning | F | — | — | [bl-032](bl-032-source-modularization.md) |
+| 5 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
+| 6 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
+| 7 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
+| 8 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Planning | F | — | — | [bl-032](bl-032-source-modularization.md) |
 
 ## Dependency Graph
 
@@ -53,6 +52,7 @@ graph TD
         BL-013[BL-013 Done]
         BL-012[BL-012 Done]
         BL-026[BL-026 Calibrate v2 Done]
+        BL-017[BL-017 Head Track Done]
         BL-031[BL-031 Tempo Token Done]
         BL-014[BL-014 Done]
         BL-018[BL-018 Done]
@@ -68,14 +68,13 @@ graph TD
     end
 
     subgraph "In Validation"
+        HX-05[HX-05 Payload]
         BL-030[BL-030 Release Gov]
+        BL-027[BL-027 Renderer v2]
     end
 
     subgraph "In Planning / Open"
-        BL-027[BL-027 Renderer v2]
         BL-028[BL-028 Output Matrix]
-        BL-017[BL-017 Head Track]
-        HX-05[HX-05 Payload]
         BL-032[BL-032 Source Modularization]
     end
 
@@ -122,7 +121,7 @@ graph TD
 | B | Scene/UI Runtime | BL-031, BL-016-adjacent | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
 | C | UX Authoring | BL-026, BL-027, BL-023, BL-025 regression | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-012, BL-013, BL-024 cadence | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
-| E | R&D Expansion | BL-017, BL-020, BL-021 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
+| E | R&D Expansion | BL-020, BL-021 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
 | F | Hardening | HX-02, HX-05, BL-032 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
 
@@ -191,6 +190,7 @@ Any status change must update in the same changeset:
 | BL-014 | Listener/speaker/aim/RMS overlay strict closeout | 2026-02-24 | [bl-014](bl-014-overlay-strict-closeout.md) |
 | BL-015 | All-emitter realtime rendering closure | 2026-02-23 | [bl-015](bl-015-all-emitter-rendering.md) |
 | BL-016 | Visualization transport contract closure | 2026-02-23 | [bl-016](bl-016-transport-contract.md) |
+| BL-017 | Head-tracked monitoring companion bridge | 2026-02-25 | [bl-017](bl-017-head-tracked-monitoring.md) |
 | BL-018 | Spatial format matrix strict closeout | 2026-02-24 | [bl-018](bl-018-spatial-format-matrix.md) |
 | BL-019 | Physics interaction lens closure | 2026-02-23 | [bl-019](bl-019-physics-interaction-lens.md) |
 | BL-022 | Choreography lane closeout | 2026-02-24 | [bl-022](bl-022-choreography-closeout.md) |

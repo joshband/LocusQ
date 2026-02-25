@@ -3,218 +3,253 @@ Title: HX-05 Payload Budget and Throttle Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-25
 ---
 
-# HX-05: Payload Budget and Throttle Contract
+# HX-05: Payload Budget and Throughput Contract
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | Open |
-| Owner Track | Track F — Hardening |
+| Status | In Validation (Slice A+B contract + Slice C harness) |
+| Owner Track | Track F - Hardening |
 | Depends On | BL-016 (Done), BL-025 (Done) |
-| Blocks | — |
-| Annex Spec | (inline — references scene-state-contract and transport docs) |
-
-## Effort Estimate
-
-| Slice | Complexity | Scope | Notes |
-|---|---|---|---|
-| A | Low | S | Measure current payload sizes |
-| B | Med | M | Define budget thresholds |
-| C | Med | L | Implement throttle/drop policy |
-| D | Med | M | Stress validation |
+| Blocks | BL-027 throughput hardening slices |
+| Slice Scope | Slice A+B+C (Slice C includes harness script + docs; no Source changes) |
 
 ## Objective
 
-Define and enforce a scene payload budget and throttling contract to maintain UI responsiveness under high emitter counts. Prevent unbounded payload growth from degrading WebView rendering performance.
+Define authoritative scene-state payload and bridge cadence limits so UI transport remains deterministic and bounded under load.
 
-## Scope & Non-Scope
+## Slice A Scope (Completed)
 
-**In scope:**
-- Measuring current scene snapshot payload sizes (bytes per emitter, total per snapshot)
-- Defining budget thresholds (max bytes per snapshot, max emitters before throttling)
-- Implementing throttle/drop policy when budget is exceeded
-- Stress testing with 8+ simultaneous emitters
+In scope:
+- Hard budget thresholds (bytes/update, cadence, burst behavior, degradation behavior)
+- Explicit pass/fail acceptance criteria tied to evidence artifacts
+- Additive schema guidance only (no breaking contract changes)
+- Traceability IDs mapped into implementation traceability
 
-**Out of scope:**
-- Redesigning the scene snapshot format
-- Changing the SceneGraph lock-free architecture
-- WebView rendering optimization (that's independent)
+Out of scope:
+- Runtime publisher/throttle code changes
+- WebView rendering code changes
+- Backlog/index/status promotion updates
 
-## Architecture Context
+## Authoritative Budget Contract (Normative)
 
-- Scene snapshots: published from processBlock via SceneGraph double-buffer, consumed by UI timer
-- Snapshot payload: JSON serialized in PluginEditor.cpp native bridge, sent to WebView JS
-- Current payload fields: per-emitter position, direction, energy, physics state, overlays
-- Scene-state contract: `Documentation/scene-state-contract.md` defines all payload fields
-- Transport contract (BL-016): cadence and sequence safety guarantees
-- Invariants: Scene Graph (lock-free, finite fields), Audio Thread (RT safety)
+| Budget Dimension | Normal Target | Soft Limit | Hard Limit | Enforcement Contract |
+|---|---:|---:|---:|---|
+| Serialized snapshot payload bytes/update | <= 24,576 B | <= 32,768 B | <= 65,536 B | Publisher must remain <= hard limit; soft-limit overage is temporary and burst-governed. |
+| Scene-state publication cadence | 30 Hz nominal | <= 45 Hz burst cap | 60 Hz absolute cap | Publisher must never exceed 60 Hz. Above 30 Hz is allowed only during bounded burst windows. |
+| Soft-overage burst window | n/a | max 8 consecutive snapshots over soft limit | n/a | Must recover to <= soft limit within 500 ms from burst start. |
+| Hard-overage policy | n/a | n/a | 1 hard-overage snapshot triggers degrade tier | Immediate degrade action required; repeated hard overage escalates to safe mode. |
 
-## Implementation Slices
+### Degradation Policy (Normative)
 
-| Slice | Description | Files | Entry Gate | Exit Criteria |
-|---|---|---|---|---|
-| A | Measure payload sizes | `Source/PluginEditor.cpp`, `Source/SceneGraph.h` | BL-016, BL-025 done | Payload size report per emitter count |
-| B | Define budget thresholds | `Documentation/scene-state-contract.md` | Slice A data | Thresholds documented |
-| C | Implement throttle/drop | `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js` | Slice B done | Throttle active when budget exceeded |
-| D | Stress validation | `tests/`, `TestEvidence/` | Slice C done | 8+ emitters stable |
-
-## Agent Mega-Prompt
-
-### Slice A — Skill-Aware Prompt
-
-```
-/impl HX-05 Slice A: Measure current scene payload sizes
-Load: $juce-webview-runtime, $skill_testing
-
-Objective: Instrument the scene snapshot bridge path to measure payload sizes
-(bytes per snapshot) at various emitter counts (1, 2, 4, 8, 16).
-
-Files to modify:
-- Source/PluginEditor.cpp — add temporary payload size logging in bridge send path
-
-Constraints:
-- Logging must be on message thread only (no logging in processBlock)
-- Measure JSON serialized size before sending to WebView
-- Capture: emitter_count, payload_bytes, fields_per_emitter
-
-Validation:
-- Launch standalone, add emitters, record payload sizes
-- Compile report: payload_bytes = f(emitter_count)
-
-Evidence:
-- TestEvidence/hx05_payload_budget_<timestamp>/payload_measurements.tsv
-```
-
-### Slice A — Standalone Fallback Prompt
-
-```
-You are implementing HX-05 Slice A for LocusQ.
-
-PROJECT CONTEXT:
-- Scene snapshots are serialized as JSON in Source/PluginEditor.cpp native bridge
-- SceneGraph (Source/SceneGraph.h) has EmitterSlot array with per-emitter fields
-- Snapshot payload includes: position (x,y,z), direction (az,el), energy (rms),
-  physics state, overlay flags, plus room/listener/speaker telemetry
-
-TASK:
-1. In Source/PluginEditor.cpp, find the bridge function that sends scene state to WebView
-2. Add temporary size measurement: log JSON string length before sending
-3. Test with 1, 2, 4, 8 emitters active
-4. Record payload sizes in TSV format: emitter_count | payload_bytes | timestamp
-5. Calculate per-emitter overhead and base overhead
-6. Remove temporary logging after measurement
-7. Write report
-
-EVIDENCE:
-- TestEvidence/hx05_payload_budget_<timestamp>/payload_measurements.tsv
-```
-
-### Slice B — Skill-Aware Prompt
-
-```
-/plan HX-05 Slice B: Define payload budget thresholds
-Load: $skill_docs, $juce-webview-runtime
-
-Objective: Based on Slice A measurements, define budget thresholds in scene-state-contract.md.
-
-Decisions needed:
-- Max payload per snapshot (suggest: 32KB soft limit, 64KB hard limit)
-- Max emitters before throttling (based on per-emitter size from Slice A)
-- Throttle behavior: reduce update frequency vs drop optional fields vs both
-- Warning threshold (% of budget that triggers diagnostics)
-
-Evidence:
-- Updated Documentation/scene-state-contract.md with budget section
-```
-
-### Slice C — Skill-Aware Prompt
-
-```
-/impl HX-05 Slice C: Implement throttle/drop policy
-Load: $skill_impl, $juce-webview-runtime
-
-Objective: When scene snapshot exceeds soft budget, apply throttle policy.
-
-Behavior:
-- Below soft limit: full payload at normal cadence
-- Between soft and hard limit: reduce cadence (skip every other snapshot)
-- Above hard limit: drop optional fields (overlays, physics detail) first, then throttle
-
-Files to modify:
-- Source/PluginEditor.cpp — budget check before bridge send
-- Source/ui/public/js/index.js — handle reduced cadence gracefully (interpolate)
-
-Constraints:
-- Budget check must be on message thread (not processBlock)
-- Throttle must not cause visual tearing
-- Must publish throttle state in diagnostics
-
-Evidence:
-- TestEvidence/hx05_payload_budget_<timestamp>/throttle_implementation.log
-```
-
-### Slice D — Skill-Aware Prompt
-
-```
-/test HX-05 Slice D: High-emitter stress validation
-Load: $skill_test, $skill_testing
-
-Objective: Validate UI remains responsive with 8+ simultaneous emitters under throttle policy.
-
-Test scenarios:
-1. 8 emitters, full motion: verify smooth UI, payload within budget
-2. 16 emitters: verify throttle activates, UI remains responsive
-3. Rapid emitter add/remove (1->16->1): verify no crash or stale state
-4. Throttle diagnostics visible in UI
-
-Evidence:
-- TestEvidence/hx05_payload_budget_<timestamp>/stress_results.tsv
-```
-
-## Validation Plan
-
-| Lane ID | Type | Command | Pass Criteria |
+| Tier | Entry Condition | Required Behavior | Exit Condition |
 |---|---|---|---|
-| HX-05-measure | Manual | Payload size measurement | Report generated |
-| HX-05-throttle | Automated | High-emitter stress | UI responsive at 8+ emitters |
-| HX-05-diagnostics | Automated | Throttle state check | Diagnostics publish correctly |
-| HX-05-freshness | Automated | `./scripts/validate-docs-freshness.sh` | Exit 0 |
+| `normal` | Within soft limit and cadence target | Full payload at nominal cadence | n/a |
+| `degrade_t1` | Hard overage once OR soft burst window exceeded | Clamp publication cadence to <= 20 Hz and prioritize core fields (`emitters`, `listener`, `speakers`, diagnostics) over optional overlays | 120 consecutive compliant snapshots |
+| `degrade_t2_safe` | Hard overage in 3 of any 10 consecutive snapshots | Clamp cadence to <= 10 Hz and publish minimal deterministic transport subset until pressure clears | 240 consecutive compliant snapshots |
 
-## Risks & Mitigations
+### Additive Schema Guidance (Slice A, non-breaking)
 
-| Risk | Impact | Likelihood | Mitigation |
-|---|---|---|---|
-| Throttle causes visual stuttering | Med | Med | Interpolation on JS side smooths gaps |
-| Budget thresholds too aggressive | Med | Med | Start conservative, tune based on testing |
-| Payload measurement overhead | Low | Low | Temporary instrumentation, remove after |
+If transport budget telemetry is added in future slices, fields must be additive and optional:
 
-## Failure & Rollback Paths
+- `snapshotPayloadBytes` (integer): serialized bytes for accepted snapshot
+- `snapshotBudgetTier` (string enum): `normal`, `degrade_t1`, `degrade_t2_safe`
+- `snapshotBurstCount` (integer): current consecutive over-soft count
+- `snapshotBudgetPolicyVersion` (string): contract policy marker, initial value `hx05-v1`
 
-- If throttle causes worse UX than no throttle: disable throttle, increase soft limit
-- If stress test crashes: check SceneGraph slot bounds, verify emitter registration
-- If payload grows unexpectedly: audit new fields added since last measurement
+Backward-compatibility rule: UI consumers must ignore unknown fields and preserve existing rendering behavior when these fields are absent.
 
-## Evidence Bundle Contract
+## Acceptance Criteria (Slice A)
 
-| Artifact | Path | Required Fields |
+| Acceptance ID | Requirement | Pass Evidence |
 |---|---|---|
-| Payload measurements | `TestEvidence/hx05_payload_budget_<timestamp>/payload_measurements.tsv` | emitter_count, payload_bytes |
-| Stress results | `TestEvidence/hx05_payload_budget_<timestamp>/stress_results.tsv` | scenario, fps, payload_bytes, throttle_active |
-| Status TSV | `TestEvidence/hx05_payload_budget_<timestamp>/status.tsv` | lane, result, timestamp |
+| `HX05-AC-001` | Budget table defines explicit limits for bytes/update, cadence, burst, degradation | `Documentation/scene-state-contract.md` includes normative HX-05 budget section |
+| `HX05-AC-002` | Additive schema guidance is documented with backward-compatibility behavior | `Documentation/scene-state-contract.md` includes optional additive field guidance |
+| `HX05-AC-003` | Implementation traceability includes HX-05 contract rows | `Documentation/implementation-traceability.md` includes HX-05 rows |
+| `HX05-AC-004` | Docs freshness gate passes after updates | `TestEvidence/hx05_payload_budget_slice_a_<timestamp>/docs_freshness.log` exit 0 |
 
-## Closeout Checklist
+## Enforcement Checks (Measurable Artifacts)
 
-- [ ] Payload sizes measured and documented
-- [ ] Budget thresholds defined in scene-state-contract.md
-- [ ] Throttle policy implemented and tested
-- [ ] 8+ emitter stress test passes
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+| Check ID | Measurement | Artifact Contract | Pass/Fail Rule |
+|---|---|---|---|
+| `HX05-CHECK-01` | Serialized bytes/update distribution | `payload_metrics.tsv` (`snapshot_seq`, `bytes`, `cadence_hz`) | `p95(bytes) <= 32768` and `max(bytes) <= 65536` |
+| `HX05-CHECK-02` | Cadence cap and burst duration | `transport_cadence.tsv` (`window_start_ms`, `hz`, `burst_count`) | `max(hz) <= 60` and no burst window > 500 ms |
+| `HX05-CHECK-03` | Degrade tier transitions | `budget_tier_events.tsv` (`seq`, `tier`, `reason`) | Entry/exit transitions match policy and are deterministic for replayed input |
+| `HX05-CHECK-04` | UI stale/fallback safety while degraded | `selftest_budget_guard.tsv` | No stale lockup; controls remain interactive |
+
+## Slice A Evidence Bundle Contract
+
+Required artifacts for this slice:
+- `TestEvidence/hx05_payload_budget_slice_a_<timestamp>/status.tsv`
+- `TestEvidence/hx05_payload_budget_slice_a_<timestamp>/budget_contract.md`
+- `TestEvidence/hx05_payload_budget_slice_a_<timestamp>/docs_freshness.log`
+
+## Slice B QA Lane Spec (This Slice)
+
+### Lane Purpose
+
+Define deterministic QA/stress validation contract for payload-budget enforcement slices so runtime implementation can be checked against fixed windows and artifact schemas.
+
+### Canonical Lane Definition
+
+| Lane ID | Intent | Execution Mode | Determinism Requirement |
+|---|---|---|---|
+| `HX05-LANE-SOAK` | Payload/cadence soak under bounded stress | deterministic replay inputs + fixed sample windows | identical input trace must produce identical pass/fail taxonomy counts and tier-transition sequence |
+
+### Sample Window Contract
+
+| Window ID | Duration | Purpose | Required Signals |
+|---|---:|---|---|
+| `W0_warmup` | 10 s | prime caches, discard startup transients | collect but exclude from pass/fail scoring |
+| `W1_nominal` | 60 s | baseline cadence and payload in steady state | `bytes`, `cadence_hz`, `tier`, `burst_count` |
+| `W2_burst` | 30 s | controlled emitter churn / burst pressure | `bytes`, `cadence_hz`, `tier`, `burst_count`, `reason` |
+| `W3_sustained_stress` | 120 s | long-horizon degradation/recovery behavior | `bytes`, `cadence_hz`, `tier`, `burst_count`, `reason` |
+
+Scoring rule: only `W1..W3` contribute to lane verdict.
+
+### Pass/Fail Thresholds (Normative)
+
+| Metric | Threshold | Scope | Fail Taxonomy Mapping |
+|---|---|---|---|
+| `max(bytes)` | `<= 65536` | `W1..W3` | `oversize_hard_limit` |
+| `p95(bytes)` | `<= 32768` | `W1..W3` | `oversize_soft_limit` |
+| `max(cadence_hz)` | `<= 60` | `W1..W3` | `cadence_violation` |
+| burst over-soft run length | `<= 8` snapshots and `<= 500 ms` | `W2..W3` | `burst_overrun` |
+| tier transition correctness | transitions must satisfy policy (`normal`, `degrade_t1`, `degrade_t2_safe`) | `W2..W3` | `degrade_tier_mismatch` |
+
+### Artifact Schema Contract (Slice B)
+
+| Artifact | Required Columns / Fields | Notes |
+|---|---|---|
+| `payload_metrics.tsv` | `window_id`, `snapshot_seq`, `utc_ms`, `bytes`, `tier`, `burst_count` | one row per accepted snapshot |
+| `transport_cadence.tsv` | `window_id`, `window_start_ms`, `window_end_ms`, `cadence_hz`, `over_soft_count` | fixed analysis windows (1 s bins) |
+| `budget_tier_events.tsv` | `snapshot_seq`, `window_id`, `from_tier`, `to_tier`, `reason`, `compliance_streak` | transition log only |
+| `taxonomy_table.tsv` | `failure_code`, `count`, `first_snapshot_seq`, `first_window_id` | aggregate failure taxonomy |
+| `status.tsv` | `lane`, `result`, `exit_code`, `timestamp`, `artifact` | machine-readable lane verdict |
+| `qa_lane_contract.md` | contract version + thresholds + deterministic replay notes | human-readable summary |
+
+### Failure Taxonomy (Slice B)
+
+| Failure Code | Trigger Condition | Severity | Required Evidence |
+|---|---|---|---|
+| `oversize_hard_limit` | any snapshot `bytes > 65536` | hard fail | offending rows in `payload_metrics.tsv` |
+| `oversize_soft_limit` | `p95(bytes) > 32768` across scored windows | fail | percentile report + raw rows |
+| `burst_overrun` | over-soft burst length exceeds `8` snapshots or `500 ms` | fail | `transport_cadence.tsv` + `budget_tier_events.tsv` |
+| `cadence_violation` | any scored window cadence exceeds `60 Hz` cap | hard fail | `transport_cadence.tsv` |
+| `degrade_tier_mismatch` | observed transitions differ from policy entry/exit contract | fail | `budget_tier_events.tsv` replay diff |
+
+### Acceptance Criteria (Slice B)
+
+| Acceptance ID | Requirement | Pass Evidence |
+|---|---|---|
+| `HX05-B-AC-001` | Soak lane sample windows and scoring rules are specified | this document (`Slice B QA Lane Spec`) |
+| `HX05-B-AC-002` | Artifact schemas are fully specified for deterministic validation | this document (`Artifact Schema Contract`) |
+| `HX05-B-AC-003` | Failure taxonomy covers oversize, burst overrun, cadence violation, and tier mismatch | this document (`Failure Taxonomy`) + evidence `taxonomy_table.tsv` |
+| `HX05-B-AC-004` | Slice B acceptance IDs are mapped in implementation traceability | `Documentation/implementation-traceability.md` HX-05 Slice B rows |
+| `HX05-B-AC-005` | Docs freshness gate passes for Slice B docs-only update | `TestEvidence/hx05_payload_budget_slice_b_<timestamp>/docs_freshness.log` exit 0 |
+
+## Slice B Evidence Bundle Contract
+
+Required artifacts for this slice:
+- `TestEvidence/hx05_payload_budget_slice_b_<timestamp>/status.tsv`
+- `TestEvidence/hx05_payload_budget_slice_b_<timestamp>/qa_lane_contract.md`
+- `TestEvidence/hx05_payload_budget_slice_b_<timestamp>/taxonomy_table.tsv`
+- `TestEvidence/hx05_payload_budget_slice_b_<timestamp>/docs_freshness.log`
+
+## Slice C Soak Harness (This Slice)
+
+### Harness Implementation
+
+Script:
+- `scripts/qa-hx05-payload-budget-soak-mac.sh`
+
+Interface:
+- `--input-dir <path>` (required)
+- `--out-dir <path>` (optional)
+- `--label <name>` (optional)
+- `--help`
+
+Strict exits:
+- `0`: pass (schema + thresholds + transition checks all valid)
+- `1`: fail (schema invalid or contract violation)
+- `2`: invocation/usage error
+
+### Enforced Inputs and Schemas
+
+Required input artifacts:
+- `payload_metrics.tsv`
+- `transport_cadence.tsv`
+- `budget_tier_events.tsv`
+- `taxonomy_table.tsv`
+
+Required schema columns:
+- payload metrics: `window_id`, `snapshot_seq`, `utc_ms`, `bytes`, `tier`, `burst_count`
+- transport cadence: `window_id`, `window_start_ms`, `window_end_ms`, `cadence_hz`, `over_soft_count`
+- tier events: `snapshot_seq`, `window_id`, `from_tier`, `to_tier`, `reason`, `compliance_streak`
+- taxonomy: `failure_code`, `count`, `first_snapshot_seq`, `first_window_id`
+
+### Deterministic Threshold Evaluation
+
+Scored windows:
+- `W1_nominal`, `W2_burst`, `W3_sustained_stress`
+
+Burst windows:
+- `W2_burst`, `W3_sustained_stress`
+
+Deterministic checks:
+- `max(bytes) <= 65536`
+- nearest-rank `p95(bytes) <= 32768`
+- `max(cadence_hz) <= 60`
+- `max burst_count <= 8` and `max burst duration <= 500 ms`
+- tier transitions and recovery streaks match policy
+
+### Slice C Failure Taxonomy
+
+Output taxonomy rows are deterministic and ordered:
+- `oversize_hard_limit`
+- `oversize_soft_limit`
+- `cadence_violation`
+- `burst_overrun`
+- `degrade_tier_mismatch`
+- `schema_invalid`
+- `none`
+
+### Acceptance Criteria (Slice C)
+
+| Acceptance ID | Requirement | Pass Evidence |
+|---|---|---|
+| `HX05-C-AC-001` | Harness script exists with strict exit semantics and help contract | `scripts/qa-hx05-payload-budget-soak-mac.sh` + `--help` output |
+| `HX05-C-AC-002` | Harness validates all required artifact schemas before scoring | harness `status.tsv` (`schema_validation`) + `eval.log` |
+| `HX05-C-AC-003` | Harness enforces A+B thresholds deterministically on scored windows | harness `status.tsv` + `taxonomy_table.tsv` |
+| `HX05-C-AC-004` | PASS fixture returns exit `0` and FAIL fixture returns exit `1` | `pass_fixture_result.tsv`, `fail_fixture_result.tsv` |
+| `HX05-C-AC-005` | Docs freshness gate passes for Slice C change set | `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/docs_freshness.log` |
+
+## Slice C Evidence Bundle Contract
+
+Required artifacts for this slice:
+- `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/status.tsv`
+- `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/qa_lane_contract.md`
+- `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/taxonomy_table.tsv`
+- `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/pass_fixture_result.tsv`
+- `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/fail_fixture_result.tsv`
+- `TestEvidence/hx05_payload_budget_slice_c_<timestamp>/docs_freshness.log`
+
+## Closeout Checklist (Slice A+B+C)
+
+- [x] Hard payload/throughput limits documented
+- [x] Burst and degradation policy documented
+- [x] Additive schema guidance documented
+- [x] Acceptance IDs and measurable checks documented
+- [x] Traceability rows added in implementation traceability
+- [x] Slice B lane windows/thresholds/artifact schemas documented
+- [x] Slice B failure taxonomy documented
+- [x] Slice B acceptance IDs defined
+- [x] Slice C soak harness script implemented with strict exit semantics
+- [x] Slice C fixture-based PASS/FAIL validation defined
+- [ ] Runtime budget enforcement implementation (future slice)
+- [ ] Runtime stress/perf validation lane (future slice)
