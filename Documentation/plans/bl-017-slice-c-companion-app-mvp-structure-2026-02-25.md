@@ -247,3 +247,13 @@ Proposed `companion/README.md` sections:
 ## 7. Suggested Next Step
 
 Implement Option A (Swift CLI) first, add one packet-size/unit test (`36 bytes`, header fields exact), then run manual AirPods validation with BL-017 diagnostics visible.
+
+
+## 8. Implementation Status (2026-02-25)
+
+Implemented in-repo under `companion/` as a Swift Package MVP:
+- `LocusQHeadTrackerCore` provides `PosePacket`, `UdpSender` (POSIX UDP), `HeadphoneMotionService` (`CMHeadphoneMotionManager` on macOS, informative fallback elsewhere), and `TrackerApp` wiring.
+- `LocusQHeadTracker` executable provides CLI entrypoint (`--host`, `--port`) targeting default `127.0.0.1:19765`.
+- `PosePacketTests` verifies v1 wire format and 36-byte packet size.
+
+Validation completed for deterministic serialization lane (`swift test`) and CLI smoke (`swift run ... --help`). Manual AirPods validation remains pending on macOS hardware lane.

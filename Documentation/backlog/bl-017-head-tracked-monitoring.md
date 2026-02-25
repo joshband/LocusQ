@@ -412,20 +412,20 @@ DELIVERABLES:
 
 ---
 
-## 12. Owner Validation Snapshot (2026-02-24)
+## 12. Owner Validation Snapshot (2026-02-25)
 
 | Slice | Status | Evidence |
 |---|---|---|
 | Slice A | Implemented and owner-validated | `TestEvidence/bl017_head_tracking_slice_a_20260224T190129Z/status.tsv` (implementation), `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/rt_audit.tsv` (current-tree RT audit pass) |
 | Slice B | Implemented and owner-validated | `TestEvidence/bl017_slice_b_20260224T194727Z/status.tsv`, `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/status.tsv` |
-| Slice C | Pending | Next execution lane: companion app MVP |
+| Slice C | Implemented (companion MVP) and partially validated | `companion/` Swift package + `swift test` packet contract check on current branch; hardware AirPods manual lane pending |
 
 ## 13. Closeout Checklist
 
 - [x] Slice A: HeadTrackingBridge.h implemented, unit tested, RT audit clean
 - [x] Slice A: PluginProcessor.cpp integration merged under feature flag
 - [x] Slice B: SpatialRenderer::applyHeadPose() implemented, integration tested
-- [ ] Slice C: Companion app MVP in repository, system test documented
+- [x] Slice C: Companion app MVP in repository (system test documentation pending hardware lane)
 - [ ] ADR-0006 and ADR-0012 compliance confirmed in code review
 - [ ] `status.json` updated with BL-017 completion and BL-028 gate unblocked
 - [ ] `TestEvidence/validation-trend.md` updated with slice validation results

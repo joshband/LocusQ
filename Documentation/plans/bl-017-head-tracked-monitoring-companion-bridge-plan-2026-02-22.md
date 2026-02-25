@@ -172,3 +172,5 @@ A dedicated Slice C design note now defines the companion app MVP directory layo
 
 Reference: `Documentation/plans/bl-017-slice-c-companion-app-mvp-structure-2026-02-25.md`.
 
+Slice C implementation landed in-repo under `companion/` (Swift Package CLI MVP + packet serialization test).
+
