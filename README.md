@@ -6,123 +6,115 @@ Last Modified Date: 2026-02-25
 
 # LocusQ
 
-LocusQ is a JUCE 8 spatial-audio plugin for designing, animating, and rendering 3D sound scenes with a WebView-based UI and deterministic real-time behavior.
+LocusQ is a spatial audio plugin for building 3D sound scenes in your DAW or standalone app.
 
-## What LocusQ Does
+It has three working views:
+- `CALIBRATE` for routing and measurement setup.
+- `EMITTER` for placing and animating sound sources in 3D space.
+- `RENDERER` for final spatial rendering, room controls, and headphone monitoring.
 
-LocusQ uses a three-mode workflow:
+## What You Can Do With It
 
-- `CALIBRATE`: measure your room/speaker setup and generate a room profile.
-- `EMITTER`: turn source tracks into spatial emitters with position, directivity, physics, and timeline automation.
-- `RENDERER`: collect all active emitters, apply spatial rendering + room processing, and output to mono/stereo/quad layouts.
+- Place sounds in 3D using cartesian or spherical positioning.
+- Animate source movement with timeline/keyframe controls.
+- Use physics-style motion behaviors for dynamic source movement.
+- Render for speaker layouts and headphone monitoring paths.
+- Tune spatial parameters such as distance model, air absorption, room mix, and damping.
+- Inspect scene behavior in an interactive WebView + Three.js interface.
 
-## Feature Overview
-
-- Multi-instance spatial workflow with a shared scene graph inside the DAW process.
-- WebView + Three.js UI for interactive 3D scene visualization.
-- Positioning in spherical or cartesian coordinates.
-- Physics-enabled motion (gravity, drag, collisions, velocity-based movement).
-- Timeline/keyframe animation and preset save/load workflow.
-- Spatial processing controls for distance, directivity, spread, doppler, and air absorption.
-- Room rendering controls (reflections/room mix/size/damping).
-- Output profiles for studio speakers and headphone workflows (including optional Steam Audio path).
-- BL-018 strict spatial profile matrix closeout completed (mono/stereo/quad/5.1/7.1/binaural/ambisonic) with deterministic diagnostics evidence.
-- BL-022 choreography lane closeout completed (`UI-P1-022` plus `UI-P1-025A..E` regression guard) with refreshed deterministic evidence.
-- BL-013 HostRunner feasibility promotion is now Done with Slice D evidence (`TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv`).
-- BL-017 head-tracked monitoring companion bridge is now Done via Slice E promotion packet (`TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv`).
-- BL-030 release governance lanes include a dedicated CI workflow (`.github/workflows/release-governance.yml`) and owner replay confirms selftest/reaper/pluginval/docs lanes pass (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains in validation pending `RL-05` and `RL-09`.
-- Deterministic QA lanes and scripted validation workflows.
-
-## Supported Platforms and Formats
+## Plugin Formats
 
 - macOS: `VST3`, `AU`, `Standalone`
 - Windows: `VST3`, `Standalone`
 - Linux: `VST3`, `LV2`, `Standalone`
+- Optional (when enabled): `CLAP`
 
-## Install and Setup
+## Quickstart (macOS)
 
-### Recommended (macOS)
+### 1. Build and install plugins
 
-1. Build and install plugin binaries:
-   - `./scripts/build-and-install-mac.sh`
-2. Optional: also install standalone app to `~/Applications`:
-   - `LOCUSQ_INSTALL_STANDALONE=1 ./scripts/build-and-install-mac.sh`
-3. Optional: enable/install CLAP during build:
-   - `LOCUSQ_ENABLE_CLAP=1 LOCUSQ_INSTALL_CLAP=1 ./scripts/build-and-install-mac.sh`
+```bash
+./scripts/build-and-install-mac.sh
+```
 
-Installed plugin locations:
+This installs to:
 - `~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3`
 - `~/Library/Audio/Plug-Ins/Components/LocusQ.component`
-- `~/Library/Audio/Plug-Ins/CLAP/LocusQ.clap` (when CLAP is enabled)
 
-### Build Prerequisites
+Optional CLAP install:
+
+```bash
+LOCUSQ_ENABLE_CLAP=1 LOCUSQ_INSTALL_CLAP=1 ./scripts/build-and-install-mac.sh
+```
+
+Optional standalone install to `~/Applications`:
+
+```bash
+LOCUSQ_INSTALL_STANDALONE=1 ./scripts/build-and-install-mac.sh
+```
+
+### 2. Launch in DAW or standalone
+
+- DAW: rescan plugins and load `LocusQ` on tracks/buses.
+- Standalone (local build artifact):
+
+```bash
+open -na "$(pwd)/build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app"
+```
+
+### 3. First-use workflow
+
+1. Open `CALIBRATE` and verify routing (topology, monitoring path, outputs).
+2. Open `EMITTER` and position at least one source in 3D.
+3. Open `RENDERER` and choose monitoring/render options.
+4. Play audio and confirm localization/motion behavior.
+
+## Headphone Usage
+
+For headphone testing:
+- Set `Monitoring Path` in `CALIBRATE`.
+- In `RENDERER`, select headphone mode/profile.
+- Use built-in movement/animation in `EMITTER` to verify front/back and motion cues.
+
+If a profile path is unavailable, LocusQ will report fallback state in diagnostics.
+
+## Build From Source (All Platforms)
+
+### Prerequisites
 
 - CMake `>= 3.22`
-- C++20-capable toolchain
-- JUCE checkout available via:
-  - `JUCE_DIR`, or
-  - sibling path `../audio-plugin-coder/_tools/JUCE`
+- C++20 toolchain
+- JUCE checkout available via `JUCE_DIR` or sibling path expected by this repo
 
-## Quick Start Workflow
+### Configure + build
 
-1. Open LocusQ in your DAW (or standalone).
-2. In `CALIBRATE`, set mic/speaker routing and run measurement to establish room context.
-3. Insert LocusQ on source tracks in `EMITTER` mode and shape each source:
-   - position/size/directivity
-   - gain/mute/solo
-   - animation/physics behavior
-4. Insert one `RENDERER` instance on your spatial bus/master and tune:
-   - renderer quality and distance model
-   - room + headphone profile settings
-   - visualization overlays (trails, vectors, physics lens)
-5. Save emitter presets and session state through your DAW project/preset flow.
-
-## Architecture
-
-### System Topology
-
-```mermaid
-flowchart TD
-    E1[Emitter Instance A]
-    E2[Emitter Instance B to N]
-    C[Calibrate Instance]
-    SG[Shared SceneGraph]
-    R[Renderer Instance]
-    OUT[Host Output Mono Stereo Quad]
-
-    E1 --> SG
-    E2 --> SG
-    C --> SG
-    SG --> R
-    R --> OUT
+```bash
+cmake -S . -B build_local -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake --build build_local --config Release --target LocusQ_Standalone -j 8
 ```
 
-### Runtime Data Flow
+Optional flags:
+- `-DLOCUSQ_ENABLE_CLAP=ON`
+- `-DLOCUSQ_ENABLE_STEAM_AUDIO=ON`
 
-```mermaid
-sequenceDiagram
-    participant UI
-    participant Processor
-    participant SceneGraph
-    participant Renderer
-    participant Host
+## Validation (Contributor-Facing)
 
-    UI->>Processor: Parameter edits and mode actions
-    Processor->>SceneGraph: Publish emitter and calibration state
-    SceneGraph->>Renderer: Read lock free scene snapshot
-    Renderer->>Host: Rendered spatial audio block
-    Processor-->>UI: Scene and status JSON
+Common validation commands:
+
+```bash
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap
+./scripts/validate-docs-freshness.sh
 ```
 
-## Modes at a Glance
+For headphone contract validation:
 
-| Mode | Primary Goal | Typical Controls |
-|---|---|---|
-| `CALIBRATE` | Speaker/mic routing and room profiling | `cal_mic_channel`, `cal_spk*_out`, `cal_test_level`, `cal_test_type` |
-| `EMITTER` | Per-source spatial authoring | position, size, gain, directivity, animation, physics |
-| `RENDERER` | Final scene rendering and monitoring | quality, distance, room, headphone, visualization |
+```bash
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl009-headphone-profile-contract-mac.sh
+```
 
-## UI Screenshots
+## UI Views
 
 ### CALIBRATE
 
@@ -136,22 +128,21 @@ sequenceDiagram
 
 ![LocusQ RENDERER state](Documentation/images/readme/locusq-state-renderer.png)
 
-## Validation Commands
+## Troubleshooting
 
-- Primary UI gate: `./scripts/ui-pr-gate-mac.sh`
-- Production self-test lane: `./scripts/standalone-ui-selftest-production-p0-mac.sh`
-- Host smoke lane: `./scripts/reaper-headless-render-smoke-mac.sh`
-- Docs freshness gate: `./scripts/validate-docs-freshness.sh`
+- Plugin not showing in DAW:
+  - run `./scripts/build-and-install-mac.sh`
+  - restart DAW and rescan plugins
+- Standalone app not launching:
+  - rebuild with `LocusQ_Standalone` target
+  - verify app exists at `build_local/LocusQ_artefacts/Standalone/LocusQ.app`
+- Self-test fails before payload output:
+  - inspect `.run.log`, `.meta.json`, and `.attempts.tsv` emitted by self-test script
 
-## Deep-Dive References
+## Learn More
 
-- Architecture and parameters:
-  - `.ideas/architecture.md`
-  - `.ideas/parameter-spec.md`
-- Contracts and invariants:
-  - `Documentation/invariants.md`
-  - `Documentation/scene-state-contract.md`
-  - `Documentation/adr/`
-- Current state and release history:
-  - `status.json`
-  - `CHANGELOG.md`
+- `CHANGELOG.md`
+- `Documentation/README.md`
+- `Documentation/scene-state-contract.md`
+- `Documentation/invariants.md`
+- `Documentation/adr/`
