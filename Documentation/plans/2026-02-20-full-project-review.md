@@ -2,7 +2,7 @@ Title: LocusQ Full Project Review — Implementation Plan
 Document Type: Implementation Plan
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-02-25
 
 # LocusQ Full Project Review — Implementation Plan
 
@@ -968,7 +968,7 @@ Estimated: 4 new scenario files.
 **16-C (Opus):** Research integration — read Section 0 research agent output, compare
 against LocusQ's current components, produce 3–5 concrete integration recommendations
 (e.g., "replace FDNReverb with JUCE dsp::Reverb: saves 200 LOC, same quality tier").
-Write recommendations to `Documentation/research/section0-integration-recommendations-2026-02-20.md`.
+Write recommendations to `Documentation/archive/2026-02-25-research-legacy/section0-integration-recommendations-2026-02-20.md`.
 
 **16-D (Opus):** Three.js viewport gap assessment — compare `.ideas/architecture.md`
 Section 7 (UI spec) against `Source/ui/public/js/index.js` and `Source/ui/public/index.html`.

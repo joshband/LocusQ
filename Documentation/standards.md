@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # Documentation Standards
 
@@ -46,7 +46,7 @@ Every in-scope markdown file must include, in this order, at the top of file:
 
 ## Master Backlog Contract
 1. `Documentation/backlog/index.md` is the single backlog authority for priority, ordering, and state.
-2. Individual runbook docs in `Documentation/backlog/bl-XXX-*.md` carry execution detail, agent mega-prompts, validation plans, and evidence contracts.
+2. Individual runbook docs in `Documentation/backlog/` carry execution detail, agent mega-prompts, validation plans, and evidence contracts (`bl-XXX-*.md` for open work, `done/*.md` for completed work).
 3. Plan docs under `Documentation/plans/` carry deep architecture content but must not become competing backlog ledgers.
 4. New backlog items enter via `Documentation/backlog/_template-intake.md` and are promoted to full runbooks using `Documentation/backlog/_template-runbook.md`.
 5. The legacy files `Documentation/backlog-post-v1-agentic-sprints.md` and `Documentation/runbooks/backlog-execution-runbooks.md` are superseded and retained as Tier 2 reference only.
@@ -99,6 +99,7 @@ When documentation bloat or ambiguity appears:
 5. Keep historical docs in-place only if active docs/status surfaces still reference them; otherwise archive them.
 6. Update `Documentation/README.md` in the same change to reflect any tier changes.
 7. Run `./scripts/validate-docs-freshness.sh` after archival edits.
+8. Keep only active research under `Documentation/research/`, index it in `Documentation/research/README.md`, and move superseded research to `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
 
 ## Tier Promotion Snapshot (2026-02-24)
 1. Tier 1 execution specs now include `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`.

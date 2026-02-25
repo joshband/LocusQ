@@ -1,0 +1,279 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl028_output_matrix_suite",
+  "name": "LocusQ BL-028 Spatial Output Matrix Suite",
+  "category": "stability",
+  "description": "Deterministic BL-028 scaffold lane that executes baseline spatial smoke coverage while validating output-matrix contract cases, acceptance ID mapping, and artifact thresholds.",
+  "scenario_ids": [
+    "locusq_emitter_passthrough",
+    "locusq_renderer_spatial_output",
+    "locusq_rt_safety_emitter",
+    "locusq_renderer_no_clipping"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl028_output_matrix"
+  },
+  "bl028_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL028-A1-001",
+        "description": "Authoritative matrix legality rows are covered for required domains/layouts."
+      },
+      {
+        "id": "BL028-A1-002",
+        "description": "Mismatch rows enforce deterministic fallback precedence and fail-safe routes."
+      },
+      {
+        "id": "BL028-A1-003",
+        "description": "Diagnostics payload schema fields are required and stable."
+      },
+      {
+        "id": "BL028-A1-004",
+        "description": "Reason-code to status-text mapping is deterministic."
+      },
+      {
+        "id": "BL028-A1-005",
+        "description": "Lane output thresholds and artifact schema are deterministic."
+      },
+      {
+        "id": "BL028-A1-006",
+        "description": "Acceptance IDs are parity-checked across runbook/spec/qa/lane surfaces."
+      }
+    ],
+    "allowed_enums": {
+      "domain": ["InternalBinaural", "Multichannel", "ExternalSpatial"],
+      "layout": ["stereo_2_0", "quad_4_0", "surround_5_1", "surround_7_1", "immersive_7_4_2"],
+      "decision": ["ALLOW", "BLOCK"],
+      "fallback_mode": ["none", "retain_last_legal", "derive_from_host_layout", "safe_stereo_passthrough"],
+      "fail_safe_route": ["none", "last_legal", "layout_derived", "stereo_passthrough"]
+    },
+    "required_diagnostics_fields": [
+      "rendererMatrixRequestedDomain",
+      "rendererMatrixActiveDomain",
+      "rendererMatrixRequestedLayout",
+      "rendererMatrixActiveLayout",
+      "rendererMatrixRuleId",
+      "rendererMatrixRuleState",
+      "rendererMatrixReasonCode",
+      "rendererMatrixFallbackMode",
+      "rendererMatrixFailSafeRoute",
+      "rendererMatrixStatusText",
+      "rendererMatrixEventSeq"
+    ],
+    "status_text_map": [
+      {
+        "reason_code": "ok",
+        "status_text": "Spatial output matrix valid."
+      },
+      {
+        "reason_code": "binaural_requires_stereo",
+        "status_text": "Binaural requires stereo output. Previous legal routing retained."
+      },
+      {
+        "reason_code": "multichannel_requires_min_4ch",
+        "status_text": "Multichannel requires at least 4 output channels."
+      },
+      {
+        "reason_code": "headtracking_not_supported_in_multichannel",
+        "status_text": "Head tracking is available only in internal binaural mode."
+      },
+      {
+        "reason_code": "external_spatial_requires_multichannel_bed",
+        "status_text": "External spatial mode requires a multichannel bed."
+      },
+      {
+        "reason_code": "fallback_derived_from_layout",
+        "status_text": "No legal prior state; routing derived from current host layout."
+      },
+      {
+        "reason_code": "fallback_safe_stereo_passthrough",
+        "status_text": "Fail-safe stereo passthrough active; review output configuration."
+      }
+    ],
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0,
+      "matrix_accuracy": 1.0,
+      "fallback_accuracy": 1.0,
+      "diagnostics_schema_min_fields": 11,
+      "status_text_map_min_entries": 7
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "max_runs": 10,
+      "max_signature_divergence": 0,
+      "max_transient_failures": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "qa_lane.log",
+      "scenario_result.log",
+      "matrix_report.tsv",
+      "acceptance_parity.tsv",
+      "replay_runs.tsv",
+      "replay_hashes.tsv",
+      "reliability_decision.md"
+    ],
+    "matrix_cases": [
+      {
+        "case_id": "SOM-028-01",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "InternalBinaural",
+        "host_layout": "stereo_2_0",
+        "head_tracking": "off",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-01",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-02",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "InternalBinaural",
+        "host_layout": "stereo_2_0",
+        "head_tracking": "on",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-02",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-03",
+        "acceptance_id": "BL028-A1-002",
+        "requested_domain": "InternalBinaural",
+        "host_layout": "surround_5_1",
+        "head_tracking": "off",
+        "expected_decision": "BLOCK",
+        "expected_rule_id": "SOM-028-03",
+        "expected_fallback_mode": "retain_last_legal",
+        "expected_fail_safe_route": "last_legal",
+        "expected_reason_code": "binaural_requires_stereo",
+        "expected_status_text": "Binaural requires stereo output. Previous legal routing retained."
+      },
+      {
+        "case_id": "SOM-028-04",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "Multichannel",
+        "host_layout": "quad_4_0",
+        "head_tracking": "off",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-04",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-05",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "Multichannel",
+        "host_layout": "surround_5_1",
+        "head_tracking": "off",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-05",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-06",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "Multichannel",
+        "host_layout": "surround_7_1",
+        "head_tracking": "off",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-06",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-07",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "Multichannel",
+        "host_layout": "immersive_7_4_2",
+        "head_tracking": "off",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-07",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-08",
+        "acceptance_id": "BL028-A1-002",
+        "requested_domain": "Multichannel",
+        "host_layout": "stereo_2_0",
+        "head_tracking": "off",
+        "expected_decision": "BLOCK",
+        "expected_rule_id": "SOM-028-08",
+        "expected_fallback_mode": "derive_from_host_layout",
+        "expected_fail_safe_route": "layout_derived",
+        "expected_reason_code": "multichannel_requires_min_4ch",
+        "expected_status_text": "Multichannel requires at least 4 output channels."
+      },
+      {
+        "case_id": "SOM-028-09",
+        "acceptance_id": "BL028-A1-002",
+        "requested_domain": "Multichannel",
+        "host_layout": "surround_7_1",
+        "head_tracking": "on",
+        "expected_decision": "BLOCK",
+        "expected_rule_id": "SOM-028-09",
+        "expected_fallback_mode": "retain_last_legal",
+        "expected_fail_safe_route": "last_legal",
+        "expected_reason_code": "headtracking_not_supported_in_multichannel",
+        "expected_status_text": "Head tracking is available only in internal binaural mode."
+      },
+      {
+        "case_id": "SOM-028-10",
+        "acceptance_id": "BL028-A1-001",
+        "requested_domain": "ExternalSpatial",
+        "host_layout": "surround_7_1",
+        "head_tracking": "os-managed",
+        "expected_decision": "ALLOW",
+        "expected_rule_id": "SOM-028-10",
+        "expected_fallback_mode": "none",
+        "expected_fail_safe_route": "none",
+        "expected_reason_code": "ok",
+        "expected_status_text": "Spatial output matrix valid."
+      },
+      {
+        "case_id": "SOM-028-11",
+        "acceptance_id": "BL028-A1-002",
+        "requested_domain": "ExternalSpatial",
+        "host_layout": "stereo_2_0",
+        "head_tracking": "os-managed",
+        "expected_decision": "BLOCK",
+        "expected_rule_id": "SOM-028-11",
+        "expected_fallback_mode": "derive_from_host_layout",
+        "expected_fail_safe_route": "layout_derived",
+        "expected_reason_code": "external_spatial_requires_multichannel_bed",
+        "expected_status_text": "External spatial mode requires a multichannel bed."
+      },
+      {
+        "case_id": "BL028-FS-01",
+        "acceptance_id": "BL028-A1-002",
+        "requested_domain": "ExternalSpatial",
+        "host_layout": "stereo_2_0",
+        "head_tracking": "os-managed",
+        "expected_decision": "BLOCK",
+        "expected_rule_id": "SOM-028-11",
+        "expected_fallback_mode": "safe_stereo_passthrough",
+        "expected_fail_safe_route": "stereo_passthrough",
+        "expected_reason_code": "fallback_safe_stereo_passthrough",
+        "expected_status_text": "Fail-safe stereo passthrough active; review output configuration.",
+        "precondition": "no_legal_prior_state"
+      }
+    ]
+  },
+  "pass_criteria": "Suite status must pass and BL-028 contract checks must satisfy configured deterministic thresholds."
+}

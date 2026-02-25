@@ -1,0 +1,2 @@
+attempt	status	terminal_failure_reason	app_pid	app_exit_code	app_signal	app_signal_name	result_wait_seconds	result_json	crash_report_path	error_reason
+1	fail	selftest_payload_not_ok	66890	143	15	TERM	19	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260225T031454Z.json		UI-P1-025E: compact emitter rail did not shrink

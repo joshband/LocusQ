@@ -55,6 +55,24 @@ Current harness note:
 - The spatial QA adapter exposes renderer/headphone/spatial profile controls but not dedicated `rend_audition_*` parameters yet.
 - This lane therefore proves deterministic runtime stability via replay and validates audition-specific metadata contracts through source-token checks in renderer/UI publication paths.
 
+## Slice P5 Reactive Geometry Mapping (Bounded)
+P5 geometry/fade behavior uses `rendererAuditionReactive` as an additive driver layer on top of cloud pattern defaults.
+
+| Feature | Formula (UI mapping) | Clamp | Expected range/behavior |
+|---|---|---|---|
+| Cloud breadth/radius morph | `sourceRadius *= 0.82 + 0.20*intensity + 0.26*spread + 0.24*physicsDensity + 0.20*physicsCoupling` | `[0.72, 1.88]` multiplier, then radius `[0.10, 6.2]` | Higher spread/density/coupling expands cloud footprint without unbounded drift. |
+| Cloud height morph | `sourceHeight *= 0.78 + 0.24*envSlow + 0.22*brightness + 0.20*physicsDensity + 0.24*physicsCollision` | `[0.70, 1.84]` multiplier, then height `[0.08, 4.4]` | Height reacts to envelope and physics activity while staying bounded. |
+| Global pulse size/opacity | `pointSize *= 0.86 + 0.16*onset + 0.24*collisionPulse + 0.18*physicsCoupling`; `lineOpacity *= 0.84 + 0.30*physicsCoupling + 0.34*collisionPulse` | point size `[0.05, 0.24]`, line opacity `[0.0, 0.72]` | Collision/coupling drive visible pulse depth and cinematic bloom without runaway values. |
+| Rain fade + droplet tail | `lineOpacityScale *= (0.36 + 1.10*rainFadeRate) * (0.86 + 0.24*physicsCoupling + 0.28*collisionPulse)`; tail length uses `(0.62 + 0.74*rainFadeRate + 0.20*collisionPulse)` | line scale `[0.10, 1.62]` | Rain opacity/tails fade by fall progress plus `rainFadeRate`, with physics accents on impacts. |
+| Snow breadth/depth morph | `snowBreadthMorph = 0.58 + 0.72*(0.52*brightness + 0.48*spread) + 0.24*physicsDensity`; `snowDepthMorph = 0.56 + 0.76*(0.34*brightness + 0.66*spread) + 0.18*physicsCoupling` | breadth `[0.54, 1.60]`, depth `[0.52, 1.64]` | Snow drift width/depth follows brightness/spread with density/coupling stabilization. |
+| Snow vertical fade + size | `verticalFade = (1-verticalDrift) * (0.52+0.48*envSlow) * (0.66+0.34*coherence) * (0.68+0.32*snowFadeRate)` then opacity/size scales from `verticalFade` | verticalFade `[0.08, 1.35]`, opacity `[0.10, 1.40]`, size `[0.42, 1.66]` | Snow fades by vertical drift + slow envelope and remains smooth/deterministic. |
+| Collision burst/pulse intensity | `collisionPulse = smooth(0.68*physicsCollision + 0.22*physicsCoupling + 0.10*onsetGate)` and `collisionBurst = (0.58*collisionPulse + 0.42*physicsCoupling) * (0.40 + 0.60*sin(...))` | both `[0, 1]` | Impact-style visuals (especially `bounce_cluster`) get deterministic burst energy with hysteresis smoothing. |
+
+Fallback rules preserved:
+1. Missing/invalid cloud payload keeps single-glyph fallback.
+2. Non-cloud/disabled paths clear cloud draw ranges each frame (no stale cloud persistence).
+3. Unknown reactive fields are ignored; mapping remains additive/backward-compatible.
+
 ## How to Run
 1. Ensure binaries exist:
    - `build_local/locusq_qa_artefacts/Release/locusq_qa`
@@ -124,6 +142,13 @@ done
 5. BL-009 parity soak pass-rate is `100%` (`5/5` runs pass with `UI-P1-009` green).
 
 Any violation yields `NO-GO`.
+
+## S3 UI Determinism Guard (BL009 Compact Rail)
+S3 adds a UI-side determinism guard for transient startup layout races that could produce false negatives in compact/tight emitter rail assertions:
+1. Self-test rail measurements use an authoritative layout variant override (`base`/`compact`/`tight`) instead of transient viewport-only dimensions.
+2. `UI-P1-025E` uses a bounded settle window with strict timeout and stable-sample requirements before asserting rail shrink ordering.
+3. No unbounded loops are permitted in this path; timeout exits fail fast with explicit `responsive layout settle failed (...)` detail.
+4. BL-029 reactive cloud and fallback semantics remain unchanged by this guard.
 
 ## Expected Artifacts
 Per run:

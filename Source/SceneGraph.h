@@ -182,14 +182,14 @@ public:
         juce::SpinLock::ScopedLockType lock (registrationLock);
         for (int i = 0; i < MAX_EMITTERS; ++i)
         {
-            if (! slotOccupied[i])
+            if (! slotOccupied[static_cast<size_t> (i)].load (std::memory_order_acquire))
             {
-                slotOccupied[i] = true;
                 EmitterData d;
                 d.active = true;
                 d.colorIndex = seededPaletteIndexForSlot (i);
                 snprintf (d.label, sizeof (d.label), "Emitter %d", i + 1);
-                slots[i].write (d);
+                slots[static_cast<size_t> (i)].write (d);
+                slotOccupied[static_cast<size_t> (i)].store (true, std::memory_order_release);
                 ++activeEmitterCount;
                 return i;
             }
@@ -201,14 +201,14 @@ public:
     {
         if (slotId < 0 || slotId >= MAX_EMITTERS) return;
         juce::SpinLock::ScopedLockType lock (registrationLock);
-        if (! slotOccupied[slotId])
+        if (! slotOccupied[static_cast<size_t> (slotId)].load (std::memory_order_acquire))
             return;
 
         EmitterData d;
         d.active = false;
-        slots[slotId].write (d);
-        slots[slotId].clearAudioBuffer();
-        slotOccupied[slotId] = false;
+        slots[static_cast<size_t> (slotId)].write (d);
+        slots[static_cast<size_t> (slotId)].clearAudioBuffer();
+        slotOccupied[static_cast<size_t> (slotId)].store (false, std::memory_order_release);
         activeEmitterCount.store (juce::jmax (0, activeEmitterCount.load() - 1));
     }
 
@@ -217,24 +217,29 @@ public:
     bool registerRenderer()
     {
         juce::SpinLock::ScopedLockType lock (registrationLock);
-        if (rendererRegistered) return false;
-        rendererRegistered = true;
+        if (rendererRegistered.load (std::memory_order_acquire)) return false;
+        rendererRegistered.store (true, std::memory_order_release);
         return true;
     }
 
     void unregisterRenderer()
     {
         juce::SpinLock::ScopedLockType lock (registrationLock);
-        rendererRegistered = false;
+        rendererRegistered.store (false, std::memory_order_release);
     }
 
-    bool isRendererRegistered() const { return rendererRegistered; }
+    bool isRendererRegistered() const { return rendererRegistered.load (std::memory_order_acquire); }
 
     //--------------------------------------------------------------------------
     // Slot access
-    EmitterSlot& getSlot (int id) { return slots[id]; }
-    const EmitterSlot& getSlot (int id) const { return slots[id]; }
-    bool isSlotActive (int id) const { return slotOccupied[id]; }
+    EmitterSlot& getSlot (int id) { return slots[static_cast<size_t> (id)]; }
+    const EmitterSlot& getSlot (int id) const { return slots[static_cast<size_t> (id)]; }
+    bool isSlotActive (int id) const
+    {
+        if (id < 0 || id >= MAX_EMITTERS)
+            return false;
+        return slotOccupied[static_cast<size_t> (id)].load (std::memory_order_acquire);
+    }
     int getActiveEmitterCount() const { return activeEmitterCount.load(); }
 
     //--------------------------------------------------------------------------
@@ -318,16 +323,20 @@ private:
         return static_cast<uint8_t> (x % 16u);
     }
 
-    SceneGraph() = default;
+    SceneGraph()
+    {
+        for (auto& occupied : slotOccupied)
+            occupied.store (false, std::memory_order_relaxed);
+    }
     ~SceneGraph() = default;
 
     SceneGraph (const SceneGraph&) = delete;
     SceneGraph& operator= (const SceneGraph&) = delete;
 
     std::array<EmitterSlot, MAX_EMITTERS> slots;
-    std::array<bool, MAX_EMITTERS> slotOccupied {};
+    std::array<std::atomic<bool>, MAX_EMITTERS> slotOccupied;
     std::atomic<int> activeEmitterCount { 0 };
-    bool rendererRegistered = false;
+    std::atomic<bool> rendererRegistered { false };
 
     SharedPtrAtomicContract<RoomProfile> currentRoomProfile { std::make_shared<RoomProfile>() };
 

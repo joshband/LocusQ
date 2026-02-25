@@ -1,0 +1,207 @@
+{
+  "reasonCode": "failing_check_assertion",
+  "failingCheck": "UI-P1-025E",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "UI-P1-025E: responsive layout settle failed (layout settle timeout variant=base rail=356.0 expected=356.0 header=28.0 lanes=130.0)"
+  },
+  "failingCheckDetails": "responsive layout settle failed (layout settle timeout variant=base rail=356.0 expected=356.0 header=28.0 lanes=130.0)",
+  "checks": [
+    {
+      "id": "UI-P1-026A",
+      "details": "topology rows mono=1 stereo=2 quad=4 verified; legacy alias sync both directions",
+      "pass": true
+    },
+    {
+      "details": "custom-map protection verified (auto=1/2/1/2 custom=2/2/1/2 postAck=2/2/1/2)",
+      "id": "UI-P1-026B",
+      "pass": true
+    },
+    {
+      "details": "preflight gate + start/abort lifecycle verified",
+      "id": "UI-P1-026C",
+      "pass": true
+    },
+    {
+      "id": "UI-P1-026D",
+      "pass": true,
+      "details": "profileState=fail profileChip=FAIL requested=sony_wh1000xm5 active=generic"
+    },
+    {
+      "id": "UI-P1-026E",
+      "pass": true,
+      "details": "downmixState=fail downmixChip=FAIL; profileCRUD=save/load/rename/delete; resize=compact+tight"
+    },
+    {
+      "pass": true,
+      "id": "UI-04",
+      "details": "sticky presets verified: orbit, float, bounce"
+    },
+    {
+      "id": "UI-06",
+      "pass": true,
+      "details": "rewind-to-start/play/stop-at-current transport sequence passed"
+    },
+    {
+      "id": "UI-07",
+      "pass": true,
+      "details": "add/move/delete/dbl-click curve cycle verified (fallbacks: add, move, delete)"
+    },
+    {
+      "pass": true,
+      "id": "UI-P1-025A",
+      "details": "position mode contract and emitter slice-a scaffold controls verified"
+    },
+    {
+      "details": "motion source contract and shared transport mirroring verified",
+      "pass": true,
+      "id": "UI-P1-025B"
+    },
+    {
+      "id": "UI-P1-025D",
+      "pass": true,
+      "details": "remote authority lock/unlock contract verified"
+    },
+    {
+      "id": "UI-P1-025E",
+      "pass": false,
+      "details": "responsive layout settle failed (layout settle timeout variant=base rail=356.0 expected=356.0 header=28.0 lanes=130.0)"
+    },
+    {
+      "pass": false,
+      "id": "failure",
+      "details": "UI-P1-025E: responsive layout settle failed (layout settle timeout variant=base rail=356.0 expected=356.0 header=28.0 lanes=130.0)"
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "pollMs": 40.0,
+      "label": "p0 self-test controls ready",
+      "polls": 1.0,
+      "elapsedMs": 0.0,
+      "timeoutMs": 8000.0
+    },
+    {
+      "result": "pass",
+      "label": "steam diagnostics baseline",
+      "pollMs": 30.0,
+      "elapsedMs": 0.0,
+      "timeoutMs": 3000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "label": "clap diagnostics baseline",
+      "pollMs": 30.0,
+      "elapsedMs": 0.0,
+      "timeoutMs": 3000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "calibrate topology stereo rows",
+      "polls": 1.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "label": "legacy config follows stereo topology",
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology quad rows",
+      "pollMs": 25.0,
+      "elapsedMs": 51.0,
+      "timeoutMs": 2000.0,
+      "polls": 3.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "legacy config follows quad topology",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology mono rows",
+      "pollMs": 25.0,
+      "polls": 2.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 26.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "label": "legacy config follows mono topology",
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "legacy stereo maps topology stereo",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "legacy mono maps topology quad",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 53.0,
+      "label": "calibrate topology 7.4.2 dynamic rows",
+      "polls": 3.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 26.0,
+      "pollMs": 25.0,
+      "polls": 2.0,
+      "timeoutMs": 1800.0,
+      "label": "calibration start [attempt 1/4]"
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "calibration abort [attempt 1/4]",
+      "polls": 3.0,
+      "timeoutMs": 1800.0,
+      "elapsedMs": 51.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "physics preset apply orbit",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "physics preset apply float",
+      "polls": 1.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0
+    }
+  ]
+}

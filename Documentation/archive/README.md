@@ -2,7 +2,7 @@ Title: LocusQ Documentation Archive Index
 Document Type: Archive Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # Documentation Archive Index
 
@@ -43,6 +43,15 @@ Provide a stable archive location for non-canonical documentation artifacts whil
   - archive manifest: `README.md`
 - Reason:
   - optional-by-default multi-agent watchdog guidance moved out of top-level `Documentation/` to reduce active surface noise while preserving traceability
+
+5. `Documentation/archive/2026-02-25-research-legacy/`
+- Contents:
+  - superseded quadraphonic research synthesis markdown + source PDF
+  - superseded harness backport opportunity notes
+  - superseded section0 integration recommendation memo
+- Reason:
+  - keep `Documentation/research/` focused on active workstreams only
+  - preserve historical references for traceability without keeping them in active research surface
 
 ## Next-Pass Candidates (review required before move)
 1. Historical planning drafts that are now reference-only:

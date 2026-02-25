@@ -141,8 +141,16 @@ fi
 
 SUITE_RESULT_JSON="$ROOT_DIR/$SUITE_OUTPUT_DIR/suite_result.json"
 if [[ ! -f "$SUITE_RESULT_JSON" ]]; then
-  log_status "contract_pack_suite_result" "fail" "missing=${SUITE_RESULT_JSON}"
-  fail_and_exit "contract pack suite_result.json missing"
+  FALLBACK_SUITE_OUTPUT_DIR="qa_output/locusq_spatial"
+  FALLBACK_SUITE_RESULT_JSON="$ROOT_DIR/$FALLBACK_SUITE_OUTPUT_DIR/suite_result.json"
+  if [[ -f "$FALLBACK_SUITE_RESULT_JSON" ]]; then
+    log_status "contract_pack_suite_result_dir_fallback" "warn" "expected_missing=${SUITE_RESULT_JSON}; fallback=${FALLBACK_SUITE_RESULT_JSON}"
+    SUITE_OUTPUT_DIR="$FALLBACK_SUITE_OUTPUT_DIR"
+    SUITE_RESULT_JSON="$FALLBACK_SUITE_RESULT_JSON"
+  else
+    log_status "contract_pack_suite_result" "fail" "missing=${SUITE_RESULT_JSON}; fallback_missing=${FALLBACK_SUITE_RESULT_JSON}"
+    fail_and_exit "contract pack suite_result.json missing"
+  fi
 fi
 cp "$SUITE_RESULT_JSON" "$OUT_DIR/contract_pack_suite_result_baseline.json"
 

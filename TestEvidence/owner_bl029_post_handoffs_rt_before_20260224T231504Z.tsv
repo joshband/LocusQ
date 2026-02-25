@@ -1,0 +1,135 @@
+file	line	pattern	severity	allowlisted	snippet
+Source/PluginProcessor.cpp	386	HEAP_ALLOC	high	true	 // intentional and acceptable in this lock-free multi-reader design.
+Source/PluginProcessor.cpp	2308	HEAP_ALLOC	high	false	 juce::var resultVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	2423	HEAP_ALLOC	high	false	 juce::var statusVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	2510	HEAP_ALLOC	high	false	 juce::var timelineVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	2522	HEAP_ALLOC	high	false	 juce::var trackVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	2529	HEAP_ALLOC	high	false	 juce::var keyframeVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3136	HEAP_ALLOC	high	false	 juce::var presetVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3145	HEAP_ALLOC	high	false	 juce::var layoutVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3153	HEAP_ALLOC	high	false	 juce::var parametersVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3235	HEAP_ALLOC	high	false	 juce::var profileVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3242	HEAP_ALLOC	high	false	 juce::var contextVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3261	HEAP_ALLOC	high	false	 juce::var controlsVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3273	HEAP_ALLOC	high	false	 juce::var layoutVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3355	HEAP_ALLOC	high	false	 juce::var entryVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3422	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3445	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3495	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3580	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3593	HEAP_ALLOC	high	false	 result->setProperty ("message", "Failed to delete preset file.");
+Source/PluginProcessor.cpp	3619	HEAP_ALLOC	high	false	 juce::var entryVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3695	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3739	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3835	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3909	HEAP_ALLOC	high	false	 juce::var response (new juce::DynamicObject());
+Source/PluginProcessor.cpp	3922	HEAP_ALLOC	high	false	 result->setProperty ("message", "Failed to delete calibration profile file.");
+Source/PluginProcessor.cpp	3934	HEAP_ALLOC	high	false	 juce::var stateVar (new juce::DynamicObject());
+Source/PluginProcessor.cpp	4030	HEAP_ALLOC	high	false	 return new LocusQAudioProcessorEditor (*this);
+Source/PluginProcessor.cpp	4534	HEAP_ALLOC	high	false	 return new LocusQAudioProcessor();
+Source/SpatialRenderer.h	1141	HEAP_ALLOC	high	false	 // Per-emitter smoothed speaker gains (for click-free panning)
+Source/PhysicsEngine.h	30	HEAP_ALLOC	high	true	 * Audio thread interaction is lock-free via atomics and double-buffered state.
+Source/CalibrationEngine.h	113	HEAP_ALLOC	high	true	 /** Kick off a new calibration sequence. Call from a non-audio thread (UI).
+Source/CalibrationEngine.h	133	HEAP_ALLOC	high	true	 "Calibration engine busy: stop current run before starting a new one.",
+Source/SceneGraph.h	11	HEAP_ALLOC	high	true	// Vec3 - Minimal 3D vector for lock-free scene data
+Source/SceneGraph.h	44	HEAP_ALLOC	high	true	// EmitterSlot - Lock-free double-buffered emitter state
+Source/SceneGraph.h	315	HEAP_ALLOC	high	true	 // Deterministic pseudo-random index to spread new emitters across the 16-color palette.
+Source/SceneGraph.h	333	HEAP_ALLOC	high	true	 SceneGraph (const SceneGraph&) = delete;
+Source/SceneGraph.h	334	HEAP_ALLOC	high	true	 SceneGraph& operator= (const SceneGraph&) = delete;
+Source/PluginProcessor.cpp	2570	DYNAMIC_CONTAINER_MUTATION	medium	false	 keyframes.reserve (static_cast<size_t> (keyframeArray->size()));
+Source/PluginProcessor.cpp	2582	DYNAMIC_CONTAINER_MUTATION	medium	false	 keyframes.push_back (keyframe);
+Source/PluginProcessor.cpp	4138	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4142	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4146	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4150	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4166	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4175	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4184	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterInt> (
+Source/PluginProcessor.cpp	4187	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterInt> (
+Source/PluginProcessor.cpp	4189	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterInt> (
+Source/PluginProcessor.cpp	4191	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterInt> (
+Source/PluginProcessor.cpp	4193	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterInt> (
+Source/PluginProcessor.cpp	4196	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4200	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4205	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4209	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4213	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4217	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4221	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4225	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4229	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4234	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4238	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4242	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4246	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4249	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4254	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4258	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4261	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4264	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4268	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4272	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4276	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4281	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4284	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4288	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4292	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4296	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4300	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4304	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4308	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4312	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4316	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4320	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4323	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4327	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4330	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4334	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4337	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4341	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4345	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterInt> (
+Source/PluginProcessor.cpp	4349	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4353	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4356	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4359	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4362	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4366	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4369	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4372	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4375	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4380	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4384	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4388	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4392	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4396	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4399	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4417	DYNAMIC_CONTAINER_MUTATION	medium	true	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4428	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4432	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4449	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4453	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4457	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4460	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4464	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4468	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4471	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4475	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4479	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4483	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4487	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4491	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4494	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4497	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4501	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterChoice> (
+Source/PluginProcessor.cpp	4505	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4508	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4512	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4515	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4518	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterFloat> (
+Source/PluginProcessor.cpp	4522	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/PluginProcessor.cpp	4525	DYNAMIC_CONTAINER_MUTATION	medium	false	 params.push_back (std::make_unique<juce::AudioParameterBool> (
+Source/SpatialRenderer.h	159	DYNAMIC_CONTAINER_MUTATION	medium	true	 speakerDelayLines[spk].resize (MAX_DELAY_SAMPLES, 0.0f);
+Source/SpatialRenderer.h	183	DYNAMIC_CONTAINER_MUTATION	medium	true	 tempMonoBuffer.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+Source/SpatialRenderer.h	202	DYNAMIC_CONTAINER_MUTATION	medium	true	 steamBinauralLeft.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+Source/SpatialRenderer.h	203	DYNAMIC_CONTAINER_MUTATION	medium	true	 steamBinauralRight.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+Source/SpatialRenderer.h	205	DYNAMIC_CONTAINER_MUTATION	medium	true	 rotated.resize (static_cast<size_t> (maxBlockSize), 0.0f);
