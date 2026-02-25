@@ -2,7 +2,7 @@ Title: LocusQ Validation Trend
 Document Type: Validation Trend Log
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # Validation Trend
 
@@ -537,3 +537,5 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-25T03:11:32Z | BL-029 R1 reliability native guard-rails lane | `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` + `qa_smoke` + `selftest_bl029 x5` + `selftest_bl009 x3` + `qa-bl009-headphone-contract` | FAIL (`selftest_bl029` set passed; BL009 scoped set not clean due one failing run; artifact `TestEvidence/bl029_reliability_native_r1_20260225T031132Z/status.tsv`) |
 | 2026-02-25T03:07:14Z | BL-029 R2 selftest harness robustness lane | `selftest_bl029 x10` + `selftest_bl009 x5` + `qa-bl009-headphone-contract` + `docs_freshness` | FAIL (diagnostics improved but runtime unstable: `app_exited_before_result` + `exit_134` + `ABRT` across soak runs; artifact `TestEvidence/bl029_selftest_harness_r2_20260225T030714Z/status.tsv`) |
 | 2026-02-25T03:07:49Z | BL-029 R3 reliability soak + go/no-go lane | `qa-bl029-audition-platform-lane` + `selftest_bl029 x10` + `selftest_bl009 x5` + `docs_freshness` | FAIL/NO-GO (QA contract deterministic PASS, but soak pass rates failed hard gates: BL029 `1/10`, BL009 `1/5`; artifact `TestEvidence/bl029_reliability_soak_r3_20260225T030749Z/status.tsv`) |
+
+| 2026-02-25T05:00:00Z | BL-017 Slice C deterministic closeout sync + dependency unblocking | `cd companion && swift test` + `cd companion && swift run LocusQHeadTracker --help` + `./scripts/validate-docs-freshness.sh` | PASS (packet-contract test pass, CLI smoke pass, docs freshness pass; manual AirPods hardware validation remains pending for Done promotion) |

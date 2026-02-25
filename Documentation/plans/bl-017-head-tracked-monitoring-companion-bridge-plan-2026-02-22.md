@@ -174,3 +174,8 @@ Reference: `Documentation/plans/bl-017-slice-c-companion-app-mvp-structure-2026-
 
 Slice C implementation landed in-repo under `companion/` (Swift Package CLI MVP + packet serialization test).
 
+
+
+### Annex review status (2026-02-25)
+
+Reviewed during BL-017 Slice C closeout sync and retained as canonical architecture/exit-criteria annex (not superseded).
