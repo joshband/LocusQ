@@ -11,8 +11,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  rt-safety-audit:
+    name: RT Safety Static Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run HX-06 RT-safety audit
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/rt_safety
+          chmod +x ./scripts/rt-safety-audit.sh
+
+          set +e
+          ./scripts/rt-safety-audit.sh --print-summary --output qa_output/rt_safety/baseline_report.tsv > qa_output/rt_safety/baseline_report.stdout.tsv
+          audit_code=$?
+          set -e
+
+          lane_result="FAIL"
+          if [[ "${audit_code}" -eq 0 ]]; then
+            lane_result="PASS"
+          fi
+
+          printf "lane\tresult\ttimestamp_utc\n" > qa_output/rt_safety/status.tsv
+          printf "HX-06-script\t%s\t%s\n" "${lane_result}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> qa_output/rt_safety/status.tsv
+
+          if [[ "${audit_code}" -ne 0 ]]; then
+            echo "RT-safety audit reported non-allowlisted findings." >&2
+            exit "${audit_code}"
+          fi
+
+      - name: Upload RT-safety audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusq-rt-safety-audit
+          path: qa_output/rt_safety/
+          retention-days: 14
+
   qa-critical:
     name: QA Critical (${{ matrix.os }})
+    needs: rt-safety-audit
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -172,10 +216,38 @@ jobs:
             build-qa/CMakeCache.txt
           retention-days: 14
 
+  qa-bl029-reliability-gate:
+    name: BL-029 Reliability Gate (macOS)
+    runs-on: macos-latest
+    needs: qa-critical
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run BL-029 reliability hard gate
+        run: |
+          set -euo pipefail
+          mkdir -p qa_output/bl029_reliability_gate
+          chmod +x ./scripts/qa-bl029-reliability-gate-mac.sh
+          BL029_GATE_OUT_DIR="qa_output/bl029_reliability_gate" \
+            ./scripts/qa-bl029-reliability-gate-mac.sh | tee qa_output/bl029_reliability_gate/ci_gate.log
+
+      - name: Upload BL-029 reliability gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locusq-bl029-reliability-gate
+          path: qa_output/bl029_reliability_gate/
+          retention-days: 14
+
   qa-pluginval-seeded-stress:
     name: QA Pluginval Seeded Stress (macOS)
     runs-on: macos-latest
-    needs: qa-critical
+    needs: qa-bl029-reliability-gate
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     timeout-minutes: 35
 
@@ -284,6 +356,7 @@ jobs:
   qa-perf-trend:
     name: QA Perf Trend (Ubuntu)
     runs-on: ubuntu-latest
+    needs: rt-safety-audit
     if: github.event_name != 'pull_request'
     continue-on-error: true
 

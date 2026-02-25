@@ -4207,3 +4207,79 @@ LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
 - before/after fail-rate summary (from S3 notes):
   - BL009: `80.0%` fail (`4/5` in R3 baseline) -> `0.0%` fail (`0/10` in S3)
   - BL029: `90.0%` fail (`9/10` in R3 baseline) -> `0.0%` fail (`0/5` in S3 scoped smoke)
+
+## BL-029 P4/P5/P6 Intake + Owner Reconciliation (UTC 2026-02-25)
+
+1. P4 reliability gate wrapper handoff
+- artifact: `TestEvidence/bl029_reliability_gate_p4_20260225T152220Z/status.tsv`
+- result: `PASS`
+  - `build_standalone` PASS
+  - `qa_bl029_lane` PASS
+  - `selftest_bl029_x10` PASS
+  - `selftest_bl009_x5` PASS
+  - `docs_freshness` PASS
+
+2. P5 reactive geometry worker handoff
+- artifact: `TestEvidence/bl029_reactive_geometry_p5_20260225T152336Z/status.tsv`
+- result: `FAIL` in worker lane
+  - `node_check` PASS
+  - standalone build PASS
+  - worker scoped selftest reported `app_exited_before_result`, `app_exit_code=127` (5/5)
+  - docs freshness PASS
+
+3. P6 native reactive bridge worker handoff
+- artifact: `TestEvidence/bl029_native_reactive_p6_20260225T152204Z/status.tsv`
+- result: `FAIL` in worker gate only
+  - `build`, `qa_smoke`, scoped `selftest_bl029`, docs freshness: PASS
+  - RT audit: FAIL (`non_allowlisted=118`), line-map drift in current allowlist baseline
+
+4. Owner reconciliation replay
+- artifact: `TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/status.tsv`
+
+Owner replay commands/results:
+- `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x5 -> PASS (5/5)
+- `./scripts/qa-bl029-reliability-gate-mac.sh` -> PASS
+- `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/rt_before.tsv` -> FAIL (`non_allowlisted=118`)
+- refresh `scripts/rt-safety-allowlist.txt` from current line map
+- `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/rt_after.tsv` -> PASS (`non_allowlisted=0`)
+- `./scripts/validate-docs-freshness.sh` -> PASS
+
+5. Owner disposition update
+- P5 worker failure is treated as non-reproducible on owner replay for current integration state.
+- P6 worker failure is treated as RT allowlist drift only; functional lanes were already green.
+- BL-029 reliability posture remains `GO` with P4 gate wrapper now in use.
+
+## BL-029 Z4/Z5/Z6 Finalization Intake (UTC 2026-02-25)
+
+1. Z4 Promotion Packet
+- artifact: `TestEvidence/bl029_promotion_packet_z4_20260225T153637Z/status.tsv`
+- result: `PASS`
+- decision: `BL-029 = DONE`
+- proof set:
+  - `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/status.tsv`
+  - `TestEvidence/bl029_reliability_gate_p4_20260225T152907Z/status.tsv`
+  - `TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/status.tsv`
+
+2. Z5 CI Wiring
+- artifact: `TestEvidence/bl029_ci_gate_z5_20260225T153647Z/status.tsv`
+- result: `PASS`
+- scope:
+  - `.github/workflows/qa_harness.yml` now includes `qa-bl029-reliability-gate` hard gate
+  - downstream seeded stress job depends on reliability gate
+- note: `actionlint` unavailable in runner environment (`SKIP`), YAML parse + semantic checks passed.
+
+3. Z6 Selftest Exit Semantics
+- artifact: `TestEvidence/bl029_selftest_semantics_z6_20260225T153646Z/status.tsv`
+- result: `PASS`
+- before/after taxonomy:
+  - `pass_terminal_none_exit127`: `10 -> 0`
+  - `pass_terminal_none_exit_empty`: `0 -> 10`
+  - no `app_exited_before_result` failures in the validated set
+- reliability gate rerun under Z6 scope also passes.
+
+4. Owner disposition
+- BL-029 remains `Done` after finalization lanes Z4/Z5/Z6.
+- Reliability regression posture is now governed by:
+  - `scripts/qa-bl029-reliability-gate-mac.sh` (local + CI)
+  - `scripts/standalone-ui-selftest-production-p0-mac.sh` exit taxonomy semantics
+  - periodic S2 ABRT probe retention for trend monitoring.

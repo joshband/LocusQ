@@ -45,6 +45,7 @@ The harness now also publishes additive runtime-serialization telemetry:
 - `prelaunch_drain_seconds`
 - `prelaunch_drain_forced_kill`
 - `prelaunch_drain_remaining_pids`
+- `app_exit_status_source` (additive exit-observation taxonomy)
 
 Attempt status table schema:
 - `attempt`
@@ -66,6 +67,7 @@ Final metadata schema (JSON):
 - `appExitCode`
 - `appSignal`
 - `appSignalName`
+- `appExitStatusSource`
 - `crashReportPath`
 - `attemptStatusTable`
 - `maxAttempts`
@@ -157,6 +159,16 @@ Standard terminal reasons:
 - `launch_mode_failed_<mode>`
 - `none` (pass)
 
+Exit-observation taxonomy (`app_exit_status_source` / `appExitStatusSource`):
+- `not_applicable_pass`: pass path; harness validated payload and does not classify process exit as failure data.
+- `child_wait`: harness observed child-process exit status via `wait`.
+- `external_non_child`: harness launched/observed process outside shell-child ownership; exit code is intentionally left empty.
+- `child_pid_missing` / `not_observed`: fallback categories for incomplete observation paths.
+
+Taxonomy consistency rule (Slice Z6):
+- `terminal_failure_reason=none` must not rely on synthetic `app_exit_code=127` bookkeeping.
+- For pass rows where exit status is not semantically relevant or not wait-observable, `app_exit_code` should be empty and `app_exit_status_source` must explain why.
+
 Wrappers should log failures with at least:
 - terminal reason
 - exit code
@@ -169,3 +181,47 @@ Wrappers (for example BL-009 contract lane) must:
 - parse and preserve `metadata_json` and `attempt_status_table` when present
 - report structured failure detail in status TSV rather than a log-only fail marker
 - keep lane failure strict: structured diagnostics improve triage but do not downgrade fail semantics
+
+## BL-029 Reliability Gate Runner Contract (Slice P4)
+
+`scripts/qa-bl029-reliability-gate-mac.sh` is the deterministic top-level gate for BL-029 reliability closeout.
+
+Required execution order:
+1. build standalone
+2. BL-029 QA lane
+3. BL-029 scoped selftest x10
+4. BL-009 scoped selftest x5
+5. docs freshness
+
+Required machine-readable outputs:
+- `status.tsv`
+- `hard_criteria.tsv`
+- `failure_taxonomy.tsv`
+- `gate_contract.md`
+
+Hard criteria expectations:
+- all required stages must execute.
+- BL-029 selftest pass count must equal required run count.
+- BL-009 selftest pass count must equal required run count.
+- docs freshness must pass.
+
+Failure taxonomy expectations:
+- include `terminal_failure_reason` distribution.
+- include `app_exit_code`, `app_signal`, and `app_signal_name` distributions.
+- preserve explicit counts for `app_exited_before_result` when present.
+
+Exit behavior:
+- non-zero exit when any hard criterion is unmet.
+
+## BL-029 Reliability Gate CI Wiring Contract (Slice Z5)
+
+Workflow path:
+- `.github/workflows/qa_harness.yml`
+
+Hard-gate wiring requirements:
+1. CI job `qa-bl029-reliability-gate` runs on `macos-latest` with `needs: qa-critical`.
+2. Job executes:
+   - `BL029_GATE_OUT_DIR="qa_output/bl029_reliability_gate" ./scripts/qa-bl029-reliability-gate-mac.sh`
+3. Job publishes artifacts from `qa_output/bl029_reliability_gate/` (including `status.tsv`, `hard_criteria.tsv`, `failure_taxonomy.tsv`, `gate_contract.md`).
+4. Downstream gated macOS validation (`qa-pluginval-seeded-stress`) must depend on `qa-bl029-reliability-gate`, not directly on `qa-critical`.
+5. Any non-zero exit from the reliability gate job is a hard CI fail for BL-029 readiness.
