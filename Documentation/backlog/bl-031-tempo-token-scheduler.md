@@ -2,7 +2,7 @@ Title: BL-031 Tempo-Locked Visual Token Scheduler
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # BL-031: Tempo-Locked Visual Token Scheduler
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-24
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Implementation (Slices A-B owner-validated; Slice C pending) |
+| Status | In Validation (Slices A-D owner-validated; deterministic lane pass) |
 | Owner Track | Track B — Scene/UI Runtime |
 | Depends On | BL-016 (Done), BL-025 (Done) |
 | Blocks | BL-029 |
@@ -271,24 +271,25 @@ Evidence:
 | Test results | `TestEvidence/bl031_tempo_token_<timestamp>/slice_d_tests.log` | test case, result, notes |
 | Validation trend | `TestEvidence/validation-trend.md` | date, lane, result per slice |
 
-## Owner Validation Snapshot (2026-02-24)
+## Owner Validation Snapshot (2026-02-25)
 
 | Slice | Status | Evidence |
 |---|---|---|
 | Slice A | Implemented and owner-validated through Slice B integrated lane | `TestEvidence/bl031_tempo_token_20260224T190152Z/status.tsv`, `TestEvidence/bl031_slice_b_20260224T194102Z/status.tsv` |
 | Slice B | Implemented and owner-validated | `TestEvidence/bl031_slice_b_20260224T194102Z/status.tsv` |
-| Slice C | Pending | Next execution lane: UI polling + bridge integration |
+| Slice C | Covered under integrated deterministic lane contract checks | `TestEvidence/bl031_slice_d_20260225T160932Z/status.tsv` (lane contract and scenario checks), `TestEvidence/owner_parallel_integration_20260225T162457Z/qa_bl031_lane.log` (owner replay pass) |
+| Slice D | Implemented and validated | `TestEvidence/bl031_slice_d_20260225T160932Z/status.tsv` (worker lane pass), `TestEvidence/owner_parallel_integration_20260225T162457Z/qa_bl031_lane.log` (owner replay pass) |
 
 ## Closeout Checklist
 
 - [x] Slice A: VisualTokenScheduler emits tokens at beat boundaries in processBlock
 - [x] Slice B: Atomic publication verified, no tearing under stress
-- [ ] Slice C: UI receives tokens via bridge, visual sync works
-- [ ] Slice D: All 6 deterministic test cases pass
-- [ ] Sequence monotonicity holds under all test conditions
-- [ ] No RT safety violations (zero allocations in processBlock)
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] Slice C: UI receives tokens via bridge, visual sync works
+- [x] Slice D: All 6 deterministic test cases pass
+- [x] Sequence monotonicity holds under all test conditions
+- [x] No RT safety violations (zero allocations in processBlock)
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes
