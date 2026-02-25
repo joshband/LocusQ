@@ -6,7 +6,7 @@
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
   "last_modified": "2026-02-24T03:36:00Z",
-  "notes": "P0 backlog items are now closed: BL-025 and BL-014 are Done (2026-02-24) after refreshed deterministic evidence (`TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`). Existing Done closures for BL-009/BL-010/BL-011/BL-015/BL-016/BL-019/BL-024 remain unchanged, and the active queue now starts at P1.",
+  "notes": "P0 backlog items are now closed: BL-025 and BL-014 are Done (2026-02-24) after refreshed deterministic evidence (`TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`). Existing Done closures for BL-009/BL-010/BL-011/BL-015/BL-016/BL-019/BL-024 remain unchanged, and the active queue now starts at P1. BL-017 Slice C companion app MVP structure documented (directory layout, motion setup, UDP packet serialization contract, and pairing-flow README outline).",
   "phase_history": [
     {
       "phase": "ideation",
@@ -392,6 +392,12 @@
       "started_at": "2026-02-21T09:40:59Z",
       "completed_at": "2026-02-21T09:40:59Z",
       "notes": "Closed BL-006/BL-007/BL-008 using automated evidence: production self-test pass including UI-P1-006/UI-P1-007/UI-P1-008, shared UI gate pass, spatial smoke WARN-only, phase 2.6 suite PASS, and docs freshness PASS."
+    },
+    {
+      "phase": "planning_bl017_slice_c_companion_mvp",
+      "status": "complete",
+      "completed_at": "2026-02-24T03:36:00Z",
+      "notes": "Design artifact added for BL-017 Slice C companion app MVP structure and packet contract alignment to HeadTrackingBridge."
     }
   ],
   "validation": {

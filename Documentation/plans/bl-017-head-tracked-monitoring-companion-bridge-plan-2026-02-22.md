@@ -2,7 +2,7 @@ Title: BL-017 Head-Tracked Headphone Monitoring Companion Bridge Plan
 Document Type: Planning
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-02-25
 
 # BL-017 Head-Tracked Headphone Monitoring Companion Bridge Plan
 
@@ -165,3 +165,10 @@ Start BL-017 with Slice A only, behind a feature flag:
 - `LOCUSQ_ENABLE_HEADTRACK_BRIDGE=ON/OFF`
 
 This de-risks host stability while enabling deterministic contract testing before full UI and perceptual tuning.
+
+## Slice C MVP companion app structure addendum (2026-02-25)
+
+A dedicated Slice C design note now defines the companion app MVP directory layout, CoreMotion setup snippet, UDP sender snippet, and v1 packet serializer contract aligned with `HeadTrackingBridge` (`magic`, `version`, quaternion, `timestamp_ms`, `seq`).
+
+Reference: `Documentation/plans/bl-017-slice-c-companion-app-mvp-structure-2026-02-25.md`.
+

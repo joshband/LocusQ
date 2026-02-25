@@ -3,7 +3,7 @@ Title: BL-017 Head-Tracked Monitoring Companion Bridge
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 ---
 
 # BL-017 Head-Tracked Monitoring Companion Bridge
@@ -21,6 +21,7 @@ Last Modified Date: 2026-02-24
 | Depends On | BL-009 (Done), BL-018 (stable gate) |
 | Blocks | BL-028 |
 | Annex | `Documentation/plans/bl-017-head-tracked-monitoring-companion-bridge-plan-2026-02-22.md` |
+| Slice C MVP design note | `Documentation/plans/bl-017-slice-c-companion-app-mvp-structure-2026-02-25.md` |
 | ADRs | ADR-0006, ADR-0012 |
 | Skills | `$skill_plan`, `$spatial-audio-engineering`, `$steam-audio-capi` |
 
@@ -97,7 +98,7 @@ All RT constraints must be preserved: no allocation, no lock, no blocking inside
 
 **Deliverables:**
 - Companion app skeleton directory (Swift/SwiftUI or bare Foundation CLI)
-- UDP sender transmitting `{ quat: [x,y,z,w], timestamp_ms: uint64, seq: uint32 }` packets
+- UDP sender transmitting `{ magic, version, quat[x,y,z,w], timestamp_ms:uint64, seq:uint32 }` packets
 - README documenting pairing flow
 
 **Entry:** Slice B merged and validated.
