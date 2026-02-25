@@ -4353,3 +4353,45 @@ LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-ma
 - `TestEvidence/owner_parallel_integration_20260225T162457Z/promotion_decisions.md`
 - `TestEvidence/owner_parallel_integration_20260225T162457Z/rt_audit.tsv`
 - `TestEvidence/owner_parallel_integration_20260225T162457Z/docs_freshness.log`
+
+## Owner Promotion Integration: BL-026 / BL-031 / HX-02 (UTC 2026-02-25)
+
+1. BL-026 done promotion packet intake
+- artifact: `TestEvidence/bl026_done_promotion_20260225T163508Z/status.tsv`
+- result: `PASS`
+  - build PASS
+  - `selftest_bl026` x5 PASS
+  - `selftest_bl029` guard x3 PASS
+  - docs freshness PASS
+  - promotion decision: `PROMOTE_TO_DONE`
+
+2. BL-031 done promotion packet intake
+- artifact: `TestEvidence/bl031_done_promotion_20260225T163524Z/status.tsv`
+- result: `PASS`
+  - build PASS
+  - deterministic lane PASS
+  - RT gate PASS (`non_allowlisted=0`)
+  - docs freshness PASS
+  - promotion decision: `PASS`
+
+3. HX-02 done promotion packet intake
+- artifact: `TestEvidence/hx02_done_promotion_20260225T163521Z/status.tsv`
+- worker result: `FAIL`
+  - build/qa_smoke/rt_audit/docs PASS
+  - scoped `selftest_hx02` FAIL (`app_exited_before_result`, `ABRT`)
+
+4. HX-02 owner replay (flake resolution)
+
+```sh
+LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac.sh  # x3
+./scripts/validate-docs-freshness.sh
+```
+
+- artifact: `TestEvidence/owner_hx02_done_replay_20260225T165720Z/hx02_selftest_runs.tsv`
+- result: `PASS` (`3/3`)
+- owner disposition: worker ABRT treated as transient flake; HX-02 promoted to `Done` on current branch state.
+
+5. Owner sync disposition
+- BL-026 -> `Done (2026-02-25)`
+- BL-031 -> `Done (2026-02-25)`
+- HX-02 -> `Done (2026-02-25, owner replay authoritative)`

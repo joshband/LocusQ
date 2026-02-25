@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-25
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation (Slices A-E owner-validated; D-E hard criteria pass on owner replay) |
+| Status | Done (2026-02-25 owner promotion sync complete) |
 | Owner Track | Track C — UX Authoring |
 | Depends On | BL-025 (Done), BL-009 (Done), BL-018 |
 | Blocks | BL-027, BL-028, BL-029 |
@@ -320,6 +320,20 @@ Evidence:
 | Slice C | Implemented and owner-validated after scoped selftest timeout remediation | `TestEvidence/bl026_slice_c_20260224T200631Z/status.tsv` (worker lane blocked by startup timeout), `TestEvidence/owner_bl026_pending_timeout_fix_r2_20260224T214425Z/status.tsv` (owner replay pass), `TestEvidence/locusq_production_p0_selftest_20260224T214446Z.json` |
 | Slice D | Implemented and validated | `TestEvidence/bl026_slice_de_20260225T160531Z/status.tsv` (worker D/E bundle pass) |
 | Slice E | Implemented and validated | `TestEvidence/bl026_slice_de_20260225T160531Z/status.tsv` (worker D/E bundle pass), `TestEvidence/owner_parallel_integration_20260225T162457Z/selftest_bl026_runs.tsv` (owner replay x3 pass), `TestEvidence/owner_parallel_integration_20260225T162457Z/selftest_bl029_runs.tsv` (BL-026 regression guard x3 pass) |
+
+## Slice F Promotion Packet (Worker Verification, 2026-02-25)
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| Build (`LocusQ_Standalone`, `locusq_qa`) | PASS | `TestEvidence/bl026_done_promotion_20260225T163508Z/build.log`, `TestEvidence/bl026_done_promotion_20260225T163508Z/status.tsv` |
+| BL-026 scoped selftest (x5) | PASS (5/5) | `TestEvidence/bl026_done_promotion_20260225T163508Z/selftest_bl026_runs.tsv` |
+| BL-029 scoped guard selftest (x3) | PASS (3/3) | `TestEvidence/bl026_done_promotion_20260225T163508Z/selftest_bl029_guard_runs.tsv` |
+| Docs freshness | PASS | `TestEvidence/bl026_done_promotion_20260225T163508Z/docs_freshness.log` |
+| Decision rule (all required lanes pass in same run) | PASS | `TestEvidence/bl026_done_promotion_20260225T163508Z/validation_matrix.tsv`, `TestEvidence/bl026_done_promotion_20260225T163508Z/promotion_decision.md` |
+
+Historical failures are preserved as context only and are not blockers once the required current-run matrix is green.
+
+Owner disposition: BL-026 is promoted to **Done** on 2026-02-25 after owner-managed sync of backlog/index/status/evidence surfaces.
 
 ## Closeout Checklist
 
