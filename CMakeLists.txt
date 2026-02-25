@@ -58,6 +58,7 @@ message(STATUS "LocusQ: WebView backend: ${WEBVIEW_BACKEND}")
 option(LOCUSQ_UI_POC "Load focused WebView POC UI by default" OFF)
 option(LOCUSQ_ENABLE_STEAM_AUDIO "Enable Steam Audio headphone backend integration hook" OFF)
 option(LOCUSQ_ENABLE_CLAP "Enable CLAP target generation via clap-juce-extensions" OFF)
+option(LOCUS_HEAD_TRACKING "Enable BL-017 head-tracking companion bridge receiver integration" OFF)
 option(LOCUSQ_CLAP_FETCH "Fetch clap-juce-extensions from Git if local path is missing" ON)
 set(LOCUSQ_STEAM_AUDIO_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/steam-audio/sdk/steamaudio"
     CACHE PATH "Path to Steam Audio SDK root (contains include/phonon.h and lib/)")
@@ -177,6 +178,7 @@ target_sources(LocusQ
         Source/SpreadProcessor.h
         Source/EarlyReflections.h
         Source/FDNReverb.h
+        Source/HeadTrackingBridge.h
         Source/TestSignalGenerator.h
         Source/IRCapture.h
         Source/RoomAnalyzer.h
@@ -274,6 +276,7 @@ target_compile_definitions(LocusQ
         LOCUSQ_UI_POC_DEFAULT=$<IF:$<BOOL:${LOCUSQ_UI_POC}>,1,0>
         LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
         LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+        LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
 )
 
 if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
@@ -369,6 +372,7 @@ if(BUILD_LOCUSQ_QA)
             Source/SpreadProcessor.h
             Source/EarlyReflections.h
             Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
@@ -396,6 +400,7 @@ if(BUILD_LOCUSQ_QA)
             LOCUSQ_TESTING=1
             LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
             LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
             JUCE_WEB_BROWSER=0
             JUCE_USE_CURL=0
             JUCE_VST3_CAN_REPLACE_VST2=0
@@ -458,6 +463,111 @@ if(BUILD_LOCUSQ_QA)
 
     message(STATUS "LocusQ QA: Target 'locusq_qa' created")
     message(STATUS "LocusQ QA: Scenarios in ${CMAKE_CURRENT_SOURCE_DIR}/qa/scenarios/")
+
+    # ── BL-018 diagnostics probe (scene-state requested/active/stage capture) ──
+    juce_add_console_app(locusq_bl018_profile_probe PRODUCT_NAME "LocusQ BL-018 Profile Probe")
+    juce_generate_juce_header(locusq_bl018_profile_probe)
+
+    target_sources(locusq_bl018_profile_probe
+        PRIVATE
+            qa/bl018_profile_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.h
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_bl018_profile_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_bl018_profile_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_bl018_profile_probe")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_bl018_profile_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_bl018_profile_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_bl018_profile_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_bl018_profile_probe' created")
 
     # ── Phase 2.4 physics acceptance probe ──────────────────────────────
     juce_add_console_app(locusq_physics_probe PRODUCT_NAME "LocusQ Physics Probe")

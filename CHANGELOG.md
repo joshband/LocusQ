@@ -53,6 +53,10 @@ Operational snapshot:
   - Slice C CI integration landed at `.github/workflows/release-governance.yml` (tag/manual trigger, automated gates, explicit manual-device gate notice).
   - Slice D dry-run execution captured baseline gate outcomes at `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`.
   - owner replay confirms required command lanes are green on current branch (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains blocked on governance gates `RL-05` and `RL-09`.
+- BL-030 RL-09 release-note closeout packet finalized (2026-02-25):
+  - RL-09 traceability evidence captured in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl09_traceability.md`.
+  - RL-09 decision state recorded as `PASS` in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl_gate_matrix.tsv`.
+  - Release governance remains `NO-GO` because RL-05 is still `FAIL` per `TestEvidence/bl030_rl05_clean_replay_g1_20260225T175856Z/dev_matrix_results.tsv`.
 - HX-05 payload budget hardening advanced to Slice C harness contract (2026-02-25):
   - deterministic soak harness added at `scripts/qa-hx05-payload-budget-soak-mac.sh`.
   - fixture contract validated (`pass=>0`, `fail=>1`) and owner replay confirmed (`TestEvidence/owner_hx05_slice_c_replay_20260225T175333Z/status.tsv`).

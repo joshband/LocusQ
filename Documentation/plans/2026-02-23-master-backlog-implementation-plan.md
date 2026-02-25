@@ -143,14 +143,14 @@ git commit -m "docs: create master backlog index with dashboard, dependency grap
 ## Task 3: Generate Closed-Item Closeout Runbooks (Batch 1: BL-001 through BL-008)
 
 **Files:**
-- Create: `Documentation/backlog/bl-001-readme-standards.md`
-- Create: `Documentation/backlog/bl-002-physics-preset-reversion.md`
-- Create: `Documentation/backlog/bl-003-timeline-transport.md`
-- Create: `Documentation/backlog/bl-004-keyframe-gestures.md`
-- Create: `Documentation/backlog/bl-005-preset-save-path.md`
-- Create: `Documentation/backlog/bl-006-motion-trail-overlays.md`
-- Create: `Documentation/backlog/bl-007-velocity-vector-overlays.md`
-- Create: `Documentation/backlog/bl-008-rms-overlays.md`
+- Create: `Documentation/backlog/done/bl-001-readme-standards.md`
+- Create: `Documentation/backlog/done/bl-002-physics-preset-reversion.md`
+- Create: `Documentation/backlog/done/bl-003-timeline-transport.md`
+- Create: `Documentation/backlog/done/bl-004-keyframe-gestures.md`
+- Create: `Documentation/backlog/done/bl-005-preset-save-path.md`
+- Create: `Documentation/backlog/done/bl-006-motion-trail-overlays.md`
+- Create: `Documentation/backlog/done/bl-007-velocity-vector-overlays.md`
+- Create: `Documentation/backlog/done/bl-008-rms-overlays.md`
 
 **Step 1: For each item, create a closeout runbook using `_template-closeout.md`**
 
@@ -212,18 +212,18 @@ git commit -m "docs: add closeout runbooks for BL-001 through BL-008"
 ## Task 4: Generate Closed-Item Closeout Runbooks (Batch 2: BL-009 through BL-025 + HX-01/03/04)
 
 **Files:**
-- Create: `Documentation/backlog/bl-009-steam-headphone-contract.md`
-- Create: `Documentation/backlog/bl-010-fdn-expansion.md`
-- Create: `Documentation/backlog/bl-011-clap-lifecycle.md`
-- Create: `Documentation/backlog/bl-014-overlay-strict-closeout.md`
-- Create: `Documentation/backlog/bl-015-all-emitter-rendering.md`
-- Create: `Documentation/backlog/bl-016-transport-contract.md`
-- Create: `Documentation/backlog/bl-019-physics-interaction-lens.md`
-- Create: `Documentation/backlog/bl-024-reaper-host-automation.md`
-- Create: `Documentation/backlog/bl-025-emitter-uiux-v2.md`
-- Create: `Documentation/backlog/hx-01-shared-ptr-atomic.md`
-- Create: `Documentation/backlog/hx-03-reaper-multi-instance.md`
-- Create: `Documentation/backlog/hx-04-scenario-coverage.md`
+- Create: `Documentation/backlog/done/bl-009-steam-headphone-contract.md`
+- Create: `Documentation/backlog/done/bl-010-fdn-expansion.md`
+- Create: `Documentation/backlog/done/bl-011-clap-lifecycle.md`
+- Create: `Documentation/backlog/done/bl-014-overlay-strict-closeout.md`
+- Create: `Documentation/backlog/done/bl-015-all-emitter-rendering.md`
+- Create: `Documentation/backlog/done/bl-016-transport-contract.md`
+- Create: `Documentation/backlog/done/bl-019-physics-interaction-lens.md`
+- Create: `Documentation/backlog/done/bl-024-reaper-host-automation.md`
+- Create: `Documentation/backlog/done/bl-025-emitter-uiux-v2.md`
+- Create: `Documentation/backlog/done/hx-01-shared-ptr-atomic.md`
+- Create: `Documentation/backlog/done/hx-03-reaper-multi-instance.md`
+- Create: `Documentation/backlog/done/hx-04-scenario-coverage.md`
 
 **Step 1: For each item, create closeout runbook**
 
@@ -253,10 +253,10 @@ git commit -m "docs: add closeout runbooks for BL-009 through BL-025 and HX-01/0
 ## Task 5: Generate Open-Item Runbooks — In Validation Tier (BL-012, BL-013, BL-018, BL-022)
 
 **Files:**
-- Create: `Documentation/backlog/bl-012-qa-harness-tranche.md`
-- Create: `Documentation/backlog/bl-013-hostrunner-feasibility.md`
-- Create: `Documentation/backlog/bl-018-spatial-format-matrix.md`
-- Create: `Documentation/backlog/bl-022-choreography-closeout.md`
+- Create: `Documentation/backlog/done/bl-012-qa-harness-tranche.md`
+- Create: `Documentation/backlog/done/bl-013-hostrunner-feasibility.md`
+- Create: `Documentation/backlog/done/bl-018-spatial-format-matrix.md`
+- Create: `Documentation/backlog/done/bl-022-choreography-closeout.md`
 
 **Step 1: Create each runbook using `_template-runbook.md` with all 12 sections**
 
@@ -330,8 +330,8 @@ git commit -m "docs: add runbooks for in-validation items BL-012, BL-013, BL-018
 ## Task 6: Generate Open-Item Runbooks — In Planning Tier P1 (BL-026, BL-031)
 
 **Files:**
-- Create: `Documentation/backlog/bl-026-calibrate-uiux-v2.md`
-- Create: `Documentation/backlog/bl-031-tempo-token-scheduler.md`
+- Create: `Documentation/backlog/done/bl-026-calibrate-uiux-v2.md`
+- Create: `Documentation/backlog/done/bl-031-tempo-token-scheduler.md`
 
 **Step 1: Create BL-026 runbook**
 
@@ -382,9 +382,9 @@ git commit -m "docs: add runbooks for P1 planning items BL-026 and BL-031"
 ## Task 7: Generate Open-Item Runbooks — Hardening Tier (HX-02, HX-05, HX-06)
 
 **Files:**
-- Create: `Documentation/backlog/hx-02-registration-lock.md`
-- Create: `Documentation/backlog/hx-05-payload-budget.md`
-- Create: `Documentation/backlog/hx-06-rt-safety-audit.md`
+- Create: `Documentation/backlog/done/hx-02-registration-lock.md`
+- Create: `Documentation/backlog/done/hx-05-payload-budget.md`
+- Create: `Documentation/backlog/done/hx-06-rt-safety-audit.md`
 
 **Step 1: Create HX-02 runbook**
 
@@ -432,9 +432,9 @@ git commit -m "docs: add runbooks for hardening items HX-02, HX-05, HX-06"
 ## Task 8: Generate Open-Item Runbooks — In Planning Tier P2 (BL-027, BL-028, BL-029, BL-030)
 
 **Files:**
-- Create: `Documentation/backlog/bl-027-renderer-uiux-v2.md`
-- Create: `Documentation/backlog/bl-028-spatial-output-matrix.md`
-- Create: `Documentation/backlog/bl-029-dsp-visualization.md`
+- Create: `Documentation/backlog/done/bl-027-renderer-uiux-v2.md`
+- Create: `Documentation/backlog/done/bl-028-spatial-output-matrix.md`
+- Create: `Documentation/backlog/done/bl-029-dsp-visualization.md`
 - Create: `Documentation/backlog/bl-030-release-governance.md`
 
 **Step 1: Create BL-027 runbook**
@@ -498,7 +498,7 @@ git commit -m "docs: add runbooks for P2 planning items BL-027, BL-028, BL-029, 
 ## Task 9: Generate Open-Item Runbooks — Todo Tier (BL-017, BL-020, BL-021, BL-023)
 
 **Files:**
-- Create: `Documentation/backlog/bl-017-head-tracked-monitoring.md`
+- Create: `Documentation/backlog/done/bl-017-head-tracked-monitoring.md`
 - Create: `Documentation/backlog/bl-020-confidence-masking.md`
 - Create: `Documentation/backlog/bl-021-room-story-overlays.md`
 - Create: `Documentation/backlog/bl-023-resize-dpi-hardening.md`

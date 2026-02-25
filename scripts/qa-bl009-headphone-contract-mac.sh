@@ -116,11 +116,81 @@ if [[ -x "$APP_EXEC" ]]; then
   if LOCUSQ_UI_SELFTEST_BL009=1 "$ROOT_DIR/scripts/standalone-ui-selftest-production-p0-mac.sh" "$APP_EXEC" >"$OUT_DIR/ui_selftest_bl009.log" 2>&1; then
     log_status "ui_selftest_bl009" "pass" "log=$OUT_DIR/ui_selftest_bl009.log"
   else
-    log_status "ui_selftest_bl009" "fail" "log=$OUT_DIR/ui_selftest_bl009.log"
+    SELFTEST_META="$(awk -F= '/^metadata_json=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+    SELFTEST_ATTEMPTS="$(awk -F= '/^attempt_status_table=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+    FAIL_REASON="unknown"
+    FAIL_EXIT_CODE=""
+    FAIL_SIGNAL=""
+    FAIL_SIGNAL_NAME=""
+    FAIL_CRASH_PATH=""
+    FAIL_LAUNCH_MODE=""
+    FAIL_LOCK_WAIT_SECONDS=""
+    FAIL_LOCK_WAIT_RESULT=""
+    FAIL_PRELAUNCH_DRAIN_RESULT=""
+
+    if [[ -n "$SELFTEST_META" && -f "$SELFTEST_META" ]]; then
+      cp "$SELFTEST_META" "$OUT_DIR/ui_selftest_bl009.meta.json"
+      if command -v jq >/dev/null 2>&1; then
+        FAIL_REASON="$(jq -r '.terminalFailureReason // .terminal_failure_reason // "unknown"' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || echo unknown)"
+        FAIL_EXIT_CODE="$(jq -r '.appExitCode // .app_exit_code // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_SIGNAL="$(jq -r '.appSignal // .app_signal // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_SIGNAL_NAME="$(jq -r '.appSignalName // .app_signal_name // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_CRASH_PATH="$(jq -r '.crashReportPath // .crash_report_path // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_LAUNCH_MODE="$(jq -r '.launchModeUsed // .launch_mode_used // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_LOCK_WAIT_SECONDS="$(jq -r '.lockWaitSeconds // .lock_wait_seconds // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_LOCK_WAIT_RESULT="$(jq -r '.lockWaitResult // .lock_wait_result // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+        FAIL_PRELAUNCH_DRAIN_RESULT="$(jq -r '.prelaunchDrainResult // .prelaunch_drain_result // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+      fi
+    fi
+
+    if [[ -n "$SELFTEST_ATTEMPTS" && -f "$SELFTEST_ATTEMPTS" ]]; then
+      cp "$SELFTEST_ATTEMPTS" "$OUT_DIR/ui_selftest_bl009.attempts.tsv"
+    fi
+
+    if [[ "$FAIL_REASON" == "unknown" ]]; then
+      FAIL_REASON="$(awk -F= '/^terminal_failure_reason=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_EXIT_CODE="$(awk -F= '/^app_exit_code=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_SIGNAL="$(awk -F= '/^app_signal=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_SIGNAL_NAME="$(awk -F= '/^app_signal_name=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_CRASH_PATH="$(awk -F= '/^crash_report_path=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_LAUNCH_MODE="$(awk -F= '/^launch_mode_used=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_LOCK_WAIT_SECONDS="$(awk -F= '/^lock_wait_seconds=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_LOCK_WAIT_RESULT="$(awk -F= '/^lock_wait_result=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+      FAIL_PRELAUNCH_DRAIN_RESULT="$(awk -F= '/^prelaunch_drain_result=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+    fi
+
+    log_status "ui_selftest_bl009" "fail" "reason=${FAIL_REASON};exit=${FAIL_EXIT_CODE};signal=${FAIL_SIGNAL};signal_name=${FAIL_SIGNAL_NAME};crash=${FAIL_CRASH_PATH};launch_mode=${FAIL_LAUNCH_MODE};lock_wait_s=${FAIL_LOCK_WAIT_SECONDS};lock_wait_result=${FAIL_LOCK_WAIT_RESULT};prelaunch_drain=${FAIL_PRELAUNCH_DRAIN_RESULT};log=$OUT_DIR/ui_selftest_bl009.log"
     exit 1
   fi
 
   SELFTEST_JSON="$(awk -F= '/^artifact=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+  SELFTEST_META="$(awk -F= '/^metadata_json=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+  SELFTEST_ATTEMPTS="$(awk -F= '/^attempt_status_table=/{print $2}' "$OUT_DIR/ui_selftest_bl009.log" | tail -n 1)"
+  if [[ -n "$SELFTEST_META" && -f "$SELFTEST_META" ]]; then
+    cp "$SELFTEST_META" "$OUT_DIR/ui_selftest_bl009.meta.json"
+    META_LAUNCH_MODE=""
+    META_LOCK_WAIT_SECONDS=""
+    META_LOCK_WAIT_RESULT=""
+    META_PRELAUNCH_DRAIN_RESULT=""
+    if command -v jq >/dev/null 2>&1; then
+      META_LAUNCH_MODE="$(jq -r '.launchModeUsed // .launch_mode_used // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+      META_LOCK_WAIT_SECONDS="$(jq -r '.lockWaitSeconds // .lock_wait_seconds // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+      META_LOCK_WAIT_RESULT="$(jq -r '.lockWaitResult // .lock_wait_result // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+      META_PRELAUNCH_DRAIN_RESULT="$(jq -r '.prelaunchDrainResult // .prelaunch_drain_result // ""' "$OUT_DIR/ui_selftest_bl009.meta.json" 2>/dev/null || true)"
+    fi
+    log_status "ui_selftest_bl009_meta" "pass" "meta=$OUT_DIR/ui_selftest_bl009.meta.json;launch_mode=${META_LAUNCH_MODE};lock_wait_s=${META_LOCK_WAIT_SECONDS};lock_wait_result=${META_LOCK_WAIT_RESULT};prelaunch_drain=${META_PRELAUNCH_DRAIN_RESULT}"
+  fi
+  if [[ -n "$SELFTEST_ATTEMPTS" && -f "$SELFTEST_ATTEMPTS" ]]; then
+    cp "$SELFTEST_ATTEMPTS" "$OUT_DIR/ui_selftest_bl009.attempts.tsv"
+    log_status "ui_selftest_bl009_attempts" "pass" "table=$OUT_DIR/ui_selftest_bl009.attempts.tsv"
+  fi
+
+  if [[ -z "$SELFTEST_JSON" && -n "$SELFTEST_META" && -f "$SELFTEST_META" ]]; then
+    if command -v jq >/dev/null 2>&1; then
+      SELFTEST_JSON="$(jq -r '.resultJson // .result_json // ""' "$SELFTEST_META" 2>/dev/null || true)"
+    fi
+  fi
+
   if [[ -n "$SELFTEST_JSON" && -f "$SELFTEST_JSON" ]]; then
     cp "$SELFTEST_JSON" "$OUT_DIR/ui_selftest_bl009.json"
     BL009_PASS="$(jq -r '((.payload.checks // .result.checks // []) | map(select(.id=="UI-P1-009")) | .[0].pass) // false' "$OUT_DIR/ui_selftest_bl009.json")"

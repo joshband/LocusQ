@@ -46,7 +46,7 @@ Every in-scope markdown file must include, in this order, at the top of file:
 
 ## Master Backlog Contract
 1. `Documentation/backlog/index.md` is the single backlog authority for priority, ordering, and state.
-2. Individual runbook docs in `Documentation/backlog/bl-XXX-*.md` carry execution detail, agent mega-prompts, validation plans, and evidence contracts.
+2. Individual runbook docs in `Documentation/backlog/` carry execution detail, agent mega-prompts, validation plans, and evidence contracts (`bl-XXX-*.md` for open work, `done/*.md` for completed work).
 3. Plan docs under `Documentation/plans/` carry deep architecture content but must not become competing backlog ledgers.
 4. New backlog items enter via `Documentation/backlog/_template-intake.md` and are promoted to full runbooks using `Documentation/backlog/_template-runbook.md`.
 5. The legacy files `Documentation/backlog-post-v1-agentic-sprints.md` and `Documentation/runbooks/backlog-execution-runbooks.md` are superseded and retained as Tier 2 reference only.

@@ -1,0 +1,302 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_audition_platform_showcase",
+  "name": "LocusQ BL-029 Audition Platform Showcase",
+  "category": "spatial",
+  "description": "Deterministic audition-platform reliability lane: cloud showcase modes, reactive envelope/parity contracts, precipitation semantics, fallback contract, and replay hash stability.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.30,
+      "duration_seconds": 2.4
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.16,
+    "emit_gain": 0.00,
+    "emit_mute": 0.0,
+    "emit_spread": 0.20,
+    "emit_directivity": 0.50,
+    "emit_dir_azimuth": 0.50,
+    "emit_dir_elevation": 0.50,
+    "rend_master_gain": 0.50,
+    "rend_quality": 1.0,
+    "rend_air_absorb": 0.0,
+    "rend_doppler": 0.0,
+    "rend_room_enable": 0.0,
+    "phys_enable": 0.0,
+    "rend_headphone_mode": 0.0,
+    "rend_headphone_profile": 0.666667
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.4,
+      "description": "Audition-platform output window"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -80.0
+      },
+      "severity": "hard_fail",
+      "description": "Showcase scenario must produce deterministic non-empty output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Output must remain finite."
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Showcase output must stay below clipping."
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Showcase path must remain deadline-safe."
+    }
+  },
+
+  "bl029_contract_checks": [
+    {
+      "id": "cloud_showcase_mode",
+      "description": "Cloud showcase metadata must expose deterministic cloud mode family mappings used in release demos.",
+      "source": "Source/PluginProcessor.cpp",
+      "expected_modes": [
+        "single_core",
+        "dual_pair",
+        "noise_cluster",
+        "precipitation_rain",
+        "precipitation_snow",
+        "impact_swarm",
+        "chime_cluster",
+        "bio_swarm",
+        "bio_flock",
+        "physical_modal",
+        "physical_impacts",
+        "synth_generative",
+        "synth_grid"
+      ]
+    },
+    {
+      "id": "bound_proxy_mode_behavior",
+      "description": "UI proxy contract must ingest rendererAuditionCloud mode/coherence/spread from scene-state.",
+      "source": "Source/ui/public/js/index.js",
+      "expected_fields": [
+        "rendererAuditionCloud",
+        "auditionEmitterTarget.cloud",
+        "cloudState.mode"
+      ]
+    },
+    {
+      "id": "reactive_envelope_contract",
+      "description": "Renderer must publish reactive envelope scalars with clamped [0..1] semantics and UI must provide fallback behavior when reactive metadata is missing.",
+      "source": "Source/PluginProcessor.cpp",
+      "expected_scene_fields": [
+        "rendererAuditionReactivity",
+        "rendererAuditionDensity"
+      ],
+      "expected_range": {
+        "min": 0.0,
+        "max": 1.0
+      },
+      "expected_range_tokens": [
+        "rendererAuditionReactivity",
+        "juce::jlimit (0.0f, 1.0f"
+      ],
+      "ui_source": "Source/ui/public/js/index.js",
+      "missing_block_fallback_tokens": [
+        "const fallback = readRendererAuditionFallbackState();",
+        "Renderer metadata unavailable; UI fallback active"
+      ]
+    },
+    {
+      "id": "rain_snow_fade_semantics",
+      "description": "Rain/snow showcase semantics must remain deterministic across renderer publication and UI fade treatment.",
+      "source": "Source/PluginProcessor.cpp",
+      "expected_plugin_tokens": [
+        "rendererAuditionCloudPattern = \"rain_sheet\"",
+        "rendererAuditionCloudPattern = \"snow_cloud\"",
+        "rendererAuditionCloudMode = \"precipitation_rain\"",
+        "rendererAuditionCloudMode = \"precipitation_snow\""
+      ],
+      "ui_source": "Source/ui/public/js/index.js",
+      "expected_ui_tokens": [
+        "case AUDITION_CLOUD_PATTERN_RAIN:",
+        "lineOpacity = 0.34;",
+        "case AUDITION_CLOUD_PATTERN_SNOW:",
+        "lineOpacity = 0.0;",
+        "return isFinalQuality ? 144 : 84;",
+        "return isFinalQuality ? 132 : 78;"
+      ]
+    },
+    {
+      "id": "bound_mode_contract",
+      "description": "Renderer scene-state must publish bound/source mode authority markers for audition handoff.",
+      "source": "Source/PluginProcessor.cpp",
+      "expected_scene_fields": [
+        "rendererAuditionSourceMode",
+        "rendererAuditionBindingTarget"
+      ],
+      "expected_source_modes": [
+        "cloud",
+        "single"
+      ],
+      "expected_binding_targets": [
+        "none"
+      ]
+    },
+    {
+      "id": "fallback_reason_contract",
+      "description": "Renderer fallback reason contract must enumerate deterministic reasons for QA triage.",
+      "source": "Source/PluginProcessor.cpp",
+      "expected_scene_field": "rendererAuditionFallbackReason",
+      "expected_reasons": [
+        "none",
+        "audition_disabled",
+        "renderer_mode_inactive",
+        "bound_emitter_unavailable",
+        "bound_choreography_unavailable",
+        "bound_physics_unavailable",
+        "visual_centroid_unavailable",
+        "cloud_emitters_unavailable"
+      ],
+      "ui_source": "Source/ui/public/js/index.js",
+      "expected_ui_tokens": [
+        "readRendererAuditionFallbackState",
+        "Renderer metadata unavailable; UI fallback active"
+      ]
+    },
+    {
+      "id": "deterministic_seed_replay",
+      "description": "Two replay runs of the same scenario must produce identical wet.wav SHA-256 hashes.",
+      "replay_runs": 4,
+      "hash_target": "wet_wav",
+      "stable_modes": [
+        "precipitation_rain",
+        "precipitation_snow",
+        "chime_cluster",
+        "impact_swarm"
+      ]
+    },
+    {
+      "id": "reactive_mode_replay_matrix",
+      "description": "Key reactive families used for reliability soak must remain enumerated in deterministic replay coverage.",
+      "source": "Source/PluginProcessor.cpp",
+      "ui_source": "Source/ui/public/js/index.js",
+      "key_modes": [
+        {
+          "mode": "precipitation_rain",
+          "plugin_pattern_token": "rendererAuditionCloudPattern = \"rain_sheet\"",
+          "ui_pattern_token": "case AUDITION_CLOUD_PATTERN_RAIN:"
+        },
+        {
+          "mode": "precipitation_snow",
+          "plugin_pattern_token": "rendererAuditionCloudPattern = \"snow_cloud\"",
+          "ui_pattern_token": "case AUDITION_CLOUD_PATTERN_SNOW:"
+        },
+        {
+          "mode": "chime_cluster",
+          "plugin_pattern_token": "rendererAuditionCloudPattern = \"chime_constellation\"",
+          "ui_pattern_token": "case AUDITION_CLOUD_PATTERN_CHIMES:"
+        },
+        {
+          "mode": "impact_swarm",
+          "plugin_pattern_token": "rendererAuditionCloudPattern = \"bounce_cluster\"",
+          "ui_pattern_token": "case AUDITION_CLOUD_PATTERN_BOUNCING:"
+        }
+      ]
+    },
+    {
+      "id": "reactive_telemetry_bounds_contract",
+      "description": "Reactive envelope/coupling/parity telemetry fields must remain present with normalized bounded variants.",
+      "source": "Source/PluginProcessor.cpp",
+      "ui_source": "Source/ui/public/js/index.js",
+      "expected_scene_fields": [
+        "rendererAuditionReactive",
+        "\"rms\":",
+        "\"peak\":",
+        "\"envFast\":",
+        "\"envSlow\":",
+        "\"onset\":",
+        "\"brightness\":",
+        "\"rainFadeRate\":",
+        "\"snowFadeRate\":",
+        "\"physicsVelocity\":",
+        "\"physicsCollision\":",
+        "\"physicsDensity\":",
+        "\"physicsCoupling\":",
+        "\"headphoneOutputRms\":",
+        "\"headphoneOutputPeak\":",
+        "\"headphoneParity\":",
+        "\"headphoneFallback\":",
+        "\"headphoneFallbackReason\":",
+        "\"sourceEnergy\":"
+      ],
+      "expected_norm_fields": [
+        "\"rmsNorm\":",
+        "\"peakNorm\":",
+        "\"envFastNorm\":",
+        "\"envSlowNorm\":",
+        "\"onsetNorm\":",
+        "\"brightnessNorm\":",
+        "\"rainFadeRateNorm\":",
+        "\"snowFadeRateNorm\":",
+        "\"physicsVelocityNorm\":",
+        "\"physicsCollisionNorm\":",
+        "\"physicsDensityNorm\":",
+        "\"physicsCouplingNorm\":",
+        "\"headphoneOutputRmsNorm\":",
+        "\"headphoneOutputPeakNorm\":",
+        "\"headphoneParityNorm\":",
+        "\"sourceEnergyNorm\":"
+      ],
+      "expected_ui_tokens": [
+        "AUDITION_REACTIVE_KEYS_ENV_FAST",
+        "AUDITION_REACTIVE_KEYS_ENV_SLOW",
+        "AUDITION_REACTIVE_KEYS_ONSET",
+        "AUDITION_REACTIVE_KEYS_BRIGHTNESS",
+        "AUDITION_REACTIVE_KEYS_RAIN_FADE",
+        "AUDITION_REACTIVE_KEYS_SNOW_FADE",
+        "AUDITION_REACTIVE_KEYS_SOURCE_ENERGY_MEAN",
+        "AUDITION_REACTIVE_KEYS_INTENSITY"
+      ],
+      "expected_range": {
+        "min": 0.0,
+        "max": 1.0
+      }
+    }
+  ],
+
+  "pass_criteria": "All hard_fail invariants and all bl029_contract_checks must pass."
+}

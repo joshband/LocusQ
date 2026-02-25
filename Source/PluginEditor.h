@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "PluginProcessor.h"
+#include "editor_webview/EditorWebViewRuntime.h"
 
 //==============================================================================
 /**
@@ -44,6 +45,9 @@ private:
 
     // Calibrate
     juce::WebComboBoxRelay calSpkConfigRelay { "cal_spk_config" };
+    juce::WebComboBoxRelay calTopologyProfileRelay { "cal_topology_profile" };
+    juce::WebComboBoxRelay calMonitoringPathRelay { "cal_monitoring_path" };
+    juce::WebComboBoxRelay calDeviceProfileRelay { "cal_device_profile" };
     juce::WebSliderRelay calMicChannelRelay { "cal_mic_channel" };
     juce::WebSliderRelay calSpk1OutRelay { "cal_spk1_out" };
     juce::WebSliderRelay calSpk2OutRelay { "cal_spk2_out" };
@@ -110,6 +114,10 @@ private:
     juce::WebComboBoxRelay distanceModelRelay { "rend_distance_model" };
     juce::WebComboBoxRelay headphoneModeRelay { "rend_headphone_mode" };
     juce::WebComboBoxRelay headphoneProfileRelay { "rend_headphone_profile" };
+    juce::WebToggleButtonRelay auditionEnableRelay { "rend_audition_enable" };
+    juce::WebComboBoxRelay auditionSignalRelay { "rend_audition_signal" };
+    juce::WebComboBoxRelay auditionMotionRelay { "rend_audition_motion" };
+    juce::WebComboBoxRelay auditionLevelRelay { "rend_audition_level" };
     juce::WebSliderRelay distanceRefRelay { "rend_distance_ref" };
     juce::WebSliderRelay distanceMaxRelay { "rend_distance_max" };
     juce::WebToggleButtonRelay dopplerRelay { "rend_doppler" };
@@ -141,6 +149,9 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> bypassAttachment;
 
     std::unique_ptr<juce::WebComboBoxParameterAttachment> calSpkConfigAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> calTopologyProfileAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> calMonitoringPathAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> calDeviceProfileAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> calMicChannelAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> calSpk1OutAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> calSpk2OutAttachment;
@@ -201,6 +212,10 @@ private:
     std::unique_ptr<juce::WebComboBoxParameterAttachment> distanceModelAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> headphoneModeAttachment;
     std::unique_ptr<juce::WebComboBoxParameterAttachment> headphoneProfileAttachment;
+    std::unique_ptr<juce::WebToggleButtonParameterAttachment> auditionEnableAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> auditionSignalAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> auditionMotionAttachment;
+    std::unique_ptr<juce::WebComboBoxParameterAttachment> auditionLevelAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> distanceRefAttachment;
     std::unique_ptr<juce::WebSliderParameterAttachment> distanceMaxAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> dopplerAttachment;
@@ -224,19 +239,13 @@ private:
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizGridAttachment;
     std::unique_ptr<juce::WebToggleButtonParameterAttachment> vizLabelsAttachment;
 
+    locusq::editor_webview::RuntimeConfig runtimeConfig;
     bool runtimeProbeDone = false;
     int runtimeProbeTicks = 0;
     bool standaloneWindowTitleUpdated = false;
     bool uiSelfTestProbeInFlight = false;
     bool uiSelfTestResultWritten = false;
     int uiSelfTestPollTicks = 0;
-
-    //==============================================================================
-    // Resource provider for embedded web files
-    std::optional<juce::WebBrowserComponent::Resource> getResource (const juce::String& url);
-
-    // Helper functions
-    static const char* getMimeForExtension (const juce::String& extension);
 
     // Reference to processor
     LocusQAudioProcessor& audioProcessor;
