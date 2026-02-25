@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # Documentation Standards
 
@@ -99,6 +99,7 @@ When documentation bloat or ambiguity appears:
 5. Keep historical docs in-place only if active docs/status surfaces still reference them; otherwise archive them.
 6. Update `Documentation/README.md` in the same change to reflect any tier changes.
 7. Run `./scripts/validate-docs-freshness.sh` after archival edits.
+8. Keep only active research under `Documentation/research/`, index it in `Documentation/research/README.md`, and move superseded research to `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
 
 ## Tier Promotion Snapshot (2026-02-24)
 1. Tier 1 execution specs now include `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`.

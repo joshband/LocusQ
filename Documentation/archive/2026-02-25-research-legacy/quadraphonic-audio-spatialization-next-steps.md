@@ -18,7 +18,7 @@ This document reconciles research recommendations with the current LocusQ docs a
 
 ## Inputs Reviewed
 
-- `Documentation/research/Quadraphonic Audio Spatialization.pdf`
+- `Documentation/archive/2026-02-25-research-legacy/Quadraphonic Audio Spatialization.pdf`
 - `tmp/pdfs/quadraphonic_audio_spatialization.txt`
 - `Documentation/lessons-learned.md`
 - `.ideas/creative-brief.md`
@@ -169,5 +169,5 @@ Inference:
 - `Documentation/lessons-learned.md`
 - `Documentation/adr/`
 - `Documentation/implementation-traceability.md`
-- `Documentation/research/Quadraphonic Audio Spatialization.pdf`
+- `Documentation/archive/2026-02-25-research-legacy/Quadraphonic Audio Spatialization.pdf`
 - `tmp/pdfs/quadraphonic_audio_spatialization.txt`
