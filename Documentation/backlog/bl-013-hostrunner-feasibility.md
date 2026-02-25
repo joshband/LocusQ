@@ -3,7 +3,7 @@ Title: BL-013 HostRunner Feasibility Promotion
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-25
 ---
 
 # BL-013: HostRunner Feasibility Promotion
@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation |
+| Status | Done (2026-02-25) |
 | Owner Track | Track D — QA Platform |
 | Depends On | BL-012 |
 | Blocks | — |
@@ -188,13 +188,37 @@ EVIDENCE:
 | Status TSV | `TestEvidence/bl013_hostrunner_<timestamp>/status.tsv` | lane, result, timestamp |
 | Promotion decision | `TestEvidence/bl013_hostrunner_<timestamp>/decision.md` | recommendation, evidence summary |
 
+## Slice D Promotion Packet (Worker Verification, 2026-02-25)
+
+Worker bundle: `TestEvidence/bl013_done_promotion_20260225T170341Z/`
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| Build (`LocusQ_Standalone`, `locusq_qa`) | PASS | `TestEvidence/bl013_done_promotion_20260225T170341Z/build.log`, `TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv` |
+| HostRunner feasibility lane | PASS (exit 0) | `TestEvidence/bl013_done_promotion_20260225T170341Z/hostrunner_lane.log`, `TestEvidence/bl013_done_promotion_20260225T170341Z/hostrunner_status.tsv` |
+| RT safety audit | PASS | `TestEvidence/bl013_done_promotion_20260225T170341Z/rt_audit.tsv` |
+| Docs freshness | PASS | `TestEvidence/bl013_done_promotion_20260225T170341Z/docs_freshness.log` |
+| Decision rule (all required lanes pass in same run) | PASS (`PROMOTE_TO_DONE`) | `TestEvidence/bl013_done_promotion_20260225T170341Z/validation_matrix.tsv`, `TestEvidence/bl013_done_promotion_20260225T170341Z/promotion_decision.md` |
+
+Note: HostRunner internal status includes a non-blocking `warn` row for skipped optional harness-host ctests (`LQ_BL013_RUN_HARNESS_HOST_TESTS=0`). Required promotion lanes above all passed.
+
+## Owner Done Sync (2026-02-25)
+
+- BL-013 is now promoted to Done across owner-authoritative surfaces:
+  - `Documentation/backlog/index.md`
+  - `status.json`
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+  - `README.md`
+  - `CHANGELOG.md`
+
 ## Closeout Checklist
 
-- [ ] VST3 probe rerun passes
-- [ ] CLAP probe implemented and tested (or risk documented)
-- [ ] Promotion decision documented
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] VST3 probe rerun passes
+- [x] CLAP probe implemented and tested (or risk documented)
+- [x] Promotion decision documented
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes

@@ -39,6 +39,47 @@ Dry-run closeout bundle:
 - `TestEvidence/bl030_release_governance_20260224T204022Z/device_matrix_results.tsv`
 - `TestEvidence/bl030_release_governance_20260224T204022Z/status.tsv`
 
+## BL-013 Done Promotion Addendum (UTC 2026-02-25)
+
+1. Intake BL-013 Slice D promotion packet
+
+```sh
+cat TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv
+```
+
+Result: `PASS`
+- required lanes all green (`build`, `hostrunner_lane`, `rt_audit`, `docs_freshness`)
+- promotion decision: `PROMOTE_TO_DONE`
+
+2. Evidence pointers
+- `TestEvidence/bl013_done_promotion_20260225T170341Z/validation_matrix.tsv`
+- `TestEvidence/bl013_done_promotion_20260225T170341Z/promotion_decision.md`
+- `TestEvidence/bl013_done_promotion_20260225T170341Z/docs_freshness.log`
+
+## BL-030 Slice E + Owner Replay Addendum (UTC 2026-02-25)
+
+1. Worker unblock packet intake
+
+```sh
+cat TestEvidence/bl030_unblock_slice_e_20260225T170350Z/status.tsv
+```
+
+Result: `FAIL`
+- worker lane reported ABRT exits in `selftest`, `reaper smoke`, and `pluginval`.
+
+2. Owner authoritative replay on current branch
+
+```sh
+./scripts/standalone-ui-selftest-production-p0-mac.sh
+./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap
+/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS`
+- replay status: `TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`
+- disposition: Slice E worker fail treated as non-authoritative on current owner branch (remaining release blockers are governance gates, not command-lane crashes).
+
 ## HX-06 Done Promotion Addendum (UTC 2026-02-25)
 
 1. Re-verify RT audit baseline on current tree
