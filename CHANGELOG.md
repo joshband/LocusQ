@@ -11,7 +11,7 @@ All notable changes to LocusQ are documented here.
 ## [Unreleased]
 
 Operational snapshot:
-- Live backlog state and P0-P2 priorities are tracked in `Documentation/backlog-post-v1-agentic-sprints.md`.
+- Live backlog state and P0-P2 priorities are tracked in `Documentation/backlog/index.md`.
 - Canonical runtime/state snapshot is tracked in `status.json`.
 
 ### Added
@@ -35,6 +35,18 @@ Operational snapshot:
 - BL-025 and BL-014 closeout promotion completed (2026-02-24):
   - backlog/state promoted both P0 rows to `Done`.
   - refreshed evidence bundle: `TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`.
+- BL-018 spatial format matrix strict closeout completed (2026-02-24):
+  - backlog/state promoted BL-018 to `Done` with queue handoff to BL-022 as next P1 lane.
+  - fallback-prompt build lane confirmed: `cmake --build build --target all` (`PASS`, warnings only).
+  - strict matrix evidence bundle: `TestEvidence/bl018_profile_matrix_20260224T183138Z/per_profile_results.tsv` and `TestEvidence/bl018_profile_matrix_20260224T183138Z/diagnostics_snapshot.json` (`9/9` profiles pass; `warnings=0`; `fallback_triggered=false`; `rt_safe=true`; `diagnostics_match=true`).
+- BL-022 choreography lane closeout completed (2026-02-24):
+  - backlog/state promoted BL-022 to `Done` with queue handoff to BL-012 as next P1 lane.
+  - closeout bundle: `TestEvidence/bl022_validation_20260224T184032Z/status.tsv`.
+  - production self-test artifact: `TestEvidence/locusq_production_p0_selftest_20260224T184037Z.json` (`UI-P1-022` plus `UI-P1-025A..E` all pass).
+- BL-030 release governance lanes progressed to validation baseline (2026-02-24):
+  - Slice C CI integration landed at `.github/workflows/release-governance.yml` (tag/manual trigger, automated gates, explicit manual-device gate notice).
+  - Slice D dry-run execution captured baseline gate outcomes at `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`.
+  - dry-run decision is currently `BLOCKED` on `RL-01`, `RL-05`, and `RL-09`; automation lanes `RL-02`, `RL-03`, `RL-04`, `RL-06`, `RL-08`, `RL-10` are passing.
 - Added plain-language validation lane documentation for operators:
   - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
   - linked from `Documentation/README.md`.

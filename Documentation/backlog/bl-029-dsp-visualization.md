@@ -3,7 +3,7 @@ Title: BL-029 DSP Visualization and Tooling
 Document Type: Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-25
 ---
 
 # BL-029 — DSP Visualization and Tooling
@@ -15,13 +15,66 @@ Deliver four visualization and tooling priorities for the LocusQ WebView UI: (1)
 | Field | Value |
 |---|---|
 | ID | BL-029 |
-| Status | In Planning |
+| Status | In Implementation (audition-cloud tranche executed; D/E/F owner replay validated; reactive G-phase in owner triage) |
 | Priority | P2 |
 | Track | B — Scene/UI Runtime |
 | Effort | Very High / XL |
 | Depends | BL-025, BL-026, BL-027, BL-028, BL-031 |
 | Blocks | none |
 | Annex | `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` |
+
+---
+
+## 1.1 Execution Snapshot (2026-02-25)
+
+| Lane | Result | Evidence | Notes |
+|---|---|---|---|
+| Audition Quality Slice D | PASS | `TestEvidence/bl029_audition_quality_slice_d_20260224T205057Z/status.tsv` | Native renderer audition-motion quality upgrades validated (`build`, `qa_smoke`, `rt_audit`). |
+| Audition Cloud UI Slice E | PASS | `TestEvidence/bl029_audition_cloud_slice_e_20260224T205041Z/status.tsv` | Multi-emitter showcase UI path validated (`node_check`, standalone build, scoped selftest). |
+| Audition Cloud Bridge Slice F | PASS | `TestEvidence/bl029_audition_cloud_slice_f_20260224T205313Z/status.tsv` | Additive `rendererAuditionCloud` metadata contract (`mode`, `emitterCount`, `emitters[]`) validated. |
+| Owner integrated replay (D+E+F) | PASS | `TestEvidence/owner_bl029_post_bl026_fix_r2_20260224T214701Z/status.tsv` | Combined replay passes `node/build/qa/rt/selftest/docs` after BL-026 scoped selftest timeout remediation and RT allowlist refresh. |
+| Audition Platform Slice A1 | PASS (owner gate recheck) | `TestEvidence/bl029_audition_platform_slice_a1_20260224T223946Z/status.tsv`; `TestEvidence/owner_rt_allowlist_refresh_20260224T224531Z/status.tsv` | Worker lane already had `build/qa/selftest` PASS; owner reconciled RT allowlist line drift and restored `non_allowlisted=0` gate. |
+| Audition Platform Slice A2 | PASS (owner rerun) | `TestEvidence/bl029_audition_platform_slice_a2_20260224T224500Z/status.tsv`; `TestEvidence/owner_bl029_slice_a2_recheck_20260224T224946Z/status.tsv`; `TestEvidence/owner_bl029_selftest_stability_20260224T224740Z/status.tsv` | Worker lane saw transient `app_exited_before_result`; owner rerun and stability loop passed (`selftest_bl029` 5/5). |
+| Audition Platform Slice A3 | PASS | `TestEvidence/bl029_audition_platform_slice_a3_20260224T225104Z/status.tsv` | Deterministic replay-hash lane, proxy/contract checks, RT audit, and docs-freshness lane are green. |
+| Audition Platform Slice B1 | PASS (owner gate recheck) | `TestEvidence/bl029_audition_platform_slice_b1_20260224T230303Z/status.tsv`; `TestEvidence/owner_rt_allowlist_refresh_20260224T231523Z/status.tsv` | Worker lane had `build/qa/selftest/docs` PASS and failed only on RT line-map drift; owner refreshed allowlist baseline (`non_allowlisted=0`). |
+| Audition Platform Slice C1 | PASS (owner rerun) | `TestEvidence/bl029_audition_platform_slice_c1_20260224T230341Z/status.tsv`; `TestEvidence/locusq_production_p0_selftest_20260224T231504Z.json`; `TestEvidence/owner_rt_allowlist_refresh_20260224T231523Z/status.tsv` | Worker lane had one transient scoped selftest abort and RT line-map drift; owner reruns pass (`selftest_bl029` 3/3) and RT gate restored. |
+| Audition Platform Slice E1 | PASS (owner gate recheck) | `TestEvidence/bl029_audition_platform_slice_e1_20260224T230316Z/status.tsv`; `TestEvidence/owner_rt_allowlist_refresh_20260224T231523Z/status.tsv` | QA lane and docs freshness passed in worker run; only RT baseline drift remained and was resolved by owner allowlist refresh. |
+| Audition Reactive Envelope Bridge Slice G1 | FAIL (worker gate) | `TestEvidence/bl029_audition_reactive_bridge_slice_g1_20260224T232748Z/status.tsv` | `build`, `qa_smoke`, `selftest_bl029`, and docs freshness pass; fails only on RT allowlist drift (`non_allowlisted=87`). |
+| Audition Reactive Cloud UI Slice G2 | FAIL (worker gate) | `TestEvidence/bl029_audition_reactive_ui_slice_g2_20260224T232957Z/status.tsv` | `node --check` + standalone build pass; scoped selftest failed in worker lane with transient `app_exited_before_result (134)`. |
+| Reactive Contract QA Slice G3 | FAIL (worker gate) | `TestEvidence/bl029_audition_reactive_qa_slice_g3_20260224T232807Z/status.tsv` | QA lane and docs freshness pass; fails only on RT allowlist drift (`non_allowlisted=87`). |
+| Binaural Reactive Parity Slice G4 | FAIL (worker gate) | `TestEvidence/bl029_audition_binaural_parity_slice_g4_20260225T000805Z/status.tsv` | `build`, `selftest_bl029`, `selftest_bl009`, and BL-009 headphone contract lane pass; fails on RT allowlist drift (`non_allowlisted=91`). |
+| Physics-Reactive Audition Coupling Slice G5 | FAIL (worker gate) | `TestEvidence/bl029_audition_physics_coupling_slice_g5_20260225T001225Z/status.tsv` | `build` + QA smoke pass; worker saw transient `selftest_bl029` abort (`app_exited_before_result`) and RT allowlist drift (`non_allowlisted=110`). |
+| Cinematic Reactive Preset Language Slice G6 | PASS | `TestEvidence/bl029_cinematic_reactive_preset_language_slice_g6_20260225T000954Z/status.tsv` | Dream/Design/Plan contract docs landed with acceptance IDs and docs-freshness gate pass. |
+| Reactive UI/QA Consolidation Slice Z3 | PASS | `TestEvidence/bl029_reactive_ui_z3_20260225T004027Z/status.tsv` | `node_check`, standalone build, scoped selftest (5/5), and docs-freshness lane pass with acceptance checks `UI-P1-029A/B/C`. |
+| Owner G-phase triage reruns | PARTIAL PASS | `TestEvidence/owner_bl029_g123_triage_20260225T000428Z/status.tsv`; `TestEvidence/owner_rt_allowlist_refresh_20260225T000548Z/status.tsv`; `TestEvidence/owner_rt_allowlist_refresh_20260225T000647Z/status.tsv` | Owner rerun shows scoped `selftest_bl029` pass and docs freshness pass after metadata fix; RT gate remains a moving target while concurrent edits continue to shift line maps. |
+| Owner G4 triage replay | PARTIAL PASS | `TestEvidence/owner_bl029_g4_triage_20260225T001418Z/status.tsv` | Owner replay confirms G4 functional lanes pass (`build`, both scoped selftests, BL-009 QA); RT gate still drifts and docs gate briefly failed from G5 evidence metadata omission (now fixed). |
+| Owner G5 triage replay | PARTIAL PASS | `TestEvidence/owner_bl029_g5_triage_20260225T001834Z/status.tsv` | Owner replay clears worker selftest abort concern (`selftest_bl029` passes 3/3); RT gate still fails from global allowlist drift (`non_allowlisted=110`). |
+| Owner Z2 replay (post-handoff) | PARTIAL PASS | `TestEvidence/owner_bl029_z2_replay_20260225T013944Z/status.tsv` | Owner replay clears worker abort concern (`selftest_bl029` 3/3 PASS, `selftest_bl009` PASS, `qa_bl009_headphone_contract` PASS); RT gate still fails after line-map movement (`non_allowlisted=103`). |
+| Owner Z2+Z3 integrated replay | PARTIAL PASS | `TestEvidence/owner_bl029_z2_z3_integrated_20260225T014638Z/status.tsv` | All functional lanes pass (`node/build/qa/smoke/selftest_bl029/selftest_bl009/qa_bl009/docs`); RT gate fails on drift (`non_allowlisted=103`) before final reconciliation. |
+| Owner RT finalizer post-Z2/Z3 | PASS | `TestEvidence/owner_bl029_rt_finalize_z2z3_20260225T014808Z/status.tsv` | Freeze guard pass and RT gate stabilized (`non_allowlisted=0`) with docs freshness pass. |
+| Reliability Hardening Slice R1 | FAIL | `TestEvidence/bl029_reliability_native_r1_20260225T031132Z/status.tsv` | Build/smoke pass and `selftest_bl029` passes 5/5, but BL009 scoped selftest lane is flaky (`1/3` fail in required set). |
+| Selftest Harness Robustness Slice R2 | FAIL | `TestEvidence/bl029_selftest_harness_r2_20260225T030714Z/status.tsv` | Diagnostics improved, but runtime remains unstable in soak (`bl029 0/10`, `bl009 0/5`, repeated `app_exited_before_result`, `exit 134`, `ABRT`). |
+| Reliability Soak + Go/No-Go Slice R3 | FAIL (NO-GO) | `TestEvidence/bl029_reliability_soak_r3_20260225T030749Z/status.tsv` | QA contract lane deterministic PASS, but soak hard gates fail (`selftest_bl029 1/10`, `selftest_bl009 1/5`), decision `NO-GO`. |
+
+Current owner disposition: BL-029 remains `In Implementation`. Reactive feature lanes are functionally advanced, but reliability tranche is currently `NO-GO` due standalone selftest instability under soak (ABRT/app-exit-before-result patterns), despite RT/docs gates being green at snapshot time.
+
+---
+
+## 1.2 Audition Platform Expansion (Hybrid + Cinematic)
+
+User intent for the next tranche is explicit:
+1. Hybrid audition role (demo/showcase + diagnostic utility).
+2. Significant quality upgrade on existing controls.
+3. Cinematic immersive behavior as the default experience posture.
+
+Authority decision:
+1. Renderer remains audition DSP authority.
+2. Emitter/choreography/physics panels provide cross-mode proxy controls ("Audition This").
+3. Deterministic standalone behavior is a first-class requirement.
+
+Normative references for this expansion:
+1. Plan: `Documentation/plans/bl-029-audition-platform-expansion-plan-2026-02-24.md`
+2. ADR: `Documentation/adr/ADR-0013-audition-authority-and-cross-mode-control.md`
 
 ---
 
@@ -257,6 +310,7 @@ struct GhostEmitter {
 |---|---|
 | ADR-0006 | Device profile authority: spectral and reflection computations must not change the active device profile |
 | ADR-0012 | Renderer domain exclusivity: reflection computation is domain-agnostic but must not activate a different domain |
+| ADR-0013 | Audition remains renderer-authoritative; cross-mode controls are proxy writers only |
 
 If the spectral computation or reflection ghost paths require a new architectural decision (e.g., whether spectral features are part of the RT data path or message-thread-only), record a new ADR.
 

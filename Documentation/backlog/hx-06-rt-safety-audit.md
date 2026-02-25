@@ -3,7 +3,7 @@ Title: HX-06 Recurring RT-Safety Static Audit
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-25
 ---
 
 # HX-06: Recurring RT-Safety Static Audit
@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | Open |
+| Status | In Validation |
 | Owner Track | Track F — Hardening |
 | Depends On | BL-016 (Done) |
 | Blocks | BL-030 |
@@ -227,14 +227,33 @@ Evidence:
 | Baseline report | `TestEvidence/hx06_rt_audit_<timestamp>/baseline_report.tsv` | file, line, pattern, severity, allowlisted |
 | Status TSV | `TestEvidence/hx06_rt_audit_<timestamp>/status.tsv` | lane, result, timestamp |
 
+## Execution Snapshot (2026-02-24)
+
+- Script + allowlist are landed at `scripts/rt-safety-audit.sh` and `scripts/rt-safety-allowlist.txt`.
+- CI integration is wired in `.github/workflows/qa_harness.yml` via `rt-safety-audit` and `needs: rt-safety-audit` on QA jobs (fail-fast merge gate behavior).
+- Latest baseline evidence bundle: `TestEvidence/hx06_rt_audit_20260224T185318Z/` (`raw_report.tsv`, `baseline_report.tsv`, `ci_integration_proof.log`, `status.tsv`; `raw_exit=1`, `baseline_exit=0`).
+- Slice D allowlist reconciliation evidence: `TestEvidence/hx06_allowlist_reconcile_20260224T202825Z/` (`rt_audit.tsv`, `rt_audit.log`, `status.tsv`, `allowlist_delta.md`; `non_allowlisted=0`).
+- Owner line-drift reconciliation evidence: `TestEvidence/owner_rt_allowlist_refresh_20260224T224531Z/` (`rt_audit_before.tsv`, `rt_audit_after.tsv`, `rt_audit_before.log`, `rt_audit_after.log`, `status.tsv`; `before_non_allowlisted=102`, `after_non_allowlisted=0`).
+- Owner line-drift reconciliation refresh (post BL-029 B1/C1/E1 merges): `TestEvidence/owner_rt_allowlist_refresh_20260224T231523Z/` (`rt_audit_before.tsv`, `rt_audit_after.tsv`, `rt_audit_before.log`, `rt_audit_after.log`, `status.tsv`; `before_non_allowlisted=92`, `after_non_allowlisted=0`).
+- Owner line-drift reconciliation refresh (BL-029 G1/G2/G3 intake): `TestEvidence/owner_rt_allowlist_refresh_20260225T000548Z/` (`rt_audit_before.tsv`, `rt_audit_after.tsv`, `status.tsv`; `before_non_allowlisted=87`, `after_non_allowlisted=0`).
+- Owner follow-up reconciliation for additional line movement: `TestEvidence/owner_rt_allowlist_refresh_20260225T000647Z/` (`rt_audit_before.tsv`, `rt_audit_after.tsv`, `status.tsv`; `before_non_allowlisted=6`, `after_non_allowlisted=0`).
+- Owner BL-029 G4 replay confirms recurring drift under active parallel edits: `TestEvidence/owner_bl029_g4_triage_20260225T001418Z/` (`build/selftest/qa` pass, `rt_audit` fail with `non_allowlisted=110`).
+- Owner BL-029 G5 replay confirms same RT drift signature while scoped selftests pass: `TestEvidence/owner_bl029_g5_triage_20260225T001834Z/` (`selftest_bl029` 3/3 pass, `rt_audit` fail with `non_allowlisted=110`).
+- Owner freeze-window finalizer (Slice Z1): `TestEvidence/owner_bl029_rt_finalize_z1_20260225T002800Z/` (`freeze_fingerprint_before/after` stable, `before_non_allowlisted=110`, `after_non_allowlisted=0`, `docs_freshness=PASS`).
+- Owner Z2 replay confirms standalone aborts are cleared but line-map drift returned after subsequent source changes: `TestEvidence/owner_bl029_z2_replay_20260225T013944Z/` (`selftest_bl029` 3/3 pass, `selftest_bl009` pass, `qa-bl009-headphone-contract` pass, `rt_audit` fail with `non_allowlisted=103`).
+- Owner integrated closeout replay (Z2+Z3): `TestEvidence/owner_bl029_z2_z3_integrated_20260225T014638Z/` (all functional lanes pass; RT drift observed at `non_allowlisted=103` before reconciliation).
+- Owner post-Z2/Z3 finalizer: `TestEvidence/owner_bl029_rt_finalize_z2z3_20260225T014808Z/` (`freeze_guard=PASS`, `before_non_allowlisted=0`, `after_non_allowlisted=0`, `docs_freshness=PASS`).
+- Owner caveat: future source line movement can still require allowlist refresh, but current baseline is reconciled and green.
+- Validation state: partially tested (local script and wiring checks pass; first GitHub Actions execution pending).
+
 ## Closeout Checklist
 
-- [ ] RT audit script written and functional
-- [ ] Allowlist populated with initial known-safe entries
-- [ ] CI integration active (blocks violations on merge)
-- [ ] Baseline audit run complete with clean report
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] RT audit script written and functional
+- [x] Allowlist populated with initial known-safe entries
+- [x] CI integration active (blocks violations on merge) *(workflow wired; first GitHub Actions run pending)*
+- [x] Baseline audit run complete with clean report
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes

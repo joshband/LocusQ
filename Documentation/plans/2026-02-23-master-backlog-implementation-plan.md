@@ -2,7 +2,7 @@ Title: Master Backlog System Implementation Plan
 Document Type: Implementation Plan
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # Master Backlog System Implementation Plan
 
@@ -296,7 +296,7 @@ Each must include:
 - Evidence: `TestEvidence/bl013_hostrunner_<timestamp>/status.tsv`
 
 **BL-018: Spatial Format Matrix Strict Closeout**
-- Priority: P1 | Status: In Validation | Track A Runtime Formats
+- Priority: P1 | Status: Done (2026-02-24) | Track A Runtime Formats
 - Depends on: BL-014 (Done) | Blocks: BL-026, BL-017
 - Objective: Promote spatial profile expansion with strict warning-free baseline.
 - Slices: Single validation tranche — strict profile matrix lanes + docs freshness.
@@ -304,7 +304,8 @@ Each must include:
 - Agent prompts: Reference `Documentation/spatial-audio-profiles-usage.md`, profile enum in `Source/SpatialRenderer.h`, and profile switching in `Source/PluginProcessor.cpp`.
 - Skills: `$steam-audio-capi`, `$spatial-audio-engineering`, `$skill_docs`
 - Validation: profile matrix lanes, warning-free evidence, docs freshness gate.
-- Evidence: `TestEvidence/bl018_profile_matrix_<timestamp>/status.tsv`
+- Evidence: `TestEvidence/bl018_profile_matrix_<timestamp>/per_profile_results.tsv`, `TestEvidence/bl018_profile_matrix_<timestamp>/diagnostics_snapshot.json`
+- 2026-02-24 execution note: strict matrix lane passed with artifact bundle `TestEvidence/bl018_profile_matrix_20260224T183138Z`.
 
 **BL-022: Choreography Lane Closeout**
 - Priority: P1 | Status: In Validation | Track C UX Authoring

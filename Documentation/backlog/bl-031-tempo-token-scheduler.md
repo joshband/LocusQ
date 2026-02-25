@@ -2,7 +2,7 @@ Title: BL-031 Tempo-Locked Visual Token Scheduler
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # BL-031: Tempo-Locked Visual Token Scheduler
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Planning (spec complete) |
+| Status | In Implementation (Slices A-B owner-validated; Slice C pending) |
 | Owner Track | Track B — Scene/UI Runtime |
 | Depends On | BL-016 (Done), BL-025 (Done) |
 | Blocks | BL-029 |
@@ -271,10 +271,18 @@ Evidence:
 | Test results | `TestEvidence/bl031_tempo_token_<timestamp>/slice_d_tests.log` | test case, result, notes |
 | Validation trend | `TestEvidence/validation-trend.md` | date, lane, result per slice |
 
+## Owner Validation Snapshot (2026-02-24)
+
+| Slice | Status | Evidence |
+|---|---|---|
+| Slice A | Implemented and owner-validated through Slice B integrated lane | `TestEvidence/bl031_tempo_token_20260224T190152Z/status.tsv`, `TestEvidence/bl031_slice_b_20260224T194102Z/status.tsv` |
+| Slice B | Implemented and owner-validated | `TestEvidence/bl031_slice_b_20260224T194102Z/status.tsv` |
+| Slice C | Pending | Next execution lane: UI polling + bridge integration |
+
 ## Closeout Checklist
 
-- [ ] Slice A: VisualTokenScheduler emits tokens at beat boundaries in processBlock
-- [ ] Slice B: Atomic publication verified, no tearing under stress
+- [x] Slice A: VisualTokenScheduler emits tokens at beat boundaries in processBlock
+- [x] Slice B: Atomic publication verified, no tearing under stress
 - [ ] Slice C: UI receives tokens via bridge, visual sync works
 - [ ] Slice D: All 6 deterministic test cases pass
 - [ ] Sequence monotonicity holds under all test conditions
