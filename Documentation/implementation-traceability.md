@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-02-25
 
 # LocusQ Implementation Traceability
 
@@ -36,6 +36,14 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - Phase 2.13: Visualization transport contract hardening (sequence guard + stale fallback + smoothing)
 - Phase 2.14: Production viewport multi-emitter + listener/speaker overlays (BL-015/BL-014), RMS telemetry overlays (BL-008), and visual overlays (BL-006/BL-007)
 - BL-011 Slice 2: CLAP runtime lifecycle telemetry surfaced to scene snapshots + optional production self-test lane
+- BL-026 Slice A: CALIBRATE topology profile selector + alias dictionary wiring refresh
+- BL-026 Slice C: CALIBRATE profile library tuple-scoped save/recall contract
+- BL-029 Slice B1: Renderer audition binding resolver metadata bridge for additive cross-mode control telemetry
+- BL-029 Slice G6: Cinematic reactive preset language pre-code design/plan contract
+- BL-029 Slice Z3: Reactive UI/QA consolidation for defensive cloud/reactive consumption and fallback robustness
+- BL-030 Slice B: Device rerun matrix contract for DEV-01..DEV-06 release-governance lane
+- BL-030 Slice C: CI release-governance workflow for automated gate lanes on tag/manual dispatch
+- BL-030 Slice D: First release-governance dry-run baseline execution + blocked-gate capture contract
 - Reference: `.ideas/plan.md`
 
 ## Stage 14 Drift Ledger (Open)
@@ -175,6 +183,11 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | Listener/speaker room overlays (BL-014) | `Source/PluginProcessor.cpp` (`roomProfileValid`, `roomDimensions`, `listener`, `speakerRms`, `speakers`) | `Source/ui/public/js/index.js` (`updateSpeakerTargetsFromScene`, `updateListenerTargetFromScene`, speaker/listener energy visuals) | Viewport listener/headphone and speaker overlays track scene telemetry with smoothing and safe defaults. |
 | Trail/vector toggles + trail-length control (BL-006/BL-007) | APVTS parameters (`rend_viz_trails`, `rend_viz_vectors`, `rend_viz_trail_len`) surfaced through relay state | `Source/ui/public/js/index.js` (toggle bindings + animate visibility gates) | Motion trails and velocity vectors are controlled by renderer UI toggles and remain visual-only overlays. |
 | Steam headphone runtime diagnostics (BL-009 closeout support) | `Source/SpatialRenderer.h` (`SteamInitStage`, init failure/error tracking) + `Source/PluginProcessor.cpp` (`getSceneStateJSON`) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest`, renderer status line) | Scene snapshots now expose deterministic Steam init stage/error/path data (`rendererSteamAudioInitStage`, `rendererSteamAudioInitErrorCode`, `rendererSteamAudioRuntimeLib`, `rendererSteamAudioMissingSymbol`). |
+| Audition-cloud metadata bridge (BL-029 Slice C/F) | `Source/PluginProcessor.cpp` (`getSceneStateJSON`; derived from `rend_audition_*`, audition visual state, and deterministic seed hashing) | `Source/ui/public/js/index.js` (`window.updateSceneState`; additive consumer path) | Scene snapshots publish additive `rendererAuditionCloud` metadata with backward compatibility (`enabled`, `pattern`, `mode`, `emitterCount`, `pointCount`, `spreadMeters`, `seed`, `pulseHz`, `coherence`, `emitters[]` where each source has `id`, `weight`, `localOffsetX/Y/Z`, `phase`, `activity`) so UI can render concurrent multi-source audition clouds while preserving legacy single-glyph fallback. |
+| Audition binding resolver metadata bridge (BL-029 Slice B1) | `Source/PluginProcessor.cpp` (`getSceneStateJSON`; renderer-owned requested/resolved mode resolver using existing audition/emitter/choreography/physics runtime state) | `Source/ui/public/js/index.js` (`window.updateSceneState`; optional additive consumer) | Scene snapshots now include additive resolver telemetry (`rendererAuditionSourceMode`, `rendererAuditionRequestedMode`, `rendererAuditionResolvedMode`, `rendererAuditionBindingTarget`, `rendererAuditionBindingAvailable`, `rendererAuditionSeed`, `rendererAuditionTransportSync`, `rendererAuditionDensity`, `rendererAuditionReactivity`, `rendererAuditionFallbackReason`) with deterministic fallback semantics for `bound_emitter`, `bound_choreography`, and `bound_physics` while preserving legacy single/cloud behavior. |
+| Audition reactive envelope + physics coupling bridge (BL-029 Slice G1/G5/R1) | `Source/SpatialRenderer.h` (`setAuditionPhysicsReactiveInput`, `publishAuditionReactiveTelemetry`, `getAuditionReactiveSnapshot`; centralized unit-range sanitize + bounded source-count guards) + `Source/PluginProcessor.cpp` (`processBlock` physics summary extraction + `getSceneStateJSON` defensive sanitize/fallback publication) | `Source/ui/public/js/index.js` (`window.updateSceneState`; optional additive consumer for rain/snow fade drivers and physics-reactive morphing) | Scene snapshots include additive `rendererAuditionReactive` telemetry with strict `[0..1]` scalar bounds, fixed-capacity source-energy bounds, deterministic neutral fallback (`reactive_payload_missing` / `reactive_payload_invalid`), and explicit audition fallback reasons for visual/cloud/reactive defensive branches. |
+| Audition cinematic preset language contract (BL-029 Slice G6) | `Documentation/plans/bl-029-cinematic-reactive-preset-language-2026-02-24.md` (v1->v3 dictionary, mapping tables, acceptance thresholds) | `Documentation/testing/bl-029-audition-platform-qa.md` (G6 acceptance-to-lane mapping + triage contract) | Pre-code expansion design authority for cinematic preset growth: explicit feature mapping, deterministic acceptance IDs, and docs-gated QA alignment before source-level expansion. |
+| Audition reactive UI hardening + deterministic self-test scope (BL-029 Slice Z3) | `Source/ui/public/js/index.js` (`window.updateSceneState` startup queueing, defensive cloud transform parsing, pattern-reactive geometry clamps, `selftest_scope=bl029` checks) + `Source/ui/public/index.html` (existing audition renderer controls reused) | `Documentation/testing/bl-029-audition-platform-qa.md` (`UI-P1-029A/B/C` acceptance contract) | UI now defends against additive/missing payloads without startup throws, keeps single-glyph fallback when cloud payload is invalid, and exposes deterministic Z3 acceptance IDs: `UI-P1-029A` (schema-additive transform bounds), `UI-P1-029B` (fallback robustness), `UI-P1-029C` (binaural parity telemetry bounds). |
 | CLAP lifecycle/runtime diagnostics (BL-011 Slice 2) | `Source/PluginProcessor.h` / `Source/PluginProcessor.cpp` (`clap_properties` bridge + `getClapRuntimeDiagnostics` + scene snapshot fields) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest` optional `UI-P2-011`) + `Source/PluginEditor.cpp` (`selftest_bl011` query flag wiring) | Scene snapshots now expose deterministic CLAP status and lifecycle telemetry (`clapBuildEnabled`, `clapPropertiesAvailable`, `clapIsPluginFormat`, `clapLifecycleStage`, `clapRuntimeMode`, `clapVersion`) for host-format triage and closeout evidence. |
 | Automated production self-test coverage | Production self-test script (`scripts/standalone-ui-selftest-production-p0-mac.sh`) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest`) | Added P1 assertions: `UI-P1-015`, `UI-P1-014`, `UI-P1-008`, `UI-P1-006`, `UI-P1-007`; optional deterministic diagnostics lanes: `UI-P1-009` (`selftest_bl009=1`) and `UI-P2-011` (`selftest_bl011=1`). |
 
@@ -561,6 +574,60 @@ Scope: extend deterministic automation coverage with capture/progress status che
 | Stage 8 self-test runner script | `scripts/standalone-ui-selftest-stage8-mac.sh` | Launch standalone in self-test mode and enforce pass/fail JSON | Accepts `.app` or direct executable path. |
 | Stage 8 self-test runtime | `Source/ui/public/incremental/js/stage8_ui.js` (`runIncrementalStage8SelfTest`) | Verifies calibrate + emitter + renderer controls and capture/progress status reflection | Adds checks for `cal_capture_running_status` and `cal_capture_complete_status` in addition to Stage 7 coverage. |
 | UI PR gate default | `scripts/ui-pr-gate-mac.sh` | Runs `ui_stage8_selftest` by default, with smoke/Appium optional | Latest gate evidence: `TestEvidence/ui_pr_gate_20260220T033031Z/status.tsv` (`PASS`). |
+
+## BL-026 Slice A CALIBRATE Topology Profile Wiring
+
+Scope: align CALIBRATE topology profile choices across APVTS, production UI, and runtime alias normalization without changing calibration engine state transitions.
+
+| Parameter ID / Contract | Implementation Path | Bridge Path | Notes |
+|---|---|---|---|
+| `cal_topology_profile` APVTS choice expansion | `Source/PluginProcessor.cpp` (`createParameterLayout`, `normaliseCalibrationTopologyId`, `topologyProfileForOutputChannels`, calibration profile apply/start mapping) | APVTS `AudioParameterChoice` index -> emitted topology IDs in calibration status/profile payloads | Canonical IDs now include `mono`, `stereo`, `quad`, `surround_51`, `surround_71`, `surround_712`, `surround_742`, `binaural`, `ambisonic_1st`, `ambisonic_3rd`, `downmix_stereo` with legacy alias compatibility preserved. |
+| CALIBRATE topology selector UI | `Source/ui/public/index.html` (`#cal-topology`) | `bindSelectToComboState("cal-topology", comboStates.cal_topology_profile)` in `Source/ui/public/js/index.js` | Dropdown choices and default (`Stereo`) now match APVTS order for deterministic combo index mapping. |
+| Topology alias dictionary + runtime resolution | `Source/ui/public/js/index.js` (`calibrationTopologyAliasDictionary`, `resolveCalibrationTopologyId`, `getCalibrationTopologyIndex`) | Processor-reported `topologyProfile` IDs and legacy IDs map to canonical client IDs before status/render use | UI status chips, preview speaker positions, required-channel checks, and BL-026 self-test topology switching now resolve through one canonical dictionary. |
+
+## BL-026 Slice C CALIBRATE Profile Library Save/Recall
+
+Scope: enforce tuple-scoped profile persistence and guarded profile recall by `topologyProfile` + `monitoringPath` in CALIBRATE without changing audio-thread behavior.
+
+| Parameter / Contract Surface | Implementation Path | Bridge Path | Notes |
+|---|---|---|---|
+| Profile tuple metadata publication | `Source/PluginProcessor.cpp` (`listCalibrationProfilesFromUI`, `saveCalibrationProfileFromUI`, `loadCalibrationProfileFromUI`) | Native responses now include `topologyProfile`, `monitoringPath`, `deviceProfile`, `profileTupleKey` | Profile CRUD results now expose tuple identity to UI for deterministic filtering/selection. |
+| Tuple-derived default profile naming | `Source/PluginProcessor.cpp` (`saveCalibrationProfileFromUI`) + `Source/ui/public/js/index.js` (`buildDefaultCalibrationProfileName`, `saveCalibrationProfile`) | Empty profile names auto-resolve to `<topology>_<monitor>_<timestamp>` | Save flow no longer depends on manual name entry for unique, tuple-identifiable profile artifacts. |
+| Tuple-scoped profile listing in CALIBRATE | `Source/ui/public/js/index.js` (`refreshCalibrationProfileList`, `profileEntryMatchesCalibrationTuple`) | Current `cal_topology_profile` + `cal_monitoring_path` selection gates displayed profile options | CALIBRATE list now hides non-matching tuple profiles and reports hidden-count status message. |
+| Guarded tuple-matched profile recall | `Source/PluginProcessor.cpp` (`loadCalibrationProfileFromUI`) + `Source/ui/public/js/index.js` (`loadCalibrationProfile`) | UI passes `enforceTupleMatch=true` + expected tuple; processor rejects mismatched tuple payloads | Prevents accidental load of incompatible topology/monitoring profile combinations. |
+
+## BL-030 Slice B Device Rerun Matrix Contract
+
+Scope: define deterministic release-governance validation rows for device-profile reruns (`DEV-01..DEV-06`) with explicit pass criteria, evidence paths, and constrained `N/A` policy.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Device rerun matrix authority (`DEV-01..DEV-06`) | `Documentation/runbooks/device-rerun-matrix.md` | Executed under `TestEvidence/bl030_release_governance_<timestamp>/device_matrix_results.tsv` | Matrix defines required rows, deterministic run order, and result ledger schema. |
+| Spatial profile/device checks (`quad`, `stereo`, `headphone generic`, `headphone Steam`) | `Documentation/runbooks/device-rerun-matrix.md` (`DEV-01..DEV-04`) | Scripted lanes: `scripts/qa-bl018-profile-matrix-strict-mac.sh`, `scripts/qa-bl009-headphone-contract-mac.sh`, `scripts/qa-bl009-headphone-profile-contract-mac.sh` plus manual notes | Aligns release rerun checks to ADR-0006 device-profile contract and BL-009/BL-018 deterministic evidence lanes. |
+| Calibration mic rerun checks (`built-in`, `external`) | `Documentation/runbooks/device-rerun-matrix.md` (`DEV-05`, `DEV-06`) | `LOCUSQ_UI_SELFTEST_SCOPE=bl026 ./scripts/standalone-ui-selftest-production-p0-mac.sh` + manual calibration notes | External mic row permits `N/A` only for explicit hardware-unavailable waiver; all other rows prohibit `N/A`. |
+| Release-gate `N/A` governance | `Documentation/runbooks/device-rerun-matrix.md` (`Execution Policy`, `N/A Policy` column) | Release checklist gate `RL-05` in `Documentation/runbooks/release-checklist-template.md` | Removes implicit skip behavior by requiring row-level `N/A` policy and written waiver artifacts where allowed. |
+
+## BL-030 Slice C CI Release-Governance Integration Contract
+
+Scope: automate repeatable release-gate execution on tag/manual triggers while preserving explicit operator ownership of hardware-dependent matrix rows.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Release-governance CI trigger and lane | `.github/workflows/release-governance.yml` (`workflow_dispatch`, tag `push`) | Local wiring checks in `TestEvidence/bl030_slice_c_20260224T203848Z/ci_integration.log` + YAML parse proof | Workflow defines deterministic entrypoints for release gate automation (`tag` and manual dispatch). |
+| Automated gates in CI (`build`, `ctest`, `docs freshness`, `production self-test`, `pluginval`) | `.github/workflows/release-governance.yml` step chain under `release-governance-automated` | `TestEvidence/bl030_slice_c_20260224T203848Z/status.tsv` | Encodes BL-030 Slice C gate set with explicit failure semantics for non-zero exits. |
+| Optional CLAP gate policy | `.github/workflows/release-governance.yml` (`enable_clap_gate` input + conditional step) | Static wiring proof (`clap-info`, `clap-validator` step presence) | CLAP validation is explicit and operator-controlled for scope alignment; disabled by default for non-CLAP release lanes. |
+| Manual gate surfacing (device matrix ownership) | `.github/workflows/release-governance.yml` (`manual_required_gates.txt`) | Uploaded artifact `locusq-release-governance-gates` | Keeps `RL-05` manual/hardware contract explicit in CI output, preventing implicit automation claims. |
+
+## BL-030 Slice D Dry-Run Baseline Contract
+
+Scope: execute first end-to-end release-governance checklist run, produce deterministic evidence artifacts, and capture blocked release gates without mutating gate semantics.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Dry-run checklist execution bundle | `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md` | `TestEvidence/bl030_release_governance_20260224T204022Z/status.tsv` | Captures full `RL-01..RL-10` results, N/A justifications, and release decision (`BLOCKED`) in one deterministic bundle. |
+| Device matrix dry-run ledger and waiver handling | `TestEvidence/bl030_release_governance_20260224T204022Z/device_matrix_results.tsv` + DEV note/waiver files | `RL-05` row in dry-run report | Preserves explicit row outcomes (`FAIL` for pending manual rows, `DEV-06` allowed `N/A` with waiver) instead of implicit skips. |
+| Automated gate evidence capture during dry-run | `gate_rl03_selftest.log`, `gate_rl04_reaper_smoke.log`, `gate_rl06_pluginval_{vst3,au}.log`, `gate_rl08_docs_freshness.log`, `release_artifact_manifest.tsv` | Gate rows `RL-03`, `RL-04`, `RL-06`, `RL-08`, `RL-10` marked `PASS` in bundle | Confirms release-governance checklist commands are executable on current baseline and produces reusable artifact-path contract. |
+| Blocked-gate reporting contract | `release_checklist_run.md` (`Blocking gates: RL01, RL05, RL09`) | `BL030-SliceD-release-decision` row in `status.tsv` | Provides explicit release-block reasons for owner triage instead of soft warnings or ambiguous closeout state. |
 
 ## Notes
 

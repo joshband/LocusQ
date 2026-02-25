@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-24
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Planning |
+| Status | In Validation (Slices A-D complete) |
 | Owner Track | Track G — Release/Governance |
 | Depends On | BL-024 (Done), BL-025 (Done), HX-06 |
 | Blocks | — |
@@ -198,6 +198,23 @@ Evidence:
 | BL-030-dryrun | Mixed | Full checklist execution | All gates PASS or explicit N/A |
 | BL-030-freshness | Automated | `./scripts/validate-docs-freshness.sh` | Exit 0 |
 
+## Execution Snapshot (2026-02-24)
+
+- Slice A complete:
+  - `Documentation/runbooks/release-checklist-template.md`
+- Slice B complete:
+  - `Documentation/runbooks/device-rerun-matrix.md`
+  - `TestEvidence/bl030_slice_b_20260224T203052Z/status.tsv`
+- Slice C complete:
+  - `.github/workflows/release-governance.yml`
+  - `TestEvidence/bl030_slice_c_20260224T203848Z/status.tsv`
+  - `TestEvidence/bl030_slice_c_20260224T203848Z/ci_integration.log`
+- Slice D complete (dry-run baseline executed):
+  - `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`
+  - `TestEvidence/bl030_release_governance_20260224T204022Z/device_matrix_results.tsv`
+  - `TestEvidence/bl030_release_governance_20260224T204022Z/status.tsv`
+  - Release decision from dry-run: `BLOCKED` (blocking gates `RL01`, `RL05`, `RL09`).
+
 ## Risks & Mitigations
 
 | Risk | Impact | Likelihood | Mitigation |
@@ -224,13 +241,13 @@ Evidence:
 
 ## Closeout Checklist
 
-- [ ] Release checklist template committed and reviewed
-- [ ] Device rerun matrix defined (DEV-01..DEV-06)
-- [ ] CI release-gate job functional
-- [ ] First dry run executed with evidence
+- [x] Release checklist template committed and reviewed
+- [x] Device rerun matrix defined (DEV-01..DEV-06)
+- [x] CI release-gate job functional
+- [x] First dry run executed with evidence
 - [ ] All gates PASS or documented N/A
 - [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes

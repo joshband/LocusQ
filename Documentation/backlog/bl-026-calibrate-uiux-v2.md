@@ -2,7 +2,7 @@ Title: BL-026 CALIBRATE UI/UX V2 Multi-Topology
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 
 # BL-026: CALIBRATE UI/UX V2 Multi-Topology
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Planning |
+| Status | In Implementation (Slices A-C owner-validated; Slices D-E pending) |
 | Owner Track | Track C — UX Authoring |
 | Depends On | BL-025 (Done), BL-009 (Done), BL-018 |
 | Blocks | BL-027, BL-028, BL-029 |
@@ -311,11 +311,19 @@ Evidence:
 | Host smoke log | `TestEvidence/bl026_calibrate_v2_<timestamp>/host_smoke.log` | host, result |
 | Validation trend | `TestEvidence/validation-trend.md` | date, lane, result per slice |
 
+## Owner Validation Snapshot (2026-02-24)
+
+| Slice | Status | Evidence |
+|---|---|---|
+| Slice A | Implemented and owner-validated on current tree | `TestEvidence/bl026_calibrate_v2_20260224T190739Z/status.tsv` (implementation), `TestEvidence/bl026_slice_b_owner_replay_20260224T195300Z/status.tsv` (current-tree build/selftest pass) |
+| Slice B | Implemented and owner-validated | `TestEvidence/bl026_slice_b_20260224T194445Z/status.tsv` (worker failure from stale tree), `TestEvidence/bl026_slice_b_owner_replay_20260224T195300Z/status.tsv` (owner replay pass) |
+| Slice C | Implemented and owner-validated after scoped selftest timeout remediation | `TestEvidence/bl026_slice_c_20260224T200631Z/status.tsv` (worker lane blocked by startup timeout), `TestEvidence/owner_bl026_pending_timeout_fix_r2_20260224T214425Z/status.tsv` (owner replay pass), `TestEvidence/locusq_production_p0_selftest_20260224T214446Z.json` |
+
 ## Closeout Checklist
 
-- [ ] Slice A: Topology profile selector renders and selects all profiles
-- [ ] Slice B: Dynamic speaker rows adapt to topology channel count
-- [ ] Slice C: Profile library saves, recalls, and persists across sessions
+- [x] Slice A: Topology profile selector renders and selects all profiles
+- [x] Slice B: Dynamic speaker rows adapt to topology channel count
+- [x] Slice C: Profile library saves, recalls, and persists across sessions
 - [ ] Slice D: Diagnostic cards update through calibration lifecycle
 - [ ] Slice E: Host resize works, no clipping, REAPER smoke passes
 - [ ] All UI-P1-026A..E validation lanes pass

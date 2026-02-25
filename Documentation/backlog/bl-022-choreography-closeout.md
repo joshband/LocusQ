@@ -3,7 +3,7 @@ Title: BL-022 Choreography Lane Closeout
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-24
 ---
 
 # BL-022: Choreography Lane Closeout
@@ -13,7 +13,7 @@ Last Modified Date: 2026-02-23
 | Field | Value |
 |---|---|
 | Priority | P1 |
-| Status | In Validation |
+| Status | Done (2026-02-24 closeout evidence refresh) |
 | Owner Track | Track C — UX Authoring |
 | Depends On | BL-003, BL-004 |
 | Blocks | — |
@@ -170,17 +170,24 @@ EVIDENCE:
 
 | Artifact | Path | Required Fields |
 |---|---|---|
-| Choreography log | `TestEvidence/bl022_choreography_<timestamp>/choreography_lane.log` | test output |
-| BL-025 regression | `TestEvidence/bl022_choreography_<timestamp>/bl025_regression.log` | assertion results |
-| Status TSV | `TestEvidence/bl022_choreography_<timestamp>/status.tsv` | lane, result, timestamp |
+| Choreography + BL-025 lane log | `TestEvidence/bl022_validation_<timestamp>/selftest.log` | production self-test output |
+| Spatial smoke regression | `TestEvidence/bl022_validation_<timestamp>/qa_smoke_spatial.log` | suite summary |
+| Status TSV | `TestEvidence/bl022_validation_<timestamp>/status.tsv` | lane, result, timestamp |
 | Validation trend | `TestEvidence/validation-trend.md` | date, lane, result, notes |
+
+## Latest Closeout Evidence (2026-02-24)
+
+- Bundle: `TestEvidence/bl022_validation_20260224T184032Z/`
+- Production self-test: `TestEvidence/locusq_production_p0_selftest_20260224T184037Z.json`
+- Key checks: `UI-P1-022` pass, `UI-P1-025A..E` pass
+- Spatial smoke: `TestEvidence/bl022_validation_20260224T184032Z/qa_smoke_spatial.log` (`4 PASS / 0 WARN / 0 FAIL`)
 
 ## Closeout Checklist
 
-- [ ] Choreography validation lane passes
-- [ ] BL-025 regression guard green
-- [ ] Evidence captured at designated paths
-- [ ] status.json updated
-- [ ] Documentation/backlog/index.md row updated
-- [ ] TestEvidence surfaces updated
-- [ ] ./scripts/validate-docs-freshness.sh passes
+- [x] Choreography validation lane passes
+- [x] BL-025 regression guard green
+- [x] Evidence captured at designated paths
+- [x] status.json updated
+- [x] Documentation/backlog/index.md row updated
+- [x] TestEvidence surfaces updated
+- [x] ./scripts/validate-docs-freshness.sh passes

@@ -58,9 +58,9 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 | Tempo-lock user proposal (2026-02-24) | BL-031 tempo-token scheduler lane |
 
 ## Status Snapshot (2026-02-24)
-- `Done`: BL-001..BL-011, BL-014, BL-015, BL-016, BL-019, BL-024, BL-025
+- `Done`: BL-001..BL-011, BL-014, BL-015, BL-016, BL-018, BL-019, BL-024, BL-025
 - `In Progress`: none
-- `In Validation`: BL-012, BL-013, BL-018, BL-022
+- `In Validation`: BL-012, BL-013, BL-022
 - `In Planning`: BL-017, BL-026, BL-027, BL-028, BL-029, BL-030, BL-031
 - `Todo`: BL-020, BL-021, BL-023
 - `HX Open`: HX-02, HX-05, HX-06
@@ -68,23 +68,22 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 ## Structured TODO Registry (Canonical Queue)
 | Order | Priority | ID | State | Depends On | Owner Track | Exit Artifact |
 |---:|---|---|---|---|---|---|
-| 1 | P1 | BL-018 | In Validation | BL-014 stable | Track A Runtime Formats | Strict warning-free profile-matrix rerun |
-| 2 | P1 | BL-022 | In Validation | BL-003, BL-004 done | Track C UX Authoring | Choreography lane closeout evidence and BL-025 regression guard |
-| 3 | P1 | BL-012 | In Validation | none | Track D QA Platform | Tranche closeout + embedded HX-04 parity evidence |
-| 4 | P1 | BL-013 | In Validation | BL-012 | Track D QA Platform | HostRunner feasibility promotion decision with rerun evidence |
-| 5 | P1 | BL-026 | In Planning | BL-025 baseline, BL-009/BL-018 diagnostics stable | Track C UX Authoring | Slice A-E implementation + `UI-P1-026A..E` evidence |
-| 6 | P1 | BL-031 | In Planning (spec complete) | BL-016 baseline, BL-025 baseline | Track B Scene/UI Runtime | Tempo-token scheduler slices A-D + `UI-P2-031A..D` rhythm-lock evidence |
-| 7 | P1 | HX-02 | Open | BL-016 baseline | Track F Hardening | Registration lock/memory-order audit and fixes |
-| 8 | P1 | HX-06 | Open | BL-016 baseline | Track F Hardening | Recurring RT-safety static-audit lane + CI/report integration |
-| 9 | P2 | BL-027 | In Planning | BL-026 | Track C UX Authoring | First renderer-v2 slice + validation promotion |
-| 10 | P2 | BL-028 | In Planning | BL-017, BL-026, BL-027 | Track A + Track C | Matrix legality enforcement + requested/active/stage parity evidence |
-| 11 | P2 | BL-029 | In Planning | BL-025, BL-026, BL-027, BL-028, BL-031 | Track B Scene/UI Runtime | `UI-P2-029A..E` lanes + schema sync |
-| 12 | P2 | HX-05 | Open | BL-016, BL-025 | Track F Hardening | Payload budget + throttle contract enforcement evidence |
-| 13 | P2 | BL-030 | In Planning | BL-024 baseline, BL-025 baseline, HX-06 active | Track G Release/Governance | Release/device-rerun checklist + synchronized closeout evidence |
-| 14 | P2 | BL-017 | In Planning | BL-009, BL-018 | Track E R&D Expansion | Slice-A bridge implementation + deterministic contract lane |
-| 15 | P2 | BL-020 | Todo | BL-014, BL-019 | Track E R&D Expansion | Confidence/masking mapping and validation matrix |
-| 16 | P2 | BL-021 | Todo | BL-014, BL-015 | Track E R&D Expansion | Room-story overlays with deterministic payload contracts |
-| 17 | P2 | BL-023 | Todo | BL-025 baseline | Track C UX Authoring | Resize/DPI hardening evidence matrix |
+| 1 | P1 | BL-022 | In Validation | BL-003, BL-004 done | Track C UX Authoring | Choreography lane closeout evidence and BL-025 regression guard |
+| 2 | P1 | BL-012 | In Validation | none | Track D QA Platform | Tranche closeout + embedded HX-04 parity evidence |
+| 3 | P1 | BL-013 | In Validation | BL-012 | Track D QA Platform | HostRunner feasibility promotion decision with rerun evidence |
+| 4 | P1 | BL-026 | In Planning | BL-025 baseline, BL-009/BL-018 diagnostics stable | Track C UX Authoring | Slice A-E implementation + `UI-P1-026A..E` evidence |
+| 5 | P1 | BL-031 | In Planning (spec complete) | BL-016 baseline, BL-025 baseline | Track B Scene/UI Runtime | Tempo-token scheduler slices A-D + `UI-P2-031A..D` rhythm-lock evidence |
+| 6 | P1 | HX-02 | Open | BL-016 baseline | Track F Hardening | Registration lock/memory-order audit and fixes |
+| 7 | P1 | HX-06 | Open | BL-016 baseline | Track F Hardening | Recurring RT-safety static-audit lane + CI/report integration |
+| 8 | P2 | BL-027 | In Planning | BL-026 | Track C UX Authoring | First renderer-v2 slice + validation promotion |
+| 9 | P2 | BL-028 | In Planning | BL-017, BL-026, BL-027 | Track A + Track C | Matrix legality enforcement + requested/active/stage parity evidence |
+| 10 | P2 | BL-029 | In Planning | BL-025, BL-026, BL-027, BL-028, BL-031 | Track B Scene/UI Runtime | `UI-P2-029A..E` lanes + schema sync |
+| 11 | P2 | HX-05 | Open | BL-016, BL-025 | Track F Hardening | Payload budget + throttle contract enforcement evidence |
+| 12 | P2 | BL-030 | In Planning | BL-024 baseline, BL-025 baseline, HX-06 active | Track G Release/Governance | Release/device-rerun checklist + synchronized closeout evidence |
+| 13 | P2 | BL-017 | In Planning | BL-009, BL-018 | Track E R&D Expansion | Slice-A bridge implementation + deterministic contract lane |
+| 14 | P2 | BL-020 | Todo | BL-014, BL-019 | Track E R&D Expansion | Confidence/masking mapping and validation matrix |
+| 15 | P2 | BL-021 | Todo | BL-014, BL-015 | Track E R&D Expansion | Room-story overlays with deterministic payload contracts |
+| 16 | P2 | BL-023 | Todo | BL-025 baseline | Track C UX Authoring | Resize/DPI hardening evidence matrix |
 
 ## Dependency and Ordering Rules
 1. Keep BL-016 transport contract stable before promoting BL-014 and BL-019-dependent lanes.
@@ -132,6 +131,7 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 | BL-014 | Listener/speaker/aim/RMS overlay strict closeout | Done (2026-02-24) |
 | BL-015 | All-emitter realtime rendering closure | Done (2026-02-23) |
 | BL-016 | Visualization transport contract closure | Done (2026-02-23) |
+| BL-018 | Spatial format matrix strict closeout | Done (2026-02-24) |
 | BL-019 | Physics interaction lens closure | Done (2026-02-23) |
 | BL-025 | EMITTER UI/UX v2 deterministic closeout | Done (2026-02-24) |
 | HX-01 | shared_ptr atomic migration guard | Done (2026-02-23) |

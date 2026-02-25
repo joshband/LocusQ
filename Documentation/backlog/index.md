@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-02-25
 
 # LocusQ Master Backlog Index
 
@@ -32,23 +32,20 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
-| 1 | BL-018 | Spatial format matrix strict closeout | P1 | In Validation | A | BL-014 | BL-026, BL-017 | [bl-018](bl-018-spatial-format-matrix.md) |
-| 2 | BL-022 | Choreography lane closeout | P1 | In Validation | C | BL-003, BL-004 | — | [bl-022](bl-022-choreography-closeout.md) |
-| 3 | BL-012 | QA harness tranche closeout | P1 | In Validation | D | — | BL-013 | [bl-012](bl-012-qa-harness-tranche.md) |
-| 4 | BL-013 | HostRunner feasibility promotion | P1 | In Validation | D | BL-012 | — | [bl-013](bl-013-hostrunner-feasibility.md) |
-| 5 | BL-026 | CALIBRATE UI/UX v2 multi-topology | P1 | In Planning | C | BL-025, BL-009, BL-018 | BL-027, BL-028, BL-029 | [bl-026](bl-026-calibrate-uiux-v2.md) |
-| 6 | BL-031 | Tempo-locked visual token scheduler | P1 | In Planning | B | BL-016, BL-025 | BL-029 | [bl-031](bl-031-tempo-token-scheduler.md) |
-| 7 | HX-02 | Registration lock / memory-order audit | P1 | Open | F | BL-016 | — | [hx-02](hx-02-registration-lock.md) |
-| 8 | HX-06 | Recurring RT-safety static audit | P1 | Open | F | BL-016 | BL-030 | [hx-06](hx-06-rt-safety-audit.md) |
-| 9 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028, BL-029 | [bl-027](bl-027-renderer-uiux-v2.md) |
-| 10 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | BL-029 | [bl-028](bl-028-spatial-output-matrix.md) |
-| 11 | BL-029 | DSP visualization and tooling | P2 | In Planning | B | BL-025, BL-026, BL-027, BL-028, BL-031 | — | [bl-029](bl-029-dsp-visualization.md) |
-| 12 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
-| 13 | BL-030 | Release governance and device rerun | P2 | In Planning | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
-| 14 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Planning | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
-| 15 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
-| 16 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
-| 17 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
+| 1 | BL-013 | HostRunner feasibility promotion | P1 | In Validation | D | BL-012 | — | [bl-013](bl-013-hostrunner-feasibility.md) |
+| 2 | BL-026 | CALIBRATE UI/UX v2 multi-topology | P1 | In Implementation (Slices A-C owner-validated; D-E pending) | C | BL-025, BL-009, BL-018 | BL-027, BL-028, BL-029 | [bl-026](bl-026-calibrate-uiux-v2.md) |
+| 3 | BL-031 | Tempo-locked visual token scheduler | P1 | In Implementation (Slices A-B validated) | B | BL-016, BL-025 | BL-029 | [bl-031](bl-031-tempo-token-scheduler.md) |
+| 4 | HX-02 | Registration lock / memory-order audit | P1 | In Validation (Slices A-B complete) | F | BL-016 | — | [hx-02](hx-02-registration-lock.md) |
+| 5 | HX-06 | Recurring RT-safety static audit | P1 | In Validation | F | BL-016 | BL-030 | [hx-06](hx-06-rt-safety-audit.md) |
+| 6 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028, BL-029 | [bl-027](bl-027-renderer-uiux-v2.md) |
+| 7 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | BL-029 | [bl-028](bl-028-spatial-output-matrix.md) |
+| 8 | BL-029 | DSP visualization and tooling | P2 | In Implementation (reactive tranche feature lanes advanced, but reliability tranche NO-GO: soak selftests unstable in R1/R2/R3 despite deterministic QA contract and RT/docs green snapshots) | B | BL-025, BL-026, BL-027, BL-028, BL-031 | — | [bl-029](bl-029-dsp-visualization.md) |
+| 9 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
+| 10 | BL-030 | Release governance and device rerun | P2 | In Validation (Slices A-D complete; release dry-run blocked on RL-01/RL-05/RL-09) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
+| 11 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Implementation (Slices A-B validated) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
+| 12 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
+| 13 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
+| 14 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
 
 ## Dependency Graph
 
@@ -58,7 +55,10 @@ graph TD
         BL-003[BL-003 Done]
         BL-004[BL-004 Done]
         BL-009[BL-009 Done]
+        BL-012[BL-012 Done]
         BL-014[BL-014 Done]
+        BL-018[BL-018 Done]
+        BL-022[BL-022 Done]
         BL-015[BL-015 Done]
         BL-016[BL-016 Done]
         BL-019[BL-019 Done]
@@ -67,10 +67,9 @@ graph TD
     end
 
     subgraph "In Validation"
-        BL-012[BL-012 QA Harness]
         BL-013[BL-013 HostRunner]
-        BL-018[BL-018 Spatial Formats]
-        BL-022[BL-022 Choreography]
+        HX-06[HX-06 RT Audit]
+        BL-030[BL-030 Release Gov]
     end
 
     subgraph "In Planning / Open"
@@ -78,12 +77,10 @@ graph TD
         BL-027[BL-027 Renderer v2]
         BL-028[BL-028 Output Matrix]
         BL-029[BL-029 DSP Viz]
-        BL-030[BL-030 Release Gov]
         BL-031[BL-031 Tempo Token]
         BL-017[BL-017 Head Track]
         HX-02[HX-02 Reg Lock]
         HX-05[HX-05 Payload]
-        HX-06[HX-06 RT Audit]
     end
 
     subgraph "Todo"
@@ -132,7 +129,7 @@ graph TD
 |---|---|---|---|
 | A | Runtime Formats | BL-018, BL-028 | `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
 | B | Scene/UI Runtime | BL-031, BL-029, BL-016-adjacent | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
-| C | UX Authoring | BL-026, BL-027, BL-022, BL-023, BL-025 regression | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
+| C | UX Authoring | BL-026, BL-027, BL-023, BL-025 regression | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-012, BL-013, BL-024 cadence | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
 | E | R&D Expansion | BL-017, BL-020, BL-021 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
 | F | Hardening | HX-02, HX-05, HX-06 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
@@ -180,7 +177,7 @@ Any status change must update in the same changeset:
 | BL-026 | `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`; `Documentation/plans/bl-026-calibrate-v1-v2-uiux-comparison-2026-02-23.md` |
 | BL-027 | `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md` |
 | BL-028 | `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md` |
-| BL-029 | `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` |
+| BL-029 | `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`; `Documentation/plans/bl-029-audition-platform-expansion-plan-2026-02-24.md` |
 | BL-031 | `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md` |
 
 ## Closed Archive
@@ -198,10 +195,13 @@ Any status change must update in the same changeset:
 | BL-009 | Steam headphone contract closeout | 2026-02-23 | [bl-009](bl-009-steam-headphone-contract.md) |
 | BL-010 | FDN expansion promotion | 2026-02-23 | [bl-010](bl-010-fdn-expansion.md) |
 | BL-011 | CLAP lifecycle and CI/host closeout | 2026-02-23 | [bl-011](bl-011-clap-lifecycle.md) |
+| BL-012 | QA harness tranche closeout | 2026-02-24 | [bl-012](bl-012-qa-harness-tranche.md) |
 | BL-014 | Listener/speaker/aim/RMS overlay strict closeout | 2026-02-24 | [bl-014](bl-014-overlay-strict-closeout.md) |
 | BL-015 | All-emitter realtime rendering closure | 2026-02-23 | [bl-015](bl-015-all-emitter-rendering.md) |
 | BL-016 | Visualization transport contract closure | 2026-02-23 | [bl-016](bl-016-transport-contract.md) |
+| BL-018 | Spatial format matrix strict closeout | 2026-02-24 | [bl-018](bl-018-spatial-format-matrix.md) |
 | BL-019 | Physics interaction lens closure | 2026-02-23 | [bl-019](bl-019-physics-interaction-lens.md) |
+| BL-022 | Choreography lane closeout | 2026-02-24 | [bl-022](bl-022-choreography-closeout.md) |
 | BL-024 | REAPER host automation baseline | 2026-02-23 | [bl-024](bl-024-reaper-host-automation.md) |
 | BL-025 | EMITTER UI/UX v2 deterministic closeout | 2026-02-24 | [bl-025](bl-025-emitter-uiux-v2.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](hx-01-shared-ptr-atomic.md) |
