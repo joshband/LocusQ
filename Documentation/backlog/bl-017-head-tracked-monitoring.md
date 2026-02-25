@@ -14,7 +14,7 @@ Last Modified Date: 2026-02-25
 |---|---|
 | ID | BL-017 |
 | Title | Head-Tracked Monitoring Companion Bridge |
-| Status | In Implementation (Slices A-B owner-validated; Slice C pending) |
+| Status | In Validation (Slices A-C implemented; manual AirPods validation capture pending) |
 | Priority | P2 |
 | Track | E — R&D Expansion |
 | Effort | High / L |
@@ -153,9 +153,8 @@ if (pose) renderer_.applyHeadPose(*pose);
 | 8 | float[4] | qx, qy, qz, qw |
 | 24 | uint64_t | timestamp_ms |
 | 32 | uint32_t | seq |
-| 36 | uint32_t | reserved |
 
-Total: 40 bytes. Port default: 19765 (configurable via plugin init param).
+Total: 36 bytes. Port default: 19765 (configurable via plugin init param).
 
 ### System Diagram
 
@@ -418,7 +417,7 @@ DELIVERABLES:
 |---|---|---|
 | Slice A | Implemented and owner-validated | `TestEvidence/bl017_head_tracking_slice_a_20260224T190129Z/status.tsv` (implementation), `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/rt_audit.tsv` (current-tree RT audit pass) |
 | Slice B | Implemented and owner-validated | `TestEvidence/bl017_slice_b_20260224T194727Z/status.tsv`, `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/status.tsv` |
-| Slice C | Implemented (companion MVP) and partially validated | `companion/` Swift package + `swift test` packet contract check on current branch; hardware AirPods manual lane pending |
+| Slice C | Implemented and validated (deterministic lane) | `companion/` Swift package + `swift test` (`PosePacketTests`) + `swift run LocusQHeadTracker --help`; manual AirPods hardware lane still pending |
 
 ## 13. Closeout Checklist
 
@@ -426,8 +425,8 @@ DELIVERABLES:
 - [x] Slice A: PluginProcessor.cpp integration merged under feature flag
 - [x] Slice B: SpatialRenderer::applyHeadPose() implemented, integration tested
 - [x] Slice C: Companion app MVP in repository (system test documentation pending hardware lane)
-- [ ] ADR-0006 and ADR-0012 compliance confirmed in code review
-- [ ] `status.json` updated with BL-017 completion and BL-028 gate unblocked
-- [ ] `TestEvidence/validation-trend.md` updated with slice validation results
-- [ ] `TestEvidence/build-summary.md` updated with build and RT audit outcome
-- [ ] Annex plan document reviewed and archived if superseded
+- [x] ADR-0006 and ADR-0012 compliance confirmed in code review (Slice A/B owner RT-audit + InternalBinaural restriction checks)
+- [x] `status.json` updated with BL-017 implementation completion and BL-028 dependency gate unblocked from BL-017 side
+- [x] `TestEvidence/validation-trend.md` updated with Slice C deterministic validation results
+- [x] `TestEvidence/build-summary.md` updated with Slice C build/RT audit outcome summary
+- [x] Annex plan document reviewed (retained, not archived; still canonical for BL-017 architecture/exit criteria)

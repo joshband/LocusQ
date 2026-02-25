@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # Changelog
 
@@ -31,6 +31,11 @@ Operational snapshot:
   - Includes fresh `P0-P2` prioritization, dependency graphs, parallel agent tracks, and per-task Codex/Claude mega-prompts.
 
 ### Changed
+
+- BL-017 Slice C companion bridge MVP landed (2026-02-25):
+  - added `companion/` Swift package CLI runtime + UDP pose packet serializer tests.
+  - backlog promoted BL-017 to `In Validation` with manual AirPods capture remaining as final promotion gate.
+  - BL-028 dependency tracking now marks the BL-017 prerequisite satisfied.
 
 - BL-025 and BL-014 closeout promotion completed (2026-02-24):
   - backlog/state promoted both P0 rows to `Done`.

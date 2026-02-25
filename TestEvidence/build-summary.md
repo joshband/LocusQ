@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-02-25
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -4160,3 +4160,25 @@ LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh
 
 4. Artifact
 - `TestEvidence/owner_bl029_z2_replay_20260225T013944Z/status.tsv`
+
+
+## BL-017 Slice C Closeout Sync (UTC 2026-02-25)
+
+1. Deterministic Slice C validation
+
+```sh
+cd companion
+swift test
+swift run LocusQHeadTracker --help
+```
+
+Result: `PASS` (`PosePacketTests` verifies 36-byte v1 wire format and header fields; CLI help path builds/runs cleanly).
+
+2. ADR compliance review references
+- ADR-0006 (RT invariants) confirmation reference: `TestEvidence/bl017_slice_b_owner_replay_20260224T195259Z/rt_audit.tsv` (`PASS`).
+- ADR-0012 (InternalBinaural scope restriction) confirmation reference: BL-017 Slice B integration notes + current backlog runbook guard statements.
+
+3. Backlog/state synchronization outcome
+- BL-017 moved to `In Validation` (Slices A-C implemented; manual AirPods capture pending).
+- BL-028 dependency gate marked satisfied from BL-017 side; BL-028 remains blocked by BL-026/BL-027.
+- docs freshness gate: `PASS` (`./scripts/validate-docs-freshness.sh`).

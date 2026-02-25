@@ -5,8 +5,8 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-02-24T03:36:00Z",
-  "notes": "P0 backlog items are now closed: BL-025 and BL-014 are Done (2026-02-24) after refreshed deterministic evidence (`TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`). Existing Done closures for BL-009/BL-010/BL-011/BL-015/BL-016/BL-019/BL-024 remain unchanged, and the active queue now starts at P1. BL-017 Slice C companion app MVP structure documented (directory layout, motion setup, UDP packet serialization contract, and pairing-flow README outline). BL-017 Slice C companion MVP implementation landed under companion/ with packet serialization unit test and CLI smoke validation; manual AirPods hardware lane pending.",
+  "last_modified": "2026-02-25T05:00:00Z",
+  "notes": "P0 backlog items are now closed: BL-025 and BL-014 are Done (2026-02-24) after refreshed deterministic evidence (`TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`). Existing Done closures for BL-009/BL-010/BL-011/BL-015/BL-016/BL-019/BL-024 remain unchanged, and the active queue now starts at P1. BL-017 Slice C companion app MVP structure documented (directory layout, motion setup, UDP packet serialization contract, and pairing-flow README outline). BL-017 Slice C companion MVP implementation landed under companion/ with packet serialization unit test and CLI smoke validation; manual AirPods hardware lane pending. BL-017 closeout sync updated: ADR-0006/ADR-0012 compliance marked in code review, Slice C deterministic validation recorded, BL-017 moved to In Validation pending manual AirPods capture, and BL-028 dependency gate marked satisfied from BL-017 side.",
   "phase_history": [
     {
       "phase": "ideation",
@@ -404,6 +404,12 @@
       "status": "complete",
       "completed_at": "2026-02-24T03:36:00Z",
       "notes": "Implemented companion Swift Package MVP (motion service, UDP sender, packet serializer, CLI entrypoint) with deterministic serialization unit test pass; hardware manual validation pending."
+    },
+    {
+      "phase": "closeout_sync_bl017_20260225",
+      "status": "complete",
+      "completed_at": "2026-02-25T05:00:00Z",
+      "notes": "Synchronized BL-017 closeout checklist artifacts/status: validation-trend/build-summary updates, ADR compliance review confirmation, and BL-028 dependency unblocked from BL-017 side while manual AirPods lane remains pending."
     }
   ],
   "validation": {
@@ -1283,7 +1289,10 @@
     "p1_resume_baseline_last_run": "2026-02-23T02:09:23Z",
     "bl006_motion_trails_status": "done_2026-02-21_automated",
     "bl007_velocity_vectors_status": "done_2026-02-21_automated",
-    "bl008_rms_telemetry_status": "done_2026-02-21_automated"
+    "bl008_rms_telemetry_status": "done_2026-02-21_automated",
+    "bl017_slice_c_companion_impl_complete": true,
+    "bl017_manual_airpods_validation_pending": true,
+    "bl028_bl017_dependency_satisfied": true
   },
   "framework_selection": {
     "decision": "webview",

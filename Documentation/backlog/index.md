@@ -38,11 +38,11 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 | 4 | HX-02 | Registration lock / memory-order audit | P1 | In Validation (Slices A-B complete) | F | BL-016 | — | [hx-02](hx-02-registration-lock.md) |
 | 5 | HX-06 | Recurring RT-safety static audit | P1 | In Validation | F | BL-016 | BL-030 | [hx-06](hx-06-rt-safety-audit.md) |
 | 6 | BL-027 | RENDERER UI/UX v2 multi-profile | P2 | In Planning | C | BL-026 | BL-028, BL-029 | [bl-027](bl-027-renderer-uiux-v2.md) |
-| 7 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-017, BL-026, BL-027 | BL-029 | [bl-028](bl-028-spatial-output-matrix.md) |
+| 7 | BL-028 | Spatial output matrix enforcement | P2 | In Planning | A+C | BL-026, BL-027 (`BL-017` dependency satisfied) | BL-029 | [bl-028](bl-028-spatial-output-matrix.md) |
 | 8 | BL-029 | DSP visualization and tooling | P2 | In Implementation (reactive tranche feature lanes advanced, but reliability tranche NO-GO: soak selftests unstable in R1/R2/R3 despite deterministic QA contract and RT/docs green snapshots) | B | BL-025, BL-026, BL-027, BL-028, BL-031 | — | [bl-029](bl-029-dsp-visualization.md) |
 | 9 | HX-05 | Payload budget and throttle contract | P2 | Open | F | BL-016, BL-025 | — | [hx-05](hx-05-payload-budget.md) |
 | 10 | BL-030 | Release governance and device rerun | P2 | In Validation (Slices A-D complete; release dry-run blocked on RL-01/RL-05/RL-09) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
-| 11 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Implementation (Slices A-B validated) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
+| 11 | BL-017 | Head-tracked monitoring companion bridge | P2 | In Validation (Slices A-C implemented; manual AirPods capture pending) | E | BL-009, BL-018 | BL-028 | [bl-017](bl-017-head-tracked-monitoring.md) |
 | 12 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 13 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 14 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
@@ -70,6 +70,7 @@ graph TD
         BL-013[BL-013 HostRunner]
         HX-06[HX-06 RT Audit]
         BL-030[BL-030 Release Gov]
+        BL-017[BL-017 Head Track]
     end
 
     subgraph "In Planning / Open"
@@ -78,7 +79,6 @@ graph TD
         BL-028[BL-028 Output Matrix]
         BL-029[BL-029 DSP Viz]
         BL-031[BL-031 Tempo Token]
-        BL-017[BL-017 Head Track]
         HX-02[HX-02 Reg Lock]
         HX-05[HX-05 Payload]
     end
