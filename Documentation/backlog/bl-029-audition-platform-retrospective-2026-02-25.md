@@ -155,32 +155,24 @@ Why it matters:
 
 ---
 
-## 8) What Still Blocks Done
+## 8) Promotion Decision (Done)
 
-The primary blocker is no longer functional reliability criteria; current replay is green. The remaining blocker is closeout hygiene and promotion discipline.
+BL-029 is promoted to `Done` on 2026-02-25.
 
-Hard criteria (from QA contract) require:
-1. BL-029 selftest soak: **100% pass** (`10/10`)
-2. BL-009 parity soak: **100% pass** (`5/5`)
-3. Contract lane pass with deterministic artifacts
+Hard criteria proof set:
+1. Owner hard-criteria replay GO (`qa lane PASS`, `selftest_bl029 10/10`, `selftest_bl009 5/5`, docs pass): `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/status.tsv`
+2. Deterministic reliability gate wrapper PASS (`build`, `qa lane`, `selftest_bl029 10/10`, `selftest_bl009 5/5`, docs freshness): `TestEvidence/bl029_reliability_gate_p4_20260225T152907Z/status.tsv`
+3. Owner P5/P6 reconciliation PASS with RT gate restored (`non_allowlisted=0` after refresh) and scoped selftest stability preserved: `TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/status.tsv`
+4. Promotion packet closeout record: `TestEvidence/bl029_promotion_packet_z4_20260225T153637Z/status.tsv`
 
-Historical R3 recorded:
-1. BL-029 soak `1/10`
-2. BL-009 soak `1/5`
-3. Decision: **NO-GO**
-
-Recovery evidence (current branch):
-1. `S1` pass: `TestEvidence/bl029_selftest_serialization_s1_20260225T033732Z/status.tsv`
-2. Owner hard-criteria replay GO: `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/status.tsv`
-
-Reference evidence:
+Historical instability evidence remains preserved for regression context:
 1. `TestEvidence/bl029_reliability_native_r1_20260225T031132Z/status.tsv`
 2. `TestEvidence/bl029_selftest_harness_r2_20260225T030714Z/status.tsv`
 3. `TestEvidence/bl029_reliability_soak_r3_20260225T030749Z/status.tsv`
 
 ---
 
-## 9) Remaining Work To Reach Done
+## 9) Post-Promotion Monitoring
 
 ```mermaid
 stateDiagram-v2
@@ -192,11 +184,10 @@ stateDiagram-v2
     ReleaseReady --> [*]
 ```
 
-Remaining completion checklist:
-1. Preserve current reliability (keep soak replay green on integration branch, not only worker branch).
-2. Keep RT/docs gates green at final integrated replay and record synchronized owner evidence.
-3. Finalize BL-029 promotion packet (status/doc sync + closeout decision) once owner signs off no active blockers.
-4. Continue monitoring ABRT taxonomy tooling (S2) as regression guard even after green runs.
+Post-promotion checklist:
+1. Keep the P4 reliability gate (`./scripts/qa-bl029-reliability-gate-mac.sh`) as the canonical regression gate.
+2. Continue ABRT taxonomy capture (S2 tooling) as an early warning signal.
+3. Maintain owner-level RT allowlist reconciliation when parallel edit churn shifts line maps.
 
 ---
 
@@ -228,3 +219,6 @@ Representative evidence bundles:
 7. `TestEvidence/bl029_reliability_soak_r3_20260225T030749Z/`
 8. `TestEvidence/bl029_selftest_serialization_s1_20260225T033732Z/`
 9. `TestEvidence/owner_bl029_reliability_resume_20260225T150335Z/`
+10. `TestEvidence/bl029_reliability_gate_p4_20260225T152907Z/`
+11. `TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/`
+12. `TestEvidence/bl029_promotion_packet_z4_20260225T153637Z/`
