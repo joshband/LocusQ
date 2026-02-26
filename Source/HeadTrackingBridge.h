@@ -9,6 +9,10 @@
 #include <cstring>
 #include <memory>
 
+#if JUCE_MAC
+ #include <pthread.h>
+#endif
+
 #ifndef LOCUS_HEAD_TRACKING
  #define LOCUS_HEAD_TRACKING 0
 #endif
@@ -27,7 +31,7 @@ struct alignas(16) HeadTrackingPoseSnapshot
 static_assert (sizeof (HeadTrackingPoseSnapshot) == 32, "HeadTrackingPoseSnapshot size contract");
 
 #if LOCUS_HEAD_TRACKING
-class HeadTrackingBridge final : private juce::Thread
+class HeadTrackingBridge final
 {
 public:
     using PoseSnapshot = HeadTrackingPoseSnapshot;
@@ -36,6 +40,9 @@ public:
     {
         int port = 19765;
         juce::String bindAddress { "127.0.0.1" };
+        int ackPort = 19766;
+        juce::String ackAddress { "127.0.0.1" };
+        int ackIntervalMs = 100;
     };
 
     HeadTrackingBridge()
@@ -44,196 +51,473 @@ public:
     }
 
     explicit HeadTrackingBridge (Config bridgeConfig)
-        : juce::Thread ("LocusQHeadTrackingBridge"),
-          config (std::move (bridgeConfig))
+        : config (std::move (bridgeConfig))
     {
-        slots[0] = PoseSnapshot {};
-        slots[1] = PoseSnapshot {};
     }
 
-    ~HeadTrackingBridge() override
+    ~HeadTrackingBridge()
     {
         stop();
     }
 
     bool start()
     {
-        if (isThreadRunning())
+        if (started.load (std::memory_order_acquire))
             return true;
 
-        invalidPacketCount.store (0, std::memory_order_relaxed);
-
-        socket = std::make_unique<juce::DatagramSocket> (false);
-        socket->setEnablePortReuse (true);
-
-        bool bound = false;
-        if (config.bindAddress.isNotEmpty())
-            bound = socket->bindToPort (config.port, config.bindAddress);
-
-        if (! bound)
-            bound = socket->bindToPort (config.port);
-
-        if (! bound)
-        {
-            socket.reset();
+        auto acquired = acquireCore (config);
+        if (acquired == nullptr)
             return false;
-        }
 
-        if (! startThread (juce::Thread::Priority::normal))
-        {
-            socket->shutdown();
-            socket.reset();
-            return false;
-        }
-
+        core = std::move (acquired);
+        corePtr.store (core.get(), std::memory_order_release);
+        started.store (true, std::memory_order_release);
         return true;
     }
 
     void stop()
     {
-        signalThreadShouldExit();
+        if (! started.exchange (false, std::memory_order_acq_rel))
+            return;
 
-        if (socket != nullptr)
-            socket->shutdown();
-
-        if (isThreadRunning())
-            stopThread (500);
-
-        socket.reset();
+        corePtr.store (nullptr, std::memory_order_release);
+        releaseCore();
+        core.reset();
     }
 
     const PoseSnapshot* currentPose() const noexcept
     {
-        return activePose.load (std::memory_order_acquire);
+        if (const auto* sharedCore = corePtr.load (std::memory_order_acquire))
+            return sharedCore->currentPose();
+        return nullptr;
     }
 
     std::uint32_t getInvalidPacketCount() const noexcept
     {
-        return invalidPacketCount.load (std::memory_order_relaxed);
+        if (const auto* sharedCore = corePtr.load (std::memory_order_acquire))
+            return sharedCore->getInvalidPacketCount();
+        return 0;
+    }
+
+    std::uint32_t getConsumerCount() const noexcept
+    {
+        if (const auto* sharedCore = corePtr.load (std::memory_order_acquire))
+            return sharedCore->getConsumerCount();
+        return 0;
     }
 
 private:
-    static constexpr std::uint32_t packetMagic = 0x4C515054u; // "LQPT"
-    static constexpr std::uint32_t packetVersion = 1u;
-    static constexpr int packetSizeBytes = 40;
-
-    static std::uint32_t readU32LE (const std::uint8_t* bytes) noexcept
+    class SharedCore final : private juce::Thread
     {
-        return static_cast<std::uint32_t> (bytes[0])
-             | (static_cast<std::uint32_t> (bytes[1]) << 8)
-             | (static_cast<std::uint32_t> (bytes[2]) << 16)
-             | (static_cast<std::uint32_t> (bytes[3]) << 24);
-    }
-
-    static std::uint64_t readU64LE (const std::uint8_t* bytes) noexcept
-    {
-        std::uint64_t value = 0;
-        for (int i = 0; i < 8; ++i)
-            value |= (static_cast<std::uint64_t> (bytes[i]) << (8 * i));
-        return value;
-    }
-
-    static float readF32LE (const std::uint8_t* bytes) noexcept
-    {
-        const auto raw = readU32LE (bytes);
-        float value = 0.0f;
-        std::memcpy (&value, &raw, sizeof (value));
-        return value;
-    }
-
-    static bool decodePacket (const std::uint8_t* bytes, int numBytes, PoseSnapshot& snapshot) noexcept
-    {
-        if (bytes == nullptr || numBytes < packetSizeBytes)
-            return false;
-
-        if (readU32LE (bytes + 0) != packetMagic || readU32LE (bytes + 4) != packetVersion)
-            return false;
-
-        snapshot.qx = readF32LE (bytes + 8);
-        snapshot.qy = readF32LE (bytes + 12);
-        snapshot.qz = readF32LE (bytes + 16);
-        snapshot.qw = readF32LE (bytes + 20);
-        snapshot.timestampMs = readU64LE (bytes + 24);
-        snapshot.seq = readU32LE (bytes + 32);
-        snapshot.pad = 0;
-
-        if (! std::isfinite (snapshot.qx)
-            || ! std::isfinite (snapshot.qy)
-            || ! std::isfinite (snapshot.qz)
-            || ! std::isfinite (snapshot.qw))
+    public:
+        explicit SharedCore (Config bridgeConfig)
+            : juce::Thread ("LocusQHeadTrackingBridgeShared"),
+              config (std::move (bridgeConfig)),
+              sourceToken (static_cast<std::uint32_t> (
+                  static_cast<std::uint64_t> (juce::Time::currentTimeMillis())
+                  ^ static_cast<std::uint64_t> (juce::Time::getMillisecondCounter())))
         {
-            return false;
+            slots[0] = PoseSnapshot {};
+            slots[1] = PoseSnapshot {};
         }
 
-        const auto normSq = (snapshot.qx * snapshot.qx)
-                          + (snapshot.qy * snapshot.qy)
-                          + (snapshot.qz * snapshot.qz)
-                          + (snapshot.qw * snapshot.qw);
-
-        if (! std::isfinite (normSq) || normSq < 1.0e-12f)
-            return false;
-
-        const auto invNorm = 1.0f / std::sqrt (normSq);
-        snapshot.qx *= invNorm;
-        snapshot.qy *= invNorm;
-        snapshot.qz *= invNorm;
-        snapshot.qw *= invNorm;
-        return true;
-    }
-
-    void publishSnapshot (const PoseSnapshot& snapshot) noexcept
-    {
-        const auto slot = writeSlot.load (std::memory_order_relaxed);
-        slots[slot] = snapshot;
-        activePose.store (&slots[slot], std::memory_order_release);
-        writeSlot.store (slot ^ 1, std::memory_order_relaxed);
-        hasPose.store (true, std::memory_order_release);
-        lastSeq.store (snapshot.seq, std::memory_order_relaxed);
-    }
-
-    void run() override
-    {
-        auto* udpSocket = socket.get();
-        if (udpSocket == nullptr)
-            return;
-
-        std::array<std::uint8_t, packetSizeBytes> packetBytes {};
-        while (! threadShouldExit())
+        ~SharedCore() override
         {
-            const auto ready = udpSocket->waitUntilReady (true, 50);
-            if (ready <= 0)
-                continue;
-
-            const auto bytesRead = udpSocket->read (packetBytes.data(), static_cast<int> (packetBytes.size()), false);
-            if (bytesRead <= 0)
-                continue;
-
-            PoseSnapshot snapshot {};
-            if (! decodePacket (packetBytes.data(), bytesRead, snapshot))
-            {
-                invalidPacketCount.fetch_add (1, std::memory_order_relaxed);
-                continue;
-            }
-
-            if (hasPose.load (std::memory_order_acquire))
-            {
-                const auto previousSeq = lastSeq.load (std::memory_order_relaxed);
-                if (snapshot.seq <= previousSeq)
-                    continue;
-            }
-
-            publishSnapshot (snapshot);
+            stopReceiver();
         }
+
+        bool startReceiver()
+        {
+            if (isThreadRunning())
+                return true;
+
+            invalidPacketCount.store (0, std::memory_order_relaxed);
+
+            socket = std::make_unique<juce::DatagramSocket> (false);
+            socket->setEnablePortReuse (true);
+
+            bool bound = false;
+            if (config.bindAddress.isNotEmpty())
+                bound = socket->bindToPort (config.port, config.bindAddress);
+
+            if (! bound)
+                bound = socket->bindToPort (config.port);
+
+            if (! bound)
+            {
+                socket.reset();
+                return false;
+            }
+
+            ackSocket = std::make_unique<juce::DatagramSocket> (false);
+            ackSocket->setEnablePortReuse (true);
+
+            if (! startThread (juce::Thread::Priority::normal))
+            {
+                socket->shutdown();
+                socket.reset();
+                ackSocket.reset();
+                return false;
+            }
+
+            return true;
+        }
+
+        void stopReceiver()
+        {
+            signalThreadShouldExit();
+
+            if (socket != nullptr)
+                socket->shutdown();
+
+            if (ackSocket != nullptr)
+                ackSocket->shutdown();
+
+            if (isThreadRunning())
+                stopThread (500);
+
+            socket.reset();
+            ackSocket.reset();
+        }
+
+        const PoseSnapshot* currentPose() const noexcept
+        {
+            return activePose.load (std::memory_order_acquire);
+        }
+
+        std::uint32_t getInvalidPacketCount() const noexcept
+        {
+            return invalidPacketCount.load (std::memory_order_relaxed);
+        }
+
+        std::uint32_t getConsumerCount() const noexcept
+        {
+            return consumerCount.load (std::memory_order_relaxed);
+        }
+
+        void setConsumerCount (std::uint32_t count) noexcept
+        {
+            consumerCount.store (count, std::memory_order_relaxed);
+        }
+
+    private:
+       #if JUCE_MAC
+        static void applySchedulingHint() noexcept
+        {
+            (void) pthread_set_qos_class_self_np (QOS_CLASS_UTILITY, 0);
+        }
+       #else
+        static void applySchedulingHint() noexcept {}
+       #endif
+
+        static constexpr std::uint32_t packetMagic = 0x4C515054u; // "LQPT"
+        static constexpr std::uint32_t packetVersion = 1u;
+        static constexpr int packetSizeBytes = 40;
+        static constexpr std::uint32_t ackMagic = 0x4C514143u; // "LQAC"
+        static constexpr std::uint32_t ackVersion = 1u;
+        static constexpr int ackPacketSizeBytes = 48;
+        static constexpr std::uint32_t ackFlagPoseAvailable = 1u << 0;
+        static constexpr std::uint32_t ackFlagPoseStale = 1u << 1;
+        static constexpr std::uint64_t staleThresholdMs = 500;
+
+        static std::uint32_t readU32LE (const std::uint8_t* bytes) noexcept
+        {
+            return static_cast<std::uint32_t> (bytes[0])
+                 | (static_cast<std::uint32_t> (bytes[1]) << 8)
+                 | (static_cast<std::uint32_t> (bytes[2]) << 16)
+                 | (static_cast<std::uint32_t> (bytes[3]) << 24);
+        }
+
+        static std::uint64_t readU64LE (const std::uint8_t* bytes) noexcept
+        {
+            std::uint64_t value = 0;
+            for (int i = 0; i < 8; ++i)
+                value |= (static_cast<std::uint64_t> (bytes[i]) << (8 * i));
+            return value;
+        }
+
+        static float readF32LE (const std::uint8_t* bytes) noexcept
+        {
+            const auto raw = readU32LE (bytes);
+            float value = 0.0f;
+            std::memcpy (&value, &raw, sizeof (value));
+            return value;
+        }
+
+        static void writeU32LE (std::uint8_t* bytes, std::uint32_t value) noexcept
+        {
+            bytes[0] = static_cast<std::uint8_t> (value & 0xFFu);
+            bytes[1] = static_cast<std::uint8_t> ((value >> 8) & 0xFFu);
+            bytes[2] = static_cast<std::uint8_t> ((value >> 16) & 0xFFu);
+            bytes[3] = static_cast<std::uint8_t> ((value >> 24) & 0xFFu);
+        }
+
+        static void writeU64LE (std::uint8_t* bytes, std::uint64_t value) noexcept
+        {
+            for (int i = 0; i < 8; ++i)
+                bytes[i] = static_cast<std::uint8_t> ((value >> (8 * i)) & 0xFFu);
+        }
+
+        static void writeF32LE (std::uint8_t* bytes, float value) noexcept
+        {
+            std::uint32_t raw = 0;
+            std::memcpy (&raw, &value, sizeof (raw));
+            writeU32LE (bytes, raw);
+        }
+
+        static bool decodePacket (const std::uint8_t* bytes, int numBytes, PoseSnapshot& snapshot) noexcept
+        {
+            if (bytes == nullptr || numBytes < packetSizeBytes)
+                return false;
+
+            if (readU32LE (bytes + 0) != packetMagic || readU32LE (bytes + 4) != packetVersion)
+                return false;
+
+            snapshot.qx = readF32LE (bytes + 8);
+            snapshot.qy = readF32LE (bytes + 12);
+            snapshot.qz = readF32LE (bytes + 16);
+            snapshot.qw = readF32LE (bytes + 20);
+            snapshot.timestampMs = readU64LE (bytes + 24);
+            snapshot.seq = readU32LE (bytes + 32);
+            snapshot.pad = 0;
+
+            if (! std::isfinite (snapshot.qx)
+                || ! std::isfinite (snapshot.qy)
+                || ! std::isfinite (snapshot.qz)
+                || ! std::isfinite (snapshot.qw))
+            {
+                return false;
+            }
+
+            const auto normSq = (snapshot.qx * snapshot.qx)
+                              + (snapshot.qy * snapshot.qy)
+                              + (snapshot.qz * snapshot.qz)
+                              + (snapshot.qw * snapshot.qw);
+
+            if (! std::isfinite (normSq) || normSq < 1.0e-12f)
+                return false;
+
+            const auto invNorm = 1.0f / std::sqrt (normSq);
+            snapshot.qx *= invNorm;
+            snapshot.qy *= invNorm;
+            snapshot.qz *= invNorm;
+            snapshot.qw *= invNorm;
+            return true;
+        }
+
+        void publishSnapshot (const PoseSnapshot& snapshot) noexcept
+        {
+            const auto slot = writeSlot.load (std::memory_order_relaxed);
+            slots[slot] = snapshot;
+            activePose.store (&slots[slot], std::memory_order_release);
+            writeSlot.store (slot ^ 1, std::memory_order_relaxed);
+            hasPose.store (true, std::memory_order_release);
+            lastSeq.store (snapshot.seq, std::memory_order_relaxed);
+        }
+
+        void sendAckPacket (std::uint64_t nowMs) noexcept
+        {
+            auto* txSocket = ackSocket.get();
+            if (txSocket == nullptr || config.ackPort <= 0 || config.ackAddress.isEmpty())
+                return;
+
+            std::array<std::uint8_t, ackPacketSizeBytes> bytes {};
+            writeU32LE (bytes.data() + 0, ackMagic);
+            writeU32LE (bytes.data() + 4, ackVersion);
+            writeU32LE (bytes.data() + 8, sourceToken);
+            writeU32LE (bytes.data() + 12, consumerCount.load (std::memory_order_relaxed));
+            writeU32LE (bytes.data() + 16, lastSeq.load (std::memory_order_relaxed));
+            writeU32LE (bytes.data() + 20, invalidPacketCount.load (std::memory_order_relaxed));
+
+            const auto* pose = activePose.load (std::memory_order_acquire);
+            const auto poseTimestampMs = (pose != nullptr ? pose->timestampMs : 0u);
+            writeU64LE (bytes.data() + 24, poseTimestampMs);
+
+            std::uint32_t flags = 0;
+            float ageMs = 0.0f;
+            if (pose != nullptr)
+            {
+                flags |= ackFlagPoseAvailable;
+                if (poseTimestampMs > 0 && nowMs >= poseTimestampMs)
+                    ageMs = static_cast<float> (nowMs - poseTimestampMs);
+                if (ageMs > static_cast<float> (staleThresholdMs))
+                    flags |= ackFlagPoseStale;
+            }
+            else
+            {
+                flags |= ackFlagPoseStale;
+            }
+
+            writeF32LE (bytes.data() + 32, ageMs);
+            writeU32LE (bytes.data() + 36, flags);
+            writeU32LE (bytes.data() + 40, static_cast<std::uint32_t> (config.port));
+            writeU32LE (bytes.data() + 44, ackCounter.fetch_add (1, std::memory_order_relaxed) + 1);
+
+            const auto bytesWritten = txSocket->write (
+                config.ackAddress,
+                config.ackPort,
+                bytes.data(),
+                static_cast<int> (bytes.size()));
+            if (bytesWritten <= 0)
+                ackSendErrors.fetch_add (1, std::memory_order_relaxed);
+        }
+
+        void run() override
+        {
+            applySchedulingHint();
+
+            auto* udpSocket = socket.get();
+            if (udpSocket == nullptr)
+                return;
+
+            std::array<std::uint8_t, packetSizeBytes> packetBytes {};
+            const auto ackIntervalMs = juce::jmax (20, config.ackIntervalMs);
+            auto nextAckTick = juce::Time::getMillisecondCounterHiRes();
+
+            while (! threadShouldExit())
+            {
+                const auto ready = udpSocket->waitUntilReady (true, 50);
+                if (ready > 0)
+                {
+                    const auto bytesRead = udpSocket->read (
+                        packetBytes.data(),
+                        static_cast<int> (packetBytes.size()),
+                        false);
+
+                    if (bytesRead > 0)
+                    {
+                        bool shouldPublish = true;
+                        PoseSnapshot snapshot {};
+                        if (! decodePacket (packetBytes.data(), bytesRead, snapshot))
+                        {
+                            invalidPacketCount.fetch_add (1, std::memory_order_relaxed);
+                            shouldPublish = false;
+                        }
+
+                        if (shouldPublish && hasPose.load (std::memory_order_acquire))
+                        {
+                            const auto previousSeq = lastSeq.load (std::memory_order_relaxed);
+                            if (snapshot.seq <= previousSeq)
+                                shouldPublish = false;
+                        }
+
+                        if (shouldPublish)
+                            publishSnapshot (snapshot);
+                    }
+                }
+
+                const auto nowTick = juce::Time::getMillisecondCounterHiRes();
+                if (nowTick >= nextAckTick)
+                {
+                    sendAckPacket (static_cast<std::uint64_t> (juce::Time::currentTimeMillis()));
+                    nextAckTick = nowTick + static_cast<double> (ackIntervalMs);
+                }
+            }
+        }
+
+        Config config;
+        std::unique_ptr<juce::DatagramSocket> socket;
+        std::unique_ptr<juce::DatagramSocket> ackSocket;
+        PoseSnapshot slots[2] {};
+        std::atomic<const PoseSnapshot*> activePose { nullptr };
+        std::atomic<int> writeSlot { 0 };
+        std::atomic<bool> hasPose { false };
+        std::atomic<std::uint32_t> lastSeq { 0 };
+        std::atomic<std::uint32_t> invalidPacketCount { 0 };
+        std::atomic<std::uint32_t> consumerCount { 0 };
+        std::atomic<std::uint32_t> ackCounter { 0 };
+        std::atomic<std::uint32_t> ackSendErrors { 0 };
+        std::uint32_t sourceToken = 0;
+    };
+
+    struct SharedRegistry
+    {
+        juce::CriticalSection lock;
+        std::weak_ptr<SharedCore> core;
+        Config activeConfig;
+        std::uint32_t consumers = 0;
+        bool configInitialized = false;
+    };
+
+    static SharedRegistry& registry() noexcept
+    {
+        static SharedRegistry sharedRegistry;
+        return sharedRegistry;
+    }
+
+    static bool configMatches (const Config& lhs, const Config& rhs) noexcept
+    {
+        return lhs.port == rhs.port
+            && lhs.bindAddress == rhs.bindAddress
+            && lhs.ackPort == rhs.ackPort
+            && lhs.ackAddress == rhs.ackAddress
+            && lhs.ackIntervalMs == rhs.ackIntervalMs;
+    }
+
+    static std::shared_ptr<SharedCore> acquireCore (const Config& requestedConfig)
+    {
+        auto& sharedRegistry = registry();
+        const juce::ScopedLock scopedLock (sharedRegistry.lock);
+
+        auto shared = sharedRegistry.core.lock();
+        if (shared != nullptr)
+        {
+            if (sharedRegistry.configInitialized
+                && ! configMatches (requestedConfig, sharedRegistry.activeConfig))
+            {
+                return nullptr;
+            }
+
+            ++sharedRegistry.consumers;
+            shared->setConsumerCount (sharedRegistry.consumers);
+            return shared;
+        }
+
+        auto created = std::shared_ptr<SharedCore> (new SharedCore (requestedConfig));
+        if (! created->startReceiver())
+            return nullptr;
+
+        sharedRegistry.core = created;
+        sharedRegistry.activeConfig = requestedConfig;
+        sharedRegistry.configInitialized = true;
+        sharedRegistry.consumers = 1;
+        created->setConsumerCount (1);
+        return created;
+    }
+
+    static void releaseCore()
+    {
+        std::shared_ptr<SharedCore> shared;
+        {
+            auto& sharedRegistry = registry();
+            const juce::ScopedLock scopedLock (sharedRegistry.lock);
+            shared = sharedRegistry.core.lock();
+            if (shared == nullptr)
+                return;
+
+            if (sharedRegistry.consumers > 0)
+                --sharedRegistry.consumers;
+            shared->setConsumerCount (sharedRegistry.consumers);
+
+            if (sharedRegistry.consumers == 0)
+            {
+                sharedRegistry.core.reset();
+                sharedRegistry.configInitialized = false;
+            }
+            else
+            {
+                shared.reset();
+            }
+        }
+
+        if (shared != nullptr)
+            shared->stopReceiver();
     }
 
     Config config;
-    std::unique_ptr<juce::DatagramSocket> socket;
-    PoseSnapshot slots[2] {};
-    std::atomic<const PoseSnapshot*> activePose { nullptr };
-    std::atomic<int> writeSlot { 0 };
-    std::atomic<bool> hasPose { false };
-    std::atomic<std::uint32_t> lastSeq { 0 };
-    std::atomic<std::uint32_t> invalidPacketCount { 0 };
+    std::shared_ptr<SharedCore> core;
+    std::atomic<SharedCore*> corePtr { nullptr };
+    std::atomic<bool> started { false };
 };
 #else
 class HeadTrackingBridge final
@@ -267,6 +551,11 @@ public:
     }
 
     std::uint32_t getInvalidPacketCount() const noexcept
+    {
+        return 0;
+    }
+
+    std::uint32_t getConsumerCount() const noexcept
     {
         return 0;
     }
