@@ -5,6 +5,10 @@ import Foundation
 import CoreMotion
 #endif
 
+#if canImport(CoreAudio)
+import CoreAudio
+#endif
+
 #if canImport(AppKit)
 import AppKit
 #if canImport(WebKit)
@@ -195,14 +199,47 @@ private enum CompanionMode: String {
     case live
 }
 
+private enum SchedulingProfile: String {
+    case eco
+    case balanced
+    case performance
+
+    var operationQoS: QualityOfService {
+        switch self {
+        case .eco: return .utility
+        case .balanced: return .userInitiated
+        case .performance: return .userInteractive
+        }
+    }
+
+    var ackThreadQoS: QualityOfService {
+        switch self {
+        case .eco: return .background
+        case .balanced: return .utility
+        case .performance: return .userInitiated
+        }
+    }
+
+    var dispatchQoS: DispatchQoS.QoSClass {
+        switch self {
+        case .eco: return .utility
+        case .balanced: return .userInitiated
+        case .performance: return .userInteractive
+        }
+    }
+}
+
 private struct CompanionArguments {
     var host: String = "127.0.0.1"
     var port: UInt16 = 19765
+    var pluginAckPort: UInt16 = 19766
     var hz: Int = 60
     var seconds: Int = 0
     var mode: CompanionMode = .synthetic
     var ui: Bool = false
     var verbose: Bool = false
+    var schedulingProfile: SchedulingProfile = .balanced
+    var monitorHz: Int = 30
 
     // Stabilization and frame controls (live mode)
     var recenterOnStart: Bool = true
@@ -227,10 +264,13 @@ private struct CompanionArguments {
           --mode <synthetic|live>   Source mode (default: synthetic)
           --host <ipv4>             Destination host (default: 127.0.0.1)
           --port <uint16>           Destination UDP port (default: 19765)
+          --plugin-ack-port <uint16> Plugin ingest-ack UDP port (default: 19766)
           --hz <int>                Target send rate in Hz (default: 60)
           --seconds <int>           Duration in seconds; 0 = run until signal (default: 0)
           --ui                       Show monitor window with raw + derived telemetry
           --verbose                  Print per-packet logs
+          --sched-profile <eco|balanced|performance> Scheduler profile (default: balanced)
+          --monitor-hz <int>        UI monitor redraw rate [5..120] (default: 30)
 
         Live Mode Controls:
           --no-recenter             Disable startup recenter transform
@@ -271,6 +311,12 @@ private struct CompanionArguments {
                     throw CompanionError.invalidArgument("\(key) requires uint16")
                 }
                 args.port = parsed
+            case "--plugin-ack-port":
+                let value = try takeValue(raw, index: &index, option: key)
+                guard let parsed = UInt16(value) else {
+                    throw CompanionError.invalidArgument("\(key) requires uint16")
+                }
+                args.pluginAckPort = parsed
             case "--hz":
                 let value = try takeValue(raw, index: &index, option: key)
                 guard let parsed = Int(value), parsed > 0 else {
@@ -287,6 +333,18 @@ private struct CompanionArguments {
                 args.ui = true
             case "--verbose":
                 args.verbose = true
+            case "--sched-profile":
+                let value = try takeValue(raw, index: &index, option: key).lowercased()
+                guard let parsed = SchedulingProfile(rawValue: value) else {
+                    throw CompanionError.invalidArgument("\(key) must be eco, balanced, or performance")
+                }
+                args.schedulingProfile = parsed
+            case "--monitor-hz":
+                let value = try takeValue(raw, index: &index, option: key)
+                guard let parsed = Int(value), parsed >= 5, parsed <= 120 else {
+                    throw CompanionError.invalidArgument("\(key) requires integer in [5,120]")
+                }
+                args.monitorHz = parsed
             case "--no-recenter":
                 args.recenterOnStart = false
             case "--stabilize-alpha":
@@ -480,10 +538,41 @@ private final class UDPSender {
     }
 }
 
+private struct StreamHealthSnapshot {
+    var effectiveRateHz: Double = 0.0
+    var intervalMs: Double = 0.0
+    var jitterMs: Double = 0.0
+    var seqGap: Int = 0
+}
+
+private struct PluginIngestSnapshot {
+    var state: String = "unavailable"
+    var sourceCount: Int = 0
+    var consumerCount: Int = 0
+    var endpoint: String = "n/a"
+    var sequence: UInt32 = 0
+    var poseAgeMs: Double = 0.0
+    var ackAgeMs: Double = 0.0
+    var invalidPackets: UInt32 = 0
+    var ackPackets: Int = 0
+    var decodeErrors: Int = 0
+}
+
+private struct OutputDeviceSnapshot {
+    var name: String = "n/a"
+    var model: String = "n/a"
+    var transport: String = "n/a"
+    var sampleRateHz: Double = 0.0
+    var channels: Int = 0
+    var connected: Bool = false
+}
+
 private struct RuntimeSnapshot {
     var mode: CompanionMode = .synthetic
     var source: String = "synthetic_generator"
     var connection: String = "n/a"
+    var schedulingProfile: String = SchedulingProfile.balanced.rawValue
+    var monitorHz: Int = 30
     var sequence: UInt32 = 0
     var timestampMs: UInt64 = 0
     var ageMs: Double = 0.0
@@ -519,6 +608,9 @@ private struct RuntimeSnapshot {
     var sendErrors: Int = 0
     var invalidSamples: Int = 0
     var lastError: String = ""
+    var streamHealth = StreamHealthSnapshot()
+    var pluginIngest = PluginIngestSnapshot()
+    var outputDevice = OutputDeviceSnapshot()
 }
 
 private final class SnapshotStore: @unchecked Sendable {
@@ -538,10 +630,426 @@ private final class SnapshotStore: @unchecked Sendable {
     }
 }
 
+private final class PluginAckReceiver: @unchecked Sendable {
+    private struct AckEntry {
+        var sourceToken: UInt32
+        var consumerCount: UInt32
+        var sequence: UInt32
+        var invalidPackets: UInt32
+        var poseAgeMs: Double
+        var flags: UInt32
+        var endpoint: String
+        var receivedAtMs: UInt64
+    }
+
+    private let lock = NSLock()
+    private let listenPort: UInt16
+    private var entries: [UInt32: AckEntry] = [:]
+    private var packetCount: Int = 0
+    private var decodeErrors: Int = 0
+    private var running = false
+    private var socketFD: Int32 = -1
+    private var thread: Thread?
+    private let workerQoS: QualityOfService
+
+    private static let packetMagic: UInt32 = 0x4C514143 // "LQAC"
+    private static let packetVersion: UInt32 = 1
+    private static let packetSize: Int = 48
+    private static let staleWindowMs: UInt64 = 2_000
+    private static let flagPoseStale: UInt32 = 1 << 1
+
+    init(listenPort: UInt16 = 19766, workerQoS: QualityOfService = .utility) {
+        self.listenPort = listenPort
+        self.workerQoS = workerQoS
+    }
+
+    func start() {
+        lock.lock()
+        if running {
+            lock.unlock()
+            return
+        }
+        running = true
+        lock.unlock()
+
+        let worker = Thread { [weak self] in
+            self?.runLoop()
+        }
+        worker.name = "LocusQHeadTracker.PluginAck"
+        worker.qualityOfService = workerQoS
+        lock.lock()
+        thread = worker
+        lock.unlock()
+        worker.start()
+    }
+
+    func stop() {
+        lock.lock()
+        running = false
+        let fd = socketFD
+        socketFD = -1
+        lock.unlock()
+
+        if fd >= 0 {
+            _ = Darwin.shutdown(fd, SHUT_RDWR)
+            Darwin.close(fd)
+        }
+
+        if let worker = thread {
+            while worker.isExecuting {
+                usleep(10_000)
+            }
+        }
+
+        lock.lock()
+        thread = nil
+        lock.unlock()
+    }
+
+    func snapshot(nowMs: UInt64) -> PluginIngestSnapshot {
+        lock.lock()
+        defer { lock.unlock() }
+
+        var active: [AckEntry] = []
+        active.reserveCapacity(entries.count)
+        var staleKeys: [UInt32] = []
+        staleKeys.reserveCapacity(entries.count)
+
+        for (key, entry) in entries {
+            if nowMs >= entry.receivedAtMs && (nowMs - entry.receivedAtMs) <= Self.staleWindowMs {
+                active.append(entry)
+            } else {
+                staleKeys.append(key)
+            }
+        }
+
+        for key in staleKeys {
+            entries.removeValue(forKey: key)
+        }
+
+        guard !active.isEmpty else {
+            return PluginIngestSnapshot(
+                state: packetCount > 0 ? "stale" : "waiting",
+                sourceCount: 0,
+                consumerCount: 0,
+                endpoint: "n/a",
+                sequence: 0,
+                poseAgeMs: 0.0,
+                ackAgeMs: 0.0,
+                invalidPackets: 0,
+                ackPackets: packetCount,
+                decodeErrors: decodeErrors
+            )
+        }
+
+        let latest = active.max { lhs, rhs in
+            lhs.receivedAtMs < rhs.receivedAtMs
+        } ?? active[0]
+        let totalConsumers = active.reduce(0) { partial, item in
+            partial + Int(item.consumerCount)
+        }
+        let ackAgeMs = nowMs >= latest.receivedAtMs ? Double(nowMs - latest.receivedAtMs) : 0.0
+        let poseStale = (latest.flags & Self.flagPoseStale) != 0
+        var ingestState = ackAgeMs > 500.0 ? "stale" : "active"
+        if ingestState == "active" && poseStale {
+            ingestState = "pose_stale"
+        }
+
+        return PluginIngestSnapshot(
+            state: ingestState,
+            sourceCount: active.count,
+            consumerCount: totalConsumers,
+            endpoint: latest.endpoint,
+            sequence: latest.sequence,
+            poseAgeMs: latest.poseAgeMs,
+            ackAgeMs: ackAgeMs,
+            invalidPackets: latest.invalidPackets,
+            ackPackets: packetCount,
+            decodeErrors: decodeErrors
+        )
+    }
+
+    private func runLoop() {
+        let fd = Darwin.socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+        if fd < 0 {
+            lock.lock()
+            decodeErrors += 1
+            running = false
+            lock.unlock()
+            return
+        }
+
+        var reuse: Int32 = 1
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
+        _ = Darwin.setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &reuse, socklen_t(MemoryLayout<Int32>.size))
+
+        var timeout = timeval(tv_sec: 0, tv_usec: 200_000)
+        _ = withUnsafePointer(to: &timeout) { ptr in
+            Darwin.setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, ptr, socklen_t(MemoryLayout<timeval>.size))
+        }
+
+        var address = sockaddr_in()
+        address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        address.sin_family = sa_family_t(AF_INET)
+        address.sin_port = CFSwapInt16HostToBig(listenPort)
+        address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+
+        let bindStatus: Int32 = withUnsafePointer(to: &address) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                Darwin.bind(fd, saPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+
+        if bindStatus != 0 {
+            Darwin.close(fd)
+            lock.lock()
+            decodeErrors += 1
+            running = false
+            lock.unlock()
+            return
+        }
+
+        lock.lock()
+        socketFD = fd
+        lock.unlock()
+
+        var receiveBuffer = [UInt8](repeating: 0, count: 256)
+        while true {
+            lock.lock()
+            let isRunning = running
+            lock.unlock()
+            if !isRunning || stopRequested() {
+                break
+            }
+
+            var peer = sockaddr_in()
+            var peerLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+            let received = withUnsafeMutablePointer(to: &peer) { peerPtr in
+                peerPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                    Darwin.recvfrom(
+                        fd,
+                        &receiveBuffer,
+                        receiveBuffer.count,
+                        0,
+                        saPtr,
+                        &peerLen
+                    )
+                }
+            }
+
+            if received < 0 {
+                if errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR {
+                    continue
+                }
+                lock.lock()
+                decodeErrors += 1
+                lock.unlock()
+                continue
+            }
+
+            if received == 0 {
+                continue
+            }
+
+            guard let entry = decodeAckPacket(bytes: receiveBuffer, count: Int(received), peer: peer) else {
+                lock.lock()
+                decodeErrors += 1
+                lock.unlock()
+                continue
+            }
+
+            lock.lock()
+            entries[entry.sourceToken] = entry
+            packetCount += 1
+            lock.unlock()
+        }
+
+        Darwin.close(fd)
+        lock.lock()
+        socketFD = -1
+        running = false
+        lock.unlock()
+    }
+
+    private func decodeAckPacket(bytes: [UInt8], count: Int, peer: sockaddr_in) -> AckEntry? {
+        guard count >= Self.packetSize else {
+            return nil
+        }
+
+        let magic = readU32LE(bytes, 0)
+        let version = readU32LE(bytes, 4)
+        guard magic == Self.packetMagic, version == Self.packetVersion else {
+            return nil
+        }
+
+        let sourceToken = readU32LE(bytes, 8)
+        let consumerCount = readU32LE(bytes, 12)
+        let sequence = readU32LE(bytes, 16)
+        let invalidPackets = readU32LE(bytes, 20)
+        let poseAgeMs = Double(readF32LE(bytes, 32))
+        let flags = readU32LE(bytes, 36)
+        let receivedAtMs = nowEpochMilliseconds()
+
+        return AckEntry(
+            sourceToken: sourceToken,
+            consumerCount: consumerCount,
+            sequence: sequence,
+            invalidPackets: invalidPackets,
+            poseAgeMs: poseAgeMs,
+            flags: flags,
+            endpoint: endpointString(peer: peer),
+            receivedAtMs: receivedAtMs
+        )
+    }
+
+    private func endpointString(peer: sockaddr_in) -> String {
+        var address = peer.sin_addr
+        var hostBuffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
+        let host = withUnsafePointer(to: &address) { ptr -> String in
+            let cString = Darwin.inet_ntop(AF_INET, ptr, &hostBuffer, socklen_t(INET_ADDRSTRLEN))
+            if cString == nil {
+                return "127.0.0.1"
+            }
+            let bytes = hostBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+            return String(decoding: bytes, as: UTF8.self)
+        }
+        let port = Int(CFSwapInt16BigToHost(peer.sin_port))
+        return "\(host):\(port)"
+    }
+
+    private func readU32LE(_ bytes: [UInt8], _ offset: Int) -> UInt32 {
+        UInt32(bytes[offset + 0])
+            | (UInt32(bytes[offset + 1]) << 8)
+            | (UInt32(bytes[offset + 2]) << 16)
+            | (UInt32(bytes[offset + 3]) << 24)
+    }
+
+    private func readF32LE(_ bytes: [UInt8], _ offset: Int) -> Float {
+        let raw = readU32LE(bytes, offset)
+        return Float(bitPattern: raw)
+    }
+}
+
+#if canImport(CoreAudio)
+private func mapTransportType(_ value: UInt32) -> String {
+    switch value {
+    case kAudioDeviceTransportTypeBuiltIn:
+        return "built_in"
+    case kAudioDeviceTransportTypeBluetooth:
+        return "bluetooth"
+    case kAudioDeviceTransportTypeUSB:
+        return "usb"
+    case kAudioDeviceTransportTypeHDMI:
+        return "hdmi"
+    case kAudioDeviceTransportTypeAirPlay:
+        return "airplay"
+    case kAudioDeviceTransportTypeVirtual:
+        return "virtual"
+    case kAudioDeviceTransportTypeAggregate:
+        return "aggregate"
+    default:
+        return "unknown_\(value)"
+    }
+}
+
+private func readDeviceString(_ deviceID: AudioDeviceID,
+                              selector: AudioObjectPropertySelector,
+                              scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> String? {
+    var address = AudioObjectPropertyAddress(
+        mSelector: selector,
+        mScope: scope,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var value: CFTypeRef?
+    var size = UInt32(MemoryLayout<CFTypeRef?>.size)
+    let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &value)
+    guard status == noErr, let text = value as? String else {
+        return nil
+    }
+    return text
+}
+
+private func readDeviceDouble(_ deviceID: AudioDeviceID,
+                              selector: AudioObjectPropertySelector,
+                              scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> Double? {
+    var address = AudioObjectPropertyAddress(
+        mSelector: selector,
+        mScope: scope,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var value: Double = 0
+    var size = UInt32(MemoryLayout<Double>.size)
+    let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &value)
+    guard status == noErr else {
+        return nil
+    }
+    return value
+}
+
+private func readDeviceUInt32(_ deviceID: AudioDeviceID,
+                              selector: AudioObjectPropertySelector,
+                              scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> UInt32? {
+    var address = AudioObjectPropertyAddress(
+        mSelector: selector,
+        mScope: scope,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var value: UInt32 = 0
+    var size = UInt32(MemoryLayout<UInt32>.size)
+    let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &value)
+    guard status == noErr else {
+        return nil
+    }
+    return value
+}
+
+private func readDefaultOutputDeviceSnapshot() -> OutputDeviceSnapshot {
+    var address = AudioObjectPropertyAddress(
+        mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+        mScope: kAudioObjectPropertyScopeGlobal,
+        mElement: kAudioObjectPropertyElementMain
+    )
+    var deviceID: AudioDeviceID = 0
+    var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+    let status = AudioObjectGetPropertyData(
+        AudioObjectID(kAudioObjectSystemObject),
+        &address,
+        0,
+        nil,
+        &size,
+        &deviceID
+    )
+    guard status == noErr, deviceID != 0 else {
+        return OutputDeviceSnapshot()
+    }
+
+    let name = readDeviceString(deviceID, selector: kAudioObjectPropertyName) ?? "unknown"
+    let model = readDeviceString(deviceID, selector: kAudioObjectPropertyModelName) ?? name
+    let sampleRate = readDeviceDouble(deviceID, selector: kAudioDevicePropertyNominalSampleRate, scope: kAudioDevicePropertyScopeOutput) ?? 0.0
+    let channels = Int(readDeviceUInt32(deviceID, selector: kAudioDevicePropertyPreferredChannelsForStereo, scope: kAudioDevicePropertyScopeOutput) != nil ? 2 : 0)
+    let transportCode = readDeviceUInt32(deviceID, selector: kAudioDevicePropertyTransportType) ?? 0
+    let transport = mapTransportType(transportCode)
+    let connectedFlag = readDeviceUInt32(deviceID, selector: kAudioDevicePropertyDeviceIsAlive) ?? 0
+
+    return OutputDeviceSnapshot(
+        name: name,
+        model: model,
+        transport: transport,
+        sampleRateHz: sampleRate,
+        channels: channels,
+        connected: connectedFlag != 0
+    )
+}
+#else
+private func readDefaultOutputDeviceSnapshot() -> OutputDeviceSnapshot {
+    OutputDeviceSnapshot()
+}
+#endif
+
 #if canImport(AppKit)
 #if canImport(WebKit)
 @MainActor
-private final class CompanionMonitorWindow: NSObject {
+private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
     private let window: NSWindow
     private let webView: WKWebView
     private var pendingPayloadJSON: String?
@@ -555,6 +1063,8 @@ private final class CompanionMonitorWindow: NSObject {
             defer: false
         )
         window.title = "LocusQ Head-Tracking Companion"
+        window.minSize = NSSize(width: 1100, height: 700)
+        window.center()
 
         let configuration = WKWebViewConfiguration()
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
@@ -562,6 +1072,7 @@ private final class CompanionMonitorWindow: NSObject {
         webView.autoresizingMask = [.width, .height]
 
         super.init()
+        window.delegate = self
 
         if let contentView = window.contentView {
             webView.frame = contentView.bounds
@@ -577,6 +1088,11 @@ private final class CompanionMonitorWindow: NSObject {
         app.setActivationPolicy(.regular)
         window.makeKeyAndOrderFront(nil)
         app.activate(ignoringOtherApps: true)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        _ = notification
+        markStopRequested()
     }
 
     func render(snapshot: RuntimeSnapshot, args: CompanionArguments) {
@@ -607,6 +1123,8 @@ private final class CompanionMonitorWindow: NSObject {
             "source": snapshot.source,
             "connection": snapshot.connection,
             "destination": "\(args.host):\(args.port)",
+            "schedulingProfile": snapshot.schedulingProfile,
+            "monitorHz": snapshot.monitorHz,
             "rateHz": args.hz,
             "durationText": args.seconds == 0 ? "until signal" : "\(args.seconds)s",
             "sequence": snapshot.sequence,
@@ -658,6 +1176,32 @@ private final class CompanionMonitorWindow: NSObject {
             "sensorLocation": snapshot.sensorLocation,
             "motionNorm": snapshot.motionNorm,
             "stabilityNorm": snapshot.stabilityNorm,
+            "streamHealth": [
+                "effectiveRateHz": snapshot.streamHealth.effectiveRateHz,
+                "intervalMs": snapshot.streamHealth.intervalMs,
+                "jitterMs": snapshot.streamHealth.jitterMs,
+                "seqGap": snapshot.streamHealth.seqGap
+            ],
+            "pluginIngest": [
+                "state": snapshot.pluginIngest.state,
+                "sourceCount": snapshot.pluginIngest.sourceCount,
+                "consumerCount": snapshot.pluginIngest.consumerCount,
+                "endpoint": snapshot.pluginIngest.endpoint,
+                "sequence": snapshot.pluginIngest.sequence,
+                "poseAgeMs": snapshot.pluginIngest.poseAgeMs,
+                "ackAgeMs": snapshot.pluginIngest.ackAgeMs,
+                "invalidPackets": snapshot.pluginIngest.invalidPackets,
+                "ackPackets": snapshot.pluginIngest.ackPackets,
+                "decodeErrors": snapshot.pluginIngest.decodeErrors
+            ],
+            "outputDevice": [
+                "name": snapshot.outputDevice.name,
+                "model": snapshot.outputDevice.model,
+                "transport": snapshot.outputDevice.transport,
+                "sampleRateHz": snapshot.outputDevice.sampleRateHz,
+                "channels": snapshot.outputDevice.channels,
+                "connected": snapshot.outputDevice.connected
+            ],
             "controls": [
                 "recenterOnStart": args.recenterOnStart,
                 "stabilizationAlpha": args.stabilizationAlpha,
@@ -720,9 +1264,14 @@ private final class CompanionMonitorWindow: NSObject {
               --text: #ddeaf9;
               --accent: #51d2ff;
               --accent-soft: rgba(81, 210, 255, 0.18);
+              --accent-glow: rgba(75, 198, 255, 0.2);
               --ok: #46e089;
               --warn: #ffca66;
               --error: #ff6c6c;
+              --font-xs: clamp(8px, 0.58vw, 10px);
+              --font-sm: clamp(9px, 0.68vw, 11px);
+              --row-pad-y: clamp(2px, 0.24vh, 4px);
+              --row-pad-x: clamp(7px, 0.55vw, 9px);
             }
             * { box-sizing: border-box; }
             html, body {
@@ -737,22 +1286,33 @@ private final class CompanionMonitorWindow: NSObject {
             }
             #root {
               display: grid;
-              grid-template-columns: minmax(520px, 1.05fr) minmax(460px, 0.95fr);
-              gap: 12px;
+              grid-template-columns: minmax(480px, 1.04fr) minmax(420px, 0.96fr);
+              gap: clamp(8px, 1vw, 12px);
               width: 100%;
               height: 100%;
-              padding: 12px;
+              padding: clamp(8px, 1vw, 12px);
+              background:
+                radial-gradient(1200px 700px at 8% 12%, rgba(24, 58, 92, 0.22), transparent 60%),
+                radial-gradient(900px 500px at 88% 92%, rgba(19, 37, 64, 0.28), transparent 66%);
             }
-            @media (max-width: 1280px) {
+            @media (max-width: 1240px) {
               #root {
                 grid-template-columns: 1fr;
-                grid-template-rows: 52% 48%;
+                grid-template-rows: 54% 46%;
+              }
+            }
+            @media (max-height: 900px) {
+              #root {
+                padding: 8px;
+                gap: 8px;
               }
             }
             .card {
               border: 1px solid var(--card-border);
               border-radius: 14px;
-              background: linear-gradient(180deg, rgba(17, 23, 34, 0.96), rgba(10, 14, 22, 0.98));
+              background:
+                linear-gradient(180deg, rgba(13, 20, 31, 0.97), rgba(8, 12, 19, 0.985)),
+                radial-gradient(180% 130% at 10% 2%, rgba(31, 79, 122, 0.14), transparent 65%);
               box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
               overflow: hidden;
               min-height: 0;
@@ -766,20 +1326,22 @@ private final class CompanionMonitorWindow: NSObject {
               justify-content: space-between;
               align-items: center;
               gap: 12px;
-              padding: 10px 14px;
+              padding: clamp(8px, 0.95vh, 10px) clamp(12px, 0.95vw, 14px);
               border-bottom: 1px solid rgba(84, 115, 160, 0.28);
-              background: rgba(16, 28, 44, 0.4);
+              background:
+                linear-gradient(90deg, rgba(18, 32, 50, 0.58), rgba(11, 24, 38, 0.34)),
+                rgba(16, 28, 44, 0.36);
             }
             .headerTitle {
-              font-size: 12px;
+              font-size: var(--font-sm);
               letter-spacing: 0.18em;
               text-transform: uppercase;
               color: #89b8de;
             }
             #statusPill {
-              font-size: 12px;
+              font-size: var(--font-sm);
               font-weight: 700;
-              padding: 5px 11px;
+              padding: clamp(4px, 0.5vh, 5px) clamp(9px, 0.7vw, 11px);
               border-radius: 999px;
               border: 1px solid rgba(93, 149, 214, 0.38);
               color: #86d6ff;
@@ -804,11 +1366,92 @@ private final class CompanionMonitorWindow: NSObject {
               position: relative;
               width: 100%;
               height: 100%;
-              min-height: 420px;
+              min-height: 320px;
+              overflow: hidden;
+            }
+            #vizWrap::before {
+              content: "";
+              position: absolute;
+              inset: 0;
+              pointer-events: none;
+              background:
+                radial-gradient(circle at center, rgba(38, 103, 155, 0.10), transparent 42%),
+                radial-gradient(circle at center, rgba(12, 34, 59, 0.20) 0%, transparent 70%);
+              z-index: 0;
             }
             #viz {
               position: absolute;
               inset: 0;
+              z-index: 1;
+            }
+            #centerReticle {
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              width: 16px;
+              height: 16px;
+              transform: translate(-50%, -50%);
+              pointer-events: none;
+              opacity: 0.58;
+              z-index: 2;
+            }
+            #centerReticle::before,
+            #centerReticle::after {
+              content: "";
+              position: absolute;
+              background: rgba(93, 188, 255, 0.5);
+              box-shadow: 0 0 10px rgba(93, 188, 255, 0.2);
+            }
+            #centerReticle::before {
+              left: 7px;
+              top: 0;
+              width: 2px;
+              height: 16px;
+            }
+            #centerReticle::after {
+              left: 0;
+              top: 7px;
+              width: 16px;
+              height: 2px;
+            }
+            #orientationOverlay {
+              position: absolute;
+              top: 12px;
+              left: 12px;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 6px;
+              max-width: min(360px, calc(100% - 24px));
+              z-index: 4;
+              pointer-events: none;
+            }
+            .orientationChip {
+              font-size: var(--font-xs);
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              border-radius: 999px;
+              border: 1px solid rgba(96, 138, 184, 0.44);
+              padding: 3px 8px;
+              background: rgba(8, 17, 28, 0.82);
+              color: #b5d4ee;
+            }
+            .orientationChip.left {
+              color: #a9dbff;
+              border-color: rgba(84, 183, 255, 0.56);
+              background: rgba(22, 65, 98, 0.5);
+            }
+            .orientationChip.right {
+              color: #ffc1cf;
+              border-color: rgba(255, 145, 170, 0.56);
+              background: rgba(91, 35, 53, 0.5);
+            }
+            .orientationHint {
+              width: 100%;
+              font-size: var(--font-xs);
+              color: #9ec3e6;
+              letter-spacing: 0.05em;
+              padding: 2px 0 0 1px;
+              text-shadow: 0 0 10px rgba(38, 121, 188, 0.25);
             }
             #legend {
               position: absolute;
@@ -817,13 +1460,15 @@ private final class CompanionMonitorWindow: NSObject {
               display: grid;
               grid-template-columns: repeat(2, minmax(140px, 1fr));
               gap: 6px 12px;
-              padding: 10px 12px;
+              padding: clamp(8px, 0.8vh, 10px) clamp(10px, 0.8vw, 12px);
               border-radius: 10px;
-              border: 1px solid rgba(76, 108, 149, 0.45);
-              background: rgba(10, 17, 27, 0.72);
-              font-size: 11px;
+              border: 1px solid rgba(76, 108, 149, 0.5);
+              background: linear-gradient(180deg, rgba(8, 17, 28, 0.86), rgba(7, 15, 24, 0.76));
+              font-size: var(--font-xs);
               color: #a9c3df;
-              backdrop-filter: blur(2px);
+              backdrop-filter: blur(3px);
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), 0 0 20px rgba(65, 155, 233, 0.08);
+              z-index: 3;
             }
             .legendDot {
               display: inline-block;
@@ -834,17 +1479,17 @@ private final class CompanionMonitorWindow: NSObject {
             }
             #diagCard {
               display: grid;
-              grid-template-rows: auto auto 1fr;
+              grid-template-rows: auto auto minmax(0, 1fr);
               min-height: 0;
             }
             #smoothingControls {
               display: grid;
-              grid-template-columns: repeat(2, minmax(160px, 1fr));
-              gap: 10px 14px;
-              padding: 10px 14px;
+              grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+              gap: 8px 10px;
+              padding: clamp(8px, 0.9vh, 10px) clamp(12px, 0.9vw, 14px);
               border-bottom: 1px solid rgba(84, 115, 160, 0.28);
               background: rgba(10, 18, 30, 0.45);
-              font-size: 11px;
+              font-size: var(--font-xs);
             }
             .controlBlock {
               display: grid;
@@ -854,7 +1499,7 @@ private final class CompanionMonitorWindow: NSObject {
               color: var(--muted);
               text-transform: uppercase;
               letter-spacing: 0.12em;
-              font-size: 10px;
+              font-size: var(--font-xs);
             }
             .controlBlock input[type="range"] {
               width: 100%;
@@ -862,23 +1507,32 @@ private final class CompanionMonitorWindow: NSObject {
             }
             .controlValue {
               color: #c6e6ff;
-              font-size: 12px;
+              font-size: var(--font-sm);
             }
             #metrics {
-              overflow: auto;
-              padding: 10px 12px 14px;
+              overflow: hidden;
+              padding: 6px 8px 8px;
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              grid-template-rows: repeat(2, minmax(0, 1fr));
+              gap: 6px;
+              align-content: stretch;
+              min-height: 0;
             }
             .section {
               border: 1px solid rgba(74, 102, 140, 0.32);
               border-radius: 10px;
-              margin-bottom: 10px;
+              margin: 0;
               overflow: hidden;
               background: rgba(7, 12, 20, 0.72);
+              display: grid;
+              grid-template-rows: auto minmax(0, 1fr);
+              min-height: 0;
             }
             .section h3 {
               margin: 0;
-              padding: 7px 10px;
-              font-size: 11px;
+              padding: 4px 8px;
+              font-size: var(--font-xs);
               letter-spacing: 0.16em;
               text-transform: uppercase;
               color: #8cb8dc;
@@ -887,19 +1541,22 @@ private final class CompanionMonitorWindow: NSObject {
             }
             .rows {
               display: grid;
-              grid-template-columns: minmax(145px, 1fr) minmax(160px, 1fr);
+              grid-template-columns: 1.06fr 0.94fr;
+              min-height: 0;
             }
             .rowLabel, .rowValue {
-              font-size: 12px;
-              padding: 5px 9px;
+              font-size: var(--font-sm);
+              padding: var(--row-pad-y) var(--row-pad-x);
               border-bottom: 1px solid rgba(67, 89, 119, 0.19);
-              line-height: 1.25;
+              line-height: 1.18;
+              min-width: 0;
             }
             .rowLabel { color: var(--muted); }
             .rowValue {
               color: #e4f2ff;
               text-align: right;
               word-break: break-word;
+              overflow-wrap: anywhere;
             }
             .rowValue.raw {
               color: #ffdca2;
@@ -908,14 +1565,25 @@ private final class CompanionMonitorWindow: NSObject {
               position: absolute;
               top: 14px;
               right: 14px;
-              font-size: 11px;
-              padding: 7px 10px;
+              font-size: var(--font-xs);
+              padding: 6px 9px;
               border-radius: 8px;
               color: #ffcf82;
               border: 1px solid rgba(255, 181, 83, 0.44);
               background: rgba(75, 47, 13, 0.35);
               display: none;
-              z-index: 2;
+              z-index: 4;
+            }
+            @media (max-height: 820px) {
+              #legend {
+                grid-template-columns: 1fr;
+                max-width: 210px;
+                gap: 4px;
+              }
+              #smoothingControls {
+                padding: 6px 10px;
+                gap: 6px 8px;
+              }
             }
           </style>
           \(threeScriptTag)
@@ -930,6 +1598,12 @@ private final class CompanionMonitorWindow: NSObject {
               <div id="vizWrap">
                 <div id="threeNotice">Three.js unavailable, telemetry-only mode.</div>
                 <div id="viz"></div>
+                <div id="centerReticle" aria-hidden="true"></div>
+                <div id="orientationOverlay" aria-hidden="true">
+                  <div class="orientationChip left">L Ear - Screen Left</div>
+                  <div class="orientationChip right">R Ear - Screen Right</div>
+                  <div class="orientationHint">Forward points into screen depth</div>
+                </div>
                 <div id="legend">
                   <div><span class="legendDot" style="background:#7ed7ff"></span>Forward Vector</div>
                   <div><span class="legendDot" style="background:#7af4ae"></span>Up Vector</div>
@@ -966,6 +1640,8 @@ private final class CompanionMonitorWindow: NSObject {
                     <div class="rowLabel">Source</div><div id="source" class="rowValue">n/a</div>
                     <div class="rowLabel">Connection</div><div id="connection" class="rowValue">n/a</div>
                     <div class="rowLabel">Destination</div><div id="destination" class="rowValue">n/a</div>
+                    <div class="rowLabel">Scheduling Profile</div><div id="schedulingProfile" class="rowValue">n/a</div>
+                    <div class="rowLabel">Monitor Refresh</div><div id="monitorHz" class="rowValue">n/a</div>
                     <div class="rowLabel">Rate</div><div id="rateHz" class="rowValue">n/a</div>
                     <div class="rowLabel">Duration</div><div id="durationText" class="rowValue">n/a</div>
                     <div class="rowLabel">Sequence</div><div id="sequence" class="rowValue">n/a</div>
@@ -973,6 +1649,15 @@ private final class CompanionMonitorWindow: NSObject {
                     <div class="rowLabel">Packets</div><div id="packetCount" class="rowValue">n/a</div>
                     <div class="rowLabel">Send Errors</div><div id="sendErrors" class="rowValue">n/a</div>
                     <div class="rowLabel">Invalid Samples</div><div id="invalidSamples" class="rowValue">n/a</div>
+                    <div class="rowLabel">Effective Rate</div><div id="streamEffectiveRateHz" class="rowValue">n/a</div>
+                    <div class="rowLabel">Interval / Jitter</div><div id="streamIntervalJitter" class="rowValue">n/a</div>
+                    <div class="rowLabel">Seq Gap</div><div id="streamSeqGap" class="rowValue">n/a</div>
+                    <div class="rowLabel">Plugin Ingest</div><div id="pluginIngestState" class="rowValue">n/a</div>
+                    <div class="rowLabel">Plugin Sources / Consumers</div><div id="pluginIngestCounts" class="rowValue">n/a</div>
+                    <div class="rowLabel">Plugin Endpoint</div><div id="pluginIngestEndpoint" class="rowValue">n/a</div>
+                    <div class="rowLabel">Plugin Seq / Pose Age</div><div id="pluginIngestSeqAge" class="rowValue">n/a</div>
+                    <div class="rowLabel">Plugin Ack Age</div><div id="pluginIngestAckAge" class="rowValue">n/a</div>
+                    <div class="rowLabel">Plugin Invalid / Decode</div><div id="pluginIngestInvalidDecode" class="rowValue">n/a</div>
                     <div class="rowLabel">Last Error</div><div id="lastError" class="rowValue">none</div>
                   </div>
                 </div>
@@ -1007,6 +1692,11 @@ private final class CompanionMonitorWindow: NSObject {
                 <div class="section">
                   <h3>Stabilization Config</h3>
                   <div class="rows">
+                    <div class="rowLabel">Output Device</div><div id="outputDeviceName" class="rowValue">n/a</div>
+                    <div class="rowLabel">Model</div><div id="outputDeviceModel" class="rowValue">n/a</div>
+                    <div class="rowLabel">Transport</div><div id="outputDeviceTransport" class="rowValue">n/a</div>
+                    <div class="rowLabel">Sample Rate / Ch</div><div id="outputDeviceSampleRateCh" class="rowValue">n/a</div>
+                    <div class="rowLabel">Connected</div><div id="outputDeviceConnected" class="rowValue">n/a</div>
                     <div class="rowLabel">Recenter on Start</div><div id="recenterOnStart" class="rowValue">n/a</div>
                     <div class="rowLabel">Alpha</div><div id="stabilizationAlpha" class="rowValue">n/a</div>
                     <div class="rowLabel">Deadband (deg)</div><div id="deadbandDeg" class="rowValue">n/a</div>
@@ -1025,8 +1715,10 @@ private final class CompanionMonitorWindow: NSObject {
                 renderer: null,
                 scene: null,
                 camera: null,
+                cameraTarget: null,
                 root: null,
                 arrows: {},
+                resizeObserver: null,
                 filter: {
                   init: false,
                   quaternion: null,
@@ -1075,29 +1767,46 @@ private final class CompanionMonitorWindow: NSObject {
 
                 state.scene = new THREE.Scene();
                 state.scene.fog = new THREE.Fog(0x05070c, 6.0, 14.0);
-                state.camera = new THREE.PerspectiveCamera(42, 1, 0.01, 60);
-                state.camera.position.set(2.2, 1.35, 2.6);
-                state.camera.lookAt(0, 0.15, 0);
+                state.camera = new THREE.PerspectiveCamera(44, 1, 0.01, 80);
+                state.cameraTarget = new THREE.Vector3(0, 0, 0);
+                state.camera.position.set(0.0, 1.08, 2.92);
+                state.camera.lookAt(state.cameraTarget);
 
                 state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 state.renderer.setPixelRatio(window.devicePixelRatio || 1);
+                state.renderer.setClearColor(0x000000, 0);
+                state.renderer.domElement.style.display = "block";
+                state.renderer.domElement.style.width = "100%";
+                state.renderer.domElement.style.height = "100%";
                 container.appendChild(state.renderer.domElement);
 
-                const hemi = new THREE.HemisphereLight(0x8cc6ff, 0x192030, 1.05);
+                const hemi = new THREE.HemisphereLight(0x98d3ff, 0x131c2a, 1.02);
                 state.scene.add(hemi);
-                const key = new THREE.DirectionalLight(0xb9e7ff, 0.9);
-                key.position.set(2.0, 3.0, 2.0);
+                const key = new THREE.DirectionalLight(0xb9e7ff, 1.0);
+                key.position.set(1.8, 2.6, 2.5);
                 state.scene.add(key);
+                const fill = new THREE.DirectionalLight(0x6fa3ff, 0.38);
+                fill.position.set(-1.4, 0.8, -1.5);
+                state.scene.add(fill);
 
-                const grid = new THREE.GridHelper(5, 30, 0x22344a, 0x152334);
-                grid.position.y = -0.35;
+                const grid = new THREE.GridHelper(6.6, 44, 0x234058, 0x13283d);
+                grid.position.y = -0.34;
                 state.scene.add(grid);
 
-                const axes = new THREE.AxesHelper(0.5);
-                axes.position.set(-2.1, -0.35, 1.9);
+                const centerRing = new THREE.Mesh(
+                  new THREE.TorusGeometry(0.34, 0.009, 12, 48),
+                  new THREE.MeshBasicMaterial({ color: 0x2f83c7, transparent: true, opacity: 0.52 })
+                );
+                centerRing.rotation.x = Math.PI * 0.5;
+                centerRing.position.set(0, -0.31, 0);
+                state.scene.add(centerRing);
+
+                const axes = new THREE.AxesHelper(0.66);
+                axes.position.set(0, -0.02, 0);
                 state.scene.add(axes);
 
                 const root = new THREE.Group();
+                root.position.set(0, 0, 0);
                 state.root = root;
                 state.scene.add(root);
 
@@ -1121,23 +1830,75 @@ private final class CompanionMonitorWindow: NSObject {
 
                 const leftPod = new THREE.Mesh(
                   new THREE.SphereGeometry(0.058, 24, 20),
-                  new THREE.MeshStandardMaterial({ color: 0x5cc4ff, emissive: 0x123348 })
+                  new THREE.MeshStandardMaterial({ color: 0x4fc3ff, emissive: 0x184268, emissiveIntensity: 1.05 })
                 );
                 leftPod.position.set(-0.35, 0.01, 0.02);
                 root.add(leftPod);
 
                 const rightPod = new THREE.Mesh(
                   new THREE.SphereGeometry(0.058, 24, 20),
-                  new THREE.MeshStandardMaterial({ color: 0xf48ca2, emissive: 0x3d1822 })
+                  new THREE.MeshStandardMaterial({ color: 0xff8faa, emissive: 0x4f1f30, emissiveIntensity: 1.05 })
                 );
                 rightPod.position.set(0.35, 0.01, 0.02);
                 root.add(rightPod);
+
+                function createPodLabelSprite(text, colorHex, x) {
+                  const canvas = document.createElement("canvas");
+                  canvas.width = 128;
+                  canvas.height = 64;
+                  const ctx = canvas.getContext("2d");
+                  if (!ctx) return null;
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                  ctx.fillStyle = "rgba(6, 14, 24, 0.78)";
+                  ctx.strokeStyle = "rgba(90, 150, 210, 0.5)";
+                  ctx.lineWidth = 2;
+                  const rx = 8;
+                  const ry = 12;
+                  const rw = canvas.width - 16;
+                  const rh = canvas.height - 24;
+                  ctx.beginPath();
+                  ctx.moveTo(rx + 8, ry);
+                  ctx.lineTo(rx + rw - 8, ry);
+                  ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + 8);
+                  ctx.lineTo(rx + rw, ry + rh - 8);
+                  ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - 8, ry + rh);
+                  ctx.lineTo(rx + 8, ry + rh);
+                  ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - 8);
+                  ctx.lineTo(rx, ry + 8);
+                  ctx.quadraticCurveTo(rx, ry, rx + 8, ry);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.fillStyle = colorHex;
+                  ctx.font = "700 30px Menlo, Monaco, monospace";
+                  ctx.textAlign = "center";
+                  ctx.textBaseline = "middle";
+                  ctx.fillText(text, canvas.width * 0.5, canvas.height * 0.52);
+                  const texture = new THREE.CanvasTexture(canvas);
+                  texture.needsUpdate = true;
+                  texture.minFilter = THREE.LinearFilter;
+                  const material = new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true,
+                    depthWrite: false,
+                    depthTest: false
+                  });
+                  const sprite = new THREE.Sprite(material);
+                  sprite.scale.set(0.24, 0.12, 1);
+                  sprite.position.set(x, 0.16, 0.02);
+                  return sprite;
+                }
+
+                const leftLabel = createPodLabelSprite("L", "#8ED8FF", -0.47);
+                const rightLabel = createPodLabelSprite("R", "#FFB4C6", 0.47);
+                if (leftLabel) root.add(leftLabel);
+                if (rightLabel) root.add(rightLabel);
 
                 const frontCue = new THREE.Mesh(
                   new THREE.ConeGeometry(0.07, 0.22, 18),
                   new THREE.MeshStandardMaterial({ color: 0xff7a7a, emissive: 0x471919 })
                 );
-                frontCue.position.set(0, -0.26, -1.12);
+                frontCue.position.set(0, 0.0, -1.22);
                 frontCue.rotation.x = Math.PI * 0.5;
                 state.scene.add(frontCue);
 
@@ -1160,9 +1921,23 @@ private final class CompanionMonitorWindow: NSObject {
                   const height = Math.max(120, container.clientHeight);
                   state.camera.aspect = width / height;
                   state.camera.updateProjectionMatrix();
-                  state.renderer.setSize(width, height, false);
+                  state.renderer.setSize(width, height, true);
+                  state.renderer.setViewport(0, 0, width, height);
+                  const target = state.cameraTarget || new THREE.Vector3(0, 0, 0);
+                  const aspect = Math.max(0.6, Math.min(2.6, width / height));
+                  const halfFovRad = (state.camera.fov * Math.PI / 180) * 0.5;
+                  const fitRadius = 1.52;
+                  const fitDistance = (fitRadius / Math.tan(halfFovRad)) * (aspect < 1 ? (1 / aspect) : 1);
+                  const distance = Math.max(2.25, Math.min(4.3, fitDistance * 0.84));
+                  const elevation = Math.max(0.85, Math.min(1.32, 1.00 + (1.0 / aspect - 1.0) * 0.18));
+                  state.camera.position.set(0, elevation, distance);
+                  state.camera.lookAt(target);
                 };
                 window.addEventListener("resize", resize);
+                if (window.ResizeObserver) {
+                  state.resizeObserver = new ResizeObserver(resize);
+                  state.resizeObserver.observe(container);
+                }
                 resize();
 
                 const animate = () => {
@@ -1214,6 +1989,8 @@ private final class CompanionMonitorWindow: NSObject {
                 setText("source", snapshot.source || "n/a");
                 setText("connection", snapshot.connection || "n/a");
                 setText("destination", snapshot.destination || "n/a");
+                setText("schedulingProfile", snapshot.schedulingProfile || "n/a");
+                setText("monitorHz", f(num(snapshot.monitorHz, 0), 0) + " Hz");
                 setText("rateHz", f(num(snapshot.rateHz, 0), 0) + " Hz");
                 setText("durationText", snapshot.durationText || "n/a");
                 setText("sequence", String(snapshot.sequence ?? "n/a"));
@@ -1230,6 +2007,9 @@ private final class CompanionMonitorWindow: NSObject {
                 const acc = snapshot.userAccelerationG || {};
                 const vel = snapshot.velocityEstimateMps || {};
                 const disp = snapshot.displacementEstimateM || {};
+                const stream = snapshot.streamHealth || {};
+                const plugin = snapshot.pluginIngest || {};
+                const outputDevice = snapshot.outputDevice || {};
                 const controls = snapshot.controls || {};
 
                 setText("quatRaw", "[" + f(num(q.x), 4) + ", " + f(num(q.y), 4) + ", " + f(num(q.z), 4) + ", " + f(num(q.w, 1), 4) + "]");
@@ -1245,6 +2025,20 @@ private final class CompanionMonitorWindow: NSObject {
                 setText("dtSec", f(num(snapshot.dtSec), 4) + " s");
                 setText("motionNorm", f(num(snapshot.motionNorm), 3));
                 setText("stabilityNorm", f(num(snapshot.stabilityNorm), 3));
+                setText("streamEffectiveRateHz", f(num(stream.effectiveRateHz), 1) + " Hz");
+                setText("streamIntervalJitter", f(num(stream.intervalMs), 1) + " ms / " + f(num(stream.jitterMs), 2) + " ms");
+                setText("streamSeqGap", String(stream.seqGap ?? "0"));
+                setText("pluginIngestState", plugin.state || "n/a");
+                setText("pluginIngestCounts", String(plugin.sourceCount ?? "0") + " / " + String(plugin.consumerCount ?? "0"));
+                setText("pluginIngestEndpoint", plugin.endpoint || "n/a");
+                setText("pluginIngestSeqAge", String(plugin.sequence ?? "0") + " / " + f(num(plugin.poseAgeMs), 1) + " ms");
+                setText("pluginIngestAckAge", f(num(plugin.ackAgeMs), 1) + " ms");
+                setText("pluginIngestInvalidDecode", String(plugin.invalidPackets ?? "0") + " / " + String(plugin.decodeErrors ?? "0"));
+                setText("outputDeviceName", outputDevice.name || "n/a");
+                setText("outputDeviceModel", outputDevice.model || "n/a");
+                setText("outputDeviceTransport", outputDevice.transport || "n/a");
+                setText("outputDeviceSampleRateCh", f(num(outputDevice.sampleRateHz), 1) + " Hz / " + String(outputDevice.channels ?? "0"));
+                setText("outputDeviceConnected", outputDevice.connected ? "true" : "false");
                 setText("recenterOnStart", controls.recenterOnStart ? "true" : "false");
                 setText("stabilizationAlpha", f(num(controls.stabilizationAlpha), 3));
                 setText("deadbandDeg", f(num(controls.deadbandDeg), 3));
@@ -1297,11 +2091,15 @@ private final class CompanionMonitorWindow: NSObject {
                 const THREE = window.THREE;
                 if (!state.filter.init || !state.root) return;
 
-                state.root.quaternion.copy(state.filter.quaternion);
+                // Screen-forward contract:
+                // +X = screen right, +Y = screen up, -Z = into the screen depth.
+                // Keep identity basis so L pod stays visually on screen-left and R on screen-right.
+                const displayQ = state.filter.quaternion.clone();
+                state.root.quaternion.copy(displayQ);
 
-                const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(state.filter.quaternion);
-                const up = new THREE.Vector3(0, 1, 0).applyQuaternion(state.filter.quaternion);
-                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(state.filter.quaternion);
+                const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(displayQ);
+                const up = new THREE.Vector3(0, 1, 0).applyQuaternion(displayQ);
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(displayQ);
 
                 setArrow(state.arrows.forward, forward, 0.95);
                 setArrow(state.arrows.up, up, 0.78);
@@ -1331,7 +2129,7 @@ private final class CompanionMonitorWindow: NSObject {
 }
 #else
 @MainActor
-private final class CompanionMonitorWindow {
+private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
     private let window: NSWindow
     private let textView: NSTextView
 
@@ -1344,6 +2142,8 @@ private final class CompanionMonitorWindow {
             defer: false
         )
         window.title = "LocusQ Companion Monitor"
+        window.minSize = NSSize(width: 560, height: 560)
+        window.center()
 
         let scrollView = NSScrollView(frame: frame)
         scrollView.hasVerticalScroller = true
@@ -1356,6 +2156,9 @@ private final class CompanionMonitorWindow {
         textView.usesAdaptiveColorMappingForDarkAppearance = true
         textView.font = NSFont.monospacedSystemFont(ofSize: 12.5, weight: .regular)
         scrollView.documentView = textView
+
+        super.init()
+        window.delegate = self
 
         if let contentView = window.contentView {
             scrollView.frame = contentView.bounds
@@ -1372,6 +2175,11 @@ private final class CompanionMonitorWindow {
         app.activate(ignoringOtherApps: true)
     }
 
+    func windowWillClose(_ notification: Notification) {
+        _ = notification
+        markStopRequested()
+    }
+
     func render(snapshot: RuntimeSnapshot, args: CompanionArguments) {
         let headingText = snapshot.headingDeg.map { String(format: "%.2f deg", $0) } ?? "n/a"
         textView.string = String(
@@ -1383,6 +2191,7 @@ private final class CompanionMonitorWindow {
             source=%@
             connection=%@
             destination=%@:%u
+            scheduling_profile=%@ monitor=%dHz
             rate=%dHz duration=%@
             seq=%u timestamp=%llu age=%.2fms
             q=[%.6f, %.6f, %.6f, %.6f]
@@ -1391,12 +2200,17 @@ private final class CompanionMonitorWindow {
             accel=[%.3f, %.3f, %.3f]g velocity=[%.3f, %.3f, %.3f]m/s
             displacement=[%.3f, %.3f, %.3f]m heading=%@
             packet_count=%d send_errors=%d invalid=%d
+            stream=[rate=%.1fHz interval=%.2fms jitter=%.2fms gap=%d]
+            plugin_ingest=[state=%@ sources=%d consumers=%d endpoint=%@ seq=%u pose_age=%.1fms ack_age=%.1fms invalid=%u decode=%d]
+            output_device=[name=%@ model=%@ transport=%@ sample_rate=%.1fHz channels=%d connected=%@]
             """,
             snapshot.mode.rawValue,
             snapshot.source,
             snapshot.connection,
             args.host,
             args.port,
+            snapshot.schedulingProfile,
+            snapshot.monitorHz,
             args.hz,
             args.seconds == 0 ? "until signal" : "\(args.seconds)s",
             snapshot.sequence,
@@ -1425,7 +2239,26 @@ private final class CompanionMonitorWindow {
             headingText,
             snapshot.packetCount,
             snapshot.sendErrors,
-            snapshot.invalidSamples
+            snapshot.invalidSamples,
+            snapshot.streamHealth.effectiveRateHz,
+            snapshot.streamHealth.intervalMs,
+            snapshot.streamHealth.jitterMs,
+            snapshot.streamHealth.seqGap,
+            snapshot.pluginIngest.state,
+            snapshot.pluginIngest.sourceCount,
+            snapshot.pluginIngest.consumerCount,
+            snapshot.pluginIngest.endpoint,
+            snapshot.pluginIngest.sequence,
+            snapshot.pluginIngest.poseAgeMs,
+            snapshot.pluginIngest.ackAgeMs,
+            snapshot.pluginIngest.invalidPackets,
+            snapshot.pluginIngest.decodeErrors,
+            snapshot.outputDevice.name,
+            snapshot.outputDevice.model,
+            snapshot.outputDevice.transport,
+            snapshot.outputDevice.sampleRateHz,
+            snapshot.outputDevice.channels,
+            snapshot.outputDevice.connected ? "true" : "false"
         )
     }
 }
@@ -1457,6 +2290,25 @@ private func withMainActorSync(_ body: @MainActor () -> Void) {
     }
 }
 
+@inline(__always)
+private func withMainActorSyncThrowing<T: Sendable>(_ body: @MainActor () throws -> T) throws -> T {
+    if Thread.isMainThread {
+        return try MainActor.assumeIsolated {
+            try body()
+        }
+    }
+
+    var result: Result<T, Error>?
+    DispatchQueue.main.sync {
+        result = Result {
+            try MainActor.assumeIsolated {
+                try body()
+            }
+        }
+    }
+    return try result!.get()
+}
+
 private func createMonitorWindowOnMain() -> CompanionMonitorWindow {
     if Thread.isMainThread {
         return MainActor.assumeIsolated { CompanionMonitorWindow() }
@@ -1470,12 +2322,25 @@ private func nowEpochMilliseconds() -> UInt64 {
     UInt64((Date().timeIntervalSince1970 * 1000.0).rounded())
 }
 
-private func clamp01(_ value: Double) -> Double {
-    max(0.0, min(1.0, value))
+private func mergePluginAndDeviceDiagnostics(store: SnapshotStore,
+                                             pluginAckReceiver: PluginAckReceiver?,
+                                             cachedOutputDevice: inout OutputDeviceSnapshot,
+                                             nextOutputDevicePollAtMs: inout UInt64) {
+    let nowMs = nowEpochMilliseconds()
+    if nowMs >= nextOutputDevicePollAtMs {
+        cachedOutputDevice = readDefaultOutputDeviceSnapshot()
+        nextOutputDevicePollAtMs = nowMs + 1_000
+    }
+
+    let pluginIngest = pluginAckReceiver?.snapshot(nowMs: nowMs) ?? PluginIngestSnapshot(state: "disabled")
+    store.update { snapshot in
+        snapshot.pluginIngest = pluginIngest
+        snapshot.outputDevice = cachedOutputDevice
+    }
 }
 
-private func pumpMainRunLoopSlice() {
-    _ = RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.01))
+private func clamp01(_ value: Double) -> Double {
+    max(0.0, min(1.0, value))
 }
 
 private func quaternionFromYawPitchRoll(yawDeg: Float, pitchDeg: Float, rollDeg: Float) -> Quaternion {
@@ -1503,7 +2368,8 @@ private func quaternionFromYawPitchRoll(yawDeg: Float, pitchDeg: Float, rollDeg:
 private func runSynthetic(arguments: CompanionArguments,
                           sender: UDPSender,
                           store: SnapshotStore,
-                          monitor: CompanionMonitorWindow?) throws {
+                          monitor: CompanionMonitorWindow?,
+                          pluginAckReceiver: PluginAckReceiver?) throws {
     let packetCount = (arguments.seconds == 0)
         ? Int.max
         : max(1, arguments.hz * arguments.seconds)
@@ -1517,6 +2383,8 @@ private func runSynthetic(arguments: CompanionArguments,
     var seq: UInt32 = 1
     var sentPackets = 0
     var stopReason = "duration_complete"
+    var cachedOutputDevice = readDefaultOutputDeviceSnapshot()
+    var nextOutputDevicePollAtMs = nowEpochMilliseconds()
 
     for i in 0..<packetCount {
         if stopRequested() {
@@ -1576,7 +2444,18 @@ private func runSynthetic(arguments: CompanionArguments,
             snapshot.sendErrors = 0
             snapshot.invalidSamples = 0
             snapshot.lastError = ""
+            snapshot.streamHealth.effectiveRateHz = Double(arguments.hz)
+            snapshot.streamHealth.intervalMs = intervalSeconds * 1000.0
+            snapshot.streamHealth.jitterMs = 0.0
+            snapshot.streamHealth.seqGap = 1
         }
+
+        mergePluginAndDeviceDiagnostics(
+            store: store,
+            pluginAckReceiver: pluginAckReceiver,
+            cachedOutputDevice: &cachedOutputDevice,
+            nextOutputDevicePollAtMs: &nextOutputDevicePollAtMs
+        )
 
         if arguments.verbose {
             print(
@@ -1603,7 +2482,6 @@ private func runSynthetic(arguments: CompanionArguments,
             withMainActorSync {
                 monitor.render(snapshot: snapshot, args: arguments)
             }
-            pumpMainRunLoopSlice()
         }
 
         usleep(microsPerTick)
@@ -1630,6 +2508,11 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
     private var previousMotionTimestamp: TimeInterval?
     private var velocityEstimateMps = Vector3.zero
     private var displacementEstimateM = Vector3.zero
+    private var lastSentEpochMs: UInt64 = 0
+    private var intervalMsEma: Double = 0.0
+    private var jitterMsEma: Double = 0.0
+    private var previousSentSeq: UInt32 = 0
+    private var latestSeqGap: Int = 1
 
     private(set) var packetCount = 0
     private(set) var sendErrors = 0
@@ -1744,6 +2627,24 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
                 packetCount += 1
                 sentSeq = sequence
                 packetTimestampMs = nowMs
+                if lastSentEpochMs > 0 && nowMs >= lastSentEpochMs {
+                    let intervalMs = Double(nowMs - lastSentEpochMs)
+                    if intervalMsEma <= 0.0 {
+                        intervalMsEma = intervalMs
+                        jitterMsEma = 0.0
+                    } else {
+                        let delta = abs(intervalMs - intervalMsEma)
+                        intervalMsEma = (intervalMsEma * 0.85) + (intervalMs * 0.15)
+                        jitterMsEma = (jitterMsEma * 0.8) + (delta * 0.2)
+                    }
+                }
+                if previousSentSeq > 0 {
+                    latestSeqGap = max(1, Int(sentSeq) - Int(previousSentSeq))
+                } else {
+                    latestSeqGap = 1
+                }
+                previousSentSeq = sentSeq
+                lastSentEpochMs = nowMs
                 sequence &+= 1
                 lastSentMotionTimestamp = motionTimestamp
                 lastError = ""
@@ -1803,6 +2704,10 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
             snapshot.sendErrors = sendErrors
             snapshot.invalidSamples = invalidSamples
             snapshot.lastError = lastError
+            snapshot.streamHealth.effectiveRateHz = intervalMsEma > 0.0 ? (1000.0 / intervalMsEma) : Double(arguments.hz)
+            snapshot.streamHealth.intervalMs = intervalMsEma > 0.0 ? intervalMsEma : (1000.0 / Double(arguments.hz))
+            snapshot.streamHealth.jitterMs = jitterMsEma
+            snapshot.streamHealth.seqGap = latestSeqGap
         }
 
         if arguments.verbose && shouldSend {
@@ -1856,7 +2761,8 @@ private final class HeadphoneConnectionDelegate: NSObject, CMHeadphoneMotionMana
 private func runLive(arguments: CompanionArguments,
                      sender: UDPSender,
                      store: SnapshotStore,
-                     monitor: CompanionMonitorWindow?) throws {
+                     monitor: CompanionMonitorWindow?,
+                     pluginAckReceiver: PluginAckReceiver?) throws {
     let authorization = CMHeadphoneMotionManager.authorizationStatus()
     guard authorization == .authorized || authorization == .notDetermined else {
         throw CompanionError.liveModeUnavailable("authorization denied/restricted")
@@ -1869,7 +2775,9 @@ private func runLive(arguments: CompanionArguments,
 
     let queue = OperationQueue()
     queue.name = "LocusQHeadTracker.LiveMotion"
-    queue.qualityOfService = .userInitiated
+    queue.qualityOfService = arguments.schedulingProfile.operationQoS
+
+    let monitorSleepMicros = useconds_t(max(1, Int(1_000_000 / max(5, arguments.monitorHz))))
 
     let processor = LiveRuntimeProcessor(arguments: arguments, sender: sender, store: store)
     let delegate = HeadphoneConnectionDelegate { state in
@@ -1903,6 +2811,8 @@ private func runLive(arguments: CompanionArguments,
     let hasDeadline = arguments.seconds > 0
     let deadline = Date().addingTimeInterval(Double(arguments.seconds))
     var stopReason = "duration_complete"
+    var cachedOutputDevice = readDefaultOutputDeviceSnapshot()
+    var nextOutputDevicePollAtMs = nowEpochMilliseconds()
 
     while true {
         if stopRequested() {
@@ -1914,12 +2824,19 @@ private func runLive(arguments: CompanionArguments,
             break
         }
 
+        mergePluginAndDeviceDiagnostics(
+            store: store,
+            pluginAckReceiver: pluginAckReceiver,
+            cachedOutputDevice: &cachedOutputDevice,
+            nextOutputDevicePollAtMs: &nextOutputDevicePollAtMs
+        )
+
         if let monitor {
             let snapshot = store.read()
             withMainActorSync {
                 monitor.render(snapshot: snapshot, args: arguments)
             }
-            pumpMainRunLoopSlice()
+            usleep(monitorSleepMicros)
         } else {
             usleep(10_000)
         }
@@ -1950,7 +2867,19 @@ private func runCompanion(arguments: CompanionArguments) throws {
     }
 
     let store = SnapshotStore()
+    store.update { snapshot in
+        snapshot.schedulingProfile = arguments.schedulingProfile.rawValue
+        snapshot.monitorHz = arguments.monitorHz
+    }
     let monitor = arguments.ui ? createMonitorWindowOnMain() : nil
+    let pluginAckReceiver = PluginAckReceiver(
+        listenPort: arguments.pluginAckPort,
+        workerQoS: arguments.schedulingProfile.ackThreadQoS
+    )
+    pluginAckReceiver.start()
+    defer {
+        pluginAckReceiver.stop()
+    }
     if let monitor {
         withMainActorSync {
             monitor.show()
@@ -1959,31 +2888,194 @@ private func runCompanion(arguments: CompanionArguments) throws {
 
     switch arguments.mode {
     case .synthetic:
-        try runSynthetic(arguments: arguments, sender: sender, store: store, monitor: monitor)
+        try runSynthetic(
+            arguments: arguments,
+            sender: sender,
+            store: store,
+            monitor: monitor,
+            pluginAckReceiver: pluginAckReceiver
+        )
     case .live:
 #if canImport(CoreMotion)
-        try runLive(arguments: arguments, sender: sender, store: store, monitor: monitor)
+        try runLive(
+            arguments: arguments,
+            sender: sender,
+            store: store,
+            monitor: monitor,
+            pluginAckReceiver: pluginAckReceiver
+        )
 #else
         throw CompanionError.liveModeUnavailable("CoreMotion unavailable on this platform")
 #endif
     }
 
     if let monitor {
+        var cachedOutputDevice = readDefaultOutputDeviceSnapshot()
+        var nextOutputDevicePollAtMs = nowEpochMilliseconds()
+        mergePluginAndDeviceDiagnostics(
+            store: store,
+            pluginAckReceiver: pluginAckReceiver,
+            cachedOutputDevice: &cachedOutputDevice,
+            nextOutputDevicePollAtMs: &nextOutputDevicePollAtMs
+        )
         let snapshot = store.read()
         withMainActorSync {
             monitor.render(snapshot: snapshot, args: arguments)
         }
-        for _ in 0..<10 {
-            pumpMainRunLoopSlice()
-        }
     }
 }
 
-do {
-    guard let arguments = try CompanionArguments.parse(Array(CommandLine.arguments.dropFirst())) else {
-        exit(EXIT_SUCCESS)
+private final class SharedErrorBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var error: Error?
+
+    func store(_ value: Error) {
+        lock.lock()
+        defer { lock.unlock() }
+        error = value
     }
-    try runCompanion(arguments: arguments)
+
+    func load() -> Error? {
+        lock.lock()
+        defer { lock.unlock() }
+        return error
+    }
+}
+
+#if canImport(AppKit)
+@MainActor
+private func runCompanionWithAppEventLoop(arguments: CompanionArguments) throws {
+    let app = NSApplication.shared
+    app.setActivationPolicy(.regular)
+
+    let errorBox = SharedErrorBox()
+    let completion = DispatchSemaphore(value: 0)
+
+    DispatchQueue.global(qos: arguments.schedulingProfile.dispatchQoS).async {
+        do {
+            try runCompanion(arguments: arguments)
+        } catch {
+            errorBox.store(error)
+        }
+
+        DispatchQueue.main.async {
+            markStopRequested()
+            app.stop(nil)
+            if let pulse = NSEvent.otherEvent(
+                with: .applicationDefined,
+                location: .zero,
+                modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: 0,
+                context: nil,
+                subtype: 0,
+                data1: 0,
+                data2: 0
+            ) {
+                app.postEvent(pulse, atStart: false)
+            }
+            completion.signal()
+        }
+    }
+
+    app.run()
+    completion.wait()
+
+    if let error = errorBox.load() {
+        throw error
+    }
+}
+#endif
+
+private func sanitizeLaunchArguments(_ rawArguments: [String], launchedFromAppBundle: Bool) -> [String] {
+    guard !rawArguments.isEmpty else {
+        return []
+    }
+
+    // Finder/Dock may pass launch metadata flags (for example -psn_*) that are not
+    // user intent. For app-bundle launches, drop these and default to no-arg mode
+    // if any unrecognized system flags remain.
+    let recognizedOptions = Set([
+        "--mode",
+        "--host",
+        "--port",
+        "--plugin-ack-port",
+        "--hz",
+        "--seconds",
+        "--ui",
+        "--verbose",
+        "--sched-profile",
+        "--monitor-hz",
+        "--no-recenter",
+        "--stabilize-alpha",
+        "--deadband-deg",
+        "--velocity-damping",
+        "--yaw-amplitude",
+        "--pitch-amplitude",
+        "--roll-amplitude",
+        "--yaw-frequency",
+        "--help",
+        "-h"
+    ])
+
+    let filtered = rawArguments.filter { !$0.hasPrefix("-psn_") }
+    if !launchedFromAppBundle {
+        return filtered
+    }
+
+    for token in filtered where token.hasPrefix("-") && !recognizedOptions.contains(token) {
+        if token.hasPrefix("-NS") || token.hasPrefix("-Apple") || token.hasPrefix("-psn_") {
+            return []
+        }
+        return []
+    }
+
+    return filtered
+}
+
+do {
+    let rawArguments = Array(CommandLine.arguments.dropFirst())
+    let executablePath = CommandLine.arguments.first ?? ""
+    let launchedFromAppBundle = executablePath.contains(".app/Contents/MacOS/")
+    let normalizedArguments = sanitizeLaunchArguments(rawArguments, launchedFromAppBundle: launchedFromAppBundle)
+
+    let runSelectedMode: (CompanionArguments) throws -> Void = { arguments in
+#if canImport(AppKit)
+        if arguments.ui && launchedFromAppBundle {
+            try withMainActorSyncThrowing {
+                try runCompanionWithAppEventLoop(arguments: arguments)
+            }
+        } else {
+            try runCompanion(arguments: arguments)
+        }
+#else
+        try runCompanion(arguments: arguments)
+#endif
+    }
+
+    if normalizedArguments.isEmpty {
+        var launchArguments = CompanionArguments()
+        launchArguments.ui = true
+        launchArguments.mode = .live
+        launchArguments.seconds = 0
+
+        do {
+#if canImport(CoreMotion)
+            try runSelectedMode(launchArguments)
+#else
+            throw CompanionError.liveModeUnavailable("CoreMotion unavailable on this platform")
+#endif
+        } catch CompanionError.liveModeUnavailable(let reason) {
+            fputs("live launch unavailable (\(reason)); falling back to synthetic UI mode\n", stderr)
+            launchArguments.mode = .synthetic
+            try runSelectedMode(launchArguments)
+        }
+    } else {
+        guard let arguments = try CompanionArguments.parse(normalizedArguments) else {
+            exit(EXIT_SUCCESS)
+        }
+        try runSelectedMode(arguments)
+    }
 } catch {
     fputs("error: \(error)\n", stderr)
     fputs("\(CompanionArguments.usage())\n", stderr)
