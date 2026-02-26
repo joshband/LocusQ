@@ -8,11 +8,14 @@ Last Modified Date: 2026-02-25
 
 # BL-017 Companion MVP
 
-This directory contains the BL-017 Slice C companion prototype:
+This directory contains the BL-017 head-tracking companion:
 
-- macOS Swift CLI sender (`locusq-headtrack-companion`)
-- UDP pose packet serializer matching the plugin bridge v1 wire contract
-- deterministic synthetic pose generation for local smoke validation
+- macOS Swift executable (`locusq-headtrack-companion`)
+- UDP pose packet sender matching the plugin bridge v1 wire contract
+- two source modes:
+  - `synthetic` deterministic replay signal
+  - `live` real `CMHeadphoneMotionManager` motion stream
+- optional monitor window (`--ui`) with raw and derived telemetry
 
 ## Packet Contract (v1)
 
@@ -41,21 +44,78 @@ swift build -c release
 Binary path:
 - `.build/release/locusq-headtrack-companion`
 
-## Run (Local Smoke)
+## Run
 
-Default short run:
+Deterministic synthetic replay:
 
 ```bash
 cd companion
-.build/release/locusq-headtrack-companion --seconds 2 --hz 30
+.build/release/locusq-headtrack-companion --mode synthetic --seconds 5 --hz 60 --verbose
+```
+
+Live AirPods motion stream:
+
+```bash
+cd companion
+.build/release/locusq-headtrack-companion --mode live --seconds 0 --hz 60
+```
+
+Live stream with monitor window:
+
+```bash
+cd companion
+.build/release/locusq-headtrack-companion --mode live --seconds 0 --hz 60 --ui
 ```
 
 Custom destination:
 
 ```bash
 cd companion
-.build/release/locusq-headtrack-companion --host 127.0.0.1 --port 19765 --seconds 5 --hz 60
+.build/release/locusq-headtrack-companion --mode live --host 127.0.0.1 --port 19765 --seconds 30 --hz 60
 ```
+
+## CLI Options (Summary)
+
+Core options:
+- `--mode synthetic|live`
+- `--host`, `--port`, `--hz`
+- `--seconds` (`0` means run until signal)
+- `--ui`
+- `--verbose`
+
+Live stabilization options:
+- `--no-recenter`
+- `--stabilize-alpha <0..1>`
+- `--deadband-deg <float>`
+- `--velocity-damping <0..1>`
+
+Synthetic options:
+- `--yaw-amplitude`
+- `--pitch-amplitude`
+- `--roll-amplitude`
+- `--yaw-frequency`
+
+See full option help:
+
+```bash
+cd companion
+.build/release/locusq-headtrack-companion --help
+```
+
+## Telemetry Monitor Window
+
+When `--ui` is enabled, the companion opens a separate monitor window showing:
+
+- transport: mode, destination, packet sequence, age, send errors
+- raw pose: quaternion + derived yaw/pitch/roll
+- motion vectors: rotation rate, gravity, user acceleration
+- derived vectors: velocity estimate and displacement estimate
+- normalized scores: `motionNorm` and `stabilityNorm`
+- stabilization settings currently applied
+
+Important:
+- velocity/displacement are **derived estimates** from acceleration and drift over time.
+- they are diagnostic helpers, not absolute world-space translation.
 
 ## Reliability Notes (Slice D)
 
@@ -90,8 +150,9 @@ Promotion packet replay command used for BL-017 Slice E:
 2. Confirm plugin bridge is listening on UDP port `19765` (or set matching port if changed).
 3. Start the companion sender from this directory.
 4. Verify plugin-side head-tracking diagnostics advance sequence and update age/state.
+5. (Optional) Enable `--ui` and compare companion telemetry against the LocusQ renderer diagnostics card.
 
 ## Notes
 
 - This MVP sends deterministic synthetic orientation trajectories as proof-of-contract.
-- `CMHeadphoneMotionManager` capture can be layered on top of this sender contract in a follow-up slice without changing packet format.
+- Live `CMHeadphoneMotionManager` mode keeps packet format unchanged (quaternion + timestamp + seq).

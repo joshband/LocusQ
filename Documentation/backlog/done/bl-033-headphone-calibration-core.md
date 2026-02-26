@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-26
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | Done-candidate (Owner Z11 replay PASS after Z9/Z10 reconciliation) |
+| Status | Done (Owner Z12 final replay PASS; promotion packet finalized) |
 | Owner Track | Track A — Runtime Formats |
 | Depends On | BL-009, BL-017, BL-026, BL-028 |
 | Blocks | BL-034 |
@@ -26,7 +26,7 @@ Last Modified Date: 2026-02-26
 | C | High | L | PEQ/FIR post-chain integration with deterministic engine selection and latency reporting |
 | D | Med | M | QA lane scaffold/docs contract (D1) followed by full execution + RT safety closeout (D2) |
 
-## Current Slice Disposition (Owner Sync Z11)
+## Current Slice Disposition (Owner Sync Z12)
 
 | Slice | Worker Result | Owner Replay Result | Evidence |
 |---|---|---|---|
@@ -43,12 +43,15 @@ Last Modified Date: 2026-02-26
 | Z9 | PASS | PASS (`rt_before=1` -> `rt_after=0`; non-allowlisted drift closed) | `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_before.tsv`, `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_after.tsv` |
 | Z10 | PASS | PASS (evidence metadata hygiene + docs freshness pass) | `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/status.tsv` |
 | Z11 | PASS | PASS (owner integration replay green across all required gates) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv`, `TestEvidence/bl033_owner_sync_z11_20260225_200647/validation_matrix.tsv` |
+| Z12 | PASS | PASS (owner final replay green; Done promotion packet finalized) | `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/status.tsv`, `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/validation_matrix.tsv` |
 
 Owner decision packet:
 - `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/owner_decisions.md`
 - `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/handoff_resolution.md`
 - `TestEvidence/bl033_owner_sync_z11_20260225_200647/owner_decisions.md`
 - `TestEvidence/bl033_owner_sync_z11_20260225_200647/handoff_resolution.md`
+- `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/promotion_decision.md`
+- `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/handoff_resolution.md`
 
 ## Objective
 
@@ -200,6 +203,7 @@ EVIDENCE:
 - [x] RT safety lane is green with explicit evidence
 - [x] `Documentation/backlog/index.md` and runbook status are synchronized
 - [x] `./scripts/validate-docs-freshness.sh` passes
+- [x] Owner Z12 final replay and promotion packet complete; BL-033 promoted to `Done`.
 
 ## Owner Integration Snapshot (Z1)
 
@@ -264,3 +268,25 @@ Replay results:
 Disposition:
 - Z9 RT reconciliation and Z10 evidence hygiene are both confirmed on current branch.
 - BL-033 promotion posture is advanced to `Done-candidate`.
+
+## Owner Final Promotion Snapshot (Z12)
+
+Date: `2026-02-26`
+
+Validation replay bundle:
+- `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/status.tsv`
+- `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/validation_matrix.tsv`
+- `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/rt_audit.tsv`
+
+Replay results:
+1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` -> PASS
+2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> PASS
+3. `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5` -> PASS (deterministic signatures stable across all runs)
+4. `./scripts/qa-bl009-headphone-contract-mac.sh` -> PASS
+5. `./scripts/rt-safety-audit.sh --print-summary` -> PASS (`non_allowlisted=0`)
+6. `jq empty status.json` -> PASS
+7. `./scripts/validate-docs-freshness.sh` -> PASS
+
+Disposition:
+- BL-033 promotion decision is finalized to `Done`.
+- BL-034 dependency gate on BL-033 is now fully satisfied on owner-authoritative evidence.

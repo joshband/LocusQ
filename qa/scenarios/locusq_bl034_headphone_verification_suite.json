@@ -1,0 +1,222 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl034_headphone_verification_suite",
+  "name": "LocusQ BL-034 Headphone Verification Suite",
+  "category": "stability",
+  "description": "Deterministic BL-034 C1 QA contract for headphone verification/profile governance lane replay and failure taxonomy.",
+  "scenario_ids": [
+    "locusq_bl009_headphone_downmix_reference",
+    "locusq_bl009_headphone_steam_request"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl034_headphone_verification"
+  },
+  "capability_requirements": {
+    "required_effect_types": [
+      "SPATIAL"
+    ],
+    "required_behaviors": [
+      "STATEFUL"
+    ],
+    "excluded_behaviors": []
+  },
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.25,
+      "duration_seconds": 2.0
+    }
+  },
+  "parameter_variations": {
+    "rend_master_gain": 0.5,
+    "rend_quality": 1.0,
+    "rend_room_enable": 0.0,
+    "rend_headphone_mode": 0.0,
+    "rend_headphone_profile": 0.0,
+    "emit_gain": 0.5,
+    "emit_spread": 0.2,
+    "emit_directivity": 0.35,
+    "pos_azimuth": 0.5,
+    "pos_elevation": 0.45,
+    "pos_distance": 0.2
+  },
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.0
+    }
+  },
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "BL-034 verification suite must emit deterministic non-empty output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Render output must remain finite."
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Verification lane must remain deadline-safe."
+    }
+  },
+  "bl034_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL034-C1-001",
+        "description": "Scenario and lane contract schema exists and is parseable."
+      },
+      {
+        "id": "BL034-C1-002",
+        "description": "Failure taxonomy schema is explicit and includes required deterministic/runtime classes."
+      },
+      {
+        "id": "BL034-C1-003",
+        "description": "Execution mode semantics are explicit for contract_only and execute_suite."
+      },
+      {
+        "id": "BL034-C1-004",
+        "description": "Replay hash stability contract is enforced for deterministic reruns."
+      },
+      {
+        "id": "BL034-C1-005",
+        "description": "Required artifact schema is complete and machine-readable."
+      },
+      {
+        "id": "BL034-C1-006",
+        "description": "Hash input contract excludes nondeterministic fields."
+      }
+    ],
+    "required_profile_fields": [
+      "requestedProfileId",
+      "activeProfileId",
+      "fallbackReasonCode",
+      "verificationScoreStatus"
+    ],
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 5,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "qa_lane.log",
+      "scenario_contract.log",
+      "scenario_result.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "artifact_schema_execute_additions": [
+      "build.log",
+      "scenario_run.log",
+      "scenario_result.json"
+    ],
+    "artifact_schema_multi_run": [
+      "status.tsv",
+      "qa_lane.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "execution_contract": {
+      "default_mode": "contract_only",
+      "suite_mode": "execute_suite",
+      "requires_qa_bin": true,
+      "requires_build": true
+    },
+    "deterministic_hash_inputs": {
+      "include": [
+        "status.semantic.check_result_pairs",
+        "scenario_contract.semantic.kv_pairs",
+        "scenario_result.summary.status_warn_pass_fail_total",
+        "failure_taxonomy.rows.class_count"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "log_line_numbers",
+        "wall_clock_duration"
+      ]
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Scenario/schema/threshold contract mismatch."
+      },
+      {
+        "failure_class": "runtime_execution_failure",
+        "description": "Build or QA runner returned non-zero exit."
+      },
+      {
+        "failure_class": "missing_result_artifact",
+        "description": "Expected suite result artifact not produced."
+      },
+      {
+        "failure_class": "deterministic_replay_divergence",
+        "description": "Replay hash signatures diverged beyond configured thresholds."
+      },
+      {
+        "failure_class": "deterministic_replay_row_drift",
+        "description": "Replay semantic row signatures diverged beyond configured thresholds."
+      }
+    ],
+    "check_rows": [
+      {
+        "acceptance_id": "BL034-C1-001",
+        "lane_check": "BL034-C1-001_contract_schema",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL034-C1-002",
+        "lane_check": "BL034-C1-002_failure_taxonomy_schema",
+        "artifact": "failure_taxonomy.tsv"
+      },
+      {
+        "acceptance_id": "BL034-C1-003",
+        "lane_check": "BL034-C1-003_execution_mode_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL034-C1-004",
+        "lane_check": "BL034-C1-004_replay_hash_stability",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL034-C1-005",
+        "lane_check": "BL034-C1-005_artifact_schema_complete",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL034-C1-006",
+        "lane_check": "BL034-C1-006_hash_input_contract",
+        "artifact": "scenario_contract.log"
+      }
+    ]
+  },
+  "pass_criteria": "Lane status must be PASS with deterministic replay signatures and zero taxonomy failures above thresholds."
+}

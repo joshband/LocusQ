@@ -57,6 +57,25 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - BL-033 Slice Z1: Owner integration replay and promotion decision packet (A1/B1/D1 handoff reconciliation)
 - BL-033 Slice Z8: Owner replay closeout update (Z2/Z5/Z6/Z7 unblock reconciliation + status promotion)
 - BL-033 Slice Z11: Owner integration update after Z9/Z10 reconciliation (Done-candidate promotion decision)
+- BL-033 Slice Z12: Final done-promotion packet replay and owner closeout synchronization
+- BL-034 Slice A1: Headphone profile catalog + fallback taxonomy contract governance (docs-only additive schema contract)
+- BL-034 Slice B1: Native additive verification telemetry contract publication
+- BL-034 Slice B2: Native verification determinism hardening and diagnostics contract tightening
+- BL-034 Slice C1: Deterministic headphone-verification QA lane + replay hash contract
+- BL-034 Slice D1: Release-governance linkage contract for BL-030 gate compatibility
+- BL-034 Slice D2: Release-governance linkage refresh for B2 hardening + Z2 RT reconcile + owner replay blocker-resolution path
+- BL-034 Slice Z1: Owner integration sync and blocked implementation-state decision (RT gate drift)
+- BL-034 Slice Z2: Owner integration sync update after B2/D1/Z2 intake and fresh replay recheck
+- BL-034 Slice Z3: Owner integration sync closure after Z3 RT reconcile and Z4 deterministic replay audit
+- BL-034 Slice E1: Extended deterministic soak confidence replay (`--runs 10`) for lane stability
+- BL-034 Slice E2: RT sentinel multi-run stability verification (`non_allowlisted=0` across repeated audits)
+- BL-034 Slice E3: Evidence contract parity audit across A1/B1/B2/C1/D1/D2/Z3/Z4 bundles
+- BL-034 Slice Z5: Owner integration promotion sync to Done-candidate after E-series evidence intake
+- BL-034 Slice Z6: Final done-promotion packet replay and owner closeout synchronization
+- BL-034 Slice F: Standalone renderer diagnostics card for additive headphone governance + verification telemetry visibility
+- BL-034 Slice F1: Cross-lane stress sentinel (BL-009 repetition + dual BL-034 lane replay determinism check)
+- BL-034 Slice F2: RT drift-watch sentinel (5x repeated RT audits with zero non-allowlisted findings)
+- BL-034 Slice Z7: Post-done owner integration sync for F/F1/F2 reconciliation and done-posture retention
 - Reference: `.ideas/plan.md`
 
 ## Stage 14 Drift Ledger (Open)
@@ -196,6 +215,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | Listener/speaker room overlays (BL-014) | `Source/PluginProcessor.cpp` (`roomProfileValid`, `roomDimensions`, `listener`, `speakerRms`, `speakers`) | `Source/ui/public/js/index.js` (`updateSpeakerTargetsFromScene`, `updateListenerTargetFromScene`, speaker/listener energy visuals) | Viewport listener/headphone and speaker overlays track scene telemetry with smoothing and safe defaults. |
 | Trail/vector toggles + trail-length control (BL-006/BL-007) | APVTS parameters (`rend_viz_trails`, `rend_viz_vectors`, `rend_viz_trail_len`) surfaced through relay state | `Source/ui/public/js/index.js` (toggle bindings + animate visibility gates) | Motion trails and velocity vectors are controlled by renderer UI toggles and remain visual-only overlays. |
 | Steam headphone runtime diagnostics (BL-009 closeout support) | `Source/SpatialRenderer.h` (`SteamInitStage`, init failure/error tracking) + `Source/PluginProcessor.cpp` (`getSceneStateJSON`) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest`, renderer status line) | Scene snapshots now expose deterministic Steam init stage/error/path data (`rendererSteamAudioInitStage`, `rendererSteamAudioInitErrorCode`, `rendererSteamAudioRuntimeLib`, `rendererSteamAudioMissingSymbol`). |
+| Head-tracking telemetry bridge diagnostics + viewport marker (BL-017/BL-027 additive UI contract) | `Source/HeadTrackingBridge.h` (UDP pose receiver), `Source/PluginProcessor.cpp` (`getSceneStateJSON` additive `rendererHeadTracking*` fields) | `Source/ui/public/index.html` (`rend-headtrack-*` diagnostics card shell) + `Source/ui/public/js/index.js` (`updateRendererPanelShell`, `updateHeadTrackingTelemetryFromScene`, listener headtracking marker/arrow/ring animation) | Renderer diagnostics now show full bridge telemetry (`seq`, `timestamp`, `age`, quaternion, derived yaw/pitch/roll, invalid packet count), and viewport listener overlay renders a distinct realtime headtracking indicator with active/stale visual states. |
 | Renderer UI/UX v2 structural shell + fallback-safe authority chips (BL-027 Slice A) | Existing renderer scene-state payload from `Source/PluginProcessor.cpp` (requested/active/profile/stage/output fields); additive-only consumption with no schema changes | `Source/ui/public/index.html` (v2 IA card shell) + `Source/ui/public/js/index.js` (`updateRendererPanelShell`, chip state helpers, defensive payload guards) | Renderer rail now exposes profile authority, output summary, diagnostics cards, and deterministic fallback-safe states when renderer payload is absent/partial while preserving legacy control IDs and runtime behavior. |
 | Steam diagnostics card collapse + fielded fallback contract (BL-027 Slice C) | Existing Steam scene-state diagnostics from `Source/PluginProcessor.cpp` (`rendererSteamAudioCompiled`, `rendererSteamAudioAvailable`, `rendererSteamAudioInitStage`, `rendererSteamAudioInitErrorCode`, `rendererSteamAudioRuntimeLib`, `rendererSteamAudioMissingSymbol`) plus optional additive per-field tokens when present | `Source/ui/public/index.html` (`rend-steam-toggle`, `rend-steam-content`, `rend-steam-hrtf-status`, `rend-steam-binaural-tier`, `rend-steam-reflections-state`, `rend-steam-convolution-method`, `rend-steam-last-error`) + `Source/ui/public/js/index.js` (`setRendererSteamDiagnosticsExpanded`, `getRendererSteamDiagnosticsState`, `updateRendererPanelShell`) | Steam diagnostics are now collapsible (collapsed by default), expose five runtime fields with deterministic unknown/unavailable fallbacks for missing/partial payloads, preserve existing BL-029 IDs (`rend-steam-chip`, `rend-steam-detail`), and keep renderer UI behavior additive and non-breaking. |
 | Ambisonic diagnostics card collapse + fielded fallback contract (BL-027 Slice D) | Existing Ambisonic scene-state diagnostics from `Source/PluginProcessor.cpp` (`rendererAmbiCompiled`, `rendererAmbiActive`, `rendererAmbiMaxOrder`, `rendererAmbiStage`, `rendererAmbiDecodeLayout`) plus optional additive ambisonic diagnostic tokens when present | `Source/ui/public/index.html` (`rend-ambi-toggle`, `rend-ambi-content`, `rend-ambi-order`, `rend-ambi-channel-count`, `rend-ambi-decoder-state`, `rend-ambi-decoder-type`) + `Source/ui/public/js/index.js` (`setRendererAmbiDiagnosticsExpanded`, `getRendererAmbiDiagnosticsState`, `updateRendererPanelShell`) | Ambisonic diagnostics are now collapsible (collapsed by default), expose order/channel-count/decoder-state/decoder-type fields with deterministic `Unknown` fallbacks for missing scalars, preserve existing BL-029 IDs (`rend-ambi-chip`, `rend-ambi-detail`), and keep renderer UI behavior additive and non-breaking. |
@@ -770,7 +790,7 @@ Scope: establish deterministic BL-033 headphone-core QA lane scaffolding and cro
 |---|---|---|---|
 | BL-033 suite contract scaffold (`BL033-D1-001`, `BL033-D1-002`, `BL033-D1-003`) | `qa/scenarios/locusq_bl033_headphone_core_suite.json` | `scripts/qa-bl033-headphone-core-lane-mac.sh --contract-only` (`BL033-D1-001_contract_schema`, `BL033-D1-002_diagnostics_fields`, `BL033-D1-003_artifact_schema`) | Scenario now declares deterministic acceptance IDs, diagnostics-field contract, thresholds, artifact schema, and failure taxonomy for headphone-core lanes. |
 | Lane runner strict status + taxonomy output (`BL033-D1-005`, `BL033-D1-006`) | `scripts/qa-bl033-headphone-core-lane-mac.sh` | `TestEvidence/bl033_headphone_core_<timestamp>/status.tsv` + `taxonomy_table.tsv` | Script enforces strict exit semantics with machine-readable status rows and explicit execution-mode contract (`contract_only` vs `execute_suite`). |
-| Acceptance parity mapping (`BL033-D1-004`) | `scripts/qa-bl033-headphone-core-lane-mac.sh` + `Documentation/backlog/bl-033-headphone-calibration-core.md` + `Documentation/testing/bl-033-headphone-core-qa.md` + this section | `TestEvidence/bl033_headphone_core_<timestamp>/acceptance_parity.tsv` | Lane verifies each BL-033 D1 acceptance ID is present across runbook, QA doc, traceability, scenario, and script surfaces before promotion. |
+| Acceptance parity mapping (`BL033-D1-004`) | `scripts/qa-bl033-headphone-core-lane-mac.sh` + `Documentation/backlog/done/bl-033-headphone-calibration-core.md` + `Documentation/testing/bl-033-headphone-core-qa.md` + this section | `TestEvidence/bl033_headphone_core_<timestamp>/acceptance_parity.tsv` | Lane verifies each BL-033 D1 acceptance ID is present across runbook, QA doc, traceability, scenario, and script surfaces before promotion. |
 | QA contract publication and command contract sync | `Documentation/testing/bl-033-headphone-core-qa.md` | `./scripts/validate-docs-freshness.sh` | Testing guide codifies lane commands, artifact schema, deterministic thresholds, and triage order aligned to runbook + scenario contracts. |
 
 ## BL-033 Slice D2 Headphone Core QA Closeout Expansion
@@ -816,6 +836,198 @@ Scope: integrate post-D2/Z9/Z10 branch state and publish owner-authoritative BL-
 | Z10 evidence hygiene intake | `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/*` | `TestEvidence/bl033_owner_sync_z11_20260225_200647/07_docs_freshness.log` | Confirms metadata hygiene debt no longer blocks docs freshness gate. |
 | D2 deterministic replay closure | Existing BL-033 lane + scenario contracts (`--execute-suite --runs 5`) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/validation_matrix.tsv` + `replay_hashes.tsv` | Replay hash and row signatures remain stable across all five runs. |
 | Owner integration decision packet | Owned docs/status sync + Z11 evidence bundle (`owner_decisions.md`, `handoff_resolution.md`) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv` + `validation_matrix.tsv` | Owner decision is upgraded from `In Validation` to `Done-candidate` on fully green required gates. |
+
+## BL-033 Slice Z12 Final Done Promotion Packet
+
+Scope: execute final owner replay on current branch state, reconcile all Z-series closure bundles, and promote BL-033 from done-candidate to done.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Final owner replay gates (`build`, `smoke`, `BL-033 lane --runs 5`, `BL-009`, `RT`, `jq`, docs freshness) | Existing BL-033 runtime surfaces with no additional source edits in Z12 | `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/status.tsv`, `validation_matrix.tsv`, `qa_lane.log`, `qa_bl009.log`, `rt_audit.tsv`, `docs_freshness.log` | All required gates pass; RT audit remains green with `non_allowlisted=0`. |
+| Deterministic replay stability proof | `scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5` | `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/lane_runs/validation_matrix.tsv` + `replay_hashes.tsv` | Combined signatures and row signatures are identical across all five runs. |
+| Owner promotion-decision contract | `Documentation/backlog/_template-promotion-decision.md` applied in Z12 evidence bundle | `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/promotion_decision.md` + `handoff_resolution.md` | Promotion decision finalized to `Done`; no unresolved blockers remain. |
+| Backlog/status/evidence sync surfaces | `Documentation/backlog/done/bl-033-headphone-calibration-core.md`, `Documentation/backlog/index.md`, `status.json`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md` | `jq empty status.json` + `./scripts/validate-docs-freshness.sh` | Owner sync remains schema-valid and docs-freshness clean after done-promotion edits. |
+
+## BL-034 Slice A1 Profile Catalog + Fallback Taxonomy Contract
+
+Scope: publish authoritative docs-only profile-governance contract surfaces for BL-034 with additive schema semantics, deterministic fallback taxonomy, bounded value domains, and downstream machine-checkable artifact requirements.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Canonical profile catalog identities (`generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`) | `Documentation/backlog/bl-034-headphone-calibration-verification.md` (`Slice A1 Contract`) + `Documentation/scene-state-contract.md` (`BL-034 Profile Governance Contract`) | `TestEvidence/bl034_slice_a1_profile_contract_<timestamp>/profile_catalog_contract.md` | Establishes deterministic profile identity authority before runtime/profile-verification lanes consume catalog IDs. |
+| Deterministic fallback taxonomy + reason-code mapping | `Documentation/backlog/bl-034-headphone-calibration-verification.md` (taxonomy table) + `Documentation/scene-state-contract.md` (normative fallback taxonomy) | `TestEvidence/bl034_slice_a1_profile_contract_<timestamp>/fallback_taxonomy.tsv` | Binds each reason code to mandatory fallback target and deterministic trigger semantics. |
+| Additive diagnostics publication + bounded-domain contract | `Documentation/scene-state-contract.md` (rules `18..21`, BL-034 section) | `TestEvidence/bl034_slice_a1_profile_contract_<timestamp>/acceptance_id_map.tsv` | Keeps BL-009/BL-033 consumers stable by requiring fallback to legacy behavior when BL-034 fields are absent. |
+| Acceptance-ID and downstream artifact schema contract (`BL034-A1-AC-001..005`) | `Documentation/backlog/bl-034-headphone-calibration-verification.md` (`Slice A1 Acceptance IDs`, `Slice A1 Machine-Checkable Artifact Contract`) + this section | `TestEvidence/bl034_slice_a1_profile_contract_<timestamp>/status.tsv` | Provides machine-checkable traceability for downstream BL-034 slices and owner replay intake. |
+
+## BL-034 Slice B1 Native Verification Telemetry Contract
+
+Scope: add additive native telemetry publication for headphone verification/governance while preserving RT safety and BL-009 compatibility.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Shared native telemetry schema | `Source/shared_contracts/HeadphoneVerificationContract.h` | `TestEvidence/bl034_slice_b1_native_metrics_<timestamp>/native_contract_notes.md` | Centralizes bounded enums/fields for verification status, fallback reason, and stage reporting. |
+| Additive scene-state publication block (`headphoneVerification`) | `Source/PluginProcessor.cpp` + `Source/PluginProcessor.h` | `TestEvidence/bl034_slice_b1_native_metrics_<timestamp>/diagnostics_snapshot.json` | Publishes requested/active/fallback + score/latency telemetry additively without breaking legacy consumers. |
+| Runtime safety/compatibility gates | Existing processor/runtime paths with no new locking/allocation in `processBlock` | `TestEvidence/bl034_slice_b1_native_metrics_<timestamp>/status.tsv`, `qa_smoke.log`, `qa_bl009.log`, `rt_audit.tsv` | Worker B1 lane reports PASS on build/smoke/BL-009 and RT audit for its captured branch state. |
+
+## BL-034 Slice B2 Native Verification Determinism Hardening
+
+Scope: harden native verification publication semantics for deterministic diagnostics snapshots while keeping additive schema behavior and BL-009 compatibility.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Deterministic diagnostics publication hardening | `Source/PluginProcessor.h` + `Source/PluginProcessor.cpp` | `TestEvidence/bl034_slice_b2_native_hardening_20260226T033523Z/diagnostics_snapshot.json` | Tightens requested/active/stage publication consistency without introducing new cross-thread coupling. |
+| Shared verification contract alignment | `Source/shared_contracts/HeadphoneVerificationContract.h` | `TestEvidence/bl034_slice_b2_native_hardening_20260226T033523Z/native_hardening_notes.md` | Keeps telemetry enums/fields bounded and additive for downstream consumers. |
+| Functional determinism gates | Existing runtime and lane contracts (`BL-009`, `BL-034 lane`) | `TestEvidence/bl034_slice_b2_native_hardening_20260226T033523Z/status.tsv`, `qa_bl009.log`, `qa_bl034.log`, `lane_runs/validation_matrix.tsv` | Worker B2 reports green build/smoke/BL-009/BL-034 execute-suite replay on the captured branch state. |
+
+## BL-034 Slice C1 Deterministic QA Lane Contract
+
+Scope: deliver deterministic BL-034 verification lane execution with strict artifact schema and replay-hash stability guarantees.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Scenario contract (`BL034-C1-001..006`) | `qa/scenarios/locusq_bl034_headphone_verification_suite.json` | `TestEvidence/bl034_slice_c1_qa_lane_<timestamp>/contract_runs/validation_matrix.tsv` | Defines contract schema, taxonomy, execution mode, replay thresholds, and deterministic hash-input rules. |
+| Lane runner strict semantics | `scripts/qa-bl034-headphone-verification-lane-mac.sh` | `TestEvidence/bl034_slice_c1_qa_lane_<timestamp>/status.tsv` | Supports `--contract-only` and `--execute-suite`, emits strict PASS/FAIL rows and machine-readable artifacts. |
+| Replay/hash stability outputs | `scripts/qa-bl034-headphone-verification-lane-mac.sh` multi-run path | `TestEvidence/bl034_slice_c1_qa_lane_<timestamp>/contract_runs/replay_hashes.tsv` + `failure_taxonomy.tsv` | Confirms deterministic signatures/rows and explicit failure classes for divergence/runtime/artifact faults. |
+
+## BL-034 Slice D1 Release-Governance Linkage Contract
+
+Scope: define additive BL-034 release-readiness linkage compatible with BL-030 governance gates through deterministic acceptance mapping and taxonomy semantics.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| D1 acceptance linkage set (`BL034-D1-001..005`) | `Documentation/backlog/bl-034-headphone-calibration-verification.md` + `Documentation/testing/bl-034-headphone-verification-qa.md` | `TestEvidence/bl034_slice_d1_release_linkage_<timestamp>/acceptance_mapping.tsv` | Ensures release-governance linkage IDs and hook intent are explicitly defined and machine-readable. |
+| BL-034 artifact to BL-030 gate hook mapping (`RL-05`, `RL-08`, `RL-09`, `RL-10`) | Runbook + QA doc linkage tables aligned to `Documentation/runbooks/release-checklist-template.md` | `TestEvidence/bl034_slice_d1_release_linkage_<timestamp>/release_linkage_contract.md` + `acceptance_mapping.tsv` | Binds BL-034 evidence artifacts to release checklist hooks with deterministic pass criteria. |
+| Deterministic release-readiness failure taxonomy | Runbook + QA doc D1 taxonomy tables | `TestEvidence/bl034_slice_d1_release_linkage_<timestamp>/failure_taxonomy.tsv` | Classifies contract schema, artifact schema, cross-doc parity, and freshness gate failures for owner review. |
+| Documentation freshness gate evidence | `./scripts/validate-docs-freshness.sh` execution for D1 packet | `TestEvidence/bl034_slice_d1_release_linkage_<timestamp>/docs_freshness.log` + `status.tsv` | Confirms D1 linkage docs remain ADR-0005 freshness compliant. |
+
+## BL-034 Slice D2 Release-Governance Linkage Refresh
+
+Scope: refresh BL-034 release-governance linkage with additive acceptance references that explicitly bind B2 hardening outcomes, Z2 RT reconcile evidence, and owner replay blocker-resolution expectations.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| D2 additive acceptance linkage set (`BL034-D2-001..005`) | `Documentation/testing/bl-034-headphone-verification-qa.md` + this matrix (`Documentation/implementation-traceability.md`) | `TestEvidence/bl034_slice_d2_release_linkage_<timestamp>/acceptance_mapping.tsv` | Adds D2 linkage IDs without mutating/removing existing `BL034-D1-001..005` mappings. |
+| B2 native hardening evidence mapping into release readiness (`BL034-D2-001`) | Existing B2 packet from runtime hardening lane (`build`, `smoke`, `BL-009`, `BL-034`) | `TestEvidence/bl034_slice_b2_native_hardening_20260226T033523Z/status.tsv`, `qa_bl009.log`, `qa_bl034.log` | D2 contract pins RL-05 readiness prerequisite to explicit PASS rows from B2 status packet. |
+| Z2 RT drift/reconcile linkage (`BL034-D2-002`) | Existing Z2 RT reconcile packet (`rt_before`, `rt_after`, docs freshness) | `TestEvidence/bl034_rt_gate_z2_20260226T033208Z/status.tsv`, `blocker_resolution.md`, `rt_before.tsv`, `rt_after.tsv` | D2 contract requires preserved `119 -> 0` drift narrative and deterministic RT evidence semantics. |
+| Owner replay expectation + blocker-resolution path (`BL034-D2-003`, `BL034-D2-004`) | Owner replay packet plus next-action contract on RT regression | `TestEvidence/bl034_owner_sync_z2_20260226T034919Z/status.tsv`, `owner_decisions.md`, `rt_audit.tsv` | If owner replay RT gate is red (`non_allowlisted=108`), decision remains blocked and deterministic next action is another reconcile slice followed by owner replay rerun. |
+| D2 packet governance evidence (`BL034-D2-005`) | D2 release-linkage packet (`status.tsv`, `release_linkage_contract.md`, `linkage_delta.md`) | `TestEvidence/bl034_slice_d2_release_linkage_<timestamp>/status.tsv`, `release_linkage_contract.md`, `linkage_delta.md`, `docs_freshness.log` | Confirms additive schema compatibility, explicit delta vs D1, and ADR-0005 docs freshness compliance. |
+
+## BL-034 Slice Z1 Owner Integration Sync
+
+Scope: reconcile A1/B1/C1 handoffs, run fresh owner replay, and publish authoritative BL-034 state transition decision.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Worker handoff intake + shared-file check | `TestEvidence/bl034_slice_a1_profile_contract_20260226T012928Z/*`, `TestEvidence/bl034_slice_b1_native_metrics_20260226T013354Z/*`, `TestEvidence/bl034_slice_c1_qa_lane_20260226T013221Z/*` | `TestEvidence/bl034_owner_sync_z1_20260226T031026Z/handoff_resolution.md` | A1/C1 explicitly report `SHARED_FILES_TOUCHED: no`; B1 packet lacks explicit token but touched-path review shows owned surfaces only. |
+| Owner replay functional gates | Existing runtime + BL-034 lane script | `TestEvidence/bl034_owner_sync_z1_20260226T031026Z/status.tsv`, `validation_matrix.tsv`, `lane_runs/validation_matrix.tsv` | Build/smoke/BL-009 and BL-034 execute-suite replay (`--runs 3`) pass with deterministic replay hashes. |
+| Blocking hard gate | `scripts/rt-safety-audit.sh` against current repository line map | `TestEvidence/bl034_owner_sync_z1_20260226T031026Z/rt_audit.tsv` | Owner Z1 decision remains blocked due `non_allowlisted=119`; status advanced to in-implementation blocked posture pending RT reconcile slice. |
+
+## BL-034 Slice Z2 Owner Integration Sync Update
+
+Scope: reconcile post-Z1 handoffs (B2 hardening, D1 linkage, Z2 RT packet) and re-run owner validation on current branch state.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Worker handoff intake and shared-file safety (`B2`, `D1`, `Z2`) | `TestEvidence/bl034_slice_b2_native_hardening_20260226T033523Z/*`, `TestEvidence/bl034_slice_d1_release_linkage_20260226T033432Z/*`, `TestEvidence/bl034_rt_gate_z2_20260226T033208Z/*` | `TestEvidence/bl034_owner_sync_z2_20260226T034919Z/handoff_resolution.md` | All three handoffs declare `SHARED_FILES_TOUCHED: no`; contract outputs are present and parseable. |
+| Owner replay functional gates (`build`, `smoke`, `BL-009`, `BL-034 lane --runs 3`, `jq`, docs freshness) | Existing BL-034 runtime + lane script with no owner-side source edits | `TestEvidence/bl034_owner_sync_z2_20260226T034919Z/validation_matrix.tsv`, `qa_lane.log`, `qa_bl009.log`, `lane_runs/validation_matrix.tsv`, `lane_runs/replay_hashes.tsv`, `lane_runs/failure_taxonomy.tsv` | Functional/deterministic gates are green and replay signatures remain stable across all three lane runs. |
+| RT gate regression on current branch line map | `scripts/rt-safety-audit.sh` | `TestEvidence/bl034_owner_sync_z2_20260226T034919Z/rt_audit.tsv` | Worker Z2 packet closes `119 -> 0`, but owner replay on latest tree is still blocked (`non_allowlisted=108`), requiring another reconcile pass. |
+
+## BL-034 Slice Z3 Owner Integration Sync Closure
+
+Scope: reconcile Z3 RT gate closure + Z4 replay audit + D2 linkage refresh and publish owner-authoritative state transition from blocked implementation to validation.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Handoff intake + shared-file safety checks | `TestEvidence/bl034_rt_gate_z3_20260226T035619Z/*`, `TestEvidence/bl034_replay_audit_z4_20260226T035632Z/*`, `TestEvidence/bl034_slice_d2_release_linkage_20260226T035925Z/*` | `TestEvidence/bl034_owner_sync_z3_20260226T040304Z/handoff_resolution.md` | All resolved handoffs declare `SHARED_FILES_TOUCHED: no` and provide parseable deterministic artifacts. |
+| Owner replay functional gates (`build`, `smoke`, `BL-009`, `BL-034 lane --runs 3`, `jq`, docs freshness) | Existing BL-034 runtime and lane script on current branch | `TestEvidence/bl034_owner_sync_z3_20260226T040304Z/validation_matrix.tsv`, `qa_lane.log`, `qa_bl009.log`, `lane_runs/validation_matrix.tsv`, `lane_runs/replay_hashes.tsv`, `lane_runs/failure_taxonomy.tsv` | All functional gates pass; replay signatures and semantic rows are stable across all three lane runs. |
+| RT gate closure on current line map | `scripts/rt-safety-audit.sh` with Z3 allowlist reconciliation | `TestEvidence/bl034_owner_sync_z3_20260226T040304Z/rt_audit.tsv` | Gate is green with `non_allowlisted=0`, clearing the prior Z1/Z2 owner blocker. |
+| Owner decision/state transition | Backlog + status + evidence sync surfaces | `TestEvidence/bl034_owner_sync_z3_20260226T040304Z/owner_decisions.md` | BL-034 advances to `In Validation`; next step is final promotion packet decision. |
+
+## BL-034 Slice E1 Determinism Soak Confidence
+
+Scope: extend deterministic replay validation beyond closeout baseline to detect low-frequency drift prior to promotion.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| 10-run deterministic replay soak (`--execute-suite --runs 10`) | Existing `scripts/qa-bl034-headphone-verification-lane-mac.sh` multi-run path | `TestEvidence/bl034_determinism_soak_e1_20260226T040823Z/lane_runs/validation_matrix.tsv`, `replay_hashes.tsv`, `failure_taxonomy.tsv` | Confirms no replay divergence/row drift across extended run count (`unique_combined_signatures=1`, `unique_row_signatures=1`). |
+| Soak summary contract | E1 evidence bundle summary generation | `TestEvidence/bl034_determinism_soak_e1_20260226T040823Z/soak_summary.tsv` | Records deterministic soak verdict and aggregate drift counters for owner intake. |
+
+## BL-034 Slice E2 RT Stability Sentinel
+
+Scope: verify post-reconciliation RT gate stability across repeated audits without additional allowlist edits.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Repeated RT audit sentinel (`run_01..03`) | Existing `scripts/rt-safety-audit.sh` with fixed allowlist | `TestEvidence/bl034_rt_sentinel_e2_20260226T040835Z/rt_run_01.tsv`, `rt_run_02.tsv`, `rt_run_03.tsv`, `rt_stability_summary.tsv` | All three sentinel runs report `non_allowlisted=0`, confirming sustained gate stability. |
+| Freshness guard for sentinel packet | `./scripts/validate-docs-freshness.sh` | `TestEvidence/bl034_rt_sentinel_e2_20260226T040835Z/docs_freshness.log` | Ensures no docs freshness regressions introduced by sentinel evidence generation. |
+
+## BL-034 Slice E3 Evidence Contract Parity Audit
+
+Scope: machine-check parity and schema presence across BL-034 artifact lineage prior to promotion.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Bundle inventory + required artifact parity | E3 audit packet over A1/B1/B2/C1/D1/D2/Z3/Z4 bundles | `TestEvidence/bl034_contract_parity_e3_20260226T040851Z/parity_matrix.tsv`, `missing_or_drift.tsv` | Reports `missing=0` and `schema_drift=0` across required evidence surfaces. |
+| Parity audit notes | E3 report | `TestEvidence/bl034_contract_parity_e3_20260226T040851Z/contract_audit_notes.md` | Captures audit method and deterministic interpretation rules for owner review. |
+
+## BL-034 Slice Z5 Owner Integration Done-Candidate Sync
+
+Scope: reconcile E1/E2/E3 and execute a fresh owner replay to determine promotion posture.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| E-series intake + shared-file safety | `TestEvidence/bl034_determinism_soak_e1_20260226T040823Z/*`, `TestEvidence/bl034_rt_sentinel_e2_20260226T040835Z/*`, `TestEvidence/bl034_contract_parity_e3_20260226T040851Z/*` | `TestEvidence/bl034_owner_sync_z5_20260226T041435Z/handoff_resolution.md` | All three handoffs declare `SHARED_FILES_TOUCHED: no` and pass required contract checks. |
+| Fresh owner replay (`build`, `smoke`, `BL-009`, `BL-034 lane --runs 5`, `RT`, `jq`, docs freshness) | Existing BL-034 runtime + lane script | `TestEvidence/bl034_owner_sync_z5_20260226T041435Z/validation_matrix.tsv`, `qa_bl009.log`, `rt_audit.tsv`, `lane_runs/validation_matrix.tsv`, `lane_runs/replay_hashes.tsv`, `lane_runs/failure_taxonomy.tsv` | All required gates pass on current branch (`non_allowlisted=0`) with deterministic replay signatures stable across 5 runs. |
+| Promotion posture decision | Backlog/status/evidence sync surfaces | `TestEvidence/bl034_owner_sync_z5_20260226T041435Z/owner_decisions.md` | Owner decision advances BL-034 to `Done-candidate`; final done-promotion packet remains next step. |
+
+## BL-034 Slice Z6 Final Done Promotion Packet
+
+Scope: execute final owner replay gates on current branch state and promote BL-034 from done-candidate to done when all hard gates remain green.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Final owner replay gates (`build`, `smoke`, `BL-009`, `BL-034 lane --runs 5`, `RT`, `jq`, docs freshness) | Existing BL-034 runtime + lane script with no source edits in Z6 | `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/status.tsv`, `validation_matrix.tsv`, `qa_bl009.log`, `qa_lane.log`, `rt_audit.tsv`, `docs_freshness.log` | All required gates pass; RT audit remains green with `non_allowlisted=0`. |
+| Deterministic replay stability proof | `./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 5` | `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/lane_runs/validation_matrix.tsv`, `replay_hashes.tsv`, `failure_taxonomy.tsv` | Five-run replay remains stable (`signature_match=1`, `row_match=1` for all runs). |
+| Owner promotion-decision contract | Promotion decision and handoff resolution docs in Z6 bundle | `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/promotion_decision.md`, `owner_decisions.md`, `handoff_resolution.md` | Promotion is finalized to `Done`; no unresolved blockers remain. |
+| Backlog/status/evidence sync surfaces | `Documentation/backlog/bl-034-headphone-calibration-verification.md`, `Documentation/backlog/index.md`, `status.json`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md` | `jq empty status.json`, `./scripts/validate-docs-freshness.sh` | Owner sync remains schema-valid and docs-freshness clean after final promotion edits. |
+
+## BL-034 Slice F Standalone Verification Diagnostics UI
+
+Scope: surface additive BL-034 profile-governance and verification telemetry in the Renderer diagnostics panel with deterministic chip mapping and fallback-safe rendering.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Headphone Verification diagnostics card UI shell (`index.html`) | `Source/ui/public/index.html` (`rend-hpver-*` controls and fields) | `node --check Source/ui/public/js/index.js`, `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh`, `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` | New card is additive and does not alter existing head-tracking/steam/ambisonic cards. |
+| Additive payload bindings for BL-034 governance + verification fields | `Source/ui/public/js/index.js` (`hasRendererHeadphoneVerificationPayload`, score/status mapping, bounded score formatting, fallback-safe read path) | `TestEvidence/bl034_slice_f_ui_diag_20260226T042553Z/ui_contract.md`, `selftest_bl029.log`, `selftest_bl009.log` | Missing/partial payloads degrade to `UNAVAILABLE` and `n/a` without throwing or breaking panel interactivity. |
+| Deterministic score-status chip mapping (`PASS/WARN/FAIL/UNAVAILABLE`) | `Source/ui/public/js/index.js` (`rendererHeadphoneVerificationScoreStatus` normalization + chip-state resolver) | `TestEvidence/bl034_slice_f_ui_diag_20260226T042553Z/ui_contract.md` | Mapping is explicit and bounded to contract-approved chip states for operator readability. |
+
+## BL-034 Slice F1 Cross-Lane Stress Sentinel
+
+Scope: prove BL-034 lane determinism and BL-009 contract stability under repeated cross-lane execution pressure.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| BL-009 repeated contract executions (`x5`) | Existing `scripts/qa-bl009-headphone-contract-mac.sh` | `TestEvidence/bl034_cross_lane_stress_f1_20260226T041919Z/bl009_runs.tsv` | All five runs pass with no failure taxonomy drift. |
+| BL-034 lane replay A/B comparison (`runs=3` twice) | Existing `scripts/qa-bl034-headphone-verification-lane-mac.sh` | `TestEvidence/bl034_cross_lane_stress_f1_20260226T041919Z/lane_run_1/validation_matrix.tsv`, `lane_run_2/validation_matrix.tsv`, `stress_summary.tsv` | Combined and row signatures match across both lane executions (`combined_match=1`, `row_match=1`). |
+
+## BL-034 Slice F2 RT Drift Watch Sentinel
+
+Scope: confirm RT safety gate stability across repeated invocations after promotion.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Five-run RT audit sentinel (`rt_01..rt_05`) | Existing `scripts/rt-safety-audit.sh` with current allowlist | `TestEvidence/bl034_rt_drift_watch_f2_20260226T041934Z/rt_01.tsv` .. `rt_05.tsv`, `drift_summary.tsv` | All five runs report `non_allowlisted=0`; no drift observed. |
+| Sentinel freshness guard | `./scripts/validate-docs-freshness.sh` | `TestEvidence/bl034_rt_drift_watch_f2_20260226T041934Z/docs_freshness.log` | Docs freshness remains green during repeated RT sentinel execution. |
+
+## BL-034 Slice Z7 Post-Done Owner Integration Sync
+
+Scope: reconcile F/F1/F2 handoffs with a fresh owner replay and retain done posture without regression.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Handoff intake + shared-file safety checks | `TestEvidence/bl034_slice_f_ui_diag_20260226T042553Z/*`, `TestEvidence/bl034_cross_lane_stress_f1_20260226T041919Z/*`, `TestEvidence/bl034_rt_drift_watch_f2_20260226T041934Z/*` | `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/handoff_resolution.md` | All three handoffs declare `SHARED_FILES_TOUCHED: no` and provide parseable artifacts. |
+| Fresh owner replay (`build`, `smoke`, `BL-009`, `BL-034 lane --runs 5`, `RT`, `jq`, docs freshness) | Existing BL-034 runtime + lane script | `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/validation_matrix.tsv`, `qa_bl009.log`, `qa_lane.log`, `rt_audit.tsv`, `lane_runs/validation_matrix.tsv`, `lane_runs/replay_hashes.tsv` | All gates pass; `non_allowlisted=0` and deterministic lane replay remains stable. |
+| Owner posture retention decision | Backlog/status/evidence sync surfaces | `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/owner_decisions.md` | BL-034 remains `Done`; Z7 adds post-promotion confidence rather than a status transition. |
 
 ## Notes
 

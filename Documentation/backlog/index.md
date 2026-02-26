@@ -34,13 +34,11 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
-| 1 | BL-030 | Release governance and device rerun | P2 | In Validation (RL-09 PASS; RL-05 manual evidence blocker retained through G5/G6/I1; RL-03 red via H1/J1/J2 owner replay (`UI-P1-025E`), RL-04/RL-06 red via H2/H3 with I2 diagnostics; I3 consolidation packet published) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
+| 1 | BL-030 | Release governance and device rerun | P2 | In Validation (RL-09 PASS; RL-05 manual evidence blocker retained through G5/G6/I1; RL-03 remains red after K1 hardening with residual `app_exited_before_result` flake (`BL-029 9/10`, `BL-009 10/10`); RL-04/RL-06 remain red via H2/H3 with I2 diagnostics) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
 | 2 | BL-020 | Confidence/masking overlay mapping | P2 | Todo | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
-| 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Implementation (Slice B2 RT reconcile PASS; Slice C1 editor extraction landed; remaining blocker `BL032-G-001` Processor line-count threshold) | F | — | — | [bl-032](bl-032-source-modularization.md) |
-| 6 | BL-033 | Headphone calibration core path | P2 | Done-candidate (owner Z11 replay PASS; Z9 RT and Z10 evidence-hygiene reconciliations confirmed) | A | BL-009, BL-017, BL-026, BL-028 | BL-034 | [bl-033](bl-033-headphone-calibration-core.md) |
-| 7 | BL-034 | Headphone calibration verification and profile governance | P2 | In Planning | D | BL-033 | — | [bl-034](bl-034-headphone-calibration-verification.md) |
+| 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Implementation (Slice D1 closed `BL032-G-001` with guardrails PASS; remaining blocker is RT audit allowlist drift after line-map movement: `non_allowlisted=92`) | F | — | — | [bl-032](bl-032-source-modularization.md) |
 
 ## Dependency Graph
 
@@ -65,6 +63,8 @@ graph TD
         BL-025[BL-025 Done]
         BL-029[BL-029 Done]
         BL-028[BL-028 Done]
+        BL-033[BL-033 Headphone Core Done]
+        BL-034[BL-034 Headphone Verification Done]
         BL-027[BL-027 Renderer v2 Done]
         HX-05[HX-05 Payload Done]
         HX-02[HX-02 Reg Lock Done]
@@ -75,10 +75,6 @@ graph TD
         BL-030[BL-030 Release Gov]
     end
 
-    subgraph "Done-candidate"
-        BL-033[BL-033 Headphone Core]
-    end
-
     subgraph "In Implementation / Open"
         BL-032[BL-032 Source Modularization]
     end
@@ -87,7 +83,6 @@ graph TD
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
         BL-023[BL-023 Resize/DPI]
-        BL-034[BL-034 Headphone Verification]
     end
 
     BL-014 --> BL-018
@@ -128,10 +123,10 @@ graph TD
 
 | Track | Name | Scope | Skills |
 |---|---|---|---|
-| A | Runtime Formats | BL-033 | `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
+| A | Runtime Formats | No active items (BL-033 complete) | `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
 | B | Scene/UI Runtime | No active items (BL-031 complete; intake lane) | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
 | C | UX Authoring | BL-023 | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
-| D | QA Platform | BL-034 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
+| D | QA Platform | No active items (BL-034 archived to done runbook) | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
 | E | R&D Expansion | BL-020, BL-021 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
 | F | Hardening | BL-032 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
@@ -222,6 +217,8 @@ Any status change must update in the same changeset:
 | BL-028 | Spatial output matrix enforcement | 2026-02-25 | [bl-028](done/bl-028-spatial-output-matrix.md) |
 | BL-029 | DSP visualization and tooling | 2026-02-25 | [bl-029](done/bl-029-dsp-visualization.md) |
 | BL-031 | Tempo-locked visual token scheduler | 2026-02-25 | [bl-031](done/bl-031-tempo-token-scheduler.md) |
+| BL-033 | Headphone calibration core path | 2026-02-26 | [bl-033](done/bl-033-headphone-calibration-core.md) |
+| BL-034 | Headphone calibration verification and profile governance | 2026-02-26 | [bl-034](done/bl-034-headphone-calibration-verification.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |
 | HX-03 | REAPER multi-instance stability lane | 2026-02-23 | [hx-03](done/hx-03-reaper-multi-instance.md) |

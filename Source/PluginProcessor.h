@@ -139,6 +139,27 @@ private:
         bool valid = false;
     };
 
+    struct PublishedHeadphoneVerificationDiagnostics
+    {
+        std::uint64_t profileSyncSeq = 0;
+        juce::String profileId;
+        juce::String requestedProfileId;
+        juce::String activeProfileId;
+        juce::String requestedEngineId;
+        juce::String activeEngineId;
+        juce::String fallbackReasonCode;
+        juce::String fallbackTarget;
+        juce::String fallbackReasonText;
+        float frontBackScore = 0.0f;
+        float elevationScore = 0.0f;
+        float externalizationScore = 0.0f;
+        float confidence = 0.0f;
+        juce::String verificationStage;
+        juce::String verificationScoreStatus;
+        int chainLatencySamples = 0;
+        bool valid = false;
+    };
+
     struct ClapRuntimeDiagnostics
     {
         bool buildEnabled = false;
@@ -247,6 +268,7 @@ private:
     std::uint64_t sceneSnapshotSequence = 0;
     mutable juce::SpinLock publishedHeadphoneCalibrationLock;
     mutable PublishedHeadphoneCalibrationDiagnostics publishedHeadphoneCalibrationDiagnostics;
+    mutable PublishedHeadphoneVerificationDiagnostics publishedHeadphoneVerificationDiagnostics;
 
     //==============================================================================
     // Sample rate tracking

@@ -741,6 +741,17 @@
       padding: 6px 7px;
       background: rgba(255, 255, 255, 0.03);
     }
+    .renderer-diagnostic-card.headtracking {
+      border-color: rgba(70, 212, 255, 0.32);
+      background: rgba(70, 212, 255, 0.08);
+    }
+    .renderer-diagnostic-card.headtracking .renderer-diagnostic-label {
+      color: #9adfff;
+    }
+    .renderer-diagnostic-card.headtracking .renderer-diagnostic-field-value.mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      letter-spacing: 0.2px;
+    }
     .renderer-diagnostic-header {
       display: flex;
       align-items: center;
@@ -1693,6 +1704,115 @@
             <div class="section">
               <div class="section-header">Diagnostics</div>
               <div class="renderer-diagnostic-list">
+                <article class="renderer-diagnostic-card headtracking" id="rend-headtrack-card">
+                  <div class="renderer-diagnostic-header">
+                    <span class="renderer-diagnostic-label">Head Tracking</span>
+                    <span class="status-chip neutral" id="rend-headtrack-chip">OFF</span>
+                  </div>
+                  <div class="renderer-diagnostic-detail" id="rend-headtrack-detail">Bridge disabled in this build.</div>
+                  <div class="renderer-diagnostic-content open" id="rend-headtrack-content">
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Source</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-source">disabled</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Seq</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-seq">0</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Timestamp</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-timestamp">0 ms</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Age</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-age">n/a</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Yaw/Pitch/Roll</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-euler">0.0 / 0.0 / 0.0 deg</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Quaternion</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-quat">0.0000, 0.0000, 0.0000, 1.0000</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Invalid Packets</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-invalid">0</span>
+                    </div>
+                  </div>
+                </article>
+                <article class="renderer-diagnostic-card" id="rend-hpver-card">
+                  <div class="renderer-diagnostic-header">
+                    <button class="renderer-diagnostic-toggle" id="rend-hpver-toggle" aria-expanded="false" aria-controls="rend-hpver-content">
+                      <span class="renderer-diagnostic-label">Headphone Verification</span>
+                      <span class="disclosure-arrow" id="rend-hpver-arrow">&#9654;</span>
+                    </button>
+                    <span class="status-chip neutral" id="rend-hpver-chip">UNAVAILABLE</span>
+                  </div>
+                  <div class="renderer-diagnostic-detail" id="rend-hpver-detail">Awaiting headphone verification diagnostics payload.</div>
+                  <div class="renderer-diagnostic-content" id="rend-hpver-content" hidden>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Catalog Version</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-catalog">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Profile Route</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-profile-route">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Fallback Reason</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-fallback-reason">none</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Fallback Target</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-fallback-target">none</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Custom SOFA Ref</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-custom-sofa">none</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Calibration Route</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-calibration-route">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Calibration Stage</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-calibration-stage">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Calibration Engine</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-calibration-engine">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Calibration Fallback</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-calibration-fallback">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Verification Schema</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-schema">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Verification Stage</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-stage">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Score Status</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-score-status">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Scores (0..1)</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-scores">FB n/a · EL n/a · EXT n/a</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Confidence</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-confidence">n/a</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Latency Samples</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-latency">n/a</span>
+                    </div>
+                  </div>
+                </article>
                 <article class="renderer-diagnostic-card" id="rend-steam-card">
                   <div class="renderer-diagnostic-header">
                     <button class="renderer-diagnostic-toggle" id="rend-steam-toggle" aria-expanded="false" aria-controls="rend-steam-content">

@@ -109,12 +109,16 @@ LOCK_STALE_RECOVERED=0
 LOCK_STALE_RECOVERY_REASON="none"
 LOCK_OWNER_PID=""
 LOCK_OWNER_AGE_SECONDS=0
+LOCK_OWNER_MATCHES_SELFTEST=0
 LOCK_WAIT_RESULT="not_attempted"
 LOCK_WAIT_POLLS=0
 PRELAUNCH_DRAIN_SECONDS=0
 PRELAUNCH_DRAIN_FORCED_KILL=0
 PRELAUNCH_DRAIN_RESULT="not_run"
 PRELAUNCH_DRAIN_REMAINING_PIDS=""
+PRELAUNCH_DRAIN_TERM_SENT=0
+PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS=0
+PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS=0
 RESULT_POST_EXIT_GRACE_WAIT_SECONDS=0
 RESULT_POST_EXIT_GRACE_USED=0
 LAUNCH_MODE_USED="$LAUNCH_MODE_REQUESTED"
@@ -125,7 +129,6 @@ RESULT_JSON_SETTLE_POLLS=0
 FINAL_PAYLOAD_REASON_CODE="none"
 FINAL_PAYLOAD_FAILING_CHECK="none"
 FINAL_PAYLOAD_SNIPPET_PATH=""
-FINAL_PAYLOAD_POINTER_PATH=""
 FINAL_PAYLOAD_POINTER_PATH=""
 
 ensure_parent_dir() {
@@ -313,6 +316,17 @@ lock_meta_read() {
   awk -F= -v key="$key" '$1 == key { print $2 }' "$LOCK_META_PATH" | tail -n 1
 }
 
+lock_owner_matches_selftest() {
+  local pid="$1"
+  if [[ -z "$pid" || ! "$pid" =~ ^[0-9]+$ ]]; then
+    return 1
+  fi
+
+  local cmdline
+  cmdline="$(ps -o command= -p "$pid" 2>/dev/null || true)"
+  [[ "$cmdline" == *"standalone-ui-selftest-production-p0-mac.sh"* ]]
+}
+
 release_single_instance_lock() {
   if (( LOCK_ACQUIRED != 1 )); then
     return 0
@@ -344,6 +358,7 @@ acquire_single_instance_lock() {
       LOCK_ACQUIRED=1
       LOCK_WAIT_SECONDS=$((lock_now_epoch - lock_start_epoch))
       LOCK_WAIT_RESULT="acquired"
+      LOCK_OWNER_MATCHES_SELFTEST=1
       return 0
     fi
 
@@ -366,14 +381,23 @@ acquire_single_instance_lock() {
       owner_alive=1
     fi
 
+    local owner_matches_selftest=0
+    if (( owner_alive == 1 )) && lock_owner_matches_selftest "$LOCK_OWNER_PID"; then
+      owner_matches_selftest=1
+    fi
+    LOCK_OWNER_MATCHES_SELFTEST="$owner_matches_selftest"
+
     local recover_stale=0
     local stale_reason=""
     if (( owner_alive == 0 )); then
       recover_stale=1
       stale_reason="owner_missing"
-    elif (( lock_age_seconds > LOCK_STALE_SECONDS )); then
+    elif (( owner_matches_selftest == 0 )); then
       recover_stale=1
-      stale_reason="stale_age_exceeded"
+      stale_reason="owner_mismatch"
+    elif (( lock_age_seconds > LOCK_STALE_SECONDS )); then
+      # Do not steal an active lock from a live, matching owner; fail deterministically on wait timeout.
+      recover_stale=0
     fi
 
     if (( recover_stale == 1 )); then
@@ -403,32 +427,49 @@ drain_locusq_processes() {
   local timeout_seconds="$1"
   local emit_telemetry="${2:-0}"
   local forced_kill=0
+  local term_sent=0
   local remaining_pids=""
   local start_seconds="$SECONDS"
-  local deadline=$((SECONDS + timeout_seconds))
+  local term_window=$((timeout_seconds / 2))
+  local kill_window=$((timeout_seconds - term_window))
+  if (( term_window < 1 )); then
+    term_window=1
+    kill_window=$((timeout_seconds - term_window))
+  fi
+  if (( kill_window < 0 )); then
+    kill_window=0
+  fi
 
-  while true; do
-    remaining_pids="$(collect_locusq_pids | tr '\n' ' ' | xargs echo -n)"
-    if [[ -z "$remaining_pids" ]]; then
-      break
-    fi
+  remaining_pids="$(collect_locusq_pids | tr '\n' ' ' | xargs echo -n)"
 
-    if (( SECONDS >= deadline )); then
-      pkill -9 -x LocusQ >/dev/null 2>&1 || true
-      forced_kill=1
+  if [[ -n "$remaining_pids" ]]; then
+    pkill -TERM -x LocusQ >/dev/null 2>&1 || true
+    term_sent=1
+    local term_deadline=$((SECONDS + term_window))
+    while [[ -n "$remaining_pids" && $SECONDS -lt $term_deadline ]]; do
       sleep 1
       remaining_pids="$(collect_locusq_pids | tr '\n' ' ' | xargs echo -n)"
-      break
-    fi
+    done
+  fi
 
-    sleep 1
-  done
+  if [[ -n "$remaining_pids" && "$kill_window" -gt 0 ]]; then
+    pkill -9 -x LocusQ >/dev/null 2>&1 || true
+    forced_kill=1
+    local kill_deadline=$((SECONDS + kill_window))
+    while [[ -n "$remaining_pids" && $SECONDS -lt $kill_deadline ]]; do
+      sleep 1
+      remaining_pids="$(collect_locusq_pids | tr '\n' ' ' | xargs echo -n)"
+    done
+  fi
 
   local elapsed_seconds=$((SECONDS - start_seconds))
   if (( emit_telemetry == 1 )); then
     PRELAUNCH_DRAIN_SECONDS="$elapsed_seconds"
     PRELAUNCH_DRAIN_FORCED_KILL="$forced_kill"
     PRELAUNCH_DRAIN_REMAINING_PIDS="$remaining_pids"
+    PRELAUNCH_DRAIN_TERM_SENT="$term_sent"
+    PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS="$term_window"
+    PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS="$kill_window"
     if [[ -z "$remaining_pids" ]]; then
       PRELAUNCH_DRAIN_RESULT="drained"
     else
@@ -651,10 +692,14 @@ write_metadata_json() {
       --arg lockWaitPolls "$LOCK_WAIT_POLLS" \
       --arg lockStaleRecovered "$LOCK_STALE_RECOVERED" \
       --arg lockStaleRecoveryReason "$LOCK_STALE_RECOVERY_REASON" \
+      --arg lockOwnerMatchesSelftest "$LOCK_OWNER_MATCHES_SELFTEST" \
       --arg prelaunchDrainSeconds "$PRELAUNCH_DRAIN_SECONDS" \
       --arg prelaunchDrainForcedKill "$PRELAUNCH_DRAIN_FORCED_KILL" \
       --arg prelaunchDrainResult "$PRELAUNCH_DRAIN_RESULT" \
       --arg prelaunchDrainRemainingPids "$PRELAUNCH_DRAIN_REMAINING_PIDS" \
+      --arg prelaunchDrainTermSent "$PRELAUNCH_DRAIN_TERM_SENT" \
+      --arg prelaunchDrainTermWindowSeconds "$PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS" \
+      --arg prelaunchDrainKillWindowSeconds "$PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS" \
       --arg resultAfterExitGraceSeconds "$RESULT_AFTER_EXIT_GRACE_SECONDS" \
       --arg resultPostExitGraceUsed "$RESULT_POST_EXIT_GRACE_USED" \
       --arg resultPostExitGraceWaitSeconds "$RESULT_POST_EXIT_GRACE_WAIT_SECONDS" \
@@ -695,10 +740,14 @@ write_metadata_json() {
         lockWaitPolls: $lockWaitPolls,
         lockStaleRecovered: ($lockStaleRecovered == "1"),
         lockStaleRecoveryReason: $lockStaleRecoveryReason,
+        lockOwnerMatchesSelftest: ($lockOwnerMatchesSelftest == "1"),
         prelaunchDrainSeconds: $prelaunchDrainSeconds,
         prelaunchDrainForcedKill: ($prelaunchDrainForcedKill == "1"),
         prelaunchDrainResult: $prelaunchDrainResult,
         prelaunchDrainRemainingPids: $prelaunchDrainRemainingPids,
+        prelaunchDrainTermSent: ($prelaunchDrainTermSent == "1"),
+        prelaunchDrainTermWindowSeconds: $prelaunchDrainTermWindowSeconds,
+        prelaunchDrainKillWindowSeconds: $prelaunchDrainKillWindowSeconds,
         resultAfterExitGraceSeconds: $resultAfterExitGraceSeconds,
         resultPostExitGraceUsed: ($resultPostExitGraceUsed == "1"),
         resultPostExitGraceWaitSeconds: $resultPostExitGraceWaitSeconds,
@@ -741,10 +790,14 @@ write_metadata_json() {
       echo "lock_wait_polls=${LOCK_WAIT_POLLS}"
       echo "lock_stale_recovered=${LOCK_STALE_RECOVERED}"
       echo "lock_stale_recovery_reason=${LOCK_STALE_RECOVERY_REASON}"
+      echo "lock_owner_matches_selftest=${LOCK_OWNER_MATCHES_SELFTEST}"
       echo "prelaunch_drain_seconds=${PRELAUNCH_DRAIN_SECONDS}"
       echo "prelaunch_drain_forced_kill=${PRELAUNCH_DRAIN_FORCED_KILL}"
       echo "prelaunch_drain_result=${PRELAUNCH_DRAIN_RESULT}"
       echo "prelaunch_drain_remaining_pids=${PRELAUNCH_DRAIN_REMAINING_PIDS}"
+      echo "prelaunch_drain_term_sent=${PRELAUNCH_DRAIN_TERM_SENT}"
+      echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}"
+      echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}"
       echo "result_after_exit_grace_seconds=${RESULT_AFTER_EXIT_GRACE_SECONDS}"
       echo "result_post_exit_grace_used=${RESULT_POST_EXIT_GRACE_USED}"
       echo "result_post_exit_grace_wait_seconds=${RESULT_POST_EXIT_GRACE_WAIT_SECONDS}"
@@ -786,6 +839,7 @@ if ! acquire_single_instance_lock; then
     echo "lock_wait_seconds=${LOCK_WAIT_SECONDS}"
     echo "lock_wait_result=${LOCK_WAIT_RESULT}"
     echo "lock_wait_polls=${LOCK_WAIT_POLLS}"
+    echo "lock_owner_matches_selftest=${LOCK_OWNER_MATCHES_SELFTEST}"
     echo "metadata_json=${META_JSON}"
   } | tee "$RUN_LOG"
   exit 1
@@ -816,6 +870,7 @@ rm -f "${RUN_LOG%.log}.attempt"*.app.log >/dev/null 2>&1 || true
   echo "lock_stale_recovery_reason=${LOCK_STALE_RECOVERY_REASON}"
   echo "lock_owner_pid=${LOCK_OWNER_PID}"
   echo "lock_owner_age_seconds=${LOCK_OWNER_AGE_SECONDS}"
+  echo "lock_owner_matches_selftest=${LOCK_OWNER_MATCHES_SELFTEST}"
   echo "attempt_status_table=${ATTEMPT_TABLE}"
   echo "failure_taxonomy_path=${FAILURE_TAXONOMY_PATH}"
   echo "metadata_json=${META_JSON}"
@@ -856,6 +911,9 @@ fi
   echo "prelaunch_drain_result=${PRELAUNCH_DRAIN_RESULT}"
   echo "prelaunch_drain_seconds=${PRELAUNCH_DRAIN_SECONDS}"
   echo "prelaunch_drain_forced_kill=${PRELAUNCH_DRAIN_FORCED_KILL}"
+  echo "prelaunch_drain_term_sent=${PRELAUNCH_DRAIN_TERM_SENT}"
+  echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}"
+  echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}"
 } | tee -a "$RUN_LOG"
 
 for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
@@ -906,6 +964,9 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
     echo "prelaunch_drain_result=${PRELAUNCH_DRAIN_RESULT}" | tee -a "$RUN_LOG"
     echo "prelaunch_drain_seconds=${PRELAUNCH_DRAIN_SECONDS}" | tee -a "$RUN_LOG"
     echo "prelaunch_drain_forced_kill=${PRELAUNCH_DRAIN_FORCED_KILL}" | tee -a "$RUN_LOG"
+    echo "prelaunch_drain_term_sent=${PRELAUNCH_DRAIN_TERM_SENT}" | tee -a "$RUN_LOG"
+    echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}" | tee -a "$RUN_LOG"
+    echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}" | tee -a "$RUN_LOG"
     echo "prelaunch_drain_remaining_pids=${PRELAUNCH_DRAIN_REMAINING_PIDS}" | tee -a "$RUN_LOG"
     echo "terminal_failure_reason=${ATTEMPT_REASON}" | tee -a "$RUN_LOG"
 
@@ -963,6 +1024,9 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
   echo "prelaunch_drain_result=${PRELAUNCH_DRAIN_RESULT}" | tee -a "$RUN_LOG"
   echo "prelaunch_drain_seconds=${PRELAUNCH_DRAIN_SECONDS}" | tee -a "$RUN_LOG"
   echo "prelaunch_drain_forced_kill=${PRELAUNCH_DRAIN_FORCED_KILL}" | tee -a "$RUN_LOG"
+  echo "prelaunch_drain_term_sent=${PRELAUNCH_DRAIN_TERM_SENT}" | tee -a "$RUN_LOG"
+  echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}" | tee -a "$RUN_LOG"
+  echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}" | tee -a "$RUN_LOG"
 
   APP_PID=""
   APP_PID_WAITABLE=0

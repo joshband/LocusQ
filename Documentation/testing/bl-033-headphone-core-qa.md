@@ -10,7 +10,7 @@ Last Modified Date: 2026-02-26
 Define the deterministic QA lane contract for BL-033 Slice D1 scaffold and Slice D2 closeout reliability checks so headphone calibration validation can run with strict machine-readable evidence.
 
 ## Linked Contracts
-- Runbook: `Documentation/backlog/bl-033-headphone-calibration-core.md`
+- Runbook: `Documentation/backlog/done/bl-033-headphone-calibration-core.md`
 - Spec: `Documentation/plans/bl-033-headphone-calibration-core-spec-2026-02-25.md`
 - Scenario: `qa/scenarios/locusq_bl033_headphone_core_suite.json`
 - Lane Script: `scripts/qa-bl033-headphone-core-lane-mac.sh`
