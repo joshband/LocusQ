@@ -2581,6 +2581,24 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
     const auto currentCalSpeakerRoutingJson = toRoutingJson (currentCalSpeakerRouting);
     const auto autoDetectedRoutingJson = toRoutingJson (lastAutoDetectedSpeakerRouting);
     const auto autoDetectedTopologyId = calibrationTopologyIdForIndex (lastAutoDetectedTopologyProfile);
+    const auto rendererHeadphoneCalibration = buildHeadphoneCalibrationDiagnosticsSnapshot (
+        currentCalMonitoringPath,
+        rendererHeadphoneModeRequestedIndex,
+        rendererHeadphoneModeActiveIndex,
+        outputChannels,
+        rendererSteamAudioAvailable,
+        rendererSteamAudioInitStage);
+
+    {
+        const juce::SpinLock::ScopedLockType publishedCalibrationLock (publishedHeadphoneCalibrationLock);
+        publishedHeadphoneCalibrationDiagnostics.profileSyncSeq = snapshotSeq;
+        publishedHeadphoneCalibrationDiagnostics.requested = rendererHeadphoneCalibration.requested;
+        publishedHeadphoneCalibrationDiagnostics.active = rendererHeadphoneCalibration.active;
+        publishedHeadphoneCalibrationDiagnostics.stage = rendererHeadphoneCalibration.stage;
+        publishedHeadphoneCalibrationDiagnostics.fallbackReady = rendererHeadphoneCalibration.fallbackReady;
+        publishedHeadphoneCalibrationDiagnostics.fallbackReason = rendererHeadphoneCalibration.fallbackReason;
+        publishedHeadphoneCalibrationDiagnostics.valid = true;
+    }
 
     Vec3 listenerPosition { 0.0f, 1.2f, 0.0f };
     Vec3 roomDimensions { 6.0f, 4.0f, 3.0f };
@@ -2722,6 +2740,26 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
           + ",\"rendererHeadphoneModeActive\":\"" + rendererHeadphoneModeActive + "\""
           + ",\"rendererHeadphoneProfileRequested\":\"" + rendererHeadphoneProfileRequested + "\""
           + ",\"rendererHeadphoneProfileActive\":\"" + rendererHeadphoneProfileActive + "\""
+          + ",\"rendererHeadphoneCalibrationSchema\":\""
+              + escapeJsonString (locusq::shared_contracts::headphone_calibration::kSchemaV1) + "\""
+          + ",\"rendererHeadphoneCalibrationRequested\":\""
+              + escapeJsonString (rendererHeadphoneCalibration.requested) + "\""
+          + ",\"rendererHeadphoneCalibrationActive\":\""
+              + escapeJsonString (rendererHeadphoneCalibration.active) + "\""
+          + ",\"rendererHeadphoneCalibrationStage\":\""
+              + escapeJsonString (rendererHeadphoneCalibration.stage) + "\""
+          + ",\"rendererHeadphoneCalibrationFallbackReady\":"
+              + juce::String (rendererHeadphoneCalibration.fallbackReady ? "true" : "false")
+          + ",\"rendererHeadphoneCalibrationFallbackReason\":\""
+              + escapeJsonString (rendererHeadphoneCalibration.fallbackReason) + "\""
+          + ",\"rendererHeadphoneCalibration\":{\"schema\":\""
+              + escapeJsonString (locusq::shared_contracts::headphone_calibration::kSchemaV1) + "\""
+              + ",\"requested\":\"" + escapeJsonString (rendererHeadphoneCalibration.requested) + "\""
+              + ",\"active\":\"" + escapeJsonString (rendererHeadphoneCalibration.active) + "\""
+              + ",\"stage\":\"" + escapeJsonString (rendererHeadphoneCalibration.stage) + "\""
+              + ",\"fallbackReady\":"
+              + juce::String (rendererHeadphoneCalibration.fallbackReady ? "true" : "false")
+              + ",\"fallbackReason\":\"" + escapeJsonString (rendererHeadphoneCalibration.fallbackReason) + "\"}"
           + ",\"rendererAuditionEnabled\":" + juce::String (rendererAuditionEnabled ? "true" : "false")
           + ",\"rendererAuditionSignal\":\"" + escapeJsonString (rendererAuditionSignal) + "\""
           + ",\"rendererAuditionMotion\":\"" + escapeJsonString (rendererAuditionMotion) + "\""
@@ -3146,6 +3184,49 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     const auto topologyProfile = getCurrentCalibrationTopologyProfileIndex();
     const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
     const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
+    const auto outputChannels = getMainBusNumOutputChannels();
+    const bool rendererSteamAudioAvailable = spatialRenderer.isSteamAudioAvailable();
+    const juce::String rendererSteamAudioInitStage {
+        SpatialRenderer::steamAudioInitStageToString (spatialRenderer.getSteamAudioInitStageIndex())
+    };
+    const int rendererHeadphoneModeRequestedIndex = juce::jlimit (
+        0,
+        1,
+        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_headphone_mode")->load())));
+    auto rendererHeadphoneModeActiveIndex = spatialRenderer.getHeadphoneRenderModeActiveIndex();
+    if (outputChannels >= 2)
+    {
+        rendererHeadphoneModeActiveIndex =
+            (rendererHeadphoneModeRequestedIndex == static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural)
+             && rendererSteamAudioAvailable)
+                ? static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural)
+                : static_cast<int> (SpatialRenderer::HeadphoneRenderMode::StereoDownmix);
+    }
+    else
+    {
+        rendererHeadphoneModeActiveIndex = static_cast<int> (SpatialRenderer::HeadphoneRenderMode::StereoDownmix);
+    }
+    auto headphoneCalibration = buildHeadphoneCalibrationDiagnosticsSnapshot (
+        monitoringPath,
+        rendererHeadphoneModeRequestedIndex,
+        rendererHeadphoneModeActiveIndex,
+        outputChannels,
+        rendererSteamAudioAvailable,
+        rendererSteamAudioInitStage);
+    auto profileSyncSeq = static_cast<juce::int64> (sceneSnapshotSequence);
+    {
+        const juce::SpinLock::ScopedLockType publishedCalibrationLock (publishedHeadphoneCalibrationLock);
+        if (publishedHeadphoneCalibrationDiagnostics.valid)
+        {
+            profileSyncSeq =
+                static_cast<juce::int64> (publishedHeadphoneCalibrationDiagnostics.profileSyncSeq);
+            headphoneCalibration.requested = publishedHeadphoneCalibrationDiagnostics.requested;
+            headphoneCalibration.active = publishedHeadphoneCalibrationDiagnostics.active;
+            headphoneCalibration.stage = publishedHeadphoneCalibrationDiagnostics.stage;
+            headphoneCalibration.fallbackReady = publishedHeadphoneCalibrationDiagnostics.fallbackReady;
+            headphoneCalibration.fallbackReason = publishedHeadphoneCalibrationDiagnostics.fallbackReason;
+        }
+    }
     const auto requiredChannels = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
     const auto routing = getCurrentCalibrationSpeakerRouting();
     const auto writableChannels = resolveCalibrationWritableChannels (
@@ -3236,18 +3317,48 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     status->setProperty ("startMessage", startDiagnostics.message);
     status->setProperty ("startStateAtRequest", startDiagnostics.stateAtRequest);
     status->setProperty ("startTimestampMs", startDiagnostics.timestampMs);
-    status->setProperty ("profileSyncSeq", static_cast<juce::int64> (sceneSnapshotSequence));
+    status->setProperty ("profileSyncSeq", profileSyncSeq);
     status->setProperty ("topologyProfileIndex", topologyProfile);
     status->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyProfile));
     status->setProperty ("monitoringPathIndex", monitoringPath);
     status->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPath));
     status->setProperty ("deviceProfileIndex", deviceProfile);
     status->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfile));
+    status->setProperty ("headphoneCalibrationSchema", locusq::shared_contracts::headphone_calibration::kSchemaV1);
+    status->setProperty ("headphoneCalibrationRequested", headphoneCalibration.requested);
+    status->setProperty ("headphoneCalibrationActive", headphoneCalibration.active);
+    status->setProperty ("headphoneCalibrationStage", headphoneCalibration.stage);
+    status->setProperty ("headphoneCalibrationFallbackReady", headphoneCalibration.fallbackReady);
+    status->setProperty ("headphoneCalibrationFallbackReason", headphoneCalibration.fallbackReason);
     status->setProperty ("requiredChannels", requiredChannels);
     status->setProperty ("writableChannels", writableChannels);
     status->setProperty ("mappingLimitedToFirst4", mappingLimitedToFirst4);
     status->setProperty ("mappingDuplicateChannels", mappingDuplicateChannels);
     status->setProperty ("mappingValid", mappingValid);
+
+    juce::var headphoneCalibrationVar (new juce::DynamicObject());
+    if (auto* headphoneContract = headphoneCalibrationVar.getDynamicObject())
+    {
+        headphoneContract->setProperty (
+            locusq::shared_contracts::headphone_calibration::fields::kSchema,
+            locusq::shared_contracts::headphone_calibration::kSchemaV1);
+        headphoneContract->setProperty (
+            locusq::shared_contracts::headphone_calibration::fields::kRequested,
+            headphoneCalibration.requested);
+        headphoneContract->setProperty (
+            locusq::shared_contracts::headphone_calibration::fields::kActive,
+            headphoneCalibration.active);
+        headphoneContract->setProperty (
+            locusq::shared_contracts::headphone_calibration::fields::kStage,
+            headphoneCalibration.stage);
+        headphoneContract->setProperty (
+            locusq::shared_contracts::headphone_calibration::fields::kFallbackReady,
+            headphoneCalibration.fallbackReady);
+        headphoneContract->setProperty (
+            locusq::shared_contracts::headphone_calibration::fields::kFallbackReason,
+            headphoneCalibration.fallbackReason);
+    }
+    status->setProperty ("headphoneCalibration", headphoneCalibrationVar);
 
     if (! running
         && state != CalibrationEngine::State::Complete

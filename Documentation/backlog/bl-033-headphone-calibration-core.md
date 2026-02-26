@@ -2,7 +2,7 @@ Title: BL-033 Headphone Calibration Core Path
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # BL-033: Headphone Calibration Core Path
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-25
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Planning |
+| Status | Done-candidate (Owner Z11 replay PASS after Z9/Z10 reconciliation) |
 | Owner Track | Track A — Runtime Formats |
 | Depends On | BL-009, BL-017, BL-026, BL-028 |
 | Blocks | BL-034 |
@@ -24,7 +24,31 @@ Last Modified Date: 2026-02-25
 | A | Med | M | Headphone profile/state contract and migration wiring (`hp_*` parameters + blob refs) |
 | B | High | L | Steam virtual surround monitoring path integration with requested/active diagnostics |
 | C | High | L | PEQ/FIR post-chain integration with deterministic engine selection and latency reporting |
-| D | Med | M | QA lane and RT safety validation contract closeout for headphone monitoring path |
+| D | Med | M | QA lane scaffold/docs contract (D1) followed by full execution + RT safety closeout (D2) |
+
+## Current Slice Disposition (Owner Sync Z11)
+
+| Slice | Worker Result | Owner Replay Result | Evidence |
+|---|---|---|---|
+| A1 | FAIL | Recovered in owner replay (`build` + `BL-009` pass) | `TestEvidence/bl033_slice_a1_processor_contract_20260225T232640Z/status.tsv`, `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/status.tsv` |
+| B1 | FAIL | Recovered in owner replay (`BL-009` + RT gate pass) | `TestEvidence/bl033_slice_b1_renderer_chain_20260225T232819Z/status.tsv`, `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/status.tsv` |
+| D1 | PASS | PASS (`execute-suite` x3 deterministic pass with `--runs`) | `TestEvidence/bl033_slice_d1_qa_contract_20260225T232722Z/status.tsv`, `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/lane_runs/validation_matrix.tsv` |
+| A2/B2 | FAIL | Reconciled by Z9+Z11 owner replay (`build/smoke/BL-009` pass; RT drift closed) | `TestEvidence/bl033_slice_a2b2_native_contract_20260226T005521Z/status.tsv`, `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_after.tsv`, `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv` |
+| C2 | FAIL | Reconciled by Z9+Z11 owner replay (`build/smoke/BL-009` pass; RT drift closed) | `TestEvidence/bl033_slice_c2_dsp_latency_20260226T005538Z/status.tsv`, `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_after.tsv`, `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv` |
+| D2 | FAIL | Reconciled by Z10+Z11 owner replay (`--runs 5` deterministic + docs freshness pass) | `TestEvidence/bl033_slice_d2_qa_closeout_20260226T010105Z/status.tsv`, `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/status.tsv`, `TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/validation_matrix.tsv` |
+| Z2 | PASS | PASS (`non_allowlisted=0`) | `TestEvidence/bl033_rt_gate_z2_20260226T003240Z/status.tsv` |
+| Z5 | PASS | PASS (docs freshness blocker repaired) | `TestEvidence/bl033_root_docs_z5_20260226T004444Z/status.tsv` |
+| Z6 | PASS | PASS (lane hardening + compatibility verified) | `TestEvidence/bl033_lane_hardening_z6_20260226T004506Z/status.tsv` |
+| Z7 | PASS | PASS (full replay audit green) | `TestEvidence/bl033_replay_audit_z7_20260226T004641Z/status.tsv` |
+| Z9 | PASS | PASS (`rt_before=1` -> `rt_after=0`; non-allowlisted drift closed) | `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_before.tsv`, `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_after.tsv` |
+| Z10 | PASS | PASS (evidence metadata hygiene + docs freshness pass) | `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/status.tsv` |
+| Z11 | PASS | PASS (owner integration replay green across all required gates) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv`, `TestEvidence/bl033_owner_sync_z11_20260225_200647/validation_matrix.tsv` |
+
+Owner decision packet:
+- `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/owner_decisions.md`
+- `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/handoff_resolution.md`
+- `TestEvidence/bl033_owner_sync_z11_20260225_200647/owner_decisions.md`
+- `TestEvidence/bl033_owner_sync_z11_20260225_200647/handoff_resolution.md`
 
 ## Objective
 
@@ -62,7 +86,7 @@ Implement an RT-safe, deterministic internal headphone calibration monitoring pa
 | A | Headphone profile/state contract and migration | `Source/PluginProcessor.cpp`, `Source/PluginProcessor.h`, state migration docs/contracts | BL-009/BL-026 complete | deterministic `hp_*` contract landed with migration + idempotence checks |
 | B | Steam virtual surround monitoring path integration | `Source/SpatialRenderer.h`, `Source/PluginProcessor.cpp`, diagnostics contracts | Slice A complete | `steam_binaural` path active with explicit requested/active/fallback diagnostics |
 | C | PEQ/FIR post-chain + latency contract | DSP modules + `Source/PluginProcessor.cpp` + QA assertions | Slice B complete | PEQ/FIR chain deterministic, no RT safety regressions, latency reporting verified |
-| D | QA lane + evidence hardening | `qa/scenarios/*`, `scripts/qa-*.sh`, docs/evidence contracts | Slice C complete | lane replay pass with machine-readable evidence + docs freshness pass |
+| D | QA lane + evidence hardening | `qa/scenarios/*`, `scripts/qa-*.sh`, docs/evidence contracts | Slice C complete | D1 contract lane IDs/artifacts stable; D2 suite/RT lanes pass with machine-readable evidence |
 
 ## Agent Mega-Prompt
 
@@ -120,11 +144,24 @@ EVIDENCE:
 
 | Lane ID | Type | Command | Pass Criteria |
 |---|---|---|---|
+| BL-033-D1-contract | Automated | `./scripts/qa-bl033-headphone-core-lane-mac.sh --contract-only --out-dir <out>` | Exit 0; `status.tsv` contains `BL033-D1-001..006` checks |
+| BL-033-D1-suite | Automated | `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --out-dir <out>` | Exit 0; `scenario_status=PASS`; `lane_result=PASS` |
 | BL-033-build | Automated | `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` | Exit 0 |
 | BL-033-smoke | Automated | `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` | Suite pass |
 | BL-033-hp-contract | Automated | `./scripts/qa-bl009-headphone-contract-mac.sh` | Exit 0; no contract regressions |
 | BL-033-rt | Automated | `./scripts/rt-safety-audit.sh --print-summary --output <out>/rt_audit.tsv` | `non_allowlisted=0` |
 | BL-033-freshness | Automated | `./scripts/validate-docs-freshness.sh` | Exit 0 |
+
+## Slice D1 Acceptance ID Map
+
+| Acceptance ID | Lane Check | Artifact |
+|---|---|---|
+| BL033-D1-001 | `BL033-D1-001_contract_schema` | `status.tsv` |
+| BL033-D1-002 | `BL033-D1-002_diagnostics_fields` | `status.tsv` |
+| BL033-D1-003 | `BL033-D1-003_artifact_schema` | `status.tsv` |
+| BL033-D1-004 | `BL033-D1-004_acceptance_parity` | `acceptance_parity.tsv` |
+| BL033-D1-005 | `BL033-D1-005_lane_thresholds` | `status.tsv` |
+| BL033-D1-006 | `BL033-D1-006_execution_mode` | `status.tsv` |
 
 ## Risks & Mitigations
 
@@ -145,16 +182,85 @@ EVIDENCE:
 | Artifact | Path | Required Fields |
 |---|---|---|
 | Lane status | `TestEvidence/bl033_headphone_core_<timestamp>/status.tsv` | lane, exit, result, notes |
+| Lane execution log | `TestEvidence/bl033_headphone_core_<timestamp>/qa_lane.log` | ordered check output, command context |
+| Scenario contract log | `TestEvidence/bl033_headphone_core_<timestamp>/scenario_contract.log` | schema checks, thresholds, diagnostics fields |
+| Scenario result ledger | `TestEvidence/bl033_headphone_core_<timestamp>/scenario_result.log` | scenario_id, result_status, warnings, result_json |
+| Acceptance parity table | `TestEvidence/bl033_headphone_core_<timestamp>/acceptance_parity.tsv` | acceptance_id, cross-doc counts, mapped check, result |
+| Taxonomy table | `TestEvidence/bl033_headphone_core_<timestamp>/taxonomy_table.tsv` | failure_class, count, detail |
 | Diagnostics snapshot | `TestEvidence/bl033_headphone_core_<timestamp>/diagnostics_snapshot.json` | requested, active, stage, fallbackReason |
 | RT audit report | `TestEvidence/bl033_headphone_core_<timestamp>/rt_audit.tsv` | non_allowlisted, rule hits |
 | Validation trend row | `TestEvidence/validation-trend.md` | date, lane, result, BL ID |
 
 ## Closeout Checklist
 
-- [ ] All slices (A-D) implemented and validated
-- [ ] Monitoring mode contract (`speakers`, `steam_binaural`, `virtual_binaural`) verified
-- [ ] Latency reporting verified for FIR mode transitions
-- [ ] RT safety lane is green with explicit evidence
-- [ ] `Documentation/backlog/index.md` and runbook status are synchronized
-- [ ] `./scripts/validate-docs-freshness.sh` passes
+- [x] All slices (A-D) implemented and validated
+- [x] Monitoring mode contract (`speakers`, `steam_binaural`, `virtual_binaural`) verified
+- [x] Latency reporting verified for FIR mode transitions
+- [x] Slice D1 acceptance IDs (`BL033-D1-001..006`) pass parity checks
+- [x] RT safety lane is green with explicit evidence
+- [x] `Documentation/backlog/index.md` and runbook status are synchronized
+- [x] `./scripts/validate-docs-freshness.sh` passes
 
+## Owner Integration Snapshot (Z1)
+
+Date: `2026-02-26`
+
+Validation replay bundle:
+- `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/status.tsv`
+- `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/validation_matrix.tsv`
+- `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/rt_audit.tsv`
+
+Replay results:
+1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` -> PASS
+2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> PASS
+3. `qa-bl033-headphone-core-lane --execute-suite` (x3) -> PASS/PASS/PASS
+4. `./scripts/qa-bl009-headphone-contract-mac.sh` -> PASS
+5. `./scripts/rt-safety-audit.sh --print-summary` -> FAIL (`non_allowlisted=94`)
+6. `./scripts/validate-docs-freshness.sh` -> FAIL (prior-worker evidence metadata omission)
+
+Disposition:
+- Blocked until RT allowlist reconciliation and docs freshness debt are closed on current branch.
+
+## Owner Integration Snapshot (Z8)
+
+Date: `2026-02-26`
+
+Validation replay bundle:
+- `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/status.tsv`
+- `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/validation_matrix.tsv`
+- `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/rt_audit.tsv`
+
+Replay results:
+1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` -> PASS
+2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> PASS
+3. `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 3` -> PASS (3/3)
+4. `./scripts/qa-bl009-headphone-contract-mac.sh` -> PASS
+5. `./scripts/rt-safety-audit.sh --print-summary` -> PASS (`non_allowlisted=0`)
+6. `jq empty status.json` -> PASS
+7. `./scripts/validate-docs-freshness.sh` -> PASS
+
+Disposition:
+- Prior Z1 blockers are closed.
+- BL-033 state advanced to `In Validation`.
+
+## Owner Integration Snapshot (Z11)
+
+Date: `2026-02-26`
+
+Validation replay bundle:
+- `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv`
+- `TestEvidence/bl033_owner_sync_z11_20260225_200647/validation_matrix.tsv`
+- `TestEvidence/bl033_owner_sync_z11_20260225_200647/rt_audit.tsv`
+
+Replay results:
+1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` -> PASS
+2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> PASS
+3. `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5` -> PASS
+4. `./scripts/qa-bl009-headphone-contract-mac.sh` -> PASS
+5. `./scripts/rt-safety-audit.sh --print-summary` -> PASS (`non_allowlisted=0`)
+6. `jq empty status.json` -> PASS
+7. `./scripts/validate-docs-freshness.sh` -> PASS
+
+Disposition:
+- Z9 RT reconciliation and Z10 evidence hygiene are both confirmed on current branch.
+- BL-033 promotion posture is advanced to `Done-candidate`.

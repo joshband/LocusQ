@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # LocusQ Implementation Traceability
 
@@ -52,6 +52,11 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - BL-032 Slice A: Processor/editor modularization boundary map contract for parallel no-overlap extraction
 - BL-032 Slice B: Processor native extraction of non-RT core/bridge/shared helper responsibilities
 - BL-032 Slice C1: Editor shell/webview extraction of runtime lifecycle and resource-provider orchestration
+- BL-033 Slice D1: Headphone calibration core QA lane scaffold (scenario contract + lane script + docs parity artifacts)
+- BL-033 Slice D2: Headphone calibration core QA closeout expansion (diagnostics consistency + replay hash determinism + strict artifact schema completeness)
+- BL-033 Slice Z1: Owner integration replay and promotion decision packet (A1/B1/D1 handoff reconciliation)
+- BL-033 Slice Z8: Owner replay closeout update (Z2/Z5/Z6/Z7 unblock reconciliation + status promotion)
+- BL-033 Slice Z11: Owner integration update after Z9/Z10 reconciliation (Done-candidate promotion decision)
 - Reference: `.ideas/plan.md`
 
 ## Stage 14 Drift Ledger (Open)
@@ -756,6 +761,61 @@ Scope: establish deterministic module ownership/dependency contracts for `Plugin
 | Forbidden dependency and one-way layering rules | `Documentation/plans/bl-032-modularization-boundary-map-2026-02-25.md` (Dependency Rules) | `TestEvidence/bl032_slice_a_boundary_map_<timestamp>/module_dependency_matrix.tsv` | Satisfies `BL032-A-003` by encoding disallowed reverse edges and editor/processor isolation constraints. |
 | Tranche migration order + no-overlap slice ownership plan (`A/B/C`) | `Documentation/plans/bl-032-modularization-boundary-map-2026-02-25.md` (Slice Ownership Plan + Migration Sequence) + runbook slice table | `TestEvidence/bl032_slice_a_boundary_map_<timestamp>/slice_ownership_plan.tsv` | Satisfies `BL032-A-004` and `BL032-A-005`; B and C file ownership lists are mutually exclusive for parallel worker safety. |
 | Acceptance-ID cross-reference parity | `Documentation/backlog/bl-032-source-modularization.md`, `Documentation/plans/bl-032-modularization-boundary-map-2026-02-25.md`, this section | `TestEvidence/bl032_slice_a_boundary_map_<timestamp>/status.tsv` | Satisfies `BL032-A-006` with explicit tri-doc acceptance linkage and evidence pointers. |
+
+## BL-033 Slice D1 Headphone Core QA Lane Scaffold
+
+Scope: establish deterministic BL-033 headphone-core QA lane scaffolding and cross-document acceptance parity before source-level calibration slices are merged.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| BL-033 suite contract scaffold (`BL033-D1-001`, `BL033-D1-002`, `BL033-D1-003`) | `qa/scenarios/locusq_bl033_headphone_core_suite.json` | `scripts/qa-bl033-headphone-core-lane-mac.sh --contract-only` (`BL033-D1-001_contract_schema`, `BL033-D1-002_diagnostics_fields`, `BL033-D1-003_artifact_schema`) | Scenario now declares deterministic acceptance IDs, diagnostics-field contract, thresholds, artifact schema, and failure taxonomy for headphone-core lanes. |
+| Lane runner strict status + taxonomy output (`BL033-D1-005`, `BL033-D1-006`) | `scripts/qa-bl033-headphone-core-lane-mac.sh` | `TestEvidence/bl033_headphone_core_<timestamp>/status.tsv` + `taxonomy_table.tsv` | Script enforces strict exit semantics with machine-readable status rows and explicit execution-mode contract (`contract_only` vs `execute_suite`). |
+| Acceptance parity mapping (`BL033-D1-004`) | `scripts/qa-bl033-headphone-core-lane-mac.sh` + `Documentation/backlog/bl-033-headphone-calibration-core.md` + `Documentation/testing/bl-033-headphone-core-qa.md` + this section | `TestEvidence/bl033_headphone_core_<timestamp>/acceptance_parity.tsv` | Lane verifies each BL-033 D1 acceptance ID is present across runbook, QA doc, traceability, scenario, and script surfaces before promotion. |
+| QA contract publication and command contract sync | `Documentation/testing/bl-033-headphone-core-qa.md` | `./scripts/validate-docs-freshness.sh` | Testing guide codifies lane commands, artifact schema, deterministic thresholds, and triage order aligned to runbook + scenario contracts. |
+
+## BL-033 Slice D2 Headphone Core QA Closeout Expansion
+
+Scope: expand BL-033 lane from scaffold coverage to closeout-grade reliability checks with deterministic multi-run replay validation and strict artifact schema enforcement.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Diagnostics requested/active/stage/fallback consistency (`BL033-D2-001`) | `qa/scenarios/locusq_bl033_headphone_core_suite.json` (`diagnostics_consistency_contract`) + `scripts/qa-bl033-headphone-core-lane-mac.sh` (`BL033-D2-001_diagnostics_consistency`) | `./scripts/qa-bl033-headphone-core-lane-mac.sh --contract-only --runs 3` and `--execute-suite --runs 5` | Lane enforces pairwise requested/active contracts plus required stage/fallback fields before accepting closeout promotion. |
+| Replay determinism hash and row stability (`BL033-D2-002`) | `scripts/qa-bl033-headphone-core-lane-mac.sh` multi-run branch (`validation_matrix.tsv`, `replay_hashes.tsv`, replay thresholds) + scenario `replay_contract` | `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5` | Multi-run closeout computes per-run signatures and row signatures, then fails when divergence exceeds configured thresholds. |
+| Strict artifact schema completeness (`BL033-D2-003`) | `qa/scenarios/locusq_bl033_headphone_core_suite.json` (`artifact_schema`, `artifact_schema_execute_additions`, `artifact_schema_multi_run`) + lane checks in single/multi-run paths | `status.tsv` rows `BL033-D2-003_artifact_schema_complete` + replay `taxonomy_table.tsv` | Enforces required artifact presence for both single-run and replay closeout outputs with non-zero exit on missing artifacts. |
+| D2 documentation and parity surface alignment | `Documentation/testing/bl-033-headphone-core-qa.md` + this traceability section + scenario + lane script | `acceptance_parity.tsv` + `./scripts/validate-docs-freshness.sh` | D2 acceptance IDs remain parity-tracked across owned surfaces while preserving D1 runbook-linked parity behavior. |
+
+## BL-033 Slice Z1 Owner Integration Replay
+
+Scope: owner-authoritative reconciliation of A1/B1/D1 handoffs with fresh replay evidence and promotion-state decisioning.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Handoff intake and shared-file safety verification | `TestEvidence/bl033_slice_a1_processor_contract_20260225T232640Z/status.tsv`, `TestEvidence/bl033_slice_b1_renderer_chain_20260225T232819Z/status.tsv`, `TestEvidence/bl033_slice_d1_qa_contract_20260225T232722Z/status.tsv` | `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/handoff_resolution.md` | All three worker handoffs reported `SHARED_FILES_TOUCHED: no`; owner intake preserved per-slice outcomes and blockers. |
+| Owner replay build/smoke/headphone-contract checks | Existing BL-033 source surfaces (`Source/PluginProcessor*`, `Source/SpatialRenderer.h`, `Source/headphone_core/*`, `Source/headphone_dsp/*`) | `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/status.tsv` (`build`, `qa_smoke`, `qa_bl009_headphone_contract`) | Replay confirms build + smoke + BL-009 lane pass on current branch despite prior worker bundle failures. |
+| D1 lane determinism replay (`execute-suite` x3) | `scripts/qa-bl033-headphone-core-lane-mac.sh` + `qa/scenarios/locusq_bl033_headphone_core_suite.json` | `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/validation_matrix.tsv` + `qa_lane.log` | All three owner replay runs passed with zero warnings and stable acceptance-parity checks. |
+| Promotion blocker contract (`RT` + docs freshness) | `scripts/rt-safety-audit.sh` output + docs freshness gate output | `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/rt_audit.tsv`, `docs_freshness.log`, `owner_decisions.md` | Decision remains blocked while `non_allowlisted=94` and prior-worker evidence markdown metadata debt keep required gates red. |
+
+## BL-033 Slice Z8 Owner Replay Closeout Update
+
+Scope: reconcile post-Z1 unblock slices (Z2/Z5/Z6/Z7), re-run owner validation with hardened lane contract, and publish promotion-state decision.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| RT gate reconciliation intake | `scripts/rt-safety-allowlist.txt` delta + `Documentation/backlog/hx-06-rt-safety-audit.md` update from Z2 | `TestEvidence/bl033_rt_gate_z2_20260226T003240Z/rt_after.tsv` | Z2 moved RT audit from `non_allowlisted=94` to `non_allowlisted=0`; owner replay confirms this gate remains green. |
+| Docs freshness blocker closure intake | Root doc metadata sync from Z5 (`README.md`, `CHANGELOG.md`) | `TestEvidence/bl033_root_docs_z5_20260226T004444Z/status.tsv` | Resolves prior freshness blocker caused by date mismatch with `status.json`. |
+| Lane hardening deterministic multi-run contract | `scripts/qa-bl033-headphone-core-lane-mac.sh` (`--runs`) + QA doc sync | `TestEvidence/bl033_lane_hardening_z6_20260226T004506Z/status.tsv` + `.../exec_runs/validation_matrix.tsv` | Confirms backward-compatible single-run behavior and deterministic multi-run output matrix for owner replay automation. |
+| Owner replay closeout gates | Existing BL-033 source/runtime surfaces with no new code edits in Z8 | `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/status.tsv`, `validation_matrix.tsv`, `rt_audit.tsv`, `docs_freshness.log` | All required Z8 gates pass (`build`, `smoke`, BL-033 lane x3, BL-009 lane, RT audit, status JSON, docs freshness); BL-033 advanced to `In Validation`. |
+
+## BL-033 Slice Z11 Owner Sync + Promotion Decision
+
+Scope: integrate post-D2/Z9/Z10 branch state and publish owner-authoritative BL-033 promotion posture using a full replay on current branch state.
+
+| Contract Surface | Implementation Path | Validation Path | Notes |
+|---|---|---|---|
+| Z9 RT gate reconciliation intake | `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/*` (`rt_before`, `rt_after`, blocker resolution) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/rt_audit.tsv` | Confirms historical drift closure is preserved on current branch (`non_allowlisted=0`). |
+| Z10 evidence hygiene intake | `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/*` | `TestEvidence/bl033_owner_sync_z11_20260225_200647/07_docs_freshness.log` | Confirms metadata hygiene debt no longer blocks docs freshness gate. |
+| D2 deterministic replay closure | Existing BL-033 lane + scenario contracts (`--execute-suite --runs 5`) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/validation_matrix.tsv` + `replay_hashes.tsv` | Replay hash and row signatures remain stable across all five runs. |
+| Owner integration decision packet | Owned docs/status sync + Z11 evidence bundle (`owner_decisions.md`, `handoff_resolution.md`) | `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv` + `validation_matrix.tsv` | Owner decision is upgraded from `In Validation` to `Done-candidate` on fully green required gates. |
 
 ## Notes
 
