@@ -1,0 +1,262 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl033_headphone_core_suite",
+  "name": "LocusQ BL-033 Headphone Calibration Core Suite",
+  "category": "stability",
+  "description": "Deterministic BL-033 scaffold suite for headphone calibration core contract checks, diagnostics parity, and machine-readable QA lane evidence.",
+  "scenario_ids": [
+    "locusq_bl009_headphone_downmix_reference",
+    "locusq_bl009_headphone_steam_request"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl033_headphone_core"
+  },
+  "capability_requirements": {
+    "required_effect_types": [
+      "SPATIAL"
+    ],
+    "required_behaviors": [
+      "STATEFUL"
+    ],
+    "excluded_behaviors": []
+  },
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.25,
+      "duration_seconds": 2.0
+    }
+  },
+  "parameter_variations": {
+    "rend_master_gain": 0.5,
+    "rend_quality": 1.0,
+    "rend_room_enable": 0.0,
+    "rend_headphone_mode": 0.0,
+    "rend_headphone_profile": 0.0,
+    "emit_gain": 0.5,
+    "emit_spread": 0.2,
+    "emit_directivity": 0.35,
+    "pos_azimuth": 0.5,
+    "pos_elevation": 0.45,
+    "pos_distance": 0.2
+  },
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.0
+    }
+  },
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "BL-033 suite must emit deterministic non-empty output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Render output must remain finite."
+    },
+    "no_clipping": {
+      "metric": "clipping",
+      "window": "full",
+      "threshold": {
+        "peak_dbfs_max": -0.1
+      },
+      "severity": "hard_fail",
+      "description": "Output must remain below clipping."
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Headphone calibration core path must remain deadline-safe."
+    }
+  },
+  "bl033_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL033-D1-001",
+        "description": "Scenario and lane contract schema exists and is parseable."
+      },
+      {
+        "id": "BL033-D1-002",
+        "description": "Required requested/active/stage/fallback diagnostics fields are declared."
+      },
+      {
+        "id": "BL033-D1-003",
+        "description": "Artifact schema contract is explicit and machine-readable."
+      },
+      {
+        "id": "BL033-D1-004",
+        "description": "Acceptance IDs maintain parity across runbook, QA doc, traceability, scenario, and lane script."
+      },
+      {
+        "id": "BL033-D1-005",
+        "description": "Lane pass/fail thresholds are deterministic and enforced."
+      },
+      {
+        "id": "BL033-D1-006",
+        "description": "Lane execution mode semantics are explicit for scaffold-only and full suite execution."
+      }
+    ],
+    "d2_acceptance_ids": [
+      {
+        "id": "BL033-D2-001",
+        "description": "Diagnostics requested/active/stage/fallback consistency contract is enforced."
+      },
+      {
+        "id": "BL033-D2-002",
+        "description": "Replay determinism is enforced via hash and row-stability checks."
+      },
+      {
+        "id": "BL033-D2-003",
+        "description": "Strict artifact schema completeness is enforced for single-run and multi-run outputs."
+      }
+    ],
+    "required_diagnostics_fields": [
+      "rendererMonitoringPathRequested",
+      "rendererMonitoringPathActive",
+      "rendererHeadphoneCalibrationRequested",
+      "rendererHeadphoneCalibrationActive",
+      "rendererHeadphoneCalibrationStage",
+      "rendererHeadphoneCalibrationFallbackReason"
+    ],
+    "diagnostics_consistency_contract": {
+      "requested_active_pairs": [
+        {
+          "requested": "rendererMonitoringPathRequested",
+          "active": "rendererMonitoringPathActive"
+        },
+        {
+          "requested": "rendererHeadphoneCalibrationRequested",
+          "active": "rendererHeadphoneCalibrationActive"
+        }
+      ],
+      "stage_field": "rendererHeadphoneCalibrationStage",
+      "fallback_field": "rendererHeadphoneCalibrationFallbackReason"
+    },
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 5,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "qa_lane.log",
+      "scenario_contract.log",
+      "scenario_result.log",
+      "acceptance_parity.tsv",
+      "taxonomy_table.tsv"
+    ],
+    "artifact_schema_execute_additions": [
+      "scenario_result.json"
+    ],
+    "artifact_schema_multi_run": [
+      "status.tsv",
+      "qa_lane.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "acceptance_parity.tsv",
+      "taxonomy_table.tsv"
+    ],
+    "execution_contract": {
+      "default_mode": "contract_only",
+      "suite_mode": "execute_suite",
+      "requires_qa_bin": true,
+      "requires_build": true
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Scenario/schema/threshold contract mismatch."
+      },
+      {
+        "failure_class": "runtime_execution_failure",
+        "description": "Build or QA runner returned non-zero exit."
+      },
+      {
+        "failure_class": "missing_result_artifact",
+        "description": "Expected suite result artifact not produced."
+      },
+      {
+        "failure_class": "acceptance_parity_failure",
+        "description": "Acceptance ID missing from one or more contract surfaces."
+      },
+      {
+        "failure_class": "diagnostics_consistency_failure",
+        "description": "Diagnostics requested/active/stage/fallback consistency contract failed."
+      },
+      {
+        "failure_class": "replay_determinism_failure",
+        "description": "Replay hash or row signatures diverged beyond configured thresholds."
+      }
+    ],
+    "check_rows": [
+      {
+        "acceptance_id": "BL033-D1-001",
+        "lane_check": "BL033-D1-001_contract_schema",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D1-002",
+        "lane_check": "BL033-D1-002_diagnostics_fields",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D1-003",
+        "lane_check": "BL033-D1-003_artifact_schema",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D1-004",
+        "lane_check": "BL033-D1-004_acceptance_parity",
+        "artifact": "acceptance_parity.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D1-005",
+        "lane_check": "BL033-D1-005_lane_thresholds",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D1-006",
+        "lane_check": "BL033-D1-006_execution_mode",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D2-001",
+        "lane_check": "BL033-D2-001_diagnostics_consistency",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D2-002",
+        "lane_check": "BL033-D2-002_replay_hash_stability",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL033-D2-003",
+        "lane_check": "BL033-D2-003_artifact_schema_complete",
+        "artifact": "status.tsv"
+      }
+    ]
+  },
+  "pass_criteria": "All hard_fail invariants and all BL-033 contract checks must pass for lane execution mode in use."
+}

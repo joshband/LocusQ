@@ -2,7 +2,7 @@ Title: LocusQ Scene State Contract
 Document Type: Interface Contract
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # Scene State Contract
 
@@ -179,6 +179,13 @@ For production viewport rendering, scene snapshots must include:
     - `rendererHeadphoneModeActive` (string enum)
     - `rendererHeadphoneProfileRequested` (string enum: `generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`)
     - `rendererHeadphoneProfileActive` (string enum)
+    - `rendererHeadphoneCalibrationSchema` (string; current value `locusq-headphone-calibration-contract-v1`)
+    - `rendererHeadphoneCalibrationRequested` (string enum: `speakers`, `stereo_downmix`, `steam_binaural`, `virtual_binaural`)
+    - `rendererHeadphoneCalibrationActive` (string enum; same domain as requested)
+    - `rendererHeadphoneCalibrationStage` (string enum: `direct`, `ready`, `initializing`, `fallback`, `unavailable`)
+    - `rendererHeadphoneCalibrationFallbackReady` (bool)
+    - `rendererHeadphoneCalibrationFallbackReason` (string enum: `none`, `steam_unavailable`, `output_incompatible`, `monitoring_path_bypassed`)
+    - `rendererHeadphoneCalibration` (object mirror with `schema`, `requested`, `active`, `stage`, `fallbackReady`, `fallbackReason`)
     - `rendererPhysicsLensEnabled` (bool)
     - `rendererPhysicsLensMix` (float 0..1)
     - `rendererSteamAudioCompiled` (bool)
@@ -309,6 +316,7 @@ Rules:
 14. Resolver semantics are deterministic for identical snapshot inputs: requested mode precedence is `bound_physics` -> `bound_choreography` -> `bound_emitter` -> standalone (`single`/`cloud`).
 15. `rendererAuditionReactive` is additive and backward-compatible; UI consumers that do not implement reactive fading must ignore the block and keep existing single/cloud visual behavior.
 16. `rendererMatrix*` diagnostics and the additive `rendererMatrix` object are backward-compatible; consumers that do not implement BL-028 matrix surfaces must ignore these fields without altering existing renderer profile/headphone diagnostics behavior.
+17. BL-033 calibration diagnostics are additive and backward-compatible; `rendererHeadphoneCalibration*` fields in scene snapshots and `headphoneCalibration*` fields in calibration status must resolve from the same published native snapshot cycle (`profileSyncSeq`) when both payloads are emitted in the same UI tick.
 
 ### Audition Resolver Examples
 

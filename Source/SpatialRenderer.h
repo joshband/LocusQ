@@ -12,6 +12,7 @@
 #include "SpreadProcessor.h"
 #include "EarlyReflections.h"
 #include "FDNReverb.h"
+#include "headphone_dsp/HeadphoneCalibrationChain.h"
 #include <algorithm>
 #include <atomic>
 #include <array>
@@ -258,6 +259,22 @@ public:
         resetAuditionVoiceFieldStates();
         resetAuditionReactiveTelemetry();
         updateHeadphoneCompensationForProfile (HeadphoneDeviceProfile::Generic);
+        headphoneCalibrationChain.prepare (sampleRate, maxBlockSize);
+        headphoneCalibrationChain.setEnabled (requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed));
+        headphoneCalibrationChain.setRequestedEngineIndex (
+            requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
+        requestedHeadphoneCalibrationEngineIndex.store (
+            headphoneCalibrationChain.getRequestedEngineIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationEngineIndex.store (
+            headphoneCalibrationChain.getActiveEngineIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationFallbackReasonIndex.store (
+            headphoneCalibrationChain.getFallbackReasonIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationLatencySamples.store (
+            headphoneCalibrationChain.getActiveLatencySamples(),
+            std::memory_order_relaxed);
         initialiseSteamAudioRuntimeIfEnabled();
     }
 
@@ -278,6 +295,16 @@ public:
         fdnReverb.reset();
         resetHeadPoseState();
         resetHeadphoneCompensationState();
+        headphoneCalibrationChain.reset();
+        activeHeadphoneCalibrationEngineIndex.store (
+            headphoneCalibrationChain.getActiveEngineIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationFallbackReasonIndex.store (
+            headphoneCalibrationChain.getFallbackReasonIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationLatencySamples.store (
+            headphoneCalibrationChain.getActiveLatencySamples(),
+            std::memory_order_relaxed);
         for (auto& voiceGains : auditionSmoothedSpeakerGains)
             for (auto& gain : voiceGains)
                 gain.setCurrentAndTargetValue (0.0f);
@@ -481,6 +508,22 @@ public:
         requestedHeadphoneProfileIndex.store (clamped, std::memory_order_relaxed);
     }
 
+    void setHeadphoneCalibrationEnabled (bool enabled) noexcept
+    {
+        if (requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed) == enabled)
+            return;
+
+        requestedHeadphoneCalibrationEnabled.store (enabled, std::memory_order_relaxed);
+    }
+
+    void setHeadphoneCalibrationEngine (int engineIndex) noexcept
+    {
+        if (requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed) == engineIndex)
+            return;
+
+        requestedHeadphoneCalibrationEngineIndex.store (engineIndex, std::memory_order_relaxed);
+    }
+
     void setSpatialOutputProfile (int profileIndex)
     {
         const auto clamped = juce::jlimit (0, 11, profileIndex);
@@ -576,6 +619,35 @@ public:
     int getHeadphoneDeviceProfileActiveIndex() const noexcept
     {
         return activeHeadphoneProfileIndex.load (std::memory_order_relaxed);
+    }
+
+    bool isHeadphoneCalibrationEnabledRequested() const noexcept
+    {
+        return requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed);
+    }
+
+    int getHeadphoneCalibrationEngineRequestedIndex() const noexcept
+    {
+        return locusq::headphone_core::sanitizeCalibrationEngineIndex (
+            requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
+    }
+
+    int getHeadphoneCalibrationEngineActiveIndex() const noexcept
+    {
+        return locusq::headphone_core::sanitizeCalibrationEngineIndex (
+            activeHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
+    }
+
+    int getHeadphoneCalibrationFallbackReasonIndex() const noexcept
+    {
+        return locusq::headphone_core::sanitizeCalibrationFallbackReasonIndex (
+            activeHeadphoneCalibrationFallbackReasonIndex.load (std::memory_order_relaxed));
+    }
+
+    int getHeadphoneCalibrationLatencySamples() const noexcept
+    {
+        return locusq::headphone_core::sanitizeCalibrationLatencySamples (
+            activeHeadphoneCalibrationLatencySamples.load (std::memory_order_relaxed));
     }
 
     int getSpatialOutputProfileRequestedIndex() const noexcept
@@ -686,6 +758,16 @@ public:
         }
 
         return "generic";
+    }
+
+    static const char* headphoneCalibrationEngineToString (int engineIndex) noexcept
+    {
+        return locusq::headphone_core::calibrationChainEngineToString (engineIndex);
+    }
+
+    static const char* headphoneCalibrationFallbackReasonToString (int reasonIndex) noexcept
+    {
+        return locusq::headphone_core::calibrationChainFallbackReasonToString (reasonIndex);
     }
 
     static const char* spatialOutputProfileToString (int profileIndex) noexcept
@@ -1026,6 +1108,23 @@ public:
             lastAppliedHeadphoneProfileIndex = activeHeadphoneProfileIndexValue;
         }
 
+        headphoneCalibrationChain.setEnabled (
+            requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed));
+        headphoneCalibrationChain.setRequestedEngineIndex (
+            requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
+        requestedHeadphoneCalibrationEngineIndex.store (
+            headphoneCalibrationChain.getRequestedEngineIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationEngineIndex.store (
+            headphoneCalibrationChain.getActiveEngineIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationFallbackReasonIndex.store (
+            headphoneCalibrationChain.getFallbackReasonIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationLatencySamples.store (
+            headphoneCalibrationChain.getActiveLatencySamples(),
+            std::memory_order_relaxed);
+
         const bool steamRenderedThisBlock = (profileAllowsHeadphoneRender
                                              && numOutputChannels >= 2
                                              && activeHeadphoneMode == HeadphoneRenderMode::SteamBinaural
@@ -1185,6 +1284,7 @@ public:
                 }
 
                 applyHeadphoneProfileCompensation (left, right);
+                headphoneCalibrationChain.processStereoSample (left, right);
                 outputBuffer.setSample (0, i, left * masterGain);
                 outputBuffer.setSample (1, i, right * masterGain);
                 continue;
@@ -1560,6 +1660,17 @@ private:
     std::atomic<int> activeHeadphoneModeIndex { static_cast<int> (HeadphoneRenderMode::StereoDownmix) };
     std::atomic<int> requestedHeadphoneProfileIndex { static_cast<int> (HeadphoneDeviceProfile::Generic) };
     std::atomic<int> activeHeadphoneProfileIndex { static_cast<int> (HeadphoneDeviceProfile::Generic) };
+    std::atomic<bool> requestedHeadphoneCalibrationEnabled { false };
+    std::atomic<int> requestedHeadphoneCalibrationEngineIndex {
+        static_cast<int> (locusq::headphone_core::CalibrationChainEngine::Disabled)
+    };
+    std::atomic<int> activeHeadphoneCalibrationEngineIndex {
+        static_cast<int> (locusq::headphone_core::CalibrationChainEngine::Disabled)
+    };
+    std::atomic<int> activeHeadphoneCalibrationFallbackReasonIndex {
+        static_cast<int> (locusq::headphone_core::CalibrationChainFallbackReason::DisabledByRequest)
+    };
+    std::atomic<int> activeHeadphoneCalibrationLatencySamples { 0 };
     std::atomic<int> requestedSpatialProfileIndex { static_cast<int> (SpatialOutputProfile::Auto) };
     std::atomic<int> activeSpatialProfileIndex { static_cast<int> (SpatialOutputProfile::Auto) };
     std::atomic<int> activeSpatialStageIndex { static_cast<int> (SpatialProfileStage::Direct) };
@@ -1586,6 +1697,7 @@ private:
     float headphoneCompLowStateLeft = 0.0f;
     float headphoneCompLowStateRight = 0.0f;
     int lastAppliedHeadphoneProfileIndex = -1;
+    locusq::headphone_dsp::HeadphoneCalibrationChain headphoneCalibrationChain;
 
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
     using IplContextCreateFn = IPLerror (IPLCALL*) (IPLContextSettings*, IPLContext*);

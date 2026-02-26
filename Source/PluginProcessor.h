@@ -128,6 +128,17 @@ public:
 #endif
 
 private:
+    struct PublishedHeadphoneCalibrationDiagnostics
+    {
+        std::uint64_t profileSyncSeq = 0;
+        juce::String requested;
+        juce::String active;
+        juce::String stage;
+        bool fallbackReady = true;
+        juce::String fallbackReason;
+        bool valid = false;
+    };
+
     struct ClapRuntimeDiagnostics
     {
         bool buildEnabled = false;
@@ -234,6 +245,8 @@ private:
     double perfRendererProcessMs = 0.0;
     std::array<float, SpatialRenderer::NUM_SPEAKERS> sceneSpeakerRms { 0.0f, 0.0f, 0.0f, 0.0f };
     std::uint64_t sceneSnapshotSequence = 0;
+    mutable juce::SpinLock publishedHeadphoneCalibrationLock;
+    mutable PublishedHeadphoneCalibrationDiagnostics publishedHeadphoneCalibrationDiagnostics;
 
     //==============================================================================
     // Sample rate tracking
