@@ -1,6 +1,10 @@
-# LocusQ TODO (Plain Language)
+Title: LocusQ TODO (Plain Language)
+Document Type: Working Notes
+Author: APC Codex
+Created Date: 2026-02-26
+Last Modified Date: 2026-02-26
 
-Last updated: 2026-02-26
+# LocusQ TODO (Plain Language)
 
 This file is a simple view of what is still left to do.
 It is based on:
