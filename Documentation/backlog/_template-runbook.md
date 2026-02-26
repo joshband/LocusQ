@@ -152,3 +152,27 @@ REFERENCE DOCS:
 - [ ] `TestEvidence/validation-trend.md` trend entry added
 - [ ] `README.md` and `CHANGELOG.md` updated (for Done transitions)
 - [ ] `./scripts/validate-docs-freshness.sh` passes
+
+## Owner Promotion Packet (Orchestrator Reuse)
+
+When moving from `In Validation` toward `Done-candidate`, create an owner sync evidence bundle:
+- `TestEvidence/<bl_or_hx>_owner_sync_<slice>_<timestamp>/`
+
+Required owner packet files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `owner_decisions.md`
+- `handoff_resolution.md`
+- `promotion_decision.md` (use `Documentation/backlog/_template-promotion-decision.md`)
+
+Return contract for owner sync handoff:
+```
+HANDOFF_READY
+TASK: <BL/HX Owner Sync Slice>
+RESULT: PASS|FAIL
+DECISION: <In Validation|Done-candidate|Blocked>
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+BLOCKERS: ...
+```

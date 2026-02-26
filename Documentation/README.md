@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 
 # Documentation Index
@@ -32,6 +32,7 @@ Only these documents are normative for implementation, release status, and close
 ### Tier 1: Active Execution Specs (current cycle, non-canonical status authority)
 Used for implementation planning and validation flow, but status truth remains Tier 0:
 - `Documentation/backlog/*.md` (individual runbook docs with agent prompts and validation plans)
+- `Documentation/backlog/_template-promotion-decision.md` (owner/orchestrator promotion packet template)
 - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md`

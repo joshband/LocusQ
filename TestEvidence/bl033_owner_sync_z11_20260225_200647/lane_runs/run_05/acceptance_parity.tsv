@@ -1,0 +1,10 @@
+acceptance_id	runbook_count	qa_doc_count	trace_doc_count	scenario_count	lane_script_count	required_surfaces	mapped_check	result
+BL033-D1-001	4	2	2	3	6	runbook,qa_doc,trace_doc,scenario,lane_script	BL033-D1-001_contract_schema	PASS
+BL033-D1-002	2	2	2	3	4	runbook,qa_doc,trace_doc,scenario,lane_script	BL033-D1-002_diagnostics_fields	PASS
+BL033-D1-003	2	2	2	3	4	runbook,qa_doc,trace_doc,scenario,lane_script	BL033-D1-003_artifact_schema	PASS
+BL033-D1-004	2	2	1	3	4	runbook,qa_doc,trace_doc,scenario,lane_script	BL033-D1-004_acceptance_parity	PASS
+BL033-D1-005	2	2	1	3	4	runbook,qa_doc,trace_doc,scenario,lane_script	BL033-D1-005_lane_thresholds	PASS
+BL033-D1-006	2	2	1	3	6	runbook,qa_doc,trace_doc,scenario,lane_script	BL033-D1-006_execution_mode	PASS
+BL033-D2-001	0	2	2	3	8	qa_doc,trace_doc,scenario,lane_script	BL033-D2-001_diagnostics_consistency	PASS
+BL033-D2-002	0	2	1	3	5	qa_doc,trace_doc,scenario,lane_script	BL033-D2-002_replay_hash_stability	PASS
+BL033-D2-003	0	2	2	3	7	qa_doc,trace_doc,scenario,lane_script	BL033-D2-003_artifact_schema_complete	PASS

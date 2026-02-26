@@ -1,0 +1,2 @@
+attempt	status	terminal_failure_reason	payload_reason_code	payload_failing_check	payload_snippet_path	payload_pointer_path	payload_status	payload_ok	error_reason	result_json
+1	pass	none	none	none		/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260226T004926Z.json	pass	true		/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260226T004926Z.json

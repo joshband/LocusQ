@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # LocusQ Master Backlog Index
 
@@ -19,6 +19,7 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 5. Every open item must have a corresponding runbook doc with dependencies, agent mega-prompts, and exit criteria.
 6. Any status/priority change must update this file, the runbook's Status Ledger, and evidence surfaces in the same changeset.
 7. Intake process for new items uses `Documentation/backlog/_template-intake.md`.
+8. Owner promotion decisions should use `Documentation/backlog/_template-promotion-decision.md` inside the owner sync evidence bundle.
 
 ## Layer Model
 
@@ -38,7 +39,7 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 | 3 | BL-021 | Room-story overlays | P2 | Todo | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | Todo | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
 | 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | In Implementation (Slice B2 RT reconcile PASS; Slice C1 editor extraction landed; remaining blocker `BL032-G-001` Processor line-count threshold) | F | — | — | [bl-032](bl-032-source-modularization.md) |
-| 6 | BL-033 | Headphone calibration core path | P2 | In Planning | A | BL-009, BL-017, BL-026, BL-028 | BL-034 | [bl-033](bl-033-headphone-calibration-core.md) |
+| 6 | BL-033 | Headphone calibration core path | P2 | Done-candidate (owner Z11 replay PASS; Z9 RT and Z10 evidence-hygiene reconciliations confirmed) | A | BL-009, BL-017, BL-026, BL-028 | BL-034 | [bl-033](bl-033-headphone-calibration-core.md) |
 | 7 | BL-034 | Headphone calibration verification and profile governance | P2 | In Planning | D | BL-033 | — | [bl-034](bl-034-headphone-calibration-verification.md) |
 
 ## Dependency Graph
@@ -74,6 +75,10 @@ graph TD
         BL-030[BL-030 Release Gov]
     end
 
+    subgraph "Done-candidate"
+        BL-033[BL-033 Headphone Core]
+    end
+
     subgraph "In Implementation / Open"
         BL-032[BL-032 Source Modularization]
     end
@@ -82,7 +87,6 @@ graph TD
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
         BL-023[BL-023 Resize/DPI]
-        BL-033[BL-033 Headphone Core]
         BL-034[BL-034 Headphone Verification]
     end
 
@@ -138,6 +142,14 @@ graph TD
 2. **Triage** — Assign BL/HX ID, determine dependencies, set priority, assign to track.
 3. **Promote** — Convert to full runbook (`bl-XXX-<slug>.md`), add row to this index.
 4. **Archive** — Delete the intake doc after promotion.
+
+## Owner Sync Packet Contract
+
+For owner/orchestrator closeout transitions (`In Validation` -> `Done-candidate`), generate:
+- `TestEvidence/<bl_or_hx>_owner_sync_<slice>_<timestamp>/promotion_decision.md`
+
+Template:
+- `Documentation/backlog/_template-promotion-decision.md`
 
 ## Definition of Ready
 

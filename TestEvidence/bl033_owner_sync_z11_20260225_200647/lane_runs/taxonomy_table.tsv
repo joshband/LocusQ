@@ -1,0 +1,7 @@
+failure_class	count	detail
+runtime_execution_failure	0	runs with non-zero exit or non-pass lane_result
+diagnostics_consistency_failure	0	runs with BL033-D2-001 non-pass
+artifact_schema_failure	0	missing required run/aggregate artifacts
+replay_signature_divergence	0	exceeds threshold=0 when greater
+replay_row_drift	0	exceeds threshold=0 when greater
+none	0	no failures
