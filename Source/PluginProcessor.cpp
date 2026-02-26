@@ -3,6 +3,7 @@
 #include "processor_bridge/ProcessorBridgeUtilities.h"
 #include "shared_contracts/BridgeStatusContract.h"
 #include "shared_contracts/HeadphoneCalibrationContract.h"
+#include "shared_contracts/HeadphoneVerificationContract.h"
 
 #if ! defined (LOCUSQ_TESTING) || ! LOCUSQ_TESTING
 #include "PluginEditor.h"
@@ -241,6 +242,116 @@ struct RendererMatrixSnapshot
     juce::String statusText { "Spatial output matrix valid." };
     bool blocked = false;
 };
+
+struct RendererHeadTrackingSnapshot
+{
+    bool bridgeEnabled = false;
+    juce::String source { "disabled" };
+    bool poseAvailable = false;
+    bool poseStale = true;
+    bool orientationValid = false;
+    std::uint32_t invalidPacketCount = 0;
+    std::uint32_t seq = 0;
+    std::uint64_t timestampMs = 0;
+    double ageMs = 0.0;
+    float qx = 0.0f;
+    float qy = 0.0f;
+    float qz = 0.0f;
+    float qw = 1.0f;
+    float yawDeg = 0.0f;
+    float pitchDeg = 0.0f;
+    float rollDeg = 0.0f;
+};
+
+constexpr double kRendererHeadTrackingStaleMs = 500.0;
+
+void computeHeadTrackingEulerDegrees (const HeadTrackingBridge::PoseSnapshot& pose,
+                                      float& yawDeg,
+                                      float& pitchDeg,
+                                      float& rollDeg) noexcept
+{
+    // Intrinsic Tait-Bryan ZYX extraction (yaw, pitch, roll) from unit quaternion.
+    const float x = pose.qx;
+    const float y = pose.qy;
+    const float z = pose.qz;
+    const float w = pose.qw;
+
+    const float sinrCosp = 2.0f * ((w * x) + (y * z));
+    const float cosrCosp = 1.0f - 2.0f * ((x * x) + (y * y));
+    const float roll = std::atan2 (sinrCosp, cosrCosp);
+
+    const float sinp = 2.0f * ((w * y) - (z * x));
+    const float pitch = (std::abs (sinp) >= 1.0f)
+        ? std::copysign (static_cast<float> (juce::MathConstants<double>::halfPi), sinp)
+        : std::asin (sinp);
+
+    const float sinyCosp = 2.0f * ((w * z) + (x * y));
+    const float cosyCosp = 1.0f - 2.0f * ((y * y) + (z * z));
+    const float yaw = std::atan2 (sinyCosp, cosyCosp);
+
+    constexpr float kRadToDeg = 57.2957795f;
+    yawDeg = yaw * kRadToDeg;
+    pitchDeg = pitch * kRadToDeg;
+    rollDeg = roll * kRadToDeg;
+}
+
+RendererHeadTrackingSnapshot buildRendererHeadTrackingSnapshot (
+    const HeadTrackingBridge::PoseSnapshot* pose,
+    std::uint32_t invalidPacketCount,
+    std::uint64_t nowMs) noexcept
+{
+    RendererHeadTrackingSnapshot snapshot;
+    snapshot.invalidPacketCount = invalidPacketCount;
+
+#if LOCUS_HEAD_TRACKING
+    snapshot.bridgeEnabled = true;
+    snapshot.source = "udp_loopback:19765";
+#else
+    snapshot.bridgeEnabled = false;
+    snapshot.source = "disabled";
+#endif
+
+    if (pose == nullptr)
+        return snapshot;
+
+    snapshot.poseAvailable = true;
+    snapshot.qx = pose->qx;
+    snapshot.qy = pose->qy;
+    snapshot.qz = pose->qz;
+    snapshot.qw = pose->qw;
+    snapshot.timestampMs = pose->timestampMs;
+    snapshot.seq = pose->seq;
+
+    const auto timestampMs = pose->timestampMs;
+    if (timestampMs > 0 && nowMs >= timestampMs)
+        snapshot.ageMs = static_cast<double> (nowMs - timestampMs);
+    else if (timestampMs > 0)
+        snapshot.ageMs = 0.0;
+    else
+        snapshot.ageMs = kRendererHeadTrackingStaleMs + 1.0;
+
+    snapshot.poseStale = snapshot.ageMs > kRendererHeadTrackingStaleMs;
+
+    if (std::isfinite (pose->qx)
+        && std::isfinite (pose->qy)
+        && std::isfinite (pose->qz)
+        && std::isfinite (pose->qw))
+    {
+        float yawDeg = 0.0f;
+        float pitchDeg = 0.0f;
+        float rollDeg = 0.0f;
+        computeHeadTrackingEulerDegrees (*pose, yawDeg, pitchDeg, rollDeg);
+        if (std::isfinite (yawDeg) && std::isfinite (pitchDeg) && std::isfinite (rollDeg))
+        {
+            snapshot.yawDeg = yawDeg;
+            snapshot.pitchDeg = pitchDeg;
+            snapshot.rollDeg = rollDeg;
+            snapshot.orientationValid = true;
+        }
+    }
+
+    return snapshot;
+}
 
 RendererMatrixSnapshot buildRendererMatrixSnapshot (int requestedProfileIndex,
                                                     int activeProfileIndex,
@@ -770,6 +881,200 @@ HeadphoneCalibrationDiagnosticsSnapshot buildHeadphoneCalibrationDiagnosticsSnap
         snapshot.fallbackReady = false;
         snapshot.fallbackReason = locusq::shared_contracts::headphone_calibration::fallback_reason::kOutputIncompatible;
     }
+
+    return snapshot;
+}
+
+struct HeadphoneVerificationSnapshot
+{
+    juce::String profileId { "generic" };
+    juce::String requestedProfileId { "generic" };
+    juce::String activeProfileId { "generic" };
+    juce::String requestedEngineId { locusq::shared_contracts::headphone_verification::engine::kDisabled };
+    juce::String activeEngineId { locusq::shared_contracts::headphone_verification::engine::kDisabled };
+    juce::String fallbackReasonCode {
+        locusq::shared_contracts::headphone_verification::fallback_reason::kDisabledByRequest
+    };
+    juce::String fallbackTarget {
+        locusq::shared_contracts::headphone_verification::fallback_target::kDisabled
+    };
+    juce::String fallbackReasonText {
+        locusq::shared_contracts::headphone_verification::fallbackReasonTextForCode (
+            locusq::shared_contracts::headphone_verification::fallback_reason::kDisabledByRequest)
+    };
+    float frontBackScore = 0.0f;
+    float elevationScore = 0.0f;
+    float externalizationScore = 0.0f;
+    float confidence = 0.0f;
+    juce::String verificationStage { locusq::shared_contracts::headphone_verification::stage::kDisabled };
+    juce::String verificationScoreStatus {
+        locusq::shared_contracts::headphone_verification::score_status::kUnavailable
+    };
+    int chainLatencySamples = 0;
+};
+
+HeadphoneVerificationSnapshot buildHeadphoneVerificationSnapshot (
+    int requestedProfileIndex,
+    int activeProfileIndex,
+    bool calibrationEnabledRequested,
+    int requestedEngineIndex,
+    int activeEngineIndex,
+    int fallbackReasonIndex,
+    int chainLatencySamples) noexcept
+{
+    using namespace locusq::shared_contracts::headphone_verification;
+
+    HeadphoneVerificationSnapshot snapshot;
+    snapshot.requestedProfileId = sanitizeProfileId (
+        SpatialRenderer::headphoneDeviceProfileToString (requestedProfileIndex));
+    snapshot.activeProfileId = sanitizeProfileId (
+        SpatialRenderer::headphoneDeviceProfileToString (activeProfileIndex));
+    snapshot.profileId = snapshot.activeProfileId;
+    snapshot.requestedEngineId = sanitizeEngineId (
+        SpatialRenderer::headphoneCalibrationEngineToString (requestedEngineIndex));
+    snapshot.activeEngineId = sanitizeEngineId (
+        SpatialRenderer::headphoneCalibrationEngineToString (activeEngineIndex));
+    snapshot.fallbackReasonCode = sanitizeFallbackReasonCode (
+        SpatialRenderer::headphoneCalibrationFallbackReasonToString (fallbackReasonIndex));
+    snapshot.fallbackTarget = deriveFallbackTarget (snapshot.fallbackReasonCode, snapshot.activeEngineId);
+    snapshot.fallbackReasonText = fallbackReasonTextForCode (snapshot.fallbackReasonCode);
+    snapshot.chainLatencySamples = sanitizeLatencySamples (chainLatencySamples);
+
+    const auto requestedEngineSanitized =
+        locusq::headphone_core::sanitizeCalibrationEngineIndex (requestedEngineIndex);
+    const auto activeEngineSanitized =
+        locusq::headphone_core::sanitizeCalibrationEngineIndex (activeEngineIndex);
+    const auto fallbackReasonSanitized =
+        locusq::headphone_core::sanitizeCalibrationFallbackReasonIndex (fallbackReasonIndex);
+    const auto disabledEngineIndex =
+        static_cast<int> (locusq::headphone_core::CalibrationChainEngine::Disabled);
+
+    const bool verificationDisabled = ! calibrationEnabledRequested
+        || requestedEngineSanitized == disabledEngineIndex;
+
+    if (verificationDisabled)
+    {
+        snapshot.activeEngineId = engine::kDisabled;
+        snapshot.fallbackReasonCode = fallback_reason::kDisabledByRequest;
+        snapshot.fallbackTarget = fallback_target::kDisabled;
+        snapshot.fallbackReasonText = fallbackReasonTextForCode (snapshot.fallbackReasonCode);
+        snapshot.chainLatencySamples = 0;
+    }
+    else if (activeEngineSanitized == disabledEngineIndex
+             && fallbackReasonSanitized
+                    == static_cast<int> (locusq::headphone_core::CalibrationChainFallbackReason::None))
+    {
+        snapshot.fallbackReasonCode = fallback_reason::kInvalidEngineSelection;
+        snapshot.fallbackTarget = fallback_target::kDisabled;
+        snapshot.fallbackReasonText = fallbackReasonTextForCode (snapshot.fallbackReasonCode);
+    }
+
+    if (verificationDisabled)
+    {
+        snapshot.verificationStage = stage::kDisabled;
+    }
+    else if (fallbackReasonSanitized
+             == static_cast<int> (locusq::headphone_core::CalibrationChainFallbackReason::DspNotPrepared))
+    {
+        snapshot.verificationStage = stage::kInitializing;
+    }
+    else if (activeEngineSanitized == requestedEngineSanitized
+             && fallbackReasonSanitized
+                    == static_cast<int> (locusq::headphone_core::CalibrationChainFallbackReason::None)
+             && activeEngineSanitized != disabledEngineIndex)
+    {
+        snapshot.verificationStage = stage::kVerified;
+    }
+    else if (activeEngineSanitized != disabledEngineIndex)
+    {
+        snapshot.verificationStage = stage::kFallback;
+    }
+    else
+    {
+        snapshot.verificationStage = stage::kUnavailable;
+    }
+
+    float baseFrontBack = 0.0f;
+    float baseElevation = 0.0f;
+    float baseExternalization = 0.0f;
+
+    switch (static_cast<locusq::headphone_core::CalibrationChainEngine> (activeEngineSanitized))
+    {
+        case locusq::headphone_core::CalibrationChainEngine::ParametricEq:
+            baseFrontBack = 0.70f;
+            baseElevation = 0.62f;
+            baseExternalization = 0.66f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainEngine::FirConvolution:
+            baseFrontBack = 0.84f;
+            baseElevation = 0.79f;
+            baseExternalization = 0.82f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainEngine::Disabled:
+        default:
+            break;
+    }
+
+    float penalty = 0.0f;
+    switch (static_cast<locusq::headphone_core::CalibrationChainFallbackReason> (fallbackReasonSanitized))
+    {
+        case locusq::headphone_core::CalibrationChainFallbackReason::None:
+            penalty = 0.0f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainFallbackReason::DisabledByRequest:
+            penalty = 1.0f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainFallbackReason::InvalidEngineSelection:
+            penalty = 0.55f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainFallbackReason::DspNotPrepared:
+            penalty = 0.85f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainFallbackReason::PeqUnavailable:
+            penalty = 0.45f;
+            break;
+
+        case locusq::headphone_core::CalibrationChainFallbackReason::FirUnavailable:
+            penalty = 0.25f;
+            break;
+    }
+
+    if (verificationDisabled)
+        penalty = 1.0f;
+
+    snapshot.frontBackScore = sanitizeScore (baseFrontBack - penalty, 0.0f);
+    snapshot.elevationScore = sanitizeScore (baseElevation - penalty, 0.0f);
+    snapshot.externalizationScore = sanitizeScore (baseExternalization - penalty, 0.0f);
+
+    const float aggregateScore =
+        (snapshot.frontBackScore + snapshot.elevationScore + snapshot.externalizationScore) / 3.0f;
+    float confidenceBias = -0.25f;
+
+    if (snapshot.verificationStage == stage::kVerified)
+        confidenceBias = 0.08f;
+    else if (snapshot.verificationStage == stage::kFallback)
+        confidenceBias = -0.08f;
+    else if (snapshot.verificationStage == stage::kInitializing)
+        confidenceBias = -0.20f;
+    else if (snapshot.verificationStage == stage::kUnavailable)
+        confidenceBias = -0.35f;
+
+    snapshot.confidence = sanitizeScore (aggregateScore + confidenceBias, 0.0f);
+    snapshot.chainLatencySamples = sanitizeLatencySamples (snapshot.chainLatencySamples);
+    snapshot.verificationStage = sanitizeVerificationStage (snapshot.verificationStage);
+    snapshot.fallbackReasonCode = sanitizeFallbackReasonCode (snapshot.fallbackReasonCode);
+    snapshot.fallbackTarget = sanitizeFallbackTargetForReason (
+        snapshot.fallbackReasonCode,
+        snapshot.fallbackTarget,
+        snapshot.activeEngineId);
+    snapshot.fallbackReasonText = fallbackReasonTextForCode (snapshot.fallbackReasonCode);
+    snapshot.verificationScoreStatus = scoreStatusFromStage (snapshot.verificationStage);
 
     return snapshot;
 }
@@ -1790,2974 +2095,10 @@ void LocusQAudioProcessor::primeRendererStateFromCurrentParameters()
 }
 
 //==============================================================================
-juce::String LocusQAudioProcessor::getSceneStateJSON()
-{
-    const auto effectiveWritableChannels = resolveCalibrationWritableChannels (
-        getSnapshotOutputChannels(),
-        static_cast<int> (getBusesLayout().getMainOutputChannelSet().size()),
-        lastAutoDetectedOutputChannels,
-        getCurrentCalibrationSpeakerRouting());
-    applyAutoDetectedCalibrationRoutingIfAppropriate (effectiveWritableChannels, false);
 
-    const auto snapshotSeq = ++sceneSnapshotSequence;
-    const auto snapshotPublishedAtUtcMs = juce::Time::getCurrentTime().toMilliseconds();
+#include "processor_bridge/ProcessorSceneStateBridgeOps.h"
 
-    // Build JSON scene snapshot for WebView
-    juce::String json = "{\"snapshotSchema\":\"" + juce::String (kSceneSnapshotSchemaProperty) + "\""
-                      + ",\"snapshotSeq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
-                      + ",\"profileSyncSeq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
-                      + ",\"snapshotPublishedAtUtcMs\":" + juce::String (snapshotPublishedAtUtcMs)
-                      + ",\"snapshotCadenceHz\":" + juce::String (kSceneSnapshotCadenceHz)
-                      + ",\"snapshotStaleAfterMs\":" + juce::String (kSceneSnapshotStaleAfterMs)
-                      + ",\"emitters\":[";
-    bool first = true;
-    double timelineTime = 0.0;
-    double timelineDuration = 0.0;
-    bool timelineLooping = false;
-    const auto outputSet = getBusesLayout().getMainOutputChannelSet();
-    const auto outputChannels = getMainBusNumOutputChannels();
-    const auto outputLayout = outputLayoutToString (outputSet);
-    const juce::String internalSpeakerLabelsJson { "[\"FL\",\"FR\",\"RR\",\"RL\"]" };
-    const juce::String quadOutputMapJson { "[0,1,3,2]" };
-    juce::String outputChannelLabelsJson { "[\"M\"]" };
-    juce::String rendererOutputMode { "mono_sum" };
-    const auto rendererHeadphoneModeRequestedIndex = juce::jlimit (
-        0,
-        1,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_headphone_mode")->load())));
-    const auto rendererHeadphoneProfileRequestedIndex = juce::jlimit (
-        0,
-        3,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_headphone_profile")->load())));
-    const bool rendererAuditionEnabled = apvts.getRawParameterValue ("rend_audition_enable")->load() > 0.5f;
-    const int rendererAuditionSignalIndex = juce::jlimit (
-        0,
-        static_cast<int> (kRendererAuditionSignalIds.size()) - 1,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_audition_signal")->load())));
-    const int rendererAuditionMotionIndex = juce::jlimit (
-        0,
-        static_cast<int> (kRendererAuditionMotionIds.size()) - 1,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_audition_motion")->load())));
-    const int rendererAuditionLevelIndex = juce::jlimit (
-        0,
-        static_cast<int> (kRendererAuditionLevelDbValues.size()) - 1,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_audition_level")->load())));
-    const juce::String rendererAuditionSignal { rendererAuditionSignalIdForIndex (rendererAuditionSignalIndex) };
-    const juce::String rendererAuditionMotion { rendererAuditionMotionIdForIndex (rendererAuditionMotionIndex) };
-    const float rendererAuditionLevelDb = rendererAuditionLevelDbForIndex (rendererAuditionLevelIndex);
-    const bool rendererAuditionVisualReportedActive = spatialRenderer.isAuditionVisualActive();
-    const float rendererAuditionVisualXRaw = spatialRenderer.getAuditionVisualX();
-    const float rendererAuditionVisualYRaw = spatialRenderer.getAuditionVisualY();
-    const float rendererAuditionVisualZRaw = spatialRenderer.getAuditionVisualZ();
-    const bool rendererAuditionVisualFinite = isFiniteVector3 (
-        rendererAuditionVisualXRaw,
-        rendererAuditionVisualYRaw,
-        rendererAuditionVisualZRaw);
-    const bool rendererAuditionVisualInvalid = rendererAuditionVisualReportedActive && ! rendererAuditionVisualFinite;
-    const bool rendererAuditionVisualActive = rendererAuditionVisualReportedActive && rendererAuditionVisualFinite;
-    const float rendererAuditionVisualX = rendererAuditionVisualFinite ? rendererAuditionVisualXRaw : 0.0f;
-    const float rendererAuditionVisualY = rendererAuditionVisualFinite ? rendererAuditionVisualYRaw : 1.2f;
-    const float rendererAuditionVisualZ = rendererAuditionVisualFinite ? rendererAuditionVisualZRaw : -1.0f;
-    const float rendererAuditionLevelNorm = static_cast<float> (rendererAuditionLevelIndex)
-        / static_cast<float> (juce::jmax (1, static_cast<int> (kRendererAuditionLevelDbValues.size()) - 1));
-    bool rendererAuditionCloudEnabled = rendererAuditionEnabled && rendererAuditionVisualActive;
-    juce::String rendererAuditionCloudPattern { "tone_core" };
-    int rendererAuditionCloudPointCountBase = 24;
-    float rendererAuditionCloudSpreadBaseMeters = 0.45f;
-    float rendererAuditionCloudPulseBaseHz = 1.9f;
-    float rendererAuditionCloudCoherenceBase = 0.92f;
-    juce::String rendererAuditionCloudMode { "single_core" };
-    int rendererAuditionCloudEmitterCountBase = 1;
-    float rendererAuditionCloudVerticalSpreadScale = 0.35f;
-    switch (rendererAuditionSignalIndex)
-    {
-        case 0: // sine_440
-            rendererAuditionCloudPattern = "tone_core";
-            rendererAuditionCloudPointCountBase = 24;
-            rendererAuditionCloudSpreadBaseMeters = 0.45f;
-            rendererAuditionCloudPulseBaseHz = 1.9f;
-            rendererAuditionCloudCoherenceBase = 0.92f;
-            rendererAuditionCloudMode = "single_core";
-            rendererAuditionCloudEmitterCountBase = 1;
-            rendererAuditionCloudVerticalSpreadScale = 0.30f;
-            break;
-        case 1: // dual_tone
-            rendererAuditionCloudPattern = "dual_orbit";
-            rendererAuditionCloudPointCountBase = 28;
-            rendererAuditionCloudSpreadBaseMeters = 0.55f;
-            rendererAuditionCloudPulseBaseHz = 2.2f;
-            rendererAuditionCloudCoherenceBase = 0.85f;
-            rendererAuditionCloudMode = "dual_pair";
-            rendererAuditionCloudEmitterCountBase = 2;
-            rendererAuditionCloudVerticalSpreadScale = 0.34f;
-            break;
-        case 2: // pink_noise
-            rendererAuditionCloudPattern = "noise_halo";
-            rendererAuditionCloudPointCountBase = 42;
-            rendererAuditionCloudSpreadBaseMeters = 0.70f;
-            rendererAuditionCloudPulseBaseHz = 1.4f;
-            rendererAuditionCloudCoherenceBase = 0.42f;
-            rendererAuditionCloudMode = "noise_cluster";
-            rendererAuditionCloudEmitterCountBase = 3;
-            rendererAuditionCloudVerticalSpreadScale = 0.42f;
-            break;
-        case 3: // rain_field
-            rendererAuditionCloudPattern = "rain_sheet";
-            rendererAuditionCloudPointCountBase = 112;
-            rendererAuditionCloudSpreadBaseMeters = 2.85f;
-            rendererAuditionCloudPulseBaseHz = 3.2f;
-            rendererAuditionCloudCoherenceBase = 0.24f;
-            rendererAuditionCloudMode = "precipitation_rain";
-            rendererAuditionCloudEmitterCountBase = 6;
-            rendererAuditionCloudVerticalSpreadScale = 1.35f;
-            break;
-        case 4: // snow_drift
-            rendererAuditionCloudPattern = "snow_cloud";
-            rendererAuditionCloudPointCountBase = 104;
-            rendererAuditionCloudSpreadBaseMeters = 3.10f;
-            rendererAuditionCloudPulseBaseHz = 0.9f;
-            rendererAuditionCloudCoherenceBase = 0.18f;
-            rendererAuditionCloudMode = "precipitation_snow";
-            rendererAuditionCloudEmitterCountBase = 7;
-            rendererAuditionCloudVerticalSpreadScale = 1.05f;
-            break;
-        case 5: // bouncing_balls
-            rendererAuditionCloudPattern = "bounce_cluster";
-            rendererAuditionCloudPointCountBase = 74;
-            rendererAuditionCloudSpreadBaseMeters = 2.45f;
-            rendererAuditionCloudPulseBaseHz = 2.7f;
-            rendererAuditionCloudCoherenceBase = 0.58f;
-            rendererAuditionCloudMode = "impact_swarm";
-            rendererAuditionCloudEmitterCountBase = 4;
-            rendererAuditionCloudVerticalSpreadScale = 0.82f;
-            break;
-        case 6: // wind_chimes
-            rendererAuditionCloudPattern = "chime_constellation";
-            rendererAuditionCloudPointCountBase = 40;
-            rendererAuditionCloudSpreadBaseMeters = 1.45f;
-            rendererAuditionCloudPulseBaseHz = 1.2f;
-            rendererAuditionCloudCoherenceBase = 0.58f;
-            rendererAuditionCloudMode = "chime_cluster";
-            rendererAuditionCloudEmitterCountBase = 5;
-            rendererAuditionCloudVerticalSpreadScale = 0.72f;
-            break;
-        case 7: // crickets
-            rendererAuditionCloudPattern = "cricket_field";
-            rendererAuditionCloudPointCountBase = 76;
-            rendererAuditionCloudSpreadBaseMeters = 2.60f;
-            rendererAuditionCloudPulseBaseHz = 4.1f;
-            rendererAuditionCloudCoherenceBase = 0.28f;
-            rendererAuditionCloudMode = "bio_swarm";
-            rendererAuditionCloudEmitterCountBase = 6;
-            rendererAuditionCloudVerticalSpreadScale = 0.54f;
-            break;
-        case 8: // song_birds
-            rendererAuditionCloudPattern = "songbird_canopy";
-            rendererAuditionCloudPointCountBase = 68;
-            rendererAuditionCloudSpreadBaseMeters = 2.95f;
-            rendererAuditionCloudPulseBaseHz = 1.5f;
-            rendererAuditionCloudCoherenceBase = 0.40f;
-            rendererAuditionCloudMode = "bio_flock";
-            rendererAuditionCloudEmitterCountBase = 6;
-            rendererAuditionCloudVerticalSpreadScale = 1.10f;
-            break;
-        case 9: // karplus_plucks
-            rendererAuditionCloudPattern = "pluck_strings";
-            rendererAuditionCloudPointCountBase = 52;
-            rendererAuditionCloudSpreadBaseMeters = 2.05f;
-            rendererAuditionCloudPulseBaseHz = 1.9f;
-            rendererAuditionCloudCoherenceBase = 0.52f;
-            rendererAuditionCloudMode = "physical_modal";
-            rendererAuditionCloudEmitterCountBase = 4;
-            rendererAuditionCloudVerticalSpreadScale = 0.70f;
-            break;
-        case 10: // membrane_drops
-            rendererAuditionCloudPattern = "membrane_impacts";
-            rendererAuditionCloudPointCountBase = 60;
-            rendererAuditionCloudSpreadBaseMeters = 2.30f;
-            rendererAuditionCloudPulseBaseHz = 2.2f;
-            rendererAuditionCloudCoherenceBase = 0.48f;
-            rendererAuditionCloudMode = "physical_impacts";
-            rendererAuditionCloudEmitterCountBase = 5;
-            rendererAuditionCloudVerticalSpreadScale = 0.78f;
-            break;
-        case 11: // krell_patch
-            rendererAuditionCloudPattern = "krell_glide";
-            rendererAuditionCloudPointCountBase = 58;
-            rendererAuditionCloudSpreadBaseMeters = 2.40f;
-            rendererAuditionCloudPulseBaseHz = 1.3f;
-            rendererAuditionCloudCoherenceBase = 0.44f;
-            rendererAuditionCloudMode = "synth_generative";
-            rendererAuditionCloudEmitterCountBase = 4;
-            rendererAuditionCloudVerticalSpreadScale = 0.96f;
-            break;
-        case 12: // generative_arp
-            rendererAuditionCloudPattern = "arp_lattice";
-            rendererAuditionCloudPointCountBase = 62;
-            rendererAuditionCloudSpreadBaseMeters = 2.55f;
-            rendererAuditionCloudPulseBaseHz = 2.4f;
-            rendererAuditionCloudCoherenceBase = 0.50f;
-            rendererAuditionCloudMode = "synth_grid";
-            rendererAuditionCloudEmitterCountBase = 5;
-            rendererAuditionCloudVerticalSpreadScale = 0.88f;
-            break;
-        default:
-            break;
-    }
-    float rendererAuditionCloudMotionSpreadScale = 0.85f;
-    float rendererAuditionCloudMotionPulseScale = 1.0f;
-    float rendererAuditionCloudMotionCoherenceScale = 1.0f;
-    switch (rendererAuditionMotionIndex)
-    {
-        case 0: // center
-            rendererAuditionCloudMotionSpreadScale = 0.85f;
-            rendererAuditionCloudMotionPulseScale = 1.0f;
-            rendererAuditionCloudMotionCoherenceScale = 1.0f;
-            break;
-        case 1: // orbit_slow
-            rendererAuditionCloudMotionSpreadScale = 1.10f;
-            rendererAuditionCloudMotionPulseScale = 1.15f;
-            rendererAuditionCloudMotionCoherenceScale = 0.88f;
-            break;
-        case 2: // orbit_fast
-            rendererAuditionCloudMotionSpreadScale = 1.35f;
-            rendererAuditionCloudMotionPulseScale = 1.35f;
-            rendererAuditionCloudMotionCoherenceScale = 0.72f;
-            break;
-        case 3: // figure8_flow
-            rendererAuditionCloudMotionSpreadScale = 1.52f;
-            rendererAuditionCloudMotionPulseScale = 1.22f;
-            rendererAuditionCloudMotionCoherenceScale = 0.76f;
-            break;
-        case 4: // helix_rise
-            rendererAuditionCloudMotionSpreadScale = 1.70f;
-            rendererAuditionCloudMotionPulseScale = 1.42f;
-            rendererAuditionCloudMotionCoherenceScale = 0.68f;
-            break;
-        case 5: // wall_ricochet
-            rendererAuditionCloudMotionSpreadScale = 1.88f;
-            rendererAuditionCloudMotionPulseScale = 1.56f;
-            rendererAuditionCloudMotionCoherenceScale = 0.62f;
-            break;
-        default:
-            break;
-    }
-    bool rendererAuditionCloudBoundsAdjusted = false;
-    const int rendererAuditionCloudPointCountRaw = static_cast<int> (std::lround (
-        rendererAuditionCloudPointCountBase * (1.0f + 0.25f * rendererAuditionLevelNorm)));
-    int rendererAuditionCloudPointCount = rendererAuditionCloudEnabled
-        ? sanitizeBoundedInt (
-            rendererAuditionCloudPointCountRaw,
-            8,
-            kRendererAuditionCloudMaxPoints,
-            &rendererAuditionCloudBoundsAdjusted)
-        : 0;
-    float rendererAuditionCloudSpreadMeters = rendererAuditionCloudEnabled
-        ? juce::jlimit (
-            0.20f,
-            6.0f,
-            rendererAuditionCloudSpreadBaseMeters * rendererAuditionCloudMotionSpreadScale
-                * (0.90f + 0.20f * rendererAuditionLevelNorm))
-        : 0.0f;
-    float rendererAuditionCloudPulseHz = rendererAuditionCloudEnabled
-        ? juce::jlimit (
-            0.2f,
-            6.0f,
-            rendererAuditionCloudPulseBaseHz * rendererAuditionCloudMotionPulseScale
-                * (0.95f + 0.15f * rendererAuditionLevelNorm))
-        : 0.0f;
-    float rendererAuditionCloudCoherence = rendererAuditionCloudEnabled
-        ? juce::jlimit (
-            0.05f,
-            0.99f,
-            rendererAuditionCloudCoherenceBase * rendererAuditionCloudMotionCoherenceScale
-                + (rendererAuditionVisualActive ? 0.04f : -0.06f))
-        : 0.0f;
-    const bool rendererAuditionCloudGeometryInvalid = rendererAuditionCloudEnabled
-        && (! std::isfinite (rendererAuditionCloudSpreadMeters)
-            || ! std::isfinite (rendererAuditionCloudPulseHz)
-            || ! std::isfinite (rendererAuditionCloudCoherence));
-    if (rendererAuditionCloudGeometryInvalid)
-    {
-        rendererAuditionCloudSpreadMeters = 0.0f;
-        rendererAuditionCloudPulseHz = 0.0f;
-        rendererAuditionCloudCoherence = 0.0f;
-        rendererAuditionCloudPointCount = 0;
-    }
-    juce::uint32 rendererAuditionCloudSeed = 0xA39F1C2Du;
-    const auto rendererAuditionSignalOrdinal = static_cast<juce::uint32> (juce::jmax (0, rendererAuditionSignalIndex) + 1);
-    const auto rendererAuditionMotionOrdinal = static_cast<juce::uint32> (juce::jmax (0, rendererAuditionMotionIndex) + 1);
-    const auto rendererAuditionLevelOrdinal = static_cast<juce::uint32> (juce::jmax (0, rendererAuditionLevelIndex) + 1);
-    rendererAuditionCloudSeed ^= rendererAuditionSignalOrdinal * 0x9E3779B9u;
-    rendererAuditionCloudSeed = (rendererAuditionCloudSeed << 13u) | (rendererAuditionCloudSeed >> 19u);
-    rendererAuditionCloudSeed ^= rendererAuditionMotionOrdinal * 0x85EBCA6Bu;
-    rendererAuditionCloudSeed ^= rendererAuditionLevelOrdinal * 0xC2B2AE35u;
-    if (rendererAuditionVisualActive)
-        rendererAuditionCloudSeed ^= 0x1B873593u;
-    int rendererAuditionCloudEmitterCount = 0;
-    if (rendererAuditionCloudEnabled)
-    {
-        const int motionEmitterBoost = rendererAuditionMotionIndex == 2 ? 2 : (rendererAuditionMotionIndex == 1 ? 1 : 0);
-        const int levelEmitterBoost = rendererAuditionLevelIndex >= 3 ? 1 : 0;
-        const int visualEmitterBoost = rendererAuditionVisualActive ? 1 : 0;
-        const auto emitterCountRaw =
-            rendererAuditionCloudEmitterCountBase + motionEmitterBoost + levelEmitterBoost + visualEmitterBoost;
-        rendererAuditionCloudEmitterCount = sanitizeBoundedInt (
-            emitterCountRaw,
-            1,
-            kRendererAuditionCloudMaxEmitters,
-            &rendererAuditionCloudBoundsAdjusted);
-    }
-
-    // BL-029 Slice B1: renderer-authoritative audition binding resolver.
-    const auto currentMode = getCurrentMode();
-    const juce::String rendererAuditionSourceMode {
-        rendererAuditionCloudEnabled ? "cloud" : "single"
-    };
-    juce::String rendererAuditionRequestedMode { rendererAuditionSourceMode };
-    juce::String rendererAuditionResolvedMode { rendererAuditionSourceMode };
-    juce::String rendererAuditionBindingTarget { "none" };
-    bool rendererAuditionBindingAvailable = false;
-    int preferredEmitterBindingId = -1;
-    int preferredPhysicsBindingId = -1;
-
-    if (emitterSlotId >= 0 && sceneGraph.isSlotActive (emitterSlotId))
-    {
-        const auto emitterData = sceneGraph.getSlot (emitterSlotId).read();
-        if (emitterData.active)
-        {
-            preferredEmitterBindingId = emitterSlotId;
-            if (emitterData.physicsEnabled)
-                preferredPhysicsBindingId = emitterSlotId;
-        }
-    }
-
-    for (int slot = 0; slot < SceneGraph::MAX_EMITTERS; ++slot)
-    {
-        if (! sceneGraph.isSlotActive (slot))
-            continue;
-
-        const auto slotData = sceneGraph.getSlot (slot).read();
-        if (! slotData.active)
-            continue;
-
-        if (preferredEmitterBindingId < 0)
-            preferredEmitterBindingId = slot;
-
-        if (slotData.physicsEnabled && preferredPhysicsBindingId < 0)
-            preferredPhysicsBindingId = slot;
-    }
-
-    const bool choreographyBindingRequested = apvts.getRawParameterValue ("anim_enable")->load() > 0.5f
-        && static_cast<int> (std::lround (apvts.getRawParameterValue ("anim_mode")->load())) == 1;
-    const bool physicsBindingRequested = apvts.getRawParameterValue ("rend_phys_interact")->load() > 0.5f;
-    const bool emitterBindingRequested = sceneGraph.getActiveEmitterCount() > 0;
-
-    if (rendererAuditionEnabled)
-    {
-        if (physicsBindingRequested)
-            rendererAuditionRequestedMode = "bound_physics";
-        else if (choreographyBindingRequested)
-            rendererAuditionRequestedMode = "bound_choreography";
-        else if (emitterBindingRequested)
-            rendererAuditionRequestedMode = "bound_emitter";
-    }
-
-    float rendererAuditionDensity = rendererAuditionCloudEnabled
-        ? juce::jlimit (0.0f, 1.0f, static_cast<float> (rendererAuditionCloudPointCount) / 160.0f)
-        : 0.0f;
-    float rendererAuditionReactivity = rendererAuditionCloudEnabled
-        ? juce::jlimit (
-            0.0f,
-            1.0f,
-            (0.58f * rendererAuditionLevelNorm) + (0.42f * (1.0f - rendererAuditionCloudCoherence)))
-        : 0.0f;
-    const bool rendererAuditionTransportSync = false;
-    juce::String rendererAuditionFallbackReason { "none" };
-    if (! rendererAuditionEnabled)
-    {
-        rendererAuditionFallbackReason = "audition_disabled";
-        rendererAuditionResolvedMode = rendererAuditionSourceMode;
-    }
-    else if (currentMode != LocusQMode::Renderer)
-    {
-        rendererAuditionFallbackReason = "renderer_mode_inactive";
-        rendererAuditionResolvedMode = rendererAuditionSourceMode;
-    }
-    else if (rendererAuditionVisualInvalid)
-    {
-        rendererAuditionFallbackReason = "visual_centroid_invalid";
-        rendererAuditionResolvedMode = rendererAuditionSourceMode;
-    }
-    else if (rendererAuditionRequestedMode == "bound_emitter")
-    {
-        if (preferredEmitterBindingId >= 0)
-        {
-            rendererAuditionResolvedMode = "bound_emitter";
-            rendererAuditionBindingTarget = "emitter:" + juce::String (preferredEmitterBindingId);
-            rendererAuditionBindingAvailable = true;
-        }
-        else
-        {
-            rendererAuditionFallbackReason = "bound_emitter_unavailable";
-            rendererAuditionResolvedMode = rendererAuditionSourceMode;
-        }
-    }
-    else if (rendererAuditionRequestedMode == "bound_choreography")
-    {
-        if (choreographyBindingRequested)
-        {
-            rendererAuditionResolvedMode = "bound_choreography";
-            rendererAuditionBindingTarget = "timeline:global";
-            rendererAuditionBindingAvailable = true;
-        }
-        else
-        {
-            rendererAuditionFallbackReason = "bound_choreography_unavailable";
-            rendererAuditionResolvedMode = rendererAuditionSourceMode;
-        }
-    }
-    else if (rendererAuditionRequestedMode == "bound_physics")
-    {
-        if (preferredPhysicsBindingId >= 0)
-        {
-            rendererAuditionResolvedMode = "bound_physics";
-            rendererAuditionBindingTarget = "emitter:" + juce::String (preferredPhysicsBindingId);
-            rendererAuditionBindingAvailable = true;
-        }
-        else
-        {
-            rendererAuditionFallbackReason = "bound_physics_unavailable";
-            rendererAuditionResolvedMode = rendererAuditionSourceMode;
-        }
-    }
-    else if (! rendererAuditionVisualActive)
-    {
-        rendererAuditionFallbackReason = "visual_centroid_unavailable";
-        rendererAuditionResolvedMode = rendererAuditionSourceMode;
-    }
-    else if (rendererAuditionSourceMode == "cloud" && rendererAuditionCloudGeometryInvalid)
-    {
-        rendererAuditionFallbackReason = "cloud_geometry_invalid";
-        rendererAuditionResolvedMode = "single";
-        rendererAuditionCloudEnabled = false;
-        rendererAuditionCloudEmitterCount = 0;
-        rendererAuditionCloudPointCount = 0;
-    }
-    else if (rendererAuditionSourceMode == "cloud" && rendererAuditionCloudEmitterCount <= 0)
-    {
-        rendererAuditionFallbackReason = "cloud_emitters_unavailable";
-        rendererAuditionResolvedMode = "single";
-        rendererAuditionCloudEnabled = false;
-        rendererAuditionCloudPointCount = 0;
-    }
-    else
-    {
-        rendererAuditionResolvedMode = rendererAuditionSourceMode;
-    }
-
-    rendererAuditionDensity = rendererAuditionCloudEnabled
-        ? juce::jlimit (0.0f, 1.0f, static_cast<float> (rendererAuditionCloudPointCount) / 160.0f)
-        : 0.0f;
-    rendererAuditionReactivity = rendererAuditionCloudEnabled
-        ? juce::jlimit (
-            0.0f,
-            1.0f,
-            (0.58f * rendererAuditionLevelNorm) + (0.42f * (1.0f - rendererAuditionCloudCoherence)))
-        : 0.0f;
-    if (rendererAuditionFallbackReason == "none"
-        && rendererAuditionSourceMode == "cloud"
-        && rendererAuditionCloudBoundsAdjusted)
-    {
-        rendererAuditionFallbackReason = "cloud_bounds_clamped";
-    }
-
-    auto auditionCloudHashUnit = [rendererAuditionCloudSeed] (int emitterIndex, juce::uint32 salt) -> float
-    {
-        juce::uint32 hash = rendererAuditionCloudSeed;
-        const auto emitterOrdinal = static_cast<juce::uint32> (juce::jmax (0, emitterIndex) + 1);
-        hash ^= emitterOrdinal * 0x9E3779B9u;
-        hash ^= salt;
-        hash ^= (hash >> 16u);
-        hash *= 0x7FEB352Du;
-        hash ^= (hash >> 15u);
-        hash *= 0x846CA68Bu;
-        hash ^= (hash >> 16u);
-        return static_cast<float> (hash & 0x00FFFFFFu) / static_cast<float> (0x00FFFFFFu);
-    };
-
-    juce::String rendererAuditionCloudEmittersJson { "[" };
-    if (rendererAuditionCloudEnabled && rendererAuditionCloudEmitterCount > 0)
-    {
-        constexpr float kTwoPi = 6.28318530717958647692f;
-        const float baseAngleStep = kTwoPi / static_cast<float> (rendererAuditionCloudEmitterCount);
-        const float motionPhaseBias = static_cast<float> (rendererAuditionMotionIndex) * 0.31f
-                                      + rendererAuditionLevelNorm * 0.27f;
-        const float spreadScaleFromMotion = juce::jlimit (
-            0.5f,
-            1.6f,
-            0.65f + 0.35f * rendererAuditionCloudMotionSpreadScale);
-
-        for (int emitterIndex = 0; emitterIndex < rendererAuditionCloudEmitterCount; ++emitterIndex)
-        {
-            const float unitRadius = auditionCloudHashUnit (emitterIndex, 0xA53C9E11u);
-            const float unitAngleJitter = auditionCloudHashUnit (emitterIndex, 0x3C6EF372u);
-            const float unitHeight = auditionCloudHashUnit (emitterIndex, 0xBB67AE85u);
-            const float unitWeight = auditionCloudHashUnit (emitterIndex, 0xC2B2AE35u);
-            const float unitActivity = auditionCloudHashUnit (emitterIndex, 0x27D4EB2Fu);
-
-            const float angle = baseAngleStep * static_cast<float> (emitterIndex)
-                                + motionPhaseBias
-                                + (unitAngleJitter - 0.5f) * 0.75f;
-            const float radialSpread = rendererAuditionCloudSpreadMeters * spreadScaleFromMotion
-                                       * (0.25f + 0.75f * unitRadius);
-            const float localOffsetX = std::cos (angle) * radialSpread;
-            const float localOffsetZ = std::sin (angle) * radialSpread;
-            const float localOffsetY = (unitHeight - 0.5f) * 2.0f
-                                       * rendererAuditionCloudSpreadMeters
-                                       * rendererAuditionCloudVerticalSpreadScale;
-            const float weight = juce::jlimit (
-                0.05f,
-                1.0f,
-                (1.0f / static_cast<float> (rendererAuditionCloudEmitterCount)) * (0.82f + 0.36f * unitWeight));
-            const float phase = std::fmod (
-                static_cast<float> (emitterIndex) / static_cast<float> (juce::jmax (1, rendererAuditionCloudEmitterCount))
-                    + motionPhaseBias
-                    + unitAngleJitter * 0.33f,
-                1.0f);
-            const float activity = juce::jlimit (
-                0.0f,
-                1.0f,
-                0.32f
-                    + 0.58f * rendererAuditionLevelNorm
-                    + 0.22f * (1.0f - rendererAuditionCloudCoherence)
-                    + 0.12f * unitActivity);
-
-            if (emitterIndex > 0)
-                rendererAuditionCloudEmittersJson << ",";
-
-            rendererAuditionCloudEmittersJson << "{\"id\":" << juce::String (emitterIndex)
-                                              << ",\"weight\":" << juce::String (weight, 4)
-                                              << ",\"localOffsetX\":" << juce::String (localOffsetX, 3)
-                                              << ",\"localOffsetY\":" << juce::String (localOffsetY, 3)
-                                              << ",\"localOffsetZ\":" << juce::String (localOffsetZ, 3)
-                                              << ",\"phase\":" << juce::String (phase, 4)
-                                              << ",\"activity\":" << juce::String (activity, 4) << "}";
-        }
-    }
-    rendererAuditionCloudEmittersJson << "]";
-    const bool rendererAuditionReactiveActive =
-        rendererAuditionEnabled
-        && currentMode == LocusQMode::Renderer
-        && rendererAuditionVisualActive;
-    auto rendererAuditionReactive = makeNeutralAuditionReactiveSnapshot();
-    bool rendererAuditionReactiveInvalid = false;
-    bool rendererAuditionReactiveMissing = false;
-    if (rendererAuditionReactiveActive)
-    {
-        const auto sanitizedReactivePayload = sanitizeAuditionReactivePayload (
-            spatialRenderer.getAuditionReactiveSnapshot());
-        rendererAuditionReactive = sanitizedReactivePayload.snapshot;
-        rendererAuditionReactiveInvalid = sanitizedReactivePayload.invalidScalars
-            || sanitizedReactivePayload.invalidBounds;
-        rendererAuditionReactiveMissing = rendererAuditionCloudEnabled
-            && rendererAuditionResolvedMode == "cloud"
-            && rendererAuditionReactive.sourceEnergyCount <= 0;
-
-        if (rendererAuditionReactiveInvalid || rendererAuditionReactiveMissing)
-            rendererAuditionReactive = makeNeutralAuditionReactiveSnapshot();
-    }
-
-    if (rendererAuditionFallbackReason == "none" && rendererAuditionReactiveInvalid)
-        rendererAuditionFallbackReason = "reactive_payload_invalid";
-    else if (rendererAuditionFallbackReason == "none" && rendererAuditionReactiveMissing)
-        rendererAuditionFallbackReason = "reactive_payload_missing";
-    const bool rendererAuditionReactivePublishedActive = rendererAuditionReactiveActive
-        && ! rendererAuditionReactiveInvalid
-        && ! rendererAuditionReactiveMissing;
-
-    const juce::String rendererAuditionReactiveHeadphoneFallbackReason {
-        SpatialRenderer::auditionReactiveHeadphoneFallbackReasonToString (
-            rendererAuditionReactive.headphoneFallbackReasonIndex)
-    };
-    const bool rendererAuditionReactiveHeadphoneFallback =
-        rendererAuditionReactive.headphoneFallbackReasonIndex
-            != static_cast<int> (SpatialRenderer::AuditionReactiveHeadphoneFallbackReason::None);
-    bool rendererAuditionReactiveSourceBoundsAdjusted = false;
-    const auto rendererAuditionSourceEnergyCount = sanitizeBoundedInt (
-        rendererAuditionReactive.sourceEnergyCount,
-        0,
-        SpatialRenderer::MAX_AUDITION_REACTIVE_SOURCES,
-        &rendererAuditionReactiveSourceBoundsAdjusted);
-    if (rendererAuditionFallbackReason == "none" && rendererAuditionReactiveSourceBoundsAdjusted)
-        rendererAuditionFallbackReason = "reactive_source_count_invalid";
-
-    juce::String rendererAuditionSourceEnergyJson { "[" };
-    juce::String rendererAuditionSourceEnergyNormJson { "[" };
-    for (int sourceIndex = 0; sourceIndex < rendererAuditionSourceEnergyCount; ++sourceIndex)
-    {
-        if (sourceIndex > 0)
-        {
-            rendererAuditionSourceEnergyJson << ",";
-            rendererAuditionSourceEnergyNormJson << ",";
-        }
-        const auto sourceEnergy = sanitizeUnitScalar (
-            rendererAuditionReactive.sourceEnergy[static_cast<size_t> (sourceIndex)],
-            0.0f);
-        rendererAuditionSourceEnergyJson << juce::String (
-            sourceEnergy,
-            5);
-        rendererAuditionSourceEnergyNormJson << juce::String (sourceEnergy, 5);
-    }
-    rendererAuditionSourceEnergyJson << "]";
-    rendererAuditionSourceEnergyNormJson << "]";
-
-    const auto escapeJsonString = [] (juce::String text)
-    {
-        return text.replace ("\\", "\\\\").replace ("\"", "\\\"");
-    };
-    const bool rendererSteamAudioCompiled = spatialRenderer.isSteamAudioCompiled();
-    const bool rendererSteamAudioAvailable = spatialRenderer.isSteamAudioAvailable();
-    const int rendererSteamAudioInitStageIndex = spatialRenderer.getSteamAudioInitStageIndex();
-    const juce::String rendererSteamAudioInitStage {
-        SpatialRenderer::steamAudioInitStageToString (rendererSteamAudioInitStageIndex)
-    };
-    const int rendererSteamAudioInitErrorCode = spatialRenderer.getSteamAudioInitErrorCode();
-    const juce::String rendererSteamAudioRuntimeLib {
-        escapeJsonString (spatialRenderer.getSteamAudioRuntimeLibraryPath())
-    };
-    const juce::String rendererSteamAudioMissingSymbol {
-        escapeJsonString (spatialRenderer.getSteamAudioMissingSymbolName())
-    };
-    const int rendererSpatialProfileRequestedIndex = juce::jlimit (
-        0,
-        11,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_spatial_profile")->load())));
-    const int rendererSpatialProfileActiveIndex = spatialRenderer.getSpatialOutputProfileActiveIndex();
-    const int rendererSpatialProfileStageIndex = spatialRenderer.getSpatialProfileStageIndex();
-    const juce::String rendererSpatialProfileRequested {
-        SpatialRenderer::spatialOutputProfileToString (rendererSpatialProfileRequestedIndex)
-    };
-    const juce::String rendererSpatialProfileActive {
-        SpatialRenderer::spatialOutputProfileToString (rendererSpatialProfileActiveIndex)
-    };
-    const juce::String rendererSpatialProfileStage {
-        SpatialRenderer::spatialProfileStageToString (rendererSpatialProfileStageIndex)
-    };
-    const bool rendererAmbiCompiled = (rendererSpatialProfileRequestedIndex
-                                       == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicFOA))
-                                      || (rendererSpatialProfileRequestedIndex
-                                          == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicHOA));
-    const bool rendererAmbiActive = (rendererSpatialProfileActiveIndex
-                                     == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicFOA))
-                                    || (rendererSpatialProfileActiveIndex
-                                        == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicHOA));
-    const int rendererAmbiMaxOrder = rendererSpatialProfileActiveIndex
-                                     == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicHOA)
-                                         ? 3
-                                         : 1;
-    const juce::String rendererAmbiNormalization { "sn3d" };
-    const juce::String rendererAmbiChannelOrder { "acn" };
-    const juce::String rendererAmbiDecodeLayout { rendererSpatialProfileActive };
-    const juce::String rendererAmbiStage { rendererSpatialProfileStage };
-    const auto clapDiagnostics = getClapRuntimeDiagnostics();
-    const juce::String clapWrapperType {
-        escapeJsonString (clapDiagnostics.wrapperType)
-    };
-    const juce::String clapLifecycleStage {
-        escapeJsonString (clapDiagnostics.lifecycleStage)
-    };
-    const juce::String clapRuntimeMode {
-        escapeJsonString (clapDiagnostics.runtimeMode)
-    };
-    auto rendererHeadphoneModeActiveIndex = spatialRenderer.getHeadphoneRenderModeActiveIndex();
-    if (outputChannels >= 2)
-    {
-        rendererHeadphoneModeActiveIndex =
-            (rendererHeadphoneModeRequestedIndex == static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural)
-             && rendererSteamAudioAvailable)
-                ? static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural)
-                : static_cast<int> (SpatialRenderer::HeadphoneRenderMode::StereoDownmix);
-    }
-    else
-    {
-        rendererHeadphoneModeActiveIndex = static_cast<int> (SpatialRenderer::HeadphoneRenderMode::StereoDownmix);
-    }
-    const juce::String rendererHeadphoneModeRequested {
-        SpatialRenderer::headphoneRenderModeToString (rendererHeadphoneModeRequestedIndex)
-    };
-    const juce::String rendererHeadphoneModeActive {
-        SpatialRenderer::headphoneRenderModeToString (rendererHeadphoneModeActiveIndex)
-    };
-    const auto rendererHeadphoneProfileActiveIndex = spatialRenderer.getHeadphoneDeviceProfileActiveIndex();
-    const juce::String rendererHeadphoneProfileRequested {
-        SpatialRenderer::headphoneDeviceProfileToString (rendererHeadphoneProfileRequestedIndex)
-    };
-    const juce::String rendererHeadphoneProfileActive {
-        SpatialRenderer::headphoneDeviceProfileToString (rendererHeadphoneProfileActiveIndex)
-    };
-    const bool rendererHeadPoseAvailable = headTrackingBridge.currentPose() != nullptr;
-    const auto rendererMatrix = buildRendererMatrixSnapshot (
-        rendererSpatialProfileRequestedIndex,
-        rendererSpatialProfileActiveIndex,
-        rendererSpatialProfileStageIndex,
-        rendererHeadphoneModeRequestedIndex,
-        rendererHeadphoneModeActiveIndex,
-        outputChannels,
-        rendererHeadPoseAvailable);
-    const auto rendererMatrixEventSeq = static_cast<juce::uint64> (snapshotSeq);
-    const bool rendererPhysicsLensEnabled = apvts.getRawParameterValue ("rend_viz_physics_lens")->load() > 0.5f;
-    const float rendererPhysicsLensMix = juce::jlimit (
-        0.0f,
-        1.0f,
-        apvts.getRawParameterValue ("rend_viz_diag_mix")->load());
-
-    if (outputChannels >= 13
-        && (rendererSpatialProfileActiveIndex == static_cast<int> (SpatialRenderer::SpatialOutputProfile::Surround742)
-            || rendererSpatialProfileActiveIndex == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AtmosBed)))
-    {
-        outputChannelLabelsJson = "[\"L\",\"R\",\"C\",\"LFE1\",\"LFE2\",\"Ls\",\"Rs\",\"Lrs\",\"Rrs\",\"TopFL\",\"TopFR\",\"TopRL\",\"TopRR\"]";
-        rendererOutputMode = rendererSpatialProfileActive;
-    }
-    else if (outputChannels >= 10
-             && rendererSpatialProfileActiveIndex == static_cast<int> (SpatialRenderer::SpatialOutputProfile::Surround721))
-    {
-        outputChannelLabelsJson = "[\"L\",\"R\",\"C\",\"LFE1\",\"LFE2\",\"Ls\",\"Rs\",\"Lrs\",\"Rrs\",\"TopC\"]";
-        rendererOutputMode = rendererSpatialProfileActive;
-    }
-    else if (outputChannels >= 8
-             && rendererSpatialProfileActiveIndex == static_cast<int> (SpatialRenderer::SpatialOutputProfile::Surround521))
-    {
-        outputChannelLabelsJson = "[\"L\",\"R\",\"C\",\"LFE1\",\"LFE2\",\"Ls\",\"Rs\",\"TopC\"]";
-        rendererOutputMode = rendererSpatialProfileActive;
-    }
-    else if (outputChannels >= SpatialRenderer::NUM_SPEAKERS
-             && rendererAmbiActive)
-    {
-        outputChannelLabelsJson = "[\"W\",\"X\",\"Y\",\"Z\"]";
-        rendererOutputMode = rendererSpatialProfileActive;
-    }
-    else if (outputChannels >= SpatialRenderer::NUM_SPEAKERS)
-    {
-        outputChannelLabelsJson = "[\"FL\",\"FR\",\"RL\",\"RR\"]";
-        rendererOutputMode = "quad_map_first4";
-    }
-    else if (outputChannels >= 2)
-    {
-        outputChannelLabelsJson = "[\"L\",\"R\"]";
-        rendererOutputMode = rendererSpatialProfileActive;
-        if (rendererOutputMode.isEmpty() || rendererOutputMode == "auto")
-            rendererOutputMode = rendererHeadphoneModeActive;
-    }
-
-    const auto currentCalSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
-    const auto currentCalSpeakerRouting = getCurrentCalibrationSpeakerRouting();
-    const auto currentCalTopologyProfile = getCurrentCalibrationTopologyProfileIndex();
-    const auto currentCalMonitoringPath = getCurrentCalibrationMonitoringPathIndex();
-    const auto currentCalDeviceProfile = getCurrentCalibrationDeviceProfileIndex();
-    const auto currentCalTopologyId = calibrationTopologyIdForIndex (currentCalTopologyProfile);
-    const auto currentCalMonitoringPathId = calibrationMonitoringPathIdForIndex (currentCalMonitoringPath);
-    const auto currentCalDeviceProfileId = calibrationDeviceProfileIdForIndex (currentCalDeviceProfile);
-    const auto currentCalRequiredChannels = getRequiredCalibrationChannelsForTopologyIndex (currentCalTopologyProfile);
-    const auto currentCalWritableChannels = resolveCalibrationWritableChannels (
-        outputChannels > 0 ? outputChannels : getSnapshotOutputChannels(),
-        static_cast<int> (getBusesLayout().getMainOutputChannelSet().size()),
-        lastAutoDetectedOutputChannels,
-        currentCalSpeakerRouting);
-    const bool currentCalMappingLimitedToFirst4 = currentCalRequiredChannels > currentCalWritableChannels;
-    const auto toRoutingJson = [] (const std::array<int, SpatialRenderer::NUM_SPEAKERS>& routing)
-    {
-        juce::String jsonArray { "[" };
-        for (size_t i = 0; i < routing.size(); ++i)
-        {
-            if (i > 0)
-                jsonArray << ",";
-            jsonArray << juce::String (juce::jlimit (1, 8, routing[i]));
-        }
-        jsonArray << "]";
-        return jsonArray;
-    };
-
-    const auto currentCalSpeakerRoutingJson = toRoutingJson (currentCalSpeakerRouting);
-    const auto autoDetectedRoutingJson = toRoutingJson (lastAutoDetectedSpeakerRouting);
-    const auto autoDetectedTopologyId = calibrationTopologyIdForIndex (lastAutoDetectedTopologyProfile);
-    const auto rendererHeadphoneCalibration = buildHeadphoneCalibrationDiagnosticsSnapshot (
-        currentCalMonitoringPath,
-        rendererHeadphoneModeRequestedIndex,
-        rendererHeadphoneModeActiveIndex,
-        outputChannels,
-        rendererSteamAudioAvailable,
-        rendererSteamAudioInitStage);
-
-    {
-        const juce::SpinLock::ScopedLockType publishedCalibrationLock (publishedHeadphoneCalibrationLock);
-        publishedHeadphoneCalibrationDiagnostics.profileSyncSeq = snapshotSeq;
-        publishedHeadphoneCalibrationDiagnostics.requested = rendererHeadphoneCalibration.requested;
-        publishedHeadphoneCalibrationDiagnostics.active = rendererHeadphoneCalibration.active;
-        publishedHeadphoneCalibrationDiagnostics.stage = rendererHeadphoneCalibration.stage;
-        publishedHeadphoneCalibrationDiagnostics.fallbackReady = rendererHeadphoneCalibration.fallbackReady;
-        publishedHeadphoneCalibrationDiagnostics.fallbackReason = rendererHeadphoneCalibration.fallbackReason;
-        publishedHeadphoneCalibrationDiagnostics.valid = true;
-    }
-
-    Vec3 listenerPosition { 0.0f, 1.2f, 0.0f };
-    Vec3 roomDimensions { 6.0f, 4.0f, 3.0f };
-    std::array<Vec3, SpatialRenderer::NUM_SPEAKERS> speakerPositions = kViewportFallbackSpeakerPositions;
-    std::array<float, SpatialRenderer::NUM_SPEAKERS> speakerGainTrims {};
-    std::array<float, SpatialRenderer::NUM_SPEAKERS> speakerDelayCompMs {};
-    bool roomProfileValid = false;
-
-    if (auto roomProfile = sceneGraph.getRoomProfile(); roomProfile != nullptr && roomProfile->valid)
-    {
-        roomProfileValid = true;
-        listenerPosition = roomProfile->listenerPos;
-        roomDimensions = roomProfile->dimensions;
-
-        for (size_t i = 0; i < speakerPositions.size(); ++i)
-        {
-            speakerPositions[i] = roomProfile->speakers[i].position;
-            speakerGainTrims[i] = roomProfile->speakers[i].gainTrim;
-            speakerDelayCompMs[i] = roomProfile->speakers[i].delayComp;
-        }
-    }
-
-    {
-        const juce::SpinLock::ScopedTryLockType timelineLock (keyframeTimelineLock);
-        if (timelineLock.isLocked())
-        {
-            timelineTime = keyframeTimeline.getCurrentTimeSeconds();
-            timelineDuration = keyframeTimeline.getDurationSeconds();
-            timelineLooping = keyframeTimeline.isLooping();
-        }
-    }
-
-    for (int i = 0; i < SceneGraph::MAX_EMITTERS; ++i)
-    {
-        if (! sceneGraph.isSlotActive (i)) continue;
-        auto data = sceneGraph.getSlot (i).read();
-        if (! data.active) continue;
-
-        if (! first) json += ",";
-        first = false;
-
-        const auto* emitterAudio = sceneGraph.getSlot (i).getAudioMono();
-        const auto emitterAudioSamples = sceneGraph.getSlot (i).getAudioNumSamples();
-        const auto emitterRmsLinear = computeMonoRmsLinear (emitterAudio, emitterAudioSamples);
-        const auto emitterRmsDb = juce::Decibels::gainToDecibels (juce::jmax (1.0e-6f, emitterRmsLinear), -120.0f);
-
-        json += "{\"id\":" + juce::String (i)
-              + ",\"x\":" + juce::String (data.position.x, 3)
-              + ",\"y\":" + juce::String (data.position.y, 3)
-              + ",\"z\":" + juce::String (data.position.z, 3)
-              + ",\"sx\":" + juce::String (data.size.x, 2)
-              + ",\"sy\":" + juce::String (data.size.y, 2)
-              + ",\"sz\":" + juce::String (data.size.z, 2)
-              + ",\"gain\":" + juce::String (data.gain, 1)
-              + ",\"spread\":" + juce::String (data.spread, 2)
-              + ",\"directivity\":" + juce::String (data.directivity, 2)
-              + ",\"aimX\":" + juce::String (data.directivityAim.x, 3)
-              + ",\"aimY\":" + juce::String (data.directivityAim.y, 3)
-              + ",\"aimZ\":" + juce::String (data.directivityAim.z, 3)
-              + ",\"color\":" + juce::String (data.colorIndex)
-              + ",\"muted\":" + juce::String (data.muted ? "true" : "false")
-              + ",\"soloed\":" + juce::String (data.soloed ? "true" : "false")
-              + ",\"physics\":" + juce::String (data.physicsEnabled ? "true" : "false")
-              + ",\"vx\":" + juce::String (data.velocity.x, 3)
-              + ",\"vy\":" + juce::String (data.velocity.y, 3)
-              + ",\"vz\":" + juce::String (data.velocity.z, 3)
-              + ",\"fx\":" + juce::String (data.force.x, 3)
-              + ",\"fy\":" + juce::String (data.force.y, 3)
-              + ",\"fz\":" + juce::String (data.force.z, 3)
-              + ",\"collisionMask\":" + juce::String (static_cast<int> (data.collisionMask))
-              + ",\"collisionEnergy\":" + juce::String (data.collisionEnergy, 4)
-              + ",\"rms\":" + juce::String (emitterRmsLinear, 5)
-              + ",\"rmsDb\":" + juce::String (emitterRmsDb, 2)
-              + ",\"label\":\"" + juce::String (data.label) + "\""
-              + "}";
-    }
-
-    juce::String speakerRmsJson { "[" };
-    juce::String speakersJson { "[" };
-    for (size_t i = 0; i < sceneSpeakerRms.size(); ++i)
-    {
-        if (i > 0)
-        {
-            speakerRmsJson << ",";
-            speakersJson << ",";
-        }
-
-        const auto speakerRms = juce::jlimit (0.0f, 4.0f, sceneSpeakerRms[i]);
-        speakerRmsJson << juce::String (speakerRms, 5);
-
-        speakersJson << "{\"id\":" << juce::String (static_cast<int> (i))
-                     << ",\"label\":\"" << juce::String (kInternalSpeakerLabels[i]) << "\""
-                     << ",\"x\":" << juce::String (speakerPositions[i].x, 3)
-                     << ",\"y\":" << juce::String (speakerPositions[i].y, 3)
-                     << ",\"z\":" << juce::String (speakerPositions[i].z, 3)
-                     << ",\"gainTrimDb\":" << juce::String (speakerGainTrims[i], 3)
-                     << ",\"delayCompMs\":" << juce::String (speakerDelayCompMs[i], 3)
-                     << ",\"rms\":" << juce::String (speakerRms, 5)
-                     << "}";
-    }
-    speakerRmsJson << "]";
-    speakersJson << "]";
-
-    json += "],\"emitterCount\":" + juce::String (sceneGraph.getActiveEmitterCount())
-          + ",\"localEmitterId\":" + juce::String (emitterSlotId)
-          + ",\"rendererActive\":" + juce::String (sceneGraph.isRendererRegistered() ? "true" : "false")
-          + ",\"rendererEligibleEmitters\":" + juce::String (spatialRenderer.getLastEligibleEmitterCount())
-          + ",\"rendererProcessedEmitters\":" + juce::String (spatialRenderer.getLastProcessedEmitterCount())
-          + ",\"rendererCulledBudget\":" + juce::String (spatialRenderer.getLastBudgetCulledEmitterCount())
-          + ",\"rendererCulledActivity\":" + juce::String (spatialRenderer.getLastActivityCulledEmitterCount())
-          + ",\"rendererGuardrailActive\":" + juce::String (spatialRenderer.wasGuardrailActiveLastBlock() ? "true" : "false")
-          + ",\"outputChannels\":" + juce::String (outputChannels)
-          + ",\"outputLayout\":\"" + outputLayout + "\""
-          + ",\"rendererOutputMode\":\"" + rendererOutputMode + "\""
-          + ",\"rendererSpatialProfileRequested\":\"" + rendererSpatialProfileRequested + "\""
-          + ",\"rendererSpatialProfileActive\":\"" + rendererSpatialProfileActive + "\""
-          + ",\"rendererSpatialProfileStage\":\"" + rendererSpatialProfileStage + "\""
-          + ",\"rendererMatrixRequestedDomain\":\"" + escapeJsonString (rendererMatrix.requestedDomain) + "\""
-          + ",\"rendererMatrixActiveDomain\":\"" + escapeJsonString (rendererMatrix.activeDomain) + "\""
-          + ",\"rendererMatrixRequestedLayout\":\"" + escapeJsonString (rendererMatrix.requestedLayout) + "\""
-          + ",\"rendererMatrixActiveLayout\":\"" + escapeJsonString (rendererMatrix.activeLayout) + "\""
-          + ",\"rendererMatrixRuleId\":\"" + escapeJsonString (rendererMatrix.ruleId) + "\""
-          + ",\"rendererMatrixRuleState\":\"" + escapeJsonString (rendererMatrix.ruleState) + "\""
-          + ",\"rendererMatrixReasonCode\":\"" + escapeJsonString (rendererMatrix.reasonCode) + "\""
-          + ",\"rendererMatrixFallbackMode\":\"" + escapeJsonString (rendererMatrix.fallbackMode) + "\""
-          + ",\"rendererMatrixFailSafeRoute\":\"" + escapeJsonString (rendererMatrix.failSafeRoute) + "\""
-          + ",\"rendererMatrixStatusText\":\"" + escapeJsonString (rendererMatrix.statusText) + "\""
-          + ",\"rendererMatrixEventSeq\":" + juce::String (static_cast<juce::int64> (rendererMatrixEventSeq))
-          + ",\"rendererMatrix\":{\"requestedDomain\":\"" + escapeJsonString (rendererMatrix.requestedDomain) + "\""
-              + ",\"activeDomain\":\"" + escapeJsonString (rendererMatrix.activeDomain) + "\""
-              + ",\"requestedLayout\":\"" + escapeJsonString (rendererMatrix.requestedLayout) + "\""
-              + ",\"activeLayout\":\"" + escapeJsonString (rendererMatrix.activeLayout) + "\""
-              + ",\"ruleId\":\"" + escapeJsonString (rendererMatrix.ruleId) + "\""
-              + ",\"ruleState\":\"" + escapeJsonString (rendererMatrix.ruleState) + "\""
-              + ",\"fallbackMode\":\"" + escapeJsonString (rendererMatrix.fallbackMode) + "\""
-              + ",\"reasonCode\":\"" + escapeJsonString (rendererMatrix.reasonCode) + "\""
-              + ",\"statusText\":\"" + escapeJsonString (rendererMatrix.statusText) + "\"}"
-          + ",\"rendererHeadphoneModeRequested\":\"" + rendererHeadphoneModeRequested + "\""
-          + ",\"rendererHeadphoneModeActive\":\"" + rendererHeadphoneModeActive + "\""
-          + ",\"rendererHeadphoneProfileRequested\":\"" + rendererHeadphoneProfileRequested + "\""
-          + ",\"rendererHeadphoneProfileActive\":\"" + rendererHeadphoneProfileActive + "\""
-          + ",\"rendererHeadphoneCalibrationSchema\":\""
-              + escapeJsonString (locusq::shared_contracts::headphone_calibration::kSchemaV1) + "\""
-          + ",\"rendererHeadphoneCalibrationRequested\":\""
-              + escapeJsonString (rendererHeadphoneCalibration.requested) + "\""
-          + ",\"rendererHeadphoneCalibrationActive\":\""
-              + escapeJsonString (rendererHeadphoneCalibration.active) + "\""
-          + ",\"rendererHeadphoneCalibrationStage\":\""
-              + escapeJsonString (rendererHeadphoneCalibration.stage) + "\""
-          + ",\"rendererHeadphoneCalibrationFallbackReady\":"
-              + juce::String (rendererHeadphoneCalibration.fallbackReady ? "true" : "false")
-          + ",\"rendererHeadphoneCalibrationFallbackReason\":\""
-              + escapeJsonString (rendererHeadphoneCalibration.fallbackReason) + "\""
-          + ",\"rendererHeadphoneCalibration\":{\"schema\":\""
-              + escapeJsonString (locusq::shared_contracts::headphone_calibration::kSchemaV1) + "\""
-              + ",\"requested\":\"" + escapeJsonString (rendererHeadphoneCalibration.requested) + "\""
-              + ",\"active\":\"" + escapeJsonString (rendererHeadphoneCalibration.active) + "\""
-              + ",\"stage\":\"" + escapeJsonString (rendererHeadphoneCalibration.stage) + "\""
-              + ",\"fallbackReady\":"
-              + juce::String (rendererHeadphoneCalibration.fallbackReady ? "true" : "false")
-              + ",\"fallbackReason\":\"" + escapeJsonString (rendererHeadphoneCalibration.fallbackReason) + "\"}"
-          + ",\"rendererAuditionEnabled\":" + juce::String (rendererAuditionEnabled ? "true" : "false")
-          + ",\"rendererAuditionSignal\":\"" + escapeJsonString (rendererAuditionSignal) + "\""
-          + ",\"rendererAuditionMotion\":\"" + escapeJsonString (rendererAuditionMotion) + "\""
-          + ",\"rendererAuditionLevelDb\":" + juce::String (rendererAuditionLevelDb, 1)
-          + ",\"rendererAuditionSourceMode\":\"" + escapeJsonString (rendererAuditionSourceMode) + "\""
-          + ",\"rendererAuditionRequestedMode\":\"" + escapeJsonString (rendererAuditionRequestedMode) + "\""
-          + ",\"rendererAuditionResolvedMode\":\"" + escapeJsonString (rendererAuditionResolvedMode) + "\""
-          + ",\"rendererAuditionBindingTarget\":\"" + escapeJsonString (rendererAuditionBindingTarget) + "\""
-          + ",\"rendererAuditionBindingAvailable\":" + juce::String (rendererAuditionBindingAvailable ? "true" : "false")
-          + ",\"rendererAuditionSeed\":" + juce::String (static_cast<juce::uint64> (rendererAuditionCloudSeed))
-          + ",\"rendererAuditionTransportSync\":" + juce::String (rendererAuditionTransportSync ? "true" : "false")
-          + ",\"rendererAuditionDensity\":" + juce::String (rendererAuditionDensity, 4)
-          + ",\"rendererAuditionReactivity\":" + juce::String (rendererAuditionReactivity, 4)
-          + ",\"rendererAuditionFallbackReason\":\"" + escapeJsonString (rendererAuditionFallbackReason) + "\""
-          + ",\"rendererAuditionVisualActive\":" + juce::String (rendererAuditionVisualActive ? "true" : "false")
-          + ",\"rendererAuditionVisual\":{\"x\":" + juce::String (rendererAuditionVisualX, 3)
-              + ",\"y\":" + juce::String (rendererAuditionVisualY, 3)
-              + ",\"z\":" + juce::String (rendererAuditionVisualZ, 3) + "}"
-          + ",\"rendererAuditionCloud\":{\"enabled\":" + juce::String (rendererAuditionCloudEnabled ? "true" : "false")
-              + ",\"pattern\":\"" + escapeJsonString (rendererAuditionCloudPattern) + "\""
-              + ",\"mode\":\"" + escapeJsonString (rendererAuditionCloudMode) + "\""
-              + ",\"emitterCount\":" + juce::String (rendererAuditionCloudEmitterCount)
-              + ",\"pointCount\":" + juce::String (rendererAuditionCloudPointCount)
-              + ",\"spreadMeters\":" + juce::String (rendererAuditionCloudSpreadMeters, 3)
-              + ",\"seed\":" + juce::String (static_cast<juce::uint64> (rendererAuditionCloudSeed))
-              + ",\"pulseHz\":" + juce::String (rendererAuditionCloudPulseHz, 3)
-              + ",\"coherence\":" + juce::String (rendererAuditionCloudCoherence, 3)
-              + ",\"emitters\":" + rendererAuditionCloudEmittersJson + "}"
-          + ",\"rendererAuditionReactive\":{\"rms\":" + juce::String (rendererAuditionReactive.rms, 5)
-              + ",\"peak\":" + juce::String (rendererAuditionReactive.peak, 5)
-              + ",\"envFast\":" + juce::String (rendererAuditionReactive.envFast, 5)
-              + ",\"envSlow\":" + juce::String (rendererAuditionReactive.envSlow, 5)
-              + ",\"onset\":" + juce::String (rendererAuditionReactive.onset, 5)
-              + ",\"brightness\":" + juce::String (rendererAuditionReactive.brightness, 5)
-              + ",\"rainFadeRate\":" + juce::String (rendererAuditionReactive.rainFadeRate, 5)
-              + ",\"snowFadeRate\":" + juce::String (rendererAuditionReactive.snowFadeRate, 5)
-              + ",\"physicsVelocity\":" + juce::String (rendererAuditionReactive.physicsVelocity, 5)
-              + ",\"physicsCollision\":" + juce::String (rendererAuditionReactive.physicsCollision, 5)
-              + ",\"physicsDensity\":" + juce::String (rendererAuditionReactive.physicsDensity, 5)
-              + ",\"physicsCoupling\":" + juce::String (rendererAuditionReactive.physicsCoupling, 5)
-              + ",\"geometryScale\":" + juce::String (rendererAuditionReactive.geometryScale, 5)
-              + ",\"geometryWidth\":" + juce::String (rendererAuditionReactive.geometryWidth, 5)
-              + ",\"geometryDepth\":" + juce::String (rendererAuditionReactive.geometryDepth, 5)
-              + ",\"geometryHeight\":" + juce::String (rendererAuditionReactive.geometryHeight, 5)
-              + ",\"precipitationFade\":" + juce::String (rendererAuditionReactive.precipitationFade, 5)
-              + ",\"collisionBurst\":" + juce::String (rendererAuditionReactive.collisionBurst, 5)
-              + ",\"densitySpread\":" + juce::String (rendererAuditionReactive.densitySpread, 5)
-              + ",\"headphoneOutputRms\":" + juce::String (rendererAuditionReactive.headphoneOutputRms, 5)
-              + ",\"headphoneOutputPeak\":" + juce::String (rendererAuditionReactive.headphoneOutputPeak, 5)
-              + ",\"headphoneParity\":" + juce::String (rendererAuditionReactive.headphoneParity, 5)
-              + ",\"headphoneFallback\":" + juce::String (rendererAuditionReactiveHeadphoneFallback ? "true" : "false")
-              + ",\"headphoneFallbackReason\":\"" + escapeJsonString (rendererAuditionReactiveHeadphoneFallbackReason) + "\""
-              + ",\"sourceEnergy\":" + rendererAuditionSourceEnergyJson
-              + ",\"reactiveActive\":" + juce::String (rendererAuditionReactivePublishedActive ? "true" : "false")
-              + ",\"rmsNorm\":" + juce::String (rendererAuditionReactive.rmsNorm, 5)
-              + ",\"peakNorm\":" + juce::String (rendererAuditionReactive.peakNorm, 5)
-              + ",\"envFastNorm\":" + juce::String (rendererAuditionReactive.envFastNorm, 5)
-              + ",\"envSlowNorm\":" + juce::String (rendererAuditionReactive.envSlowNorm, 5)
-              + ",\"onsetNorm\":" + juce::String (rendererAuditionReactive.onset, 5)
-              + ",\"brightnessNorm\":" + juce::String (rendererAuditionReactive.brightness, 5)
-              + ",\"rainFadeRateNorm\":" + juce::String (rendererAuditionReactive.rainFadeRate, 5)
-              + ",\"snowFadeRateNorm\":" + juce::String (rendererAuditionReactive.snowFadeRate, 5)
-              + ",\"physicsVelocityNorm\":" + juce::String (rendererAuditionReactive.physicsVelocity, 5)
-              + ",\"physicsCollisionNorm\":" + juce::String (rendererAuditionReactive.physicsCollision, 5)
-              + ",\"physicsDensityNorm\":" + juce::String (rendererAuditionReactive.physicsDensity, 5)
-              + ",\"physicsCouplingNorm\":" + juce::String (rendererAuditionReactive.physicsCoupling, 5)
-              + ",\"headphoneOutputRmsNorm\":" + juce::String (rendererAuditionReactive.headphoneOutputRmsNorm, 5)
-              + ",\"headphoneOutputPeakNorm\":" + juce::String (rendererAuditionReactive.headphoneOutputPeakNorm, 5)
-              + ",\"headphoneParityNorm\":" + juce::String (rendererAuditionReactive.headphoneParityNorm, 5)
-              + ",\"sourceEnergyNorm\":" + rendererAuditionSourceEnergyNormJson + "}"
-          + ",\"rendererPhysicsLensEnabled\":" + juce::String (rendererPhysicsLensEnabled ? "true" : "false")
-          + ",\"rendererPhysicsLensMix\":" + juce::String (rendererPhysicsLensMix, 3)
-          + ",\"rendererSteamAudioCompiled\":" + juce::String (rendererSteamAudioCompiled ? "true" : "false")
-          + ",\"rendererSteamAudioAvailable\":" + juce::String (rendererSteamAudioAvailable ? "true" : "false")
-          + ",\"rendererSteamAudioInitStage\":\"" + rendererSteamAudioInitStage + "\""
-          + ",\"rendererSteamAudioInitErrorCode\":" + juce::String (rendererSteamAudioInitErrorCode)
-          + ",\"rendererSteamAudioRuntimeLib\":\"" + rendererSteamAudioRuntimeLib + "\""
-          + ",\"rendererSteamAudioMissingSymbol\":\"" + rendererSteamAudioMissingSymbol + "\""
-          + ",\"rendererAmbiCompiled\":" + juce::String (rendererAmbiCompiled ? "true" : "false")
-          + ",\"rendererAmbiActive\":" + juce::String (rendererAmbiActive ? "true" : "false")
-          + ",\"rendererAmbiMaxOrder\":" + juce::String (rendererAmbiMaxOrder)
-          + ",\"rendererAmbiNormalization\":\"" + rendererAmbiNormalization + "\""
-          + ",\"rendererAmbiChannelOrder\":\"" + rendererAmbiChannelOrder + "\""
-          + ",\"rendererAmbiDecodeLayout\":\"" + rendererAmbiDecodeLayout + "\""
-          + ",\"rendererAmbiStage\":\"" + rendererAmbiStage + "\""
-          + ",\"clapBuildEnabled\":" + juce::String (clapDiagnostics.buildEnabled ? "true" : "false")
-          + ",\"clapPropertiesAvailable\":" + juce::String (clapDiagnostics.propertiesAvailable ? "true" : "false")
-          + ",\"clapIsPluginFormat\":" + juce::String (clapDiagnostics.isClapInstance ? "true" : "false")
-          + ",\"clapIsActive\":" + juce::String (clapDiagnostics.isActive ? "true" : "false")
-          + ",\"clapIsProcessing\":" + juce::String (clapDiagnostics.isProcessing ? "true" : "false")
-          + ",\"clapHasTransport\":" + juce::String (clapDiagnostics.hasTransport ? "true" : "false")
-          + ",\"clapWrapperType\":\"" + clapWrapperType + "\""
-          + ",\"clapLifecycleStage\":\"" + clapLifecycleStage + "\""
-          + ",\"clapRuntimeMode\":\"" + clapRuntimeMode + "\""
-          + ",\"clapVersion\":{\"major\":" + juce::String (static_cast<int> (clapDiagnostics.versionMajor))
-              + ",\"minor\":" + juce::String (static_cast<int> (clapDiagnostics.versionMinor))
-              + ",\"revision\":" + juce::String (static_cast<int> (clapDiagnostics.versionRevision))
-              + "}"
-          + ",\"rendererOutputChannels\":" + outputChannelLabelsJson
-          + ",\"rendererInternalSpeakers\":" + internalSpeakerLabelsJson
-          + ",\"rendererQuadMap\":" + quadOutputMapJson
-          + ",\"calCurrentTopologyProfile\":" + juce::String (currentCalTopologyProfile)
-          + ",\"calCurrentTopologyId\":\"" + escapeJsonString (currentCalTopologyId) + "\""
-          + ",\"calCurrentMonitoringPath\":" + juce::String (currentCalMonitoringPath)
-          + ",\"calCurrentMonitoringPathId\":\"" + escapeJsonString (currentCalMonitoringPathId) + "\""
-          + ",\"calCurrentDeviceProfile\":" + juce::String (currentCalDeviceProfile)
-          + ",\"calCurrentDeviceProfileId\":\"" + escapeJsonString (currentCalDeviceProfileId) + "\""
-          + ",\"calRequiredChannels\":" + juce::String (currentCalRequiredChannels)
-          + ",\"calWritableChannels\":" + juce::String (currentCalWritableChannels)
-          + ",\"calMappingLimitedToFirst4\":" + juce::String (currentCalMappingLimitedToFirst4 ? "true" : "false")
-          + ",\"calTopologyAliasLegacySpeakerConfig\":" + juce::String (legacySpeakerConfigForTopologyIndex (currentCalTopologyProfile))
-          + ",\"calCurrentSpeakerConfig\":" + juce::String (currentCalSpeakerConfig)
-          + ",\"calCurrentSpeakerMap\":" + currentCalSpeakerRoutingJson
-          + ",\"calAutoRoutingApplied\":" + juce::String (hasAppliedAutoDetectedCalibrationRouting ? "true" : "false")
-          + ",\"calAutoRoutingOutputChannels\":" + juce::String (lastAutoDetectedOutputChannels)
-          + ",\"calAutoRoutingTopologyProfile\":" + juce::String (lastAutoDetectedTopologyProfile)
-          + ",\"calAutoRoutingTopologyId\":\"" + escapeJsonString (autoDetectedTopologyId) + "\""
-          + ",\"calAutoRoutingSpeakerConfig\":" + juce::String (lastAutoDetectedSpeakerConfig)
-          + ",\"calAutoRoutingMap\":" + autoDetectedRoutingJson
-          + ",\"roomProfileValid\":" + juce::String (roomProfileValid ? "true" : "false")
-          + ",\"roomDimensions\":{\"width\":" + juce::String (roomDimensions.x, 3)
-              + ",\"depth\":" + juce::String (roomDimensions.y, 3)
-              + ",\"height\":" + juce::String (roomDimensions.z, 3) + "}"
-          + ",\"listener\":{\"x\":" + juce::String (listenerPosition.x, 3)
-              + ",\"y\":" + juce::String (listenerPosition.y, 3)
-              + ",\"z\":" + juce::String (listenerPosition.z, 3) + "}"
-          + ",\"speakerRms\":" + speakerRmsJson
-          + ",\"speakers\":" + speakersJson
-          + ",\"physicsInteraction\":" + juce::String (sceneGraph.isPhysicsInteractionEnabled() ? "true" : "false")
-          + ",\"animEnabled\":" + juce::String (apvts.getRawParameterValue ("anim_enable")->load() > 0.5f ? "true" : "false")
-          + ",\"animMode\":" + juce::String (static_cast<int> (apvts.getRawParameterValue ("anim_mode")->load()))
-          + ",\"animTime\":" + juce::String (timelineTime, 3)
-          + ",\"animDuration\":" + juce::String (timelineDuration, 3)
-          + ",\"animLooping\":" + juce::String (timelineLooping ? "true" : "false")
-          + ",\"perfBlockMs\":" + juce::String (perfProcessBlockMs, 4)
-          + ",\"perfEmitterMs\":" + juce::String (perfEmitterPublishMs, 4)
-          + ",\"perfRendererMs\":" + juce::String (perfRendererProcessMs, 4)
-          + "}";
-
-    return json;
-}
-
-//==============================================================================
-bool LocusQAudioProcessor::startCalibrationFromUI (const juce::var& options)
-{
-    const auto snapshotOutputChannels = getSnapshotOutputChannels();
-    const auto layoutOutputChannels = static_cast<int> (getBusesLayout().getMainOutputChannelSet().size());
-    const auto initialRouting = getCurrentCalibrationSpeakerRouting();
-    const auto effectiveWritableChannels = resolveCalibrationWritableChannels (
-        snapshotOutputChannels,
-        layoutOutputChannels,
-        lastAutoDetectedOutputChannels,
-        initialRouting);
-
-    applyAutoDetectedCalibrationRoutingIfAppropriate (effectiveWritableChannels, false);
-
-    if (getCurrentMode() != LocusQMode::Calibrate)
-    {
-        const juce::String message { "Calibration start rejected: mode is not CALIBRATE." };
-        calibrationEngine.recordExternalStartFailure ("mode_mismatch", message);
-        DBG ("LocusQ: " << message);
-        return false;
-    }
-
-    const auto state = calibrationEngine.getState();
-    if (state == CalibrationEngine::State::Playing
-        || state == CalibrationEngine::State::Recording
-        || state == CalibrationEngine::State::Analyzing)
-    {
-        const juce::String message { "Calibration start rejected: calibration engine is already running." };
-        calibrationEngine.recordExternalStartFailure ("engine_busy", message);
-        DBG ("LocusQ: " << message);
-        return false;
-    }
-
-    if (state == CalibrationEngine::State::Complete
-        || state == CalibrationEngine::State::Error)
-    {
-        calibrationEngine.abortCalibration();
-    }
-
-    int testTypeIndex = static_cast<int> (apvts.getRawParameterValue ("cal_test_type")->load());
-    float levelDb     = apvts.getRawParameterValue ("cal_test_level")->load();
-    float sweepSecs   = 3.0f;
-    float tailSecs    = 1.5f;
-    int micChannel    = static_cast<int> (apvts.getRawParameterValue ("cal_mic_channel")->load()) - 1;
-    int topologyProfile = getCurrentCalibrationTopologyProfileIndex();
-    int monitoringPath = getCurrentCalibrationMonitoringPathIndex();
-    int deviceProfile = getCurrentCalibrationDeviceProfileIndex();
-    bool allowLimitedMapping = false;
-    int speakerCh[4] =
-    {
-        static_cast<int> (apvts.getRawParameterValue ("cal_spk1_out")->load()) - 1,
-        static_cast<int> (apvts.getRawParameterValue ("cal_spk2_out")->load()) - 1,
-        static_cast<int> (apvts.getRawParameterValue ("cal_spk3_out")->load()) - 1,
-        static_cast<int> (apvts.getRawParameterValue ("cal_spk4_out")->load()) - 1
-    };
-
-    if (auto* obj = options.getDynamicObject())
-    {
-        if (obj->hasProperty ("testType"))
-        {
-            const auto& value = obj->getProperty ("testType");
-            if (value.isString())
-                testTypeIndex = toSignalTypeIndex (value.toString());
-            else
-                testTypeIndex = static_cast<int> (value);
-        }
-
-        if (obj->hasProperty ("testLevelDb"))
-            levelDb = static_cast<float> (double (obj->getProperty ("testLevelDb")));
-
-        if (obj->hasProperty ("sweepSeconds"))
-            sweepSecs = static_cast<float> (double (obj->getProperty ("sweepSeconds")));
-
-        if (obj->hasProperty ("tailSeconds"))
-            tailSecs = static_cast<float> (double (obj->getProperty ("tailSeconds")));
-
-        if (obj->hasProperty ("micChannel"))
-            micChannel = static_cast<int> (obj->getProperty ("micChannel"));
-
-        if (obj->hasProperty ("topologyProfile"))
-        {
-            const auto topologyText = normaliseCalibrationTopologyId (obj->getProperty ("topologyProfile").toString());
-            const auto topologyIndex = indexOfCaseInsensitive (kCalibrationTopologyIds, topologyText);
-            if (topologyIndex >= 0)
-                topologyProfile = topologyIndex;
-        }
-
-        if (obj->hasProperty ("topologyProfileIndex"))
-            topologyProfile = static_cast<int> (obj->getProperty ("topologyProfileIndex"));
-
-        if (obj->hasProperty ("monitoringPath"))
-        {
-            const auto monitoringText = normaliseCalibrationMonitoringPathId (obj->getProperty ("monitoringPath").toString());
-            const auto monitoringIndex = indexOfCaseInsensitive (kCalibrationMonitoringPathIds, monitoringText);
-            if (monitoringIndex >= 0)
-                monitoringPath = monitoringIndex;
-        }
-
-        if (obj->hasProperty ("monitoringPathIndex"))
-            monitoringPath = static_cast<int> (obj->getProperty ("monitoringPathIndex"));
-
-        if (obj->hasProperty ("deviceProfile"))
-        {
-            const auto deviceText = normaliseCalibrationDeviceProfileId (obj->getProperty ("deviceProfile").toString());
-            const auto deviceIndex = indexOfCaseInsensitive (kCalibrationDeviceProfileIds, deviceText);
-            if (deviceIndex >= 0)
-                deviceProfile = deviceIndex;
-        }
-
-        if (obj->hasProperty ("deviceProfileIndex"))
-            deviceProfile = static_cast<int> (obj->getProperty ("deviceProfileIndex"));
-
-        if (obj->hasProperty ("allowLimitedMapping"))
-            allowLimitedMapping = static_cast<bool> (obj->getProperty ("allowLimitedMapping"));
-
-        if (obj->hasProperty ("speakerChannels"))
-        {
-            const auto channels = obj->getProperty ("speakerChannels");
-            if (auto* arr = channels.getArray())
-            {
-                const auto count = juce::jmin (4, arr->size());
-                for (int i = 0; i < count; ++i)
-                    speakerCh[i] = static_cast<int> (arr->getReference (i));
-            }
-        }
-    }
-
-    micChannel = juce::jlimit (0, 7, micChannel);
-    sweepSecs  = juce::jlimit (0.1f, 30.0f, sweepSecs);
-    tailSecs   = juce::jlimit (0.0f, 10.0f, tailSecs);
-    topologyProfile = juce::jlimit (0, static_cast<int> (kCalibrationTopologyIds.size()) - 1, topologyProfile);
-    monitoringPath = juce::jlimit (0, static_cast<int> (kCalibrationMonitoringPathIds.size()) - 1, monitoringPath);
-    deviceProfile = juce::jlimit (0, static_cast<int> (kCalibrationDeviceProfileIds.size()) - 1, deviceProfile);
-
-    for (int& ch : speakerCh)
-        ch = juce::jlimit (0, 7, ch);
-
-    const auto requiredChannels = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
-    const std::array<int, SpatialRenderer::NUM_SPEAKERS> requestedRouting
-    {
-        speakerCh[0] + 1,
-        speakerCh[1] + 1,
-        speakerCh[2] + 1,
-        speakerCh[3] + 1
-    };
-    const auto writableChannels = resolveCalibrationWritableChannels (
-        getSnapshotOutputChannels(),
-        layoutOutputChannels,
-        lastAutoDetectedOutputChannels,
-        requestedRouting);
-    if (requiredChannels > writableChannels && ! allowLimitedMapping)
-    {
-        const juce::String message = "Calibration start rejected: topology requires "
-            + juce::String (requiredChannels)
-            + " writable channels but runtime reports "
-            + juce::String (writableChannels)
-            + ". Enable limited mapping acknowledgement to proceed.";
-        calibrationEngine.recordExternalStartFailure ("writable_channel_gate", message);
-        DBG ("LocusQ: " << message);
-        return false;
-    }
-
-    const auto legacySpeakerConfig = legacySpeakerConfigForTopologyIndex (topologyProfile);
-    setIntegerParameterValueNotifyingHost ("cal_topology_profile", topologyProfile);
-    setIntegerParameterValueNotifyingHost ("cal_monitoring_path", monitoringPath);
-    setIntegerParameterValueNotifyingHost ("cal_device_profile", deviceProfile);
-    setIntegerParameterValueNotifyingHost ("cal_spk_config", legacySpeakerConfig);
-
-    // Keep renderer diagnostics in sync so CALIBRATE can validate requested vs active
-    // headphone/spatial states deterministically.
-    const auto headphoneModeIndex = (monitoringPath == 2 || monitoringPath == 3) ? 1 : 0;
-    setIntegerParameterValueNotifyingHost ("rend_headphone_mode", headphoneModeIndex);
-    setIntegerParameterValueNotifyingHost ("rend_headphone_profile", deviceProfile);
-
-    int rendererSpatialProfileIndex = 0;
-    switch (topologyProfile)
-    {
-        case 0: rendererSpatialProfileIndex = 1; break; // stereo safe
-        case 1: rendererSpatialProfileIndex = 1; break; // stereo 2.0
-        case 2: rendererSpatialProfileIndex = 2; break; // quad 4.0
-        case 3: rendererSpatialProfileIndex = 3; break; // surround 5.2.1
-        case 4: rendererSpatialProfileIndex = 4; break; // surround 7.2.1 (7.1)
-        case 5: rendererSpatialProfileIndex = 4; break; // surround 7.2.1 (7.1.2 alias target)
-        case 6: rendererSpatialProfileIndex = 5; break; // surround 7.4.2
-        case 7: rendererSpatialProfileIndex = 9; break; // binaural virtual 3D stereo
-        case 8: rendererSpatialProfileIndex = 6; break; // ambisonic FOA
-        case 9: rendererSpatialProfileIndex = 7; break; // ambisonic HOA
-        case 10: rendererSpatialProfileIndex = 9; break; // downmix target
-        default: break;
-    }
-    setIntegerParameterValueNotifyingHost ("rend_spatial_profile", rendererSpatialProfileIndex);
-
-    if (auto* param = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("cal_mic_channel")))
-        param->setValueNotifyingHost (param->convertTo0to1 (static_cast<float> (micChannel + 1)));
-
-    const auto started = calibrationEngine.startCalibration (toSignalType (testTypeIndex),
-                                                             levelDb,
-                                                             sweepSecs,
-                                                             tailSecs,
-                                                             speakerCh,
-                                                             micChannel);
-
-    if (! started)
-    {
-        const auto startDiagnostics = calibrationEngine.getLastStartDiagnostics();
-        DBG ("LocusQ: Calibration start rejected ["
-             << startDiagnostics.code
-             << "] "
-             << startDiagnostics.message);
-        return false;
-    }
-
-    const auto startDiagnostics = calibrationEngine.getLastStartDiagnostics();
-    DBG ("LocusQ: Calibration start accepted (seq="
-         << static_cast<int> (startDiagnostics.seq)
-         << ", writableChannels="
-         << writableChannels
-         << ")");
-    return true;
-}
-
-void LocusQAudioProcessor::abortCalibrationFromUI()
-{
-    calibrationEngine.abortCalibration();
-}
-
-juce::var LocusQAudioProcessor::redetectCalibrationRoutingFromUI()
-{
-    const auto snapshotOutputChannels = getSnapshotOutputChannels();
-    const auto layoutOutputChannels = static_cast<int> (getBusesLayout().getMainOutputChannelSet().size());
-    const auto effectiveWritableChannels = resolveCalibrationWritableChannels (
-        snapshotOutputChannels,
-        layoutOutputChannels,
-        lastAutoDetectedOutputChannels,
-        getCurrentCalibrationSpeakerRouting());
-
-    applyAutoDetectedCalibrationRoutingIfAppropriate (effectiveWritableChannels, true);
-
-    juce::var resultVar (new juce::DynamicObject());
-    auto* result = resultVar.getDynamicObject();
-    if (result == nullptr)
-        return resultVar;
-
-    result->setProperty ("ok", true);
-    result->setProperty ("outputChannels", effectiveWritableChannels);
-    const auto topologyProfile = getCurrentCalibrationTopologyProfileIndex();
-    const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
-    const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
-    const auto requiredChannels = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
-    const auto writableChannels = resolveCalibrationWritableChannels (
-        snapshotOutputChannels,
-        layoutOutputChannels,
-        lastAutoDetectedOutputChannels,
-        getCurrentCalibrationSpeakerRouting());
-    result->setProperty ("speakerConfigIndex", getCurrentCalibrationSpeakerConfigIndex());
-    result->setProperty ("topologyProfileIndex", topologyProfile);
-    result->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyProfile));
-    result->setProperty ("monitoringPathIndex", monitoringPath);
-    result->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPath));
-    result->setProperty ("deviceProfileIndex", deviceProfile);
-    result->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfile));
-    result->setProperty ("requiredChannels", requiredChannels);
-    result->setProperty ("writableChannels", writableChannels);
-    result->setProperty ("mappingLimitedToFirst4", requiredChannels > writableChannels);
-
-    juce::Array<juce::var> routing;
-    const auto map = getCurrentCalibrationSpeakerRouting();
-    for (const auto channel : map)
-        routing.add (juce::jlimit (1, 8, channel));
-    result->setProperty ("routing", juce::var (routing));
-
-    return resultVar;
-}
-
-juce::var LocusQAudioProcessor::getCalibrationStatus() const
-{
-    auto progress = calibrationEngine.getProgress();
-    const auto state = progress.state;
-    const auto speakerIndex = juce::jlimit (0, 3, progress.currentSpeaker);
-    const auto topologyProfile = getCurrentCalibrationTopologyProfileIndex();
-    const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
-    const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
-    const auto outputChannels = getMainBusNumOutputChannels();
-    const bool rendererSteamAudioAvailable = spatialRenderer.isSteamAudioAvailable();
-    const juce::String rendererSteamAudioInitStage {
-        SpatialRenderer::steamAudioInitStageToString (spatialRenderer.getSteamAudioInitStageIndex())
-    };
-    const int rendererHeadphoneModeRequestedIndex = juce::jlimit (
-        0,
-        1,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_headphone_mode")->load())));
-    auto rendererHeadphoneModeActiveIndex = spatialRenderer.getHeadphoneRenderModeActiveIndex();
-    if (outputChannels >= 2)
-    {
-        rendererHeadphoneModeActiveIndex =
-            (rendererHeadphoneModeRequestedIndex == static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural)
-             && rendererSteamAudioAvailable)
-                ? static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural)
-                : static_cast<int> (SpatialRenderer::HeadphoneRenderMode::StereoDownmix);
-    }
-    else
-    {
-        rendererHeadphoneModeActiveIndex = static_cast<int> (SpatialRenderer::HeadphoneRenderMode::StereoDownmix);
-    }
-    auto headphoneCalibration = buildHeadphoneCalibrationDiagnosticsSnapshot (
-        monitoringPath,
-        rendererHeadphoneModeRequestedIndex,
-        rendererHeadphoneModeActiveIndex,
-        outputChannels,
-        rendererSteamAudioAvailable,
-        rendererSteamAudioInitStage);
-    auto profileSyncSeq = static_cast<juce::int64> (sceneSnapshotSequence);
-    {
-        const juce::SpinLock::ScopedLockType publishedCalibrationLock (publishedHeadphoneCalibrationLock);
-        if (publishedHeadphoneCalibrationDiagnostics.valid)
-        {
-            profileSyncSeq =
-                static_cast<juce::int64> (publishedHeadphoneCalibrationDiagnostics.profileSyncSeq);
-            headphoneCalibration.requested = publishedHeadphoneCalibrationDiagnostics.requested;
-            headphoneCalibration.active = publishedHeadphoneCalibrationDiagnostics.active;
-            headphoneCalibration.stage = publishedHeadphoneCalibrationDiagnostics.stage;
-            headphoneCalibration.fallbackReady = publishedHeadphoneCalibrationDiagnostics.fallbackReady;
-            headphoneCalibration.fallbackReason = publishedHeadphoneCalibrationDiagnostics.fallbackReason;
-        }
-    }
-    const auto requiredChannels = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
-    const auto routing = getCurrentCalibrationSpeakerRouting();
-    const auto writableChannels = resolveCalibrationWritableChannels (
-        getSnapshotOutputChannels(),
-        static_cast<int> (getBusesLayout().getMainOutputChannelSet().size()),
-        lastAutoDetectedOutputChannels,
-        routing);
-    const auto mappingLimitedToFirst4 = requiredChannels > writableChannels;
-    const auto startDiagnostics = calibrationEngine.getLastStartDiagnostics();
-    const auto checkedRows = juce::jlimit (1, SpatialRenderer::NUM_SPEAKERS, juce::jmin (requiredChannels, writableChannels));
-    std::array<bool, 9> seenChannels {};
-    bool mappingDuplicateChannels = false;
-    bool mappingChannelsInRange = true;
-
-    for (int i = 0; i < checkedRows; ++i)
-    {
-        const auto routedChannel = juce::jlimit (1, 8, routing[static_cast<size_t> (i)]);
-        if (routedChannel < 1 || routedChannel > 8)
-        {
-            mappingChannelsInRange = false;
-            continue;
-        }
-
-        if (seenChannels[static_cast<size_t> (routedChannel)])
-            mappingDuplicateChannels = true;
-        seenChannels[static_cast<size_t> (routedChannel)] = true;
-    }
-    const bool mappingValid = mappingChannelsInRange && ! mappingDuplicateChannels && ! mappingLimitedToFirst4;
-
-    int completedSpeakers = 0;
-    float speakerPhasePercent = 0.0f;
-    bool running = false;
-
-    switch (state)
-    {
-        case CalibrationEngine::State::Idle:
-            break;
-
-        case CalibrationEngine::State::Playing:
-            running = true;
-            completedSpeakers = speakerIndex;
-            speakerPhasePercent = juce::jlimit (0.0f, 1.0f, progress.playPercent) * 0.5f;
-            break;
-
-        case CalibrationEngine::State::Recording:
-            running = true;
-            completedSpeakers = speakerIndex;
-            speakerPhasePercent = 0.5f + juce::jlimit (0.0f, 1.0f, progress.recordPercent) * 0.45f;
-            break;
-
-        case CalibrationEngine::State::Analyzing:
-            running = true;
-            completedSpeakers = speakerIndex;
-            speakerPhasePercent = 0.95f;
-            break;
-
-        case CalibrationEngine::State::Complete:
-            completedSpeakers = 4;
-            speakerPhasePercent = 1.0f;
-            break;
-
-        case CalibrationEngine::State::Error:
-            completedSpeakers = speakerIndex;
-            break;
-    }
-
-    auto overallPercent = (state == CalibrationEngine::State::Complete)
-                            ? 1.0f
-                            : (static_cast<float> (completedSpeakers) + speakerPhasePercent) / 4.0f;
-    overallPercent = juce::jlimit (0.0f, 1.0f, overallPercent);
-
-    juce::var statusVar (new juce::DynamicObject());
-    auto* status = statusVar.getDynamicObject();
-
-    status->setProperty ("state", toCalibrationStateString (state));
-    status->setProperty ("stateCode", static_cast<int> (state));
-    status->setProperty ("running", running);
-    status->setProperty ("complete", state == CalibrationEngine::State::Complete);
-    status->setProperty ("currentSpeaker", speakerIndex + 1);
-    status->setProperty ("completedSpeakers", completedSpeakers);
-    status->setProperty ("playPercent", juce::jlimit (0.0f, 1.0f, progress.playPercent));
-    status->setProperty ("recordPercent", juce::jlimit (0.0f, 1.0f, progress.recordPercent));
-    status->setProperty ("overallPercent", overallPercent);
-    status->setProperty ("message", progress.message);
-    status->setProperty ("startAck", startDiagnostics.accepted);
-    status->setProperty ("startSeq", static_cast<int> (startDiagnostics.seq));
-    status->setProperty ("startCode", startDiagnostics.code);
-    status->setProperty ("startMessage", startDiagnostics.message);
-    status->setProperty ("startStateAtRequest", startDiagnostics.stateAtRequest);
-    status->setProperty ("startTimestampMs", startDiagnostics.timestampMs);
-    status->setProperty ("profileSyncSeq", profileSyncSeq);
-    status->setProperty ("topologyProfileIndex", topologyProfile);
-    status->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyProfile));
-    status->setProperty ("monitoringPathIndex", monitoringPath);
-    status->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPath));
-    status->setProperty ("deviceProfileIndex", deviceProfile);
-    status->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfile));
-    status->setProperty ("headphoneCalibrationSchema", locusq::shared_contracts::headphone_calibration::kSchemaV1);
-    status->setProperty ("headphoneCalibrationRequested", headphoneCalibration.requested);
-    status->setProperty ("headphoneCalibrationActive", headphoneCalibration.active);
-    status->setProperty ("headphoneCalibrationStage", headphoneCalibration.stage);
-    status->setProperty ("headphoneCalibrationFallbackReady", headphoneCalibration.fallbackReady);
-    status->setProperty ("headphoneCalibrationFallbackReason", headphoneCalibration.fallbackReason);
-    status->setProperty ("requiredChannels", requiredChannels);
-    status->setProperty ("writableChannels", writableChannels);
-    status->setProperty ("mappingLimitedToFirst4", mappingLimitedToFirst4);
-    status->setProperty ("mappingDuplicateChannels", mappingDuplicateChannels);
-    status->setProperty ("mappingValid", mappingValid);
-
-    juce::var headphoneCalibrationVar (new juce::DynamicObject());
-    if (auto* headphoneContract = headphoneCalibrationVar.getDynamicObject())
-    {
-        headphoneContract->setProperty (
-            locusq::shared_contracts::headphone_calibration::fields::kSchema,
-            locusq::shared_contracts::headphone_calibration::kSchemaV1);
-        headphoneContract->setProperty (
-            locusq::shared_contracts::headphone_calibration::fields::kRequested,
-            headphoneCalibration.requested);
-        headphoneContract->setProperty (
-            locusq::shared_contracts::headphone_calibration::fields::kActive,
-            headphoneCalibration.active);
-        headphoneContract->setProperty (
-            locusq::shared_contracts::headphone_calibration::fields::kStage,
-            headphoneCalibration.stage);
-        headphoneContract->setProperty (
-            locusq::shared_contracts::headphone_calibration::fields::kFallbackReady,
-            headphoneCalibration.fallbackReady);
-        headphoneContract->setProperty (
-            locusq::shared_contracts::headphone_calibration::fields::kFallbackReason,
-            headphoneCalibration.fallbackReason);
-    }
-    status->setProperty ("headphoneCalibration", headphoneCalibrationVar);
-
-    if (! running
-        && state != CalibrationEngine::State::Complete
-        && ! startDiagnostics.accepted
-        && startDiagnostics.seq > 0
-        && startDiagnostics.message.isNotEmpty())
-    {
-        status->setProperty ("message", startDiagnostics.message);
-    }
-
-    juce::Array<juce::var> speakerLevels;
-    speakerLevels.ensureStorageAllocated (4);
-    for (int i = 0; i < 4; ++i)
-    {
-        float level = 0.0f;
-
-        if (state == CalibrationEngine::State::Complete || i < completedSpeakers)
-        {
-            level = 1.0f;
-        }
-        else if (running && i == speakerIndex)
-        {
-            if (state == CalibrationEngine::State::Playing)
-                level = juce::jlimit (0.0f, 1.0f, progress.playPercent);
-            else if (state == CalibrationEngine::State::Recording)
-                level = juce::jlimit (0.0f, 1.0f, progress.recordPercent);
-            else if (state == CalibrationEngine::State::Analyzing)
-                level = 1.0f;
-        }
-
-        speakerLevels.add (juce::jlimit (0.0f, 1.0f, level));
-    }
-    status->setProperty ("speakerLevels", juce::var (speakerLevels));
-
-    juce::Array<juce::var> speakerRouting;
-    speakerRouting.ensureStorageAllocated (4);
-    for (const auto channel : routing)
-        speakerRouting.add (juce::jlimit (1, 8, channel));
-    status->setProperty ("speakerRouting", juce::var (speakerRouting));
-
-    const auto roomProfile = sceneGraph.getRoomProfile();
-    status->setProperty ("profileValid", roomProfile != nullptr && roomProfile->valid);
-    status->setProperty ("phasePass", state == CalibrationEngine::State::Complete);
-    const auto estimatedRt60 = calibrationEngine.getResult().estimatedRT60;
-    const bool delayPass = state == CalibrationEngine::State::Complete
-                           && std::isfinite (estimatedRt60)
-                           && estimatedRt60 > 0.0f;
-    status->setProperty ("delayPass", delayPass);
-
-    if (state == CalibrationEngine::State::Complete)
-        status->setProperty ("estimatedRT60", estimatedRt60);
-
-    return statusVar;
-}
-
-juce::var LocusQAudioProcessor::serialiseKeyframeTimelineLocked() const
-{
-    juce::var timelineVar (new juce::DynamicObject());
-    auto* timeline = timelineVar.getDynamicObject();
-
-    timeline->setProperty ("durationSeconds", keyframeTimeline.getDurationSeconds());
-    timeline->setProperty ("looping", keyframeTimeline.isLooping());
-    timeline->setProperty ("playbackRate", keyframeTimeline.getPlaybackRate());
-    timeline->setProperty ("currentTimeSeconds", keyframeTimeline.getCurrentTimeSeconds());
-
-    juce::Array<juce::var> tracks;
-
-    for (const auto& track : keyframeTimeline.getTracks())
-    {
-        juce::var trackVar (new juce::DynamicObject());
-        auto* trackObject = trackVar.getDynamicObject();
-        trackObject->setProperty ("parameterId", track.getParameterId());
-
-        juce::Array<juce::var> keyframes;
-        for (const auto& keyframe : track.getKeyframes())
-        {
-            juce::var keyframeVar (new juce::DynamicObject());
-            auto* keyframeObject = keyframeVar.getDynamicObject();
-            keyframeObject->setProperty ("timeSeconds", keyframe.timeSeconds);
-            keyframeObject->setProperty ("value", keyframe.value);
-            keyframeObject->setProperty ("curve", keyframeCurveToString (keyframe.curve));
-            keyframes.add (keyframeVar);
-        }
-
-        trackObject->setProperty ("keyframes", juce::var (keyframes));
-        tracks.add (trackVar);
-    }
-
-    timeline->setProperty ("tracks", juce::var (tracks));
-    return timelineVar;
-}
-
-bool LocusQAudioProcessor::applyKeyframeTimelineLocked (const juce::var& timelineState)
-{
-    auto* timeline = timelineState.getDynamicObject();
-    if (timeline == nullptr)
-        return false;
-
-    auto* trackArray = timeline->getProperty ("tracks").getArray();
-    if (trackArray == nullptr)
-        return false;
-
-    keyframeTimeline.clearTracks();
-
-    for (const auto& trackValue : *trackArray)
-    {
-        auto* trackObject = trackValue.getDynamicObject();
-        if (trackObject == nullptr)
-            continue;
-
-        const auto parameterId = trackObject->getProperty ("parameterId").toString().trim();
-        if (parameterId.isEmpty())
-            continue;
-
-        std::vector<Keyframe> keyframes;
-        if (auto* keyframeArray = trackObject->getProperty ("keyframes").getArray())
-        {
-            keyframes.reserve (static_cast<size_t> (keyframeArray->size()));
-
-            for (const auto& keyframeValue : *keyframeArray)
-            {
-                auto* keyframeObject = keyframeValue.getDynamicObject();
-                if (keyframeObject == nullptr)
-                    continue;
-
-                Keyframe keyframe;
-                keyframe.timeSeconds = static_cast<double> (keyframeObject->getProperty ("timeSeconds"));
-                keyframe.value = static_cast<float> (double (keyframeObject->getProperty ("value")));
-                keyframe.curve = keyframeCurveFromVar (keyframeObject->getProperty ("curve"));
-                keyframes.push_back (keyframe);
-            }
-        }
-
-        if (! keyframes.empty())
-        {
-            KeyframeTrack track { parameterId };
-            track.setKeyframes (std::move (keyframes));
-            keyframeTimeline.addOrReplaceTrack (std::move (track));
-        }
-    }
-
-    if (timeline->hasProperty ("durationSeconds"))
-        keyframeTimeline.setDurationSeconds (static_cast<double> (timeline->getProperty ("durationSeconds")));
-
-    if (timeline->hasProperty ("looping"))
-        keyframeTimeline.setLooping (static_cast<bool> (timeline->getProperty ("looping")));
-
-    if (timeline->hasProperty ("playbackRate"))
-        keyframeTimeline.setPlaybackRate (static_cast<float> (double (timeline->getProperty ("playbackRate"))));
-
-    if (timeline->hasProperty ("currentTimeSeconds"))
-        keyframeTimeline.setCurrentTimeSeconds (static_cast<double> (timeline->getProperty ("currentTimeSeconds")));
-
-    if (! keyframeTimeline.hasAnyTrack())
-        initialiseDefaultKeyframeTimeline();
-
-    return true;
-}
-
-juce::var LocusQAudioProcessor::getKeyframeTimelineForUI() const
-{
-    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-    return serialiseKeyframeTimelineLocked();
-}
-
-bool LocusQAudioProcessor::setKeyframeTimelineFromUI (const juce::var& timelineState)
-{
-    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-    return applyKeyframeTimelineLocked (timelineState);
-}
-
-bool LocusQAudioProcessor::setTimelineCurrentTimeFromUI (double timeSeconds)
-{
-    if (! std::isfinite (timeSeconds))
-        return false;
-
-    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-    const auto clamped = juce::jlimit (0.0,
-                                       juce::jmax (0.0, keyframeTimeline.getDurationSeconds()),
-                                       timeSeconds);
-    keyframeTimeline.setCurrentTimeSeconds (clamped);
-    return true;
-}
-
-juce::String LocusQAudioProcessor::sanitisePresetName (const juce::String& presetName)
-{
-    return locusq::processor_bridge::sanitisePresetName (presetName);
-}
-
-juce::String LocusQAudioProcessor::normalisePresetType (const juce::String& presetType)
-{
-    return locusq::processor_bridge::normalisePresetType (presetType,
-                                                          kEmitterPresetTypeEmitter,
-                                                          kEmitterPresetTypeMotion);
-}
-
-juce::String LocusQAudioProcessor::normaliseChoreographyPackId (const juce::String& packId)
-{
-    return locusq::processor_bridge::normaliseChoreographyPackId (packId, kChoreographyPackIds);
-}
-
-juce::String LocusQAudioProcessor::normaliseCalibrationTopologyId (const juce::String& topologyId)
-{
-    return locusq::processor_bridge::normaliseCalibrationTopologyId (
-        topologyId,
-        kCalibrationTopologyIds,
-        [] (int index) { return calibrationTopologyIdForIndex (index); },
-        [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
-}
-
-juce::String LocusQAudioProcessor::normaliseCalibrationMonitoringPathId (const juce::String& monitoringPathId)
-{
-    return locusq::processor_bridge::normaliseCalibrationMonitoringPathId (
-        monitoringPathId,
-        kCalibrationMonitoringPathIds,
-        [] (int index) { return calibrationMonitoringPathIdForIndex (index); },
-        [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
-}
-
-juce::String LocusQAudioProcessor::normaliseCalibrationDeviceProfileId (const juce::String& deviceProfileId)
-{
-    return locusq::processor_bridge::normaliseCalibrationDeviceProfileId (
-        deviceProfileId,
-        kCalibrationDeviceProfileIds,
-        [] (int index) { return calibrationDeviceProfileIdForIndex (index); },
-        [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
-}
-
-juce::String LocusQAudioProcessor::inferPresetTypeFromPayload (const juce::var& payload)
-{
-    return locusq::processor_bridge::inferPresetTypeFromPayload (payload,
-                                                                 kEmitterPresetTypeProperty,
-                                                                 kEmitterPresetTypeEmitter,
-                                                                 kEmitterPresetTypeMotion);
-}
-
-juce::String LocusQAudioProcessor::sanitiseEmitterLabel (const juce::String& label)
-{
-    return locusq::processor_bridge::sanitiseEmitterLabel (label);
-}
-
-juce::File LocusQAudioProcessor::getPresetDirectory() const
-{
-    return locusq::processor_bridge::getUserDataSubdirectory ("Presets");
-}
-
-juce::File LocusQAudioProcessor::resolvePresetFileFromOptions (const juce::var& options) const
-{
-    return locusq::processor_bridge::resolveNamedJsonFileFromOptions (
-        options,
-        getPresetDirectory(),
-        [] (const juce::String& name) { return locusq::processor_bridge::sanitisePresetName (name); });
-}
-
-juce::File LocusQAudioProcessor::getCalibrationProfileDirectory() const
-{
-    return locusq::processor_bridge::getUserDataSubdirectory ("CalibrationProfiles");
-}
-
-juce::File LocusQAudioProcessor::resolveCalibrationProfileFileFromOptions (const juce::var& options) const
-{
-    return locusq::processor_bridge::resolveNamedJsonFileFromOptions (
-        options,
-        getCalibrationProfileDirectory(),
-        [] (const juce::String& name) { return locusq::processor_bridge::sanitisePresetName (name); });
-}
-
-juce::String LocusQAudioProcessor::getSnapshotOutputLayout() const
-{
-    return outputLayoutToString (getBusesLayout().getMainOutputChannelSet());
-}
-
-int LocusQAudioProcessor::getSnapshotOutputChannels() const
-{
-    return locusq::processor_core::readSnapshotOutputChannels (getMainBusNumOutputChannels(),
-                                                               getTotalNumOutputChannels());
-}
-
-std::array<int, SpatialRenderer::NUM_SPEAKERS> LocusQAudioProcessor::getCurrentCalibrationSpeakerRouting() const
-{
-    return locusq::processor_core::readCalibrationSpeakerRouting (apvts);
-}
-
-int LocusQAudioProcessor::getCurrentCalibrationSpeakerConfigIndex() const
-{
-    return locusq::processor_core::readDiscreteParameterIndex (apvts,
-                                                               "cal_spk_config",
-                                                               0,
-                                                               1,
-                                                               0);
-}
-
-int LocusQAudioProcessor::getCurrentCalibrationTopologyProfileIndex() const
-{
-    if (apvts.getRawParameterValue ("cal_topology_profile") != nullptr)
-    {
-        return locusq::processor_core::readDiscreteParameterIndex (
-            apvts,
-            "cal_topology_profile",
-            0,
-            static_cast<int> (kCalibrationTopologyIds.size()) - 1,
-            1);
-    }
-
-    const auto legacyConfig = getCurrentCalibrationSpeakerConfigIndex();
-    return legacyConfig == 1 ? 1 : 2;
-}
-
-int LocusQAudioProcessor::getCurrentCalibrationMonitoringPathIndex() const
-{
-    return locusq::processor_core::readDiscreteParameterIndex (
-        apvts,
-        "cal_monitoring_path",
-        0,
-        static_cast<int> (kCalibrationMonitoringPathIds.size()) - 1,
-        0);
-}
-
-int LocusQAudioProcessor::getCurrentCalibrationDeviceProfileIndex() const
-{
-    return locusq::processor_core::readDiscreteParameterIndex (
-        apvts,
-        "cal_device_profile",
-        0,
-        static_cast<int> (kCalibrationDeviceProfileIds.size()) - 1,
-        0);
-}
-
-int LocusQAudioProcessor::getRequiredCalibrationChannelsForTopologyIndex (int topologyIndex) const
-{
-    return calibrationRequiredChannelsForTopologyIndex (topologyIndex);
-}
-
-void LocusQAudioProcessor::applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force)
-{
-    const auto clampedOutputChannels = juce::jlimit (1, 16, outputChannels);
-
-    std::array<int, SpatialRenderer::NUM_SPEAKERS> autoRouting { 1, 2, 3, 4 };
-    int autoSpeakerConfig = 0; // 0 = 4x Mono, 1 = 2x Stereo
-    int autoTopologyProfile = topologyProfileForOutputChannels (clampedOutputChannels);
-
-    if (clampedOutputChannels == 1)
-    {
-        autoSpeakerConfig = 1;
-        autoRouting = { 1, 1, 1, 1 };
-    }
-    else if (clampedOutputChannels == 2)
-    {
-        autoSpeakerConfig = 1;
-        autoRouting = { 1, 2, 1, 2 };
-    }
-    else if (clampedOutputChannels == 3)
-    {
-        autoSpeakerConfig = 0;
-        autoRouting = { 1, 2, 3, 3 };
-    }
-
-    const auto currentRouting = getCurrentCalibrationSpeakerRouting();
-    const auto currentSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
-    const auto currentTopologyProfile = getCurrentCalibrationTopologyProfileIndex();
-    const auto isFactoryMonoRouting = currentSpeakerConfig == 0
-                                      && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 3, 4 };
-    const auto isFactoryStereoRouting = currentSpeakerConfig == 1
-                                        && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 1, 2 };
-    const auto isFactoryMonoByChoice = currentSpeakerConfig == 0
-                                       && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 1, 2 };
-    const auto isFactoryTopologyProfile = currentTopologyProfile == 2 || currentTopologyProfile == 1;
-    const auto followsPreviousAuto = hasAppliedAutoDetectedCalibrationRouting
-                                     && currentTopologyProfile == lastAutoDetectedTopologyProfile
-                                     && currentSpeakerConfig == lastAutoDetectedSpeakerConfig
-                                     && currentRouting == lastAutoDetectedSpeakerRouting;
-
-    if (! force
-        && ! followsPreviousAuto
-        && ! isFactoryMonoRouting
-        && ! isFactoryStereoRouting
-        && ! isFactoryMonoByChoice
-        && ! isFactoryTopologyProfile)
-    {
-        return;
-    }
-
-    if (hasAppliedAutoDetectedCalibrationRouting
-        && clampedOutputChannels == lastAutoDetectedOutputChannels
-        && autoTopologyProfile == lastAutoDetectedTopologyProfile
-        && autoSpeakerConfig == lastAutoDetectedSpeakerConfig
-        && autoRouting == lastAutoDetectedSpeakerRouting)
-    {
-        return;
-    }
-
-    setIntegerParameterValueNotifyingHost ("cal_topology_profile", autoTopologyProfile);
-    setIntegerParameterValueNotifyingHost ("cal_spk_config", autoSpeakerConfig);
-    setIntegerParameterValueNotifyingHost ("cal_spk1_out", autoRouting[0]);
-    setIntegerParameterValueNotifyingHost ("cal_spk2_out", autoRouting[1]);
-    setIntegerParameterValueNotifyingHost ("cal_spk3_out", autoRouting[2]);
-    setIntegerParameterValueNotifyingHost ("cal_spk4_out", autoRouting[3]);
-
-    hasAppliedAutoDetectedCalibrationRouting = true;
-    lastAutoDetectedOutputChannels = clampedOutputChannels;
-    lastAutoDetectedTopologyProfile = autoTopologyProfile;
-    lastAutoDetectedSpeakerConfig = autoSpeakerConfig;
-    lastAutoDetectedSpeakerRouting = autoRouting;
-}
-
-void LocusQAudioProcessor::setIntegerParameterValueNotifyingHost (const char* parameterId, int value)
-{
-    locusq::processor_core::setIntegerParameterValueNotifyingHost (apvts, parameterId, value);
-}
-
-void LocusQAudioProcessor::migrateSnapshotLayoutIfNeeded (const juce::ValueTree& restoredState)
-{
-    int storedOutputChannels = 0;
-    if (restoredState.hasProperty (kSnapshotOutputChannelsProperty))
-    {
-        storedOutputChannels = juce::jlimit (1,
-                                             kMaxSnapshotOutputChannels,
-                                             static_cast<int> (restoredState.getProperty (kSnapshotOutputChannelsProperty)));
-    }
-    else if (restoredState.hasProperty (kSnapshotOutputLayoutProperty))
-    {
-        const auto storedLayout = restoredState.getProperty (kSnapshotOutputLayoutProperty).toString().trim().toLowerCase();
-        if (storedLayout == "mono")
-            storedOutputChannels = 1;
-        else if (storedLayout == "stereo")
-            storedOutputChannels = 2;
-        else if (storedLayout == "quad")
-            storedOutputChannels = SpatialRenderer::NUM_SPEAKERS;
-        else if (storedLayout == "surround_5_1")
-            storedOutputChannels = 6;
-        else if (storedLayout == "surround_5_2_1")
-            storedOutputChannels = 8;
-        else if (storedLayout == "surround_7_1")
-            storedOutputChannels = 8;
-        else if (storedLayout == "surround_7_2_1")
-            storedOutputChannels = 10;
-        else if (storedLayout == "surround_7_1_4")
-            storedOutputChannels = 12;
-        else if (storedLayout == "surround_7_4_2")
-            storedOutputChannels = 13;
-        else if (storedLayout == "multichannel")
-            storedOutputChannels = juce::jmax (SpatialRenderer::NUM_SPEAKERS, storedOutputChannels);
-    }
-
-    const auto currentOutputChannels = juce::jlimit (1,
-                                                     kMaxSnapshotOutputChannels,
-                                                     getSnapshotOutputChannels());
-    const auto isLegacySnapshot = ! restoredState.hasProperty (kSnapshotSchemaProperty);
-    const auto hasLayoutMismatch = (storedOutputChannels > 0 && storedOutputChannels != currentOutputChannels);
-
-    if (! isLegacySnapshot && ! hasLayoutMismatch)
-        return;
-
-    std::array<int, SpatialRenderer::NUM_SPEAKERS> migratedSpeakerMap { 1, 2, 3, 4 };
-    int migratedSpeakerConfig = 0;
-    const int migratedTopologyProfile = topologyProfileForOutputChannels (currentOutputChannels);
-
-    if (currentOutputChannels == 1)
-    {
-        migratedSpeakerMap.fill (1);
-        migratedSpeakerConfig = 1;
-    }
-    else if (currentOutputChannels == 2)
-    {
-        migratedSpeakerMap = { 1, 2, 1, 2 };
-        migratedSpeakerConfig = 1;
-    }
-
-    setIntegerParameterValueNotifyingHost ("cal_topology_profile", migratedTopologyProfile);
-    setIntegerParameterValueNotifyingHost ("cal_spk_config", migratedSpeakerConfig);
-    setIntegerParameterValueNotifyingHost ("cal_spk1_out", migratedSpeakerMap[0]);
-    setIntegerParameterValueNotifyingHost ("cal_spk2_out", migratedSpeakerMap[1]);
-    setIntegerParameterValueNotifyingHost ("cal_spk3_out", migratedSpeakerMap[2]);
-    setIntegerParameterValueNotifyingHost ("cal_spk4_out", migratedSpeakerMap[3]);
-}
-
-juce::String LocusQAudioProcessor::keyframeCurveToString (KeyframeCurve curve)
-{
-    const auto index = static_cast<size_t> (juce::jlimit (0, static_cast<int> (kCurveNames.size()) - 1, static_cast<int> (curve)));
-    return juce::String (kCurveNames[index]);
-}
-
-KeyframeCurve LocusQAudioProcessor::keyframeCurveFromVar (const juce::var& value)
-{
-    if (value.isInt() || value.isInt64() || value.isDouble())
-        return static_cast<KeyframeCurve> (juce::jlimit (0, static_cast<int> (kCurveNames.size()) - 1, static_cast<int> (value)));
-
-    const auto text = value.toString().trim();
-    for (size_t i = 0; i < kCurveNames.size(); ++i)
-    {
-        if (text.equalsIgnoreCase (kCurveNames[i]))
-            return static_cast<KeyframeCurve> (i);
-    }
-
-    return KeyframeCurve::linear;
-}
-
-std::optional<juce::var> LocusQAudioProcessor::readJsonFromFile (const juce::File& file)
-{
-    return locusq::processor_bridge::readJsonFromFile (file);
-}
-
-bool LocusQAudioProcessor::writeJsonToFile (const juce::File& file, const juce::var& payload)
-{
-    return locusq::processor_bridge::writeJsonToFile (file, payload);
-}
-
-void LocusQAudioProcessor::applyEmitterLabelToSceneSlotIfAvailable (const juce::String& label)
-{
-    if (emitterSlotId < 0 || ! sceneGraph.isSlotActive (emitterSlotId))
-        return;
-
-    auto data = sceneGraph.getSlot (emitterSlotId).read();
-    const auto sanitised = sanitiseEmitterLabel (label);
-    std::snprintf (data.label, sizeof (data.label), "%s", sanitised.toRawUTF8());
-    sceneGraph.getSlot (emitterSlotId).write (data);
-}
-
-juce::var LocusQAudioProcessor::buildEmitterPresetLocked (const juce::String& presetName,
-                                                          const juce::String& presetType,
-                                                          const juce::String& choreographyPackId,
-                                                          bool includeParameters,
-                                                          bool includeTimeline) const
-{
-    juce::var presetVar (new juce::DynamicObject());
-    auto* preset = presetVar.getDynamicObject();
-
-    preset->setProperty ("schema", kEmitterPresetSchemaV2);
-    preset->setProperty ("name", presetName);
-    preset->setProperty (kEmitterPresetTypeProperty, normalisePresetType (presetType));
-    preset->setProperty ("savedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
-    preset->setProperty ("choreographyPackId", normaliseChoreographyPackId (choreographyPackId));
-
-    juce::var layoutVar (new juce::DynamicObject());
-    auto* layout = layoutVar.getDynamicObject();
-    layout->setProperty ("outputLayout", getSnapshotOutputLayout());
-    layout->setProperty ("outputChannels", getSnapshotOutputChannels());
-    preset->setProperty (kEmitterPresetLayoutProperty, layoutVar);
-
-    if (includeParameters)
-    {
-        juce::var parametersVar (new juce::DynamicObject());
-        auto* parameters = parametersVar.getDynamicObject();
-        for (const auto* parameterId : kEmitterPresetParameterIds)
-        {
-            if (auto* parameter = apvts.getParameter (parameterId))
-                parameters->setProperty (parameterId, parameter->getValue());
-        }
-
-        preset->setProperty ("parameters", parametersVar);
-    }
-
-    if (includeTimeline)
-        preset->setProperty ("timeline", serialiseKeyframeTimelineLocked());
-
-    return presetVar;
-}
-
-bool LocusQAudioProcessor::applyEmitterPresetLocked (const juce::var& presetState)
-{
-    auto* preset = presetState.getDynamicObject();
-    if (preset == nullptr)
-        return false;
-
-    if (preset->hasProperty ("schema"))
-    {
-        const auto schema = preset->getProperty ("schema").toString();
-        if (schema.isNotEmpty()
-            && schema != kEmitterPresetSchemaV1
-            && schema != kEmitterPresetSchemaV2)
-        {
-            return false;
-        }
-    }
-
-    if (auto* layout = preset->getProperty (kEmitterPresetLayoutProperty).getDynamicObject())
-    {
-        if (layout->hasProperty ("outputChannels"))
-        {
-            const auto parsedChannels = static_cast<int> (layout->getProperty ("outputChannels"));
-            if (parsedChannels <= 0)
-                return false;
-        }
-
-        if (layout->hasProperty ("outputLayout")
-            && layout->getProperty ("outputLayout").toString().trim().isEmpty())
-        {
-            return false;
-        }
-    }
-
-    if (auto* parameters = preset->getProperty ("parameters").getDynamicObject())
-    {
-        for (const auto* parameterId : kEmitterPresetParameterIds)
-        {
-            if (parameters->hasProperty (parameterId))
-            {
-                if (auto* parameter = apvts.getParameter (parameterId))
-                {
-                    const auto normalized = juce::jlimit (0.0f, 1.0f, static_cast<float> (double (parameters->getProperty (parameterId))));
-                    parameter->setValueNotifyingHost (normalized);
-                }
-            }
-        }
-    }
-
-    if (preset->hasProperty ("timeline"))
-        applyKeyframeTimelineLocked (preset->getProperty ("timeline"));
-
-    {
-        const auto choreographyPack = preset->hasProperty ("choreographyPackId")
-            ? normaliseChoreographyPackId (preset->getProperty ("choreographyPackId").toString())
-            : juce::String ("custom");
-        const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
-        choreographyPackState = choreographyPack;
-    }
-
-    return true;
-}
-
-juce::var LocusQAudioProcessor::buildCalibrationProfileState (const juce::String& profileName,
-                                                              const juce::var& validationSummary) const
-{
-    juce::var profileVar (new juce::DynamicObject());
-    auto* profile = profileVar.getDynamicObject();
-
-    profile->setProperty ("schema", kCalibrationProfileSchemaV1);
-    profile->setProperty ("name", profileName);
-    profile->setProperty ("savedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
-
-    juce::var contextVar (new juce::DynamicObject());
-    auto* context = contextVar.getDynamicObject();
-    const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
-    const auto monitoringPathIndex = getCurrentCalibrationMonitoringPathIndex();
-    const auto deviceProfileIndex = getCurrentCalibrationDeviceProfileIndex();
-    context->setProperty ("topologyProfileIndex", topologyIndex);
-    context->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyIndex));
-    context->setProperty ("monitoringPathIndex", monitoringPathIndex);
-    context->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPathIndex));
-    context->setProperty ("deviceProfileIndex", deviceProfileIndex);
-    context->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfileIndex));
-    context->setProperty ("requiredChannels", getRequiredCalibrationChannelsForTopologyIndex (topologyIndex));
-    context->setProperty ("writableChannels", resolveCalibrationWritableChannels (
-        getSnapshotOutputChannels(),
-        static_cast<int> (getBusesLayout().getMainOutputChannelSet().size()),
-        lastAutoDetectedOutputChannels,
-        getCurrentCalibrationSpeakerRouting()));
-    profile->setProperty ("context", contextVar);
-
-    juce::var controlsVar (new juce::DynamicObject());
-    auto* controls = controlsVar.getDynamicObject();
-    for (const auto* parameterId : kCalibrationProfileParameterIds)
-    {
-        if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter (parameterId)))
-        {
-            const auto scaledValue = parameter->convertFrom0to1 (parameter->getValue());
-            controls->setProperty (parameterId, scaledValue);
-        }
-    }
-    profile->setProperty ("controls", controlsVar);
-
-    juce::var layoutVar (new juce::DynamicObject());
-    auto* layout = layoutVar.getDynamicObject();
-    layout->setProperty ("outputLayout", getSnapshotOutputLayout());
-    layout->setProperty ("outputChannels", getSnapshotOutputChannels());
-    profile->setProperty ("layout", layoutVar);
-
-    if (! validationSummary.isVoid())
-        profile->setProperty ("validationSummary", validationSummary);
-
-    return profileVar;
-}
-
-bool LocusQAudioProcessor::applyCalibrationProfileState (const juce::var& profileState)
-{
-    auto* profile = profileState.getDynamicObject();
-    if (profile == nullptr)
-        return false;
-
-    if (profile->hasProperty ("schema"))
-    {
-        const auto schema = profile->getProperty ("schema").toString().trim();
-        if (schema.isNotEmpty() && schema != kCalibrationProfileSchemaV1)
-            return false;
-    }
-
-    auto* controls = profile->getProperty ("controls").getDynamicObject();
-    if (controls == nullptr)
-        return false;
-
-    for (const auto& property : controls->getProperties())
-    {
-        const auto parameterId = property.name.toString();
-        if (parameterId.isEmpty())
-            continue;
-
-        if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter (parameterId)))
-        {
-            const auto scaledValue = static_cast<float> (double (property.value));
-            parameter->setValueNotifyingHost (parameter->convertTo0to1 (scaledValue));
-        }
-    }
-
-    const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
-    const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
-    const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
-    setIntegerParameterValueNotifyingHost ("cal_spk_config", legacySpeakerConfigForTopologyIndex (topologyIndex));
-    setIntegerParameterValueNotifyingHost ("rend_headphone_mode", (monitoringPath == 2 || monitoringPath == 3) ? 1 : 0);
-    setIntegerParameterValueNotifyingHost ("rend_headphone_profile", deviceProfile);
-
-    int rendererSpatialProfileIndex = 0;
-    switch (topologyIndex)
-    {
-        case 0: rendererSpatialProfileIndex = 1; break;
-        case 1: rendererSpatialProfileIndex = 1; break;
-        case 2: rendererSpatialProfileIndex = 2; break;
-        case 3: rendererSpatialProfileIndex = 3; break;
-        case 4: rendererSpatialProfileIndex = 4; break;
-        case 5: rendererSpatialProfileIndex = 4; break;
-        case 6: rendererSpatialProfileIndex = 5; break;
-        case 7: rendererSpatialProfileIndex = 9; break;
-        case 8: rendererSpatialProfileIndex = 6; break;
-        case 9: rendererSpatialProfileIndex = 7; break;
-        case 10: rendererSpatialProfileIndex = 9; break;
-        default: break;
-    }
-    setIntegerParameterValueNotifyingHost ("rend_spatial_profile", rendererSpatialProfileIndex);
-
-    return true;
-}
-
-juce::var LocusQAudioProcessor::listEmitterPresetsFromUI() const
-{
-    juce::Array<juce::var> presets;
-    const auto presetDir = getPresetDirectory();
-    if (! presetDir.exists())
-        return juce::var (presets);
-
-    juce::Array<juce::File> files;
-    presetDir.findChildFiles (files, juce::File::findFiles, false, "*.json");
-
-    for (const auto& file : files)
-    {
-        juce::var entryVar (new juce::DynamicObject());
-        auto* entry = entryVar.getDynamicObject();
-
-        juce::String displayName = file.getFileNameWithoutExtension();
-        juce::String choreographyPackId = "custom";
-        juce::String presetType = kEmitterPresetTypeEmitter;
-        if (const auto payload = readJsonFromFile (file))
-        {
-            if (auto* preset = payload->getDynamicObject())
-            {
-                if (preset->hasProperty ("name"))
-                    displayName = preset->getProperty ("name").toString();
-
-                if (preset->hasProperty ("choreographyPackId"))
-                    choreographyPackId = normaliseChoreographyPackId (preset->getProperty ("choreographyPackId").toString());
-
-                presetType = inferPresetTypeFromPayload (*payload);
-            }
-        }
-
-        entry->setProperty ("name", displayName);
-        entry->setProperty ("file", file.getFileName());
-        entry->setProperty ("path", file.getFullPathName());
-        entry->setProperty ("modifiedUtc", file.getLastModificationTime().toISO8601 (true));
-        entry->setProperty ("choreographyPackId", choreographyPackId);
-        entry->setProperty ("presetType", presetType);
-        presets.add (entryVar);
-    }
-
-    return juce::var (presets);
-}
-
-juce::var LocusQAudioProcessor::saveEmitterPresetFromUI (const juce::var& options)
-{
-    juce::String requestedName = "Preset";
-    juce::String presetType = kEmitterPresetTypeEmitter;
-    juce::String choreographyPackId = "custom";
-    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
-    {
-        if (optionsObject->hasProperty ("name"))
-            requestedName = optionsObject->getProperty ("name").toString();
-        if (optionsObject->hasProperty ("presetType"))
-            presetType = optionsObject->getProperty ("presetType").toString();
-        if (optionsObject->hasProperty ("choreographyPackId"))
-            choreographyPackId = optionsObject->getProperty ("choreographyPackId").toString();
-    }
-
-    requestedName = requestedName.trim();
-    if (requestedName.isEmpty())
-        requestedName = "Preset_" + juce::String (juce::Time::getCurrentTime().toMilliseconds());
-
-    presetType = normalisePresetType (presetType);
-    choreographyPackId = normaliseChoreographyPackId (choreographyPackId);
-    const auto includeParameters = presetType == kEmitterPresetTypeEmitter;
-    const auto includeTimeline = presetType == kEmitterPresetTypeMotion;
-
-    const auto safeName = sanitisePresetName (requestedName);
-    auto presetDir = getPresetDirectory();
-    presetDir.createDirectory();
-    const auto presetFile = presetDir.getChildFile (safeName + ".json");
-
-    juce::var presetPayload;
-    {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-        presetPayload = buildEmitterPresetLocked (requestedName, presetType, choreographyPackId, includeParameters, includeTimeline);
-    }
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! writeJsonToFile (presetFile, presetPayload))
-    {
-        result->setProperty (locusq::shared_contracts::bridge_status::kOk, false);
-        result->setProperty (locusq::shared_contracts::bridge_status::kMessage, "Failed to write preset file.");
-        return response;
-    }
-
-    result->setProperty (locusq::shared_contracts::bridge_status::kOk, true);
-    result->setProperty (locusq::shared_contracts::bridge_status::kName, requestedName);
-    result->setProperty (locusq::shared_contracts::bridge_status::kFile, presetFile.getFileName());
-    result->setProperty (locusq::shared_contracts::bridge_status::kPath, presetFile.getFullPathName());
-    result->setProperty ("choreographyPackId", choreographyPackId);
-    result->setProperty ("presetType", presetType);
-    return response;
-}
-
-juce::var LocusQAudioProcessor::loadEmitterPresetFromUI (const juce::var& options)
-{
-    const auto presetFile = resolvePresetFileFromOptions (options);
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! presetFile.existsAsFile())
-    {
-        result->setProperty (locusq::shared_contracts::bridge_status::kOk, false);
-        result->setProperty (locusq::shared_contracts::bridge_status::kMessage, "Preset file not found.");
-        return response;
-    }
-
-    const auto payload = readJsonFromFile (presetFile);
-    if (! payload.has_value())
-    {
-        result->setProperty (locusq::shared_contracts::bridge_status::kOk, false);
-        result->setProperty (locusq::shared_contracts::bridge_status::kMessage, "Preset file is invalid JSON.");
-        return response;
-    }
-
-    {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-        if (! applyEmitterPresetLocked (*payload))
-        {
-            result->setProperty (locusq::shared_contracts::bridge_status::kOk, false);
-            result->setProperty (locusq::shared_contracts::bridge_status::kMessage, "Preset payload is not compatible.");
-            return response;
-        }
-    }
-
-    result->setProperty (locusq::shared_contracts::bridge_status::kOk, true);
-    result->setProperty (locusq::shared_contracts::bridge_status::kName, presetFile.getFileNameWithoutExtension());
-    result->setProperty (locusq::shared_contracts::bridge_status::kFile, presetFile.getFileName());
-    result->setProperty (locusq::shared_contracts::bridge_status::kPath, presetFile.getFullPathName());
-    result->setProperty ("presetType", inferPresetTypeFromPayload (*payload));
-    if (auto* preset = payload->getDynamicObject(); preset != nullptr
-        && preset->hasProperty ("choreographyPackId"))
-    {
-        result->setProperty ("choreographyPackId",
-                             normaliseChoreographyPackId (preset->getProperty ("choreographyPackId").toString()));
-    }
-    else
-    {
-        result->setProperty ("choreographyPackId", "custom");
-    }
-    return response;
-}
-
-juce::var LocusQAudioProcessor::renameEmitterPresetFromUI (const juce::var& options)
-{
-    const auto sourceFile = resolvePresetFileFromOptions (options);
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! sourceFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Preset file not found.");
-        return response;
-    }
-
-    juce::String requestedName;
-    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
-    {
-        if (optionsObject->hasProperty ("newName"))
-            requestedName = optionsObject->getProperty ("newName").toString();
-        else if (optionsObject->hasProperty ("name"))
-            requestedName = optionsObject->getProperty ("name").toString();
-    }
-
-    requestedName = requestedName.trim();
-    if (requestedName.isEmpty())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Preset name is required.");
-        return response;
-    }
-
-    const auto safeName = sanitisePresetName (requestedName);
-    const auto destinationFile = getPresetDirectory().getChildFile (safeName + ".json");
-    const auto samePath = destinationFile.getFullPathName() == sourceFile.getFullPathName();
-
-    if (! samePath && destinationFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Preset name already exists.");
-        return response;
-    }
-
-    const auto payload = readJsonFromFile (sourceFile);
-    if (! payload.has_value())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Preset file is invalid JSON.");
-        return response;
-    }
-
-    auto updatedPayload = *payload;
-    if (auto* preset = updatedPayload.getDynamicObject(); preset != nullptr)
-    {
-        preset->setProperty ("name", requestedName);
-        preset->setProperty ("updatedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
-    }
-
-    if (! writeJsonToFile (destinationFile, updatedPayload))
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Failed to write preset file.");
-        return response;
-    }
-
-    if (! samePath)
-        sourceFile.deleteFile();
-
-    result->setProperty ("ok", true);
-    result->setProperty ("name", requestedName);
-    result->setProperty ("file", destinationFile.getFileName());
-    result->setProperty ("path", destinationFile.getFullPathName());
-    result->setProperty ("presetType", inferPresetTypeFromPayload (updatedPayload));
-    if (auto* preset = updatedPayload.getDynamicObject(); preset != nullptr
-        && preset->hasProperty ("choreographyPackId"))
-    {
-        result->setProperty ("choreographyPackId",
-                             normaliseChoreographyPackId (preset->getProperty ("choreographyPackId").toString()));
-    }
-    else
-    {
-        result->setProperty ("choreographyPackId", "custom");
-    }
-    return response;
-}
-
-juce::var LocusQAudioProcessor::deleteEmitterPresetFromUI (const juce::var& options)
-{
-    const auto presetFile = resolvePresetFileFromOptions (options);
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! presetFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Preset file not found.");
-        return response;
-    }
-
-    if (! presetFile.deleteFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Failed to delete preset file.");
-        return response;
-    }
-
-    result->setProperty ("ok", true);
-    result->setProperty ("file", presetFile.getFileName());
-    result->setProperty ("path", presetFile.getFullPathName());
-    return response;
-}
-
-juce::var LocusQAudioProcessor::listCalibrationProfilesFromUI() const
-{
-    juce::Array<juce::var> profiles;
-    const auto profileDir = getCalibrationProfileDirectory();
-    if (! profileDir.exists())
-        return juce::var (profiles);
-
-    juce::Array<juce::File> files;
-    profileDir.findChildFiles (files, juce::File::findFiles, false, "*.json");
-    std::sort (files.begin(), files.end(), [] (const juce::File& lhs, const juce::File& rhs)
-    {
-        return lhs.getLastModificationTime() > rhs.getLastModificationTime();
-    });
-
-    for (const auto& file : files)
-    {
-        juce::var entryVar (new juce::DynamicObject());
-        auto* entry = entryVar.getDynamicObject();
-
-        juce::String displayName = file.getFileNameWithoutExtension();
-        juce::String topologyId = calibrationTopologyIdForIndex (1);
-        juce::String monitoringPathId = calibrationMonitoringPathIdForIndex (0);
-        juce::String deviceProfileId = calibrationDeviceProfileIdForIndex (0);
-        juce::var validationSummary;
-
-        if (const auto payload = readJsonFromFile (file))
-        {
-            if (auto* profile = payload->getDynamicObject())
-            {
-                if (profile->hasProperty ("name"))
-                    displayName = profile->getProperty ("name").toString();
-
-                if (auto* context = profile->getProperty ("context").getDynamicObject())
-                {
-                    if (context->hasProperty ("topologyProfile"))
-                        topologyId = normaliseCalibrationTopologyId (context->getProperty ("topologyProfile").toString());
-                    if (context->hasProperty ("monitoringPath"))
-                        monitoringPathId = normaliseCalibrationMonitoringPathId (context->getProperty ("monitoringPath").toString());
-                    if (context->hasProperty ("deviceProfile"))
-                        deviceProfileId = normaliseCalibrationDeviceProfileId (context->getProperty ("deviceProfile").toString());
-                }
-
-                if (profile->hasProperty ("validationSummary"))
-                    validationSummary = profile->getProperty ("validationSummary");
-            }
-        }
-
-        entry->setProperty ("name", displayName);
-        entry->setProperty ("file", file.getFileName());
-        entry->setProperty ("path", file.getFullPathName());
-        entry->setProperty ("modifiedUtc", file.getLastModificationTime().toISO8601 (true));
-        entry->setProperty ("topologyProfile", topologyId);
-        entry->setProperty ("monitoringPath", monitoringPathId);
-        entry->setProperty ("deviceProfile", deviceProfileId);
-        entry->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
-        if (! validationSummary.isVoid())
-            entry->setProperty ("validationSummary", validationSummary);
-        profiles.add (entryVar);
-    }
-
-    return juce::var (profiles);
-}
-
-juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& options)
-{
-    juce::String requestedName;
-    juce::var validationSummary;
-    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
-    {
-        if (optionsObject->hasProperty ("name"))
-            requestedName = optionsObject->getProperty ("name").toString();
-        if (optionsObject->hasProperty ("validationSummary"))
-            validationSummary = optionsObject->getProperty ("validationSummary");
-    }
-
-    const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
-    const auto monitoringPathIndex = getCurrentCalibrationMonitoringPathIndex();
-    const auto deviceProfileIndex = getCurrentCalibrationDeviceProfileIndex();
-    const auto topologyId = calibrationTopologyIdForIndex (topologyIndex);
-    const auto monitoringPathId = calibrationMonitoringPathIdForIndex (monitoringPathIndex);
-    const auto deviceProfileId = calibrationDeviceProfileIdForIndex (deviceProfileIndex);
-
-    requestedName = requestedName.trim();
-    if (requestedName.isEmpty())
-        requestedName = topologyId + "_" + monitoringPathId + "_" + juce::Time::getCurrentTime().formatted ("%Y%m%d_%H%M%S");
-
-    const auto safeName = sanitisePresetName (requestedName);
-    auto profileDir = getCalibrationProfileDirectory();
-    profileDir.createDirectory();
-    const auto profileFile = profileDir.getChildFile (safeName + ".json");
-    const auto payload = buildCalibrationProfileState (requestedName, validationSummary);
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! writeJsonToFile (profileFile, payload))
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Failed to write calibration profile file.");
-        return response;
-    }
-
-    result->setProperty ("ok", true);
-    result->setProperty ("name", requestedName);
-    result->setProperty ("file", profileFile.getFileName());
-    result->setProperty ("path", profileFile.getFullPathName());
-    result->setProperty ("topologyProfile", topologyId);
-    result->setProperty ("monitoringPath", monitoringPathId);
-    result->setProperty ("deviceProfile", deviceProfileId);
-    result->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
-    if (! validationSummary.isVoid())
-        result->setProperty ("validationSummary", validationSummary);
-    return response;
-}
-
-juce::var LocusQAudioProcessor::loadCalibrationProfileFromUI (const juce::var& options)
-{
-    const auto profileFile = resolveCalibrationProfileFileFromOptions (options);
-    bool enforceTupleMatch = false;
-    juce::String expectedTopologyId;
-    juce::String expectedMonitoringPathId;
-    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
-    {
-        if (optionsObject->hasProperty ("enforceTupleMatch"))
-            enforceTupleMatch = static_cast<bool> (optionsObject->getProperty ("enforceTupleMatch"));
-        if (optionsObject->hasProperty ("topologyProfile"))
-            expectedTopologyId = optionsObject->getProperty ("topologyProfile").toString();
-        else if (optionsObject->hasProperty ("topologyProfileIndex"))
-            expectedTopologyId = calibrationTopologyIdForIndex (static_cast<int> (optionsObject->getProperty ("topologyProfileIndex")));
-
-        if (optionsObject->hasProperty ("monitoringPath"))
-            expectedMonitoringPathId = optionsObject->getProperty ("monitoringPath").toString();
-        else if (optionsObject->hasProperty ("monitoringPathIndex"))
-            expectedMonitoringPathId = calibrationMonitoringPathIdForIndex (static_cast<int> (optionsObject->getProperty ("monitoringPathIndex")));
-    }
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! profileFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile file not found.");
-        return response;
-    }
-
-    const auto payload = readJsonFromFile (profileFile);
-    if (! payload.has_value())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile file is invalid JSON.");
-        return response;
-    }
-
-    auto loadedTopologyId = calibrationTopologyIdForIndex (getCurrentCalibrationTopologyProfileIndex());
-    auto loadedMonitoringPathId = calibrationMonitoringPathIdForIndex (getCurrentCalibrationMonitoringPathIndex());
-    auto loadedDeviceProfileId = calibrationDeviceProfileIdForIndex (getCurrentCalibrationDeviceProfileIndex());
-    if (auto* profile = payload->getDynamicObject())
-    {
-        if (auto* context = profile->getProperty ("context").getDynamicObject())
-        {
-            if (context->hasProperty ("topologyProfile"))
-                loadedTopologyId = normaliseCalibrationTopologyId (context->getProperty ("topologyProfile").toString());
-            if (context->hasProperty ("monitoringPath"))
-                loadedMonitoringPathId = normaliseCalibrationMonitoringPathId (context->getProperty ("monitoringPath").toString());
-            if (context->hasProperty ("deviceProfile"))
-                loadedDeviceProfileId = normaliseCalibrationDeviceProfileId (context->getProperty ("deviceProfile").toString());
-        }
-    }
-
-    if (expectedTopologyId.isEmpty())
-        expectedTopologyId = calibrationTopologyIdForIndex (getCurrentCalibrationTopologyProfileIndex());
-    if (expectedMonitoringPathId.isEmpty())
-        expectedMonitoringPathId = calibrationMonitoringPathIdForIndex (getCurrentCalibrationMonitoringPathIndex());
-    expectedTopologyId = normaliseCalibrationTopologyId (expectedTopologyId);
-    expectedMonitoringPathId = normaliseCalibrationMonitoringPathId (expectedMonitoringPathId);
-
-    if (enforceTupleMatch
-        && (loadedTopologyId != expectedTopologyId
-            || loadedMonitoringPathId != expectedMonitoringPathId))
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message",
-                             "Calibration profile tuple mismatch (profile="
-                                 + loadedTopologyId + "/"
-                                 + loadedMonitoringPathId + ", current="
-                                 + expectedTopologyId + "/"
-                                 + expectedMonitoringPathId + ").");
-        return response;
-    }
-
-    if (! applyCalibrationProfileState (*payload))
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile payload is not compatible.");
-        return response;
-    }
-
-    result->setProperty ("ok", true);
-    result->setProperty ("name", profileFile.getFileNameWithoutExtension());
-    result->setProperty ("file", profileFile.getFileName());
-    result->setProperty ("path", profileFile.getFullPathName());
-    result->setProperty ("topologyProfile", loadedTopologyId);
-    result->setProperty ("monitoringPath", loadedMonitoringPathId);
-    result->setProperty ("deviceProfile", loadedDeviceProfileId);
-    result->setProperty ("profileTupleKey", loadedTopologyId + "::" + loadedMonitoringPathId);
-    if (auto* profile = payload->getDynamicObject())
-    {
-        if (profile->hasProperty ("name"))
-            result->setProperty ("name", profile->getProperty ("name").toString());
-
-        if (auto* context = profile->getProperty ("context").getDynamicObject())
-        {
-            if (context->hasProperty ("topologyProfile"))
-                result->setProperty ("topologyProfile", normaliseCalibrationTopologyId (context->getProperty ("topologyProfile").toString()));
-            if (context->hasProperty ("monitoringPath"))
-                result->setProperty ("monitoringPath", normaliseCalibrationMonitoringPathId (context->getProperty ("monitoringPath").toString()));
-            if (context->hasProperty ("deviceProfile"))
-                result->setProperty ("deviceProfile", normaliseCalibrationDeviceProfileId (context->getProperty ("deviceProfile").toString()));
-        }
-
-        if (profile->hasProperty ("validationSummary"))
-            result->setProperty ("validationSummary", profile->getProperty ("validationSummary"));
-    }
-
-    return response;
-}
-
-juce::var LocusQAudioProcessor::renameCalibrationProfileFromUI (const juce::var& options)
-{
-    const auto sourceFile = resolveCalibrationProfileFileFromOptions (options);
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! sourceFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile file not found.");
-        return response;
-    }
-
-    juce::String requestedName;
-    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
-    {
-        if (optionsObject->hasProperty ("newName"))
-            requestedName = optionsObject->getProperty ("newName").toString();
-        else if (optionsObject->hasProperty ("name"))
-            requestedName = optionsObject->getProperty ("name").toString();
-    }
-
-    requestedName = requestedName.trim();
-    if (requestedName.isEmpty())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile name is required.");
-        return response;
-    }
-
-    const auto safeName = sanitisePresetName (requestedName);
-    const auto destinationFile = getCalibrationProfileDirectory().getChildFile (safeName + ".json");
-    const auto samePath = destinationFile.getFullPathName() == sourceFile.getFullPathName();
-
-    if (! samePath && destinationFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile name already exists.");
-        return response;
-    }
-
-    const auto payload = readJsonFromFile (sourceFile);
-    if (! payload.has_value())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile file is invalid JSON.");
-        return response;
-    }
-
-    auto updatedPayload = *payload;
-    if (auto* profile = updatedPayload.getDynamicObject(); profile != nullptr)
-    {
-        profile->setProperty ("name", requestedName);
-        profile->setProperty ("updatedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
-    }
-
-    if (! writeJsonToFile (destinationFile, updatedPayload))
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Failed to write calibration profile file.");
-        return response;
-    }
-
-    if (! samePath)
-        sourceFile.deleteFile();
-
-    result->setProperty ("ok", true);
-    result->setProperty ("name", requestedName);
-    result->setProperty ("file", destinationFile.getFileName());
-    result->setProperty ("path", destinationFile.getFullPathName());
-    return response;
-}
-
-juce::var LocusQAudioProcessor::deleteCalibrationProfileFromUI (const juce::var& options)
-{
-    const auto profileFile = resolveCalibrationProfileFileFromOptions (options);
-
-    juce::var response (new juce::DynamicObject());
-    auto* result = response.getDynamicObject();
-
-    if (! profileFile.existsAsFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Calibration profile file not found.");
-        return response;
-    }
-
-    if (! profileFile.deleteFile())
-    {
-        result->setProperty ("ok", false);
-        result->setProperty ("message", "Failed to delete calibration profile file.");
-        return response;
-    }
-
-    result->setProperty ("ok", true);
-    result->setProperty ("file", profileFile.getFileName());
-    result->setProperty ("path", profileFile.getFullPathName());
-    return response;
-}
-
-juce::var LocusQAudioProcessor::getUIStateFromUI() const
-{
-    juce::var stateVar (new juce::DynamicObject());
-    auto* state = stateVar.getDynamicObject();
-
-    juce::String emitterLabelSnapshot;
-    juce::String physicsPresetSnapshot;
-    juce::String choreographyPackSnapshot;
-    {
-        const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
-        emitterLabelSnapshot = emitterLabelState;
-        physicsPresetSnapshot = physicsPresetState;
-        choreographyPackSnapshot = choreographyPackState;
-    }
-
-    if (emitterSlotId >= 0 && sceneGraph.isSlotActive (emitterSlotId))
-    {
-        const auto slotData = sceneGraph.getSlot (emitterSlotId).read();
-        const auto slotLabel = juce::String::fromUTF8 (slotData.label).trim();
-        if (slotLabel.isNotEmpty())
-            emitterLabelSnapshot = slotLabel;
-    }
-
-    if (physicsPresetSnapshot.isEmpty())
-        physicsPresetSnapshot = "off";
-    if (choreographyPackSnapshot.isEmpty())
-        choreographyPackSnapshot = "custom";
-
-    state->setProperty ("emitterLabel", sanitiseEmitterLabel (emitterLabelSnapshot));
-    state->setProperty ("physicsPreset", physicsPresetSnapshot);
-    state->setProperty ("choreographyPack", normaliseChoreographyPackId (choreographyPackSnapshot));
-    return stateVar;
-}
-
-bool LocusQAudioProcessor::setUIStateFromUI (const juce::var& stateVar)
-{
-    auto* state = stateVar.getDynamicObject();
-    if (state == nullptr)
-        return false;
-
-    bool changed = false;
-
-    if (state->hasProperty ("emitterLabel"))
-    {
-        const auto nextLabel = sanitiseEmitterLabel (state->getProperty ("emitterLabel").toString());
-        {
-            const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
-            emitterLabelState = nextLabel;
-        }
-        applyEmitterLabelToSceneSlotIfAvailable (nextLabel);
-        changed = true;
-    }
-
-    if (state->hasProperty ("physicsPreset"))
-    {
-        auto preset = state->getProperty ("physicsPreset").toString().trim().toLowerCase();
-        if (preset != "off" && preset != "bounce" && preset != "float" && preset != "orbit")
-            preset = "custom";
-
-        {
-            const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
-            physicsPresetState = preset;
-        }
-
-        changed = true;
-    }
-
-    if (state->hasProperty ("choreographyPack"))
-    {
-        const auto choreographyPack = normaliseChoreographyPackId (state->getProperty ("choreographyPack").toString());
-        {
-            const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
-            choreographyPackState = choreographyPack;
-        }
-        changed = true;
-    }
-
-    return changed;
-}
+#include "processor_bridge/ProcessorUiBridgeOps.h"
 
 void LocusQAudioProcessor::updatePerfEma (double& accumulator, double sampleMs) noexcept
 {

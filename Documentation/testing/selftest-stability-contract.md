@@ -2,7 +2,7 @@ Title: Selftest Stability Contract
 Document Type: Testing Contract
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # Selftest Stability Contract
 
@@ -38,6 +38,7 @@ The harness now also publishes additive runtime-serialization telemetry:
 - `lock_wait_polls`
 - `lock_stale_recovered`
 - `lock_stale_recovery_reason`
+- `lock_owner_matches_selftest`
 - `launch_mode_requested`
 - `launch_mode_used`
 - `launch_mode_fallback_reason`
@@ -45,6 +46,9 @@ The harness now also publishes additive runtime-serialization telemetry:
 - `prelaunch_drain_seconds`
 - `prelaunch_drain_forced_kill`
 - `prelaunch_drain_remaining_pids`
+- `prelaunch_drain_term_sent`
+- `prelaunch_drain_term_window_seconds`
+- `prelaunch_drain_kill_window_seconds`
 - `result_after_exit_grace_seconds`
 - `result_post_exit_grace_used`
 - `result_post_exit_grace_wait_seconds`
@@ -81,6 +85,7 @@ Final metadata schema (JSON):
 - `lockWaitPolls`
 - `lockStaleRecovered`
 - `lockStaleRecoveryReason`
+- `lockOwnerMatchesSelftest`
 - `launchModeRequested`
 - `launchModeUsed`
 - `launchModeFallbackReason`
@@ -88,6 +93,9 @@ Final metadata schema (JSON):
 - `prelaunchDrainSeconds`
 - `prelaunchDrainForcedKill`
 - `prelaunchDrainRemainingPids`
+- `prelaunchDrainTermSent`
+- `prelaunchDrainTermWindowSeconds`
+- `prelaunchDrainKillWindowSeconds`
 - `resultAfterExitGraceSeconds`
 - `resultPostExitGraceUsed`
 - `resultPostExitGraceWaitSeconds`
@@ -120,7 +128,8 @@ The standalone selftest harness must serialize concurrent invocations via a glob
 
 Rules:
 - lock acquisition is required before per-run cleanup and launch.
-- stale lock recovery is allowed only when owner PID is gone or lock age exceeds configured stale window.
+- stale lock recovery is allowed only when owner PID is gone or owner PID does not match the selftest harness identity.
+- lock age alone must not steal an active lock from a live matching owner process.
 - lock wait timeout is a hard fail with deterministic reason `single_instance_lock_timeout`.
 - lock telemetry must be emitted in both run log and metadata.
 
@@ -147,7 +156,9 @@ Rules:
 Before each attempt, harness must verify no stale `LocusQ` process remains.
 
 Rules:
-- if residual process(es) remain, harness tries bounded drain and bounded force-kill once.
+- if residual process(es) remain, harness performs deterministic two-phase drain:
+  1. bounded `TERM` window
+  2. bounded `KILL` window (only if needed)
 - unresolved residual process state is a deterministic hard fail (`prelaunch_process_drain_timeout`).
 - drain telemetry is additive and must be emitted to run log and metadata.
 

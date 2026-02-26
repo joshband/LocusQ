@@ -8,6 +8,257 @@ Last Modified Date: 2026-02-26
 
 Date (UTC): `2026-02-20`
 
+## BL-032 Guardrail Remediation D1 Intake Addendum (UTC 2026-02-26)
+
+1. D1 worker packet intake
+- packet: `TestEvidence/bl032_guardrail_d1_20260226T043747Z/status.tsv`
+- ownership-respecting surfaces touched under Slice D1 scope.
+
+2. Gate summary
+- build/smoke: PASS
+- structural guardrails: PASS (`BL032-G-001` closed; `PluginProcessor.cpp 2626 <= 3200`)
+- RT audit: FAIL (`non_allowlisted=92`)
+- docs freshness: PASS
+
+3. Owner disposition
+- BL-032 remains `In Implementation`.
+- `BL032-G-001` blocker is closed.
+- new active blocker is RT allowlist line-map drift; follow-on RT reconciliation slice required.
+
+## BL-030 RL-03 Stability K1 Intake Addendum (UTC 2026-02-26)
+
+1. K1 worker packet intake
+- packet: `TestEvidence/bl030_rl03_stability_k1_20260226T043756Z/status.tsv`
+- updated harness/doc surfaces:
+  - `scripts/standalone-ui-selftest-production-p0-mac.sh`
+  - `Documentation/testing/selftest-stability-contract.md`
+
+2. Gate summary
+- BL-029 scoped selftest: `9/10` PASS (`1` residual `app_exited_before_result`, BUS signal)
+- BL-009 scoped selftest: `10/10` PASS
+- docs freshness: PASS
+
+3. Owner disposition
+- RL-03 remains red (strict all-runs-pass target unmet).
+- K1 is partial progress and reduces risk vs J1/J2 baseline; next slice should target the residual BL-029 scoped process-exit flake.
+
+## BL-034 Done Archive Finalization Z8 Addendum (UTC 2026-02-26)
+
+1. Runbook archive action
+- Moved BL-034 runbook from active backlog path to done archive path:
+  - from `Documentation/backlog/bl-034-headphone-calibration-verification.md`
+  - to `Documentation/backlog/done/bl-034-headphone-calibration-verification.md`
+
+2. Index closure sync
+- Removed BL-034 row from Active Queue.
+- Updated Track D scope to no active BL-034 item.
+- Added BL-034 Closed Archive row linked to `done/bl-034-headphone-calibration-verification.md`.
+
+3. Validation
+- `rg -n "bl-034-headphone-calibration-verification.md" Documentation/backlog/index.md Documentation/backlog/done/bl-034-headphone-calibration-verification.md` -> PASS
+- `./scripts/validate-docs-freshness.sh` -> PASS
+
+## BL-034 Owner Sync Z7 Post-Done Confidence Addendum (UTC 2026-02-26)
+
+1. Z7 owner replay bundle
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl034_owner_sync_z7_20260226T042832Z/lane_runs
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl034_owner_sync_z7_20260226T042832Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all owner gates green)
+- build/smoke/BL-009/BL-034 lane: PASS
+- RT audit: PASS (`non_allowlisted=0`)
+- `jq` + docs freshness: PASS
+
+2. New confidence packet intake
+- F UI diagnostics: `TestEvidence/bl034_slice_f_ui_diag_20260226T042553Z/status.tsv`
+- F1 cross-lane stress sentinel: `TestEvidence/bl034_cross_lane_stress_f1_20260226T041919Z/status.tsv`
+- F2 RT drift watch sentinel: `TestEvidence/bl034_rt_drift_watch_f2_20260226T041934Z/status.tsv`
+
+3. Owner disposition
+- BL-034 remains `Done`.
+- decision logs: `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/owner_decisions.md`, `.../handoff_resolution.md`
+
+## BL-034 Final Done Promotion Packet Z6 Addendum (UTC 2026-02-26)
+
+1. Z6 final owner replay bundle
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl034_done_promotion_z6_20260226T041946Z/lane_runs
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl034_done_promotion_z6_20260226T041946Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all done-promotion gates green)
+- build/smoke/BL-009/BL-034 lane: PASS
+- RT audit: PASS (`non_allowlisted=0`)
+- `jq` + docs freshness: PASS
+
+2. Promotion evidence packet
+- status: `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/status.tsv`
+- validation matrix: `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/validation_matrix.tsv`
+- lane replay matrix: `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/lane_runs/validation_matrix.tsv`
+- decision note: `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/promotion_decision.md`
+
+3. Owner disposition
+- BL-034 advanced from `Done-candidate` to `Done`.
+- decision logs: `TestEvidence/bl034_done_promotion_z6_20260226T041946Z/owner_decisions.md`, `.../handoff_resolution.md`
+
+## BL-034 Owner Sync Z5 Addendum (UTC 2026-02-26)
+
+1. Z5 owner replay bundle
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl034_owner_sync_z5_20260226T041435Z/lane_runs
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl034_owner_sync_z5_20260226T041435Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all owner gates green)
+- build/smoke/BL-009/BL-034 lane: PASS
+- RT audit: PASS (`non_allowlisted=0`)
+- `jq` + docs freshness: PASS
+
+2. E-series confidence packet intake
+- E1 determinism soak: `TestEvidence/bl034_determinism_soak_e1_20260226T040823Z/status.tsv`
+- E2 RT sentinel: `TestEvidence/bl034_rt_sentinel_e2_20260226T040835Z/status.tsv`
+- E3 contract parity: `TestEvidence/bl034_contract_parity_e3_20260226T040851Z/status.tsv`
+
+3. Owner disposition
+- BL-034 advanced from `In Validation` to `Done-candidate`.
+- decision log: `TestEvidence/bl034_owner_sync_z5_20260226T041435Z/owner_decisions.md`
+
+## BL-034 Owner Sync Z3 Addendum (UTC 2026-02-26)
+
+1. Z3 owner replay bundle
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 3 --out-dir TestEvidence/bl034_owner_sync_z3_20260226T040304Z/lane_runs
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl034_owner_sync_z3_20260226T040304Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all owner gates green)
+- build/smoke/BL-009/BL-034 lane: PASS
+- RT audit: PASS (`non_allowlisted=0`)
+- `jq` + docs freshness: PASS
+
+2. Resolved handoff packets in this sync
+- Z3 RT reconcile: `TestEvidence/bl034_rt_gate_z3_20260226T035619Z/status.tsv`
+- Z4 replay audit: `TestEvidence/bl034_replay_audit_z4_20260226T035632Z/status.tsv`
+- D2 release linkage refresh: `TestEvidence/bl034_slice_d2_release_linkage_20260226T035925Z/status.tsv`
+
+3. Owner disposition
+- BL-034 advanced from `In Implementation (Blocked)` to `In Validation`.
+- decision log: `TestEvidence/bl034_owner_sync_z3_20260226T040304Z/owner_decisions.md`
+
+## BL-034 Owner Sync Z2 Addendum (UTC 2026-02-26)
+
+1. Z2 owner replay bundle
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 3 --out-dir TestEvidence/bl034_owner_sync_z2_20260226T034919Z/lane_runs
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl034_owner_sync_z2_20260226T034919Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `FAIL` (RT gate blocker only)
+- build/smoke/BL-009/BL-034 lane: PASS
+- RT audit: FAIL (`non_allowlisted=108`)
+- `jq` + docs freshness: PASS
+
+2. Handoff intake coverage
+- B2 native hardening: `TestEvidence/bl034_slice_b2_native_hardening_20260226T033523Z/status.tsv`
+- D1 release linkage: `TestEvidence/bl034_slice_d1_release_linkage_20260226T033432Z/status.tsv`
+- Z2 RT reconcile packet: `TestEvidence/bl034_rt_gate_z2_20260226T033208Z/status.tsv`
+
+3. Owner disposition
+- BL-034 remains `In Implementation (Blocked)`.
+- blocker: current-branch RT allowlist drift (`non_allowlisted=108`) despite worker Z2 packet showing `119 -> 0` at capture time.
+- decision log: `TestEvidence/bl034_owner_sync_z2_20260226T034919Z/owner_decisions.md`
+
+## BL-034 Owner Sync Z1 Addendum (UTC 2026-02-26)
+
+1. Z1 owner replay bundle
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/qa-bl034-headphone-verification-lane-mac.sh --execute-suite --runs 3 --out-dir TestEvidence/bl034_owner_sync_z1_20260226T031026Z/lane_runs
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl034_owner_sync_z1_20260226T031026Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `FAIL` (RT gate blocker only)
+- build/smoke/BL-009/BL-034 lane: PASS
+- RT audit: FAIL (`non_allowlisted=119`)
+- `jq` + docs freshness: PASS
+
+2. Handoff intake coverage
+- A1 contract packet: `TestEvidence/bl034_slice_a1_profile_contract_20260226T012928Z/status.tsv`
+- B1 native metrics packet: `TestEvidence/bl034_slice_b1_native_metrics_20260226T013354Z/status.tsv`
+- C1 QA lane packet: `TestEvidence/bl034_slice_c1_qa_lane_20260226T013221Z/status.tsv`
+
+3. Owner disposition
+- BL-034 moved from `In Planning` to `In Implementation (Blocked)`.
+- blocker: RT allowlist drift on current line map (`non_allowlisted=119`).
+- decision log: `TestEvidence/bl034_owner_sync_z1_20260226T031026Z/owner_decisions.md`
+
+## BL-033 Final Done Promotion Packet Z12 Addendum (UTC 2026-02-26)
+
+1. Z12 fresh owner replay
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl033_done_promotion_z12_20260226T011520Z/lane_runs
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_done_promotion_z12_20260226T011520Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all required gates green)
+- status: `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/status.tsv`
+- validation matrix: `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/validation_matrix.tsv`
+- lane replay matrix: `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/lane_runs/validation_matrix.tsv`
+
+2. Input reconciliation anchors confirmed
+- `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/status.tsv`
+- `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/status.tsv`
+- `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv`
+- `TestEvidence/bl033_lane_hardening_z6_20260226T004506Z/status.tsv`
+- `TestEvidence/bl033_replay_audit_z7_20260226T004641Z/status.tsv`
+
+3. Owner disposition
+- BL-033 advanced from `Done-candidate` to `Done`.
+- decision log: `TestEvidence/bl033_done_promotion_z12_20260226T011520Z/promotion_decision.md`
+
 ## BL-033 Owner Sync Z11 Addendum (UTC 2026-02-26)
 
 1. Z11 owner integration replay

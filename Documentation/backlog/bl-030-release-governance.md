@@ -2,7 +2,7 @@ Title: BL-030 Release Governance and Device Rerun
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # BL-030: Release Governance and Device Rerun
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-25
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Validation (RL-09 PASS retained; RL-05 FAIL remains deterministic blocker per G5/G6/I1; RL-03 remains red through H1/J1/J2 owner replay classification while RL-04/RL-06 remain red through H2/H3 with I2 diagnostics; I3 consolidation packet confirms NO-GO) |
+| Status | In Validation (RL-09 PASS retained; RL-05 FAIL remains deterministic blocker per G5/G6/I1; RL-03 remains red after K1 hardening with residual `app_exited_before_result` flake while RL-04/RL-06 remain red through H2/H3 with I2 diagnostics; I3 consolidation packet remains NO-GO) |
 | Owner Track | Track G — Release/Governance |
 | Depends On | BL-024 (Done), BL-025 (Done), HX-06 |
 | Blocks | — |
@@ -536,6 +536,21 @@ Evidence:
   - J2 worker `app_exited_before_result` signature is not reproduced on owner replay.
   - RL-03 classification is unchanged from J1: deterministic BL-009 payload assertion failure (`UI-P1-025E`) while BL-029 lane is green.
   - release decision remains `NO-GO` with unchanged failing gates `RL-03`, `RL-04`, `RL-05`, `RL-06`.
+
+## Slice K1 RL-03 Selftest Stability Hardening (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl03_stability_k1_20260226T043756Z`
+- Updated lane surfaces:
+  - `scripts/standalone-ui-selftest-production-p0-mac.sh`
+  - `Documentation/testing/selftest-stability-contract.md`
+- Validation commands:
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x10: `FAIL` (`9/10`; one `app_exited_before_result`, BUS signal)
+  - `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x10: `PASS` (`10/10`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+  - `bash -n scripts/standalone-ui-selftest-production-p0-mac.sh`: `PASS`
+- Result interpretation:
+  - K1 materially improved RL-03 stability compared to J1/J2 (BL-009 scoped runs now fully green).
+  - RL-03 remains red because strict all-runs-pass criteria is not met (`BL-029` scope still has a residual `1/10` process-exit flake).
 
 ## Closeout Checklist
 

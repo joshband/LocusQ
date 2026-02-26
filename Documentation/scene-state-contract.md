@@ -179,6 +179,11 @@ For production viewport rendering, scene snapshots must include:
     - `rendererHeadphoneModeActive` (string enum)
     - `rendererHeadphoneProfileRequested` (string enum: `generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`)
     - `rendererHeadphoneProfileActive` (string enum)
+    - `rendererHeadphoneProfileCatalogVersion` (string enum; current value `bl034-profile-catalog-v1`)
+    - `rendererHeadphoneProfileFallbackReason` (string enum: `none`, `requested_profile_unavailable`, `requested_profile_invalid`, `custom_sofa_ref_missing`, `custom_sofa_ref_invalid`, `steam_unavailable`, `output_incompatible`, `monitoring_path_bypassed`, `catalog_version_mismatch`)
+    - `rendererHeadphoneProfileFallbackTarget` (string enum: `none`, `generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`)
+    - `rendererHeadphoneProfileCustomSofaRef` (string; bounded token, empty when inactive)
+    - `rendererHeadphoneProfileGovernance` (object mirror with `catalogVersion`, `requested`, `active`, `fallbackReason`, `fallbackTarget`, `customSofaRef`)
     - `rendererHeadphoneCalibrationSchema` (string; current value `locusq-headphone-calibration-contract-v1`)
     - `rendererHeadphoneCalibrationRequested` (string enum: `speakers`, `stereo_downmix`, `steam_binaural`, `virtual_binaural`)
     - `rendererHeadphoneCalibrationActive` (string enum; same domain as requested)
@@ -186,6 +191,19 @@ For production viewport rendering, scene snapshots must include:
     - `rendererHeadphoneCalibrationFallbackReady` (bool)
     - `rendererHeadphoneCalibrationFallbackReason` (string enum: `none`, `steam_unavailable`, `output_incompatible`, `monitoring_path_bypassed`)
     - `rendererHeadphoneCalibration` (object mirror with `schema`, `requested`, `active`, `stage`, `fallbackReady`, `fallbackReason`)
+    - Head-tracking bridge diagnostics (additive):
+      - `rendererHeadTrackingEnabled` (bool; true only when build enables bridge receiver integration)
+      - `rendererHeadTrackingSource` (string; current values: `disabled`, `udp_loopback:19765`)
+      - `rendererHeadTrackingPoseAvailable` (bool; true when at least one valid pose packet has been published)
+      - `rendererHeadTrackingPoseStale` (bool; true when latest pose age exceeds stale threshold)
+      - `rendererHeadTrackingOrientationValid` (bool; true when derived yaw/pitch/roll are finite)
+      - `rendererHeadTrackingInvalidPackets` (uint32; cumulative decode/validation rejects since bridge start)
+      - `rendererHeadTrackingSeq` (uint32; latest accepted pose sequence number)
+      - `rendererHeadTrackingTimestampMs` (uint64; latest accepted pose source timestamp, ms)
+      - `rendererHeadTrackingAgeMs` (float; latest pose age in milliseconds)
+      - `rendererHeadTrackingQx` / `rendererHeadTrackingQy` / `rendererHeadTrackingQz` / `rendererHeadTrackingQw` (float; latest normalized quaternion telemetry)
+      - `rendererHeadTrackingYawDeg` / `rendererHeadTrackingPitchDeg` / `rendererHeadTrackingRollDeg` (float; derived orientation telemetry)
+      - `rendererHeadTracking` (object mirror with `enabled`, `source`, `poseAvailable`, `poseStale`, `orientationValid`, `invalidPackets`, `seq`, `timestampMs`, `ageMs`, `qx`, `qy`, `qz`, `qw`, `yawDeg`, `pitchDeg`, `rollDeg`)
     - `rendererPhysicsLensEnabled` (bool)
     - `rendererPhysicsLensMix` (float 0..1)
     - `rendererSteamAudioCompiled` (bool)
@@ -317,6 +335,45 @@ Rules:
 15. `rendererAuditionReactive` is additive and backward-compatible; UI consumers that do not implement reactive fading must ignore the block and keep existing single/cloud visual behavior.
 16. `rendererMatrix*` diagnostics and the additive `rendererMatrix` object are backward-compatible; consumers that do not implement BL-028 matrix surfaces must ignore these fields without altering existing renderer profile/headphone diagnostics behavior.
 17. BL-033 calibration diagnostics are additive and backward-compatible; `rendererHeadphoneCalibration*` fields in scene snapshots and `headphoneCalibration*` fields in calibration status must resolve from the same published native snapshot cycle (`profileSyncSeq`) when both payloads are emitted in the same UI tick.
+18. BL-034 profile governance diagnostics are additive and backward-compatible; when `rendererHeadphoneProfileCatalogVersion`, `rendererHeadphoneProfileFallbackReason`, `rendererHeadphoneProfileFallbackTarget`, `rendererHeadphoneProfileCustomSofaRef`, or `rendererHeadphoneProfileGovernance` are absent, consumers must keep legacy BL-009/BL-033 behavior with no hard dependency on these fields.
+19. `rendererHeadphoneProfileRequested` and `rendererHeadphoneProfileActive` are bounded to the profile catalog domain `{generic, airpods_pro_2, sony_wh1000xm5, custom_sofa}`; unknown values must be treated as `generic` by deterministic fallback logic.
+20. `rendererHeadphoneProfileCustomSofaRef` is bounded to length `0..256` and pattern `[A-Za-z0-9._:/-]*`; it must be non-empty only when requested or active profile is `custom_sofa`, otherwise it must publish as an empty string.
+21. `rendererHeadphoneProfileFallbackReason` and `rendererHeadphoneProfileFallbackTarget` must publish deterministically as an ordered pair in every snapshot that includes BL-034 profile governance fields; `fallbackReason == "none"` requires `fallbackTarget == "none"`.
+
+### BL-034 Profile Governance Contract (Slice A1)
+
+#### Canonical Profile Catalog (Normative)
+
+| Profile ID | Class | Source | `requiresCustomSofaRef` |
+|---|---|---|---|
+| `generic` | `built_in_reference` | bundled | `false` |
+| `airpods_pro_2` | `built_in_reference` | bundled | `false` |
+| `sony_wh1000xm5` | `built_in_reference` | bundled | `false` |
+| `custom_sofa` | `external_reference` | user reference | `true` |
+
+#### Deterministic Fallback Taxonomy (Normative)
+
+| Reason Code | Fallback Target | Class | Deterministic Trigger |
+|---|---|---|---|
+| `none` | `none` | `no_fallback` | Requested profile resolved without downgrade. |
+| `requested_profile_unavailable` | `generic` | `profile_resolution` | Requested profile ID absent from catalog domain. |
+| `requested_profile_invalid` | `generic` | `profile_validation` | Requested profile token malformed/outside enum domain. |
+| `custom_sofa_ref_missing` | `generic` | `external_reference` | `custom_sofa` requested/active with empty ref token. |
+| `custom_sofa_ref_invalid` | `generic` | `external_reference` | `custom_sofa` ref token fails bounded validation. |
+| `steam_unavailable` | `generic` | `runtime_capability` | Runtime cannot host requested Steam-dependent route. |
+| `output_incompatible` | `generic` | `routing_capability` | Output topology incompatible with requested profile route. |
+| `monitoring_path_bypassed` | `generic` | `runtime_resolution` | Monitoring path downgraded by resolver policy. |
+| `catalog_version_mismatch` | `generic` | `contract_version` | Published catalog version incompatible with expected contract version. |
+
+#### Acceptance Hooks (BL-034 Slice A1)
+
+| Acceptance ID | Required Evidence |
+|---|---|
+| `BL034-A1-AC-001` | Catalog identities table present in this section and BL-034 runbook |
+| `BL034-A1-AC-002` | Fallback taxonomy table present in this section and `fallback_taxonomy.tsv` |
+| `BL034-A1-AC-003` | Additive publication + bounded-domain rules (`18..21`) present |
+| `BL034-A1-AC-004` | Downstream machine-checkable artifact schema documented in BL-034 runbook |
+| `BL034-A1-AC-005` | `./scripts/validate-docs-freshness.sh` passes for this slice |
 
 ### Audition Resolver Examples
 

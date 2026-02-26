@@ -2588,6 +2588,22 @@ let sceneData = {
     rendererHeadphoneModeActive: "stereo_downmix",
     rendererHeadphoneProfileRequested: "generic",
     rendererHeadphoneProfileActive: "generic",
+    rendererHeadTrackingEnabled: false,
+    rendererHeadTrackingSource: "disabled",
+    rendererHeadTrackingPoseAvailable: false,
+    rendererHeadTrackingPoseStale: true,
+    rendererHeadTrackingOrientationValid: false,
+    rendererHeadTrackingInvalidPackets: 0,
+    rendererHeadTrackingSeq: 0,
+    rendererHeadTrackingTimestampMs: 0,
+    rendererHeadTrackingAgeMs: 0.0,
+    rendererHeadTrackingQx: 0.0,
+    rendererHeadTrackingQy: 0.0,
+    rendererHeadTrackingQz: 0.0,
+    rendererHeadTrackingQw: 1.0,
+    rendererHeadTrackingYawDeg: 0.0,
+    rendererHeadTrackingPitchDeg: 0.0,
+    rendererHeadTrackingRollDeg: 0.0,
     rendererAuditionEnabled: false,
     rendererAuditionSignal: "sine_440",
     rendererAuditionMotion: "center",
@@ -3017,6 +3033,7 @@ let calibrationLegacyAliasSyncInFlight = false;
 const calibrationMappingRowEntries = [];
 let rendererSteamDiagnosticsExpanded = false;
 let rendererAmbiDiagnosticsExpanded = false;
+let rendererHeadphoneVerificationDiagnosticsExpanded = false;
 
 const laneTrackMap = {
     azimuth: "pos_azimuth",
@@ -3163,7 +3180,7 @@ let roomLines, gridHelper, speakers = [], speakerMeters = [], speakerEnergyRings
 let emitterMeshes = new Map();
 let emitterVisualTargets = new Map();
 let selectionRing;
-let listenerGroup, listenerEnergyRing, listenerAimArrow;
+let listenerGroup, listenerEnergyRing, listenerAimArrow, listenerHeadTrackingArrow, listenerHeadTrackingMarker, listenerHeadTrackingRing;
 let auditionEmitterMesh, auditionEmitterRing;
 let auditionCloudPoints, auditionCloudLines;
 let azArc, elArc, distRing;
@@ -3181,6 +3198,26 @@ let dragTarget;
 let emitterDragState = null;
 let lastAnimationFrameTimeMs = 0;
 let listenerTarget = { x: 0.0, y: 1.2, z: 0.0 };
+let headTrackingTelemetryTarget = {
+    bridgeEnabled: false,
+    source: "disabled",
+    poseAvailable: false,
+    poseStale: true,
+    orientationValid: false,
+    invalidPackets: 0,
+    seq: 0,
+    timestampMs: 0,
+    ageMs: 0.0,
+    qx: 0.0,
+    qy: 0.0,
+    qz: 0.0,
+    qw: 1.0,
+    yawDeg: 0.0,
+    pitchDeg: 0.0,
+    rollDeg: 0.0,
+};
+let headTrackingDirectionScratch = null;
+let headTrackingQuaternionScratch = null;
 let auditionEmitterTarget = {
     x: 0.0,
     y: 1.2,
@@ -4149,6 +4186,16 @@ function hasRendererSteamDiagnosticsPayload(data) {
         || Object.prototype.hasOwnProperty.call(data, "rendererSteamAudioLastError");
 }
 
+function hasRendererHeadTrackingPayload(data) {
+    if (!data || typeof data !== "object") return false;
+    return Object.prototype.hasOwnProperty.call(data, "rendererHeadTrackingEnabled")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadTrackingPoseAvailable")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadTrackingSeq")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadTrackingTimestampMs")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadTrackingQx")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadTrackingYawDeg");
+}
+
 function hasRendererAmbiDiagnosticsPayload(data) {
     if (!data || typeof data !== "object") return false;
     return Object.prototype.hasOwnProperty.call(data, "rendererAmbiCompiled")
@@ -4159,6 +4206,64 @@ function hasRendererAmbiDiagnosticsPayload(data) {
         || Object.prototype.hasOwnProperty.call(data, "rendererAmbiChannelCount")
         || Object.prototype.hasOwnProperty.call(data, "rendererAmbiDecoderState")
         || Object.prototype.hasOwnProperty.call(data, "rendererAmbiDecoderType");
+}
+
+function hasRendererHeadphoneVerificationPayload(data) {
+    if (!data || typeof data !== "object") return false;
+    return Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneProfileCatalogVersion")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneProfileFallbackReason")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneProfileFallbackTarget")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneProfileCustomSofaRef")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationSchema")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationRequested")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationActive")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationStage")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationFallbackReady")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationFallbackReason")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationFallbackReasonCode")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationEngineRequested")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneCalibrationEngineActive")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationSchema")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationProfileId")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationRequestedProfileId")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationActiveProfileId")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationFallbackReasonCode")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationFallbackTarget")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationFallbackReasonText")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationFrontBackScore")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationElevationScore")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationExternalizationScore")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationConfidence")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationStage")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationScoreStatus")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationLatencySamples");
+}
+
+function readFiniteNumber(value, fallback = 0.0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function formatSignedTelemetry(value, digits = 1, suffix = "") {
+    if (!Number.isFinite(value)) return "n/a";
+    const prefix = value > 0 ? "+" : "";
+    return `${prefix}${value.toFixed(digits)}${suffix}`;
+}
+
+function readUnitIntervalMetric(payload, key) {
+    if (!payload || typeof payload !== "object" || !Object.prototype.hasOwnProperty.call(payload, key)) {
+        return { present: false, value: 0.0 };
+    }
+    const raw = Number(payload[key]);
+    if (!Number.isFinite(raw)) {
+        return { present: false, value: 0.0 };
+    }
+    return { present: true, value: clamp(raw, 0.0, 1.0) };
+}
+
+function formatUnitIntervalMetric(metric) {
+    if (!metric || !metric.present) return "n/a";
+    return metric.value.toFixed(3);
 }
 
 function setRendererChipState(chipId, text, stateClass = "neutral") {
@@ -4210,6 +4315,24 @@ function setRendererAmbiDiagnosticsExpanded(expanded) {
     }
     if (toggle) {
         toggle.setAttribute("aria-expanded", rendererAmbiDiagnosticsExpanded ? "true" : "false");
+    }
+}
+
+function setRendererHeadphoneVerificationDiagnosticsExpanded(expanded) {
+    rendererHeadphoneVerificationDiagnosticsExpanded = !!expanded;
+    const content = document.getElementById("rend-hpver-content");
+    const arrow = document.getElementById("rend-hpver-arrow");
+    const toggle = document.getElementById("rend-hpver-toggle");
+
+    if (content) {
+        content.classList.toggle("open", rendererHeadphoneVerificationDiagnosticsExpanded);
+        content.hidden = !rendererHeadphoneVerificationDiagnosticsExpanded;
+    }
+    if (arrow) {
+        arrow.classList.toggle("open", rendererHeadphoneVerificationDiagnosticsExpanded);
+    }
+    if (toggle) {
+        toggle.setAttribute("aria-expanded", rendererHeadphoneVerificationDiagnosticsExpanded ? "true" : "false");
     }
 }
 
@@ -4633,12 +4756,169 @@ function updateRendererPanelShell(data = sceneData) {
     setRendererText("rend-ambi-decoder-state", ambiFieldState.decoderStateLabel);
     setRendererText("rend-ambi-decoder-type", ambiFieldState.decoderTypeLabel);
 
+    const headTrackingPayloadPresent = hasRendererHeadTrackingPayload(payload);
+    const headTrackingEnabled = !!payload.rendererHeadTrackingEnabled;
+    const headTrackingSource = String(payload.rendererHeadTrackingSource || (headTrackingEnabled ? "udp_loopback:19765" : "disabled"));
+    const headTrackingPoseAvailable = !!payload.rendererHeadTrackingPoseAvailable;
+    const headTrackingPoseStale = Object.prototype.hasOwnProperty.call(payload, "rendererHeadTrackingPoseStale")
+        ? !!payload.rendererHeadTrackingPoseStale
+        : true;
+    const headTrackingSeq = Math.max(0, Math.round(readFiniteNumber(payload.rendererHeadTrackingSeq, 0)));
+    const headTrackingTimestampMs = Math.max(0, Math.round(readFiniteNumber(payload.rendererHeadTrackingTimestampMs, 0)));
+    const headTrackingAgeMs = Math.max(0.0, readFiniteNumber(payload.rendererHeadTrackingAgeMs, 0.0));
+    const headTrackingYawDeg = readFiniteNumber(payload.rendererHeadTrackingYawDeg, 0.0);
+    const headTrackingPitchDeg = readFiniteNumber(payload.rendererHeadTrackingPitchDeg, 0.0);
+    const headTrackingRollDeg = readFiniteNumber(payload.rendererHeadTrackingRollDeg, 0.0);
+    const headTrackingQx = readFiniteNumber(payload.rendererHeadTrackingQx, 0.0);
+    const headTrackingQy = readFiniteNumber(payload.rendererHeadTrackingQy, 0.0);
+    const headTrackingQz = readFiniteNumber(payload.rendererHeadTrackingQz, 0.0);
+    const headTrackingQw = readFiniteNumber(payload.rendererHeadTrackingQw, 1.0);
+    const headTrackingInvalidPackets = Math.max(0, Math.round(readFiniteNumber(payload.rendererHeadTrackingInvalidPackets, 0)));
+    const headTrackingOrientationValid = !!payload.rendererHeadTrackingOrientationValid;
+
+    if (!headTrackingPayloadPresent) {
+        setRendererChipState("rend-headtrack-chip", "UNAVAILABLE", "neutral");
+        setRendererText("rend-headtrack-detail", "Awaiting head-tracking diagnostics payload.");
+    } else if (!headTrackingEnabled) {
+        setRendererChipState("rend-headtrack-chip", "OFF", "neutral");
+        setRendererText("rend-headtrack-detail", "Bridge disabled in this build (LOCUS_HEAD_TRACKING=0).");
+    } else if (headTrackingPoseAvailable && !headTrackingPoseStale) {
+        setRendererChipState("rend-headtrack-chip", "ACTIVE", "ok");
+        setRendererText(
+            "rend-headtrack-detail",
+            `live pose stream · seq=${headTrackingSeq} · age=${headTrackingAgeMs.toFixed(1)} ms${headTrackingOrientationValid ? "" : " · orientation=invalid"}`
+        );
+    } else if (headTrackingPoseAvailable) {
+        setRendererChipState("rend-headtrack-chip", "STALE", "warning");
+        setRendererText(
+            "rend-headtrack-detail",
+            `pose stream stale · seq=${headTrackingSeq} · age=${headTrackingAgeMs.toFixed(1)} ms`
+        );
+    } else {
+        setRendererChipState("rend-headtrack-chip", "LISTEN", "warning");
+        setRendererText("rend-headtrack-detail", "Bridge enabled; waiting for first pose packet.");
+    }
+
+    setRendererText("rend-headtrack-source", headTrackingSource || "disabled");
+    setRendererText("rend-headtrack-seq", String(headTrackingSeq));
+    setRendererText("rend-headtrack-timestamp", `${headTrackingTimestampMs} ms`);
+    setRendererText("rend-headtrack-age", headTrackingPoseAvailable ? `${headTrackingAgeMs.toFixed(1)} ms` : "n/a");
+    setRendererText(
+        "rend-headtrack-euler",
+        `${formatSignedTelemetry(headTrackingYawDeg, 1)} / ${formatSignedTelemetry(headTrackingPitchDeg, 1)} / ${formatSignedTelemetry(headTrackingRollDeg, 1)} deg`
+    );
+    setRendererText(
+        "rend-headtrack-quat",
+        `${headTrackingQx.toFixed(4)}, ${headTrackingQy.toFixed(4)}, ${headTrackingQz.toFixed(4)}, ${headTrackingQw.toFixed(4)}`
+    );
+    setRendererText("rend-headtrack-invalid", String(headTrackingInvalidPackets));
+
+    const hpVerificationPayloadPresent = hasRendererHeadphoneVerificationPayload(payload);
+    const hpCatalogVersion = String(payload.rendererHeadphoneProfileCatalogVersion || "").trim();
+    const hpProfileFallbackReasonToken = normalizeAuditionToken(payload.rendererHeadphoneProfileFallbackReason || "") || "none";
+    const hpProfileFallbackTargetToken = normalizeAuditionToken(payload.rendererHeadphoneProfileFallbackTarget || "") || "none";
+    const hpCustomSofaRef = String(payload.rendererHeadphoneProfileCustomSofaRef || "").trim();
+
+    const hpCalibrationSchema = String(payload.rendererHeadphoneCalibrationSchema || "").trim();
+    const hpCalibrationRequested = normalizeAuditionToken(payload.rendererHeadphoneCalibrationRequested || requestedHeadphoneMode) || requestedHeadphoneMode;
+    const hpCalibrationActive = normalizeAuditionToken(payload.rendererHeadphoneCalibrationActive || activeHeadphoneMode) || activeHeadphoneMode;
+    const hpCalibrationStageToken = normalizeAuditionToken(payload.rendererHeadphoneCalibrationStage || "") || "unavailable";
+    const hpCalibrationFallbackReady = readRendererDiagnosticBoolean(payload, ["rendererHeadphoneCalibrationFallbackReady"]) === true;
+    const hpCalibrationFallbackReasonToken = normalizeAuditionToken(payload.rendererHeadphoneCalibrationFallbackReason || "") || "none";
+    const hpCalibrationFallbackReasonCode = String(payload.rendererHeadphoneCalibrationFallbackReasonCode || "").trim();
+    const hpCalibrationEngineRequested = normalizeAuditionToken(payload.rendererHeadphoneCalibrationEngineRequested || "") || "unknown";
+    const hpCalibrationEngineActive = normalizeAuditionToken(payload.rendererHeadphoneCalibrationEngineActive || "") || "unknown";
+
+    const hpVerificationSchema = String(payload.rendererHeadphoneVerificationSchema || "").trim();
+    const hpVerificationProfileId = normalizeAuditionToken(payload.rendererHeadphoneVerificationProfileId || activeHeadphoneProfile) || activeHeadphoneProfile;
+    const hpVerificationRequestedProfileId = normalizeAuditionToken(payload.rendererHeadphoneVerificationRequestedProfileId || requestedHeadphoneProfile) || requestedHeadphoneProfile;
+    const hpVerificationActiveProfileId = normalizeAuditionToken(payload.rendererHeadphoneVerificationActiveProfileId || activeHeadphoneProfile) || activeHeadphoneProfile;
+    const hpVerificationFallbackReasonCodeToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationFallbackReasonCode || hpProfileFallbackReasonToken) || hpProfileFallbackReasonToken;
+    const hpVerificationFallbackTargetToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationFallbackTarget || hpProfileFallbackTargetToken) || hpProfileFallbackTargetToken;
+    const hpVerificationFallbackReasonText = String(payload.rendererHeadphoneVerificationFallbackReasonText || "").trim();
+    const hpVerificationStageToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationStage || "") || "unavailable";
+    const hpVerificationScoreStatusToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationScoreStatus || "");
+    const hpVerificationLatencyRaw = Number(payload.rendererHeadphoneVerificationLatencySamples);
+    const hpVerificationLatencyText = Number.isFinite(hpVerificationLatencyRaw) && hpVerificationLatencyRaw >= 0
+        ? String(Math.round(hpVerificationLatencyRaw))
+        : "n/a";
+
+    const hpFrontBackMetric = readUnitIntervalMetric(payload, "rendererHeadphoneVerificationFrontBackScore");
+    const hpElevationMetric = readUnitIntervalMetric(payload, "rendererHeadphoneVerificationElevationScore");
+    const hpExternalizationMetric = readUnitIntervalMetric(payload, "rendererHeadphoneVerificationExternalizationScore");
+    const hpConfidenceMetric = readUnitIntervalMetric(payload, "rendererHeadphoneVerificationConfidence");
+
+    let hpScoreChipLabel = "UNAVAILABLE";
+    let hpScoreChipStateClass = "neutral";
+    if (hpVerificationPayloadPresent) {
+        if (!hpVerificationScoreStatusToken) {
+            hpScoreChipLabel = "UNAVAILABLE";
+            hpScoreChipStateClass = "neutral";
+        } else if (["pass", "ok", "stable", "verified", "ready"].includes(hpVerificationScoreStatusToken)) {
+            hpScoreChipLabel = "PASS";
+            hpScoreChipStateClass = "ok";
+        } else if (["warn", "warning", "degraded", "fallback", "review", "unstable"].includes(hpVerificationScoreStatusToken)) {
+            hpScoreChipLabel = "WARN";
+            hpScoreChipStateClass = "warning";
+        } else if (["fail", "error", "invalid", "mismatch", "blocked"].includes(hpVerificationScoreStatusToken)) {
+            hpScoreChipLabel = "FAIL";
+            hpScoreChipStateClass = "error";
+        } else {
+            hpScoreChipLabel = "WARN";
+            hpScoreChipStateClass = "warning";
+        }
+    }
+
+    const hpVerificationStageLabel = formatAuditionTokenLabel(hpVerificationStageToken);
+    const hpCalibrationStageLabel = formatAuditionTokenLabel(hpCalibrationStageToken);
+    const hpVerificationScoreStatusLabel = hpVerificationScoreStatusToken
+        ? formatAuditionTokenLabel(hpVerificationScoreStatusToken)
+        : "Unavailable";
+    const hpVerificationFallbackReasonLabel = hpVerificationFallbackReasonText.length > 0
+        ? hpVerificationFallbackReasonText
+        : formatAuditionTokenLabel(hpVerificationFallbackReasonCodeToken || hpProfileFallbackReasonToken);
+    const hpVerificationFallbackTargetLabel = formatAuditionTokenLabel(hpVerificationFallbackTargetToken || "none");
+    const hpProfileRouteText = `${formatAuditionTokenLabel(hpVerificationRequestedProfileId)} -> ${formatAuditionTokenLabel(hpVerificationActiveProfileId)} (${formatAuditionTokenLabel(hpVerificationProfileId)})`;
+    const hpCalibrationRouteText = `${formatAuditionTokenLabel(hpCalibrationRequested)} -> ${formatAuditionTokenLabel(hpCalibrationActive)}`;
+    const hpCalibrationEngineText = `${formatAuditionTokenLabel(hpCalibrationEngineRequested)} -> ${formatAuditionTokenLabel(hpCalibrationEngineActive)}`;
+    const hpCalibrationFallbackDetail = `ready=${hpCalibrationFallbackReady ? "yes" : "no"} · ${formatAuditionTokenLabel(hpCalibrationFallbackReasonToken)}${hpCalibrationFallbackReasonCode ? ` (${hpCalibrationFallbackReasonCode})` : ""}`;
+    const hpScoreSummaryText = `FB ${formatUnitIntervalMetric(hpFrontBackMetric)} · EL ${formatUnitIntervalMetric(hpElevationMetric)} · EXT ${formatUnitIntervalMetric(hpExternalizationMetric)}`;
+    const hpConfidenceText = hpConfidenceMetric.present
+        ? `${hpConfidenceMetric.value.toFixed(3)} (${Math.round(hpConfidenceMetric.value * 100)}%)`
+        : "n/a";
+
+    if (!hpVerificationPayloadPresent) {
+        setRendererChipState("rend-hpver-chip", "UNAVAILABLE", "neutral");
+        setRendererText("rend-hpver-detail", "Awaiting headphone verification diagnostics payload.");
+    } else {
+        setRendererChipState("rend-hpver-chip", hpScoreChipLabel, hpScoreChipStateClass);
+        setRendererText(
+            "rend-hpver-detail",
+            `stage=${hpVerificationStageLabel} · score=${hpVerificationScoreStatusLabel} · fallback=${hpVerificationFallbackReasonLabel}${hpVerificationFallbackTargetToken !== "none" ? ` -> ${hpVerificationFallbackTargetLabel}` : ""}`
+        );
+    }
+    setRendererText("rend-hpver-catalog", hpCatalogVersion || "Unavailable");
+    setRendererText("rend-hpver-profile-route", hpProfileRouteText);
+    setRendererText("rend-hpver-fallback-reason", hpVerificationFallbackReasonLabel);
+    setRendererText("rend-hpver-fallback-target", hpVerificationFallbackTargetLabel);
+    setRendererText("rend-hpver-custom-sofa", hpCustomSofaRef || "none");
+    setRendererText("rend-hpver-calibration-route", hpCalibrationRouteText);
+    setRendererText("rend-hpver-calibration-stage", hpCalibrationStageLabel);
+    setRendererText("rend-hpver-calibration-engine", hpCalibrationEngineText);
+    setRendererText("rend-hpver-calibration-fallback", hpCalibrationFallbackDetail);
+    setRendererText("rend-hpver-schema", hpVerificationSchema || hpCalibrationSchema || "Unavailable");
+    setRendererText("rend-hpver-stage", hpVerificationStageLabel);
+    setRendererText("rend-hpver-score-status", hpVerificationScoreStatusLabel);
+    setRendererText("rend-hpver-scores", hpScoreSummaryText);
+    setRendererText("rend-hpver-confidence", hpConfidenceText);
+    setRendererText("rend-hpver-latency", hpVerificationLatencyText);
+
     const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
     if (diagnosticsAvailability) {
-        if (!steamPayloadPresent && !ambiPayloadPresent) {
+        if (!steamPayloadPresent && !ambiPayloadPresent && !headTrackingPayloadPresent && !hpVerificationPayloadPresent) {
             diagnosticsAvailability.textContent = "Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults.";
         } else {
-            diagnosticsAvailability.textContent = `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"}.`;
+            diagnosticsAvailability.textContent = `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
         }
     }
 }
@@ -7395,6 +7675,30 @@ function initThreeJS() {
     );
     listenerGroup.add(listenerAimArrow);
 
+    listenerHeadTrackingArrow = new THREE.ArrowHelper(
+        new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(0, 0.0, 0),
+        0.52,
+        0x35D9FF,
+        0.17,
+        0.10
+    );
+    listenerHeadTrackingArrow.visible = false;
+    listenerGroup.add(listenerHeadTrackingArrow);
+
+    listenerHeadTrackingMarker = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.06, 0),
+        new THREE.MeshBasicMaterial({
+            color: 0x35D9FF,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.0,
+        })
+    );
+    listenerHeadTrackingMarker.position.set(0.0, 0.16, 0.0);
+    listenerHeadTrackingMarker.visible = false;
+    listenerGroup.add(listenerHeadTrackingMarker);
+
     listenerEnergyRing = new THREE.Mesh(
         new THREE.RingGeometry(0.18, 0.22, 24),
         new THREE.MeshBasicMaterial({
@@ -7407,6 +7711,23 @@ function initThreeJS() {
     listenerEnergyRing.rotation.x = -Math.PI / 2;
     listenerEnergyRing.position.y = -0.14;
     listenerGroup.add(listenerEnergyRing);
+
+    listenerHeadTrackingRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.24, 0.28, 24),
+        new THREE.MeshBasicMaterial({
+            color: 0x35D9FF,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.0,
+        })
+    );
+    listenerHeadTrackingRing.rotation.x = -Math.PI / 2;
+    listenerHeadTrackingRing.position.y = -0.14;
+    listenerHeadTrackingRing.visible = false;
+    listenerGroup.add(listenerHeadTrackingRing);
+
+    headTrackingDirectionScratch = new THREE.Vector3(0, 0, -1);
+    headTrackingQuaternionScratch = new THREE.Quaternion();
 
     listenerGroup.position.set(listenerTarget.x, listenerTarget.y, listenerTarget.z);
     threeScene.add(listenerGroup);
@@ -7985,6 +8306,13 @@ function initUIBindings() {
         });
     }
     setRendererAmbiDiagnosticsExpanded(false);
+    const headphoneVerificationDiagnosticsToggle = document.getElementById("rend-hpver-toggle");
+    if (headphoneVerificationDiagnosticsToggle) {
+        bindControlActivate(headphoneVerificationDiagnosticsToggle, () => {
+            setRendererHeadphoneVerificationDiagnosticsExpanded(!rendererHeadphoneVerificationDiagnosticsExpanded);
+        });
+    }
+    setRendererHeadphoneVerificationDiagnosticsExpanded(false);
 
     const dopplerToggle = document.getElementById("toggle-doppler");
     if (dopplerToggle) {
@@ -9017,6 +9345,49 @@ function updateListenerTargetFromScene(data) {
         x: Number.isFinite(Number(data?.listener?.x)) ? Number(data.listener.x) : 0.0,
         y: Number.isFinite(Number(data?.listener?.y)) ? Number(data.listener.y) : 1.2,
         z: Number.isFinite(Number(data?.listener?.z)) ? Number(data.listener.z) : 0.0,
+    };
+}
+
+function updateHeadTrackingTelemetryFromScene(data) {
+    const source = String(data?.rendererHeadTrackingSource || "disabled").trim() || "disabled";
+    const bridgeEnabled = !!data?.rendererHeadTrackingEnabled;
+    const poseAvailable = !!data?.rendererHeadTrackingPoseAvailable;
+    const poseStale = Object.prototype.hasOwnProperty.call(data || {}, "rendererHeadTrackingPoseStale")
+        ? !!data.rendererHeadTrackingPoseStale
+        : true;
+    const orientationValid = !!data?.rendererHeadTrackingOrientationValid;
+
+    const timestampMs = Math.max(0, Math.round(readFiniteNumber(data?.rendererHeadTrackingTimestampMs, 0)));
+    const ageMs = Math.max(0.0, readFiniteNumber(data?.rendererHeadTrackingAgeMs, 0.0));
+    const seq = Math.max(0, Math.round(readFiniteNumber(data?.rendererHeadTrackingSeq, 0)));
+    const invalidPackets = Math.max(0, Math.round(readFiniteNumber(data?.rendererHeadTrackingInvalidPackets, 0)));
+
+    const qx = readFiniteNumber(data?.rendererHeadTrackingQx, 0.0);
+    const qy = readFiniteNumber(data?.rendererHeadTrackingQy, 0.0);
+    const qz = readFiniteNumber(data?.rendererHeadTrackingQz, 0.0);
+    const qw = readFiniteNumber(data?.rendererHeadTrackingQw, 1.0);
+
+    const yawDeg = readFiniteNumber(data?.rendererHeadTrackingYawDeg, 0.0);
+    const pitchDeg = readFiniteNumber(data?.rendererHeadTrackingPitchDeg, 0.0);
+    const rollDeg = readFiniteNumber(data?.rendererHeadTrackingRollDeg, 0.0);
+
+    headTrackingTelemetryTarget = {
+        bridgeEnabled,
+        source,
+        poseAvailable,
+        poseStale,
+        orientationValid,
+        invalidPackets,
+        seq,
+        timestampMs,
+        ageMs,
+        qx,
+        qy,
+        qz,
+        qw,
+        yawDeg,
+        pitchDeg,
+        rollDeg,
     };
 }
 
@@ -10070,6 +10441,7 @@ window.updateSceneState = function(data) {
     updateRendererPanelShell(sceneData);
     updateSpeakerTargetsFromScene(sceneData);
     updateListenerTargetFromScene(sceneData);
+    updateHeadTrackingTelemetryFromScene(sceneData);
     updateAuditionEmitterTargetFromScene(sceneData, rendererAuditionState);
     updateAuditionAuthorityIndicator();
     applyTimelineModeVisibility(currentMode);
@@ -10189,9 +10561,24 @@ window.updateSceneState = function(data) {
                     headphoneText += "]";
                 }
             }
-            const headTrackingText = (outputChannels >= 2 && headphoneActive === "steam_binaural")
-                ? " \u00B7 HT not wired"
-                : "";
+            let headTrackingText = "";
+            if (outputChannels >= 2 && headphoneActive === "steam_binaural") {
+                const htEnabled = !!data.rendererHeadTrackingEnabled;
+                const htAvailable = !!data.rendererHeadTrackingPoseAvailable;
+                const htStale = !!data.rendererHeadTrackingPoseStale;
+                const htYaw = readFiniteNumber(data.rendererHeadTrackingYawDeg, 0.0);
+                const htPitch = readFiniteNumber(data.rendererHeadTrackingPitchDeg, 0.0);
+                const htRoll = readFiniteNumber(data.rendererHeadTrackingRollDeg, 0.0);
+                if (!htEnabled) {
+                    headTrackingText = " \u00B7 HT bridge off";
+                } else if (htAvailable && !htStale) {
+                    headTrackingText = ` \u00B7 HT active ${formatSignedTelemetry(htYaw, 0)}/${formatSignedTelemetry(htPitch, 0)}/${formatSignedTelemetry(htRoll, 0)}deg`;
+                } else if (htAvailable) {
+                    headTrackingText = " \u00B7 HT stale";
+                } else {
+                    headTrackingText = " \u00B7 HT waiting";
+                }
+            }
             const physicsLensEnabled = !!data.rendererPhysicsLensEnabled;
             const physicsLensMix = Number.isFinite(Number(data.rendererPhysicsLensMix))
                 ? clamp(Number(data.rendererPhysicsLensMix), 0.0, 1.0)
@@ -11482,6 +11869,80 @@ function animate() {
             const selectedTarget = emitterVisualTargets.get(selectedEmitterId);
             if (selectedTarget) {
                 setArrowFromVector(listenerAimArrow, selectedTarget.aimX, selectedTarget.aimY, selectedTarget.aimZ, 0.38);
+            }
+        }
+
+        const headTrackingVisible = currentMode === "renderer" && headTrackingTelemetryTarget.bridgeEnabled;
+        if (listenerHeadTrackingArrow) {
+            listenerHeadTrackingArrow.visible = headTrackingVisible;
+        }
+        if (listenerHeadTrackingMarker) {
+            listenerHeadTrackingMarker.visible = headTrackingVisible;
+        }
+        if (listenerHeadTrackingRing) {
+            listenerHeadTrackingRing.visible = headTrackingVisible;
+        }
+
+        if (headTrackingVisible) {
+            const poseAvailable = !!headTrackingTelemetryTarget.poseAvailable;
+            const poseStale = !!headTrackingTelemetryTarget.poseStale;
+            const activePose = poseAvailable && !poseStale;
+            const stalePose = poseAvailable && poseStale;
+            const telemetryColor = activePose ? 0x35D9FF : (stalePose ? 0xE7A13A : 0x6E7D8B);
+
+            if (listenerHeadTrackingArrow?.line?.material?.color) {
+                listenerHeadTrackingArrow.line.material.color.setHex(telemetryColor);
+                listenerHeadTrackingArrow.line.material.opacity = activePose ? 0.95 : (stalePose ? 0.7 : 0.45);
+                listenerHeadTrackingArrow.line.material.transparent = true;
+            }
+            if (listenerHeadTrackingArrow?.cone?.material?.color) {
+                listenerHeadTrackingArrow.cone.material.color.setHex(telemetryColor);
+                listenerHeadTrackingArrow.cone.material.opacity = activePose ? 0.95 : (stalePose ? 0.7 : 0.45);
+                listenerHeadTrackingArrow.cone.material.transparent = true;
+            }
+
+            const hasQuaternion = Number.isFinite(headTrackingTelemetryTarget.qx)
+                && Number.isFinite(headTrackingTelemetryTarget.qy)
+                && Number.isFinite(headTrackingTelemetryTarget.qz)
+                && Number.isFinite(headTrackingTelemetryTarget.qw);
+            if (poseAvailable && hasQuaternion && headTrackingQuaternionScratch && headTrackingDirectionScratch) {
+                headTrackingQuaternionScratch.set(
+                    headTrackingTelemetryTarget.qx,
+                    headTrackingTelemetryTarget.qy,
+                    headTrackingTelemetryTarget.qz,
+                    headTrackingTelemetryTarget.qw
+                ).normalize();
+                headTrackingDirectionScratch.set(0, 0, -1).applyQuaternion(headTrackingQuaternionScratch);
+                setArrowFromVector(
+                    listenerHeadTrackingArrow,
+                    headTrackingDirectionScratch.x,
+                    headTrackingDirectionScratch.y,
+                    headTrackingDirectionScratch.z,
+                    0.52
+                );
+                if (listenerHeadTrackingMarker) {
+                    listenerHeadTrackingMarker.quaternion.copy(headTrackingQuaternionScratch);
+                }
+            } else if (listenerHeadTrackingArrow) {
+                setArrowFromVector(listenerHeadTrackingArrow, 0.0, 0.0, -1.0, 0.26);
+            }
+
+            if (listenerHeadTrackingMarker?.material) {
+                listenerHeadTrackingMarker.material.color.setHex(telemetryColor);
+                listenerHeadTrackingMarker.material.opacity = activePose ? 0.88 : (stalePose ? 0.58 : 0.36);
+                const markerScale = activePose
+                    ? (1.0 + 0.12 * (0.5 + 0.5 * Math.sin(animTime * 8.0)))
+                    : 1.0;
+                listenerHeadTrackingMarker.scale.set(markerScale, markerScale, markerScale);
+            }
+
+            if (listenerHeadTrackingRing?.material) {
+                listenerHeadTrackingRing.material.color.setHex(telemetryColor);
+                listenerHeadTrackingRing.material.opacity = activePose ? 0.30 : (stalePose ? 0.18 : 0.10);
+                const ringScale = activePose
+                    ? (1.0 + 0.18 * (0.5 + 0.5 * Math.sin(animTime * 5.6)))
+                    : (stalePose ? 1.08 : 1.0);
+                listenerHeadTrackingRing.scale.set(ringScale, ringScale, 1.0);
             }
         }
     }

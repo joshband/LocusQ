@@ -87,3 +87,7 @@ TestEvidence/thread-heartbeats.tsv
 TestEvidence/suite_result_*.json
 TestEvidence/**/*.wav
 TestEvidence/**/*.gz
+
+# Local secrets/env
+.env
+.env.*

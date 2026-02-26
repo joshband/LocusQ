@@ -2,7 +2,7 @@ Title: BL-032 Source Modularization of PluginProcessor/PluginEditor
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # BL-032: Source Modularization of PluginProcessor/PluginEditor
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-25
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Implementation (Slice A PASS; Slice B2 RT reconciliation PASS; Slice C1 editor extraction landed; remaining blocker is guardrail `BL032-G-001` on `PluginProcessor.cpp` line count) |
+| Status | In Implementation (Slice A PASS; Slice B2 RT reconciliation PASS; Slice C1 editor extraction landed; Slice D1 guardrail remediation PASS for `BL032-G-001`; remaining blocker is RT audit allowlist drift after line-map movement) |
 | Owner Track | Track F — Hardening |
 | Depends On | — |
 | Blocks | — |
@@ -94,7 +94,7 @@ No-overlap ownership rule for Slice B/C:
 
 - [x] Slice A boundary map completed with evidence (`TestEvidence/bl032_slice_a_boundary_map_<timestamp>/`)
 - [ ] Slice B-C completed with evidence
-- [ ] `PluginProcessor.cpp` and `PluginEditor.cpp` reduced to bounded orchestration roles
+- [x] `PluginProcessor.cpp` and `PluginEditor.cpp` reduced to bounded orchestration roles
 - [ ] Validation lanes pass with recorded evidence
 - [ ] `status.json` and `Documentation/backlog/index.md` synchronized
 - [ ] `./scripts/validate-docs-freshness.sh` passes
@@ -183,3 +183,24 @@ No-overlap ownership rule for Slice B/C:
   - Slice B RT gate blocker is closed by B2 reconciliation.
   - Slice C1 editor extraction goals are complete with behavior parity retained.
   - BL-032 remains active in implementation with one deterministic blocker: `BL032-G-001` (`Source/PluginProcessor.cpp` line count threshold).
+
+## Slice D1 Guardrail Remediation Snapshot (2026-02-26)
+
+- Worker packet: `TestEvidence/bl032_guardrail_d1_20260226T043747Z/status.tsv`
+- Result: `FAIL`
+- Extraction scope completed:
+  - `Source/processor_bridge/ProcessorSceneStateBridgeOps.h` (new)
+  - `Source/processor_bridge/ProcessorUiBridgeOps.h` (new)
+  - `Source/PluginProcessor.cpp` include-hook delegation for extracted non-RT sections
+- Guardrail delta:
+  - `Source/PluginProcessor.cpp`: `5920 -> 2626` lines (`-3294`)
+  - `BL032-G-001`: `PASS` (`2626 <= 3200`)
+- Validation outcomes:
+  1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` => `PASS`
+  2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS`
+  3. `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir <out>/guardrails` => `PASS`
+  4. `./scripts/rt-safety-audit.sh --print-summary --output <out>/rt_audit.tsv` => `FAIL` (`non_allowlisted=92`)
+  5. `./scripts/validate-docs-freshness.sh` => `PASS`
+- Blocker classification:
+  - guardrail blocker `BL032-G-001` is closed.
+  - RT gate regressed due deterministic allowlist line-map drift after large line movement; remediation requires owner-authorized `scripts/` allowlist update lane.
