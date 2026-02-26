@@ -8,6 +8,23 @@ Last Modified Date: 2026-02-26
 
 Date (UTC): `2026-02-20`
 
+## Owner Sync Packet BL-034 Z8 + BL-032 D1 + BL-030 K1 (UTC 2026-02-26)
+
+1. Owner reconciliation packet
+- `TestEvidence/owner_sync_bl034z8_bl032d1_bl030k1_20260226T050120Z/status.tsv`
+- `validation_matrix.tsv`
+- `owner_decisions.md`
+- `handoff_resolution.md`
+
+2. Sync validation
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
+
+3. Owner disposition
+- BL-034: Done retained and runbook archive confirmed.
+- BL-032: In Implementation retained; `BL032-G-001` closed, RT allowlist drift is the active blocker.
+- BL-030: In Validation / NO-GO retained; RL-03 remains red with residual `1/10` BL-029 scoped process-exit flake after K1.
+
 ## BL-032 Guardrail Remediation D1 Intake Addendum (UTC 2026-02-26)
 
 1. D1 worker packet intake
