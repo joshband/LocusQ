@@ -1,0 +1,10 @@
+step	command	exit_code	result	log
+01_build	cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/01_build.log
+02_spatial_smoke	./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/02_spatial_smoke.log
+03_bl033_lane	./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/03_bl033_lane.log
+04_bl009_contract	./scripts/qa-bl009-headphone-contract-mac.sh	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/04_bl009_contract.log
+05_rt_audit	./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z11_20260225_200647/rt_audit.tsv	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/05_rt_audit.log
+06_jq_status	jq empty status.json	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/06_jq_status.log
+07_docs_freshness	./scripts/validate-docs-freshness.sh	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/07_docs_freshness.log
+08_jq_status_post_sync	jq empty status.json	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/08_jq_status_post_sync.log
+09_docs_freshness_post_sync	./scripts/validate-docs-freshness.sh	0	PASS	TestEvidence/bl033_owner_sync_z11_20260225_200647/09_docs_freshness_post_sync.log

@@ -2,11 +2,108 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # LocusQ Build Summary (Acceptance Closeout)
 
 Date (UTC): `2026-02-20`
+
+## BL-033 Owner Sync Z11 Addendum (UTC 2026-02-26)
+
+1. Z11 owner integration replay
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z11_20260225_200647/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all required gates green)
+- status: `TestEvidence/bl033_owner_sync_z11_20260225_200647/status.tsv`
+- validation matrix: `TestEvidence/bl033_owner_sync_z11_20260225_200647/validation_matrix.tsv`
+- lane replay matrix: `TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/validation_matrix.tsv`
+
+2. Reconciliation inputs verified
+- A2/B2 packet: `TestEvidence/bl033_slice_a2b2_native_contract_20260226T005521Z/status.tsv`
+- C2 packet: `TestEvidence/bl033_slice_c2_dsp_latency_20260226T005538Z/status.tsv`
+- D2 packet: `TestEvidence/bl033_slice_d2_qa_closeout_20260226T010105Z/status.tsv`
+- Z9 RT gate closure: `TestEvidence/bl033_rt_gate_z9_20260226T010610Z/rt_after.tsv`
+- Z10 metadata hygiene closure: `TestEvidence/bl033_evidence_hygiene_z10_20260226T010548Z/status.tsv`
+
+3. Owner disposition
+- BL-033 advanced from `In Validation` to `Done-candidate`.
+- decision log: `TestEvidence/bl033_owner_sync_z11_20260225_200647/owner_decisions.md`
+
+## BL-033 Owner Sync Z8 Addendum (UTC 2026-02-26)
+
+1. Z8 fresh owner replay
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 3 --out-dir TestEvidence/bl033_owner_sync_z8_20260226T004911Z/lane_runs
+./scripts/qa-bl009-headphone-contract-mac.sh
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z8_20260226T004911Z/rt_audit.tsv
+jq empty status.json
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `PASS` (all gates green)
+- status: `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/status.tsv`
+- validation matrix: `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/validation_matrix.tsv`
+
+2. Prior blocker closure evidence
+- RT gate reconciliation: `TestEvidence/bl033_rt_gate_z2_20260226T003240Z/status.tsv`
+- Root docs freshness repair: `TestEvidence/bl033_root_docs_z5_20260226T004444Z/status.tsv`
+- Lane hardening re-verify: `TestEvidence/bl033_lane_hardening_z6_20260226T004506Z/status.tsv`
+- Replay audit packet: `TestEvidence/bl033_replay_audit_z7_20260226T004641Z/status.tsv`
+
+3. Owner disposition
+- BL-033 moved from blocked implementation posture (Z1) to `In Validation`.
+- decision log: `TestEvidence/bl033_owner_sync_z8_20260226T004911Z/owner_decisions.md`
+
+## BL-033 Owner Integration Replay Addendum (UTC 2026-02-26)
+
+1. Owner replay build + smoke + BL-009 lane
+
+```sh
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json
+./scripts/qa-bl009-headphone-contract-mac.sh
+```
+
+Result: `PASS`
+- evidence: `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/status.tsv`
+
+2. BL-033 D1 lane execute replay (`x3`)
+
+```sh
+BL033_OUT_DIR=TestEvidence/bl033_owner_sync_z1_20260226T000200Z/lane_runs/run_01 ./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite
+BL033_OUT_DIR=TestEvidence/bl033_owner_sync_z1_20260226T000200Z/lane_runs/run_02 ./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite
+BL033_OUT_DIR=TestEvidence/bl033_owner_sync_z1_20260226T000200Z/lane_runs/run_03 ./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite
+```
+
+Result: `PASS` (`3/3`)
+- evidence: `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/validation_matrix.tsv`
+
+3. Blocking gates
+
+```sh
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z1_20260226T000200Z/rt_audit.tsv
+./scripts/validate-docs-freshness.sh
+```
+
+Result: `FAIL`
+- RT gate: `non_allowlisted=94`
+- docs freshness: prior-worker artifact metadata omission in `TestEvidence/bl033_slice_b1_renderer_chain_20260225T232819Z/renderer_chain_notes.md`
+
+4. Owner decision
+- BL-033 remains blocked from promotion.
+- decision artifact: `TestEvidence/bl033_owner_sync_z1_20260226T000200Z/owner_decisions.md`
 
 ## BL-030 Release Governance Addendum (UTC 2026-02-24)
 

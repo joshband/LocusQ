@@ -2,7 +2,7 @@ Title: LocusQ Validation Trend
 Document Type: Validation Trend Log
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # Validation Trend
 
@@ -597,3 +597,24 @@ Track a concise run history for regression visibility across implementation phas
 | 2026-02-25T22:49:30Z | BL-032 owner C1+B2 recheck classification | `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/owner_bl032_c1_b2_recheck_20260225T224930Z/rt_audit.tsv` + `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir TestEvidence/owner_bl032_c1_b2_recheck_20260225T224930Z/guardrails` + `./scripts/validate-docs-freshness.sh` | PARTIAL_FAIL (`RT gate now PASS`, guardrails still FAIL on residual `BL032-G-001`; artifact `TestEvidence/owner_bl032_c1_b2_recheck_20260225T224930Z/status.tsv`) |
 | 2026-02-25T22:46:46Z | BL-030 Slice J2 RL-03 payload determinism remediation (worker lane) | `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x10 + `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x10 + `./scripts/validate-docs-freshness.sh` | FAIL (`bl029 0/10`, `bl009 0/10`, terminal `app_exited_before_result`; payload failure class remained `0/10`; artifact `TestEvidence/bl030_rl03_payload_j2_20260225T224646Z/status.tsv`) |
 | 2026-02-25T22:51:34Z | BL-030 owner J2 recheck classification lane | `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x3 + `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x3 | PARTIAL_FAIL (`bl029 3/3 pass`; `bl009 0/3 pass` with deterministic `selftest_payload_not_ok` / `UI-P1-025E`; artifact `TestEvidence/owner_bl030_j2_recheck_20260225T225134Z/owner_replay_matrix.tsv`) |
+| 2026-02-26T00:02:05Z | BL-033 owner replay build | `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` | PASS |
+| 2026-02-26T00:02:08Z | BL-033 owner replay smoke suite | `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` | PASS |
+| 2026-02-26T00:02:17Z | BL-033 owner replay lane (`execute-suite` x3) | `BL033_OUT_DIR=.../lane_runs/run_0{1..3} ./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite` | PASS (`3/3`) |
+| 2026-02-26T00:02:20Z | BL-033 owner replay BL-009 contract lane | `./scripts/qa-bl009-headphone-contract-mac.sh` | PASS |
+| 2026-02-26T00:02:22Z | BL-033 owner replay RT safety gate | `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z1_20260226T000200Z/rt_audit.tsv` | FAIL (`non_allowlisted=94`) |
+| 2026-02-26T00:02:23Z | BL-033 owner replay status JSON schema check | `jq empty status.json` | PASS |
+| 2026-02-26T00:02:24Z | BL-033 owner replay docs freshness gate | `./scripts/validate-docs-freshness.sh` | FAIL (missing metadata in prior-worker evidence markdown) |
+| 2026-02-26T00:49:11Z | BL-033 owner sync Z8 build | `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` | PASS |
+| 2026-02-26T00:49:13Z | BL-033 owner sync Z8 smoke suite | `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` | PASS |
+| 2026-02-26T00:49:20Z | BL-033 owner sync Z8 lane (`--execute-suite --runs 3`) | `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 3 --out-dir TestEvidence/bl033_owner_sync_z8_20260226T004911Z/lane_runs` | PASS |
+| 2026-02-26T00:49:22Z | BL-033 owner sync Z8 BL-009 contract lane | `./scripts/qa-bl009-headphone-contract-mac.sh` | PASS |
+| 2026-02-26T00:49:23Z | BL-033 owner sync Z8 RT audit | `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z8_20260226T004911Z/rt_audit.tsv` | PASS (`non_allowlisted=0`) |
+| 2026-02-26T00:49:24Z | BL-033 owner sync Z8 status schema check | `jq empty status.json` | PASS |
+| 2026-02-26T00:49:25Z | BL-033 owner sync Z8 docs freshness | `./scripts/validate-docs-freshness.sh` | PASS |
+| 2026-02-26T01:06:47Z | BL-033 owner sync Z11 build | `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` | PASS |
+| 2026-02-26T01:06:58Z | BL-033 owner sync Z11 smoke suite | `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` | PASS |
+| 2026-02-26T01:07:14Z | BL-033 owner sync Z11 lane (`--execute-suite --runs 5`) | `./scripts/qa-bl033-headphone-core-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs` | PASS |
+| 2026-02-26T01:07:20Z | BL-033 owner sync Z11 BL-009 contract lane | `./scripts/qa-bl009-headphone-contract-mac.sh` | PASS |
+| 2026-02-26T01:07:22Z | BL-033 owner sync Z11 RT audit | `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl033_owner_sync_z11_20260225_200647/rt_audit.tsv` | PASS (`non_allowlisted=0`) |
+| 2026-02-26T01:07:23Z | BL-033 owner sync Z11 status schema check | `jq empty status.json` | PASS |
+| 2026-02-26T01:07:24Z | BL-033 owner sync Z11 docs freshness | `./scripts/validate-docs-freshness.sh` | PASS |

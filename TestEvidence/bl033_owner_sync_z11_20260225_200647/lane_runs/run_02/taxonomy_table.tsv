@@ -1,0 +1,8 @@
+failure_class	count	detail
+deterministic_contract_failure	0	contract/schema/threshold mismatches
+runtime_execution_failure	0	build or qa runner non-zero exit
+missing_result_artifact	0	qa execution succeeded but expected result artifact missing
+acceptance_parity_failure	0	acceptance IDs missing in one or more contract surfaces
+diagnostics_consistency_failure	0	diagnostics requested/active/stage/fallback consistency mismatch
+artifact_schema_failure	0	required artifact missing from lane output
+none	0	no failures

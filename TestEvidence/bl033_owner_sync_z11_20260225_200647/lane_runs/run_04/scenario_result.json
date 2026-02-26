@@ -1,0 +1,22 @@
+{
+  "scenarios": [
+    {
+      "duration_ms": 2000.0,
+      "id": "locusq_bl009_headphone_downmix_reference",
+      "status": "PASS"
+    },
+    {
+      "duration_ms": 2000.0,
+      "id": "locusq_bl009_headphone_steam_request",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "suite_id": "locusq_bl033_headphone_core_suite",
+  "summary": {
+    "failed": 0,
+    "passed": 2,
+    "total": 2,
+    "warned": 0
+  }
+}

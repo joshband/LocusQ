@@ -1,0 +1,19 @@
+check	result	detail	artifact
+tool_jq	PASS	/usr/bin/jq	
+tool_python3	PASS	/usr/bin/python3	
+tool_rg	PASS	/opt/homebrew/bin/rg	
+BL033-D1-001_contract_schema	PASS	scenario_id=locusq_bl033_headphone_core_suite	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D1-001_acceptance_ids	PASS	count=6	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D1-002_diagnostics_fields	PASS	fields=6	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D1-003_artifact_schema	PASS	artifacts=6	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D1-005_lane_thresholds	PASS	suite_status=PASS max_warnings=0	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D2-000_acceptance_ids	PASS	count=3	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D2-001_diagnostics_consistency	PASS	requested_active_pairs=2;stage=rendererHeadphoneCalibrationStage;fallback=rendererHeadphoneCalibrationFallbackReason	/Users/artbox/Documents/Repos/LocusQ/qa/scenarios/locusq_bl033_headphone_core_suite.json
+BL033-D1-004_acceptance_parity	PASS	all_acceptance_ids_mapped	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/acceptance_parity.tsv
+build_targets	PASS	cmake_build_exit=0	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/build.log
+scenario_exec	PASS	qa_runner_exit=0	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/scenario_run.log
+scenario_status	PASS	status=PASS warnings=0	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/scenario_result.json
+BL033-D1-006_execution_mode	PASS	mode=execute_suite	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/scenario_result.log
+BL033-D2-002_replay_hash_stability	SKIP	single_run_mode_use_--runs_for_replay_determinism	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/status.tsv
+BL033-D2-003_artifact_schema_complete	PASS	all_required_artifacts_present	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03
+lane_result	PASS	all_enabled_checks_passed	TestEvidence/bl033_owner_sync_z11_20260225_200647/lane_runs/run_03/status.tsv
