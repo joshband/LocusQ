@@ -2,7 +2,7 @@ Title: BL-030 Release Governance QA
 Document Type: Testing Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-26
 
 # BL-030 Release Governance QA
 
@@ -41,12 +41,19 @@ Required stage classification fields in RL-04 status JSON:
 Required terminal fields in RL-04 status JSON:
 - `terminalStage` (`bootstrap|install|render|output|unknown|none`)
 - `terminalReasonCode` (deterministic reason token)
+- `terminalReasonClass` (`bootstrap_failed|install_failed|render_failed|output_failed|signal|abrt|other|none`)
+- `terminalSignalNumber` (numeric signal when available, otherwise `0`)
 - `terminalReasonDetail` (human-readable detail)
 
 Bootstrap retry contract:
-- One bounded retry is allowed for bootstrap transport/setup failures (`LQ_REAPER_BOOTSTRAP_RETRY_ONCE=1` default).
-- Retry must perform cleanup before second attempt.
+- Retry attempts are deterministic and bounded:
+  - `LQ_REAPER_BOOTSTRAP_MAX_ATTEMPTS` (default derives from `LQ_REAPER_BOOTSTRAP_RETRY_ONCE`: `2` when enabled, `1` otherwise).
+  - `LQ_REAPER_BOOTSTRAP_BACKOFF_BASE_SEC`
+  - `LQ_REAPER_BOOTSTRAP_BACKOFF_STEP_SEC`
+  - `LQ_REAPER_BOOTSTRAP_BACKOFF_MAX_SEC`
+- Retry must perform cleanup before each retry attempt.
 - Retry must not mask deterministic install failures (for example missing required LocusQ FX).
+- Terminal taxonomy for bootstrap must use `bootstrap_failed_*`; signal-path failures must classify under `signal`/`abrt`.
 
 RL-04 strict exit semantics:
 - `0` only when all required stages pass and no terminal failure reason is set.
@@ -141,6 +148,22 @@ Optional parameters:
 - `--dev06-waiver <path>`
 - `--skip-build`
 
+DEV-06 waiver preflight contract:
+- If `--dev06-waiver` is provided, the path must exist, be a regular file, be readable, and be non-empty.
+- Invalid waiver-path input is a deterministic RL-05 failure and must not fall back to DEV-06 selftest replay.
+- Invalid waiver-path failures are emitted as:
+  - `blocker_taxonomy.tsv` row with `category=deterministic_missing_manual_evidence`
+  - machine-readable reason code in `detail`:
+    - `dev06_waiver_path_missing`
+    - `dev06_waiver_path_not_file`
+    - `dev06_waiver_path_unreadable`
+    - `dev06_waiver_path_empty`
+  - `status.tsv` step `dev06_waiver_preflight` with matching `reason_code=...`
+
+Valid waiver-path behavior:
+- `status.tsv` emits `dev06_waiver_preflight` with `reason_code=dev06_waiver_path_valid`.
+- Existing `DEV-06` `N/A` waiver flow remains unchanged (`classification=not_applicable_with_waiver`).
+
 Machine-readable outputs:
 - `status.tsv` (`step`, `result`, `exit_code`, `detail`, `artifact`)
 - `dev_matrix_results.tsv` (`dev_id`, `result`, `timestamp_utc`, `classification`, `evidence_path`, `notes`)
@@ -154,10 +177,129 @@ Blocker category schema (fixed):
 - `runtime_flake_abrt`
 - `not_applicable_with_waiver`
 
+## RL-05 Deterministic Capture Hardening (Slice N12)
+
+Preflight execution order (before lane steps):
+1. `dev06_waiver_preflight` (when `--dev06-waiver` is provided)
+2. `preflight_process_drain`
+3. `preflight_warmup`
+4. `preflight_build` (unless `--skip-build`)
+5. `preflight_selftest_warmup` (bounded BL-009 scoped bootstrap selftest; required when build succeeds)
+
+Bounded preflight process-drain contract:
+- Stale process drain executes against lane-related stale commands/binaries only.
+- TERM window: `4` seconds.
+- KILL window: `4` seconds.
+- Poll interval: `1` second.
+- Total bound: `8` seconds.
+- If drain cannot clear remaining PIDs within bound, lane fails closed with:
+  - `status.tsv` step `preflight_process_drain` = `FAIL`
+  - `blocker_taxonomy.tsv` row category `runtime_flake_abrt` detail token `preflight_process_drain_timeout`
+  - overall RL-05 decision `FAIL` (exit `1`)
+
+Deterministic warmup contract:
+- `preflight_warmup` is a bounded fixed sleep (`2` seconds) after successful drain.
+- Warmup emits machine-readable `status.tsv` detail `warmup_sleep_seconds=2`.
+- `preflight_selftest_warmup` is a bounded bootstrap selftest gate before DEV lane commands:
+  - command: `LOCUSQ_UI_SELFTEST_BL009=1 LOCUSQ_UI_SELFTEST_SCOPE=bl009 ./scripts/standalone-ui-selftest-production-p0-mac.sh`
+  - max attempts: `3`
+  - per-attempt timeout: `90` seconds
+  - retry barrier between attempts: same bounded drain + fixed warmup sleep (`2` seconds)
+- If `preflight_selftest_warmup` never passes within bound, lane fails closed with:
+  - `status.tsv` step `preflight_selftest_warmup` = `FAIL`
+  - `blocker_taxonomy.tsv` row category `runtime_flake_abrt` detail token `preflight_selftest_warmup_failed`
+  - overall RL-05 decision `FAIL` (exit `1`)
+
+Deterministic retry contract:
+- Lane command execution uses bounded retry (`max_attempts=2`) with fixed recovery barrier between attempts:
+  - stale-process drain (same bounded rules as preflight)
+  - fixed retry warmup sleep (`2` seconds)
+- Lane commands are executed with deterministic selftest override env to reduce first-run payload flake without bypassing assertions:
+  - `LOCUSQ_UI_SELFTEST_LAUNCH_READY_DELAY_SECONDS=2`
+  - `LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_TIMEOUT_SECONDS=18`
+  - `LOCUSQ_UI_SELFTEST_RESULT_JSON_SETTLE_TIMEOUT_SECONDS=4`
+  - `LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_MAX_ATTEMPTS=3`
+  - `LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_DELAY_SECONDS=2`
+  - `LOCUSQ_UI_SELFTEST_TARGETED_CHECK_MAX_ATTEMPTS=6`
+- BL-009 lane calls (`DEV-02..DEV-04`) pin `LOCUSQ_UI_SELFTEST_SCOPE=bl009` to keep BL-009 checks strict while excluding unrelated full-scope payload assertions from those lanes.
+- Retry does not change strict pass criteria; final lane result remains derived from final command exit and manual evidence rules.
+- `status.tsv` command steps remain machine-readable and include `attempts=<N>` in `detail`.
+
+Deterministic machine-readable status requirements (N12 additive):
+- `status.tsv` must include:
+  - `preflight_process_drain` with detail keys:
+    - `result`
+    - `initial_pids`
+    - `remaining_pids`
+    - `forced_kill`
+    - `elapsed_seconds`
+    - `timeout_seconds`
+  - `preflight_warmup` with detail key `warmup_sleep_seconds`
+  - `preflight_selftest_warmup` with detail keys:
+    - `attempts`
+    - `max_attempts`
+    - `timeout_seconds`
+    - `retry_sleep_seconds`
+    - `launch_ready_delay_seconds`
+    - `targeted_check_max_attempts`
+- Existing strict exit semantics remain unchanged:
+  - `0` pass
+  - `1` gate fail
+  - `2` usage/invocation error
+
 Strict exit semantics:
 - `0` only when RL-05 pass criteria are met (`DEV-01..DEV-05=PASS` and `DEV-06=PASS|N/A with waiver`).
 - `1` when RL-05 criteria are not met.
 - `2` for usage/invocation errors.
+
+## RL-05 Replay Reconcile Wrapper (Slice N5)
+
+Canonical command:
+- `./scripts/qa-bl030-rl05-replay-reconcile-mac.sh --notes-dir <dir> [--dev06-waiver <path>] [--out-dir <path>]`
+
+Purpose:
+- Execute a deterministic RL-05 reconciliation chain across existing scripts and publish one unified machine-readable closure verdict.
+
+Required wrapper sequence (fixed order):
+1. `qa-bl030-manual-evidence-pack-mac.sh`
+2. `qa-bl030-manual-evidence-validate-mac.sh`
+3. `qa-bl030-device-matrix-capture-mac.sh`
+
+Wrapper inputs:
+- `--notes-dir <dir>` (required)
+- `--dev06-waiver <path>` (optional pass-through to capture lane)
+- `--out-dir <path>` (optional)
+
+Wrapper machine-readable outputs:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `rl05_reconcile_summary.tsv`
+- `blocker_taxonomy.tsv` (aggregated from pack/validate/capture packets)
+
+Wrapper strict exit semantics:
+- `0`: RL-05 green (`pack=0`, `validate=0`, `capture=0`)
+- `1`: RL-05 blocker remains
+- `2`: usage/preflight error (wrapper or child invocation contract)
+
+## RL-05 Authoritative Replay Closure (Slice N10)
+
+Canonical fixture path contract:
+- Create DEV-06 waiver fixture under the slice-local packet:
+  - `TestEvidence/bl030_rl05_authoritative_n10_<timestamp>/fixtures/dev06_external_mic_waiver.md`
+- All replay invocations in this slice must reference that exact slice-local waiver path.
+
+Canonical replay sequence:
+1. `./scripts/qa-bl030-manual-evidence-pack-mac.sh --notes-dir TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes --out-dir TestEvidence/bl030_rl05_authoritative_n10_<timestamp>/pack`
+2. `./scripts/qa-bl030-manual-evidence-validate-mac.sh --input TestEvidence/bl030_rl05_authoritative_n10_<timestamp>/pack/manual_evidence_checklist.tsv --out-dir TestEvidence/bl030_rl05_authoritative_n10_<timestamp>/validate`
+3. `./scripts/qa-bl030-device-matrix-capture-mac.sh --out-dir TestEvidence/bl030_rl05_authoritative_n10_<timestamp>/capture_run1 --dev01-manual-notes TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes/dev01_quad_manual_notes.md --dev02-manual-notes TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes/dev02_laptop_manual_notes.md --dev03-manual-notes TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes/dev03_headphone_generic_manual_notes.md --dev04-manual-notes TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes/dev04_steam_manual_notes.md --dev05-manual-notes TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes/dev05_builtin_mic_manual_notes.md --dev06-manual-notes TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes/dev06_external_mic_manual_notes.md --dev06-waiver TestEvidence/bl030_rl05_authoritative_n10_<timestamp>/fixtures/dev06_external_mic_waiver.md`
+4. Repeat step 3 for `capture_run2` and `capture_run3` using the same `--dev06-waiver` path.
+
+Strict closure semantics for N10:
+- `PASS` only when `pack=0`, `validate=0`, and all three capture runs exit `0` with `rl05_gate_decision=PASS`.
+- Any mixed capture outcome across run1/run2/run3 is a deterministic closure failure for this slice and must be recorded in:
+  - `validation_matrix.tsv` (overall `FAIL`)
+  - `rl05_replay_summary.tsv` (`replay_consistency=MIXED`)
+  - `blocker_taxonomy.tsv` (`category=replay_nondeterminism`)
 
 ## RL-05 Closure Replay Packet (Slice G4)
 
@@ -231,14 +373,18 @@ Validation rules:
 - Fail when `artifact_path` does not exist.
 - Fail on unknown/duplicate `device_id`.
 - Fail on invalid `timestamp_iso8601` format (required: `YYYY-MM-DDTHH:MM:SSZ`).
+- DEV-06 waiver handling:
+  - `evidence_status=waived|not_applicable_with_waiver` is valid only for `DEV-06` when `artifact_path` exists.
+  - A valid DEV-06 waiver is non-failing (`manual_evidence_validation.tsv` row reason `waiver_applied`).
+  - Waiver status on `DEV-01..DEV-05` is invalid and fails intake.
 
 Blocker categories (fixed):
 - `deterministic_missing_manual_evidence`
 - `runtime_flake_abrt`
-- `not_applicable_with_waiver`
+- `not_applicable_with_waiver` (invalid waiver usage only)
 
 Exit semantics:
-- `0` = RL-05 manual evidence complete.
+- `0` = RL-05 manual evidence complete (`DEV-01..DEV-05` complete and `DEV-06` complete or valid waiver).
 - `1` = incomplete/invalid manual evidence.
 
 ## RL-04 Bootstrap ABRT Diagnostics Harness (Slice I2)
@@ -260,7 +406,10 @@ Required diagnostics outputs:
 Per-run capture contract:
 - `exit_code`: wrapper script exit for the replay lane
 - `stage`: failing stage (`bootstrap`, `render`, `post_render`, `complete`, `unknown`)
-- `terminal_reason`: parsed reason string with ABRT markers when present
+- `terminal_reason`: deterministic token from RL-04 lane (`bootstrap_failed_*`, `install_failed_*`, `render_failed_*`, `output_failed_*`, etc.)
+- `terminal_reason_class`: normalized class (`bootstrap_failed|install_failed|render_failed|output_failed|signal|abrt|other|none`)
+- `terminal_signal_number`: signal number when present (for example `6` for ABRT), otherwise `0`
+- `classification`: deterministic bucket (`pass`, `transient_runtime_abort`, `transient_runtime_signal`, `deterministic_*`)
 - `crash_report_present`: `yes|no`
 - `crash_report_path`: path when a new matching crash report is detected
 
@@ -362,3 +511,71 @@ Compiler exit semantics:
 - `0` checklist complete/valid.
 - `1` missing/invalid note inputs.
 - `2` usage error.
+
+## RL-05 Closure Evidence Packaging (Slice M1)
+
+Purpose:
+- Build an auditor-facing RL-05 closure packet from prior deterministic artifacts only (no new runtime lane executions).
+
+Canonical input packets:
+- `TestEvidence/bl030_rl05_manual_closure_g5_<timestamp>/`
+- `TestEvidence/bl030_rl05_manual_intake_g6_<timestamp>/`
+- `TestEvidence/bl030_rl05_manual_pack_i1_<timestamp>/`
+- `TestEvidence/bl030_gate_consolidation_i3_<timestamp>/`
+
+Required M1 outputs:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `rl05_closure_index.tsv` (artifact inventory with source packet and checksum)
+- `rl05_operator_chain_of_custody.tsv`
+- `rl05_blocker_statement.md`
+- `promotion_decision_draft.md`
+- `docs_freshness.log`
+
+Proof-point classification tokens (required):
+- `PRESENT_VALID`
+- `PRESENT_INCOMPLETE`
+- `MISSING`
+
+Decision rule:
+- If any required RL-05 proof point is `PRESENT_INCOMPLETE` or `MISSING`, packet result is `FAIL`.
+- `FAIL` packets must enumerate exact blocker IDs in both `validation_matrix.tsv` and `rl05_blocker_statement.md`.
+
+## RL-05 Closure Evidence Packaging Snapshot (Slice M1, 2026-02-26)
+
+- Packet directory: `TestEvidence/bl030_rl05_closure_pack_m1_20260226T155124Z`
+- Result: `FAIL`
+- Deterministic blocker IDs:
+  - `BL030-M1-001`
+  - `BL030-M1-002`
+  - `BL030-M1-003`
+  - `BL030-M1-004`
+  - `BL030-M1-005`
+  - `BL030-M1-006`
+  - `BL030-M1-007`
+- Key M1 determinations:
+  1. Authoritative RL-05 closure packet (`G5`) still reports `rl05_gate_decision=FAIL`.
+  2. G5 manual checklist remains incomplete (`present_yes=0`, `present_no=6`).
+  3. G6 intake remains invalid (`header_schema=FAIL`; unresolved required rows).
+  4. Consolidated I3 packet still reports `RL-05=FAIL` with deterministic blockers retained.
+  5. Compiler packet I1 is valid but does not clear authoritative G5/G6 closure blockers by itself.
+
+## RL-05 Closure Evidence Packaging Snapshot (Slice M1 rerun, 2026-02-26)
+
+- Packet directory: `TestEvidence/bl030_rl05_closure_pack_m1_20260226T155213Z`
+- Result: `FAIL`
+- Deterministic blocker IDs:
+  - `BL030-M1-001`
+  - `BL030-M1-002`
+  - `BL030-M1-003`
+  - `BL030-M1-004`
+  - `BL030-M1-005`
+  - `BL030-M1-006`
+  - `BL030-M1-007`
+  - `BL030-M1-008`
+- Key M1 rerun determinations:
+  1. G5 remains authoritative and still reports `rl05_gate_decision=FAIL`.
+  2. G5 checklist remains non-intake schema with `present=no` for `DEV-01..DEV-06`.
+  3. G6 real-input intake remains `FAIL` (`header_schema=FAIL`, `manual_evidence_gate=FAIL`).
+  4. I1 compiler output remains fixture-valid only and cannot close RL-05 without authoritative note linkage.
+  5. I3 consolidated matrix remains `RL-05=FAIL`; release posture stays `NO-GO`.

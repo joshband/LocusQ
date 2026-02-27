@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-27
 
 # LocusQ Implementation Traceability
 
@@ -76,6 +76,9 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - BL-034 Slice F1: Cross-lane stress sentinel (BL-009 repetition + dual BL-034 lane replay determinism check)
 - BL-034 Slice F2: RT drift-watch sentinel (5x repeated RT audits with zero non-allowlisted findings)
 - BL-034 Slice Z7: Post-done owner integration sync for F/F1/F2 reconciliation and done-posture retention
+- BL-045 Slice A: Companion v2 packet (52B) — `MotionSample`/`PosePacket` extended; `HeadTrackingPoseSnapshot` 32→48B; `SpatialRenderer::PoseSnapshot` 32→48B; v1/v2 versioned dispatch + v1 off-by-4 fix
+- BL-045 Slice B: `Source/HeadPoseInterpolator.h` — slerp/nlerp, bounded angular-velocity prediction, sensor-switch crossfade; wired into `processBlock`
+- BL-045 Slice C: Re-center UX + drift telemetry — `yawReferenceDeg`/`yawReferenceSet`/`lastHeadTrackYawDeg` atomics; `setYawReference()`; processBlock quaternion pre-rotation; `pushHeadTrackDrift()` telemetry; UI `Set Forward` button + drift display
 - Reference: `.ideas/plan.md`
 
 ## Stage 14 Drift Ledger (Open)
@@ -215,7 +218,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | Listener/speaker room overlays (BL-014) | `Source/PluginProcessor.cpp` (`roomProfileValid`, `roomDimensions`, `listener`, `speakerRms`, `speakers`) | `Source/ui/public/js/index.js` (`updateSpeakerTargetsFromScene`, `updateListenerTargetFromScene`, speaker/listener energy visuals) | Viewport listener/headphone and speaker overlays track scene telemetry with smoothing and safe defaults. |
 | Trail/vector toggles + trail-length control (BL-006/BL-007) | APVTS parameters (`rend_viz_trails`, `rend_viz_vectors`, `rend_viz_trail_len`) surfaced through relay state | `Source/ui/public/js/index.js` (toggle bindings + animate visibility gates) | Motion trails and velocity vectors are controlled by renderer UI toggles and remain visual-only overlays. |
 | Steam headphone runtime diagnostics (BL-009 closeout support) | `Source/SpatialRenderer.h` (`SteamInitStage`, init failure/error tracking) + `Source/PluginProcessor.cpp` (`getSceneStateJSON`) | `Source/ui/public/js/index.js` (`runProductionP0SelfTest`, renderer status line) | Scene snapshots now expose deterministic Steam init stage/error/path data (`rendererSteamAudioInitStage`, `rendererSteamAudioInitErrorCode`, `rendererSteamAudioRuntimeLib`, `rendererSteamAudioMissingSymbol`). |
-| Head-tracking telemetry bridge diagnostics + viewport marker (BL-017/BL-027 additive UI contract) | `Source/HeadTrackingBridge.h` (UDP pose receiver), `Source/PluginProcessor.cpp` (`getSceneStateJSON` additive `rendererHeadTracking*` fields) | `Source/ui/public/index.html` (`rend-headtrack-*` diagnostics card shell) + `Source/ui/public/js/index.js` (`updateRendererPanelShell`, `updateHeadTrackingTelemetryFromScene`, listener headtracking marker/arrow/ring animation) | Renderer diagnostics now show full bridge telemetry (`seq`, `timestamp`, `age`, quaternion, derived yaw/pitch/roll, invalid packet count), and viewport listener overlay renders a distinct realtime headtracking indicator with active/stale visual states. |
+| Head-tracking telemetry bridge diagnostics + viewport marker (BL-017/BL-027 additive UI contract) | `Source/HeadTrackingBridge.h` (process-shared UDP pose receiver + plugin-ingest ack publisher), `Source/PluginProcessor.cpp` (`getSceneStateJSON` additive `rendererHeadTracking*` fields) | `Source/ui/public/index.html` (`rend-headtrack-*` diagnostics card shell) + `Source/ui/public/js/index.js` (`updateRendererPanelShell`, `updateHeadTrackingTelemetryFromScene`, listener headtracking marker/arrow/ring animation) | Renderer diagnostics now show full bridge telemetry (`seq`, `timestamp`, `age`, quaternion, derived yaw/pitch/roll, invalid packet count, bridge consumer count), and viewport listener overlay renders a distinct realtime headtracking indicator with active/stale visual states. |
 | Renderer UI/UX v2 structural shell + fallback-safe authority chips (BL-027 Slice A) | Existing renderer scene-state payload from `Source/PluginProcessor.cpp` (requested/active/profile/stage/output fields); additive-only consumption with no schema changes | `Source/ui/public/index.html` (v2 IA card shell) + `Source/ui/public/js/index.js` (`updateRendererPanelShell`, chip state helpers, defensive payload guards) | Renderer rail now exposes profile authority, output summary, diagnostics cards, and deterministic fallback-safe states when renderer payload is absent/partial while preserving legacy control IDs and runtime behavior. |
 | Steam diagnostics card collapse + fielded fallback contract (BL-027 Slice C) | Existing Steam scene-state diagnostics from `Source/PluginProcessor.cpp` (`rendererSteamAudioCompiled`, `rendererSteamAudioAvailable`, `rendererSteamAudioInitStage`, `rendererSteamAudioInitErrorCode`, `rendererSteamAudioRuntimeLib`, `rendererSteamAudioMissingSymbol`) plus optional additive per-field tokens when present | `Source/ui/public/index.html` (`rend-steam-toggle`, `rend-steam-content`, `rend-steam-hrtf-status`, `rend-steam-binaural-tier`, `rend-steam-reflections-state`, `rend-steam-convolution-method`, `rend-steam-last-error`) + `Source/ui/public/js/index.js` (`setRendererSteamDiagnosticsExpanded`, `getRendererSteamDiagnosticsState`, `updateRendererPanelShell`) | Steam diagnostics are now collapsible (collapsed by default), expose five runtime fields with deterministic unknown/unavailable fallbacks for missing/partial payloads, preserve existing BL-029 IDs (`rend-steam-chip`, `rend-steam-detail`), and keep renderer UI behavior additive and non-breaking. |
 | Ambisonic diagnostics card collapse + fielded fallback contract (BL-027 Slice D) | Existing Ambisonic scene-state diagnostics from `Source/PluginProcessor.cpp` (`rendererAmbiCompiled`, `rendererAmbiActive`, `rendererAmbiMaxOrder`, `rendererAmbiStage`, `rendererAmbiDecodeLayout`) plus optional additive ambisonic diagnostic tokens when present | `Source/ui/public/index.html` (`rend-ambi-toggle`, `rend-ambi-content`, `rend-ambi-order`, `rend-ambi-channel-count`, `rend-ambi-decoder-state`, `rend-ambi-decoder-type`) + `Source/ui/public/js/index.js` (`setRendererAmbiDiagnosticsExpanded`, `getRendererAmbiDiagnosticsState`, `updateRendererPanelShell`) | Ambisonic diagnostics are now collapsible (collapsed by default), expose order/channel-count/decoder-state/decoder-type fields with deterministic `Unknown` fallbacks for missing scalars, preserve existing BL-029 IDs (`rend-ambi-chip`, `rend-ambi-detail`), and keep renderer UI behavior additive and non-breaking. |
@@ -276,6 +279,28 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | Editor shell orchestration helper contract | `Source/editor_shell/EditorShellHelpers.h` | Deterministic scene/calibration JS push, resize notification, runtime probe/selftest script sources extracted from monolithic editor file | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/module_move_map.md` |
 | PluginEditor facade parity contract | `Source/PluginEditor.cpp` + `Source/PluginEditor.h` | Relay/attachment ownership and order preserved while runtime/resource concerns delegate to module helpers | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/selftest_runs.tsv` |
 | Slice C1 validation gates | `Documentation/backlog/bl-032-source-modularization.md` | Build/selftest/docs pass, guardrail residual fails on pre-existing Processor line-count threshold (`BL032-G-001`) | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/status.tsv`, `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/blocker_taxonomy.tsv` |
+
+## BL-032 RT Gate Reconciliation (Slice D2)
+
+| Contract Surface | Source of Truth | Slice D2 Mapping | Evidence Contract |
+|---|---|---|---|
+| RT allowlist drift capture and closure (`rt_before` -> `rt_after`) | `scripts/rt-safety-audit.sh`, `scripts/rt-safety-allowlist.txt` | Deterministic line-map reconciliation after Slice D1 refactor (`non_allowlisted=92 -> 0`) | `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/rt_before.tsv`, `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/rt_after.tsv` |
+| Reconciliation classification and blocker resolution notes | `Documentation/backlog/hx-06-rt-safety-audit.md` + D2 packet notes | Explicit allowlist delta with bounded rule updates and blocker closure evidence | `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/allowlist_delta.md`, `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/blocker_resolution.md` |
+| Docs hygiene gate after allowlist updates | `scripts/validate-docs-freshness.sh` | Confirms D2 packet and shared-doc metadata remain compliant | `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/docs_freshness.log` |
+
+## BL-032 Owner Replay Readiness (Slice E1)
+
+| Contract Surface | Source of Truth | Slice E1 Mapping | Evidence Contract |
+|---|---|---|---|
+| Owner replay readiness gates (build/smoke/guardrails/rt/docs) | `Documentation/backlog/bl-032-source-modularization.md` (validation plan + E1 snapshot) | Confirms BL-032 extraction stack is promotion-ready for `In Validation` transition | `TestEvidence/bl032_owner_replay_e1_20260226T151756Z/status.tsv`, `TestEvidence/bl032_owner_replay_e1_20260226T151756Z/validation_matrix.tsv` |
+| Guardrail and RT parity at replay boundary | `scripts/qa-bl032-structure-guardrails-mac.sh` + `scripts/rt-safety-audit.sh` | `BL032-G-001` closure retained and RT gate remains green (`non_allowlisted=0`) after D2 | `TestEvidence/bl032_owner_replay_e1_20260226T151756Z/guardrails/guardrail_report.tsv`, `TestEvidence/bl032_owner_replay_e1_20260226T151756Z/rt_audit.tsv` |
+
+## BL-032 Done Promotion Packet (Slice F1)
+
+| Contract Surface | Source of Truth | Slice F1 Mapping | Evidence Contract |
+|---|---|---|---|
+| Done-candidate promotion gate replay (build/smoke/guardrails/rt/docs) | `Documentation/backlog/bl-032-source-modularization.md` (F1 snapshot) | Confirms BL-032 meets done-promotion validation bundle criteria on current branch | `TestEvidence/bl032_done_promotion_f1_20260226T152552Z/status.tsv`, `TestEvidence/bl032_done_promotion_f1_20260226T152552Z/validation_matrix.tsv` |
+| Final promotion decision record | F1 decision packet (`promotion_decision.md`) + owner sync surfaces | Marks BL-032 posture as `Done-candidate` pending final owner done packet | `TestEvidence/bl032_done_promotion_f1_20260226T152552Z/promotion_decision.md` |
 
 ## Phase 2.5 Core Files
 
@@ -1028,6 +1053,32 @@ Scope: reconcile F/F1/F2 handoffs with a fresh owner replay and retain done post
 | Handoff intake + shared-file safety checks | `TestEvidence/bl034_slice_f_ui_diag_20260226T042553Z/*`, `TestEvidence/bl034_cross_lane_stress_f1_20260226T041919Z/*`, `TestEvidence/bl034_rt_drift_watch_f2_20260226T041934Z/*` | `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/handoff_resolution.md` | All three handoffs declare `SHARED_FILES_TOUCHED: no` and provide parseable artifacts. |
 | Fresh owner replay (`build`, `smoke`, `BL-009`, `BL-034 lane --runs 5`, `RT`, `jq`, docs freshness) | Existing BL-034 runtime + lane script | `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/validation_matrix.tsv`, `qa_bl009.log`, `qa_lane.log`, `rt_audit.tsv`, `lane_runs/validation_matrix.tsv`, `lane_runs/replay_hashes.tsv` | All gates pass; `non_allowlisted=0` and deterministic lane replay remains stable. |
 | Owner posture retention decision | Backlog/status/evidence sync surfaces | `TestEvidence/bl034_owner_sync_z7_20260226T042832Z/owner_decisions.md` | BL-034 remains `Done`; Z7 adds post-promotion confidence rather than a status transition. |
+
+## BL-045 Contract Surfaces
+
+### Session-Transient State (NOT persisted to XML)
+
+| Contract Surface | Declaration Path | Write Path | Read Path | Notes |
+|---|---|---|---|---|
+| `yawReferenceDeg` (atomic float) | `Source/PluginProcessor.h` (public) | `setYawReference()` called from `locusqSetForwardYaw` native function | `processBlock` — quaternion pre-rotation by −yawReferenceDeg about Z | Session-transient; absent from `getStateInformation` / `setStateInformation` |
+| `yawReferenceSet` (atomic bool) | `Source/PluginProcessor.h` (public) | `setYawReference()` | `processBlock` — gates quaternion pre-rotation | Session-transient; reset to false on plugin instantiation |
+| `lastHeadTrackYawDeg` (atomic float) | `Source/PluginProcessor.h` (public) | `processBlock` — stores raw yaw after Euler decomposition | `EditorShellHelpers.h::pushHeadTrackDrift()` — computes drift for telemetry | Session-transient; read on message thread by timer |
+
+### Native Function / UI Wiring
+
+| Contract Surface | Declaration Path | Implementation Path | UI Counterpart | Notes |
+|---|---|---|---|---|
+| `locusqSetForwardYaw` native function | `Source/editor_webview/EditorWebViewRuntime.h` | Reads `lastHeadTrackYawDeg`, calls `processor.setYawReference()` | `Source/ui/public/js/index.js` (`setForwardYaw`) + `Source/ui/public/index.html` (`#btn-set-forward`) | Registered on message thread; disabled until head-tracking poseAvailable=true |
+| `pushHeadTrackDrift()` telemetry helper | `Source/editor_shell/EditorShellHelpers.h` | Computes `drift = lastHeadTrackYawDeg − yawReferenceDeg`; serializes `headTrackDrift` JSON | `Source/ui/public/js/index.js` (`updateHeadTrackDrift`) + `Source/ui/public/index.html` (`#val-headtrack-drift`) | Called by drift timer at `kDriftTelemetryIntervalTicks` × ~33ms ≈ 495ms |
+| Drift telemetry timer | `Source/PluginEditor.h` (`kDriftTelemetryIntervalTicks = 15`, `driftTelemetryTickCount`) | `Source/PluginEditor.cpp` (`timerCallback`) | — | 500ms ± 20ms cadence per spec |
+
+### QA Evidence
+
+| Check ID | Lane Script | Artifact | Notes |
+|---|---|---|---|
+| BL045-C-001 | `scripts/qa-bl045-headtracking-fidelity-lane-mac.sh --slice C` | `TestEvidence/bl045_headtracking_fidelity_20260227T033038Z` | Structural: atomic write + processBlock read + native function registered |
+| BL045-C-002 | `scripts/qa-bl045-headtracking-fidelity-lane-mac.sh --slice C` | `TestEvidence/bl045_headtracking_fidelity_20260227T033038Z` | Drift telemetry interval `kDriftTelemetryIntervalTicks=15` ≈ 495ms ≤ 20ms jitter |
+| BL045-C-003 | `scripts/qa-bl045-headtracking-fidelity-lane-mac.sh --slice C` | `TestEvidence/bl045_headtracking_fidelity_20260227T033038Z` | State NOT persisted: yawReferenceSet/yawReferenceDeg absent from state XML paths |
 
 ## Notes
 

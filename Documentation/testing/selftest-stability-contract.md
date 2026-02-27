@@ -49,10 +49,22 @@ The harness now also publishes additive runtime-serialization telemetry:
 - `prelaunch_drain_term_sent`
 - `prelaunch_drain_term_window_seconds`
 - `prelaunch_drain_kill_window_seconds`
+- `prelaunch_drain_stable_polls`
+- `prelaunch_drain_stable_poll_seconds`
+- `launch_ready_delay_seconds`
 - `result_after_exit_grace_seconds`
+- `result_after_exit_grace_poll_seconds`
 - `result_post_exit_grace_used`
 - `result_post_exit_grace_wait_seconds`
 - `app_exit_status_source` (additive exit-observation taxonomy)
+- `max_attempts_configured`
+- `retry_delay_seconds`
+- `retry_delay_seconds_configured`
+- `auto_assertion_retry_enabled`
+- `auto_assertion_retry_applied`
+- `auto_assertion_retry_reason`
+- `auto_assertion_retry_max_attempts`
+- `auto_assertion_retry_delay_seconds`
 
 Attempt status table schema:
 - `attempt`
@@ -78,7 +90,15 @@ Final metadata schema (JSON):
 - `crashReportPath`
 - `attemptStatusTable`
 - `maxAttempts`
+- `maxAttemptsConfigured`
 - `attemptsRun`
+- `retryDelaySeconds`
+- `retryDelaySecondsConfigured`
+- `autoAssertionRetryEnabled`
+- `autoAssertionRetryApplied`
+- `autoAssertionRetryReason`
+- `autoAssertionRetryMaxAttempts`
+- `autoAssertionRetryDelaySeconds`
 - `lockPath`
 - `lockWaitSeconds`
 - `lockWaitResult`
@@ -96,7 +116,11 @@ Final metadata schema (JSON):
 - `prelaunchDrainTermSent`
 - `prelaunchDrainTermWindowSeconds`
 - `prelaunchDrainKillWindowSeconds`
+- `prelaunchDrainStablePolls`
+- `prelaunchDrainStablePollSeconds`
+- `launchReadyDelaySeconds`
 - `resultAfterExitGraceSeconds`
+- `resultAfterExitGracePollSeconds`
 - `resultPostExitGraceUsed`
 - `resultPostExitGraceWaitSeconds`
 
@@ -116,11 +140,17 @@ This prevents stale outputs from being misclassified as fresh pass artifacts.
 Optional retry behavior is controlled by:
 - `LOCUSQ_UI_SELFTEST_MAX_ATTEMPTS` (default `1`)
 - `LOCUSQ_UI_SELFTEST_RETRY_DELAY_SECONDS` (default `1`)
+- `LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_ENABLED` (default `1`)
+- `LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_MAX_ATTEMPTS` (default `2`)
+- `LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_DELAY_SECONDS` (default `2`)
 
 Rules:
 - default `1` preserves legacy single-attempt behavior.
 - every attempt must append a row to the attempt status table.
 - retries must never convert a hard fail into a silent pass without explicit successful attempt evidence.
+- if `LOCUSQ_UI_SELFTEST_MAX_ATTEMPTS` is not explicitly set, the harness may apply an additive deterministic auto-profile for known RL-03 scopes (`LOCUSQ_UI_SELFTEST_SCOPE=bl029` or `LOCUSQ_UI_SELFTEST_BL009=1`) by increasing attempts to a bounded value.
+- explicit caller-provided `LOCUSQ_UI_SELFTEST_MAX_ATTEMPTS` always wins over auto-profile behavior.
+- auto-profile activation and effective values must be emitted in both run log and metadata.
 
 ## Single-Instance Serialization Contract
 
@@ -159,11 +189,26 @@ Rules:
 - if residual process(es) remain, harness performs deterministic two-phase drain:
   1. bounded `TERM` window
   2. bounded `KILL` window (only if needed)
+- after drain reaches zero PIDs, harness requires consecutive stable zero-PID polls before launch.
 - unresolved residual process state is a deterministic hard fail (`prelaunch_process_drain_timeout`).
 - drain telemetry is additive and must be emitted to run log and metadata.
 
 Environment controls:
 - `LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_TIMEOUT_SECONDS`
+- `LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_STABLE_POLLS`
+- `LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_STABLE_POLL_SECONDS`
+
+## Launch Readiness Contract
+
+To reduce cross-run readiness races, the harness applies a bounded post-drain launch-ready delay before each app launch.
+
+Rules:
+- launch-ready delay is additive and deterministic.
+- launch-ready delay does not weaken fail semantics.
+- launch-ready delay telemetry must be emitted in run log and metadata.
+
+Environment controls:
+- `LOCUSQ_UI_SELFTEST_LAUNCH_READY_DELAY_SECONDS` (default `1`)
 
 ## Post-Exit Result Grace Contract
 
@@ -176,6 +221,7 @@ Rules:
 
 Environment controls:
 - `LOCUSQ_UI_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS`
+- `LOCUSQ_UI_SELFTEST_RESULT_AFTER_EXIT_GRACE_POLL_SECONDS`
 
 ## Result JSON Settle Contract
 
@@ -184,11 +230,33 @@ To avoid classifying partially-written payload files as `selftest_payload_not_ok
 Rules:
 - once result JSON appears, harness waits for two consecutive stable reads and (when `jq` is available) valid JSON parse.
 - settle timeout remains strict: if JSON is still unparseable at timeout, harness fails with `selftest_payload_invalid_json`.
+- if `jq` is unavailable, harness fails deterministically with `selftest_payload_parser_unavailable` (no regex fallback pass path).
 - settle telemetry must be emitted in run log and metadata (`result_json_settle_result`, `result_json_settle_wait_seconds`, `result_json_settle_polls`).
 
 Environment controls:
 - `LOCUSQ_UI_SELFTEST_RESULT_JSON_SETTLE_TIMEOUT_SECONDS` (default `2`)
 - `LOCUSQ_UI_SELFTEST_RESULT_JSON_SETTLE_POLL_SECONDS` (default `0.1`)
+
+## Targeted Assertion Retry Contract
+
+To reduce intermittent payload assertion variability while preserving strict fail behavior, the harness supports bounded targeted retry extension for known flaky assertions:
+- `UI-P1-029B`
+- `UI-07`
+- `UI-P1-025E`
+
+Rules:
+- targeted retry extension applies only when:
+  - `LOCUSQ_UI_SELFTEST_MAX_ATTEMPTS` is not explicitly overridden, and
+  - auto assertion retry is enabled.
+- on `selftest_payload_not_ok` with one of the targeted checks, harness may increment retry budget by `+1` per failure up to a hard cap.
+- strict fail semantics remain unchanged: if targeted failures persist through capped attempts, command exits non-zero.
+- telemetry fields must be emitted in run log and metadata:
+  - `auto_assertion_targeted_check_max_attempts`
+  - `auto_assertion_targeted_retry_applied`
+  - `auto_assertion_targeted_retry_reason`
+
+Environment controls:
+- `LOCUSQ_UI_SELFTEST_TARGETED_CHECK_MAX_ATTEMPTS` (default `4`)
 
 ## Failure Taxonomy
 
@@ -197,6 +265,7 @@ Standard terminal reasons:
 - `result_json_missing_after_<timeout>s`
 - `selftest_payload_not_ok`
 - `selftest_payload_invalid_json`
+- `selftest_payload_parser_unavailable`
 - `single_instance_lock_timeout`
 - `prelaunch_process_drain_timeout`
 - `launch_mode_failed_<mode>`
@@ -206,11 +275,23 @@ Payload-failure taxonomy:
 - harness emits additive machine-readable artifact `failure_taxonomy_path` (`*.failure_taxonomy.tsv`) with per-attempt payload diagnostics.
 - required fields include: `payload_reason_code`, `payload_failing_check`, `payload_snippet_path`, `payload_pointer_path`, `payload_status`, `payload_ok`.
 - `payload_reason_code` examples:
+  - `assertion_ui_p1_029b_single_glyph_fallback`
+  - `assertion_ui_07_keyframe_interaction`
+  - `assertion_ui_p1_025e_responsive_layout_settle`
   - `failing_check_assertion`
   - `payload_error_without_check`
   - `payload_ok_false`
   - `invalid_json_payload`
+  - `json_parser_unavailable`
   - `not_payload_failure`
+- deterministic assertion mapping contract:
+  - `UI-P1-029B` -> `assertion_ui_p1_029b_single_glyph_fallback`
+  - `UI-07` -> `assertion_ui_07_keyframe_interaction`
+  - `UI-P1-025E` -> `assertion_ui_p1_025e_responsive_layout_settle`
+  - any other failing check id -> `failing_check_assertion`
+- failing-check normalization contract:
+  - check IDs are normalized to uppercase/no-whitespace before mapping.
+  - if check ID is absent, harness may derive one from `payload.error` text for targeted checks only.
 - for payload failures, harness must emit a deterministic snippet artifact (`*.payload_failure_snippet.json`) and record the path.
 - `payload_pointer_path` must point to the attempt result JSON used for payload evaluation.
 

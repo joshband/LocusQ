@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-26
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Validation (RL-09 PASS retained; RL-05 FAIL remains deterministic blocker per G5/G6/I1; RL-03 remains red after K1 hardening with residual `app_exited_before_result` flake while RL-04/RL-06 remain red through H2/H3 with I2 diagnostics; I3 consolidation packet remains NO-GO) |
+| Status | In Validation (RL-09/RL-03/RL-04/RL-06 remain PASS; N13 owner replay reconcile is `FAIL` 3/3 with deterministic capture abort before `rl05_gate_decision` (capture exit `143`), so RL-05 remains blocked) |
 | Owner Track | Track G — Release/Governance |
 | Depends On | BL-024 (Done), BL-025 (Done), HX-06 |
 | Blocks | — |
@@ -551,6 +551,238 @@ Evidence:
 - Result interpretation:
   - K1 materially improved RL-03 stability compared to J1/J2 (BL-009 scoped runs now fully green).
   - RL-03 remains red because strict all-runs-pass criteria is not met (`BL-029` scope still has a residual `1/10` process-exit flake).
+
+## Slice L1 RL-04 Bootstrap Recovery (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl04_bootstrap_l1_20260226T151001Z`
+- Updated lane surfaces:
+  - `scripts/reaper-headless-render-smoke-mac.sh`
+  - `scripts/diagnose-reaper-bootstrap-abrt-mac.sh`
+  - `Documentation/testing/bl-030-release-governance-qa.md`
+- Validation commands:
+  - `bash -n scripts/reaper-headless-render-smoke-mac.sh`: `PASS`
+  - `bash -n scripts/diagnose-reaper-bootstrap-abrt-mac.sh`: `PASS`
+  - `./scripts/reaper-headless-render-smoke-mac.sh --help`: `PASS`
+  - `./scripts/diagnose-reaper-bootstrap-abrt-mac.sh --help`: `PASS`
+  - `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap` x10: `PASS` (`10/10`)
+  - `./scripts/diagnose-reaper-bootstrap-abrt-mac.sh --runs 10 --out-dir .../diag`: `PASS`
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Result interpretation:
+  - RL-04 runtime lane is recovered to green in this replay window with deterministic bootstrap success (`10/10`).
+  - BL-030 overall remains `NO-GO` because RL-03, RL-05, and RL-06 remain red.
+
+## Slice L2 RL-03 Stability Hardening (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl03_stability_l2_20260226T151702Z`
+- Validation commands:
+  - `bash -n scripts/standalone-ui-selftest-production-p0-mac.sh`: `PASS`
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x20: `PASS` (`19/20`, `app_exited_before_result=0`, one payload fail `UI-P1-029B`)
+  - `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x10: `PASS` (`8/10`, `app_exited_before_result=0`, payload fails `UI-07` and `UI-P1-025E`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Result interpretation:
+  - L2 clears the prior RL-03 process-exit flake class (`app_exited_before_result` eliminated in both matrices).
+  - RL-03 remains non-green at release-governance level because payload assertions persist in both scoped matrices.
+  - BL-030 overall remains `NO-GO` while RL-03/RL-05/RL-06 remain red.
+
+## Slice K2 RL-03 Stability Hardening (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl03_stability_k2_20260226T150716Z`
+- Validation commands:
+  - `bash -n scripts/standalone-ui-selftest-production-p0-mac.sh`: `PASS`
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x20: `PASS` (`20/20`)
+  - `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x10: `PASS` (`10/10`)
+  - `./scripts/validate-docs-freshness.sh`: `FAIL` (blocked by external evidence metadata debt)
+- Result interpretation:
+  - K2 demonstrates a clean replay window for RL-03 behavior.
+  - Lane verdict stayed `FAIL` only because docs freshness failed on out-of-scope evidence metadata (`harness_delta.md`).
+  - Combined with L2, owner classification remains cautious: RL-03 is not promoted green until payload assertions are stable across repeated windows.
+
+## Slice L2 RL-06 Pluginval Stability Hardening (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl06_stability_l2_20260226T153423Z`
+- Updated lane surfaces:
+  - `scripts/qa-bl030-pluginval-stability-mac.sh`
+  - `Documentation/testing/pluginval-stability-contract.md`
+- Validation commands:
+  - `bash -n scripts/qa-bl030-pluginval-stability-mac.sh`: `PASS`
+  - `./scripts/qa-bl030-pluginval-stability-mac.sh --help`: `PASS`
+  - `./scripts/qa-bl030-pluginval-stability-mac.sh --runs 10 --out-dir ...`: `PASS` (`10/10`, `fails=0`)
+  - `./scripts/validate-docs-freshness.sh`: `FAIL` (blocked by shared evidence metadata debt outside L2 ownership)
+- Owner follow-up:
+  - metadata header was added to `TestEvidence/bl030_rl03_stability_l2_20260226T151702Z/harness_delta.md`.
+  - docs freshness now passes, clearing the cross-slice blocker classification.
+- Result interpretation:
+  - RL-06 is recovered to green in the current replay window (`10/10` pluginval stability run).
+  - BL-030 overall remains `NO-GO` while RL-03 and RL-05 remain unresolved.
+
+## Slice L3 RL-06 Pluginval Stability Hardening (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl06_stability_l3_20260226T153725Z`
+- Updated lane surfaces:
+  - `scripts/qa-bl030-pluginval-stability-mac.sh`
+  - `Documentation/testing/pluginval-stability-contract.md`
+- Validation commands:
+  - `bash -n scripts/qa-bl030-pluginval-stability-mac.sh`: `PASS`
+  - `./scripts/qa-bl030-pluginval-stability-mac.sh --help`: `PASS`
+  - `./scripts/qa-bl030-pluginval-stability-mac.sh --runs 10 --out-dir ...`: `PASS` (`10/10`, `fails=0`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+  - exit semantics probes: `PASS` (`invalid invocation -> exit 2`, `lane/preflight fail -> exit 1`)
+- Result interpretation:
+  - RL-06 stability is reaffirmed green with stricter harness semantics coverage and deterministic replay.
+  - BL-030 remains `NO-GO` because RL-03 and RL-05 are still unresolved.
+
+## Slice M2 RL-05 Real Operator Evidence Closure (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z`
+- Validation commands:
+  - `./scripts/qa-bl030-manual-evidence-pack-mac.sh --notes-dir ... --out-dir .../pack`: `PASS`
+  - `./scripts/qa-bl030-manual-evidence-validate-mac.sh --input .../pack/manual_evidence_checklist.tsv --out-dir .../validate`: `PASS`
+  - `./scripts/qa-bl030-device-matrix-capture-mac.sh` (per-device notes invocation): `PASS`
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Result interpretation:
+  - RL-05 evidence closure packet landed as a passing worker window.
+  - Owner retained tie-break requirement because later M2b replay produced conflicting RL-05 outcome.
+
+## Slice M2b RL-05 Waiver Semantics Remediation (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl05_waiver_fix_m2b_20260226T160720Z`
+- Updated surfaces:
+  - `scripts/qa-bl030-manual-evidence-validate-mac.sh`
+  - `Documentation/testing/bl-030-release-governance-qa.md`
+- Validation commands:
+  - validator lint/help: `PASS`
+  - pack lane: `PASS`
+  - validate lane: `PASS` (`manual_evidence_gate=PASS`, `DEV-06 reason=waiver_applied`)
+  - matrix lane: `FAIL` (`rl05_gate_decision=FAIL`) due `DEV-02/DEV-03/DEV-04` lane failures in that replay window
+  - docs freshness: `PASS`
+- Result interpretation:
+  - G6 waiver semantics are corrected and contract-aligned.
+  - RL-05 remained mixed at owner level due conflicting M2 vs M2b replay outcomes.
+
+## Slice M3 RL-03 Payload Determinism Hardening (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl03_payload_m3_20260226T162051Z`
+- Validation commands:
+  - `bash -n scripts/standalone-ui-selftest-production-p0-mac.sh`: `PASS`
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x20: `PASS` (`20/20`)
+  - `LOCUSQ_UI_SELFTEST_BL009=1 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x20: `PASS` (`20/20`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Result interpretation:
+  - RL-03 is recovered in the current replay window.
+  - `app_exited_before_result` and prior payload-assertion instability are no longer observed in M3.
+
+## Owner Sync N2 RL-05 Tie-Break Replay (2026-02-26)
+
+- Owner packet directory: `TestEvidence/bl030_owner_sync_n2_20260226T164428Z`
+- Required replay (authoritative tie-break):
+  - `./scripts/qa-bl030-device-matrix-capture-mac.sh` replayed `3x` (`rl05_run1..3`) with M2 evidence inputs
+  - `jq empty status.json`: `PASS`
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Replay outcome:
+  - `rl05_run1`: `FAIL`
+  - `rl05_run2`: `FAIL`
+  - `rl05_run3`: `FAIL`
+  - deterministic condition in all three: `DEV-06` classified `deterministic_missing_manual_evidence` with `manual_missing=1`
+- Owner decision:
+  - BL-030 remains `In Validation` / `NO-GO`.
+  - RL-03 is now green; RL-04/RL-06/RL-09 remain green.
+  - RL-05 remains the only release-governance blocker and requires closure with valid DEV-06 evidence-path semantics in owner replay.
+
+## Slice N3 RL-05 Deterministic Evidence-Path Guard (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl05_guard_n3_20260226T165722Z`
+- Updated surfaces:
+  - `scripts/qa-bl030-device-matrix-capture-mac.sh`
+  - `Documentation/testing/bl-030-release-governance-qa.md`
+- Validation commands:
+  - script lint/help: `PASS`
+  - negative waiver-path fixture: `PASS` (expected exit `1`, `reason_code=dev06_waiver_path_missing`)
+  - positive waiver-path fixture: `PASS` (`dev06_waiver_preflight` reports `reason_code=dev06_waiver_path_valid`)
+  - docs freshness: `PASS`
+- Result interpretation:
+  - RL-05 guard semantics are now deterministic for missing vs valid DEV-06 waiver paths.
+  - N3 is hardening only; it does not close RL-05 by itself.
+
+## Owner Sync N4 BL-030 N3 Guard Recheck (2026-02-26)
+
+- Owner packet directory: `TestEvidence/owner_sync_bl020_bl021_bl023_bl030_n4_20260226T170124Z`
+- Guard recheck commands:
+  - negative recheck (`missing waiver path`): `FAIL` as expected with `reason_code=dev06_waiver_path_missing`
+  - positive recheck (`valid waiver path`): `dev06_waiver_preflight=PASS` with `reason_code=dev06_waiver_path_valid`; lane remains `FAIL` due missing DEV-01..DEV-05 manual notes in this intentionally scoped guard probe
+  - `jq empty status.json`: `PASS`
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Owner decision:
+  - BL-030 remains `In Validation` / `NO-GO`.
+  - RL-05 remains the only release-governance blocker; N3 hardening is accepted and integrated.
+
+## Slice N5 RL-05 Replay Reconcile Wrapper (2026-02-26)
+
+- Worker packet directory: `TestEvidence/bl030_rl05_reconcile_n5_20260226T172002Z`
+- Updated surfaces:
+  - `scripts/qa-bl030-rl05-replay-reconcile-mac.sh`
+  - `Documentation/testing/bl-030-release-governance-qa.md`
+- Validation summary:
+  - wrapper lint/help: `PASS`
+  - reconcile chain execution: `PASS` as wrapper contract (`exit 1` when RL-05 blocker remains)
+  - docs freshness: `FAIL` (external metadata debt outside N5 ownership)
+- Wrapper interpretation:
+  - chain execution and exit semantics are deterministic and machine-readable.
+  - RL-05 remains blocked (`device_matrix_capture` failure; `reason_code=dev06_waiver_path_missing`).
+
+## Owner Sync N6 RL-05 Recheck (2026-02-26)
+
+- Owner packet directory: `TestEvidence/owner_sync_bl020_bl021_bl023_bl030_n6_20260226T172348Z`
+- Owner recheck command:
+  - `./scripts/qa-bl030-rl05-replay-reconcile-mac.sh --notes-dir ... --dev06-waiver ... --out-dir .../bl030_recheck`
+- Recheck result:
+  - wrapper chain `pack`/`validate`: `PASS`
+  - `device_matrix_capture`: `FAIL`
+  - `rl05_reconcile_result`: `FAIL`
+- Owner decision:
+  - BL-030 remains `In Validation` / `NO-GO`.
+  - RL-05 remains unresolved and is still the release-critical blocker.
+
+## Owner Sync N9 RL-05 + Global Gate Recheck (2026-02-26)
+
+- Owner packet directory: `TestEvidence/owner_sync_bl030_bl020_bl023_n9_20260226T192237Z`
+- Intake references:
+  - N7 docs repair: `TestEvidence/bl030_docs_freshness_n7_20260226T173504Z/status.tsv`
+  - N8 authoritative replay: `TestEvidence/bl030_rl05_authoritative_n8_20260226T173345Z/status.tsv`
+  - N9 RL-05 recheck: `TestEvidence/owner_sync_bl030_bl020_bl023_n9_20260226T192237Z/bl030_recheck/status.tsv`
+- Owner replay commands:
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+  - `./scripts/qa-bl030-rl05-replay-reconcile-mac.sh --notes-dir ... --dev06-waiver TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_artifacts/dev06_external_mic_waiver.md --out-dir .../bl030_recheck`: `FAIL`
+  - `cmake --build ...`: `PASS`
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`: `PASS`
+  - `./scripts/rt-safety-audit.sh --print-summary --output .../rt_audit.tsv`: `FAIL` (`non_allowlisted=85`)
+  - `jq empty status.json`: `PASS`
+- Deterministic blocker classification:
+  - RL-05 remains blocked with `reason_code=dev06_waiver_path_missing` for the specified M2 waiver input path.
+  - RT gate is red in owner replay (`non_allowlisted=85`) and remains an explicit release blocker.
+- Owner decision:
+  - BL-030 remains `In Validation` / `NO-GO`.
+  - RL-05 closure requires a replay that passes with deterministic, valid DEV-06 evidence-path semantics under owner-authoritative command inputs.
+
+## Owner Sync N13 RL-05 Tie-Break Recheck (2026-02-26)
+
+- Owner packet directory: `TestEvidence/owner_sync_bl030_bl021_bl023_n13_20260226T203010Z`
+- Intake references:
+  - N11 forensics packet: `TestEvidence/bl030_rl05_run1_forensics_n11_20260226T195003Z/status.tsv`
+  - N12 determinism packet: `TestEvidence/bl030_rl05_determinism_n12_20260226T195401Z/status.tsv`
+  - owner recheck runs:
+    - `.../bl030_recheck_run1/status.tsv`
+    - `.../bl030_recheck_run2/status.tsv`
+    - `.../bl030_recheck_run3/status.tsv`
+- Owner replay commands:
+  - `./scripts/qa-bl030-rl05-replay-reconcile-mac.sh ... --out-dir .../bl030_recheck_run1`: `FAIL` (`exit 1`)
+  - `./scripts/qa-bl030-rl05-replay-reconcile-mac.sh ... --out-dir .../bl030_recheck_run2`: `FAIL` (`exit 1`)
+  - `./scripts/qa-bl030-rl05-replay-reconcile-mac.sh ... --out-dir .../bl030_recheck_run3`: `FAIL` (`exit 1`)
+- Deterministic blocker classification:
+  - `BL030-N13-001`: `capture_aborted_without_gate` (`device_matrix_capture` exit `143`; no `rl05_gate_decision` row emitted)
+  - `BL030-N13-002`: `replay_reconcile_not_deterministic_or_not_closable` (`0/3` PASS)
+- Owner decision:
+  - BL-030 remains `In Validation` / `NO-GO`.
+  - RL-05 remains release-critical and is not promotable on current authoritative replay outputs.
 
 ## Closeout Checklist
 
