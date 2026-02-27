@@ -2788,6 +2788,11 @@ void LocusQAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
                        juce::JSON::toString (getUIStateFromUI(), true),
                        nullptr);
 
+    // hp_calibration_enabled: not an APVTS param (no UI yet); persisted manually.
+    state.setProperty ("hp_calibration_enabled",
+                       spatialRenderer.isHeadphoneCalibrationEnabledRequested() ? 1 : 0,
+                       nullptr);
+
     state.setProperty (kSnapshotSchemaProperty,
                        kSnapshotSchemaValueV2,
                        nullptr);
@@ -2812,6 +2817,11 @@ void LocusQAudioProcessor::setStateInformation (const void* data, int sizeInByte
 
             const auto state = apvts.copyState();
             hasRestoredSnapshotState = state.hasProperty (kSnapshotSchemaProperty);
+
+            // Restore manually-persisted headphone calibration enable flag (no APVTS backing).
+            if (state.hasProperty ("hp_calibration_enabled"))
+                spatialRenderer.setHeadphoneCalibrationEnabled (
+                    static_cast<int> (state.getProperty ("hp_calibration_enabled")) > 0);
             hasSeededInitialEmitterColor = true;
             migrateSnapshotLayoutIfNeeded (state);
             const auto effectiveWritableChannels = resolveCalibrationWritableChannels (
