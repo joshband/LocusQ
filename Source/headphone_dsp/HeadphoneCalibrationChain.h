@@ -32,6 +32,21 @@ public:
         firHook.reset();
     }
 
+    void clearPeqPreset() noexcept
+    {
+        peqHook.setIdentityCurve();
+    }
+
+    void setPeqPreampDb (float db) noexcept
+    {
+        peqHook.setPreampDb (db);
+    }
+
+    void setPeqStage (int stageIndex, const HeadphonePeqHook::Coefficients& coefficients) noexcept
+    {
+        peqHook.setStageCoefficients (stageIndex, coefficients);
+    }
+
     void setEnabled (bool enabled) noexcept
     {
         if (request.enabled == enabled)

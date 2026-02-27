@@ -1,0 +1,5 @@
+hp_model_id: sony_wh1000xm5
+hp_mode: anc_off
+preamp_db: 0.0
+filters:
+  - {type: PK, fc_hz: 100.0, gain_db: -1.0, q: 0.7}
