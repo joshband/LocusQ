@@ -118,17 +118,24 @@ if(LOCUSQ_ENABLE_SOFA)
     include(FetchContent)
 
     # Suppress libmysofa's own tests and utilities to keep build lean.
-    set(BUILD_TESTS      OFF CACHE BOOL "Disable libmysofa tests"     FORCE)
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build mysofa as static lib" FORCE)
+    set(BUILD_TESTS OFF CACHE BOOL "Disable libmysofa tests" FORCE)
 
     FetchContent_Declare(
         mysofa
         GIT_REPOSITORY https://github.com/hoene/libmysofa.git
-        GIT_TAG        main
+        GIT_TAG        v1.3.2
         GIT_SHALLOW    TRUE
     )
+
+    # Scope BUILD_SHARED_LIBS to mysofa only: save the current value, force
+    # static for mysofa's configure step, then restore.  This avoids poisoning
+    # subsequent FetchContent dependencies with a global FORCE override.
+    set(_locusq_prev_shared_libs ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
     FetchContent_MakeAvailable(mysofa)
-    message(STATUS "LocusQ: SOFA HRTF loader enabled (libmysofa via FetchContent)")
+    set(BUILD_SHARED_LIBS ${_locusq_prev_shared_libs})
+
+    message(STATUS "LocusQ: SOFA HRTF loader enabled (libmysofa v1.3.2 via FetchContent)")
 endif()
 
 # ============================================
@@ -209,14 +216,17 @@ target_sources(LocusQ
         Source/PhysicsEngine.h
         Source/KeyframeTimeline.cpp
         Source/KeyframeTimeline.h
-        Source/dsp/SofaHrtfLoader.h
 )
 
-# SofaHrtfLoader.cpp is an isolated compilation unit: it #includes mysofa.h
-# (a C header) in a separate TU so that libmysofa symbols never leak into
-# JUCE's header compilation units.
+# SofaHrtfLoader.h/.cpp are both isolated to the SOFA feature block.
+# The header unconditionally includes mysofa.h (guarded by #ifdef LOCUSQ_ENABLE_SOFA
+# inside the header itself), but keeping it out of the unconditional source list
+# prevents unity-build tools from pulling it in when the feature is OFF.
 if(LOCUSQ_ENABLE_SOFA)
-    target_sources(LocusQ PRIVATE Source/dsp/SofaHrtfLoader.cpp)
+    target_sources(LocusQ PRIVATE
+        Source/dsp/SofaHrtfLoader.h
+        Source/dsp/SofaHrtfLoader.cpp
+    )
 endif()
 
 # ============================================
