@@ -11688,6 +11688,55 @@ function applyCalibrationStatus() {
     if (currentMode === "calibrate") {
         updateSpeakerTargetsFromScene(sceneData);
     }
+
+    // Headphone device status card — populated from companion CalibrationProfile.json
+    // via the hpDeviceStatus field in the calibration payload (Task 14).
+    const hp = (typeof status.hpDeviceStatus === "object" && status.hpDeviceStatus !== null)
+        ? status.hpDeviceStatus
+        : null;
+
+    const hpDeviceEl = document.getElementById("cal-hp-device");
+    if (hpDeviceEl) {
+        hpDeviceEl.textContent = hp ? String(hp.device || "Unknown Device") : "Not connected";
+    }
+
+    const hpEqModeEl = document.getElementById("cal-hp-eq-mode");
+    if (hpEqModeEl) {
+        const eqMode = hp ? String(hp.eq_mode || "off") : "off";
+        const eqLabels = { off: "Off", peq: "Parametric EQ", fir: "FIR" };
+        hpEqModeEl.textContent = eqLabels[eqMode] || eqMode;
+    }
+
+    const hpHrtfModeEl = document.getElementById("cal-hp-hrtf-mode");
+    if (hpHrtfModeEl) {
+        const hrtfMode = hp ? String(hp.hrtf_mode || "default") : "default";
+        hpHrtfModeEl.textContent = hrtfMode === "sofa" ? "Personalized (SOFA)" : "Default HRTF";
+    }
+
+    const hpTrackingEl = document.getElementById("cal-hp-tracking");
+    if (hpTrackingEl) {
+        hpTrackingEl.textContent = hp && hp.tracking_enabled ? "Enabled" : "Disabled";
+    }
+
+    const hpExternEl = document.getElementById("cal-hp-extern-score");
+    if (hpExternEl) {
+        hpExternEl.textContent = (hp && hp.externalization_score != null)
+            ? Number(hp.externalization_score).toFixed(2)
+            : "--";
+    }
+
+    const hpFbEl = document.getElementById("cal-hp-frontback-score");
+    if (hpFbEl) {
+        hpFbEl.textContent = (hp && hp.front_back_confusion_rate != null)
+            ? Number(hp.front_back_confusion_rate).toFixed(2)
+            : "--";
+    }
+
+    const hpFirLatEl = document.getElementById("cal-hp-fir-latency");
+    if (hpFirLatEl) {
+        const lat = hp ? Number(hp.fir_latency_samples || 0) : 0;
+        hpFirLatEl.textContent = lat > 0 ? `${lat} smp` : "0 smp";
+    }
 }
 
 function updateEmitterMeshes(emitters) {

@@ -652,6 +652,33 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     if (state == CalibrationEngine::State::Complete)
         status->setProperty ("estimatedRT60", estimatedRt60);
 
+    // Companion headphone device status — cached by pollCompanionCalibrationProfileFromDisk().
+    // Fields mirror the CalibrationProfile.json schema; verification scores are null until
+    // Phase B (Task 17) writes them back.
+    {
+        juce::var hpDeviceVar (new juce::DynamicObject());
+        auto* hpDevice = hpDeviceVar.getDynamicObject();
+
+        hpDevice->setProperty ("device",           cachedCalibrationDevice);
+        hpDevice->setProperty ("eq_mode",          cachedCalibrationEqMode);
+        hpDevice->setProperty ("hrtf_mode",        cachedCalibrationHrtfMode);
+        hpDevice->setProperty ("tracking_enabled", cachedCalibrationTrackingEnabled);
+        hpDevice->setProperty ("fir_latency_samples", cachedCalibrationFirLatency);
+
+        // Scores: use JSON null when not yet set (value -1 sentinel).
+        if (cachedExternalizationScore >= 0.0f)
+            hpDevice->setProperty ("externalization_score",    cachedExternalizationScore);
+        else
+            hpDevice->setProperty ("externalization_score",    juce::var());
+
+        if (cachedFrontBackConfusionRate >= 0.0f)
+            hpDevice->setProperty ("front_back_confusion_rate", cachedFrontBackConfusionRate);
+        else
+            hpDevice->setProperty ("front_back_confusion_rate", juce::var());
+
+        status->setProperty ("hpDeviceStatus", hpDeviceVar);
+    }
+
     return statusVar;
 }
 
@@ -1969,6 +1996,7 @@ bool LocusQAudioProcessor::setUIStateFromUI (const juce::var& stateVar)
             const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
             emitterLabelState = nextLabel;
         }
+        emitterLabelRtState.store (std::make_shared<juce::String> (nextLabel));
         applyEmitterLabelToSceneSlotIfAvailable (nextLabel);
         changed = true;
     }
