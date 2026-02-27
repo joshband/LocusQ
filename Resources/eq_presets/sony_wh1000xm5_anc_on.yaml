@@ -1,0 +1,12 @@
+hp_model_id: sony_wh1000xm5
+hp_mode: anc_on
+preamp_db: -6.2
+filters:
+  - {type: LSC, fc_hz: 105.0,  gain_db: -3.2, q: 0.70}
+  - {type: PK,  fc_hz: 2448.0, gain_db:  6.9, q: 2.46}
+  - {type: PK,  fc_hz: 173.0,  gain_db: -5.6, q: 0.96}
+  - {type: PK,  fc_hz: 3028.0, gain_db: -5.4, q: 2.03}
+  - {type: PK,  fc_hz: 1327.0, gain_db:  3.3, q: 0.58}
+  - {type: HSC, fc_hz: 10000.0, gain_db: 4.9, q: 0.70}
+  - {type: PK,  fc_hz: 6110.0, gain_db: -2.3, q: 5.81}
+  - {type: PK,  fc_hz: 875.0,  gain_db: -1.2, q: 4.07}

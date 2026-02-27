@@ -1,0 +1,7 @@
+hp_model_id: airpods_pro_3
+hp_mode: anc_on
+preamp_db: -1.0
+filters:
+  - {type: PK, fc_hz: 200.0,  gain_db: -1.5, q: 1.0}
+  - {type: PK, fc_hz: 3000.0, gain_db:  1.2, q: 2.0}
+  - {type: PK, fc_hz: 8000.0, gain_db: -1.0, q: 3.0}

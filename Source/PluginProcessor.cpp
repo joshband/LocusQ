@@ -2178,6 +2178,9 @@ void LocusQAudioProcessor::updateRendererParameters()
         static_cast<int> (apvts.getRawParameterValue ("rend_headphone_mode")->load()));
     spatialRenderer.setHeadphoneDeviceProfile (
         static_cast<int> (apvts.getRawParameterValue ("rend_headphone_profile")->load()));
+    spatialRenderer.loadPeqPresetForProfile (
+        static_cast<int> (apvts.getRawParameterValue ("rend_headphone_profile")->load()),
+        currentSampleRate);
     spatialRenderer.setSpatialOutputProfile (
         static_cast<int> (apvts.getRawParameterValue ("rend_spatial_profile")->load()));
     spatialRenderer.setAuditionEnabled (

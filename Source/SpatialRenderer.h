@@ -13,6 +13,7 @@
 #include "EarlyReflections.h"
 #include "FDNReverb.h"
 #include "headphone_dsp/HeadphoneCalibrationChain.h"
+#include "headphone_dsp/HeadphonePresetLoader.h"
 #include <algorithm>
 #include <atomic>
 #include <array>
@@ -511,6 +512,70 @@ public:
             return;
 
         requestedHeadphoneProfileIndex.store (clamped, std::memory_order_relaxed);
+    }
+
+    void loadPeqPresetForProfile (int profileIndex, double sampleRate)
+    {
+        if (lastLoadedPeqPresetIndex == profileIndex && lastLoadedPeqSampleRate == sampleRate)
+            return;
+        lastLoadedPeqPresetIndex = profileIndex;
+        lastLoadedPeqSampleRate  = sampleRate;
+
+        const auto profile = static_cast<HeadphoneDeviceProfile> (
+            juce::jlimit (0, 4, profileIndex));
+
+        juce::String presetFilename;
+        switch (profile)
+        {
+            case HeadphoneDeviceProfile::AirPodsPro2:   presetFilename = "airpods_pro_2_anc_on.yaml"; break;
+            case HeadphoneDeviceProfile::AirPodsPro3:   presetFilename = "airpods_pro_3_anc_on.yaml"; break;
+            case HeadphoneDeviceProfile::SonyWH1000XM5: presetFilename = "sony_wh1000xm5_anc_on.yaml"; break;
+            default: break;
+        }
+
+        if (presetFilename.isEmpty() || sampleRate <= 0.0)
+        {
+            headphoneCalibrationChain.clearPeqPreset();
+            return;
+        }
+
+        // Resolve from plugin bundle: MacOS/ -> parent -> Contents/ -> Resources/eq_presets/
+        const auto presetsDir = juce::File::getSpecialLocation (
+            juce::File::currentExecutableFile)
+            .getParentDirectory()         // MacOS/
+            .getSiblingFile ("Resources") // Contents/Resources/
+            .getChildFile ("eq_presets");
+
+        const auto preset = locusq::headphone_dsp::loadHeadphonePreset (
+            presetsDir.getChildFile (presetFilename));
+
+        headphoneCalibrationChain.clearPeqPreset();
+
+        if (! preset.valid || preset.bands.empty())
+            return;
+
+        headphoneCalibrationChain.setPeqPreampDb (preset.preampDb);
+
+        const auto sr = static_cast<float> (sampleRate);
+        const int maxStages = juce::jmin (
+            static_cast<int> (preset.bands.size()),
+            locusq::headphone_dsp::HeadphonePeqHook::kMaxStages);
+
+        for (int i = 0; i < maxStages; ++i)
+        {
+            const auto& band = preset.bands[static_cast<size_t> (i)];
+            locusq::headphone_dsp::HeadphonePeqHook::Coefficients c;
+            switch (band.type)
+            {
+                case locusq::headphone_dsp::PeqBandSpec::Type::LSC:
+                    c = locusq::headphone_dsp::HeadphonePeqHook::makeLowShelf  (band.fcHz, band.gainDb, band.q, sr); break;
+                case locusq::headphone_dsp::PeqBandSpec::Type::HSC:
+                    c = locusq::headphone_dsp::HeadphonePeqHook::makeHighShelf (band.fcHz, band.gainDb, band.q, sr); break;
+                default:
+                    c = locusq::headphone_dsp::HeadphonePeqHook::makePeakEQ    (band.fcHz, band.gainDb, band.q, sr); break;
+            }
+            headphoneCalibrationChain.setPeqStage (i, c);
+        }
     }
 
     void setHeadphoneCalibrationEnabled (bool enabled) noexcept
@@ -1702,7 +1767,9 @@ private:
     float headphoneCompCrossfeed = 0.0f;
     float headphoneCompLowStateLeft = 0.0f;
     float headphoneCompLowStateRight = 0.0f;
-    int lastAppliedHeadphoneProfileIndex = -1;
+    int    lastAppliedHeadphoneProfileIndex = -1;
+    int    lastLoadedPeqPresetIndex         = -1;
+    double lastLoadedPeqSampleRate          = 0.0;
     locusq::headphone_dsp::HeadphoneCalibrationChain headphoneCalibrationChain;
 
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
