@@ -1337,7 +1337,7 @@
               <div class="section-header">Profile Setup</div>
               <div class="control-row"><span class="control-label">Topology</span><select class="dropdown wide" id="cal-topology"><option>Mono</option><option selected>Stereo</option><option>Quad</option><option>5.1</option><option>7.1</option><option>7.1.2</option><option>7.4.2 / Atmos-style</option><option>Binaural / Headphone</option><option>Ambisonic 1st Order</option><option>Ambisonic 3rd Order</option><option>Multichannel -&gt; Stereo Downmix</option></select></div>
               <div class="control-row"><span class="control-label">Monitoring Path</span><select class="dropdown wide" id="cal-monitoring-path"><option selected>Speakers</option><option>Stereo Downmix</option><option>Steam Binaural</option><option>Virtual Binaural</option></select></div>
-              <div class="control-row"><span class="control-label">Device Profile</span><select class="dropdown wide" id="cal-device-profile"><option selected>Generic</option><option>AirPods Pro 2</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
+              <div class="control-row"><span class="control-label">Device Profile</span><select class="dropdown wide" id="cal-device-profile"><option selected>Generic</option><option>AirPods Pro 2</option><option>AirPods Pro 3</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
               <div class="control-row"><span class="control-label">Mic Channel</span><select class="dropdown" id="cal-mic"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
             </div>
           </div>
@@ -1672,7 +1672,7 @@
               <div class="section-header">Spatialization</div>
               <div class="control-row"><span class="control-label">Distance</span><select class="dropdown" id="rend-dist-model"><option>Inverse&sup2;</option><option>Linear</option><option>Log</option><option>Custom</option></select></div>
               <div class="control-row"><span class="control-label">Headphone</span><select class="dropdown" id="rend-headphone-mode"><option>Stereo Downmix</option><option>Steam Binaural</option></select></div>
-              <div class="control-row"><span class="control-label">HP Profile</span><select class="dropdown" id="rend-headphone-profile"><option>Generic</option><option>AirPods Pro 2</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
+              <div class="control-row"><span class="control-label">HP Profile</span><select class="dropdown" id="rend-headphone-profile"><option>Generic</option><option>AirPods Pro 2</option><option>AirPods Pro 3</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
               <div class="control-row"><span class="control-label">Ref Dist</span><span class="control-value">1.0<span class="control-unit">m</span></span></div>
               <div class="control-row"><span class="control-label">Doppler</span><div class="toggle" id="toggle-doppler"><div class="toggle-thumb"></div></div></div>
               <div class="control-row"><span class="control-label">Air Absorb</span><div class="toggle on" id="toggle-air-absorb"><div class="toggle-thumb"></div></div></div>
@@ -1738,6 +1738,81 @@
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Invalid Packets</span>
                       <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-invalid">0</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Bridge Consumers</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-consumers">0</span>
+                    </div>
+                    <div class="renderer-diagnostic-field" id="rend-headtrack-recenter-row">
+                      <span class="renderer-diagnostic-field-label">Re-center</span>
+                      <span class="renderer-diagnostic-field-value" style="display:flex;align-items:center;gap:8px;">
+                        <button id="rend-headtrack-set-forward" class="btn-secondary" style="padding:2px 8px;font-size:11px;" disabled>Set Forward</button>
+                        <span id="rend-headtrack-drift" class="mono" style="font-size:11px;">Drift: n/a</span>
+                      </span>
+                    </div>
+                  </div>
+                </article>
+                <article class="renderer-diagnostic-card" id="rend-resize-card">
+                  <div class="renderer-diagnostic-header">
+                    <button class="renderer-diagnostic-toggle" id="rend-resize-toggle" aria-expanded="false" aria-controls="rend-resize-content">
+                      <span class="renderer-diagnostic-label">Resize / DPI</span>
+                      <span class="disclosure-arrow" id="rend-resize-arrow">&#9654;</span>
+                    </button>
+                    <span class="status-chip neutral" id="rend-resize-chip">UNKNOWN</span>
+                  </div>
+                  <div class="renderer-diagnostic-detail" id="rend-resize-detail">Awaiting resize diagnostics.</div>
+                  <div class="renderer-diagnostic-content" id="rend-resize-content" hidden>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Viewport (W x H)</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-resize-viewport">unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Device Pixel Ratio</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-resize-dpr">unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Layout Bucket</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-resize-bucket">unknown</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Last Resize Settle</span>
+                      <span class="renderer-diagnostic-field-value" id="rend-resize-settle">unknown</span>
+                    </div>
+                  </div>
+                </article>
+                <article class="renderer-diagnostic-card" id="rend-auth-card">
+                  <div class="renderer-diagnostic-header">
+                    <button class="renderer-diagnostic-toggle" id="rend-auth-toggle" aria-expanded="false" aria-controls="rend-auth-content">
+                      <span class="renderer-diagnostic-label">Authority Status</span>
+                      <span class="disclosure-arrow" id="rend-auth-arrow">&#9654;</span>
+                    </button>
+                    <span class="status-chip neutral" id="rend-auth-chip">UNAVAILABLE</span>
+                  </div>
+                  <div class="renderer-diagnostic-detail" id="rend-auth-detail">Awaiting authority diagnostics payload.</div>
+                  <div class="renderer-diagnostic-content" id="rend-auth-content" hidden>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Source</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-source">native fallback</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Status Class</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-status-class">authority unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Lock Reason</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-lock-reason">none</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Snapshot Age</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-snapshot-age">0 ms</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Fallback Reason</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-fallback-reason">none</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Replay Seq</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-replay-seq">0</span>
                     </div>
                   </div>
                 </article>

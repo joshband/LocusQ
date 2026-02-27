@@ -360,6 +360,7 @@ const nativeFunctions = {
     deleteEmitterPreset: Juce.getNativeFunction("locusqDeleteEmitterPreset"),
     getUiState: Juce.getNativeFunction("locusqGetUiState"),
     setUiState: Juce.getNativeFunction("locusqSetUiState"),
+    setForwardYaw: Juce.getNativeFunction("locusqSetForwardYaw"),
 };
 
 const NATIVE_CALL_TIMEOUT_MS = 3000;
@@ -379,6 +380,19 @@ let productionP0SelfTestLaunchReason = "unspecified";
 let activeSelfTestTimingCollector = null;
 let selfTestLayoutVariantOverride = null;
 let layoutResizeFramePending = false;
+const RESIZE_DIAGNOSTIC_SETTLE_WINDOW_MS = 160;
+const RESIZE_DIAGNOSTIC_COMPACT_MAX_WIDTH = 960;
+const RESIZE_DIAGNOSTIC_WIDE_MIN_WIDTH = 1440;
+const RESIZE_DIAGNOSTIC_SETTLE_WARN_MS = 250;
+const resizeDiagnosticsState = {
+    viewportWidth: null,
+    viewportHeight: null,
+    devicePixelRatio: null,
+    layoutBucket: "unknown",
+    settleWindowStartMs: null,
+    lastResizeSettleMs: null,
+    settleTimerId: null,
+};
 
 if (productionP0SelfTestRequested) {
     window.__LQ_SELFTEST_RESULT__ = {
@@ -1076,16 +1090,17 @@ function syncResponsiveLayoutMode() {
         body.classList.remove("layout-tight");
     };
 
+    const width = Math.max(
+        Number(window.innerWidth) || 0,
+        Number(document.documentElement?.clientWidth) || 0
+    );
+
     let variant = "base";
     if (selfTestLayoutVariantOverride === "base"
         || selfTestLayoutVariantOverride === "compact"
         || selfTestLayoutVariantOverride === "tight") {
         variant = selfTestLayoutVariantOverride;
     } else {
-        const width = Math.max(
-            Number(window.innerWidth) || 0,
-            Number(document.documentElement?.clientWidth) || 0
-        );
         if (width <= 1024) {
             variant = "tight";
         } else if (width <= 1240) {
@@ -1093,6 +1108,7 @@ function syncResponsiveLayoutMode() {
         }
     }
     applyVariant(variant);
+    updateRendererResizeDiagnosticsLayout(width);
 
     if (!layoutResizeFramePending) {
         layoutResizeFramePending = true;
@@ -1126,6 +1142,141 @@ window.__LocusQHostResized = function(hostWidth, hostHeight) {
         resize();
     }
 };
+
+function getResizeDiagnosticsNowMs() {
+    if (typeof performance !== "undefined" && typeof performance.now === "function") {
+        return performance.now();
+    }
+    return Date.now();
+}
+
+function resolveResizeLayoutBucket(viewportWidth) {
+    const body = document.body;
+    if (body && (body.classList.contains("layout-tight") || body.classList.contains("layout-compact"))) {
+        return "compact";
+    }
+
+    const width = Number(viewportWidth);
+    if (!Number.isFinite(width) || width <= 0) {
+        return "unknown";
+    }
+    if (width < RESIZE_DIAGNOSTIC_COMPACT_MAX_WIDTH) {
+        return "compact";
+    }
+    if (width >= RESIZE_DIAGNOSTIC_WIDE_MIN_WIDTH) {
+        return "wide";
+    }
+    return "standard";
+}
+
+function formatResizeDiagnosticDimension(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "unknown";
+    return String(Math.round(numeric));
+}
+
+function formatResizeDiagnosticDevicePixelRatio(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "unknown";
+    return numeric.toFixed(2);
+}
+
+function formatResizeDiagnosticSettleMs(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric < 0) return "unknown";
+    return `${Math.round(numeric)} ms`;
+}
+
+function updateRendererResizeDiagnosticsPanel() {
+    const widthLabel = formatResizeDiagnosticDimension(resizeDiagnosticsState.viewportWidth);
+    const heightLabel = formatResizeDiagnosticDimension(resizeDiagnosticsState.viewportHeight);
+    const dprLabel = formatResizeDiagnosticDevicePixelRatio(resizeDiagnosticsState.devicePixelRatio);
+    const bucketToken = String(resizeDiagnosticsState.layoutBucket || "unknown").trim().toLowerCase();
+    const bucketLabel = bucketToken || "unknown";
+    const settleLabel = formatResizeDiagnosticSettleMs(resizeDiagnosticsState.lastResizeSettleMs);
+
+    setRendererText("rend-resize-viewport", `${widthLabel} x ${heightLabel}`);
+    setRendererText("rend-resize-dpr", dprLabel);
+    setRendererText("rend-resize-bucket", bucketLabel);
+    setRendererText("rend-resize-settle", settleLabel);
+
+    const hasViewport = widthLabel !== "unknown" && heightLabel !== "unknown";
+    const hasDpr = dprLabel !== "unknown";
+    const hasBucket = bucketLabel !== "unknown";
+    const hasSettle = settleLabel !== "unknown";
+    const metricsAvailable = hasViewport && hasDpr && hasBucket;
+
+    const settleMs = Number(resizeDiagnosticsState.lastResizeSettleMs);
+    const settleWarn = Number.isFinite(settleMs) && settleMs > RESIZE_DIAGNOSTIC_SETTLE_WARN_MS;
+    let chipLabel = "UNKNOWN";
+    let chipStateClass = "neutral";
+    if (metricsAvailable) {
+        chipLabel = settleWarn ? "WARN" : "OK";
+        chipStateClass = settleWarn ? "warning" : "ok";
+    }
+    setRendererChipState("rend-resize-chip", chipLabel, chipStateClass);
+
+    const detailParts = [
+        `viewport ${widthLabel}x${heightLabel}`,
+        `dpr ${dprLabel}`,
+        `bucket ${bucketLabel}`,
+        `settle ${settleLabel}`,
+    ];
+    if (!hasSettle) {
+        detailParts.push("settle pending");
+    }
+    setRendererText("rend-resize-detail", detailParts.join(" · "));
+}
+
+function scheduleResizeDiagnosticsSettle() {
+    const nowMs = getResizeDiagnosticsNowMs();
+    if (!Number.isFinite(resizeDiagnosticsState.settleWindowStartMs)) {
+        resizeDiagnosticsState.settleWindowStartMs = nowMs;
+    }
+
+    if (resizeDiagnosticsState.settleTimerId !== null) {
+        window.clearTimeout(resizeDiagnosticsState.settleTimerId);
+        resizeDiagnosticsState.settleTimerId = null;
+    }
+
+    resizeDiagnosticsState.settleTimerId = window.setTimeout(() => {
+        resizeDiagnosticsState.settleTimerId = null;
+        const settleStartMs = Number(resizeDiagnosticsState.settleWindowStartMs);
+        const endMs = getResizeDiagnosticsNowMs();
+        if (Number.isFinite(settleStartMs)) {
+            resizeDiagnosticsState.lastResizeSettleMs = Math.max(0, Math.round(endMs - settleStartMs));
+        } else {
+            resizeDiagnosticsState.lastResizeSettleMs = null;
+        }
+        resizeDiagnosticsState.settleWindowStartMs = null;
+        updateRendererResizeDiagnosticsPanel();
+    }, RESIZE_DIAGNOSTIC_SETTLE_WINDOW_MS);
+}
+
+function updateRendererResizeDiagnosticsLayout(viewportWidth = null) {
+    const width = Number(viewportWidth);
+    if (Number.isFinite(width) && width > 0) {
+        resizeDiagnosticsState.layoutBucket = resolveResizeLayoutBucket(width);
+    } else {
+        const currentWidth = Number(resizeDiagnosticsState.viewportWidth);
+        resizeDiagnosticsState.layoutBucket = resolveResizeLayoutBucket(currentWidth);
+    }
+    updateRendererResizeDiagnosticsPanel();
+}
+
+function recordRendererResizeDiagnostics(viewportWidth, viewportHeight) {
+    const width = Number(viewportWidth);
+    const height = Number(viewportHeight);
+    resizeDiagnosticsState.viewportWidth = Number.isFinite(width) && width > 0 ? width : null;
+    resizeDiagnosticsState.viewportHeight = Number.isFinite(height) && height > 0 ? height : null;
+
+    const dpr = Number(window.devicePixelRatio);
+    resizeDiagnosticsState.devicePixelRatio = Number.isFinite(dpr) && dpr > 0 ? dpr : null;
+    resizeDiagnosticsState.layoutBucket = resolveResizeLayoutBucket(resizeDiagnosticsState.viewportWidth);
+
+    scheduleResizeDiagnosticsSettle();
+    updateRendererResizeDiagnosticsPanel();
+}
 
 function getDerivedMotionSourceId() {
     const animEnabled = !!getToggleValue(toggleStates.anim_enable);
@@ -2594,6 +2745,7 @@ let sceneData = {
     rendererHeadTrackingPoseStale: true,
     rendererHeadTrackingOrientationValid: false,
     rendererHeadTrackingInvalidPackets: 0,
+    rendererHeadTrackingConsumers: 0,
     rendererHeadTrackingSeq: 0,
     rendererHeadTrackingTimestampMs: 0,
     rendererHeadTrackingAgeMs: 0.0,
@@ -2941,12 +3093,14 @@ const calibrationMonitoringPathLabels = {
 const calibrationDeviceProfileIds = [
     "generic",
     "airpods_pro_2",
+    "airpods_pro_3",
     "sony_wh1000xm5",
     "custom_sofa",
 ];
 const calibrationDeviceProfileLabels = {
     generic: "Generic",
     airpods_pro_2: "AirPods Pro 2",
+    airpods_pro_3: "AirPods Pro 3",
     sony_wh1000xm5: "Sony WH-1000XM5",
     custom_sofa: "Custom SOFA",
 };
@@ -3034,6 +3188,8 @@ const calibrationMappingRowEntries = [];
 let rendererSteamDiagnosticsExpanded = false;
 let rendererAmbiDiagnosticsExpanded = false;
 let rendererHeadphoneVerificationDiagnosticsExpanded = false;
+let rendererAuthorityDiagnosticsExpanded = false;
+let rendererResizeDiagnosticsExpanded = false;
 
 const laneTrackMap = {
     azimuth: "pos_azimuth",
@@ -3205,6 +3361,7 @@ let headTrackingTelemetryTarget = {
     poseStale: true,
     orientationValid: false,
     invalidPackets: 0,
+    consumers: 0,
     seq: 0,
     timestampMs: 0,
     ageMs: 0.0,
@@ -4133,6 +4290,7 @@ function getRendererHeadphoneProfileRequestedFromControls() {
     );
     const normalized = normalizeAuditionToken(requestedLabel);
     if (normalized === "airpods_pro_2") return "airpods_pro_2";
+    if (normalized === "airpods_pro_3") return "airpods_pro_3";
     if (normalized === "sony_wh_1000xm5" || normalized === "sony_wh1000xm5") return "sony_wh1000xm5";
     if (normalized === "custom_sofa") return "custom_sofa";
     return "generic";
@@ -4239,6 +4397,16 @@ function hasRendererHeadphoneVerificationPayload(data) {
         || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationLatencySamples");
 }
 
+function hasRendererAuthorityDiagnosticsPayload(data) {
+    if (!data || typeof data !== "object") return false;
+    return Object.prototype.hasOwnProperty.call(data, "authoritySource")
+        || Object.prototype.hasOwnProperty.call(data, "authorityStatusClass")
+        || Object.prototype.hasOwnProperty.call(data, "authorityLockReason")
+        || Object.prototype.hasOwnProperty.call(data, "authoritySnapshotAgeMs")
+        || Object.prototype.hasOwnProperty.call(data, "authorityFallbackReason")
+        || Object.prototype.hasOwnProperty.call(data, "authorityReplaySeq");
+}
+
 function readFiniteNumber(value, fallback = 0.0) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
@@ -4333,6 +4501,42 @@ function setRendererHeadphoneVerificationDiagnosticsExpanded(expanded) {
     }
     if (toggle) {
         toggle.setAttribute("aria-expanded", rendererHeadphoneVerificationDiagnosticsExpanded ? "true" : "false");
+    }
+}
+
+function setRendererAuthorityDiagnosticsExpanded(expanded) {
+    rendererAuthorityDiagnosticsExpanded = !!expanded;
+    const content = document.getElementById("rend-auth-content");
+    const arrow = document.getElementById("rend-auth-arrow");
+    const toggle = document.getElementById("rend-auth-toggle");
+
+    if (content) {
+        content.classList.toggle("open", rendererAuthorityDiagnosticsExpanded);
+        content.hidden = !rendererAuthorityDiagnosticsExpanded;
+    }
+    if (arrow) {
+        arrow.classList.toggle("open", rendererAuthorityDiagnosticsExpanded);
+    }
+    if (toggle) {
+        toggle.setAttribute("aria-expanded", rendererAuthorityDiagnosticsExpanded ? "true" : "false");
+    }
+}
+
+function setRendererResizeDiagnosticsExpanded(expanded) {
+    rendererResizeDiagnosticsExpanded = !!expanded;
+    const content = document.getElementById("rend-resize-content");
+    const arrow = document.getElementById("rend-resize-arrow");
+    const toggle = document.getElementById("rend-resize-toggle");
+
+    if (content) {
+        content.classList.toggle("open", rendererResizeDiagnosticsExpanded);
+        content.hidden = !rendererResizeDiagnosticsExpanded;
+    }
+    if (arrow) {
+        arrow.classList.toggle("open", rendererResizeDiagnosticsExpanded);
+    }
+    if (toggle) {
+        toggle.setAttribute("aria-expanded", rendererResizeDiagnosticsExpanded ? "true" : "false");
     }
 }
 
@@ -4774,6 +4978,7 @@ function updateRendererPanelShell(data = sceneData) {
     const headTrackingQz = readFiniteNumber(payload.rendererHeadTrackingQz, 0.0);
     const headTrackingQw = readFiniteNumber(payload.rendererHeadTrackingQw, 1.0);
     const headTrackingInvalidPackets = Math.max(0, Math.round(readFiniteNumber(payload.rendererHeadTrackingInvalidPackets, 0)));
+    const headTrackingConsumers = Math.max(0, Math.round(readFiniteNumber(payload.rendererHeadTrackingConsumers, 0)));
     const headTrackingOrientationValid = !!payload.rendererHeadTrackingOrientationValid;
 
     if (!headTrackingPayloadPresent) {
@@ -4812,6 +5017,83 @@ function updateRendererPanelShell(data = sceneData) {
         `${headTrackingQx.toFixed(4)}, ${headTrackingQy.toFixed(4)}, ${headTrackingQz.toFixed(4)}, ${headTrackingQw.toFixed(4)}`
     );
     setRendererText("rend-headtrack-invalid", String(headTrackingInvalidPackets));
+    setRendererText("rend-headtrack-consumers", String(headTrackingConsumers));
+
+    // BL-045-C: enable Set Forward button only when bridge is active and pose is fresh.
+    const setFwdBtn = document.getElementById("rend-headtrack-set-forward");
+    if (setFwdBtn) {
+        const canRecenter = headTrackingEnabled && headTrackingPoseAvailable && !headTrackingPoseStale;
+        setFwdBtn.disabled = !canRecenter;
+        setFwdBtn.style.opacity = canRecenter ? "1" : "0.5";
+    }
+
+    const authorityPayloadPresent = hasRendererAuthorityDiagnosticsPayload(payload);
+    const authoritySourceToken = normalizeAuditionToken(payload.authoritySource || "native_fallback") || "native_fallback";
+    const authorityStatusToken = normalizeAuditionToken(payload.authorityStatusClass || "authority_unavailable") || "authority_unavailable";
+    const authorityLockReasonToken = normalizeAuditionToken(payload.authorityLockReason || "none") || "none";
+    const authorityAgeRaw = Number(payload.authoritySnapshotAgeMs);
+    const authoritySnapshotAgeMs = Number.isFinite(authorityAgeRaw) && authorityAgeRaw >= 0.0
+        ? authorityAgeRaw
+        : 0.0;
+    const authorityFallbackReasonToken = normalizeAuditionToken(payload.authorityFallbackReason || "none") || "none";
+    const authorityReplaySeqRaw = Number(payload.authorityReplaySeq);
+    const authorityReplaySeq = Number.isFinite(authorityReplaySeqRaw) && authorityReplaySeqRaw >= 0.0
+        ? Math.max(0, Math.round(authorityReplaySeqRaw))
+        : 0;
+
+    let authorityChipLabel = "UNAVAILABLE";
+    let authorityChipClass = "neutral";
+    if (authorityPayloadPresent) {
+        switch (authorityStatusToken) {
+            case "authority_ok":
+                authorityChipLabel = "READY";
+                authorityChipClass = "ok";
+                break;
+            case "authority_stale_warn":
+                authorityChipLabel = "STALE";
+                authorityChipClass = "warning";
+                break;
+            case "authority_locked":
+                authorityChipLabel = "LOCKED";
+                authorityChipClass = "warning";
+                break;
+            case "authority_fallback":
+                authorityChipLabel = "FALLBACK";
+                authorityChipClass = "warning";
+                break;
+            case "authority_unavailable":
+                authorityChipLabel = "UNAVAILABLE";
+                authorityChipClass = "neutral";
+                break;
+            default:
+                authorityChipLabel = "WARN";
+                authorityChipClass = "warning";
+                break;
+        }
+    }
+
+    const authoritySourceLabel = formatAuditionTokenLabel(authoritySourceToken);
+    const authorityStatusLabel = formatAuditionTokenLabel(authorityStatusToken);
+    const authorityLockReasonLabel = formatAuditionTokenLabel(authorityLockReasonToken);
+    const authorityFallbackReasonLabel = formatAuditionTokenLabel(authorityFallbackReasonToken);
+    const authorityAgeText = `${authoritySnapshotAgeMs.toFixed(1)} ms`;
+
+    if (!authorityPayloadPresent) {
+        setRendererChipState("rend-auth-chip", "UNAVAILABLE", "neutral");
+        setRendererText("rend-auth-detail", "Awaiting authority diagnostics payload.");
+    } else {
+        setRendererChipState("rend-auth-chip", authorityChipLabel, authorityChipClass);
+        setRendererText(
+            "rend-auth-detail",
+            `source=${authoritySourceLabel} · class=${authorityStatusLabel} · age=${authorityAgeText} · lock=${authorityLockReasonLabel} · fallback=${authorityFallbackReasonLabel}`
+        );
+    }
+    setRendererText("rend-auth-source", authoritySourceLabel);
+    setRendererText("rend-auth-status-class", authorityStatusLabel);
+    setRendererText("rend-auth-lock-reason", authorityLockReasonLabel);
+    setRendererText("rend-auth-snapshot-age", authorityAgeText);
+    setRendererText("rend-auth-fallback-reason", authorityFallbackReasonLabel);
+    setRendererText("rend-auth-replay-seq", String(authorityReplaySeq));
 
     const hpVerificationPayloadPresent = hasRendererHeadphoneVerificationPayload(payload);
     const hpCatalogVersion = String(payload.rendererHeadphoneProfileCatalogVersion || "").trim();
@@ -4912,13 +5194,14 @@ function updateRendererPanelShell(data = sceneData) {
     setRendererText("rend-hpver-scores", hpScoreSummaryText);
     setRendererText("rend-hpver-confidence", hpConfidenceText);
     setRendererText("rend-hpver-latency", hpVerificationLatencyText);
+    updateRendererResizeDiagnosticsPanel();
 
     const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
     if (diagnosticsAvailability) {
-        if (!steamPayloadPresent && !ambiPayloadPresent && !headTrackingPayloadPresent && !hpVerificationPayloadPresent) {
+        if (!steamPayloadPresent && !ambiPayloadPresent && !headTrackingPayloadPresent && !hpVerificationPayloadPresent && !authorityPayloadPresent) {
             diagnosticsAvailability.textContent = "Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults.";
         } else {
-            diagnosticsAvailability.textContent = `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
+            diagnosticsAvailability.textContent = `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · Authority ${authorityPayloadPresent ? "present" : "missing"} · HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
         }
     }
 }
@@ -7228,9 +7511,9 @@ async function runProductionP0SelfTest() {
                     }
                 };
                 const requestAirPodsProfile = () => {
-                    setChoiceIndex(comboStates.rend_headphone_profile, 1, 4); // AirPods Pro 2 profile
+                    setChoiceIndex(comboStates.rend_headphone_profile, 1, 5); // AirPods Pro 2 profile
                     if (typeof emitChoiceWithFallback === "function") {
-                        emitChoiceWithFallback(comboStates.rend_headphone_profile, 1, 4);
+                        emitChoiceWithFallback(comboStates.rend_headphone_profile, 1, 5);
                     }
                     if (headphoneProfileSelect) {
                         headphoneProfileSelect.selectedIndex = 1;
@@ -7896,6 +8179,7 @@ function resize() {
     rendererGL.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    recordRendererResizeDiagnostics(w, h);
 }
 
 // ===== UI BINDINGS =====
@@ -8313,6 +8597,21 @@ function initUIBindings() {
         });
     }
     setRendererHeadphoneVerificationDiagnosticsExpanded(false);
+    const authorityDiagnosticsToggle = document.getElementById("rend-auth-toggle");
+    if (authorityDiagnosticsToggle) {
+        bindControlActivate(authorityDiagnosticsToggle, () => {
+            setRendererAuthorityDiagnosticsExpanded(!rendererAuthorityDiagnosticsExpanded);
+        });
+    }
+    setRendererAuthorityDiagnosticsExpanded(false);
+    const resizeDiagnosticsToggle = document.getElementById("rend-resize-toggle");
+    if (resizeDiagnosticsToggle) {
+        bindControlActivate(resizeDiagnosticsToggle, () => {
+            setRendererResizeDiagnosticsExpanded(!rendererResizeDiagnosticsExpanded);
+        });
+    }
+    setRendererResizeDiagnosticsExpanded(false);
+    updateRendererResizeDiagnosticsPanel();
 
     const dopplerToggle = document.getElementById("toggle-doppler");
     if (dopplerToggle) {
@@ -8399,6 +8698,19 @@ function initUIBindings() {
             const paused = !getToggleValue(toggleStates.rend_phys_pause);
             setToggleValue(toggleStates.rend_phys_pause, paused);
             pausePhysicsButton.textContent = paused ? "RESUME ALL" : "PAUSE ALL";
+        });
+    }
+
+    // BL-045-C: Set Forward re-center button.
+    const setForwardBtn = document.getElementById("rend-headtrack-set-forward");
+    if (setForwardBtn) {
+        setForwardBtn.addEventListener("click", () => {
+            if (setForwardBtn.disabled) return;
+            if (typeof nativeFunctions.setForwardYaw === "function") {
+                nativeFunctions.setForwardYaw().catch(error => {
+                    console.warn("LocusQ: setForwardYaw failed:", error);
+                });
+            }
         });
     }
 
@@ -9361,6 +9673,7 @@ function updateHeadTrackingTelemetryFromScene(data) {
     const ageMs = Math.max(0.0, readFiniteNumber(data?.rendererHeadTrackingAgeMs, 0.0));
     const seq = Math.max(0, Math.round(readFiniteNumber(data?.rendererHeadTrackingSeq, 0)));
     const invalidPackets = Math.max(0, Math.round(readFiniteNumber(data?.rendererHeadTrackingInvalidPackets, 0)));
+    const consumers = Math.max(0, Math.round(readFiniteNumber(data?.rendererHeadTrackingConsumers, 0)));
 
     const qx = readFiniteNumber(data?.rendererHeadTrackingQx, 0.0);
     const qy = readFiniteNumber(data?.rendererHeadTrackingQy, 0.0);
@@ -9378,6 +9691,7 @@ function updateHeadTrackingTelemetryFromScene(data) {
         poseStale,
         orientationValid,
         invalidPackets,
+        consumers,
         seq,
         timestampMs,
         ageMs,
@@ -9390,6 +9704,16 @@ function updateHeadTrackingTelemetryFromScene(data) {
         rollDeg,
     };
 }
+
+// BL-045 Slice C: drift telemetry pushed from C++ at ~500ms intervals.
+window.updateHeadTrackDrift = function(payload) {
+    const driftDeg = readFiniteNumber(payload?.driftDeg, 0.0);
+    const referenceSet = !!payload?.referenceSet;
+    const driftEl = document.getElementById("rend-headtrack-drift");
+    if (driftEl) {
+        driftEl.textContent = referenceSet ? `Drift: ${driftDeg.toFixed(1)}\u00b0` : "Drift: n/a";
+    }
+};
 
 function smoothReactiveScalar(current, target, riseAlpha, fallAlpha, deadband = AUDITION_REACTIVE_DEADBAND) {
     if (!Number.isFinite(target)) return current;
