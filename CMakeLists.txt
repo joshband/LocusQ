@@ -60,6 +60,7 @@ option(LOCUSQ_ENABLE_STEAM_AUDIO "Enable Steam Audio headphone backend integrati
 option(LOCUSQ_ENABLE_CLAP "Enable CLAP target generation via clap-juce-extensions" OFF)
 option(LOCUS_HEAD_TRACKING "Enable BL-017 head-tracking companion bridge receiver integration" OFF)
 option(LOCUSQ_CLAP_FETCH "Fetch clap-juce-extensions from Git if local path is missing" ON)
+option(LOCUSQ_ENABLE_SOFA "Enable libmysofa SOFA HRTF loader (requires network on first configure)" OFF)
 set(LOCUSQ_STEAM_AUDIO_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/steam-audio/sdk/steamaudio"
     CACHE PATH "Path to Steam Audio SDK root (contains include/phonon.h and lib/)")
 set(LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/clap-juce-extensions"
@@ -107,6 +108,27 @@ if(LOCUSQ_ENABLE_CLAP)
             "${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR}. Set LOCUSQ_CLAP_FETCH=ON or point "
             "LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR to a checkout.")
     endif()
+endif()
+
+# ============================================
+# SOFA HRTF LOADER (libmysofa via FetchContent)
+# Enable with: cmake -DLOCUSQ_ENABLE_SOFA=ON ..
+# ============================================
+if(LOCUSQ_ENABLE_SOFA)
+    include(FetchContent)
+
+    # Suppress libmysofa's own tests and utilities to keep build lean.
+    set(BUILD_TESTS      OFF CACHE BOOL "Disable libmysofa tests"     FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build mysofa as static lib" FORCE)
+
+    FetchContent_Declare(
+        mysofa
+        GIT_REPOSITORY https://github.com/hoene/libmysofa.git
+        GIT_TAG        main
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(mysofa)
+    message(STATUS "LocusQ: SOFA HRTF loader enabled (libmysofa via FetchContent)")
 endif()
 
 # ============================================
@@ -187,7 +209,15 @@ target_sources(LocusQ
         Source/PhysicsEngine.h
         Source/KeyframeTimeline.cpp
         Source/KeyframeTimeline.h
+        Source/dsp/SofaHrtfLoader.h
 )
+
+# SofaHrtfLoader.cpp is an isolated compilation unit: it #includes mysofa.h
+# (a C header) in a separate TU so that libmysofa symbols never leak into
+# JUCE's header compilation units.
+if(LOCUSQ_ENABLE_SOFA)
+    target_sources(LocusQ PRIVATE Source/dsp/SofaHrtfLoader.cpp)
+endif()
 
 # ============================================
 # INCLUDE PATHS
@@ -268,6 +298,11 @@ target_link_libraries(LocusQ
         juce::juce_recommended_warning_flags
 )
 
+if(LOCUSQ_ENABLE_SOFA)
+    target_link_libraries(LocusQ PRIVATE mysofa)
+    target_include_directories(LocusQ PRIVATE "${mysofa_SOURCE_DIR}/src")
+endif()
+
 # ============================================
 # COMPILE DEFINITIONS (Platform-Specific)
 # ============================================
@@ -280,6 +315,7 @@ target_compile_definitions(LocusQ
         LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
         LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
         LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+        LOCUSQ_ENABLE_SOFA=$<IF:$<BOOL:${LOCUSQ_ENABLE_SOFA}>,1,0>
 )
 
 if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
