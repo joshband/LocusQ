@@ -2704,6 +2704,48 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         }
     }
 
+    // Cache companion profile fields for use by the bridge getCalibrationStatus() handler.
+    // Called on the message thread — safe to write string/bool/int members here.
+    {
+        // Human-readable device name from hp_model_id.
+        const juce::String modelIdForCache = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
+        if (modelIdForCache == "airpods_pro_1")
+            cachedCalibrationDevice = "AirPods Pro (1st gen)";
+        else if (modelIdForCache == "airpods_pro_2")
+            cachedCalibrationDevice = "AirPods Pro (2nd gen)";
+        else if (modelIdForCache == "airpods_pro_3")
+            cachedCalibrationDevice = "AirPods Pro (3rd gen)";
+        else if (modelIdForCache == "sony_wh1000xm5")
+            cachedCalibrationDevice = "Sony WH-1000XM5";
+        else if (modelIdForCache == "generic" || modelIdForCache.isEmpty())
+            cachedCalibrationDevice = "Generic Headphones";
+        else
+            cachedCalibrationDevice = "Unknown Device";
+
+        cachedCalibrationEqMode = eqMode.isEmpty() ? "off" : eqMode;
+
+        const auto hrtfModeForCache = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
+        cachedCalibrationHrtfMode = hrtfModeForCache.isEmpty() ? "default" : hrtfModeForCache;
+
+        const auto trackingVar = headphone->getProperty ("hp_tracking_enabled");
+        cachedCalibrationTrackingEnabled = trackingVar.isBool() ? static_cast<bool> (trackingVar)
+                                                                : (trackingVar.toString().trim().toLowerCase() == "true");
+
+        cachedCalibrationFirLatency = spatialRenderer.getHeadphoneCalibrationLatencySamples();
+
+        // Verification scores: populated by Phase B write-back (Task 17).
+        // For now read from profile if present (companion may write them after verification run).
+        const auto extScoreVar = headphone->getProperty ("externalization_score");
+        cachedExternalizationScore = extScoreVar.isDouble() || extScoreVar.isInt()
+                                       ? static_cast<float> (static_cast<double> (extScoreVar))
+                                       : -1.0f;
+
+        const auto fbConfusionVar = headphone->getProperty ("front_back_confusion_rate");
+        cachedFrontBackConfusionRate = fbConfusionVar.isDouble() || fbConfusionVar.isInt()
+                                         ? static_cast<float> (static_cast<double> (fbConfusionVar))
+                                         : -1.0f;
+    }
+
     companionCalibrationProfileLastModifiedMs = modifiedMs;
 }
 

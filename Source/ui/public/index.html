@@ -1433,6 +1433,20 @@
               <div class="cal-profile-status" id="cal-profile-status">No calibration profiles loaded.</div>
             </div>
           </div>
+
+          <!-- Headphone Device Status (Task 14): populated from companion CalibrationProfile.json -->
+          <div class="cal-card">
+            <div class="section">
+              <div class="section-header">Headphone Device Status</div>
+              <div class="control-row"><span class="control-label">Active Device</span><span class="control-value mono" id="cal-hp-device">Not connected</span></div>
+              <div class="control-row"><span class="control-label">EQ Mode</span><span class="control-value mono" id="cal-hp-eq-mode">Off</span></div>
+              <div class="control-row"><span class="control-label">HRTF Mode</span><span class="control-value mono" id="cal-hp-hrtf-mode">Default HRTF</span></div>
+              <div class="control-row"><span class="control-label">Head Tracking</span><span class="control-value mono" id="cal-hp-tracking">Disabled</span></div>
+              <div class="control-row"><span class="control-label">FIR Latency</span><span class="control-value mono" id="cal-hp-fir-latency">0 smp</span></div>
+              <div class="control-row"><span class="control-label">Externalization</span><span class="control-value mono" id="cal-hp-extern-score">--</span></div>
+              <div class="control-row"><span class="control-label">Front/Back Score</span><span class="control-value mono" id="cal-hp-frontback-score">--</span></div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -133,6 +133,7 @@ public:
     juce::var loadCalibrationProfileFromUI (const juce::var& options);
     juce::var renameCalibrationProfileFromUI (const juce::var& options);
     juce::var deleteCalibrationProfileFromUI (const juce::var& options);
+    void pollCompanionCalibrationProfileFromDisk();
 
     // Timeline and preset API for WebView bridge (Phase 2.6)
     juce::var getKeyframeTimelineForUI() const;
@@ -367,6 +368,18 @@ private:
     bool hasRestoredSnapshotState = false;
     bool hasSeededInitialEmitterColor = false;
     int lastReportedCalibrationLatency = -1;  // -1 forces first-block update
+    juce::int64 companionCalibrationProfileLastModifiedMs = -1;
+
+    // Cached companion CalibrationProfile.json fields — populated on the message thread
+    // by pollCompanionCalibrationProfileFromDisk(). Read by getCalibrationStatus() bridge handler.
+    // Do NOT access from processBlock().
+    juce::String cachedCalibrationDevice         = "unknown";
+    juce::String cachedCalibrationEqMode         = "off";
+    juce::String cachedCalibrationHrtfMode       = "default";
+    bool         cachedCalibrationTrackingEnabled = false;
+    int          cachedCalibrationFirLatency      = 0;
+    float        cachedExternalizationScore       = -1.0f;  // -1 = not yet available
+    float        cachedFrontBackConfusionRate     = -1.0f;  // -1 = not yet available
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LocusQAudioProcessor)
