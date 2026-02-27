@@ -590,6 +590,45 @@ public:
         lastLoadedPeqSampleRate  = sampleRate;
     }
 
+    // Apply PEQ bands from a JSON-parsed var array (companion IPC path).
+    // preampDb = 0.0 if the JSON schema has no preamp field.
+    // Called on message thread; not RT-safe (see loadPeqPresetForProfile note).
+    void applyJsonPeqBands (const juce::var& bandsArray, float preampDb, double sampleRate)
+    {
+        headphoneCalibrationChain.clearPeqPreset();
+        headphoneCalibrationChain.setPeqPreampDb (preampDb);
+
+        if (! bandsArray.isArray())
+            return;
+
+        const auto sr = static_cast<float> (sampleRate);
+        const int maxStages = juce::jmin (
+            bandsArray.getArray()->size(),
+            locusq::headphone_dsp::HeadphonePeqHook::kMaxStages);
+
+        for (int i = 0; i < maxStages; ++i)
+        {
+            auto* band = (*bandsArray.getArray())[i].getDynamicObject();
+            if (band == nullptr)
+                continue;
+
+            const auto typeStr = band->getProperty ("type").toString().trim().toUpperCase();
+            const auto fcHz    = static_cast<float> (static_cast<double> (band->getProperty ("fc_hz")));
+            const auto gainDb  = static_cast<float> (static_cast<double> (band->getProperty ("gain_db")));
+            const auto q       = static_cast<float> (static_cast<double> (band->getProperty ("q")));
+
+            locusq::headphone_dsp::HeadphonePeqHook::Coefficients c;
+            if (typeStr == "LSC")
+                c = locusq::headphone_dsp::HeadphonePeqHook::makeLowShelf  (fcHz, gainDb, q, sr);
+            else if (typeStr == "HSC")
+                c = locusq::headphone_dsp::HeadphonePeqHook::makeHighShelf (fcHz, gainDb, q, sr);
+            else
+                c = locusq::headphone_dsp::HeadphonePeqHook::makePeakEQ    (fcHz, gainDb, q, sr);
+
+            headphoneCalibrationChain.setPeqStage (i, c);
+        }
+    }
+
     void setHeadphoneCalibrationEnabled (bool enabled) noexcept
     {
         if (requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed) == enabled)

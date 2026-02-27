@@ -2606,6 +2606,74 @@ void LocusQAudioProcessor::primeRendererStateFromCurrentParameters()
         updateRendererParameters();
 }
 
+void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
+{
+    const auto profileFile = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+        .getChildFile ("LocusQ")
+        .getChildFile ("CalibrationProfile.json");
+
+    if (! profileFile.existsAsFile())
+    {
+        companionCalibrationProfileLastModifiedMs = -1;
+        return;
+    }
+
+    const auto modifiedMs = profileFile.getLastModificationTime().toMilliseconds();
+    if (modifiedMs == companionCalibrationProfileLastModifiedMs)
+        return;
+
+    const auto payload = juce::JSON::parse (profileFile.loadFileAsString());
+    auto* root = payload.getDynamicObject();
+    if (root == nullptr)
+        return;
+
+    const auto schema = root->getProperty ("schema").toString().trim();
+    if (schema.isEmpty() || schema != kCalibrationProfileSchemaV1)
+        return;
+
+    auto* headphone = root->getProperty ("headphone").getDynamicObject();
+    if (headphone == nullptr)
+        return;
+
+    auto modelId = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
+    if (modelId.isEmpty())
+        modelId = "generic";
+
+    int profileIndex = 0;
+    if (modelId == "airpods_pro_1" || modelId == "airpods_pro_2")
+        profileIndex = 1; // Pro 1 maps to Pro 2 profile until dedicated slot exists in plugin.
+    else if (modelId == "airpods_pro_3")
+        profileIndex = 2;
+    else if (modelId == "sony_wh1000xm5")
+        profileIndex = 3;
+    else if (modelId == "custom_sofa")
+        profileIndex = 4;
+
+    setIntegerParameterValueNotifyingHost ("cal_device_profile", profileIndex);
+    setIntegerParameterValueNotifyingHost ("rend_headphone_profile", profileIndex);
+
+    const auto eqMode = headphone->getProperty ("hp_eq_mode").toString().trim().toLowerCase();
+    if (eqMode == "peq")
+    {
+        const auto bandsVar = headphone->getProperty ("hp_peq_bands");
+        spatialRenderer.applyJsonPeqBands (bandsVar, 0.0f, currentSampleRate);
+        spatialRenderer.setHeadphoneCalibrationEngine (1); // ParametricEq
+        spatialRenderer.setHeadphoneCalibrationEnabled (true);
+    }
+    else if (eqMode == "fir")
+    {
+        spatialRenderer.setHeadphoneCalibrationEngine (2); // FirConvolution
+        spatialRenderer.setHeadphoneCalibrationEnabled (true);
+        // TODO(Task 13): load hp_fir_taps from JSON
+    }
+    else
+    {
+        spatialRenderer.setHeadphoneCalibrationEnabled (false);
+    }
+
+    companionCalibrationProfileLastModifiedMs = modifiedMs;
+}
+
 juce::var LocusQAudioProcessor::getConfidenceMaskingStatus() const
 {
     namespace confidence_masking = locusq::shared_contracts::confidence_masking;
