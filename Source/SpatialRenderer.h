@@ -606,6 +606,11 @@ public:
         requestedHeadphoneCalibrationEngineIndex.store (engineIndex, std::memory_order_relaxed);
     }
 
+    int getCalibrationLatencySamples() const noexcept
+    {
+        return headphoneCalibrationChain.getActiveLatencySamples();
+    }
+
     void setSpatialOutputProfile (int profileIndex)
     {
         const auto clamped = juce::jlimit (0, 11, profileIndex);

@@ -2158,6 +2158,9 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const auto blockElapsedTicks = juce::Time::getHighResolutionTicks() - blockStartTicks;
     const auto blockMs = (static_cast<double> (blockElapsedTicks) * 1000.0) / ticksPerSecond;
     updatePerfEma (perfProcessBlockMs, blockMs);
+
+    // Report calibration chain latency to the DAW host (audio thread, safe to call here).
+    setLatencySamples (spatialRenderer.getCalibrationLatencySamples());
 }
 
 //==============================================================================
