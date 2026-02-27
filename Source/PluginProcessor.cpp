@@ -1830,7 +1830,14 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Check bypass
     auto* bypassParam = apvts.getRawParameterValue ("bypass");
     if (bypassParam->load() > 0.5f)
+    {
+        if (lastReportedCalibrationLatency != 0)
+        {
+            lastReportedCalibrationLatency = 0;
+            setLatencySamples (0);
+        }
         return;
+    }
 
     auto mode = getCurrentMode();
     syncSceneGraphRegistrationForMode (mode);
@@ -2159,8 +2166,14 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const auto blockMs = (static_cast<double> (blockElapsedTicks) * 1000.0) / ticksPerSecond;
     updatePerfEma (perfProcessBlockMs, blockMs);
 
-    // Report calibration chain latency to the DAW host (audio thread, safe to call here).
-    setLatencySamples (spatialRenderer.getCalibrationLatencySamples());
+    // Report calibration chain latency to the DAW host — guarded to avoid spamming
+    // hosts with redundant PDC-recalculation notifications on every block.
+    const int calLatency = spatialRenderer.getCalibrationLatencySamples();
+    if (calLatency != lastReportedCalibrationLatency)
+    {
+        lastReportedCalibrationLatency = calLatency;
+        setLatencySamples (calLatency);
+    }
 }
 
 //==============================================================================

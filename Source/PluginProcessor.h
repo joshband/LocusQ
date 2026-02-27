@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 #include <juce_gui_extra/juce_gui_extra.h>
+#include <atomic>
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -10,9 +11,12 @@
 #include "SceneGraph.h"
 #include "SpatialRenderer.h"
 #include "HeadTrackingBridge.h"
+#include "HeadPoseInterpolator.h"
 #include "CalibrationEngine.h"
 #include "PhysicsEngine.h"
 #include "KeyframeTimeline.h"
+#include "shared_contracts/ConfidenceMaskingContract.h"
+#include "shared_contracts/RegistrationLockFreeContract.h"
 
 #if LOCUSQ_ENABLE_CLAP
  #if __has_include(<clap-juce-extensions/clap-juce-extensions.h>)
@@ -35,6 +39,25 @@ enum class LocusQMode
     Calibrate = 0,
     Emitter   = 1,
     Renderer  = 2
+};
+
+enum class RegistrationTransitionStage : int
+{
+    Stable = 0,
+    ClaimConflict = 1,
+    Recovered = 2,
+    Ambiguous = 3
+};
+
+enum class RegistrationTransitionFallbackReason : int
+{
+    None = 0,
+    EmitterSlotUnavailable = 1,
+    RendererAlreadyClaimed = 2,
+    StaleEmitterOwner = 3,
+    DualOwnershipResolved = 4,
+    RendererStateDrift = 5,
+    ReleaseIncomplete = 6
 };
 
 //==============================================================================
@@ -98,6 +121,7 @@ public:
     // Scene graph JSON for WebView (called from editor timer)
     juce::String getSceneStateJSON();
     const VisualTokenSnapshot& getVisualTokenSnapshot() const noexcept { return visualTokenScheduler.getSnapshot(); }
+    juce::var getConfidenceMaskingStatus() const;
 
     // Calibration control/status API for WebView bridge
     bool startCalibrationFromUI (const juce::var& options);
@@ -121,6 +145,13 @@ public:
     juce::var deleteEmitterPresetFromUI (const juce::var& options);
     juce::var getUIStateFromUI() const;
     bool setUIStateFromUI (const juce::var& state);
+
+    // BL-045 Slice C: re-center UX + drift telemetry (public — accessed from EditorWebViewRuntime)
+    // yawReferenceDeg and yawReferenceSet are transient (not persisted to state XML).
+    std::atomic<float> yawReferenceDeg    { 0.0f };
+    std::atomic<bool>  yawReferenceSet    { false };
+    std::atomic<float> lastHeadTrackYawDeg { 0.0f }; // raw yaw; updated each processBlock call
+    void setYawReference (float yawDeg) noexcept;
 
 #if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
     bool supportsDirectEvent (uint16_t space_id, uint16_t type) override;
@@ -160,6 +191,22 @@ private:
         bool valid = false;
     };
 
+    struct PublishedConfidenceMaskingDiagnostics
+    {
+        std::atomic<std::uint64_t> snapshotSeq { 0 };
+        std::atomic<float> distanceConfidence { 0.0f };
+        std::atomic<float> occlusionProbability { 0.0f };
+        std::atomic<float> hrtfMatchQuality { 0.0f };
+        std::atomic<float> maskingIndex { 1.0f };
+        std::atomic<float> combinedConfidence { 0.0f };
+        std::atomic<float> overlayAlpha { 0.0f };
+        std::atomic<int> overlayBucketIndex { 0 };
+        std::atomic<int> fallbackReasonIndex {
+            static_cast<int> (locusq::shared_contracts::confidence_masking::FallbackReason::InactiveMode)
+        };
+        std::atomic<bool> valid { false };
+    };
+
     struct ClapRuntimeDiagnostics
     {
         bool buildEnabled = false;
@@ -176,6 +223,32 @@ private:
         std::uint32_t versionRevision = 0;
     };
 
+    struct RegistrationTransitionDiagnostics
+    {
+        std::atomic<std::uint64_t> seq { 0 };
+        std::atomic<int> requestedMode { static_cast<int> (LocusQMode::Calibrate) };
+        std::atomic<int> stageCode { static_cast<int> (RegistrationTransitionStage::Stable) };
+        std::atomic<int> fallbackCode { static_cast<int> (RegistrationTransitionFallbackReason::None) };
+        std::atomic<int> emitterSlot { -1 };
+        std::atomic<bool> emitterActive { false };
+        std::atomic<bool> rendererOwned { false };
+        std::atomic<std::uint32_t> ambiguityCount { 0 };
+        std::atomic<std::uint32_t> staleOwnerCount { 0 };
+    };
+
+    struct RegistrationClaimReleaseDiagnostics
+    {
+        std::atomic<std::uint64_t> seq { 0 };
+        std::atomic<int> lastOperationCode {
+            static_cast<int> (locusq::shared_contracts::registration_lock_free::Operation::None)
+        };
+        std::atomic<int> lastOutcomeCode {
+            static_cast<int> (locusq::shared_contracts::registration_lock_free::Outcome::Noop)
+        };
+        std::atomic<std::uint32_t> contentionCount { 0 };
+        std::atomic<std::uint32_t> releaseIncompleteCount { 0 };
+    };
+
     ClapRuntimeDiagnostics getClapRuntimeDiagnostics() const;
 
     //==============================================================================
@@ -186,6 +259,8 @@ private:
     SceneGraph& sceneGraph;
     int emitterSlotId = -1;
     bool rendererRegistered = false;
+    RegistrationTransitionDiagnostics registrationTransitionDiagnostics;
+    RegistrationClaimReleaseDiagnostics registrationClaimReleaseDiagnostics;
     void syncSceneGraphRegistrationForMode (LocusQMode mode);
 
     // Publish emitter state to scene graph (called in processBlock for Emitter mode)
@@ -194,7 +269,8 @@ private:
     //==============================================================================
     // Spatialization engine (Phase 2.2)
     SpatialRenderer spatialRenderer;
-    HeadTrackingBridge headTrackingBridge;
+    HeadTrackingBridge   headTrackingBridge;
+    HeadPoseInterpolator headPoseInterpolator;
 
     // Update renderer parameters from APVTS (called before processing)
     void updateRendererParameters();
@@ -269,6 +345,7 @@ private:
     mutable juce::SpinLock publishedHeadphoneCalibrationLock;
     mutable PublishedHeadphoneCalibrationDiagnostics publishedHeadphoneCalibrationDiagnostics;
     mutable PublishedHeadphoneVerificationDiagnostics publishedHeadphoneVerificationDiagnostics;
+    mutable PublishedConfidenceMaskingDiagnostics publishedConfidenceMaskingDiagnostics;
 
     //==============================================================================
     // Sample rate tracking
@@ -279,6 +356,7 @@ private:
     // UI-only state persisted in plugin snapshot (non-APVTS)
     mutable juce::SpinLock uiStateLock;
     juce::String emitterLabelState { "Emitter" };
+    SharedPtrAtomicContract<juce::String> emitterLabelRtState { std::make_shared<juce::String> ("Emitter") };
     juce::String physicsPresetState { "off" };
     juce::String choreographyPackState { "custom" };
     bool hasAppliedAutoDetectedCalibrationRouting = false;
@@ -288,6 +366,7 @@ private:
     std::array<int, SpatialRenderer::NUM_SPEAKERS> lastAutoDetectedSpeakerRouting { 1, 2, 3, 4 };
     bool hasRestoredSnapshotState = false;
     bool hasSeededInitialEmitterColor = false;
+    int lastReportedCalibrationLatency = -1;  // -1 forces first-block update
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LocusQAudioProcessor)
