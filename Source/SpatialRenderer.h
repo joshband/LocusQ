@@ -55,10 +55,11 @@ public:
     };
     enum class HeadphoneDeviceProfile : int
     {
-        Generic = 0,
-        AirPodsPro2 = 1,
-        SonyWH1000XM5 = 2,
-        CustomSOFA = 3
+        Generic       = 0,
+        AirPodsPro2   = 1,
+        AirPodsPro3   = 2,
+        SonyWH1000XM5 = 3,
+        CustomSOFA    = 4
     };
     enum class SpatialOutputProfile : int
     {
@@ -108,16 +109,20 @@ public:
 
     struct alignas(16) PoseSnapshot
     {
-        float qx = 0.0f;
-        float qy = 0.0f;
-        float qz = 0.0f;
-        float qw = 1.0f;
-        std::uint64_t timestampMs = 0;
-        std::uint32_t seq = 0;
-        std::uint32_t pad = 0;
-    };
+        float qx = 0.0f;              // +0
+        float qy = 0.0f;              // +4
+        float qz = 0.0f;              // +8
+        float qw = 1.0f;              // +12
+        std::uint64_t timestampMs = 0; // +16
+        std::uint32_t seq = 0;        // +24
+        std::uint32_t pad = 0;        // +28
+        float angVx = 0.0f;           // +32  rad/s body frame
+        float angVy = 0.0f;           // +36
+        float angVz = 0.0f;           // +40
+        std::uint32_t sensorLocationFlags = 0; // +44
+    };                                // = 48 bytes
 
-    static_assert (sizeof (PoseSnapshot) == 32, "PoseSnapshot size contract");
+    static_assert (sizeof (PoseSnapshot) == 48, "PoseSnapshot size contract");
 
     struct ListenerOrientation
     {
@@ -501,7 +506,7 @@ public:
 
     void setHeadphoneDeviceProfile (int profileIndex)
     {
-        const auto clamped = juce::jlimit (0, 3, profileIndex);
+        const auto clamped = juce::jlimit (0, 4, profileIndex);
         if (requestedHeadphoneProfileIndex.load (std::memory_order_relaxed) == clamped)
             return;
 
@@ -748,9 +753,10 @@ public:
 
     static const char* headphoneDeviceProfileToString (int profileIndex) noexcept
     {
-        switch (juce::jlimit (0, 3, profileIndex))
+        switch (juce::jlimit (0, 4, profileIndex))
         {
             case static_cast<int> (HeadphoneDeviceProfile::AirPodsPro2): return "airpods_pro_2";
+            case static_cast<int> (HeadphoneDeviceProfile::AirPodsPro3): return "airpods_pro_3";
             case static_cast<int> (HeadphoneDeviceProfile::SonyWH1000XM5): return "sony_wh1000xm5";
             case static_cast<int> (HeadphoneDeviceProfile::CustomSOFA): return "custom_sofa";
             case static_cast<int> (HeadphoneDeviceProfile::Generic):
@@ -1085,7 +1091,7 @@ public:
         const auto requestedHeadphoneMode = static_cast<HeadphoneRenderMode> (
             requestedHeadphoneModeIndex.load (std::memory_order_relaxed));
         const auto requestedHeadphoneProfile = static_cast<HeadphoneDeviceProfile> (
-            juce::jlimit (0, 3, requestedHeadphoneProfileIndex.load (std::memory_order_relaxed)));
+            juce::jlimit (0, 4, requestedHeadphoneProfileIndex.load (std::memory_order_relaxed)));
         const auto steamBackendAvailable = isSteamAudioBackendAvailable();
         const bool profileAllowsHeadphoneRender = isStereoOrBinauralProfile (activeSpatialProfile)
                                                   || numOutputChannels <= 2;
@@ -3864,6 +3870,11 @@ private:
         switch (profile)
         {
             case HeadphoneDeviceProfile::AirPodsPro2:
+                headphoneCompLowGain = 0.98f;
+                headphoneCompHighGain = 1.03f;
+                headphoneCompCrossfeed = 0.015f;
+                break;
+            case HeadphoneDeviceProfile::AirPodsPro3:
                 headphoneCompLowGain = 0.98f;
                 headphoneCompHighGain = 1.03f;
                 headphoneCompCrossfeed = 0.015f;

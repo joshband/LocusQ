@@ -90,6 +90,8 @@ inline const char* sanitizeProfileId (juce::String profileId) noexcept
         return "generic";
     if (profileId == "airpods_pro_2")
         return "airpods_pro_2";
+    if (profileId == "airpods_pro_3")
+        return "airpods_pro_3";
     if (profileId == "sony_wh1000xm5")
         return "sony_wh1000xm5";
     if (profileId == "custom_sofa")

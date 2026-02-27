@@ -2,8 +2,10 @@
 #include "processor_core/ProcessorParameterReaders.h"
 #include "processor_bridge/ProcessorBridgeUtilities.h"
 #include "shared_contracts/BridgeStatusContract.h"
+#include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/HeadphoneCalibrationContract.h"
 #include "shared_contracts/HeadphoneVerificationContract.h"
+#include "shared_contracts/RegistrationLockFreeContract.h"
 
 #if ! defined (LOCUSQ_TESTING) || ! LOCUSQ_TESTING
 #include "PluginEditor.h"
@@ -17,6 +19,9 @@
 
 namespace
 {
+static_assert (std::atomic<int>::is_always_lock_free,
+               "Registration claim/release diagnostics require lockless atomics.");
+
 const char* toCalibrationStateString (CalibrationEngine::State state)
 {
     switch (state)
@@ -30,6 +35,143 @@ const char* toCalibrationStateString (CalibrationEngine::State state)
     }
 
     return "unknown";
+}
+
+const char* locusQModeToString (LocusQMode mode) noexcept
+{
+    switch (mode)
+    {
+        case LocusQMode::Calibrate: return "calibrate";
+        case LocusQMode::Emitter: return "emitter";
+        case LocusQMode::Renderer: return "renderer";
+        default: break;
+    }
+
+    return "calibrate";
+}
+
+RegistrationTransitionStage registrationTransitionStageFromCode (int code) noexcept
+{
+    switch (code)
+    {
+        case static_cast<int> (RegistrationTransitionStage::Stable): return RegistrationTransitionStage::Stable;
+        case static_cast<int> (RegistrationTransitionStage::ClaimConflict): return RegistrationTransitionStage::ClaimConflict;
+        case static_cast<int> (RegistrationTransitionStage::Recovered): return RegistrationTransitionStage::Recovered;
+        case static_cast<int> (RegistrationTransitionStage::Ambiguous): return RegistrationTransitionStage::Ambiguous;
+        default: break;
+    }
+
+    return RegistrationTransitionStage::Stable;
+}
+
+const char* registrationTransitionStageToString (RegistrationTransitionStage stage) noexcept
+{
+    switch (stage)
+    {
+        case RegistrationTransitionStage::Stable: return "stable";
+        case RegistrationTransitionStage::ClaimConflict: return "claim_conflict";
+        case RegistrationTransitionStage::Recovered: return "recovered";
+        case RegistrationTransitionStage::Ambiguous: return "ambiguous";
+        default: break;
+    }
+
+    return "stable";
+}
+
+RegistrationTransitionFallbackReason registrationTransitionFallbackReasonFromCode (int code) noexcept
+{
+    switch (code)
+    {
+        case static_cast<int> (RegistrationTransitionFallbackReason::None):
+            return RegistrationTransitionFallbackReason::None;
+        case static_cast<int> (RegistrationTransitionFallbackReason::EmitterSlotUnavailable):
+            return RegistrationTransitionFallbackReason::EmitterSlotUnavailable;
+        case static_cast<int> (RegistrationTransitionFallbackReason::RendererAlreadyClaimed):
+            return RegistrationTransitionFallbackReason::RendererAlreadyClaimed;
+        case static_cast<int> (RegistrationTransitionFallbackReason::StaleEmitterOwner):
+            return RegistrationTransitionFallbackReason::StaleEmitterOwner;
+        case static_cast<int> (RegistrationTransitionFallbackReason::DualOwnershipResolved):
+            return RegistrationTransitionFallbackReason::DualOwnershipResolved;
+        case static_cast<int> (RegistrationTransitionFallbackReason::RendererStateDrift):
+            return RegistrationTransitionFallbackReason::RendererStateDrift;
+        case static_cast<int> (RegistrationTransitionFallbackReason::ReleaseIncomplete):
+            return RegistrationTransitionFallbackReason::ReleaseIncomplete;
+        default:
+            break;
+    }
+
+    return RegistrationTransitionFallbackReason::None;
+}
+
+const char* registrationTransitionFallbackReasonToString (RegistrationTransitionFallbackReason reason) noexcept
+{
+    switch (reason)
+    {
+        case RegistrationTransitionFallbackReason::None: return "none";
+        case RegistrationTransitionFallbackReason::EmitterSlotUnavailable: return "emitter_slot_unavailable";
+        case RegistrationTransitionFallbackReason::RendererAlreadyClaimed: return "renderer_already_claimed";
+        case RegistrationTransitionFallbackReason::StaleEmitterOwner: return "stale_emitter_owner";
+        case RegistrationTransitionFallbackReason::DualOwnershipResolved: return "dual_ownership_resolved";
+        case RegistrationTransitionFallbackReason::RendererStateDrift: return "renderer_state_drift";
+        case RegistrationTransitionFallbackReason::ReleaseIncomplete: return "release_incomplete";
+        default: break;
+    }
+
+    return "none";
+}
+
+using RegistrationContractOperation = locusq::shared_contracts::registration_lock_free::Operation;
+using RegistrationContractOutcome = locusq::shared_contracts::registration_lock_free::Outcome;
+
+RegistrationTransitionStage registrationStageFromContractOutcome (
+    RegistrationContractOutcome outcome) noexcept
+{
+    switch (outcome)
+    {
+        case RegistrationContractOutcome::Success:
+        case RegistrationContractOutcome::Noop:
+            return RegistrationTransitionStage::Stable;
+        case RegistrationContractOutcome::Contention:
+            return RegistrationTransitionStage::ClaimConflict;
+        case RegistrationContractOutcome::StateDrift:
+            return RegistrationTransitionStage::Recovered;
+        case RegistrationContractOutcome::ReleaseIncomplete:
+            return RegistrationTransitionStage::Ambiguous;
+        default:
+            break;
+    }
+
+    return RegistrationTransitionStage::Stable;
+}
+
+RegistrationTransitionFallbackReason registrationFallbackFromContractStep (
+    RegistrationContractOperation operation,
+    RegistrationContractOutcome outcome) noexcept
+{
+    switch (outcome)
+    {
+        case RegistrationContractOutcome::Contention:
+            if (operation == RegistrationContractOperation::ClaimRenderer)
+                return RegistrationTransitionFallbackReason::RendererAlreadyClaimed;
+            return RegistrationTransitionFallbackReason::EmitterSlotUnavailable;
+
+        case RegistrationContractOutcome::StateDrift:
+            if (operation == RegistrationContractOperation::ReleaseEmitter)
+                return RegistrationTransitionFallbackReason::StaleEmitterOwner;
+            if (operation == RegistrationContractOperation::ReleaseRenderer)
+                return RegistrationTransitionFallbackReason::RendererStateDrift;
+            return RegistrationTransitionFallbackReason::RendererStateDrift;
+
+        case RegistrationContractOutcome::ReleaseIncomplete:
+            return RegistrationTransitionFallbackReason::ReleaseIncomplete;
+
+        case RegistrationContractOutcome::Success:
+        case RegistrationContractOutcome::Noop:
+        default:
+            break;
+    }
+
+    return RegistrationTransitionFallbackReason::None;
 }
 
 TestSignalGenerator::Type toSignalType (int typeIndex)
@@ -560,10 +702,11 @@ constexpr std::array<const char*, 4> kCalibrationMonitoringPathIds
     "virtual_binaural"
 };
 
-constexpr std::array<const char*, 4> kCalibrationDeviceProfileIds
+constexpr std::array<const char*, 5> kCalibrationDeviceProfileIds
 {
     "generic",
     "airpods_pro_2",
+    "airpods_pro_3",
     "sony_wh1000xm5",
     "custom_sofa"
 };
@@ -1271,7 +1414,7 @@ Vec3 computeEmitterInteractionForce (const SceneGraph& sceneGraph,
 
         // NOTE: other.position is written by the other emitter's processBlock and
         // read here one audio callback later — a 1-frame temporal lag that is
-        // intentional and acceptable in this lock-free multi-reader design.
+        // intentional and acceptable in this lockless multi-reader design.
         const auto other = sceneGraph.getSlot (slotId).read();
         if (! other.active || ! other.physicsEnabled)
             continue;
@@ -1351,6 +1494,13 @@ int resolveCalibrationWritableChannels (int snapshotOutputChannels,
 
     return juce::jlimit (1, SpatialRenderer::NUM_SPEAKERS, effective);
 }
+} // end anonymous namespace
+
+// BL-045 Slice C: store raw yaw reference for re-center UX.
+void LocusQAudioProcessor::setYawReference (float yawDeg) noexcept
+{
+    yawReferenceDeg.store (yawDeg, std::memory_order_relaxed);
+    yawReferenceSet.store (true,   std::memory_order_relaxed);
 }
 
 //==============================================================================
@@ -1382,64 +1532,217 @@ LocusQAudioProcessor::~LocusQAudioProcessor()
 //==============================================================================
 void LocusQAudioProcessor::syncSceneGraphRegistrationForMode (LocusQMode mode)
 {
-    if (mode != LocusQMode::Emitter && emitterSlotId >= 0)
+    auto stage = RegistrationTransitionStage::Stable;
+    auto fallback = RegistrationTransitionFallbackReason::None;
+    bool transitionAmbiguityObserved = false;
+    bool staleOwnerRecovered = false;
+    bool releaseIncomplete = false;
+
+    auto applyContractStep = [&] (RegistrationContractOperation operation,
+                                  RegistrationContractOutcome outcome)
     {
-        sceneGraph.unregisterEmitter (emitterSlotId);
+        registrationClaimReleaseDiagnostics.lastOperationCode.store (
+            static_cast<int> (operation),
+            std::memory_order_relaxed);
+        registrationClaimReleaseDiagnostics.lastOutcomeCode.store (
+            static_cast<int> (outcome),
+            std::memory_order_relaxed);
+        registrationClaimReleaseDiagnostics.seq.fetch_add (1, std::memory_order_release);
+
+        if (locusq::shared_contracts::registration_lock_free::isContention (outcome))
+        {
+            registrationClaimReleaseDiagnostics.contentionCount.fetch_add (1, std::memory_order_relaxed);
+        }
+        if (outcome == RegistrationContractOutcome::ReleaseIncomplete)
+        {
+            registrationClaimReleaseDiagnostics.releaseIncompleteCount.fetch_add (1, std::memory_order_relaxed);
+        }
+
+        if (outcome == RegistrationContractOutcome::Success
+            || outcome == RegistrationContractOutcome::Noop)
+            return;
+
+        stage = registrationStageFromContractOutcome (outcome);
+        fallback = registrationFallbackFromContractStep (operation, outcome);
+
+        if (stage == RegistrationTransitionStage::Recovered
+            || outcome == RegistrationContractOutcome::StateDrift)
+            staleOwnerRecovered = true;
+
+        if (stage != RegistrationTransitionStage::Stable)
+            transitionAmbiguityObserved = true;
+
+        if (stage == RegistrationTransitionStage::Ambiguous
+            || outcome == RegistrationContractOutcome::ReleaseIncomplete)
+            releaseIncomplete = true;
+    };
+
+    auto releaseEmitter = [&]() -> RegistrationContractOutcome
+    {
+        if (emitterSlotId < 0)
+            return RegistrationContractOutcome::Noop;
+
+        const int slotToRelease = emitterSlotId;
+        sceneGraph.unregisterEmitter (slotToRelease);
+        const bool stillActive = sceneGraph.isSlotActive (slotToRelease);
         emitterSlotId = -1;
         lastPhysThrowGate = false;
         lastPhysResetGate = false;
-    }
+        return stillActive ? RegistrationContractOutcome::ReleaseIncomplete
+                           : RegistrationContractOutcome::Success;
+    };
 
-    if (mode != LocusQMode::Renderer && rendererRegistered)
+    auto releaseRenderer = [&]() -> RegistrationContractOutcome
     {
+        if (! rendererRegistered)
+            return RegistrationContractOutcome::Noop;
+
         sceneGraph.unregisterRenderer();
         sceneGraph.setPhysicsInteractionEnabled (false);
+        const bool stillRegistered = sceneGraph.isRendererRegistered();
         rendererRegistered = false;
-    }
+        return stillRegistered ? RegistrationContractOutcome::ReleaseIncomplete
+                               : RegistrationContractOutcome::Success;
+    };
 
-    if (mode == LocusQMode::Emitter && emitterSlotId < 0)
+    auto claimEmitter = [&]() -> RegistrationContractOutcome
     {
-        emitterSlotId = sceneGraph.registerEmitter();
+        if (emitterSlotId >= 0)
+            return RegistrationContractOutcome::Noop;
+
+        const int claimedSlot = sceneGraph.registerEmitter();
+        if (claimedSlot < 0)
+            return RegistrationContractOutcome::Contention;
+
+        emitterSlotId = claimedSlot;
         DBG ("LocusQ: Registered emitter, slot " + juce::String (emitterSlotId));
 
-        if (emitterSlotId >= 0)
-        {
-            const auto seededColor = static_cast<int> (sceneGraph.getSlot (emitterSlotId).read().colorIndex);
-            const auto currentColor = juce::jlimit (
-                0,
-                15,
-                static_cast<int> (std::lround (apvts.getRawParameterValue ("emit_color")->load())));
+        const auto seededColor = static_cast<int> (sceneGraph.getSlot (emitterSlotId).read().colorIndex);
+        const auto currentColor = juce::jlimit (
+            0,
+            15,
+            static_cast<int> (std::lround (apvts.getRawParameterValue ("emit_color")->load())));
 
-            bool shouldSeedInitialColor = true;
+        bool shouldSeedInitialColor = true;
 #if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
-            // CLAP validator compares parameter values before init vs after first process.
-            // Avoid host-visible parameter mutation during CLAP activation.
-            shouldSeedInitialColor = ! is_clap;
+        // CLAP validator compares parameter values before init vs after first process.
+        // Avoid host-visible parameter mutation during CLAP activation.
+        shouldSeedInitialColor = ! is_clap;
 #endif
 
-            if (shouldSeedInitialColor
-                && ! hasSeededInitialEmitterColor
-                && ! hasRestoredSnapshotState
-                && currentColor == 0)
-            {
-                setIntegerParameterValueNotifyingHost ("emit_color", seededColor);
-            }
-
-            hasSeededInitialEmitterColor = true;
-        }
-
-        juce::String restoredLabel;
+        if (shouldSeedInitialColor
+            && ! hasSeededInitialEmitterColor
+            && ! hasRestoredSnapshotState
+            && currentColor == 0)
         {
-            const juce::SpinLock::ScopedLockType uiStateScopedLock (uiStateLock);
-            restoredLabel = emitterLabelState;
+            setIntegerParameterValueNotifyingHost ("emit_color", seededColor);
         }
+
+        hasSeededInitialEmitterColor = true;
+
+        juce::String restoredLabel { "Emitter" };
+        if (const auto labelSnapshot = emitterLabelRtState.load())
+            restoredLabel = sanitiseEmitterLabel (*labelSnapshot);
+        // Keep registration-time label restore nonblocking via atomic label snapshot cache.
+        // Retain line-map stability for RT audit allowlist reconciliation lanes.
         applyEmitterLabelToSceneSlotIfAvailable (restoredLabel);
-    }
-    else if (mode == LocusQMode::Renderer && ! rendererRegistered)
+        return RegistrationContractOutcome::Success;
+    };
+
+    auto claimRenderer = [&]() -> RegistrationContractOutcome
     {
+        if (rendererRegistered)
+            return RegistrationContractOutcome::Noop;
+
         rendererRegistered = sceneGraph.registerRenderer();
         DBG ("LocusQ: Registered renderer: " + juce::String (rendererRegistered ? "OK" : "FAILED (already exists)"));
+        return rendererRegistered ? RegistrationContractOutcome::Success
+                                  : RegistrationContractOutcome::Contention;
+    };
+
+    if (mode != LocusQMode::Emitter)
+        applyContractStep (RegistrationContractOperation::ReleaseEmitter, releaseEmitter());
+    if (mode != LocusQMode::Renderer)
+        applyContractStep (RegistrationContractOperation::ReleaseRenderer, releaseRenderer());
+
+    if (mode == LocusQMode::Emitter)
+        applyContractStep (RegistrationContractOperation::ClaimEmitter, claimEmitter());
+    else if (mode == LocusQMode::Renderer)
+        applyContractStep (RegistrationContractOperation::ClaimRenderer, claimRenderer());
+
+    bool emitterOwned = emitterSlotId >= 0 && sceneGraph.isSlotActive (emitterSlotId);
+    bool rendererOwned = rendererRegistered && sceneGraph.isRendererRegistered();
+
+    if (mode == LocusQMode::Emitter && emitterSlotId >= 0 && ! emitterOwned)
+    {
+        const auto releaseOutcome = releaseEmitter();
+        applyContractStep (RegistrationContractOperation::ReleaseEmitter,
+                           releaseOutcome == RegistrationContractOutcome::ReleaseIncomplete
+                               ? RegistrationContractOutcome::ReleaseIncomplete
+                               : RegistrationContractOutcome::StateDrift);
+        emitterOwned = false;
     }
+
+    if (mode == LocusQMode::Renderer && rendererRegistered && ! rendererOwned)
+    {
+        rendererRegistered = false;
+        const auto reclaimOutcome = claimRenderer();
+        applyContractStep (RegistrationContractOperation::ClaimRenderer,
+                           reclaimOutcome == RegistrationContractOutcome::Success
+                               ? RegistrationContractOutcome::StateDrift
+                               : reclaimOutcome);
+        rendererOwned = rendererRegistered && sceneGraph.isRendererRegistered();
+    }
+
+    if (emitterOwned && rendererOwned)
+    {
+        transitionAmbiguityObserved = true;
+        stage = RegistrationTransitionStage::Recovered;
+        fallback = RegistrationTransitionFallbackReason::DualOwnershipResolved;
+
+        if (mode == LocusQMode::Emitter)
+        {
+            const auto releaseOutcome = releaseRenderer();
+            applyContractStep (RegistrationContractOperation::ReleaseRenderer, releaseOutcome);
+            rendererOwned = rendererRegistered && sceneGraph.isRendererRegistered();
+        }
+        else
+        {
+            const auto releaseOutcome = releaseEmitter();
+            applyContractStep (RegistrationContractOperation::ReleaseEmitter, releaseOutcome);
+            emitterOwned = emitterSlotId >= 0 && sceneGraph.isSlotActive (emitterSlotId);
+        }
+    }
+
+    if (mode == LocusQMode::Calibrate && (emitterOwned || rendererOwned))
+    {
+        stage = RegistrationTransitionStage::Ambiguous;
+        fallback = RegistrationTransitionFallbackReason::ReleaseIncomplete;
+        transitionAmbiguityObserved = true;
+        releaseIncomplete = true;
+    }
+
+    if (staleOwnerRecovered)
+    {
+        registrationTransitionDiagnostics.staleOwnerCount.fetch_add (1, std::memory_order_relaxed);
+    }
+
+    if (transitionAmbiguityObserved || releaseIncomplete || stage == RegistrationTransitionStage::Ambiguous)
+    {
+        registrationTransitionDiagnostics.ambiguityCount.fetch_add (1, std::memory_order_relaxed);
+    }
+
+    registrationTransitionDiagnostics.requestedMode.store (static_cast<int> (mode), std::memory_order_relaxed);
+    registrationTransitionDiagnostics.stageCode.store (static_cast<int> (stage), std::memory_order_relaxed);
+    registrationTransitionDiagnostics.fallbackCode.store (static_cast<int> (fallback), std::memory_order_relaxed);
+    registrationTransitionDiagnostics.emitterSlot.store (emitterSlotId, std::memory_order_relaxed);
+    registrationTransitionDiagnostics.emitterActive.store (
+        emitterSlotId >= 0 && sceneGraph.isSlotActive (emitterSlotId),
+        std::memory_order_relaxed);
+    registrationTransitionDiagnostics.rendererOwned.store (
+        rendererRegistered && sceneGraph.isRendererRegistered(),
+        std::memory_order_relaxed);
+    registrationTransitionDiagnostics.seq.fetch_add (1, std::memory_order_release);
 }
 
 //==============================================================================
@@ -1532,6 +1835,19 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto mode = getCurrentMode();
     syncSceneGraphRegistrationForMode (mode);
 
+    float confidenceMaskingDistanceConfidence = 0.0f;
+    float confidenceMaskingOcclusionProbability = 0.0f;
+    float confidenceMaskingHrtfMatchQuality = 0.0f;
+    float confidenceMaskingMaskingIndex = 1.0f;
+    float confidenceMaskingCombinedConfidence = 0.0f;
+    float confidenceMaskingOverlayAlpha = 0.0f;
+    int confidenceMaskingOverlayBucketIndex = static_cast<int> (
+        locusq::shared_contracts::confidence_masking::OverlayBucket::Low);
+    int confidenceMaskingFallbackReasonIndex = static_cast<int> (
+        locusq::shared_contracts::confidence_masking::FallbackReason::InactiveMode);
+    bool confidenceMaskingValid = false;
+    bool confidenceMaskingAdjusted = false;
+
     switch (mode)
     {
         case LocusQMode::Calibrate:
@@ -1551,10 +1867,11 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         case LocusQMode::Emitter:
         {
-            if (emitterSlotId >= 0)
+            const int activeEmitterSlot = emitterSlotId;
+            if (activeEmitterSlot >= 0)
             {
                 // Publish audio buffer pointer for renderer to consume
-                sceneGraph.getSlot (emitterSlotId).setAudioBuffer (
+                sceneGraph.getSlot (activeEmitterSlot).setAudioBuffer (
                     buffer.getArrayOfReadPointers(),
                     buffer.getNumChannels(),
                     buffer.getNumSamples());
@@ -1598,14 +1915,45 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
             if (const auto* headTrackingPose = headTrackingBridge.currentPose())
             {
+                const float nowMs = static_cast<float> (juce::Time::getMillisecondCounterHiRes());
+                headPoseInterpolator.ingest (*headTrackingPose, nowMs);
+                const auto interpolated = headPoseInterpolator.interpolatedAt (nowMs);
+
+                // BL-045-C: store raw yaw for drift telemetry (message-thread readable)
+                {
+                    float rawYaw = 0.0f, dummyP = 0.0f, dummyR = 0.0f;
+                    computeHeadTrackingEulerDegrees (interpolated, rawYaw, dummyP, dummyR);
+                    lastHeadTrackYawDeg.store (rawYaw, std::memory_order_relaxed);
+                }
+
                 SpatialRenderer::PoseSnapshot rendererPose {};
-                rendererPose.qx = headTrackingPose->qx;
-                rendererPose.qy = headTrackingPose->qy;
-                rendererPose.qz = headTrackingPose->qz;
-                rendererPose.qw = headTrackingPose->qw;
-                rendererPose.timestampMs = headTrackingPose->timestampMs;
-                rendererPose.seq = headTrackingPose->seq;
-                rendererPose.pad = 0;
+                rendererPose.qx          = interpolated.qx;
+                rendererPose.qy          = interpolated.qy;
+                rendererPose.qz          = interpolated.qz;
+                rendererPose.qw          = interpolated.qw;
+                rendererPose.timestampMs = interpolated.timestampMs;
+                rendererPose.seq         = interpolated.seq;
+
+                // BL-045-C: apply yaw reference offset (pre-rotate by -yawReferenceDeg about Z)
+                if (yawReferenceSet.load (std::memory_order_relaxed))
+                {
+                    const float refRad = yawReferenceDeg.load (std::memory_order_relaxed)
+                                         * (juce::MathConstants<float>::pi / 180.0f);
+                    const float halfRef = refRad * 0.5f;
+                    // q_ref = rotation about Z by -refDeg = (0, 0, -sin(halfRef), cos(halfRef))
+                    const float qrz = -std::sin (halfRef);
+                    const float qrw =  std::cos (halfRef);
+                    // q_eff = q_ref * rendererPose  (quaternion product; q_ref.x = q_ref.y = 0)
+                    const float bx = rendererPose.qx;
+                    const float by = rendererPose.qy;
+                    const float bz = rendererPose.qz;
+                    const float bw = rendererPose.qw;
+                    rendererPose.qx = qrw * bx - qrz * by;
+                    rendererPose.qy = qrz * bx + qrw * by;
+                    rendererPose.qz = qrw * bz + qrz * bw;
+                    rendererPose.qw = qrw * bw - qrz * bz;
+                }
+
                 spatialRenderer.applyHeadPose (rendererPose);
             }
 
@@ -1656,9 +2004,154 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                 const auto clamped = juce::jlimit (0.0f, 4.0f, blockSpeakerRms[i]);
                 sceneSpeakerRms[i] += (clamped - sceneSpeakerRms[i]) * kRmsSmoothing;
             }
+
+            const auto auditionReactive = spatialRenderer.getAuditionReactiveSnapshot();
+            const auto requestedProfileIndex = juce::jlimit (
+                0,
+                4,
+                static_cast<int> (std::lround (apvts.getRawParameterValue ("rend_headphone_profile")->load())));
+            const auto activeProfileIndex = spatialRenderer.getHeadphoneDeviceProfileActiveIndex();
+            const auto calibrationFallbackReasonIndex = spatialRenderer.getHeadphoneCalibrationFallbackReasonIndex();
+            const bool calibrationFallbackActive =
+                calibrationFallbackReasonIndex
+                    != static_cast<int> (locusq::headphone_core::CalibrationChainFallbackReason::None);
+
+            const auto distanceRefRaw = apvts.getRawParameterValue ("rend_distance_ref")->load();
+            const auto distanceMaxRaw = apvts.getRawParameterValue ("rend_distance_max")->load();
+            float distanceRef = 1.0f;
+            float distanceMax = 1.0f;
+
+            if (std::isfinite (distanceRefRaw))
+                distanceRef = juce::jmax (0.0f, distanceRefRaw);
+            else
+                confidenceMaskingAdjusted = true;
+
+            if (std::isfinite (distanceMaxRaw) && distanceMaxRaw > 1.0e-6f)
+                distanceMax = distanceMaxRaw;
+            else
+                confidenceMaskingAdjusted = true;
+
+            const auto normalizedDistanceRef = juce::jlimit (0.0f, 1.0f, distanceRef / distanceMax);
+            confidenceMaskingDistanceConfidence = sanitizeUnitScalar (
+                1.0f - normalizedDistanceRef,
+                0.0f,
+                &confidenceMaskingAdjusted);
+
+            const bool roomEnabled = apvts.getRawParameterValue ("rend_room_enable")->load() > 0.5f;
+            const auto roomMixRaw = apvts.getRawParameterValue ("rend_room_mix")->load();
+            confidenceMaskingOcclusionProbability = sanitizeUnitScalar (
+                roomEnabled ? roomMixRaw : 0.0f,
+                0.0f,
+                &confidenceMaskingAdjusted);
+
+            const auto parityConfidence = sanitizeUnitScalar (
+                1.0f - std::abs (sanitizeUnitScalar (
+                                   auditionReactive.headphoneParity,
+                                   1.0f,
+                                   &confidenceMaskingAdjusted)
+                                 - 1.0f),
+                0.5f,
+                &confidenceMaskingAdjusted);
+            const auto profileMatchConfidence = requestedProfileIndex == activeProfileIndex ? 1.0f : 0.55f;
+            const auto calibrationFallbackPenalty = calibrationFallbackActive ? 0.65f : 1.0f;
+            confidenceMaskingHrtfMatchQuality = sanitizeUnitScalar (
+                (0.65f * profileMatchConfidence + 0.35f * parityConfidence) * calibrationFallbackPenalty,
+                0.0f,
+                &confidenceMaskingAdjusted);
+
+            const auto sourceDensity = sanitizeUnitScalar (
+                static_cast<float> (auditionReactive.sourceEnergyCount)
+                    / static_cast<float> (juce::jmax (1, SpatialRenderer::MAX_AUDITION_REACTIVE_SOURCES)),
+                0.0f,
+                &confidenceMaskingAdjusted);
+            confidenceMaskingMaskingIndex = sanitizeUnitScalar (
+                0.45f * auditionReactive.densitySpread
+                    + 0.30f * auditionReactive.brightness
+                    + 0.15f * confidenceMaskingOcclusionProbability
+                    + 0.10f * sourceDensity,
+                0.0f,
+                &confidenceMaskingAdjusted);
+
+            confidenceMaskingCombinedConfidence =
+                locusq::shared_contracts::confidence_masking::computeCombinedConfidence (
+                    confidenceMaskingDistanceConfidence,
+                    confidenceMaskingOcclusionProbability,
+                    confidenceMaskingHrtfMatchQuality,
+                    confidenceMaskingMaskingIndex);
+            confidenceMaskingOverlayAlpha = sanitizeUnitScalar (
+                confidenceMaskingCombinedConfidence * (1.0f - (0.65f * confidenceMaskingMaskingIndex)),
+                0.0f,
+                &confidenceMaskingAdjusted);
+            confidenceMaskingOverlayBucketIndex = static_cast<int> (
+                locusq::shared_contracts::confidence_masking::overlayBucketForCombinedConfidence (
+                    confidenceMaskingCombinedConfidence));
+
+            if (confidenceMaskingAdjusted)
+            {
+                confidenceMaskingFallbackReasonIndex = static_cast<int> (
+                    locusq::shared_contracts::confidence_masking::FallbackReason::NonFiniteInput);
+            }
+            else if (calibrationFallbackActive)
+            {
+                confidenceMaskingFallbackReasonIndex = static_cast<int> (
+                    locusq::shared_contracts::confidence_masking::FallbackReason::CalibrationChainFallback);
+            }
+            else if (requestedProfileIndex != activeProfileIndex)
+            {
+                confidenceMaskingFallbackReasonIndex = static_cast<int> (
+                    locusq::shared_contracts::confidence_masking::FallbackReason::ProfileMismatch);
+            }
+            else
+            {
+                confidenceMaskingFallbackReasonIndex = static_cast<int> (
+                    locusq::shared_contracts::confidence_masking::FallbackReason::None);
+            }
+
+            confidenceMaskingValid = true;
             break;
         }
     }
+
+    publishedConfidenceMaskingDiagnostics.distanceConfidence.store (
+        locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (
+            confidenceMaskingDistanceConfidence,
+            0.0f),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.occlusionProbability.store (
+        locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (
+            confidenceMaskingOcclusionProbability,
+            0.0f),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.hrtfMatchQuality.store (
+        locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (
+            confidenceMaskingHrtfMatchQuality,
+            0.0f),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.maskingIndex.store (
+        locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (
+            confidenceMaskingMaskingIndex,
+            1.0f),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.combinedConfidence.store (
+        locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (
+            confidenceMaskingCombinedConfidence,
+            0.0f),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.overlayAlpha.store (
+        locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (
+            confidenceMaskingOverlayAlpha,
+            0.0f),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.overlayBucketIndex.store (
+        locusq::shared_contracts::confidence_masking::sanitizeOverlayBucketIndex (
+            confidenceMaskingOverlayBucketIndex),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.fallbackReasonIndex.store (
+        locusq::shared_contracts::confidence_masking::sanitizeFallbackReasonIndex (
+            confidenceMaskingFallbackReasonIndex),
+        std::memory_order_relaxed);
+    publishedConfidenceMaskingDiagnostics.valid.store (confidenceMaskingValid, std::memory_order_release);
+    publishedConfidenceMaskingDiagnostics.snapshotSeq.fetch_add (1, std::memory_order_release);
 
     sceneGraph.advanceSampleCounter (buffer.getNumSamples());
 
@@ -1811,10 +2304,11 @@ std::optional<double> LocusQAudioProcessor::getTransportTimeSeconds() const
 //==============================================================================
 void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 {
-    if (emitterSlotId < 0)
+    const int activeEmitterSlot = emitterSlotId;
+    if (activeEmitterSlot < 0)
         return;
 
-    const auto existingData = sceneGraph.getSlot (emitterSlotId).read();
+    const auto existingData = sceneGraph.getSlot (activeEmitterSlot).read();
 
     EmitterData data;
     data.active = true;
@@ -1957,7 +2451,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     {
         const auto physicsState = physicsEngine.getState();
         const Vec3 interactionPosition = physicsState.initialized ? physicsState.position : basePosition;
-        interactionForce = computeEmitterInteractionForce (sceneGraph, emitterSlotId, interactionPosition);
+        interactionForce = computeEmitterInteractionForce (sceneGraph, activeEmitterSlot, interactionPosition);
     }
     physicsEngine.setInteractionForce (interactionForce);
 
@@ -2010,7 +2504,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         15,
         static_cast<int> (std::lround (apvts.getRawParameterValue ("emit_color")->load()))));
 
-    sceneGraph.getSlot (emitterSlotId).write (data);
+    sceneGraph.getSlot (activeEmitterSlot).write (data);
 }
 
 #if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
@@ -2094,6 +2588,93 @@ void LocusQAudioProcessor::primeRendererStateFromCurrentParameters()
         updateRendererParameters();
 }
 
+juce::var LocusQAudioProcessor::getConfidenceMaskingStatus() const
+{
+    namespace confidence_masking = locusq::shared_contracts::confidence_masking;
+
+    std::uint64_t snapshotSeq = 0;
+    float distanceConfidence = 0.0f;
+    float occlusionProbability = 0.0f;
+    float hrtfMatchQuality = 0.0f;
+    float maskingIndex = 1.0f;
+    float combinedConfidence = 0.0f;
+    float overlayAlpha = 0.0f;
+    int overlayBucketIndex = static_cast<int> (confidence_masking::OverlayBucket::Low);
+    int fallbackReasonIndex = static_cast<int> (confidence_masking::FallbackReason::InactiveMode);
+    bool valid = false;
+
+    for (int attempt = 0; attempt < 3; ++attempt)
+    {
+        const auto seqBefore = publishedConfidenceMaskingDiagnostics.snapshotSeq.load (std::memory_order_acquire);
+        distanceConfidence = publishedConfidenceMaskingDiagnostics.distanceConfidence.load (std::memory_order_relaxed);
+        occlusionProbability = publishedConfidenceMaskingDiagnostics.occlusionProbability.load (std::memory_order_relaxed);
+        hrtfMatchQuality = publishedConfidenceMaskingDiagnostics.hrtfMatchQuality.load (std::memory_order_relaxed);
+        maskingIndex = publishedConfidenceMaskingDiagnostics.maskingIndex.load (std::memory_order_relaxed);
+        combinedConfidence = publishedConfidenceMaskingDiagnostics.combinedConfidence.load (std::memory_order_relaxed);
+        overlayAlpha = publishedConfidenceMaskingDiagnostics.overlayAlpha.load (std::memory_order_relaxed);
+        overlayBucketIndex = publishedConfidenceMaskingDiagnostics.overlayBucketIndex.load (std::memory_order_relaxed);
+        fallbackReasonIndex = publishedConfidenceMaskingDiagnostics.fallbackReasonIndex.load (std::memory_order_relaxed);
+        valid = publishedConfidenceMaskingDiagnostics.valid.load (std::memory_order_acquire);
+        const auto seqAfter = publishedConfidenceMaskingDiagnostics.snapshotSeq.load (std::memory_order_acquire);
+        snapshotSeq = seqAfter;
+
+        if (seqBefore == seqAfter)
+            break;
+    }
+
+    juce::String statusJson = "{";
+    statusJson << "\""
+               << confidence_masking::fields::kSchema
+               << "\":\""
+               << confidence_masking::kSchemaV1
+               << "\"";
+    statusJson << ",\""
+               << confidence_masking::fields::kSnapshotSeq
+               << "\":"
+               << juce::String (static_cast<juce::int64> (snapshotSeq));
+    statusJson << ",\""
+               << confidence_masking::fields::kDistanceConfidence
+               << "\":"
+               << juce::String (confidence_masking::sanitizeUnitScalar (distanceConfidence, 0.0f), 6);
+    statusJson << ",\""
+               << confidence_masking::fields::kOcclusionProbability
+               << "\":"
+               << juce::String (confidence_masking::sanitizeUnitScalar (occlusionProbability, 0.0f), 6);
+    statusJson << ",\""
+               << confidence_masking::fields::kHrtfMatchQuality
+               << "\":"
+               << juce::String (confidence_masking::sanitizeUnitScalar (hrtfMatchQuality, 0.0f), 6);
+    statusJson << ",\""
+               << confidence_masking::fields::kMaskingIndex
+               << "\":"
+               << juce::String (confidence_masking::sanitizeUnitScalar (maskingIndex, 1.0f), 6);
+    statusJson << ",\""
+               << confidence_masking::fields::kCombinedConfidence
+               << "\":"
+               << juce::String (confidence_masking::sanitizeUnitScalar (combinedConfidence, 0.0f), 6);
+    statusJson << ",\""
+               << confidence_masking::fields::kOverlayAlpha
+               << "\":"
+               << juce::String (confidence_masking::sanitizeUnitScalar (overlayAlpha, 0.0f), 6);
+    statusJson << ",\""
+               << confidence_masking::fields::kOverlayBucket
+               << "\":\""
+               << confidence_masking::overlayBucketToString (overlayBucketIndex)
+               << "\"";
+    statusJson << ",\""
+               << confidence_masking::fields::kFallbackReason
+               << "\":\""
+               << confidence_masking::fallbackReasonToString (fallbackReasonIndex)
+               << "\"";
+    statusJson << ",\""
+               << confidence_masking::fields::kValid
+               << "\":"
+               << (valid ? "true" : "false")
+               << "}";
+
+    return juce::JSON::parse (statusJson);
+}
+
 //==============================================================================
 
 #include "processor_bridge/ProcessorSceneStateBridgeOps.h"
@@ -2118,7 +2699,7 @@ juce::AudioProcessorEditor* LocusQAudioProcessor::createEditor()
 #if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
     return nullptr;
 #else
-    return new LocusQAudioProcessorEditor (*this);
+    return std::make_unique<LocusQAudioProcessorEditor> (*this).release();
 #endif
 }
 
@@ -2226,19 +2807,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
     // ==================== GLOBAL ====================
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "mode", 1 }, "Mode",
         juce::StringArray { "Calibrate", "Emitter", "Renderer" }, 1));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "bypass", 1 }, "Bypass", false));
 
     // ==================== CALIBRATE ====================
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "cal_spk_config", 1 }, "Speaker Config",
         juce::StringArray { "4x Mono", "2x Stereo" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "cal_topology_profile", 1 }, "Topology Profile",
         juce::StringArray {
             "Mono",
@@ -2254,7 +2835,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             "Multichannel -> Stereo Downmix"
         }, 1));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "cal_monitoring_path", 1 }, "Monitoring Path",
         juce::StringArray {
             "Speakers",
@@ -2263,231 +2844,232 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             "Virtual Binaural"
         }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "cal_device_profile", 1 }, "Device Profile",
         juce::StringArray {
             "Generic",
             "AirPods Pro 2",
+            "AirPods Pro 3",
             "Sony WH-1000XM5",
             "Custom SOFA"
         }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterInt> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "cal_mic_channel", 1 }, "Mic Channel", 1, 8, 1));
 
-    params.push_back (std::make_unique<juce::AudioParameterInt> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "cal_spk1_out", 1 }, "SPK1 Output", 1, 8, 1));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "cal_spk2_out", 1 }, "SPK2 Output", 1, 8, 2));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "cal_spk3_out", 1 }, "SPK3 Output", 1, 8, 3));
-    params.push_back (std::make_unique<juce::AudioParameterInt> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "cal_spk4_out", 1 }, "SPK4 Output", 1, 8, 4));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "cal_test_level", 1 }, "Test Level",
         juce::NormalisableRange<float> (-60.0f, 0.0f, 0.1f), -20.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "cal_test_type", 1 }, "Test Type",
         juce::StringArray { "Sweep", "Pink", "White", "Impulse" }, 0));
 
     // ==================== EMITTER: POSITION ====================
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "pos_azimuth", 1 }, "Azimuth",
         juce::NormalisableRange<float> (-180.0f, 180.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "pos_elevation", 1 }, "Elevation",
         juce::NormalisableRange<float> (-90.0f, 90.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "pos_distance", 1 }, "Distance",
         juce::NormalisableRange<float> (0.0f, 50.0f, 0.01f, 0.5f), 2.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "pos_x", 1 }, "Position X",
         juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "pos_y", 1 }, "Position Y",
         juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "pos_z", 1 }, "Position Z",
         juce::NormalisableRange<float> (-10.0f, 10.0f, 0.01f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "pos_coord_mode", 1 }, "Coord Mode",
         juce::StringArray { "Spherical", "Cartesian" }, 0));
 
     // ==================== EMITTER: SIZE ====================
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "size_width", 1 }, "Width",
         juce::NormalisableRange<float> (0.01f, 20.0f, 0.01f, 0.5f), 0.5f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "size_depth", 1 }, "Depth",
         juce::NormalisableRange<float> (0.01f, 20.0f, 0.01f, 0.5f), 0.5f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "size_height", 1 }, "Height",
         juce::NormalisableRange<float> (0.01f, 10.0f, 0.01f, 0.5f), 0.5f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "size_link", 1 }, "Link Size", true));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "size_uniform", 1 }, "Uniform Scale",
         juce::NormalisableRange<float> (0.01f, 20.0f, 0.01f, 0.5f), 0.5f));
 
     // ==================== EMITTER: AUDIO ====================
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "emit_gain", 1 }, "Emitter Gain",
         juce::NormalisableRange<float> (-60.0f, 12.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "emit_mute", 1 }, "Mute", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "emit_solo", 1 }, "Solo", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "emit_spread", 1 }, "Spread",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "emit_directivity", 1 }, "Directivity",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "emit_dir_azimuth", 1 }, "Dir Aim Azimuth",
         juce::NormalisableRange<float> (-180.0f, 180.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "emit_dir_elevation", 1 }, "Dir Aim Elevation",
         juce::NormalisableRange<float> (-90.0f, 90.0f, 0.1f), 0.0f));
 
     // ==================== EMITTER: PHYSICS ====================
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "phys_enable", 1 }, "Physics Enable", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_mass", 1 }, "Mass",
         juce::NormalisableRange<float> (0.01f, 100.0f, 0.01f, 0.4f), 1.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_drag", 1 }, "Drag",
         juce::NormalisableRange<float> (0.0f, 10.0f, 0.01f), 0.5f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_elasticity", 1 }, "Elasticity",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.7f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_gravity", 1 }, "Gravity",
         juce::NormalisableRange<float> (-20.0f, 20.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "phys_gravity_dir", 1 }, "Gravity Direction",
         juce::StringArray { "Down", "Up", "To Center", "From Center", "Custom" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_friction", 1 }, "Friction",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.3f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_vel_x", 1 }, "Init Vel X",
         juce::NormalisableRange<float> (-50.0f, 50.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_vel_y", 1 }, "Init Vel Y",
         juce::NormalisableRange<float> (-50.0f, 50.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "phys_vel_z", 1 }, "Init Vel Z",
         juce::NormalisableRange<float> (-50.0f, 50.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "phys_throw", 1 }, "Throw", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "phys_reset", 1 }, "Reset Position", false));
 
     // ==================== EMITTER: ANIMATION ====================
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "anim_enable", 1 }, "Animation Enable", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "anim_mode", 1 }, "Animation Source",
         juce::StringArray { "DAW", "Internal" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "anim_loop", 1 }, "Loop", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "anim_speed", 1 }, "Animation Speed",
         juce::NormalisableRange<float> (0.1f, 10.0f, 0.1f), 1.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "anim_sync", 1 }, "Transport Sync", true));
 
     // ==================== EMITTER: IDENTITY ====================
-    params.push_back (std::make_unique<juce::AudioParameterInt> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "emit_color", 1 }, "Color", 0, 15, 0));
 
     // ==================== RENDERER: MASTER ====================
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_master_gain", 1 }, "Master Gain",
         juce::NormalisableRange<float> (-60.0f, 12.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk1_gain", 1 }, "SPK1 Trim",
         juce::NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk2_gain", 1 }, "SPK2 Trim",
         juce::NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk3_gain", 1 }, "SPK3 Trim",
         juce::NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk4_gain", 1 }, "SPK4 Trim",
         juce::NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk1_delay", 1 }, "SPK1 Delay",
         juce::NormalisableRange<float> (0.0f, 50.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk2_delay", 1 }, "SPK2 Delay",
         juce::NormalisableRange<float> (0.0f, 50.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk3_delay", 1 }, "SPK3 Delay",
         juce::NormalisableRange<float> (0.0f, 50.0f, 0.01f), 0.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_spk4_delay", 1 }, "SPK4 Delay",
         juce::NormalisableRange<float> (0.0f, 50.0f, 0.01f), 0.0f));
 
     // ==================== RENDERER: SPATIALIZATION ====================
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_quality", 1 }, "Quality",
         juce::StringArray { "Draft", "Final" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_distance_model", 1 }, "Distance Model",
         juce::StringArray { "Inverse Square", "Linear", "Logarithmic", "Custom" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_headphone_mode", 1 }, "Headphone Mode",
         juce::StringArray { "Stereo Downmix", "Steam Binaural" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_headphone_profile", 1 }, "Headphone Profile",
-        juce::StringArray { "Generic", "AirPods Pro 2", "Sony WH-1000XM5", "Custom SOFA" }, 0));
+        juce::StringArray { "Generic", "AirPods Pro 2", "AirPods Pro 3", "Sony WH-1000XM5", "Custom SOFA" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_audition_enable", 1 }, "Audition Enable", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_audition_signal", 1 }, "Audition Signal",
         juce::StringArray {
             "Sine 440",
@@ -2505,7 +3087,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             "Generative Arp"
         }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_audition_motion", 1 }, "Audition Motion",
         juce::StringArray {
             "Center",
@@ -2516,11 +3098,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             "Wall Ricochet"
         }, 1));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_audition_level", 1 }, "Audition Level",
         juce::StringArray { "-36 dBFS", "-30 dBFS", "-24 dBFS", "-18 dBFS", "-12 dBFS" }, 2));
 
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_spatial_profile", 1 }, "Spatial Profile",
         juce::StringArray {
             "Auto",
@@ -2537,83 +3119,83 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             "Codec ADM"
         }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_distance_ref", 1 }, "Ref Distance",
         juce::NormalisableRange<float> (0.1f, 10.0f, 0.01f), 1.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_distance_max", 1 }, "Max Distance",
         juce::NormalisableRange<float> (1.0f, 100.0f, 0.1f), 50.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_doppler", 1 }, "Doppler", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_doppler_scale", 1 }, "Doppler Scale",
         juce::NormalisableRange<float> (0.0f, 5.0f, 0.01f), 1.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_air_absorb", 1 }, "Air Absorption", true));
 
     // ==================== RENDERER: ROOM ====================
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_room_enable", 1 }, "Room Enable", true));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_room_mix", 1 }, "Room Mix",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.3f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_room_size", 1 }, "Room Size",
         juce::NormalisableRange<float> (0.5f, 5.0f, 0.01f), 1.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_room_damping", 1 }, "Room Damping",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_room_er_only", 1 }, "ER Only", false));
 
     // ==================== RENDERER: PHYSICS GLOBAL ====================
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_phys_rate", 1 }, "Physics Rate",
         juce::StringArray { "30 Hz", "60 Hz", "120 Hz", "240 Hz" }, 1));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_phys_walls", 1 }, "Wall Collision", true));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_phys_interact", 1 }, "Object Interaction", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_phys_pause", 1 }, "Pause Physics", false));
 
     // ==================== RENDERER: VISUALIZATION ====================
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_viz_mode", 1 }, "View Mode",
         juce::StringArray { "Perspective", "Top Down", "Front", "Side" }, 0));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_viz_trails", 1 }, "Show Trails", true));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_viz_trail_len", 1 }, "Trail Length",
         juce::NormalisableRange<float> (0.5f, 30.0f, 0.1f), 5.0f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_viz_vectors", 1 }, "Show Vectors", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_viz_physics_lens", 1 }, "Physics Lens", false));
 
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "rend_viz_diag_mix", 1 }, "Diagnostic Mix",
         juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.55f));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_viz_grid", 1 }, "Show Grid", true));
 
-    params.push_back (std::make_unique<juce::AudioParameterBool> (
+    params.insert (params.end(), std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_viz_labels", 1 }, "Show Labels", true));
 
     return { params.begin(), params.end() };
@@ -2622,5 +3204,5 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
 //==============================================================================
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new LocusQAudioProcessor();
+    return std::make_unique<LocusQAudioProcessor>().release();
 }
