@@ -23,7 +23,7 @@ struct HeadphonePreset
     bool valid = false;
 };
 
-inline HeadphonePreset loadHeadphonePreset (const juce::File& yamlFile)
+[[nodiscard]] inline HeadphonePreset loadHeadphonePreset (const juce::File& yamlFile)
 {
     HeadphonePreset result;
     if (! yamlFile.existsAsFile())
@@ -62,7 +62,7 @@ inline HeadphonePreset loadHeadphonePreset (const juce::File& yamlFile)
             result.bands.push_back (band);
         }
     }
-    result.valid = true;
+    result.valid = ! result.modelId.isEmpty() && ! result.bands.empty();
     return result;
 }
 
