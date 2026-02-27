@@ -120,8 +120,10 @@ public:
         const float A     = std::sqrt (std::pow (10.0f, gainDb / 40.0f));
         const float w0    = 2.0f * 3.14159265f * fc / sampleRate;
         const float alpha = std::sin (w0) / (2.0f * q);
-        const float a0inv = 1.0f / (1.0f + alpha / A);
-        Coefficients c;
+        const float a0Denom = 1.0f + alpha / A;
+        if (! std::isfinite (a0Denom) || a0Denom == 0.0f) return Coefficients {};
+        const float a0inv = 1.0f / a0Denom;
+        Coefficients c {};
         c.b0 = (1.0f + alpha * A) * a0inv;
         c.b1 = -2.0f * std::cos (w0) * a0inv;
         c.b2 = (1.0f - alpha * A) * a0inv;
@@ -139,8 +141,10 @@ public:
         const float sinw = std::sin (w0);
         const float alpha = sinw / (2.0f * q);
         const float sqA  = std::sqrt (A);
-        const float a0inv = 1.0f / ((A + 1.0f) + (A - 1.0f) * cosw + 2.0f * sqA * alpha);
-        Coefficients c;
+        const float a0Denom = (A + 1.0f) + (A - 1.0f) * cosw + 2.0f * sqA * alpha;
+        if (! std::isfinite (a0Denom) || a0Denom == 0.0f) return Coefficients {};
+        const float a0inv = 1.0f / a0Denom;
+        Coefficients c {};
         c.b0 = A * ((A + 1.0f) - (A - 1.0f) * cosw + 2.0f * sqA * alpha) * a0inv;
         c.b1 = 2.0f * A * ((A - 1.0f) - (A + 1.0f) * cosw) * a0inv;
         c.b2 = A * ((A + 1.0f) - (A - 1.0f) * cosw - 2.0f * sqA * alpha) * a0inv;
@@ -158,8 +162,10 @@ public:
         const float sinw = std::sin (w0);
         const float alpha = sinw / (2.0f * q);
         const float sqA  = std::sqrt (A);
-        const float a0inv = 1.0f / ((A + 1.0f) - (A - 1.0f) * cosw + 2.0f * sqA * alpha);
-        Coefficients c;
+        const float a0Denom = (A + 1.0f) - (A - 1.0f) * cosw + 2.0f * sqA * alpha;
+        if (! std::isfinite (a0Denom) || a0Denom == 0.0f) return Coefficients {};
+        const float a0inv = 1.0f / a0Denom;
+        Coefficients c {};
         c.b0 = A * ((A + 1.0f) + (A - 1.0f) * cosw + 2.0f * sqA * alpha) * a0inv;
         c.b1 = -2.0f * A * ((A - 1.0f) + (A + 1.0f) * cosw) * a0inv;
         c.b2 = A * ((A + 1.0f) + (A - 1.0f) * cosw - 2.0f * sqA * alpha) * a0inv;
