@@ -518,8 +518,6 @@ public:
     {
         if (lastLoadedPeqPresetIndex == profileIndex && lastLoadedPeqSampleRate == sampleRate)
             return;
-        lastLoadedPeqPresetIndex = profileIndex;
-        lastLoadedPeqSampleRate  = sampleRate;
 
         const auto profile = static_cast<HeadphoneDeviceProfile> (
             juce::jlimit (0, 4, profileIndex));
@@ -536,23 +534,34 @@ public:
         if (presetFilename.isEmpty() || sampleRate <= 0.0)
         {
             headphoneCalibrationChain.clearPeqPreset();
+            lastLoadedPeqPresetIndex = profileIndex;
+            lastLoadedPeqSampleRate  = sampleRate;
             return;
         }
 
-        // Resolve from plugin bundle: MacOS/ -> parent -> Contents/ -> Resources/eq_presets/
+        // Resolve preset from plugin bundle.
+        // NOTE: path traversal assumes macOS AU/VST3 bundle layout (Contents/MacOS/ + Contents/Resources/).
+        // On Windows/Linux presetsDir will not resolve and loadHeadphonePreset will return invalid.
+#if JUCE_MAC
         const auto presetsDir = juce::File::getSpecialLocation (
             juce::File::currentExecutableFile)
-            .getParentDirectory()         // MacOS/
-            .getSiblingFile ("Resources") // Contents/Resources/
+            .getParentDirectory()
+            .getSiblingFile ("Resources")
             .getChildFile ("eq_presets");
+#else
+        const juce::File presetsDir {};
+#endif
 
         const auto preset = locusq::headphone_dsp::loadHeadphonePreset (
             presetsDir.getChildFile (presetFilename));
 
         headphoneCalibrationChain.clearPeqPreset();
 
+        // NOTE: clearPeqPreset -> setPeqPreampDb -> setPeqStage writes are not atomic with respect
+        // to the audio thread. A brief glitch may occur during a profile switch while audio is
+        // processing. This is acceptable: profile changes are non-RT events on the message thread.
         if (! preset.valid || preset.bands.empty())
-            return;
+            return;  // Do not cache — allow retry if file was temporarily unavailable.
 
         headphoneCalibrationChain.setPeqPreampDb (preset.preampDb);
 
@@ -576,6 +585,9 @@ public:
             }
             headphoneCalibrationChain.setPeqStage (i, c);
         }
+
+        lastLoadedPeqPresetIndex = profileIndex;
+        lastLoadedPeqSampleRate  = sampleRate;
     }
 
     void setHeadphoneCalibrationEnabled (bool enabled) noexcept

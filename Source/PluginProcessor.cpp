@@ -2176,11 +2176,10 @@ void LocusQAudioProcessor::updateRendererParameters()
         apvts.getRawParameterValue ("rend_distance_max")->load());
     spatialRenderer.setHeadphoneRenderMode (
         static_cast<int> (apvts.getRawParameterValue ("rend_headphone_mode")->load()));
-    spatialRenderer.setHeadphoneDeviceProfile (
-        static_cast<int> (apvts.getRawParameterValue ("rend_headphone_profile")->load()));
-    spatialRenderer.loadPeqPresetForProfile (
-        static_cast<int> (apvts.getRawParameterValue ("rend_headphone_profile")->load()),
-        currentSampleRate);
+    const auto headphoneProfileIndex = static_cast<int> (
+        apvts.getRawParameterValue ("rend_headphone_profile")->load());
+    spatialRenderer.setHeadphoneDeviceProfile (headphoneProfileIndex);
+    spatialRenderer.loadPeqPresetForProfile (headphoneProfileIndex, currentSampleRate);
     spatialRenderer.setSpatialOutputProfile (
         static_cast<int> (apvts.getRawParameterValue ("rend_spatial_profile")->load()));
     spatialRenderer.setAuditionEnabled (
