@@ -11,7 +11,7 @@ namespace locusq::headphone_dsp
 class HeadphonePeqHook
 {
 public:
-    static constexpr int kMaxStages = 4;
+    static constexpr int kMaxStages = 8;
 
     struct Coefficients
     {
@@ -60,8 +60,15 @@ public:
         return 0;
     }
 
+    void setPreampDb (float db) noexcept
+    {
+        preampLinear = std::pow (10.0f, db / 20.0f);
+    }
+
     void setIdentityCurve() noexcept
     {
+        preampLinear = 1.0f;
+
         for (auto& stage : stages)
         {
             stage.coefficients = Coefficients {};
@@ -90,6 +97,9 @@ public:
         if (! ready || bypassed)
             return;
 
+        left  *= preampLinear;
+        right *= preampLinear;
+
         for (auto& stage : stages)
         {
             if (! stage.coefficients.active)
@@ -103,6 +113,60 @@ public:
             left = 0.0f;
         if (! std::isfinite (right))
             right = 0.0f;
+    }
+
+    static Coefficients makePeakEQ (float fc, float gainDb, float q, float sampleRate) noexcept
+    {
+        const float A     = std::sqrt (std::pow (10.0f, gainDb / 40.0f));
+        const float w0    = 2.0f * 3.14159265f * fc / sampleRate;
+        const float alpha = std::sin (w0) / (2.0f * q);
+        const float a0inv = 1.0f / (1.0f + alpha / A);
+        Coefficients c;
+        c.b0 = (1.0f + alpha * A) * a0inv;
+        c.b1 = -2.0f * std::cos (w0) * a0inv;
+        c.b2 = (1.0f - alpha * A) * a0inv;
+        c.a1 = c.b1;
+        c.a2 = (1.0f - alpha / A) * a0inv;
+        c.active = true;
+        return c;
+    }
+
+    static Coefficients makeLowShelf (float fc, float gainDb, float q, float sampleRate) noexcept
+    {
+        const float A    = std::pow (10.0f, gainDb / 40.0f);
+        const float w0   = 2.0f * 3.14159265f * fc / sampleRate;
+        const float cosw = std::cos (w0);
+        const float sinw = std::sin (w0);
+        const float alpha = sinw / (2.0f * q);
+        const float sqA  = std::sqrt (A);
+        const float a0inv = 1.0f / ((A + 1.0f) + (A - 1.0f) * cosw + 2.0f * sqA * alpha);
+        Coefficients c;
+        c.b0 = A * ((A + 1.0f) - (A - 1.0f) * cosw + 2.0f * sqA * alpha) * a0inv;
+        c.b1 = 2.0f * A * ((A - 1.0f) - (A + 1.0f) * cosw) * a0inv;
+        c.b2 = A * ((A + 1.0f) - (A - 1.0f) * cosw - 2.0f * sqA * alpha) * a0inv;
+        c.a1 = -2.0f * ((A - 1.0f) + (A + 1.0f) * cosw) * a0inv;
+        c.a2 = ((A + 1.0f) + (A - 1.0f) * cosw - 2.0f * sqA * alpha) * a0inv;
+        c.active = true;
+        return c;
+    }
+
+    static Coefficients makeHighShelf (float fc, float gainDb, float q, float sampleRate) noexcept
+    {
+        const float A    = std::pow (10.0f, gainDb / 40.0f);
+        const float w0   = 2.0f * 3.14159265f * fc / sampleRate;
+        const float cosw = std::cos (w0);
+        const float sinw = std::sin (w0);
+        const float alpha = sinw / (2.0f * q);
+        const float sqA  = std::sqrt (A);
+        const float a0inv = 1.0f / ((A + 1.0f) - (A - 1.0f) * cosw + 2.0f * sqA * alpha);
+        Coefficients c;
+        c.b0 = A * ((A + 1.0f) + (A - 1.0f) * cosw + 2.0f * sqA * alpha) * a0inv;
+        c.b1 = -2.0f * A * ((A - 1.0f) + (A + 1.0f) * cosw) * a0inv;
+        c.b2 = A * ((A + 1.0f) + (A - 1.0f) * cosw - 2.0f * sqA * alpha) * a0inv;
+        c.a1 = 2.0f * ((A - 1.0f) - (A + 1.0f) * cosw) * a0inv;
+        c.a2 = ((A + 1.0f) - (A - 1.0f) * cosw - 2.0f * sqA * alpha) * a0inv;
+        c.active = true;
+        return c;
     }
 
 private:
@@ -156,6 +220,7 @@ private:
 
     bool ready = false;
     bool bypassed = true;
+    float preampLinear = 1.0f;
     std::array<StageState, kMaxStages> stages {};
 };
 
