@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-26
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Implementation (Slice A PASS; Slice B2 RT reconciliation PASS; Slice C1 editor extraction landed; Slice D1 guardrail remediation PASS for `BL032-G-001`; remaining blocker is RT audit allowlist drift after line-map movement) |
+| Status | Done-candidate (Slice A/B/C1 complete; D1 closed `BL032-G-001`; D2 RT reconciliation PASS; E1 owner replay PASS `Ready-for-In-Validation`; F1 done-promotion PASS `Done-candidate`) |
 | Owner Track | Track F — Hardening |
 | Depends On | — |
 | Blocks | — |
@@ -93,11 +93,11 @@ No-overlap ownership rule for Slice B/C:
 ## Closeout Checklist
 
 - [x] Slice A boundary map completed with evidence (`TestEvidence/bl032_slice_a_boundary_map_<timestamp>/`)
-- [ ] Slice B-C completed with evidence
+- [x] Slice B-C completed with evidence
 - [x] `PluginProcessor.cpp` and `PluginEditor.cpp` reduced to bounded orchestration roles
-- [ ] Validation lanes pass with recorded evidence
+- [x] Validation lanes pass with recorded evidence
 - [ ] `status.json` and `Documentation/backlog/index.md` synchronized
-- [ ] `./scripts/validate-docs-freshness.sh` passes
+- [x] `./scripts/validate-docs-freshness.sh` passes
 
 ## Slice A Integration Snapshot (2026-02-25)
 
@@ -204,3 +204,49 @@ No-overlap ownership rule for Slice B/C:
 - Blocker classification:
   - guardrail blocker `BL032-G-001` is closed.
   - RT gate regressed due deterministic allowlist line-map drift after large line movement; remediation requires owner-authorized `scripts/` allowlist update lane.
+
+## Slice D2 RT Gate Reconciliation Snapshot (2026-02-26)
+
+- Worker packet: `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/status.tsv`
+- Result: `PASS`
+- Validation outcomes:
+  1. `./scripts/rt-safety-audit.sh --print-summary --output .../rt_before.tsv` => `PASS` (captured pre-reconcile baseline `non_allowlisted=92`)
+  2. `./scripts/rt-safety-audit.sh --print-summary --output .../rt_after.tsv` => `PASS` (`non_allowlisted=0`)
+  3. `./scripts/validate-docs-freshness.sh` => `PASS`
+- Reconciliation detail:
+  - deterministic allowlist line-map drift from Slice D1 refactor is closed via explicit `scripts/rt-safety-allowlist.txt` updates.
+  - evidence bundle includes before/after reports, delta classification, and blocker-resolution notes under `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/`.
+- Owner disposition:
+  - active RT blocker from Slice D1 is closed.
+  - BL-032 remains in implementation pending a fresh owner replay/promotion decision slice.
+
+## Slice E1 Owner Replay Readiness Snapshot (2026-02-26)
+
+- Owner replay packet: `TestEvidence/bl032_owner_replay_e1_20260226T151756Z/status.tsv`
+- Result: `PASS`
+- Decision: `Ready-for-In-Validation`
+- Validation outcomes:
+  1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` => `PASS`
+  2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS`
+  3. `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir .../guardrails` => `PASS`
+  4. `./scripts/rt-safety-audit.sh --print-summary --output .../rt_audit.tsv` => `PASS` (`non_allowlisted=0`)
+  5. `./scripts/validate-docs-freshness.sh` => `PASS`
+- Owner disposition:
+  - BL-032 advances from `In Implementation` to `In Validation`.
+  - Next gate is final done-promotion packet after sustained replay confidence.
+
+## Slice F1 Done Promotion Packet Snapshot (2026-02-26)
+
+- Promotion packet: `TestEvidence/bl032_done_promotion_f1_20260226T152552Z/status.tsv`
+- Result: `PASS`
+- Decision: `Done-candidate`
+- Validation outcomes:
+  1. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` => `PASS`
+  2. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS`
+  3. `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir .../guardrails` => `PASS`
+  4. `./scripts/rt-safety-audit.sh --print-summary --output .../rt_audit.tsv` => `PASS` (`non_allowlisted=0`)
+  5. `./scripts/validate-docs-freshness.sh` => `PASS`
+- Owner disposition:
+  - BL-032 satisfies done-promotion validation criteria on current branch.
+  - Owner synchronization is complete; backlog posture is now `Done-candidate`.
+  - Final transition to `Done` requires a dedicated final owner promotion packet.

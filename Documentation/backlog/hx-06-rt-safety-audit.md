@@ -2,7 +2,7 @@ Title: HX-06 RT Safety Audit Reconciliation Ledger
 Document Type: Backlog Support
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-27
 
 # HX-06 RT Safety Audit Reconciliation Ledger
 
@@ -94,3 +94,85 @@ Canonical HX-06 implementation runbook remains:
 
 - Reconciliation used explicit `file:line:rule` entries only (no wildcard rules).
 - This pass re-aligned RT allowlist line drift on the current BL-034 branch map after owner replay.
+
+## BL-032 D2 Reconciliation (2026-02-26)
+
+- Evidence root: `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/`
+- Baseline (`rt_before.tsv`): `non_allowlisted=92`
+- Post-reconcile (`rt_after.tsv`): `non_allowlisted=0`
+- Allowlist file updated: `scripts/rt-safety-allowlist.txt`
+- Delta ledger: `allowlist_delta.md`
+
+### Delta Classification Summary
+
+| Class | Count | Meaning |
+|---|---:|---|
+| `baseline_debt` | 0 | No additional lexical false-positive entries were required in this pass |
+| `intentional_current_behavior` | 92 | Non-audio-thread allocations/container setup entries shifted by current branch line-map changes |
+
+### Notes
+
+- Reconciliation used explicit `file:line:rule` entries only (no wildcard rules).
+- This pass cleared the BL-032 D1 RT blocker by restoring `non_allowlisted=0` on the current branch map.
+
+## BL-020 C2 Reconciliation (2026-02-26)
+
+- Evidence root: `TestEvidence/bl020_rt_gate_c2_20260226T193025Z/`
+- Baseline (`rt_before.tsv`): `non_allowlisted=85`
+- Post-reconcile (`rt_after.tsv`): `non_allowlisted=0`
+- Allowlist file updated: `scripts/rt-safety-allowlist.txt`
+- Delta ledger: `allowlist_delta.md`
+
+### Delta Classification Summary
+
+| Class | Count | Meaning |
+|---|---:|---|
+| `baseline_debt` | 1 | Static lexical false-positive match in comment text |
+| `intentional_current_behavior` | 84 | Non-audio-thread allocation/container setup paths currently relied on by runtime construction |
+
+### Notes
+
+- Reconciliation used explicit `file:line:rule` entries only (no wildcard rules).
+- Entry set matched both inputs exactly before allowlist update:
+  - `TestEvidence/bl020_slice_c1_native_20260226T174052Z/rt_audit.tsv`
+  - `TestEvidence/owner_sync_bl030_bl020_bl023_n9_20260226T192237Z/rt_audit.tsv`
+
+## BL-035 D2 Reconciliation (2026-02-26)
+
+- Evidence root: `TestEvidence/bl035_rt_gate_d2_20260226T233641Z/`
+- Baseline (`rt_before.tsv`): `non_allowlisted=87`
+- Post-reconcile (`rt_after.tsv`): `non_allowlisted=0`
+- Allowlist file updated: `scripts/rt-safety-allowlist.txt`
+- Delta ledger: `allowlist_delta.md`
+
+### Delta Classification Summary
+
+| Class | Count | Meaning |
+|---|---:|---|
+| `baseline_debt` | 1 | Static lexical false-positive in comment text |
+| `intentional_current_behavior` | 86 | Non-audio-thread allocation/container setup entries shifted by current branch line-map changes |
+
+### Notes
+
+- Reconciliation used explicit `file:line:rule` entries only (no wildcard rules).
+- This pass cleared BL-035 Slice D RT blocker caused by allowlist line-map drift on current branch snapshot.
+
+## BL-035 D5b Reconciliation (2026-02-27)
+
+- Evidence root: `TestEvidence/bl035_rt_gate_d5b_20260227T001744Z/`
+- Baseline (`rt_before.tsv`): `non_allowlisted=74`
+- Post-reconcile (`rt_after.tsv`): `non_allowlisted=0`
+- Allowlist file updated: `scripts/rt-safety-allowlist.txt`
+- Delta ledger: `allowlist_delta.md`
+
+### Delta Classification Summary
+
+| Class | Count | Meaning |
+|---|---:|---|
+| `baseline_debt` | 2 | Static lexical false-positives in lock-free diagnostic/comment text |
+| `intentional_current_behavior` | 72 | Non-audio-thread allocation/container setup entries shifted by current branch line-map changes |
+
+### Notes
+
+- Reconciliation used explicit `file:line:rule` entries only (no wildcard rules).
+- Requested input pattern `TestEvidence/bl035_slice_d5_integrated_<timestamp>/` was absent in workspace; reconciliation source was the live baseline `rt_before.tsv` generated in this D5b slice.
