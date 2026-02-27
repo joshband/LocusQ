@@ -2745,6 +2745,35 @@ const juce::String LocusQAudioProcessor::getProgramName (int) { return {}; }
 void LocusQAudioProcessor::changeProgramName (int, const juce::String&) {}
 
 //==============================================================================
+// Task 8 — Headphone calibration parameter state persistence audit (2026-02-27)
+// -----------------------------------------------------------------------
+// The Task 8 spec named three logical parameters that must survive DAW
+// session save/restore:
+//
+//   hp_eq_mode            → maps to APVTS "rend_headphone_mode"  (AudioParameterChoice)
+//   hp_profile_index      → maps to APVTS "rend_headphone_profile" (AudioParameterChoice)
+//   hp_calibration_enabled → runtime flag on SpatialRenderer
+//                            (isHeadphoneCalibrationEnabledRequested / setHeadphoneCalibrationEnabled)
+//                            that is NOT backed by an APVTS parameter and is NOT currently
+//                            wired from any APVTS parameter or bridge message; its initial
+//                            value defaults to SpatialRenderer's constructor default.
+//
+// "rend_headphone_mode" and "rend_headphone_profile" are registered APVTS parameters
+// (createParameterLayout lines ~3079-3085) and are therefore included in the ValueTree
+// returned by apvts.copyState() below.  They require NO additional manual serialisation.
+//
+// "hp_calibration_enabled" (aka isHeadphoneCalibrationEnabledRequested) has no APVTS
+// backing today.  If it needs to persist it must be added as an APVTS parameter or
+// serialised manually here.  No such serialisation is added in this task because:
+//   (a) setHeadphoneCalibrationEnabled is never called from a DAW-controllable path,
+//   (b) default (disabled) is the safe startup value, and
+//   (c) adding premature manual serialisation risks a state-format mismatch on next
+//       refactor.  The backlog item for full calibration persistence is BL-038.
+//
+// Schema note: the state version is currently encoded as the string property
+// kSnapshotSchemaValueV2 ("locusq-state-v2").  No schema bump is required by this
+// task because no new keys were added; the existing APVTS keys were already present
+// in v2 sessions.
 void LocusQAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
