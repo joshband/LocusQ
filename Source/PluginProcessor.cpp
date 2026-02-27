@@ -2671,6 +2671,39 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         spatialRenderer.setHeadphoneCalibrationEnabled (false);
     }
 
+    // SOFA HRTF mode: read hp_hrtf_mode and sofa_ref from the profile.
+    // These fields are written by the companion app when HeadphoneDeviceProfile::CustomSOFA
+    // is selected and an HRTF file has been identified via the SADIE II dataset.
+    //
+    // hp_hrtf_mode: "default" | "sofa"
+    // sofa_ref:     relative path under ~/Library/Application Support/LocusQ/sofa/
+    //               (e.g. "SADIE_D1_HRIR_48k.sofa")
+    //
+    // TODO(Task 13): Once the SpatialRenderer SOFA swap hook is wired (see the
+    // TODO(Task 13) comment in SpatialRenderer.h :: initSteamAudioRuntime()), forward
+    // these values to the renderer here:
+    //
+    //   const auto hrtfMode = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
+    //   const auto sofaRef  = headphone->getProperty ("sofa_ref").toString().trim();
+    //   if (hrtfMode == "sofa" && sofaRef.isNotEmpty())
+    //       spatialRenderer.setPendingSofaRef (sofaRef);   // method to be added in follow-up
+    //   else
+    //       spatialRenderer.clearPendingSofaRef();
+    //
+    // The sofa_ref is resolved at runtime to an absolute path:
+    //   ~/Library/Application Support/LocusQ/sofa/<sofa_ref>
+    // The loader gracefully returns valid=false if the file is absent (new device / not yet downloaded).
+    {
+        const auto hrtfMode = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
+        const auto sofaRef  = headphone->getProperty ("sofa_ref").toString().trim();
+        // Log for diagnostics only; active wiring deferred until SpatialRenderer hook is complete.
+        if (hrtfMode == "sofa" && sofaRef.isNotEmpty())
+        {
+            DBG ("LocusQ: CalibrationProfile requests SOFA HRTF: " + sofaRef
+                 + " (wiring deferred — see TODO(Task 13) in SpatialRenderer.h)");
+        }
+    }
+
     companionCalibrationProfileLastModifiedMs = modifiedMs;
 }
 

@@ -3694,6 +3694,35 @@ private:
         hrtfSettings.volume = 1.0f;
         hrtfSettings.normType = IPL_HRTFNORMTYPE_RMS;
 
+        // TODO(Task 13): SOFA HRTF swap hook.
+        //
+        // When hp_hrtf_mode == "sofa" and a sofa_ref path is available (delivered
+        // from CalibrationProfile.json via pollCompanionCalibrationProfileFromDisk),
+        // replace the DEFAULT HRTF type with a SOFA-backed one:
+        //
+        //   const auto sofaAbsPath = juce::File (
+        //       juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+        //           .getChildFile ("LocusQ/sofa")
+        //           .getChildFile (sofaRefRelativePath)).getFullPathName().toStdString();
+        //
+        //   // Load via locusq::dsp::loadSofaFile() from Source/dsp/SofaHrtfLoader.h
+        //   // (include that header only from an isolated .cpp, not here).
+        //   // On success (result.valid == true), set:
+        //   //   hrtfSettings.type       = IPL_HRTFTYPE_SOFA;
+        //   //   hrtfSettings.sofaFileName = sofaAbsPath.c_str();  // phonon.h field
+        //   // On failure, fall through to IPL_HRTFTYPE_DEFAULT (current behaviour).
+        //
+        // Prerequisite: SpatialRenderer needs a member `juce::String pendingSofaRef`
+        // populated by the processor when the CalibrationProfile changes, plus a
+        // `bool pendingHrtfIsSofa` flag, both written from the message thread and
+        // read here on the audio thread under a memory_order_relaxed atomic or
+        // equivalent lock strategy consistent with HX-06 RT-safety audit.
+        //
+        // The full wiring is deferred to a follow-up task because it requires
+        // cross-thread state (sofa_ref string) to be communicated safely to the
+        // Steam Audio init path which runs on the audio thread.
+        // See: Source/dsp/SofaHrtfLoader.h for the loader infrastructure.
+
         setSteamInitStage (SteamInitStage::CreatingHRTF, 0);
         const auto hrtfStatus = iplHRTFCreateFn (steamContext, &audioSettings, &hrtfSettings, &steamHrtf);
         if (hrtfStatus != IPL_STATUS_SUCCESS || steamHrtf == nullptr)
