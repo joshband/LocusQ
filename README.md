@@ -2,7 +2,7 @@ Title: LocusQ Root README
 Document Type: Project README
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # LocusQ
 
@@ -153,3 +153,5 @@ For headphone contract validation:
 - `Documentation/scene-state-contract.md`
 - `Documentation/invariants.md`
 - `Documentation/adr/`
+- `Documentation/backlog/index.md` (canonical backlog status)
+- `TestEvidence/bl052_owner_sync_z1_20260228T175701Z/status.tsv` (BL-052 done closeout packet)

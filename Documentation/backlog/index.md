@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28 (BL-052 done archive sync)
 
 # LocusQ Master Backlog Index
 
@@ -55,6 +55,7 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 | 19 | BL-049 | Unit test framework and tracker automation | P1 | In Planning (derived from full architecture review 2026-02-26 gap G-16/G-17) | D | BL-042 | — | [bl-049](bl-049-unit-test-framework-and-tracker-automation.md) |
 | 20 | BL-050 | High-rate delay and FIR hardening | P2 | In Planning (derived from full architecture review 2026-02-26 gap G-14/G-24) | F | BL-043 (Done), BL-046 | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
 | 21 | BL-051 | Ambisonics and ADM roadmap | P3 | In Planning (derived from full architecture review 2026-02-26 gap G-20/G-21/G-24 follow-on) | E | BL-046, BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
+| 22 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 
 ## Dependency Graph
 
@@ -261,6 +262,7 @@ Any status change must update in the same changeset:
 | BL-049 | `(pending annex spec)` |
 | BL-050 | `(pending annex spec)` |
 | BL-051 | `(pending annex spec)` |
+| BL-052 | `(no annex spec — self-contained runbook)` |
 
 ## Closed Archive
 
@@ -296,6 +298,7 @@ Any status change must update in the same changeset:
 | BL-033 | Headphone calibration core path | 2026-02-26 | [bl-033](done/bl-033-headphone-calibration-core.md) |
 | BL-034 | Headphone calibration verification and profile governance | 2026-02-26 | [bl-034](done/bl-034-headphone-calibration-verification.md) |
 | BL-043 | FDN sample-rate integrity | 2026-02-26 | [bl-043](done/bl-043-fdn-sample-rate-integrity.md) |
+| BL-052 | Steam Audio virtual surround + quad layout | 2026-02-28 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |
 | HX-03 | REAPER multi-instance stability lane | 2026-02-23 | [hx-03](done/hx-03-reaper-multi-instance.md) |

@@ -2,9 +2,19 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # LocusQ Build Summary (Acceptance Closeout)
+
+## BL-052 Done Archive Sync Z1 (UTC 2026-02-28)
+
+1. Runbook archive move: `Documentation/backlog/bl-052-steam-audio-virtual-surround-quad-layout.md` -> `Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md`
+2. Backlog index synchronization: active queue + closed archive entries updated for BL-052.
+3. Owner closeout packet: `TestEvidence/bl052_owner_sync_z1_20260228T175701Z/` (status, validation matrix, owner decision, handoff resolution, promotion decision).
+4. Governance gates:
+   - `jq empty status.json` => PASS
+   - `./scripts/validate-docs-freshness.sh` => PASS
+5. BL-052 remains **Done** with lifecycle closeout normalized.
 
 Date (UTC): `2026-02-20`
 

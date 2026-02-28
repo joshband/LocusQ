@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # Changelog
 
@@ -31,6 +31,12 @@ Operational snapshot:
   - Includes fresh `P0-P2` prioritization, dependency graphs, parallel agent tracks, and per-task Codex/Claude mega-prompts.
 
 ### Changed
+
+- BL-052 Steam Audio virtual surround + quad layout done closeout normalized (2026-02-28):
+  - runbook archived to `Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md`.
+  - backlog index synchronized (active queue + closed archive row).
+  - owner closeout packet published at `TestEvidence/bl052_owner_sync_z1_20260228T175701Z/`.
+  - governance gates PASS (`jq empty status.json`, `./scripts/validate-docs-freshness.sh`).
 
 - BL-025 and BL-014 closeout promotion completed (2026-02-24):
   - backlog/state promoted both P0 rows to `Done`.
