@@ -1,0 +1,8 @@
+check_id	result	detail
+BL052-Z1-001_packet_artifacts_present	PASS	status.tsv, validation_matrix.tsv, owner_decisions.md, handoff_resolution.md, promotion_decision.md present
+BL052-Z1-002_runbook_archived_to_done	PASS	Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md
+BL052-Z1-003_index_done_sync	PASS	BL-052 row + closed-archive entry updated in Documentation/backlog/index.md
+BL052-Z1-004_docs_freshness	PASS	see docs_freshness.log
+BL052-Z1-005_status_schema	PASS	see status_json.log
+BL052-Z1-006_evidence_localized	PASS	canonical evidence under TestEvidence/bl052_*/ and owner packet path
+BL052-Z1-007_shared_files_touched_marker	PASS	SHARED_FILES_TOUCHED: no
