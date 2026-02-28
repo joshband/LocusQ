@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28 (BL-064/065/066 I3 payload materialization sync)
+Last Modified Date: 2026-02-28 (BL-053..BL-060 queue reconciliation + head-tracking methodology sync)
 
 # LocusQ Master Backlog Index
 
@@ -90,9 +90,9 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 1 | BL-030 | Release governance and device rerun | P2 | **Done** (N15 owner authoritative confirm `UNANIMOUS_PASS`; RL-03..RL-09 closeout matrix PASS; release decision `GO`) | G | BL-024, BL-025, HX-06 | — | [bl-030](done/bl-030-release-governance.md) |
 | 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Implementation (C1 additive native bridge intake integrated; build/smoke PASS; RT gate still red `non_allowlisted=85` in owner N9 replay) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
-| 4 | BL-023 | Resize/DPI hardening | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with deterministic signatures and zero row drift) | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
+| 4 | BL-023 | Resize/DPI hardening | P2 | **Done** (A2 runtime/UI hardening complete; T3 heavy-wrapper equivalent replay PASS; strict usage exits and mode parity confirmed) | C | BL-025 | — | [bl-023](done/bl-023-resize-dpi-hardening.md) |
 | 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (D1 guardrail remediation PASS, D2 RT reconciliation PASS, E1 owner replay PASS, F1 done-promotion PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
-| 6 | BL-035 | RT lock-free registration | P0 | In Implementation (owner D6 replay keeps build/smoke/selftest/RT/schema green and `BL035-A-001/A-002` closed, but docs freshness gate fails on external metadata debt in `TestEvidence/bl030_rl05_manual_closure_g5_20260225T210303Z/harness_contract.md`) | F | HX-02, BL-032 | — | [bl-035](bl-035-rt-lock-free-registration.md) |
+| 6 | BL-035 | RT lock-free registration | P0 | In Validation (D8 owner readiness replay PASS on build/smoke/selftest/RT/docs; `non_allowlisted=0`; D7 blockers cleared) | F | HX-02, BL-032 | — | [bl-035](bl-035-rt-lock-free-registration.md) |
 | 7 | BL-036 | DSP finite output guardrails | P0 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-036](bl-036-dsp-finite-output-guardrails.md) |
 | 8 | BL-037 | Emitter snapshot CPU budget | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-037](bl-037-emitter-snapshot-cpu-budget.md) |
 | 9 | BL-038 | Calibration threading and telemetry | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | E | BL-026, BL-034 | — | [bl-038](bl-038-calibration-threading-and-telemetry.md) |
@@ -107,13 +107,21 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 18 | BL-048 | Cross-platform shipping hardening | P1 | **Done** (Z16b e2e promotion reconcile PASS; Z17 owner done-promotion PASS) | G | BL-030, BL-042 | — | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | 19 | BL-049 | Unit test framework and tracker automation | P1 | **Done** (D2 done-promotion parity PASS; Z17 owner done-promotion PASS) | D | BL-042 | — | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
 | 20 | BL-050 | High-rate delay and FIR hardening | P2 | In Planning (derived from full architecture review 2026-02-26 gap G-14/G-24) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
-| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | In Validation (A1b owner intake accepted; A2 contract drafted; ADR-0014 formalized; C1 decomposition complete; WI lanes registered as BL-062..BL-066) | E | BL-046 (Done), BL-050 | BL-062, BL-064, BL-065 | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
-| 22 | BL-062 | Ambisonics IR interface contract | P2 | In Implementation (I1 contract snapshot scaffold landed; bridge telemetry schema published for downstream lanes) | E | BL-051 | BL-063 | [bl-062](bl-062-ambisonics-ir-interface-contract.md) |
-| 23 | BL-063 | Ambisonics renderer compatibility guardrails | P2 | In Implementation (I1 guardrail telemetry emitted; deterministic blocker/status contract published) | E | BL-062 | BL-066 | [bl-063](bl-063-ambisonics-renderer-compatibility-guardrails.md) |
-| 24 | BL-064 | ADM mapping contract | P2 | In Implementation (I3 runtime payload materialization landed; ADM payload object metadata now emitted for intake/verification lanes) | E | BL-051 | BL-066 | [bl-064](bl-064-adm-mapping-contract.md) |
-| 25 | BL-065 | IAMF mapping contract | P2 | In Implementation (I3 runtime payload materialization landed; IAMF payload element metadata now emitted for intake/verification lanes) | E | BL-051 | BL-066 | [bl-065](bl-065-iamf-mapping-contract.md) |
-| 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | In Implementation (I3 intake gate now composes concrete ADM/IAMF runtime payload objects with execution guard signals) | E | BL-063, BL-064, BL-065 | — | [bl-066](bl-066-ambisonics-adm-pilot-execution-intake.md) |
+| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | Done-candidate (BL-062..BL-066 promoted to Done; parent lane reconciled; BL-050 dependency remains open) | E | BL-046 (Done), BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
+| 22 | BL-062 | Ambisonics IR interface contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-063 | [bl-062](done/bl-062-ambisonics-ir-interface-contract.md) |
+| 23 | BL-063 | Ambisonics renderer compatibility guardrails | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-062 | BL-066 | [bl-063](done/bl-063-ambisonics-renderer-compatibility-guardrails.md) |
+| 24 | BL-064 | ADM mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-064](done/bl-064-adm-mapping-contract.md) |
+| 25 | BL-065 | IAMF mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-065](done/bl-065-iamf-mapping-contract.md) |
+| 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-063, BL-064, BL-065 | — | [bl-066](done/bl-066-ambisonics-adm-pilot-execution-intake.md) |
 | 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done-candidate) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
+| 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual listening acceptance pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
+| 29 | BL-054 | PEQ cascade RT integration | P1 | Open | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
+| 30 | BL-055 | FIR convolution engine | P1 | Open | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
+| 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
+| 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | Open | E | BL-046 | BL-058 | [bl-057](bl-057-device-preset-library.md) |
+| 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P1 | Open | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
+| 34 | BL-059 | CalibrationProfile integration handoff | P1 | Open | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
+| 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 
 ## Dependency Graph
 
@@ -137,6 +145,7 @@ graph TD
         BL-024[BL-024 Done]
         BL-025[BL-025 Done]
         BL-029[BL-029 Done]
+        BL-023[BL-023 Resize/DPI Hardening Done]
         BL-028[BL-028 Done]
         BL-033[BL-033 Headphone Core Done]
         BL-034[BL-034 Headphone Verification Done]
@@ -168,10 +177,17 @@ graph TD
     subgraph "In Implementation / Open"
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
-        BL-023[BL-023 Resize/DPI]
         BL-035[BL-035 RT Lock-Free Registration]
         BL-050[BL-050 High-Rate Delay/FIR]
         BL-051[BL-051 Ambisonics + ADM]
+        BL-053[BL-053 Head Tracking Orientation Injection]
+        BL-054[BL-054 PEQ Cascade RT Integration]
+        BL-055[BL-055 FIR Convolution Engine]
+        BL-056[BL-056 Calibration State Migration + Latency]
+        BL-057[BL-057 Device Preset Library]
+        BL-058[BL-058 Companion Profile Acquisition]
+        BL-059[BL-059 CalibrationProfile Integration Handoff]
+        BL-060[BL-060 Phase B Listening Test Harness]
         BL-062[BL-062 Ambisonics IR Contract]
         BL-063[BL-063 Renderer Compatibility Guardrails]
         BL-064[BL-064 ADM Mapping Contract]
@@ -235,6 +251,19 @@ graph TD
     BL-046 --> BL-050
     BL-046 --> BL-051
     BL-050 --> BL-051
+    BL-045 --> BL-053
+    BL-052 --> BL-053
+    BL-052 --> BL-054
+    BL-054 --> BL-056
+    BL-055 --> BL-056
+    BL-046 --> BL-057
+    BL-057 --> BL-058
+    BL-053 --> BL-059
+    BL-054 --> BL-059
+    BL-055 --> BL-059
+    BL-056 --> BL-059
+    BL-058 --> BL-059
+    BL-059 --> BL-060
     BL-051 --> BL-062
     BL-062 --> BL-063
     BL-051 --> BL-064
@@ -255,9 +284,9 @@ graph TD
 |---|---|---|---|
 | A | Runtime Formats | BL-046 | `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
 | B | Scene/UI Runtime | BL-039, BL-040 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
-| C | UX Authoring | BL-023 | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
+| C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
-| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-062, BL-063, BL-064, BL-065, BL-066 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
+| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-062, BL-063, BL-064, BL-065, BL-066 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs` |
 | F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030, BL-042, BL-048 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
 
@@ -333,6 +362,14 @@ Any status change must update in the same changeset:
 | BL-050 | `(pending annex spec)` |
 | BL-051 | `(pending annex spec)` |
 | BL-052 | `(no annex spec — self-contained runbook)` |
+| BL-053 | `(no annex spec — self-contained runbook)` |
+| BL-054 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
+| BL-055 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
+| BL-056 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md`; `Documentation/plans/calibration-profile-schema-v1.md` |
+| BL-057 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
+| BL-058 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md`; `Documentation/plans/calibration-profile-schema-v1.md` |
+| BL-059 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md`; `Documentation/plans/calibration-profile-schema-v1.md` |
+| BL-060 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
 
 ## Closed Archive
 

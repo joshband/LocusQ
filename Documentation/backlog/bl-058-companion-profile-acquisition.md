@@ -30,6 +30,19 @@ Build guided ear-photo capture UI in companion app (left ear + right ear + front
 - fallback subject used when similarity <0.6
 - images not persisted to disk after embedding
 - privacy: no network calls
+- top/T viewport head-tracking arrow is derived from quaternion forward projected onto XZ plane (not serialized yaw only)
+- stale pose packets do not continue rotating head/arrow visuals; stale state renders explicit fallback orientation
+
+## Methodology Reference
+
+- Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Additional review baselines:
+  - `Documentation/reviews/2026-02-26-full-architecture-review.md`
+  - `Documentation/reviews/LocusQ Repo Review 02262026.md`
+- Companion execution for this backlog item must include math/visualization sanity checks:
+  - synthetic pure yaw/pitch/roll axis sweeps,
+  - sensor-location transition diagnostics,
+  - Three.js frame-contract verification (+X right, +Y up, -Z ahead).
 
 
 ## Validation Plan

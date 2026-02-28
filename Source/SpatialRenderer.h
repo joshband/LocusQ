@@ -25,6 +25,21 @@
 
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
  #include <phonon.h>
+#else
+struct IPLVector3
+{
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+};
+
+struct IPLCoordinateSpace3
+{
+    IPLVector3 right { 1.0f, 0.0f, 0.0f };
+    IPLVector3 up { 0.0f, 1.0f, 0.0f };
+    IPLVector3 ahead { 0.0f, 0.0f, -1.0f };
+    IPLVector3 origin { 0.0f, 0.0f, 0.0f };
+};
 #endif
 
 //==============================================================================
@@ -84,6 +99,17 @@ public:
         FallbackQuad = 2,
         AmbiDecodeStereo = 3,
         CodecLayoutPlaceholder = 4
+    };
+    enum class AmbisonicNormalization : int
+    {
+        SN3D = 0,
+        N3D = 1
+    };
+    enum class CodecMappingMode : int
+    {
+        None = 0,
+        ADM = 1,
+        IAMF = 2
     };
     enum class SteamInitStage : int
     {
@@ -168,6 +194,59 @@ public:
         std::array<float, MAX_AUDITION_REACTIVE_SOURCES> sourceEnergy {};
     };
 
+    struct AmbisonicIrContractSnapshot
+    {
+        std::uint64_t frameId = 0;
+        std::uint64_t timestampSamples = 0;
+        int order = 0;
+        int normalizationIndex = static_cast<int> (AmbisonicNormalization::SN3D);
+        int channelCount = 0;
+        int requestedSpatialProfileIndex = static_cast<int> (SpatialOutputProfile::Auto);
+        int activeSpatialProfileIndex = static_cast<int> (SpatialOutputProfile::Auto);
+        int activeSpatialStageIndex = static_cast<int> (SpatialProfileStage::Direct);
+        int requestedHeadphoneModeIndex = static_cast<int> (HeadphoneRenderMode::StereoDownmix);
+        int activeHeadphoneModeIndex = static_cast<int> (HeadphoneRenderMode::StereoDownmix);
+        bool steamAudioAvailable = false;
+        bool headphoneRenderAllowed = false;
+        bool fallbackActive = false;
+    };
+
+    struct CodecMappingExecutionSnapshot
+    {
+        std::uint64_t frameId = 0;
+        std::uint64_t timestampSamples = 0;
+        int modeIndex = static_cast<int> (CodecMappingMode::None);
+        int mappedChannelCount = 0;
+        int objectCount = 0;
+        int elementCount = 0;
+        bool mappingApplied = false;
+        bool fallbackActive = false;
+        bool finite = true;
+        std::uint64_t signature = 0;
+    };
+
+    struct CodecAdmRuntimePayloadSnapshot
+    {
+        bool active = false;
+        std::uint64_t frameId = 0;
+        std::uint64_t timestampSamples = 0;
+        int channelCount = 0;
+        int objectCount = 0;
+        std::array<float, NUM_SPEAKERS> objectGain {};
+        std::array<float, NUM_SPEAKERS> objectAzimuthDeg {};
+    };
+
+    struct CodecIamfRuntimePayloadSnapshot
+    {
+        bool active = false;
+        std::uint64_t frameId = 0;
+        std::uint64_t timestampSamples = 0;
+        int channelCount = 0;
+        int elementCount = 0;
+        float sceneGain = 0.0f;
+        std::array<float, 2> elementGain {};
+    };
+
     enum class AuditionReactiveHeadphoneFallbackReason : int
     {
         None = 0,
@@ -195,6 +274,44 @@ public:
         shutdown();
         currentSampleRate = sampleRate;
         currentBlockSize = maxBlockSize;
+        ambisonicIrFrameId.store (0, std::memory_order_relaxed);
+        ambisonicIrTimestampSamples.store (0, std::memory_order_relaxed);
+        ambisonicIrSampleCursor.store (0, std::memory_order_relaxed);
+        ambisonicIrOrder.store (0, std::memory_order_relaxed);
+        ambisonicIrChannelCount.store (0, std::memory_order_relaxed);
+        ambisonicIrNormalizationIndex.store (
+            static_cast<int> (AmbisonicNormalization::SN3D),
+            std::memory_order_relaxed);
+        ambisonicIrHeadphoneRenderAllowed.store (false, std::memory_order_relaxed);
+        ambisonicIrFallbackActive.store (false, std::memory_order_relaxed);
+        codecMappingFrameId.store (0, std::memory_order_relaxed);
+        codecMappingTimestampSamples.store (0, std::memory_order_relaxed);
+        codecMappingModeIndex.store (static_cast<int> (CodecMappingMode::None), std::memory_order_relaxed);
+        codecMappingMappedChannelCount.store (0, std::memory_order_relaxed);
+        codecMappingObjectCount.store (0, std::memory_order_relaxed);
+        codecMappingElementCount.store (0, std::memory_order_relaxed);
+        codecMappingApplied.store (false, std::memory_order_relaxed);
+        codecMappingFallbackActive.store (false, std::memory_order_relaxed);
+        codecMappingFinite.store (true, std::memory_order_relaxed);
+        codecMappingSignature.store (0, std::memory_order_relaxed);
+        codecAdmPayloadActive.store (false, std::memory_order_relaxed);
+        codecAdmPayloadFrameId.store (0, std::memory_order_relaxed);
+        codecAdmPayloadTimestampSamples.store (0, std::memory_order_relaxed);
+        codecAdmPayloadChannelCount.store (0, std::memory_order_relaxed);
+        codecAdmPayloadObjectCount.store (0, std::memory_order_relaxed);
+        for (int i = 0; i < NUM_SPEAKERS; ++i)
+        {
+            codecAdmPayloadObjectGain[static_cast<size_t> (i)].store (0.0f, std::memory_order_relaxed);
+            codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].store (0.0f, std::memory_order_relaxed);
+        }
+        codecIamfPayloadActive.store (false, std::memory_order_relaxed);
+        codecIamfPayloadFrameId.store (0, std::memory_order_relaxed);
+        codecIamfPayloadTimestampSamples.store (0, std::memory_order_relaxed);
+        codecIamfPayloadChannelCount.store (0, std::memory_order_relaxed);
+        codecIamfPayloadElementCount.store (0, std::memory_order_relaxed);
+        codecIamfPayloadSceneGain.store (0.0f, std::memory_order_relaxed);
+        codecIamfPayloadElementGain[0].store (0.0f, std::memory_order_relaxed);
+        codecIamfPayloadElementGain[1].store (0.0f, std::memory_order_relaxed);
 
         // Prepare per-emitter air absorption filters
         for (auto& filter : emitterAbsorption)
@@ -205,10 +322,18 @@ public:
             for (auto& g : emitterGains)
                 g.reset (sampleRate, 0.020); // 20ms gain ramp
 
+        auto ensureZeroedBuffer = [] (std::vector<float>& buffer, size_t size)
+        {
+            if (buffer.size() != size)
+                buffer = std::vector<float> (size, 0.0f);
+            else
+                std::fill (buffer.begin(), buffer.end(), 0.0f);
+        };
+
         // Prepare per-speaker delay lines
         for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
         {
-            speakerDelayLines[spk].resize (MAX_DELAY_SAMPLES, 0.0f);
+            ensureZeroedBuffer (speakerDelayLines[spk], MAX_DELAY_SAMPLES);
             delayWritePos[spk] = 0;
         }
 
@@ -232,7 +357,7 @@ public:
             trim.reset (sampleRate, 0.020);
 
         // Temp mono buffer for per-emitter processing
-        tempMonoBuffer.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+        ensureZeroedBuffer (tempMonoBuffer, static_cast<size_t> (maxBlockSize));
 
         // Prepare per-emitter doppler processors
         for (auto& doppler : emitterDoppler)
@@ -251,10 +376,12 @@ public:
         setRoomDamping (roomDamping);
         setEarlyReflectionsOnly (earlyReflectionsOnly);
 
-        steamBinauralLeft.resize (static_cast<size_t> (maxBlockSize), 0.0f);
-        steamBinauralRight.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+        ensureZeroedBuffer (steamBinauralLeft, static_cast<size_t> (maxBlockSize));
+        ensureZeroedBuffer (steamBinauralRight, static_cast<size_t> (maxBlockSize));
         for (auto& rotated : headPoseRotatedQuadScratch)
-            rotated.resize (static_cast<size_t> (maxBlockSize), 0.0f);
+            ensureZeroedBuffer (rotated, static_cast<size_t> (maxBlockSize));
+        for (auto& rotated : monitoringHeadPoseRotatedQuadScratch_)
+            ensureZeroedBuffer (rotated, static_cast<size_t> (maxBlockSize));
         resetHeadPoseState();
         resetHeadphoneCompensationState();
         for (auto& voiceGains : auditionSmoothedSpeakerGains)
@@ -791,6 +918,73 @@ public:
         return activeSpatialStageIndex.load (std::memory_order_relaxed);
     }
 
+    AmbisonicIrContractSnapshot getAmbisonicIrContractSnapshot() const noexcept
+    {
+        AmbisonicIrContractSnapshot snapshot;
+        snapshot.frameId = ambisonicIrFrameId.load (std::memory_order_relaxed);
+        snapshot.timestampSamples = ambisonicIrTimestampSamples.load (std::memory_order_relaxed);
+        snapshot.order = ambisonicIrOrder.load (std::memory_order_relaxed);
+        snapshot.normalizationIndex = ambisonicIrNormalizationIndex.load (std::memory_order_relaxed);
+        snapshot.channelCount = ambisonicIrChannelCount.load (std::memory_order_relaxed);
+        snapshot.requestedSpatialProfileIndex = requestedSpatialProfileIndex.load (std::memory_order_relaxed);
+        snapshot.activeSpatialProfileIndex = activeSpatialProfileIndex.load (std::memory_order_relaxed);
+        snapshot.activeSpatialStageIndex = activeSpatialStageIndex.load (std::memory_order_relaxed);
+        snapshot.requestedHeadphoneModeIndex = requestedHeadphoneModeIndex.load (std::memory_order_relaxed);
+        snapshot.activeHeadphoneModeIndex = activeHeadphoneModeIndex.load (std::memory_order_relaxed);
+        snapshot.steamAudioAvailable = steamAudioAvailable.load (std::memory_order_relaxed);
+        snapshot.headphoneRenderAllowed = ambisonicIrHeadphoneRenderAllowed.load (std::memory_order_relaxed);
+        snapshot.fallbackActive = ambisonicIrFallbackActive.load (std::memory_order_relaxed);
+        return snapshot;
+    }
+
+    CodecMappingExecutionSnapshot getCodecMappingExecutionSnapshot() const noexcept
+    {
+        CodecMappingExecutionSnapshot snapshot;
+        snapshot.frameId = codecMappingFrameId.load (std::memory_order_relaxed);
+        snapshot.timestampSamples = codecMappingTimestampSamples.load (std::memory_order_relaxed);
+        snapshot.modeIndex = codecMappingModeIndex.load (std::memory_order_relaxed);
+        snapshot.mappedChannelCount = codecMappingMappedChannelCount.load (std::memory_order_relaxed);
+        snapshot.objectCount = codecMappingObjectCount.load (std::memory_order_relaxed);
+        snapshot.elementCount = codecMappingElementCount.load (std::memory_order_relaxed);
+        snapshot.mappingApplied = codecMappingApplied.load (std::memory_order_relaxed);
+        snapshot.fallbackActive = codecMappingFallbackActive.load (std::memory_order_relaxed);
+        snapshot.finite = codecMappingFinite.load (std::memory_order_relaxed);
+        snapshot.signature = codecMappingSignature.load (std::memory_order_relaxed);
+        return snapshot;
+    }
+
+    CodecAdmRuntimePayloadSnapshot getCodecAdmRuntimePayloadSnapshot() const noexcept
+    {
+        CodecAdmRuntimePayloadSnapshot snapshot;
+        snapshot.active = codecAdmPayloadActive.load (std::memory_order_relaxed);
+        snapshot.frameId = codecAdmPayloadFrameId.load (std::memory_order_relaxed);
+        snapshot.timestampSamples = codecAdmPayloadTimestampSamples.load (std::memory_order_relaxed);
+        snapshot.channelCount = codecAdmPayloadChannelCount.load (std::memory_order_relaxed);
+        snapshot.objectCount = codecAdmPayloadObjectCount.load (std::memory_order_relaxed);
+        for (int i = 0; i < NUM_SPEAKERS; ++i)
+        {
+            snapshot.objectGain[static_cast<size_t> (i)] =
+                codecAdmPayloadObjectGain[static_cast<size_t> (i)].load (std::memory_order_relaxed);
+            snapshot.objectAzimuthDeg[static_cast<size_t> (i)] =
+                codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].load (std::memory_order_relaxed);
+        }
+        return snapshot;
+    }
+
+    CodecIamfRuntimePayloadSnapshot getCodecIamfRuntimePayloadSnapshot() const noexcept
+    {
+        CodecIamfRuntimePayloadSnapshot snapshot;
+        snapshot.active = codecIamfPayloadActive.load (std::memory_order_relaxed);
+        snapshot.frameId = codecIamfPayloadFrameId.load (std::memory_order_relaxed);
+        snapshot.timestampSamples = codecIamfPayloadTimestampSamples.load (std::memory_order_relaxed);
+        snapshot.channelCount = codecIamfPayloadChannelCount.load (std::memory_order_relaxed);
+        snapshot.elementCount = codecIamfPayloadElementCount.load (std::memory_order_relaxed);
+        snapshot.sceneGain = codecIamfPayloadSceneGain.load (std::memory_order_relaxed);
+        snapshot.elementGain[0] = codecIamfPayloadElementGain[0].load (std::memory_order_relaxed);
+        snapshot.elementGain[1] = codecIamfPayloadElementGain[1].load (std::memory_order_relaxed);
+        return snapshot;
+    }
+
     bool isSteamAudioAvailable() const noexcept
     {
         return steamAudioAvailable.load (std::memory_order_relaxed);
@@ -932,6 +1126,167 @@ public:
         }
 
         return "direct";
+    }
+
+    static const char* ambisonicNormalizationToString (int normalizationIndex) noexcept
+    {
+        switch (juce::jlimit (0, 1, normalizationIndex))
+        {
+            case static_cast<int> (AmbisonicNormalization::N3D): return "n3d";
+            case static_cast<int> (AmbisonicNormalization::SN3D):
+            default:
+                break;
+        }
+
+        return "sn3d";
+    }
+
+    static const char* codecMappingModeToString (int modeIndex) noexcept
+    {
+        switch (juce::jlimit (0, 2, modeIndex))
+        {
+            case static_cast<int> (CodecMappingMode::ADM): return "adm";
+            case static_cast<int> (CodecMappingMode::IAMF): return "iamf";
+            case static_cast<int> (CodecMappingMode::None):
+            default:
+                break;
+        }
+
+        return "none";
+    }
+
+    //==========================================================================
+    // BL-052: RT-safe quad-to-binaural for calibration monitoring
+    //==========================================================================
+    // Apply virtual surround to external quad input (Steam canonical channel order
+    // FL, FR, RL, RR). outL and outR must point to caller-allocated arrays of at
+    // least numSamples floats. Returns true if rendering succeeded; false when
+    // Steam Audio is unavailable (caller should apply a fallback path).
+    // listenerOrientation is optional; when supplied, the quad bed is first
+    // rotated into the listener frame represented by IPLCoordinateSpace3.
+    //
+    // RT-safe: no allocation. quadChannels must remain valid for the duration of
+    // the call. Concurrent calls from multiple threads are not safe.
+    bool renderVirtualSurroundForMonitoring (const float* const* quadChannels,
+                                             float* outL,
+                                             float* outR,
+                                             int numSamples,
+                                             const IPLCoordinateSpace3* listenerOrientation = nullptr) noexcept
+    {
+#if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
+        if (! steamAudioRuntimeReady
+            || steamVirtualSurroundEffect == nullptr
+            || iplVirtualSurroundEffectApplyFn == nullptr
+            || quadChannels == nullptr
+            || outL == nullptr
+            || outR == nullptr
+            || numSamples <= 0
+            || numSamples > currentBlockSize)
+        {
+            return false;
+        }
+
+        if (quadChannels[0] == nullptr
+            || quadChannels[1] == nullptr
+            || quadChannels[2] == nullptr
+            || quadChannels[3] == nullptr)
+        {
+            return false;
+        }
+
+        if (static_cast<int> (monitoringHeadPoseRotatedQuadScratch_[0].size()) < numSamples
+            || static_cast<int> (monitoringHeadPoseRotatedQuadScratch_[1].size()) < numSamples
+            || static_cast<int> (monitoringHeadPoseRotatedQuadScratch_[2].size()) < numSamples
+            || static_cast<int> (monitoringHeadPoseRotatedQuadScratch_[3].size()) < numSamples)
+        {
+            return false;
+        }
+
+        // Avoid in-place aliasing between quad input pointers and output L/R when
+        // monitoring is applied to the same host buffer.
+        std::copy_n (quadChannels[0], numSamples, monitoringHeadPoseRotatedQuadScratch_[0].data());
+        std::copy_n (quadChannels[1], numSamples, monitoringHeadPoseRotatedQuadScratch_[1].data());
+        std::copy_n (quadChannels[2], numSamples, monitoringHeadPoseRotatedQuadScratch_[2].data());
+        std::copy_n (quadChannels[3], numSamples, monitoringHeadPoseRotatedQuadScratch_[3].data());
+
+        if (listenerOrientation != nullptr)
+        {
+            ListenerOrientation monitoringOrientation {};
+            if (tryBuildListenerOrientationFromCoordinateSpace (*listenerOrientation, monitoringOrientation))
+            {
+                std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS> monitoringSpeakerMix {};
+                buildSpeakerMixFromOrientation (monitoringOrientation, monitoringSpeakerMix);
+
+                // Host quad order in this monitoring path is FL, FR, RL, RR.
+                // buildSpeakerMixFromOrientation() expects/source-indexes FL, FR, RR, RL,
+                // so source channel mapping is adapted per-sample below.
+                auto* rotatedFl = monitoringHeadPoseRotatedQuadScratch_[0].data();
+                auto* rotatedFr = monitoringHeadPoseRotatedQuadScratch_[1].data();
+                auto* rotatedRl = monitoringHeadPoseRotatedQuadScratch_[2].data();
+                auto* rotatedRr = monitoringHeadPoseRotatedQuadScratch_[3].data();
+
+                for (int i = 0; i < numSamples; ++i)
+                {
+                    const float sourceFl = rotatedFl[i];
+                    const float sourceFr = rotatedFr[i];
+                    const float sourceRl = rotatedRl[i];
+                    const float sourceRr = rotatedRr[i];
+
+                    const float targetFl = (monitoringSpeakerMix[0][0] * sourceFl)
+                                           + (monitoringSpeakerMix[0][1] * sourceFr)
+                                           + (monitoringSpeakerMix[0][2] * sourceRr)
+                                           + (monitoringSpeakerMix[0][3] * sourceRl);
+                    const float targetFr = (monitoringSpeakerMix[1][0] * sourceFl)
+                                           + (monitoringSpeakerMix[1][1] * sourceFr)
+                                           + (monitoringSpeakerMix[1][2] * sourceRr)
+                                           + (monitoringSpeakerMix[1][3] * sourceRl);
+                    const float targetRr = (monitoringSpeakerMix[2][0] * sourceFl)
+                                           + (monitoringSpeakerMix[2][1] * sourceFr)
+                                           + (monitoringSpeakerMix[2][2] * sourceRr)
+                                           + (monitoringSpeakerMix[2][3] * sourceRl);
+                    const float targetRl = (monitoringSpeakerMix[3][0] * sourceFl)
+                                           + (monitoringSpeakerMix[3][1] * sourceFr)
+                                           + (monitoringSpeakerMix[3][2] * sourceRr)
+                                           + (monitoringSpeakerMix[3][3] * sourceRl);
+
+                    rotatedFl[i] = targetFl;
+                    rotatedFr[i] = targetFr;
+                    rotatedRl[i] = targetRl;
+                    rotatedRr[i] = targetRr;
+                }
+            }
+        }
+
+        monitoringInputPtrs_[0] = monitoringHeadPoseRotatedQuadScratch_[0].data();
+        monitoringInputPtrs_[1] = monitoringHeadPoseRotatedQuadScratch_[1].data();
+        monitoringInputPtrs_[2] = monitoringHeadPoseRotatedQuadScratch_[2].data();
+        monitoringInputPtrs_[3] = monitoringHeadPoseRotatedQuadScratch_[3].data();
+
+        monitoringOutputPtrs_[0] = outL;
+        monitoringOutputPtrs_[1] = outR;
+
+        IPLAudioBuffer inputBuffer {};
+        inputBuffer.numChannels = NUM_SPEAKERS;
+        inputBuffer.numSamples  = numSamples;
+        inputBuffer.data        = monitoringInputPtrs_.data();
+
+        IPLAudioBuffer outputBuffer {};
+        outputBuffer.numChannels = 2;
+        outputBuffer.numSamples  = numSamples;
+        outputBuffer.data        = monitoringOutputPtrs_.data();
+
+        IPLVirtualSurroundEffectParams effectParams {};
+        effectParams.hrtf = steamHrtf;
+
+        iplVirtualSurroundEffectApplyFn (steamVirtualSurroundEffect,
+                                         &effectParams,
+                                         &inputBuffer,
+                                         &outputBuffer);
+        return true;
+#else
+        juce::ignoreUnused (quadChannels, outL, outR, numSamples, listenerOrientation);
+        return false;
+#endif
     }
 
     //==========================================================================
@@ -1263,6 +1618,133 @@ public:
         activeHeadphoneModeIndex.store (static_cast<int> (activeHeadphoneMode), std::memory_order_relaxed);
         activeHeadphoneProfileIndex.store (activeHeadphoneProfileIndexValue, std::memory_order_relaxed);
         steamAudioAvailable.store (steamBackendAvailable, std::memory_order_relaxed);
+        const auto requestedSpatialProfileIndexValue = juce::jlimit (
+            0,
+            11,
+            requestedSpatialProfileIndex.load (std::memory_order_relaxed));
+        const auto requestedSpatialProfile = static_cast<SpatialOutputProfile> (requestedSpatialProfileIndexValue);
+        const int requestedAmbisonicOrder = ambisonicOrderForProfile (requestedSpatialProfile);
+        const int activeAmbisonicOrder = ambisonicOrderForProfile (activeSpatialProfile);
+        const int contractAmbisonicOrder = requestedAmbisonicOrder > 0 ? requestedAmbisonicOrder
+                                                                        : activeAmbisonicOrder;
+        const int contractChannelCount = contractAmbisonicOrder > 0
+                                             ? (contractAmbisonicOrder + 1) * (contractAmbisonicOrder + 1)
+                                             : 0;
+        const bool contractFallbackActive = requestedAmbisonicOrder > 0 && activeAmbisonicOrder == 0;
+        const auto contractTimestampSamples = ambisonicIrSampleCursor.fetch_add (
+            static_cast<std::uint64_t> (juce::jmax (0, numSamples)),
+            std::memory_order_relaxed);
+        ambisonicIrFrameId.fetch_add (1, std::memory_order_relaxed);
+        ambisonicIrTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        ambisonicIrOrder.store (contractAmbisonicOrder, std::memory_order_relaxed);
+        ambisonicIrNormalizationIndex.store (
+            static_cast<int> (AmbisonicNormalization::SN3D),
+            std::memory_order_relaxed);
+        ambisonicIrChannelCount.store (contractChannelCount, std::memory_order_relaxed);
+        ambisonicIrHeadphoneRenderAllowed.store (profileAllowsHeadphoneRender, std::memory_order_relaxed);
+        ambisonicIrFallbackActive.store (contractFallbackActive, std::memory_order_relaxed);
+        const bool codecAdmRequested = requestedSpatialProfile == SpatialOutputProfile::CodecADM;
+        const bool codecIamfRequested = requestedSpatialProfile == SpatialOutputProfile::CodecIAMF;
+        const auto codecMode = codecAdmRequested ? CodecMappingMode::ADM
+                                                 : (codecIamfRequested ? CodecMappingMode::IAMF
+                                                                       : CodecMappingMode::None);
+        int codecMappedChannelCount = 0;
+        if (codecMode != CodecMappingMode::None)
+        {
+            if (numOutputChannels >= 13)
+                codecMappedChannelCount = 13;
+            else if (numOutputChannels >= 10)
+                codecMappedChannelCount = 10;
+            else if (numOutputChannels >= 8)
+                codecMappedChannelCount = 8;
+            else if (numOutputChannels >= NUM_SPEAKERS)
+                codecMappedChannelCount = NUM_SPEAKERS;
+            else
+                codecMappedChannelCount = juce::jmax (0, numOutputChannels);
+        }
+        const int codecObjectCount = codecMode == CodecMappingMode::ADM
+                                         ? juce::jmax (0, juce::jmin (NUM_SPEAKERS, codecMappedChannelCount))
+                                         : 0;
+        const int codecElementCount = codecMode == CodecMappingMode::IAMF
+                                          ? juce::jmax (0, juce::jmin (2, codecMappedChannelCount))
+                                          : 0;
+        const bool codecMappingAppliedThisBlock =
+            codecMode != CodecMappingMode::None && codecMappedChannelCount > 0;
+        const bool codecMappingFallbackActive =
+            codecMode != CodecMappingMode::None
+            && profileResolution.stage != SpatialProfileStage::CodecLayoutPlaceholder;
+        bool codecMappingFiniteThisBlock = true;
+        if (codecMappingAppliedThisBlock && numSamples > 0)
+        {
+            const int channelsToInspect = juce::jmin (NUM_SPEAKERS, accumBuffer.getNumChannels());
+            for (int channel = 0; channel < channelsToInspect; ++channel)
+            {
+                const auto sample = accumBuffer.getSample (channel, 0);
+                if (! std::isfinite (sample))
+                {
+                    codecMappingFiniteThisBlock = false;
+                    break;
+                }
+            }
+        }
+        const auto codecFrameId = codecMappingFrameId.fetch_add (1, std::memory_order_relaxed) + 1u;
+        const auto codecSignature =
+            (codecFrameId * 1315423911ull)
+            ^ (contractTimestampSamples * 2654435761ull)
+            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecMappedChannelCount)) << 32u)
+            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecObjectCount)) << 16u)
+            ^ static_cast<std::uint64_t> (juce::jmax (0, codecElementCount));
+        codecMappingTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecMappingModeIndex.store (static_cast<int> (codecMode), std::memory_order_relaxed);
+        codecMappingMappedChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecMappingObjectCount.store (codecObjectCount, std::memory_order_relaxed);
+        codecMappingElementCount.store (codecElementCount, std::memory_order_relaxed);
+        codecMappingApplied.store (codecMappingAppliedThisBlock, std::memory_order_relaxed);
+        this->codecMappingFallbackActive.store (codecMappingFallbackActive, std::memory_order_relaxed);
+        codecMappingFinite.store (codecMappingFiniteThisBlock, std::memory_order_relaxed);
+        codecMappingSignature.store (codecSignature, std::memory_order_relaxed);
+        const bool codecAdmPayloadActiveThisBlock =
+            codecMode == CodecMappingMode::ADM
+            && codecMappingAppliedThisBlock
+            && codecMappingFiniteThisBlock;
+        codecAdmPayloadActive.store (codecAdmPayloadActiveThisBlock, std::memory_order_relaxed);
+        codecAdmPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
+        codecAdmPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecAdmPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecAdmPayloadObjectCount.store (
+            codecAdmPayloadActiveThisBlock ? codecObjectCount : 0,
+            std::memory_order_relaxed);
+        for (int i = 0; i < NUM_SPEAKERS; ++i)
+        {
+            const bool objectActive = codecAdmPayloadActiveThisBlock && i < codecObjectCount;
+            codecAdmPayloadObjectGain[static_cast<size_t> (i)].store (
+                objectActive ? kCodecAdmObjectDefaultGains[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+            codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].store (
+                objectActive ? kCodecAdmObjectAzimuthDeg[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+        }
+        const bool codecIamfPayloadActiveThisBlock =
+            codecMode == CodecMappingMode::IAMF
+            && codecMappingAppliedThisBlock
+            && codecMappingFiniteThisBlock;
+        codecIamfPayloadActive.store (codecIamfPayloadActiveThisBlock, std::memory_order_relaxed);
+        codecIamfPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
+        codecIamfPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecIamfPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecIamfPayloadElementCount.store (
+            codecIamfPayloadActiveThisBlock ? codecElementCount : 0,
+            std::memory_order_relaxed);
+        codecIamfPayloadSceneGain.store (
+            codecIamfPayloadActiveThisBlock ? 1.0f : 0.0f,
+            std::memory_order_relaxed);
+        for (int i = 0; i < 2; ++i)
+        {
+            const bool elementActive = codecIamfPayloadActiveThisBlock && i < codecElementCount;
+            codecIamfPayloadElementGain[static_cast<size_t> (i)].store (
+                elementActive ? kCodecIamfDefaultElementGains[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+        }
 
         double auditionReactiveHeadphoneEnergy = 0.0;
         double auditionReactiveHeadphoneReferenceEnergy = 0.0;
@@ -1616,7 +2098,7 @@ private:
     std::array<AirAbsorption, MAX_TRACKED_EMITTERS> emitterAbsorption;
     std::array<DopplerProcessor, MAX_TRACKED_EMITTERS> emitterDoppler;
 
-    // Per-emitter smoothed speaker gains (for click-free panning)
+    // Per-emitter smoothed speaker gains (for click-safe panning)
     std::array<std::array<juce::SmoothedValue<float>, NUM_SPEAKERS>, MAX_TRACKED_EMITTERS> smoothedSpeakerGains;
     std::array<std::array<juce::SmoothedValue<float>, NUM_SPEAKERS>, AUDITION_MAX_VOICES> auditionSmoothedSpeakerGains;
 
@@ -1801,6 +2283,38 @@ private:
     std::atomic<int> requestedSpatialProfileIndex { static_cast<int> (SpatialOutputProfile::Auto) };
     std::atomic<int> activeSpatialProfileIndex { static_cast<int> (SpatialOutputProfile::Auto) };
     std::atomic<int> activeSpatialStageIndex { static_cast<int> (SpatialProfileStage::Direct) };
+    std::atomic<std::uint64_t> ambisonicIrFrameId { 0 };
+    std::atomic<std::uint64_t> ambisonicIrTimestampSamples { 0 };
+    std::atomic<std::uint64_t> ambisonicIrSampleCursor { 0 };
+    std::atomic<int> ambisonicIrOrder { 0 };
+    std::atomic<int> ambisonicIrNormalizationIndex { static_cast<int> (AmbisonicNormalization::SN3D) };
+    std::atomic<int> ambisonicIrChannelCount { 0 };
+    std::atomic<bool> ambisonicIrHeadphoneRenderAllowed { false };
+    std::atomic<bool> ambisonicIrFallbackActive { false };
+    std::atomic<std::uint64_t> codecMappingFrameId { 0 };
+    std::atomic<std::uint64_t> codecMappingTimestampSamples { 0 };
+    std::atomic<int> codecMappingModeIndex { static_cast<int> (CodecMappingMode::None) };
+    std::atomic<int> codecMappingMappedChannelCount { 0 };
+    std::atomic<int> codecMappingObjectCount { 0 };
+    std::atomic<int> codecMappingElementCount { 0 };
+    std::atomic<bool> codecMappingApplied { false };
+    std::atomic<bool> codecMappingFallbackActive { false };
+    std::atomic<bool> codecMappingFinite { true };
+    std::atomic<std::uint64_t> codecMappingSignature { 0 };
+    std::atomic<bool> codecAdmPayloadActive { false };
+    std::atomic<std::uint64_t> codecAdmPayloadFrameId { 0 };
+    std::atomic<std::uint64_t> codecAdmPayloadTimestampSamples { 0 };
+    std::atomic<int> codecAdmPayloadChannelCount { 0 };
+    std::atomic<int> codecAdmPayloadObjectCount { 0 };
+    std::array<std::atomic<float>, NUM_SPEAKERS> codecAdmPayloadObjectGain {};
+    std::array<std::atomic<float>, NUM_SPEAKERS> codecAdmPayloadObjectAzimuthDeg {};
+    std::atomic<bool> codecIamfPayloadActive { false };
+    std::atomic<std::uint64_t> codecIamfPayloadFrameId { 0 };
+    std::atomic<std::uint64_t> codecIamfPayloadTimestampSamples { 0 };
+    std::atomic<int> codecIamfPayloadChannelCount { 0 };
+    std::atomic<int> codecIamfPayloadElementCount { 0 };
+    std::atomic<float> codecIamfPayloadSceneGain { 0.0f };
+    std::array<std::atomic<float>, 2> codecIamfPayloadElementGain {};
     std::atomic<bool> steamAudioAvailable { false };
     std::atomic<int> steamInitStageIndex { static_cast<int> (SteamInitStage::NotCompiled) };
     std::atomic<int> steamInitErrorCode { 0 };
@@ -1812,7 +2326,9 @@ private:
     std::vector<float> steamBinauralLeft;
     std::vector<float> steamBinauralRight;
     std::array<std::vector<float>, NUM_SPEAKERS> headPoseRotatedQuadScratch;
+    std::array<std::vector<float>, NUM_SPEAKERS> monitoringHeadPoseRotatedQuadScratch_;
     std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS> headPoseSpeakerMix {};
+    std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS> monitoringSpeakerMix_ {};
     PoseSnapshot headPoseSnapshot {};
     ListenerOrientation headPoseOrientation {};
     bool headPoseValid = false;
@@ -1853,6 +2369,11 @@ private:
     IPLVirtualSurroundEffect steamVirtualSurroundEffect = nullptr;
     std::array<float*, NUM_SPEAKERS> steamInputChannelPtrs {};
     std::array<float*, 2> steamOutputChannelPtrs {};
+    // BL-052: dedicated pointer arrays for renderVirtualSurroundForMonitoring.
+    // Kept separate from steamInputChannelPtrs/steamOutputChannelPtrs so
+    // renderSteamBinauralBlock and monitoring renders remain independent.
+    std::array<float*, NUM_SPEAKERS> monitoringInputPtrs_ {};
+    std::array<float*, 2>            monitoringOutputPtrs_ {};
 #endif
 
     bool steamAudioRuntimeReady = false;
@@ -1874,10 +2395,109 @@ private:
         {  0.70710678f,  0.70710678f }, // RR
         { -0.70710678f,  0.70710678f }  // RL
     }};
+    static constexpr std::array<float, NUM_SPEAKERS> kCodecAdmObjectDefaultGains
+    {
+        1.0f, 1.0f, 1.0f, 1.0f
+    };
+    static constexpr std::array<float, NUM_SPEAKERS> kCodecAdmObjectAzimuthDeg
+    {
+        -45.0f, 45.0f, 135.0f, -135.0f
+    };
+    static constexpr std::array<float, 2> kCodecIamfDefaultElementGains
+    {
+        0.70710678f, 0.70710678f
+    };
 
     static float dot3 (const std::array<float, 3>& lhs, const std::array<float, 3>& rhs) noexcept
     {
         return (lhs[0] * rhs[0]) + (lhs[1] * rhs[1]) + (lhs[2] * rhs[2]);
+    }
+
+    static bool normalizeVector3 (std::array<float, 3>& vector) noexcept
+    {
+        const float magnitudeSq = dot3 (vector, vector);
+        if (! std::isfinite (magnitudeSq) || magnitudeSq <= 1.0e-12f)
+            return false;
+
+        const float invMagnitude = 1.0f / std::sqrt (magnitudeSq);
+        vector[0] *= invMagnitude;
+        vector[1] *= invMagnitude;
+        vector[2] *= invMagnitude;
+        return std::isfinite (vector[0]) && std::isfinite (vector[1]) && std::isfinite (vector[2]);
+    }
+
+    static bool tryBuildListenerOrientationFromCoordinateSpace (const IPLCoordinateSpace3& coordinateSpace,
+                                                                ListenerOrientation& orientation) noexcept
+    {
+        orientation.right = { coordinateSpace.right.x, coordinateSpace.right.y, coordinateSpace.right.z };
+        orientation.up = { coordinateSpace.up.x, coordinateSpace.up.y, coordinateSpace.up.z };
+        orientation.ahead = { coordinateSpace.ahead.x, coordinateSpace.ahead.y, coordinateSpace.ahead.z };
+
+        if (! normalizeVector3 (orientation.right)
+            || ! normalizeVector3 (orientation.up)
+            || ! normalizeVector3 (orientation.ahead))
+        {
+            orientation = ListenerOrientation {};
+            return false;
+        }
+
+        return true;
+    }
+
+    static void buildSpeakerMixFromOrientation (const ListenerOrientation& orientation,
+                                                std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS>& speakerMix) noexcept
+    {
+        for (int sourceSpeaker = 0; sourceSpeaker < NUM_SPEAKERS; ++sourceSpeaker)
+        {
+            const auto& worldDir = kQuadWorldSpeakerDirs[static_cast<size_t> (sourceSpeaker)];
+            const float relX = dot3 (worldDir, orientation.right);
+            const float relZ = dot3 (worldDir, orientation.ahead);
+            const float planarMag = std::sqrt ((relX * relX) + (relZ * relZ));
+
+            float planarX = 0.0f;
+            float planarZ = -1.0f;
+            if (planarMag > 1.0e-6f && std::isfinite (planarMag))
+            {
+                const float invPlanar = 1.0f / planarMag;
+                planarX = relX * invPlanar;
+                planarZ = relZ * invPlanar;
+            }
+
+            float weightSum = 0.0f;
+            float bestDot = -2.0f;
+            int bestSpeaker = 0;
+            for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+            {
+                const auto& targetDir = kQuadListenerSpeakerDirsXZ[static_cast<size_t> (targetSpeaker)];
+                const float projection = (planarX * targetDir[0]) + (planarZ * targetDir[1]);
+                if (projection > bestDot)
+                {
+                    bestDot = projection;
+                    bestSpeaker = targetSpeaker;
+                }
+
+                const float weight = juce::jmax (0.0f, projection);
+                speakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] = weight;
+                weightSum += weight;
+            }
+
+            if (weightSum > 1.0e-6f && std::isfinite (weightSum))
+            {
+                const float invWeightSum = 1.0f / weightSum;
+                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+                {
+                    speakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] *= invWeightSum;
+                }
+            }
+            else
+            {
+                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
+                {
+                    speakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] =
+                        (targetSpeaker == bestSpeaker) ? 1.0f : 0.0f;
+                }
+            }
+        }
     }
 
     void setHeadPoseIdentityMix() noexcept
@@ -1940,58 +2560,7 @@ private:
             setHeadPoseIdentityMix();
             return;
         }
-
-        for (int sourceSpeaker = 0; sourceSpeaker < NUM_SPEAKERS; ++sourceSpeaker)
-        {
-            const auto& worldDir = kQuadWorldSpeakerDirs[static_cast<size_t> (sourceSpeaker)];
-            const float relX = dot3 (worldDir, headPoseOrientation.right);
-            const float relZ = dot3 (worldDir, headPoseOrientation.ahead);
-            const float planarMag = std::sqrt ((relX * relX) + (relZ * relZ));
-
-            float planarX = 0.0f;
-            float planarZ = -1.0f;
-            if (planarMag > 1.0e-6f && std::isfinite (planarMag))
-            {
-                const float invPlanar = 1.0f / planarMag;
-                planarX = relX * invPlanar;
-                planarZ = relZ * invPlanar;
-            }
-
-            float weightSum = 0.0f;
-            float bestDot = -2.0f;
-            int bestSpeaker = 0;
-            for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
-            {
-                const auto& targetDir = kQuadListenerSpeakerDirsXZ[static_cast<size_t> (targetSpeaker)];
-                const float projection = (planarX * targetDir[0]) + (planarZ * targetDir[1]);
-                if (projection > bestDot)
-                {
-                    bestDot = projection;
-                    bestSpeaker = targetSpeaker;
-                }
-
-                const float weight = juce::jmax (0.0f, projection);
-                headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] = weight;
-                weightSum += weight;
-            }
-
-            if (weightSum > 1.0e-6f && std::isfinite (weightSum))
-            {
-                const float invWeightSum = 1.0f / weightSum;
-                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
-                {
-                    headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] *= invWeightSum;
-                }
-            }
-            else
-            {
-                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
-                {
-                    headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] =
-                        (targetSpeaker == bestSpeaker) ? 1.0f : 0.0f;
-                }
-            }
-        }
+        buildSpeakerMixFromOrientation (headPoseOrientation, headPoseSpeakerMix);
     }
 
     inline void getHeadPoseAdjustedQuadSample (int sampleIndex, float& fl, float& fr, float& rr, float& rl) const noexcept
@@ -3548,28 +4117,58 @@ private:
         clearSteamInitDiagnosticsStrings();
         setSteamInitStage (SteamInitStage::LoadingLibrary, 0);
 
-        juce::String runtimePath;
+        juce::StringArray runtimeCandidates;
+
         if (const auto* envPath = std::getenv ("LOCUSQ_STEAM_AUDIO_LIB"))
         {
             const auto candidate = juce::String (envPath).trim();
             if (candidate.isNotEmpty())
-                runtimePath = candidate;
+                runtimeCandidates.add (candidate);
         }
 
+        // Prefer bundle-local runtime locations first to avoid host permission
+        // issues when the repo lives under user-protected directories.
+        const auto executableFile = juce::File::getSpecialLocation (juce::File::currentExecutableFile);
+        const auto executableDir = executableFile.getParentDirectory();
+       #if JUCE_MAC
+        runtimeCandidates.add (executableDir.getChildFile ("libphonon.dylib").getFullPathName());
+        runtimeCandidates.add (executableDir.getParentDirectory()
+            .getChildFile ("Frameworks")
+            .getChildFile ("libphonon.dylib")
+            .getFullPathName());
+       #elif JUCE_WINDOWS
+        runtimeCandidates.add (executableDir.getChildFile ("phonon.dll").getFullPathName());
+       #else
+        runtimeCandidates.add (executableDir.getChildFile ("libphonon.so").getFullPathName());
+       #endif
+
        #if defined (LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH)
-        if (runtimePath.isEmpty())
-            runtimePath = juce::String (LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH).trim();
+        const auto compiledDefaultPath = juce::String (LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH).trim();
+        if (compiledDefaultPath.isNotEmpty())
+            runtimeCandidates.add (compiledDefaultPath);
        #endif
 
         bool libraryOpened = false;
         juce::String loadedLibraryPath;
         juce::String attemptedLibraryPath;
-        if (runtimePath.isNotEmpty())
+
+        runtimeCandidates.removeEmptyStrings();
+        runtimeCandidates.removeDuplicates (false);
+        for (const auto& candidatePath : runtimeCandidates)
         {
-            attemptedLibraryPath = runtimePath;
-            libraryOpened = steamAudioLibrary.open (runtimePath);
+            if (candidatePath.isEmpty())
+                continue;
+
+            attemptedLibraryPath = attemptedLibraryPath.isNotEmpty()
+                ? attemptedLibraryPath + ";" + candidatePath
+                : candidatePath;
+
+            libraryOpened = steamAudioLibrary.open (candidatePath);
             if (libraryOpened)
-                loadedLibraryPath = runtimePath;
+            {
+                loadedLibraryPath = candidatePath;
+                break;
+            }
         }
 
         if (! libraryOpened)
@@ -3891,6 +4490,18 @@ private:
         }
 
         return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
+    }
+
+    static int ambisonicOrderForProfile (SpatialOutputProfile profile) noexcept
+    {
+        switch (profile)
+        {
+            case SpatialOutputProfile::AmbisonicFOA: return 1;
+            case SpatialOutputProfile::AmbisonicHOA: return 3;
+            default: break;
+        }
+
+        return 0;
     }
 
     static void encodeAmbisonicFoaProxyFromQuad (float fl, float fr, float rr, float rl,

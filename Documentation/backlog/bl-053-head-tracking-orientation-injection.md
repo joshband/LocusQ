@@ -30,6 +30,11 @@ Inject head pose quaternion from the companion bridge into `SteamAudioVirtualSur
 - null fallback is silent (no glitch)
 - yaw offset is applied correctly
 
+## Methodology Reference
+
+- Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Manual listening acceptance for this item must explicitly verify post-restore orientation behavior in `virtual_binaural` mode.
+
 
 ## Validation Plan
 
@@ -47,9 +52,15 @@ Evidence schema: `TestEvidence/bl053_*/status.tsv`.
   - consumes companion head pose when available and fresh,
   - applies composed yaw offset (`tracking.hp_yaw_offset_deg` + runtime recenter),
   - falls back to identity orientation when tracking is disabled/disconnected/stale.
+- Follow-up restore (2026-02-28, orientation mix path):
+  - `SpatialRenderer::renderVirtualSurroundForMonitoring` now applies listener-orientation-derived quad rotation mix when `listenerOrientation` is provided.
+  - Prior temporary bypass (`ignoreUnused(listenerOrientation)`) was removed so virtual binaural tracking affects rendered monitoring output again.
 - Structural QA lane PASS:
   - Command: `./scripts/qa-bl053-head-tracking-orientation-injection-mac.sh`
   - Evidence: `TestEvidence/bl053_20260228_182422/status.tsv`
+- Post-restore structural QA lane PASS:
+  - Command: `./scripts/qa-bl053-head-tracking-orientation-injection-mac.sh`
+  - Evidence: `TestEvidence/bl053_20260228_211320/status.tsv`
 - T1 replay cadence PASS (3/3):
   - Summary: `TestEvidence/bl053_t1_replay_20260228T183235Z/status.tsv`
   - Runs: `bl053_20260228_183235`, `bl053_20260228_183236`, `bl053_20260228_183237`

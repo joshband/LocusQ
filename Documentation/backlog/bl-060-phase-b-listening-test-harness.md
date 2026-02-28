@@ -31,6 +31,11 @@ Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ
 - Phase B gate result recorded in `verification` fields of CalibrationProfile
 - result documented in TestEvidence
 
+## Methodology Reference
+
+- Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- This backlog item must follow the blinded 2x2 protocol and gate criteria defined in that methodology.
+
 
 ## Validation Plan
 

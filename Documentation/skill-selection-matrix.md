@@ -2,7 +2,7 @@ Title: LocusQ Skill Selection Matrix
 Document Type: Routing Guide
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-02-28
 
 # Skill Selection Matrix (Codex + Claude)
 
@@ -64,6 +64,41 @@ Phase skills remain first when a phase command is active.
 | "Implement optional host-specific cross-instance coordination" | `physics-reactive-audio`, `skill_troubleshooting`, optionally `skill_docs` |
 | "Update ADR/traceability after implementation changes" | `skill_docs` |
 | "Run formal test phase with harness evidence" | `skill_test`, `skill_testing` |
+
+## Active Bundle: Head-Tracking + Calibration (BL-053..BL-060)
+
+Use this bundle for the current calibration/head-tracking execution lane.
+
+### Skill Order (default)
+1. `skill_plan`
+2. `skill_docs`
+3. `spatial-audio-engineering`
+4. `steam-audio-capi` (when Steam/monitoring-path behavior is in scope)
+5. `threejs` (when companion/WebView visualization behavior is in scope)
+6. `skill_impl` (when code edits are required)
+7. `skill_troubleshooting` (for repro-first regression triage)
+8. `skill_test` + `skill_testing` (for lane execution/replay evidence)
+
+### Triggered Scenarios
+| Scenario | Skills |
+|---|---|
+| BL-053 orientation path appears wired but no audible effect in `virtual_binaural` | `spatial-audio-engineering`, `steam-audio-capi`, `skill_impl`, `skill_testing` |
+| Companion axis/pose display is odd (for example up/down appears lateral) | `threejs`, `skill_troubleshooting`, optionally `spatial-audio-engineering` |
+| Companion/WebView bridge behavior differs by host/backend (`WKWebView` vs `WebView2`) | `juce-webview-runtime`, optionally `threejs`, `skill_troubleshooting` |
+| Visualization should react deterministically to audio/pose/calibration features | `reactive-av`, optionally `threejs`, `skill_testing` |
+| Physics/simulation signals are introduced into calibration or renderer behavior | `physics-reactive-audio`, optionally `reactive-av`, `skill_impl` |
+| Converting Calibration POC findings into production backlog language | `skill_plan`, `skill_docs`, `spatial-audio-engineering` |
+| Updating runbooks/intake templates/index with replay/evidence governance | `skill_docs`, optionally `skill_plan` |
+| Deciding standalone POC MVP vs direct integration slice | `skill_plan`, `spatial-audio-engineering`, `skill_docs` |
+| CLAP compatibility constraints affect execution/validation plan | `clap-plugin-lifecycle`, `skill_plan`, optionally `skill_test` |
+| New concept exploration before backlog intake formalization | `skill_dream`, then `skill_plan`, then `skill_docs` |
+| UI spec/prototype work for companion/plugin calibration surfaces | `skill_design`, optionally `threejs`, `juce-webview-runtime` |
+| Release/distribution closeout after calibration lane acceptance | `skill_ship`, `skill_test`, `skill_docs` |
+
+### Output Discipline
+- At task start, state selected skills and order.
+- When task intent changes materially (for example from docs to runtime bug triage), restate active skills.
+- Keep evidence linked to repo-local `TestEvidence/` and referenced backlog runbooks.
 
 ## Agent Output Requirement
 At task start, state selected skills and execution order when one or more skills are active.

@@ -384,6 +384,7 @@ const RESIZE_DIAGNOSTIC_SETTLE_WINDOW_MS = 160;
 const RESIZE_DIAGNOSTIC_COMPACT_MAX_WIDTH = 960;
 const RESIZE_DIAGNOSTIC_WIDE_MIN_WIDTH = 1440;
 const RESIZE_DIAGNOSTIC_SETTLE_WARN_MS = 250;
+const RESIZE_DIAGNOSTIC_HIT_TARGET_STALE_MS = 250;
 const resizeDiagnosticsState = {
     viewportWidth: null,
     viewportHeight: null,
@@ -392,6 +393,9 @@ const resizeDiagnosticsState = {
     settleWindowStartMs: null,
     lastResizeSettleMs: null,
     settleTimerId: null,
+    hitTargetMapVersion: 0,
+    lastHitTargetRefreshMs: null,
+    hitTargetRefreshPending: false,
 };
 
 if (productionP0SelfTestRequested) {
@@ -1101,10 +1105,8 @@ function syncResponsiveLayoutMode() {
         || selfTestLayoutVariantOverride === "tight") {
         variant = selfTestLayoutVariantOverride;
     } else {
-        if (width <= 1024) {
+        if (width < RESIZE_DIAGNOSTIC_COMPACT_MAX_WIDTH) {
             variant = "tight";
-        } else if (width <= 1240) {
-            variant = "compact";
         }
     }
     applyVariant(variant);
@@ -1116,6 +1118,9 @@ function syncResponsiveLayoutMode() {
             layoutResizeFramePending = false;
             if (typeof resize === "function") {
                 resize();
+            } else {
+                markResizeHitTargetRefresh();
+                updateRendererResizeDiagnosticsPanel();
             }
         });
     }
@@ -1187,6 +1192,20 @@ function formatResizeDiagnosticSettleMs(value) {
     return `${Math.round(numeric)} ms`;
 }
 
+function markResizeHitTargetRefresh() {
+    resizeDiagnosticsState.hitTargetMapVersion += 1;
+    resizeDiagnosticsState.lastHitTargetRefreshMs = getResizeDiagnosticsNowMs();
+    resizeDiagnosticsState.hitTargetRefreshPending = false;
+}
+
+function isResizeHitTargetFresh() {
+    const refreshedAt = Number(resizeDiagnosticsState.lastHitTargetRefreshMs);
+    if (!Number.isFinite(refreshedAt)) return false;
+    if (resizeDiagnosticsState.hitTargetRefreshPending) return false;
+    const nowMs = getResizeDiagnosticsNowMs();
+    return (nowMs - refreshedAt) <= RESIZE_DIAGNOSTIC_HIT_TARGET_STALE_MS;
+}
+
 function updateRendererResizeDiagnosticsPanel() {
     const widthLabel = formatResizeDiagnosticDimension(resizeDiagnosticsState.viewportWidth);
     const heightLabel = formatResizeDiagnosticDimension(resizeDiagnosticsState.viewportHeight);
@@ -1204,6 +1223,7 @@ function updateRendererResizeDiagnosticsPanel() {
     const hasDpr = dprLabel !== "unknown";
     const hasBucket = bucketLabel !== "unknown";
     const hasSettle = settleLabel !== "unknown";
+    const hitTargetFresh = isResizeHitTargetFresh();
     const metricsAvailable = hasViewport && hasDpr && hasBucket;
 
     const settleMs = Number(resizeDiagnosticsState.lastResizeSettleMs);
@@ -1225,6 +1245,7 @@ function updateRendererResizeDiagnosticsPanel() {
     if (!hasSettle) {
         detailParts.push("settle pending");
     }
+    detailParts.push(hitTargetFresh ? "hitmap ready" : "hitmap syncing");
     setRendererText("rend-resize-detail", detailParts.join(" · "));
 }
 
@@ -1273,6 +1294,7 @@ function recordRendererResizeDiagnostics(viewportWidth, viewportHeight) {
     const dpr = Number(window.devicePixelRatio);
     resizeDiagnosticsState.devicePixelRatio = Number.isFinite(dpr) && dpr > 0 ? dpr : null;
     resizeDiagnosticsState.layoutBucket = resolveResizeLayoutBucket(resizeDiagnosticsState.viewportWidth);
+    resizeDiagnosticsState.hitTargetRefreshPending = true;
 
     scheduleResizeDiagnosticsSettle();
     updateRendererResizeDiagnosticsPanel();
@@ -3336,11 +3358,12 @@ let roomLines, gridHelper, speakers = [], speakerMeters = [], speakerEnergyRings
 let emitterMeshes = new Map();
 let emitterVisualTargets = new Map();
 let selectionRing;
-let listenerGroup, listenerEnergyRing, listenerAimArrow, listenerHeadTrackingArrow, listenerHeadTrackingMarker, listenerHeadTrackingRing;
+let listenerGroup, listenerHeadRig, listenerEnergyRing, listenerAimArrow, listenerHeadTrackingArrow, listenerHeadTrackingMarker, listenerHeadTrackingRing;
 let auditionEmitterMesh, auditionEmitterRing;
 let auditionCloudPoints, auditionCloudLines;
 let azArc, elArc, distRing;
 let spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
+let activeViewportView = "perspective";
 let orbitTarget;
 let isDragging = false, isRight = false, prevMouse = { x: 0, y: 0 };
 let animTime = 0;
@@ -7866,7 +7889,10 @@ function initThreeJS() {
 
     camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
     rendererGL = new THREE.WebGLRenderer({ canvas, antialias: true });
-    rendererGL.setPixelRatio(window.devicePixelRatio);
+    {
+        const initialDpr = Number(window.devicePixelRatio);
+        rendererGL.setPixelRatio(Number.isFinite(initialDpr) && initialDpr > 0 ? initialDpr : 1);
+    }
 
     // Room wireframe
     const roomW = 6, roomD = 4, roomH = 3;
@@ -7924,12 +7950,14 @@ function initThreeJS() {
 
     // Listener (head + headphone + orientation/energy overlays)
     listenerGroup = new THREE.Group();
+    listenerHeadRig = new THREE.Group();
+    listenerGroup.add(listenerHeadRig);
 
     const head = new THREE.Mesh(
         new THREE.SphereGeometry(0.13, 16, 12),
         new THREE.MeshBasicMaterial({ color: 0x96BAD0, wireframe: true, transparent: true, opacity: 0.65 })
     );
-    listenerGroup.add(head);
+    listenerHeadRig.add(head);
 
     const earGeometry = new THREE.SphereGeometry(0.03, 10, 8);
     const earMaterial = new THREE.MeshBasicMaterial({ color: 0xD8CFA0, transparent: true, opacity: 0.75 });
@@ -7937,8 +7965,8 @@ function initThreeJS() {
     const rightEar = new THREE.Mesh(earGeometry, earMaterial.clone());
     leftEar.position.set(-0.11, 0.0, 0.0);
     rightEar.position.set(0.11, 0.0, 0.0);
-    listenerGroup.add(leftEar);
-    listenerGroup.add(rightEar);
+    listenerHeadRig.add(leftEar);
+    listenerHeadRig.add(rightEar);
 
     const headphoneBand = new THREE.Mesh(
         new THREE.TorusGeometry(0.14, 0.012, 8, 24, Math.PI),
@@ -7946,7 +7974,7 @@ function initThreeJS() {
     );
     headphoneBand.rotation.z = Math.PI / 2;
     headphoneBand.position.y = 0.03;
-    listenerGroup.add(headphoneBand);
+    listenerHeadRig.add(headphoneBand);
 
     listenerAimArrow = new THREE.ArrowHelper(
         new THREE.Vector3(0, 0, -1),
@@ -8170,8 +8198,11 @@ function resize() {
         : 0;
     const w = rect.width, h = rect.height - tlH;
     if (w <= 0 || h <= 0) return;
-    canvas.width = w * devicePixelRatio;
-    canvas.height = h * devicePixelRatio;
+    const dpr = Number(window.devicePixelRatio);
+    const effectiveDpr = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
+    rendererGL.setPixelRatio(effectiveDpr);
+    canvas.width = Math.round(w * effectiveDpr);
+    canvas.height = Math.round(h * effectiveDpr);
     canvas.style.minHeight = "0px";
     canvas.style.flex = "1 1 auto";
     canvas.style.width = w + "px";
@@ -8180,6 +8211,8 @@ function resize() {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     recordRendererResizeDiagnostics(w, h);
+    markResizeHitTargetRefresh();
+    updateRendererResizeDiagnosticsPanel();
 }
 
 // ===== UI BINDINGS =====
@@ -8194,6 +8227,7 @@ const viewOrder = ["perspective", "top", "front", "side"];
 
 function setActiveView(viewName) {
     const resolved = viewPresetByName[viewName] ? viewName : "perspective";
+    activeViewportView = resolved;
     document.querySelectorAll(".view-btn").forEach(button => {
         button.classList.toggle("active", button.dataset.view === resolved);
     });
@@ -11202,6 +11236,7 @@ async function runCalibrationRedetect() {
         }
 
         const routing = normaliseCalibrationRouting(result.routing || [], CALIBRATION_ROUTABLE_CHANNELS);
+        const previousRouting = normaliseCalibrationRouting(result.previousRouting || currentRouting, CALIBRATION_ROUTABLE_CHANNELS);
         const mappingSelects = ensureCalibrationMappingRows()
             .map(entry => entry.select)
             .filter(select => !!select)
@@ -11228,7 +11263,17 @@ async function runCalibrationRedetect() {
         calibrationLastAutoRouting = routing.slice(0, CALIBRATION_ROUTABLE_CHANNELS);
         calibrationMappingEditedByUser = false;
         if (ackRedetect) ackRedetect.checked = false;
-        setCalibrationProfileStatus("Routing redetected from host output layout.");
+        const changed = result.changed !== undefined
+            ? !!result.changed
+            : !compareCalibrationRouting(previousRouting, routing, CALIBRATION_ROUTABLE_CHANNELS);
+        const routingText = routing.join("/");
+        const previousRoutingText = previousRouting.join("/");
+        const writableChannels = Number(result.effectiveWritableChannels ?? result.writableChannels ?? calibrationState.writableChannels);
+        const requiredChannels = Number(result.requiredChannels ?? calibrationState.requiredChannels);
+        const statusMessage = changed
+            ? `Routing redetected from host output layout (applied ${previousRoutingText} -> ${routingText}; writable ${writableChannels}/${requiredChannels}).`
+            : `Routing redetected from host output layout (no change: ${routingText}; writable ${writableChannels}/${requiredChannels}).`;
+        setCalibrationProfileStatus(statusMessage);
         applyCalibrationStatus();
         return true;
     } catch (error) {
@@ -11466,12 +11511,36 @@ function applyCalibrationStatus() {
         captureLabel.textContent = status.message || "Idle - press Start to begin calibration";
     }
 
-    const requestedHeadphoneMode = (monitoringPathId === "steam_binaural" || monitoringPathId === "virtual_binaural")
+    const inferredRequestedHeadphoneMode = (monitoringPathId === "steam_binaural" || monitoringPathId === "virtual_binaural")
         ? "steam_binaural"
         : "stereo_downmix";
-    const activeHeadphoneMode = String(sceneData.rendererHeadphoneModeActive || requestedHeadphoneMode);
-    const requestedHeadphoneProfile = deviceProfileId;
-    const activeHeadphoneProfile = String(sceneData.rendererHeadphoneProfileActive || requestedHeadphoneProfile);
+    const requestedHeadphoneMode = normalizeAuditionToken(
+        status.headphoneCalibrationRequested
+        || sceneData.rendererHeadphoneCalibrationRequested
+        || inferredRequestedHeadphoneMode
+    ) || inferredRequestedHeadphoneMode;
+    const activeHeadphoneMode = normalizeAuditionToken(
+        status.headphoneCalibrationActive
+        || sceneData.rendererHeadphoneCalibrationActive
+        || sceneData.rendererHeadphoneModeActive
+        || requestedHeadphoneMode
+    ) || requestedHeadphoneMode;
+    const requestedHeadphoneProfile = normalizeAuditionToken(
+        status.headphoneVerificationRequestedProfileId
+        || sceneData.rendererHeadphoneVerificationRequestedProfileId
+        || deviceProfileId
+    ) || deviceProfileId;
+    const activeHeadphoneProfile = normalizeAuditionToken(
+        status.headphoneVerificationActiveProfileId
+        || sceneData.rendererHeadphoneVerificationActiveProfileId
+        || sceneData.rendererHeadphoneProfileActive
+        || requestedHeadphoneProfile
+    ) || requestedHeadphoneProfile;
+    const headphoneCalibrationStage = normalizeAuditionToken(
+        status.headphoneCalibrationStage
+        || sceneData.rendererHeadphoneCalibrationStage
+        || ""
+    ) || "unknown";
 
     if (mappingValid) {
         setCalibrationValidationState(
@@ -11568,12 +11637,11 @@ function applyCalibrationStatus() {
             `Requested ${requestedHeadphoneMode}/${requestedHeadphoneProfile} is active.`
         );
     } else if (activeHeadphoneMode === "stereo_downmix" && requestedHeadphoneMode !== "stereo_downmix") {
-        const stage = String(sceneData.rendererSpatialProfileStage || "unknown");
         setCalibrationValidationState(
             "cal-validation-profile-chip",
             "fail",
             "FAIL",
-            `Fallback active: requested ${requestedHeadphoneMode}/${requestedHeadphoneProfile}, running stereo_downmix (${stage}).`
+            `Fallback active: requested ${requestedHeadphoneMode}/${requestedHeadphoneProfile}, running stereo_downmix (${headphoneCalibrationStage}).`
         );
     } else {
         setCalibrationValidationState(
@@ -12245,7 +12313,14 @@ function animate() {
             }
         }
 
-        const headTrackingVisible = currentMode === "renderer" && headTrackingTelemetryTarget.bridgeEnabled;
+        const calibrateVirtualBinauralActive = currentMode === "calibrate"
+            && String(
+                sceneData?.calCurrentMonitoringPathId
+                || calibrationState?.monitoringPath
+                || ""
+            ).trim().toLowerCase() === "virtual_binaural";
+        const headTrackingVisible = (currentMode === "renderer" || calibrateVirtualBinauralActive)
+            && headTrackingTelemetryTarget.bridgeEnabled;
         if (listenerHeadTrackingArrow) {
             listenerHeadTrackingArrow.visible = headTrackingVisible;
         }
@@ -12278,25 +12353,53 @@ function animate() {
                 && Number.isFinite(headTrackingTelemetryTarget.qy)
                 && Number.isFinite(headTrackingTelemetryTarget.qz)
                 && Number.isFinite(headTrackingTelemetryTarget.qw);
-            if (poseAvailable && hasQuaternion && headTrackingQuaternionScratch && headTrackingDirectionScratch) {
+            if (activePose && hasQuaternion && headTrackingQuaternionScratch && headTrackingDirectionScratch) {
                 headTrackingQuaternionScratch.set(
                     headTrackingTelemetryTarget.qx,
                     headTrackingTelemetryTarget.qy,
                     headTrackingTelemetryTarget.qz,
                     headTrackingTelemetryTarget.qw
                 ).normalize();
-                headTrackingDirectionScratch.set(0, 0, -1).applyQuaternion(headTrackingQuaternionScratch);
-                setArrowFromVector(
-                    listenerHeadTrackingArrow,
-                    headTrackingDirectionScratch.x,
-                    headTrackingDirectionScratch.y,
-                    headTrackingDirectionScratch.z,
-                    0.52
-                );
+                if (listenerHeadRig) {
+                    listenerHeadRig.quaternion.copy(headTrackingQuaternionScratch);
+                }
+                if (activeViewportView === "top") {
+                    // Top view should track facing direction projected onto the floor plane.
+                    headTrackingDirectionScratch.set(0, 0, -1).applyQuaternion(headTrackingQuaternionScratch);
+                    const projectedX = headTrackingDirectionScratch.x;
+                    const projectedZ = headTrackingDirectionScratch.z;
+                    const projectedLengthSq = projectedX * projectedX + projectedZ * projectedZ;
+
+                    if (projectedLengthSq > 1.0e-8) {
+                        const invLen = 1.0 / Math.sqrt(projectedLengthSq);
+                        setArrowFromVector(
+                            listenerHeadTrackingArrow,
+                            projectedX * invLen,
+                            0.0,
+                            projectedZ * invLen,
+                            0.52
+                        );
+                    } else {
+                        // Degenerate case when forward is near +/-Y; keep a stable fallback.
+                        setArrowFromVector(listenerHeadTrackingArrow, 0.0, 0.0, -1.0, 0.52);
+                    }
+                } else {
+                    headTrackingDirectionScratch.set(0, 0, -1).applyQuaternion(headTrackingQuaternionScratch);
+                    setArrowFromVector(
+                        listenerHeadTrackingArrow,
+                        headTrackingDirectionScratch.x,
+                        headTrackingDirectionScratch.y,
+                        headTrackingDirectionScratch.z,
+                        0.52
+                    );
+                }
                 if (listenerHeadTrackingMarker) {
                     listenerHeadTrackingMarker.quaternion.copy(headTrackingQuaternionScratch);
                 }
             } else if (listenerHeadTrackingArrow) {
+                if (listenerHeadRig) {
+                    listenerHeadRig.quaternion.identity();
+                }
                 setArrowFromVector(listenerHeadTrackingArrow, 0.0, 0.0, -1.0, 0.26);
             }
 
@@ -12317,6 +12420,9 @@ function animate() {
                     : (stalePose ? 1.08 : 1.0);
                 listenerHeadTrackingRing.scale.set(ringScale, ringScale, 1.0);
             }
+        }
+        else if (listenerHeadRig) {
+            listenerHeadRig.quaternion.identity();
         }
     }
 
