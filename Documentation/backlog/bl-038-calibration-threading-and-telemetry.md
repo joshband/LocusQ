@@ -2,7 +2,7 @@ Title: BL-038 Calibration Threading and Telemetry
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # BL-038 Calibration Threading and Telemetry
 
@@ -12,11 +12,13 @@ Last Modified Date: 2026-02-27
 |---|---|
 | ID | BL-038 |
 | Priority | P1 |
-| Status | In Implementation (Owner Z7 intake accepted H2 + C6r/C7 long-run parity semantics; deterministic contract/execute parity and docs freshness are green) |
+| Status | Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-026 (Done), BL-034 (Done) |
 | Blocks | — |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
@@ -167,6 +169,7 @@ TSV schema requirements:
 - `status.tsv` header: `artifact\tvalue`
 - `acceptance_matrix.tsv` header: `acceptance_id\tgate\tthreshold\tresult\tartifact\tnote`
 - `failure_taxonomy.tsv` header: `failure_id\tcategory\ttrigger\tclassification\tblocking\tseverity`
+
 
 ## Validation Plan (A1)
 
@@ -732,3 +735,257 @@ Required artifacts:
   - `./scripts/validate-docs-freshness.sh` => `PASS`
 - Result:
   - long-run execute-mode parity and strict usage-exit semantics remain deterministic and passing at 50-run depth.
+
+### Owner Intake Sync Z8 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-038 remains `In Implementation`; C7 long-run execute-mode parity packet is accepted.
+
+## Slice D1 Done-Candidate Long-Run Parity Contract (2026-02-27)
+
+Slice D1 extends C7 replay depth to a done-candidate confidence packet with 75-run deterministic parity across contract-only and execute-suite modes, plus strict usage-exit guard revalidation.
+
+Canonical parity commands:
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/contract_runs_execute`
+
+Strict expectations:
+1. contract-only summary result is `PASS`.
+2. execute-suite summary result is `PASS`.
+3. both modes report `signature_divergence=0` and `row_drift=0`.
+4. both modes report zero `runtime_execution_failure`, `deterministic_contract_failure`, and `missing_result_artifact`.
+5. `--runs 0` exits with code `2`.
+6. `--unknown` exits with code `2`.
+
+### D1 Acceptance IDs
+
+| Acceptance ID | Requirement | Evidence |
+|---|---|---|
+| `BL038-D1-001` | done-candidate long-run parity summary shows deterministic pass for contract-only and execute-suite (`runs=75`) | `mode_parity.tsv`, `replay_sentinel_summary.tsv` |
+| `BL038-D1-002` | usage probe `--runs 0` returns strict usage exit code `2` | `exit_semantics_probe.tsv` |
+| `BL038-D1-003` | usage probe `--unknown` returns strict usage exit code `2` | `exit_semantics_probe.tsv` |
+
+### D1 Validation Plan
+
+- `bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/contract_runs_execute`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+### D1 Evidence Contract
+
+Required path:
+- `TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/`
+
+Required artifacts:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice D1 Execution Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl038_slice_c7_longrun_parity_20260227T033937Z/`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/`
+- Evidence packet:
+  - `TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/contract_runs_execute` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` => expected exit `2`, observed `2` (`PASS`)
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` => expected exit `2`, observed `2` (`PASS`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - done-candidate long-run parity packet is green with deterministic 75/75 contract/execute replay signatures and strict usage exits preserved.
+
+### Owner Intake Sync Z9 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-038 advances to `In Validation`; D1 done-candidate long-run parity intake is accepted.
+
+## Slice D2 Done Promotion Parity Contract (2026-02-27)
+
+Slice D2 deepens done-promotion confidence by requiring 100-run deterministic parity across contract-only and execute-suite modes while preserving strict usage-exit semantics.
+
+Canonical parity commands:
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/contract_runs_execute`
+
+Strict expectations:
+1. contract-only summary result is `PASS`.
+2. execute-suite summary result is `PASS`.
+3. both modes report `signature_divergence=0` and `row_drift=0`.
+4. both modes report zero `runtime_execution_failure`, `deterministic_contract_failure`, and `missing_result_artifact`.
+5. `--runs 0` exits with code `2`.
+6. `--unknown` exits with code `2`.
+
+### D2 Acceptance IDs
+
+| Acceptance ID | Requirement | Evidence |
+|---|---|---|
+| `BL038-D2-001` | done-promotion parity summary shows deterministic pass for contract-only and execute-suite (`runs=100`) | `mode_parity.tsv`, `replay_sentinel_summary.tsv` |
+| `BL038-D2-002` | usage probe `--runs 0` returns strict usage exit code `2` | `exit_semantics_probe.tsv` |
+| `BL038-D2-003` | usage probe `--unknown` returns strict usage exit code `2` | `exit_semantics_probe.tsv` |
+
+### D2 Validation Plan
+
+- `bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/contract_runs_execute`
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+### D2 Evidence Contract
+
+Required path:
+- `TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/`
+
+Required artifacts:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
+## Slice D2 Execution Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/`
+- Evidence packet:
+  - `TestEvidence/bl038_slice_d2_done_promotion_20260227T201829Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_20260227T201829Z/contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_20260227T201829Z/contract_runs_execute` => `PASS`
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` => expected exit `2`, observed `2` (`PASS`)
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` => expected exit `2`, observed `2` (`PASS`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - done-promotion parity packet is green with deterministic 100/100 contract/execute replay signatures, strict usage exits, and promotion readiness marked `READY_FOR_DONE_PROMOTION`.
+
+### Owner Intake Sync Z10 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-038 advances to `Done-candidate`; D2 done-promotion parity intake is accepted.
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

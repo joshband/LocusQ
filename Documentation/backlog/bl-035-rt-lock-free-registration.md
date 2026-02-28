@@ -2,7 +2,7 @@ Title: BL-035 RT Lock-Free Registration
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # BL-035 RT Lock-Free Registration
 
@@ -12,11 +12,13 @@ Last Modified Date: 2026-02-27
 |---|---|
 | ID | BL-035 |
 | Priority | P0 |
-| Status | In Implementation (Owner D6 replay keeps build/smoke/selftest/RT/schema green and `BL035-A-001`/`BL035-A-002` closed, but docs freshness is currently blocked by external metadata debt in `TestEvidence/bl030_rl05_manual_closure_g5_20260225T210303Z/harness_contract.md`) |
+| Status | In Implementation (Owner D7 recheck on current branch: build/smoke pass, selftest/RT fail: `app_exited_before_result` and `non_allowlisted=3`) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | HX-02 (Done), BL-032 (Done-candidate) |
 | Blocks | BL-030 |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
@@ -99,6 +101,23 @@ Current hotspot surfaces (for implementation slices):
 - [x] Slice D: Re-run RT audit and keep `non_allowlisted=0`.
 - [x] Update BL-035 status from `In Planning` only after evidence-backed slice completion.
 - [x] Owner reconcile current branch RT/docs blockers observed in Slice B/C worker rerun (`20260226T235335Z`/`20260226T235348Z`) via D6 fresh owner replay.
+
+## Owner D7 Recheck (2026-02-28)
+
+Task: `BL-035 RT Lock-Free Registration D7 Owner-Readiness Recheck`
+
+- Validation package: `TestEvidence/bl035_slice_d7_owner_ready_20260228_115509/`
+- Validation result: `FAIL`
+- Hard blockers recorded:
+  - `BL035-D7-BLK-001` — selftest app exits before result capture (`app_exited_before_result`, abort trap 6).
+  - `BL035-D7-BLK-002` — RT audit non-allowlisted hits (`non_allowlisted=3`).
+- Required command recheck:
+  - `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` ✅
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` ✅
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` ❌
+  - `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_slice_d7_owner_ready_20260228_115509/rt_audit.tsv` ❌
+  - `./scripts/validate-docs-freshness.sh` ✅
+- Decision: remain **In Implementation** until both selftest and RT audit blockers are cleared.
 
 ## Skill Routing (Per Slice)
 
@@ -201,6 +220,7 @@ EVIDENCE:
 - rt_audit.tsv
 - docs_freshness.log
 ```
+
 
 ## Validation Plan
 
@@ -443,3 +463,48 @@ BL-035 may move out of `In Planning` only when at least one implementation slice
   - `TestEvidence/build-summary.md` Last Modified Date mismatch vs `status.json` date (`2026-02-27`)
   - `TestEvidence/validation-trend.md` Last Modified Date mismatch vs `status.json` date (`2026-02-27`)
   - `TestEvidence/validation-trend.md` missing trend row for `2026-02-27`
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

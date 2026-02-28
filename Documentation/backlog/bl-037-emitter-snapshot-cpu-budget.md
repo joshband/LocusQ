@@ -2,7 +2,7 @@ Title: BL-037 Emitter Snapshot CPU Budget
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # BL-037 Emitter Snapshot CPU Budget
 
@@ -12,11 +12,13 @@ Last Modified Date: 2026-02-27
 |---|---|
 | ID | BL-037 |
 | Priority | P1 |
-| Status | In Implementation (Owner Z8 long-run intake accepted C6 release-sentinel packet; deterministic replay, strict usage semantics, and docs freshness are green) |
+| Status | Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-035 |
 | Blocks | BL-030 |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
 
 ## Objective
@@ -495,6 +497,8 @@ C5c required evidence bundle:
 - [x] Capture C5c replay summary, semantics probe, and lane notes.
 - [x] Re-run docs freshness and record gate result.
 - [x] Execute C6 release sentinel (`--runs 50`) with strict usage probes and docs freshness replay.
+- [x] Execute D1 done-candidate readiness sentinel (`--runs 75`) with strict usage probes and docs freshness replay.
+- [x] Execute D2 done-promotion readiness sentinel (`--runs 100`) with strict usage probes and docs freshness replay.
 
 ## Slice C5c Execution Snapshot (2026-02-27)
 
@@ -580,6 +584,124 @@ C6 required evidence bundle:
 - Result:
   - C6 release sentinel passed (`deterministic_match_yes=50`, `deterministic_match_no=0`, strict usage probes `2/2`).
 
+## Slice D1 Done-Candidate Readiness Contract
+
+Purpose:
+- Advance C6 release confidence to a done-candidate packet with 75 deterministic replay runs and strict usage-exit semantics.
+
+D1 validation commands:
+- `bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh`
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help`
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl037_slice_d1_done_candidate_<timestamp>/contract_runs`
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+D1 acceptance IDs:
+
+| Acceptance ID | Requirement | Evidence |
+|---|---|---|
+| `BL037-D1-001` | 75-run contract replay remains deterministic (`deterministic_match=yes` on all rows) | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL037-D1-002` | Contract validation matrix remains fully passing (`FAIL rows = 0`) | `contract_runs/validation_matrix.tsv` |
+| `BL037-D1-003` | Usage probes enforce strict usage-exit semantics (`exit=2`) | `exit_semantics_probe.tsv` |
+| `BL037-D1-004` | Docs freshness remains pass for done-candidate packet | `docs_freshness.log` |
+| `BL037-D1-005` | Required D1 artifact schema is complete and machine-readable | `status.tsv`, `validation_matrix.tsv`, `lane_notes.md` |
+
+D1 required evidence bundle:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice D1 Done-Candidate Execution Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl037_slice_c6_release_sentinel_20260227T033724Z/`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/`
+- Evidence packet:
+  - `TestEvidence/bl037_slice_d1_done_candidate_20260227T035844Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl037_slice_d1_done_candidate_20260227T035844Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0` => `PASS` (expected usage exit `2`)
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` => `PASS` (expected usage exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - D1 done-candidate readiness passed (`deterministic_match_yes=75`, `deterministic_match_no=0`, strict usage probes `2/2`).
+
+## Slice D2 Done-Promotion Readiness Contract
+
+Purpose:
+- Prove done-promotion readiness with 100 deterministic replay runs and strict usage-exit semantics.
+
+D2 validation commands:
+- `bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh`
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help`
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl037_slice_d2_done_promotion_<timestamp>/contract_runs`
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+D2 acceptance IDs:
+
+| Acceptance ID | Requirement | Evidence |
+|---|---|---|
+| `BL037-D2-001` | 100-run contract replay remains deterministic (`deterministic_match=yes` on all rows) | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL037-D2-002` | Contract validation matrix remains fully passing (`FAIL rows = 0`) | `contract_runs/validation_matrix.tsv` |
+| `BL037-D2-003` | Usage probes enforce strict usage-exit semantics (`exit=2`) | `exit_semantics_probe.tsv` |
+| `BL037-D2-004` | Docs freshness remains pass for done-promotion packet | `docs_freshness.log` |
+| `BL037-D2-005` | Required D2 artifact schema is complete and machine-readable | `status.tsv`, `validation_matrix.tsv`, `promotion_readiness.md` |
+
+D2 required evidence bundle:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
+## Slice D2 Done-Promotion Execution Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl037_slice_d1_done_candidate_20260227T035844Z/`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/`
+- Evidence packet:
+  - `TestEvidence/bl037_slice_d2_done_promotion_20260227T201737Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl037_slice_d2_done_promotion_20260227T201737Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0` => `PASS` (expected usage exit `2`)
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` => `PASS` (expected usage exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - D2 done-promotion readiness passed (`deterministic_match_yes=100`, `deterministic_match_no=0`, strict usage probes `2/2`).
+
 
 ## Slice A1 Execution Snapshot (2026-02-27)
 
@@ -609,6 +731,7 @@ C6 required evidence bundle:
   - `jq empty status.json` => `PASS`
 - Disposition:
   - BL-037 remains `In Planning`; A1 contract intake is complete and implementation slices remain pending.
+
 
 ## Validation
 
@@ -661,3 +784,78 @@ C6 required evidence bundle:
   - Canonical path retained: `Documentation/testing/bl-037-emitter-snapshot-cpu-budget-qa.md`.
 - Disposition:
   - BL-037 remains `In Implementation`; C6 long-run release-sentinel packet is accepted.
+
+### Owner Intake Sync Z9 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-037 advances to `In Validation`; D1 done-candidate readiness intake is accepted.
+
+### Owner Intake Sync Z10 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-037 advances to `Done-candidate`; D2 done-promotion readiness intake is accepted.
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

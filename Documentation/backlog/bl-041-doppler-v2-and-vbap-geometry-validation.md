@@ -2,7 +2,7 @@ Title: BL-041 Doppler v2 and VBAP Geometry Validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # BL-041 Doppler v2 and VBAP Geometry Validation
 
@@ -12,11 +12,13 @@ Last Modified Date: 2026-02-27
 |---|---|
 | ID | BL-041 |
 | Priority | P2 |
-| Status | In Implementation (Owner Z7 intake accepted H2 + C3c packet; C4 long-run replay sentinel and mode parity packet now green at 50-run depth) |
+| Status | Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-036 |
 | Blocks | — |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
 
 ## Objective
@@ -192,6 +194,7 @@ Required `failure_taxonomy.tsv` columns:
 - [x] Define replay artifact schema and required evidence files.
 - [x] Capture A1 evidence bundle and docs freshness validation log.
 
+
 ## Validation Plan (A1)
 
 - `./scripts/validate-docs-freshness.sh`
@@ -353,6 +356,126 @@ C3 scope is additive and deterministic:
 
 Evidence bundle path:
 - `TestEvidence/bl041_slice_c3_replay_mode_parity_<timestamp>/`
+
+Required files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `soak_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice D2 Done Promotion Mode-Parity (100-Run Contract/Execute Replay)
+
+D2 scope extends D1 to done-promotion replay depth:
+- Preserve all prior B1/C2/C3/C4/D1 deterministic checks.
+- Run both `--contract-only` and `--execute-suite` at `--runs 100`.
+- Require zero cross-mode signature and row mismatches.
+- Preserve strict usage semantics (`--runs 0` must exit `2`) and docs freshness pass.
+
+### D2 Acceptance IDs
+
+| Acceptance ID | Requirement | Pass Threshold |
+|---|---|---|
+| BL041-D2-001 | Contract-only done-promotion sentinel | `--contract-only --runs 100` completes with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D2-002 | Execute-suite done-promotion sentinel | `--execute-suite --runs 100` completes with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D2-003 | Cross-mode parity at D2 depth | `cross_mode_signature_mismatch_count=0` and `cross_mode_row_mismatch_count=0` |
+| BL041-D2-004 | Taxonomy stability at D2 depth | contract/execute taxonomy rows remain none-only (`nonzero_rows=0`) |
+| BL041-D2-005 | Usage exit semantics guard | `--runs 0` returns exit code `2` deterministically |
+| BL041-D2-006 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+| BL041-D2-007 | D2 evidence schema complete | all required D2 files emitted under evidence root |
+
+### D2 Failure Taxonomy Additions
+
+| Failure ID | Category | Trigger | Classification | Blocking |
+|---|---|---|---|---|
+| BL041-FX-601 | lane_d2_contract_longrun_drift | contract-only 100-run signature/row drift detected | deterministic_replay_failure | yes |
+| BL041-FX-602 | lane_d2_execute_longrun_drift | execute-suite 100-run signature/row drift detected | deterministic_replay_failure | yes |
+| BL041-FX-603 | lane_d2_mode_parity_failure | contract/execute replay hashes diverge by run | deterministic_replay_failure | yes |
+| BL041-FX-604 | lane_d2_taxonomy_drift | non-zero or unstable taxonomy rows across done-promotion replay | deterministic_replay_failure | yes |
+| BL041-FX-605 | lane_d2_exit_semantics_failure | invalid `--runs` probe does not return exit `2` | deterministic_contract_failure | yes |
+| BL041-FX-606 | lane_d2_docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes |
+| BL041-FX-607 | lane_d2_evidence_schema_incomplete | required D2 artifact files missing | deterministic_evidence_failure | yes |
+
+## Validation Plan (D2)
+
+- `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl041_slice_d2_done_promotion_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl041_slice_d2_done_promotion_<timestamp>/contract_runs_execute`
+- Negative probe: `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## Evidence Contract (D2)
+
+Evidence bundle path:
+- `TestEvidence/bl041_slice_d2_done_promotion_<timestamp>/`
+
+Required files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `soak_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
+## Slice D1 Done-Candidate Long-Run Mode Parity (75-Run Contract/Execute Replay)
+
+D1 scope raises replay confidence for done-candidate decision support:
+- Keep B1/C2/C3/C4 contracts intact.
+- Run both `--contract-only` and `--execute-suite` in 75-run replay mode.
+- Require zero cross-mode signature and row mismatches at 75-run depth.
+- Preserve strict usage semantics (`--runs 0` must exit `2`) and docs freshness pass.
+
+### D1 Acceptance IDs
+
+| Acceptance ID | Requirement | Pass Threshold |
+|---|---|---|
+| BL041-D1-001 | Contract-only done-candidate sentinel | `--contract-only --runs 75` completes with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D1-002 | Execute-suite done-candidate sentinel | `--execute-suite --runs 75` completes with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D1-003 | Cross-mode parity at D1 depth | `cross_mode_signature_mismatch_count=0` and `cross_mode_row_mismatch_count=0` |
+| BL041-D1-004 | Taxonomy stability at D1 depth | contract/execute taxonomy rows remain none-only (`nonzero_rows=0`) |
+| BL041-D1-005 | Usage exit semantics guard | `--runs 0` returns exit code `2` deterministically |
+| BL041-D1-006 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+| BL041-D1-007 | D1 evidence schema complete | all required D1 files emitted under evidence root |
+
+### D1 Failure Taxonomy Additions
+
+| Failure ID | Category | Trigger | Classification | Blocking |
+|---|---|---|---|---|
+| BL041-FX-501 | lane_d1_contract_longrun_drift | contract-only 75-run signature/row drift detected | deterministic_replay_failure | yes |
+| BL041-FX-502 | lane_d1_execute_longrun_drift | execute-suite 75-run signature/row drift detected | deterministic_replay_failure | yes |
+| BL041-FX-503 | lane_d1_mode_parity_failure | contract/execute replay hashes diverge by run | deterministic_replay_failure | yes |
+| BL041-FX-504 | lane_d1_taxonomy_drift | non-zero or unstable taxonomy rows across done-candidate replay | deterministic_replay_failure | yes |
+| BL041-FX-505 | lane_d1_exit_semantics_failure | invalid `--runs` probe does not return exit `2` | deterministic_contract_failure | yes |
+| BL041-FX-506 | lane_d1_docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes |
+| BL041-FX-507 | lane_d1_evidence_schema_incomplete | required D1 artifact files missing | deterministic_evidence_failure | yes |
+
+## Validation Plan (D1)
+
+- `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl041_slice_d1_done_candidate_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl041_slice_d1_done_candidate_<timestamp>/contract_runs_execute`
+- Negative probe: `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## Evidence Contract (D1)
+
+Evidence bundle path:
+- `TestEvidence/bl041_slice_d1_done_candidate_<timestamp>/`
 
 Required files:
 - `status.tsv`
@@ -661,3 +784,165 @@ Required files:
   - `mode_parity_gate=PASS`
   - `exit_semantics_gate=PASS`
   - `docs_freshness_gate=PASS`
+
+### Owner Intake Sync Z8 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-041 remains `In Implementation`; C4 long-run replay sentinel and mode parity packet is accepted.
+
+## Slice D1 Done-Candidate Long-Run Mode Parity Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl041_slice_c4_longrun_mode_parity_20260227T033844Z/status.tsv`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/status.tsv`
+- Evidence packet:
+  - `TestEvidence/bl041_slice_d1_done_candidate_20260227T183530Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `soak_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 75 --out-dir .../contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 75 --out-dir .../contract_runs_execute` => `PASS`
+  - Negative probe `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` => `PASS` (expected exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Done-candidate long-run parity summary:
+  - `contract_runs_observed=75`
+  - `execute_runs_observed=75`
+  - `signature_drift_count(contract/execute)=0/0`
+  - `row_drift_count(contract/execute)=0/0`
+  - `cross_mode_signature_mismatch_count=0`
+  - `cross_mode_row_mismatch_count=0`
+  - `mode_parity_gate=PASS`
+  - `exit_semantics_gate=PASS`
+  - `docs_freshness_gate=PASS`
+
+### Owner Intake Sync Z9 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-041 advances to `In Validation`; D1 done-candidate long-run replay sentinel and mode parity intake is accepted.
+
+## Slice D2 Done Promotion Mode-Parity Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl041_slice_d1_done_candidate_20260227T183530Z/status.tsv`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/status.tsv`
+- Evidence packet:
+  - `TestEvidence/bl041_slice_d2_done_promotion_20260227T201910Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `soak_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 100 --out-dir .../contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 100 --out-dir .../contract_runs_execute` => `PASS`
+  - Negative probe `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` => `PASS` (expected exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Done-promotion parity summary:
+  - `contract_runs_observed=100`
+  - `execute_runs_observed=100`
+  - `signature_drift_count(contract/execute)=0/0`
+  - `row_drift_count(contract/execute)=0/0`
+  - `cross_mode_signature_mismatch_count=0`
+  - `cross_mode_row_mismatch_count=0`
+  - `mode_parity_gate=PASS`
+  - `exit_semantics_gate=PASS`
+  - `docs_freshness_gate=PASS`
+
+### Owner Intake Sync Z10 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-041 advances to `Done-candidate`; D2 done-promotion mode-parity intake is accepted.
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

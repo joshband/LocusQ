@@ -2,7 +2,7 @@ Title: BL-039 Parameter Relay Spec Generation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # BL-039 Parameter Relay Spec Generation
 
@@ -12,11 +12,13 @@ Last Modified Date: 2026-02-27
 |---|---|
 | ID | BL-039 |
 | Priority | P1 |
-| Status | In Implementation (Owner Z7 intake accepted H2 + C5c parity semantics; C6 long-run execute-mode parity sentinel is PASS with docs freshness green) |
+| Status | Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract+execute parity, strict usage exits, and docs freshness are green) |
 | Track | B - Scene/UI Runtime |
 | Effort | High / L |
 | Depends On | BL-027 (Done), BL-032 (Done-candidate) |
 | Blocks | BL-040 |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
 
 ## Objective
@@ -48,6 +50,8 @@ Out of scope:
 | C5b | Drift execute-mode parity recheck after docs unblock | Re-run C5 packet after H1 intake; keep deterministic parity artifacts and capture current global docs-freshness status |
 | C5c | Drift execute-mode parity recheck (Post-H2) | Re-run execute-mode parity packet post-H2 and confirm docs freshness + parity semantics all PASS |
 | C6 | Drift long-run execute-mode parity sentinel | `--contract-only` and `--execute-suite` parity remain stable at `runs=50` with strict usage-exit semantics and docs freshness PASS |
+| D1 | Done-candidate long-run mode parity | `--contract-only` and `--execute-suite` parity remain stable at `runs=75` with strict usage-exit semantics and docs freshness PASS |
+| D2 | Done-promotion parity confidence packet | `--contract-only` and `--execute-suite` parity remain stable at `runs=100` with strict usage-exit semantics, promotion-readiness evidence, and docs freshness PASS |
 | B | Implement generator/centralized iterator for relay emission | No duplicate/manual relay lists remain in active runtime path |
 | C | Add replay/drift detection lane for CI and local promotion packets | Replay hashes stable, drift checks pass, required artifacts complete |
 
@@ -181,6 +185,8 @@ Required `relay_drift_report.tsv` columns:
 - [x] Define failure taxonomy and acceptance IDs.
 - [x] Align acceptance IDs with QA contract document.
 - [x] Capture docs freshness evidence for Slice A1 bundle.
+- [x] Publish D2 done-promotion parity packet with 100-run contract/execute evidence and promotion-readiness notes.
+
 
 ## Validation Plan (Slice A1)
 
@@ -501,6 +507,92 @@ Required artifacts:
 - `lane_notes.md`
 - `docs_freshness.log`
 
+## Slice D1 Done-Candidate Long-Run Mode Parity Contract
+
+Slice D1 raises done-candidate readiness confidence to 75-run replay stability across contract-only and execute-suite alias modes.
+
+### D1 Acceptance IDs and Gates
+
+| Acceptance ID | Gate | Pass Threshold |
+|---|---|---|
+| BL039-D1-001 | done-candidate parity contract | contract vs execute parity checks all `PASS` at `runs=75` |
+| BL039-D1-002 | contract-only 75-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, and `run_failure_count=0` for `runs=75` |
+| BL039-D1-003 | execute-suite 75-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, and `run_failure_count=0` for `runs=75` |
+| BL039-D1-004 | done-candidate parity artifact contract | `mode_parity.tsv` machine-readable with all parity rows `PASS` |
+| BL039-D1-005 | strict usage exit semantics | negative probe `--runs 0` exits with code `2` |
+| BL039-D1-006 | docs freshness gate | `./scripts/validate-docs-freshness.sh` exit `0` |
+
+### D1 Validation Plan
+
+- `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_<timestamp>/contract_runs_execute`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+### D1 Evidence Contract
+
+Required path:
+- `TestEvidence/bl039_slice_d1_done_candidate_<timestamp>/`
+
+Required artifacts:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `drift_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice D2 Done Promotion Parity Contract
+
+Slice D2 raises promotion-confidence coverage to 100-run replay stability across contract-only and execute-suite alias modes with explicit promotion-readiness evidence.
+
+### D2 Acceptance IDs and Gates
+
+| Acceptance ID | Gate | Pass Threshold |
+|---|---|---|
+| BL039-D2-001 | done-promotion parity contract | contract vs execute parity checks all `PASS` at `runs=100` |
+| BL039-D2-002 | contract-only 100-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, and `run_failure_count=0` for `runs=100` |
+| BL039-D2-003 | execute-suite 100-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, and `run_failure_count=0` for `runs=100` |
+| BL039-D2-004 | done-promotion parity artifact contract | `mode_parity.tsv` machine-readable with all parity rows `PASS` |
+| BL039-D2-005 | strict usage exit semantics | negative probe `--runs 0` exits with code `2` |
+| BL039-D2-006 | docs freshness gate | `./scripts/validate-docs-freshness.sh` exit `0` |
+
+### D2 Validation Plan
+
+- `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_<timestamp>/contract_runs_execute`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+### D2 Evidence Contract
+
+Required path:
+- `TestEvidence/bl039_slice_d2_done_promotion_<timestamp>/`
+
+Required artifacts:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `drift_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
 ## Slice A1 Execution Snapshot (2026-02-27)
 
 - Evidence packet:
@@ -706,6 +798,64 @@ Required artifacts:
   - Long-run execute-mode parity sentinel is fully green with stable deterministic replay signatures/rows across both modes.
   - Strict usage exit semantics and docs freshness gate are both `PASS`.
 
+## Slice D1 Execution Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl039_slice_c6_longrun_parity_20260227T033754Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/*`
+- Evidence packet:
+  - `TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `drift_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh` => `PASS`
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/contract_runs_execute` => `PASS`
+  - negative probe `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` => exit `2` (`PASS`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - D1 done-candidate readiness packet is fully green with deterministic 75-run parity stability across both modes.
+  - Strict usage exit semantics and docs freshness gate are both `PASS`.
+
+## Slice D2 Execution Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/*`
+- Evidence packet:
+  - `TestEvidence/bl039_slice_d2_done_promotion_20260227T201844Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `drift_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh` => `PASS`
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_20260227T201844Z/contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_20260227T201844Z/contract_runs_execute` => `PASS`
+  - negative probe `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` => exit `2` (`PASS`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - D2 done-promotion parity packet is fully green with deterministic 100-run parity stability across both modes.
+  - Strict usage exit semantics and docs freshness gate are both `PASS`.
+
 ### Owner Intake Sync Z1 (2026-02-27)
 
 - Owner packet:
@@ -748,3 +898,93 @@ Required artifacts:
   - `jq empty status.json` => `PASS`
 - Disposition:
   - BL-039 remains `In Implementation`; C5c packet is accepted and H2 metadata hygiene closure is integrated.
+
+### Owner Intake Sync Z8 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-039 remains `In Implementation`; C6 long-run execute-mode parity packet is accepted.
+
+### Owner Intake Sync Z9 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-039 advances to `In Validation`; D1 done-candidate long-run parity intake is accepted.
+
+### Owner Intake Sync Z10 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-039 advances to `Done-candidate`; D2 done-promotion parity intake is accepted.
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

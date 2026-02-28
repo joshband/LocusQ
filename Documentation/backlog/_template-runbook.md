@@ -16,6 +16,8 @@ Last Modified Date: [YYYY-MM-DD]
 | Depends On | [BL-YYY, BL-ZZZ] |
 | Blocks | [BL-AAA] |
 | Annex Spec | `[Documentation/plans/bl-XXX-....md]` |
+| Default Replay Tier | [T0/T1/T2/T3/T4 per `Documentation/backlog/index.md`] |
+| Heavy Lane Budget | [Standard / High-cost wrapper] |
 
 ## Effort Estimate
 
@@ -121,6 +123,22 @@ REFERENCE DOCS:
 | [UI-PX-XXXA] | Automated | `[command]` | Exit 0, no FAIL lines |
 | [Manual-XX] | Manual | [Steps 1-N] | Checklist all checked |
 
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | [T0/T1] | [1/3] | `[qa lane command]` | `validation_matrix.tsv`, run logs |
+| Candidate intake | [T2] | [5 or justified alternative] | `[qa lane command]` | replay summary + taxonomy |
+| Promotion | [T3] | [10 or owner-approved alternative] | `[qa lane command]` | owner packet evidence |
+
+### Cost/Flake Policy
+
+- Heavy wrappers (>=20 binary launches per wrapper run) must avoid repeated full-sweep reruns.
+- On failure, diagnose failing run(s) first; do not blindly repeat full multi-run sweeps.
+- Any cadence override must be documented in `lane_notes.md` or owner decision artifacts.
+
 ## Risks & Mitigations
 
 | Risk | Impact | Likelihood | Mitigation |
@@ -152,6 +170,7 @@ REFERENCE DOCS:
 - [ ] `TestEvidence/validation-trend.md` trend entry added
 - [ ] `README.md` and `CHANGELOG.md` updated (for Done transitions)
 - [ ] `./scripts/validate-docs-freshness.sh` passes
+- [ ] Replay cadence policy and any overrides are documented with rationale
 
 ## Owner Promotion Packet (Orchestrator Reuse)
 

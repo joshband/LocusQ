@@ -2,7 +2,7 @@ Title: HX-06 RT Safety Audit Reconciliation Ledger
 Document Type: Backlog Support
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # HX-06 RT Safety Audit Reconciliation Ledger
 
@@ -13,6 +13,14 @@ Track recurring RT-audit allowlist reconciliation passes that keep
 
 Canonical HX-06 implementation runbook remains:
 - `Documentation/backlog/done/hx-06-rt-safety-audit.md`
+
+## Governance Alignment
+
+- This file is a `Backlog Support` ledger and is intentionally exempt from active runbook schema fields (for example `Default Replay Tier`, `Heavy Lane Budget`, and `Replay Cadence Plan`).
+- Lifecycle/cadence governance for active backlog work is defined in:
+  - `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+  - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
+- Promotion-state authority for HX-06 remains the canonical done runbook path above.
 
 ## BL-033 Z2 Reconciliation (2026-02-26)
 
