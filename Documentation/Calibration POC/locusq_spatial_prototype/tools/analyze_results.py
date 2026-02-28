@@ -22,7 +22,7 @@ def analyze(results_dir: pathlib.Path):
         print("Insufficient data for statistical test.")
         return None
 
-    t_stat, p_value = stats.ttest_rel(personal_ext, generic_ext)
+    _, p_value = stats.ttest_rel(personal_ext, generic_ext)
     mean_improvement = (statistics.mean(personal_ext) - statistics.mean(generic_ext)) / statistics.mean(generic_ext) * 100
     fb_accuracy = statistics.mean(fb_correct) * 100
 
