@@ -1,6 +1,29 @@
 import argparse
 from locusq.renderer_offline import render_binaural_offline
 
+# ---------------------------------------------------------------------------
+# Phase B condition definitions
+# ---------------------------------------------------------------------------
+
+# (label, azimuth_deg, elevation_deg)
+SCENES = [
+    ("front",    0,   0),
+    ("left",     90,  0),
+    ("right",   -90,  0),
+    ("rear",    180,  0),
+    ("elevated",  0, 30),
+]
+
+# (label, hrtf_key, headphone_eq_preset or None)
+CONDITIONS = [
+    ("generic_no_eq",       "H3",             None),
+    ("personalized_no_eq",  "matched_subject", None),
+    ("generic_eq",          "H3",             "sony_wh1000xm5"),
+    ("personalized_eq",     "matched_subject", "sony_wh1000xm5"),
+]
+
+# ---------------------------------------------------------------------------
+
 def main():
     ap = argparse.ArgumentParser(description="Offline SOFA binaural renderer (prototype).")
     ap.add_argument("--sofa", required=True, help="Path to SOFA HRIR file")
