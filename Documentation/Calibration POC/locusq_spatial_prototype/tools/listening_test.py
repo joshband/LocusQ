@@ -24,12 +24,12 @@ def run_session(stimulus_dir: pathlib.Path, participant_id: str, out_dir: pathli
                 "externalization": float(ratings[0]),
                 "front_back_correct": int(ratings[1]),
                 "preference": float(ratings[2]),
-                "timestamp": datetime.datetime.utcnow().isoformat()
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
             })
         except (ValueError, IndexError):
             print("Skipped.")
 
-    ts = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_file = out_dir / f"session_{participant_id}_{ts}.json"
     out_file.write_text(json.dumps(results, indent=2))
     print(f"\nSaved: {out_file}")
