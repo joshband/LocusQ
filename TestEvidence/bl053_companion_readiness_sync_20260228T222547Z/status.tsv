@@ -1,0 +1,7 @@
+check_id	result	notes
+build_release	PASS	"cd companion && swift build -c release"
+companion_relaunch	PASS	Relaunched /Applications/LocusQ Headtrack Companion.app after binary replacement
+process_running	PASS	Companion monitor + runtime processes observed via pgrep
+udp_ack_socket	PASS	Companion bound localhost:19766 (lsof)
+manual_yaw_pitch_direction	PASS	User confirmed axis correction: "that works!"
+manual_readiness_gate_flow	PENDING_USER	Verify disconnected -> not_ready -> ready and Center/Sync gate behavior in UI
