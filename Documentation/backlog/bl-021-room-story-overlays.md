@@ -2,7 +2,7 @@ Title: BL-021 Room-Story Overlays
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-021 Room-Story Overlays
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-26
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Implementation (C2 soak packet PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay signatures and zero row drift; deterministic confidence reinforced) |
+| Status | In Implementation (C2 soak packet PASS; C4 execute-mode parity + exit-guard packet PASS on 2026-02-28; N13 owner recheck `--contract-only --runs 3` PASS with stable replay signatures and zero row drift; deterministic confidence reinforced) |
 | Owner Track | Track E — R&D Expansion |
 | Depends On | BL-014 (Done), BL-015 (Done), HX-05 |
 | Blocks | — |
@@ -244,3 +244,76 @@ Slice C2 strengthens replay determinism for BL-021 lane evidence while preservin
   - Deterministic confidence is reinforced by fresh owner-authoritative replay.
 - Note:
   - Requested C3 sentinel packet path was not present; owner used latest available C2 soak packet plus fresh N13 recheck.
+
+## Slice C4 Execute-Mode Parity + Exit Guard Contract
+
+Slice C4 extends deterministic confidence by requiring 20-run replay parity across both lane modes and strict usage/configuration exit guards.
+
+### C4 Acceptance IDs
+
+| ID | Requirement | Evidence |
+|---|---|---|
+| `BL021-C4-001` | Contract-only replay remains deterministic for `--runs 20` | `contract_runs/replay_hashes.tsv` |
+| `BL021-C4-002` | Execute-suite replay remains deterministic for `--runs 20` | `execute_runs/replay_hashes.tsv` |
+| `BL021-C4-003` | Contract-only vs execute-suite parity remains PASS at 20-run depth | `mode_parity.tsv` |
+| `BL021-C4-004` | Replay sentinel aggregate captures both mode summaries | `replay_sentinel_summary.tsv` |
+| `BL021-C4-005` | Strict usage/configuration exit guards remain enforced (`--runs 0`, `--unknown-flag` => exit `2`) | `exit_semantics_probe.tsv` |
+| `BL021-C4-006` | Docs freshness gate remains green at closeout | `docs_freshness.log` |
+| `BL021-C4-007` | C4 artifact schema is complete and machine-readable | `status.tsv`, `validation_matrix.tsv` |
+
+### C4 Validation Plan
+
+```bash
+bash -n scripts/qa-bl021-room-story-overlays-lane-mac.sh
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --help
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl021_slice_c4_mode_parity_<timestamp>/contract_runs
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --execute-suite --runs 20 --out-dir TestEvidence/bl021_slice_c4_mode_parity_<timestamp>/execute_runs
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --runs 0
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --unknown-flag
+./scripts/validate-docs-freshness.sh
+```
+
+### C4 Required Evidence Bundle
+
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `execute_runs/validation_matrix.tsv`
+- `execute_runs/replay_hashes.tsv`
+- `execute_runs/failure_taxonomy.tsv`
+- `mode_parity.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice C4 Execute-Mode Parity Intake (2026-02-28)
+
+- Worker packet directory: `TestEvidence/bl021_slice_c4_mode_parity_20260228T170131Z`
+- Validation summary:
+  - lane lint/help: `PASS`
+  - contract-only replay (`runs=20`): `PASS`
+  - execute-suite replay (`runs=20`): `PASS`
+  - usage/configuration probes: `PASS` (`--runs 0` => `2`, `--unknown-flag` => `2`)
+  - docs freshness: `PASS`
+- Determinism summary:
+  - contract-only signature divergence: `0`, row drift: `0`
+  - execute-suite signature divergence: `0`, row drift: `0`
+  - mode parity gate: `PASS`
+- Owner interpretation:
+  - BL-021 remains `In Implementation`.
+  - C4 packet confirms execute-mode parity and strict usage-exit guards are deterministic at 20-run depth.
+
+## Slice C4 Execute-Mode Parity Reconfirm (2026-02-28)
+
+- Reconfirm packet directory: `TestEvidence/bl021_slice_c4_mode_parity_20260228T171133Z`
+- Reconfirm summary:
+  - contract-only replay (`runs=20`): `PASS`
+  - execute-suite replay (`runs=20`): `PASS`
+  - usage/configuration probes: `PASS` (`--runs 0` => `2`, `--unknown-flag` => `2`)
+  - docs freshness: `PASS`
+- Notes:
+  - Replay parity and strict usage-exit semantics remain deterministic.
+  - C4 required evidence set includes `execute_runs/failure_taxonomy.tsv`.

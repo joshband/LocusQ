@@ -2,7 +2,7 @@ Title: BL-021 Room-Story Overlays QA Contract
 Document Type: Testing Guide
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-021 Room-Story Overlays QA Contract
 
@@ -174,3 +174,74 @@ bash -n scripts/qa-bl021-room-story-overlays-lane-mac.sh
 ./scripts/qa-bl021-room-story-overlays-lane-mac.sh --execute-suite --runs 3 --out-dir TestEvidence/bl021_slice_c2_soak_<timestamp>/exec_runs
 ./scripts/validate-docs-freshness.sh
 ```
+
+## C4 Execute-Mode Parity + Exit Guard Contract
+
+### C4 Acceptance Mapping
+
+| C4 ID | Requirement | Lane Artifact |
+|---|---|---|
+| `BL021-C4-001` | Contract-only replay sentinel remains deterministic for `--runs 20` | `contract_runs/replay_hashes.tsv` |
+| `BL021-C4-002` | Execute-suite replay sentinel remains deterministic for `--runs 20` | `execute_runs/replay_hashes.tsv` |
+| `BL021-C4-003` | Contract/execute mode parity remains PASS at 20-run depth | `mode_parity.tsv` |
+| `BL021-C4-004` | Replay sentinel summary includes both mode rows and PASS verdicts | `replay_sentinel_summary.tsv` |
+| `BL021-C4-005` | Usage/configuration guards keep strict exit semantics (`2`) | `exit_semantics_probe.tsv` |
+| `BL021-C4-006` | Docs freshness gate remains green | `docs_freshness.log` |
+| `BL021-C4-007` | Required C4 evidence schema is complete | `status.tsv`, `validation_matrix.tsv` |
+
+### C4 Validation Matrix
+
+```bash
+bash -n scripts/qa-bl021-room-story-overlays-lane-mac.sh
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --help
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl021_slice_c4_mode_parity_<timestamp>/contract_runs
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --execute-suite --runs 20 --out-dir TestEvidence/bl021_slice_c4_mode_parity_<timestamp>/execute_runs
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --runs 0
+./scripts/qa-bl021-room-story-overlays-lane-mac.sh --unknown-flag
+./scripts/validate-docs-freshness.sh
+```
+
+### C4 Evidence Contract
+
+Required files under `TestEvidence/bl021_slice_c4_mode_parity_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `execute_runs/validation_matrix.tsv`
+- `execute_runs/replay_hashes.tsv`
+- `execute_runs/failure_taxonomy.tsv`
+- `mode_parity.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## C4 Snapshot (2026-02-28)
+
+- Evidence path: `TestEvidence/bl021_slice_c4_mode_parity_20260228T170131Z/`
+- Validation outcome:
+  - syntax + help: `PASS`
+  - contract-only (`runs=20`): `PASS`
+  - execute-suite (`runs=20`): `PASS`
+  - usage/configuration probes: `PASS` (`--runs 0` => `2`, `--unknown-flag` => `2`)
+  - docs freshness: `PASS`
+- Determinism/parity summary:
+  - contract-only replay drift: `signature_divergence=0`, `row_drift=0`
+  - execute-suite replay drift: `signature_divergence=0`, `row_drift=0`
+  - mode parity gate: `PASS`
+
+## C4 Reconfirm Snapshot (2026-02-28)
+
+- Evidence path: `TestEvidence/bl021_slice_c4_mode_parity_20260228T171133Z/`
+- Validation outcome:
+  - syntax + help: `PASS`
+  - contract-only (`runs=20`): `PASS`
+  - execute-suite (`runs=20`): `PASS`
+  - usage/configuration probes: `PASS` (`--runs 0` => `2`, `--unknown-flag` => `2`)
+  - docs freshness: `PASS`
+- Determinism/parity summary:
+  - contract-only replay drift: `signature_divergence=0`, `row_drift=0`
+  - execute-suite replay drift: `signature_divergence=0`, `row_drift=0`
+  - mode parity gate: `PASS`
