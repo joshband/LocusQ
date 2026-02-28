@@ -90,6 +90,20 @@ private struct Quaternion {
 
     static let identity = Quaternion(x: 0, y: 0, z: 0, w: 1)
 
+    static func fromAxisAngle(axisX: Float, axisY: Float, axisZ: Float, radians: Float) -> Quaternion {
+        let axisLength = sqrtf((axisX * axisX) + (axisY * axisY) + (axisZ * axisZ))
+        guard axisLength > 0 else { return .identity }
+        let invLength = 1.0 / axisLength
+        let half = radians * 0.5
+        let sinHalf = sinf(half)
+        return Quaternion(
+            x: axisX * invLength * sinHalf,
+            y: axisY * invLength * sinHalf,
+            z: axisZ * invLength * sinHalf,
+            w: cosf(half)
+        ).normalized()
+    }
+
     func normalized() -> Quaternion {
         let length = sqrtf((x * x) + (y * y) + (z * z) + (w * w))
         guard length > 0 else { return .identity }
@@ -156,6 +170,48 @@ private struct Quaternion {
         let radToDeg: Float = 57.2957795
         return (yaw * radToDeg, pitch * radToDeg, roll * radToDeg)
     }
+}
+
+// CMHeadphoneMotionManager frame harmonization:
+// CoreMotion headphone attitude uses a frame where +Z is typically aligned with
+// "up" for yaw semantics, while LocusQ runtime diagnostics/rendering contract is
+// +X right, +Y up, -Z ahead (Steam canonical).
+//
+// Apply basis remap by conjugation:
+//   qSteam = R * qCoreMotion * inverse(R),
+// where R is +90deg about +X (maps Y->Z and Z->-Y).
+private let coreMotionToSteamBasis = Quaternion.fromAxisAngle(
+    axisX: 1.0,
+    axisY: 0.0,
+    axisZ: 0.0,
+    radians: Float.pi * 0.5
+)
+private let steamToCoreMotionBasis = coreMotionToSteamBasis.conjugate().normalized()
+
+private func remapCoreMotionQuaternionToSteamBasis(_ quaternion: Quaternion) -> Quaternion {
+    coreMotionToSteamBasis
+        .multiplied(by: quaternion)
+        .multiplied(by: steamToCoreMotionBasis)
+        .normalized()
+}
+
+private func remapCoreMotionVectorToSteamBasis(_ vector: Vector3) -> Vector3 {
+    // +90deg rotation around +X axis:
+    // x' = x
+    // y' = z
+    // z' = -y
+    Vector3(x: vector.x, y: vector.z, z: -vector.y)
+}
+
+private func applyOrientationSignCorrections(_ quaternion: Quaternion) -> Quaternion {
+    // Preserve yaw/pitch handedness from the current remap while correcting
+    // shoulder-tilt roll sign for companion + plugin parity.
+    let euler = quaternion.toEulerDegrees()
+    return quaternionFromYawPitchRoll(
+        yawDeg: euler.yaw,
+        pitchDeg: euler.pitch,
+        rollDeg: -euler.roll
+    )
 }
 
 private struct PosePacketV1 {
@@ -243,6 +299,7 @@ private struct CompanionArguments {
 
     // Stabilization and frame controls (live mode)
     var recenterOnStart: Bool = true
+    var requireSyncToStart: Bool = false
     var stabilizationAlpha: Float = 0.20
     var deadbandDeg: Float = 0.6
     var velocityDamping: Double = 0.92
@@ -274,6 +331,8 @@ private struct CompanionArguments {
 
         Live Mode Controls:
           --no-recenter             Disable startup recenter transform
+          --require-sync            Gate UDP pose output until "Center/Sync" is pressed in UI after ready
+          --auto-sync               Disable sync gate (default behavior)
           --stabilize-alpha <float> Quaternion low-pass alpha [0..1] (default: 0.20)
           --deadband-deg <float>    Ignore tiny orientation deltas below threshold (default: 0.6)
           --velocity-damping <float> Velocity damping [0..1] for derived translation estimate (default: 0.92)
@@ -347,6 +406,10 @@ private struct CompanionArguments {
                 args.monitorHz = parsed
             case "--no-recenter":
                 args.recenterOnStart = false
+            case "--require-sync":
+                args.requireSyncToStart = true
+            case "--auto-sync":
+                args.requireSyncToStart = false
             case "--stabilize-alpha":
                 let value = try takeValue(raw, index: &index, option: key)
                 guard let parsed = Float(value), parsed >= 0.0, parsed <= 1.0 else {
@@ -412,6 +475,8 @@ private struct CompanionArguments {
 }
 
 nonisolated(unsafe) private var gStopRequested: sig_atomic_t = 0
+nonisolated(unsafe) private var gSyncRequested = false
+private let gSyncRequestLock = NSLock()
 
 private func markStopRequested() {
     gStopRequested = 1
@@ -423,6 +488,22 @@ private func clearStopRequested() {
 
 private func stopRequested() -> Bool {
     gStopRequested != 0
+}
+
+private func requestSyncFromUI() {
+    gSyncRequestLock.lock()
+    gSyncRequested = true
+    gSyncRequestLock.unlock()
+}
+
+private func consumeSyncRequest() -> Bool {
+    gSyncRequestLock.lock()
+    defer { gSyncRequestLock.unlock() }
+    if gSyncRequested {
+        gSyncRequested = false
+        return true
+    }
+    return false
 }
 
 private func handleTerminationSignal(_ signal: Int32) -> Void {
@@ -585,6 +666,11 @@ private struct RuntimeSnapshot {
     var yawDeg: Float = 0.0
     var pitchDeg: Float = 0.0
     var rollDeg: Float = 0.0
+    var frameMapping: String = "steam_basis_identity"
+    var baselineState: String = "n/a"
+    var readinessState: String = "disabled_disconnected"
+    var sendGateOpen: Bool = false
+    var syncRequired: Bool = false
 
     var rotRateXDeg: Double = 0.0
     var rotRateYDeg: Double = 0.0
@@ -1049,7 +1135,7 @@ private func readDefaultOutputDeviceSnapshot() -> OutputDeviceSnapshot {
 #if canImport(AppKit)
 #if canImport(WebKit)
 @MainActor
-private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
+private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScriptMessageHandler {
     private let window: NSWindow
     private let webView: WKWebView
     private var pendingPayloadJSON: String?
@@ -1068,10 +1154,13 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
 
         let configuration = WKWebViewConfiguration()
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
+        let userContentController = WKUserContentController()
+        configuration.userContentController = userContentController
         webView = WKWebView(frame: frame, configuration: configuration)
         webView.autoresizingMask = [.width, .height]
 
         super.init()
+        userContentController.add(self, name: "locusqControl")
         window.delegate = self
 
         if let contentView = window.contentView {
@@ -1093,6 +1182,18 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         _ = notification
         markStopRequested()
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "locusqControl" else { return }
+        guard let body = message.body as? [String: Any],
+              let type = body["type"] as? String
+        else {
+            return
+        }
+        if type == "sync" {
+            requestSyncFromUI()
+        }
     }
 
     func render(snapshot: RuntimeSnapshot, args: CompanionArguments) {
@@ -1145,6 +1246,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 "pitch": snapshot.pitchDeg,
                 "roll": snapshot.rollDeg
             ],
+            "frameMapping": snapshot.frameMapping,
+            "baselineState": snapshot.baselineState,
+            "readinessState": snapshot.readinessState,
+            "sendGateOpen": snapshot.sendGateOpen,
+            "syncRequired": snapshot.syncRequired,
             "rotationRateDegPerSec": [
                 "x": snapshot.rotRateXDeg,
                 "y": snapshot.rotRateYDeg,
@@ -1204,6 +1310,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
             ],
             "controls": [
                 "recenterOnStart": args.recenterOnStart,
+                "requireSyncToStart": args.requireSyncToStart,
                 "stabilizationAlpha": args.stabilizationAlpha,
                 "deadbandDeg": args.deadbandDeg,
                 "velocityDamping": args.velocityDamping
@@ -1453,6 +1560,41 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
               padding: 2px 0 0 1px;
               text-shadow: 0 0 10px rgba(38, 121, 188, 0.25);
             }
+            #viewControls {
+              position: absolute;
+              top: 12px;
+              right: 12px;
+              display: inline-flex;
+              gap: 6px;
+              z-index: 5;
+              pointer-events: auto;
+            }
+            .viewBtn {
+              border: 1px solid rgba(74, 119, 167, 0.56);
+              border-radius: 6px;
+              background: rgba(8, 16, 26, 0.86);
+              color: #a8c7e4;
+              font-size: var(--font-xs);
+              font-weight: 700;
+              letter-spacing: 0.12em;
+              min-width: 28px;
+              height: 24px;
+              line-height: 1;
+              padding: 0 8px;
+              cursor: pointer;
+              transition: all 0.12s ease;
+            }
+            .viewBtn:hover {
+              border-color: rgba(100, 185, 255, 0.72);
+              color: #d5ecff;
+              background: rgba(18, 37, 56, 0.9);
+            }
+            .viewBtn.active {
+              border-color: rgba(102, 196, 255, 0.9);
+              color: #f5fbff;
+              background: linear-gradient(180deg, rgba(52, 124, 179, 0.64), rgba(31, 87, 135, 0.62));
+              box-shadow: 0 0 10px rgba(78, 176, 248, 0.24);
+            }
             #legend {
               position: absolute;
               left: 12px;
@@ -1508,6 +1650,30 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
             .controlValue {
               color: #c6e6ff;
               font-size: var(--font-sm);
+            }
+            .syncButton {
+              border: 1px solid rgba(86, 144, 199, 0.66);
+              border-radius: 8px;
+              background: rgba(14, 30, 46, 0.88);
+              color: #d4ecff;
+              font-size: var(--font-xs);
+              font-weight: 700;
+              letter-spacing: 0.12em;
+              text-transform: uppercase;
+              min-height: 30px;
+              cursor: pointer;
+              transition: all 0.12s ease;
+            }
+            .syncButton:hover {
+              border-color: rgba(112, 195, 255, 0.84);
+              background: rgba(26, 53, 77, 0.92);
+            }
+            .syncButton:disabled {
+              cursor: default;
+              opacity: 0.55;
+              border-color: rgba(75, 95, 118, 0.46);
+              background: rgba(12, 19, 28, 0.82);
+              color: #9fb4c9;
             }
             #metrics {
               overflow: hidden;
@@ -1599,6 +1765,12 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 <div id="threeNotice">Three.js unavailable, telemetry-only mode.</div>
                 <div id="viz"></div>
                 <div id="centerReticle" aria-hidden="true"></div>
+                <div id="viewControls">
+                  <button class="viewBtn active" data-view="perspective" title="Perspective View">P</button>
+                  <button class="viewBtn" data-view="top" title="Top View">T</button>
+                  <button class="viewBtn" data-view="front" title="Front View">F</button>
+                  <button class="viewBtn" data-view="side" title="Side View">S</button>
+                </div>
                 <div id="orientationOverlay" aria-hidden="true">
                   <div class="orientationChip left">L Ear - Screen Left</div>
                   <div class="orientationChip right">R Ear - Screen Right</div>
@@ -1631,6 +1803,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                   <input id="smoothVectors" type="range" min="0.02" max="0.65" step="0.01" value="0.22" />
                   <div id="smoothVectorsValue" class="controlValue">0.22</div>
                 </div>
+                <div class="controlBlock">
+                  <label for="syncButton">Center / Sync</label>
+                  <button id="syncButton" class="syncButton" type="button">Center / Sync</button>
+                  <div id="syncHint" class="controlValue">Waiting for readiness…</div>
+                </div>
               </div>
               <div id="metrics">
                 <div class="section">
@@ -1652,6 +1829,8 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                     <div class="rowLabel">Effective Rate</div><div id="streamEffectiveRateHz" class="rowValue">n/a</div>
                     <div class="rowLabel">Interval / Jitter</div><div id="streamIntervalJitter" class="rowValue">n/a</div>
                     <div class="rowLabel">Seq Gap</div><div id="streamSeqGap" class="rowValue">n/a</div>
+                    <div class="rowLabel">Readiness</div><div id="readinessState" class="rowValue">n/a</div>
+                    <div class="rowLabel">Send Gate</div><div id="sendGateOpen" class="rowValue">n/a</div>
                     <div class="rowLabel">Plugin Ingest</div><div id="pluginIngestState" class="rowValue">n/a</div>
                     <div class="rowLabel">Plugin Sources / Consumers</div><div id="pluginIngestCounts" class="rowValue">n/a</div>
                     <div class="rowLabel">Plugin Endpoint</div><div id="pluginIngestEndpoint" class="rowValue">n/a</div>
@@ -1668,6 +1847,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                     <div class="rowLabel">Yaw/Pitch/Roll Smoothed</div><div id="yprSmooth" class="rowValue">n/a</div>
                     <div class="rowLabel">Quaternion Raw (x,y,z,w)</div><div id="quatRaw" class="rowValue raw">n/a</div>
                     <div class="rowLabel">Quaternion Smoothed</div><div id="quatSmooth" class="rowValue">n/a</div>
+                    <div class="rowLabel">Frame Mapping</div><div id="frameMapping" class="rowValue">n/a</div>
                     <div class="rowLabel">Heading</div><div id="headingDeg" class="rowValue">n/a</div>
                     <div class="rowLabel">Sensor Location</div><div id="sensorLocation" class="rowValue">n/a</div>
                   </div>
@@ -1698,6 +1878,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                     <div class="rowLabel">Sample Rate / Ch</div><div id="outputDeviceSampleRateCh" class="rowValue">n/a</div>
                     <div class="rowLabel">Connected</div><div id="outputDeviceConnected" class="rowValue">n/a</div>
                     <div class="rowLabel">Recenter on Start</div><div id="recenterOnStart" class="rowValue">n/a</div>
+                    <div class="rowLabel">Baseline State</div><div id="baselineState" class="rowValue">n/a</div>
                     <div class="rowLabel">Alpha</div><div id="stabilizationAlpha" class="rowValue">n/a</div>
                     <div class="rowLabel">Deadband (deg)</div><div id="deadbandDeg" class="rowValue">n/a</div>
                     <div class="rowLabel">Velocity Damping</div><div id="velocityDamping" class="rowValue">n/a</div>
@@ -1716,6 +1897,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 scene: null,
                 camera: null,
                 cameraTarget: null,
+                viewMode: "perspective",
                 root: null,
                 arrows: {},
                 resizeObserver: null,
@@ -1735,6 +1917,37 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
               const num = (value, fallback = 0) => (typeof value === "number" && Number.isFinite(value)) ? value : fallback;
               const get = (id) => document.getElementById(id);
               const setText = (id, text) => { const el = get(id); if (el) el.textContent = text; };
+              const readinessLabel = (value) => {
+                if (value === "active_ready") return "active_ready";
+                if (value === "active_not_ready") return "active_not_ready";
+                return "disabled_disconnected";
+              };
+
+              function bindViewControls() {
+                const buttons = document.querySelectorAll("#viewControls .viewBtn[data-view]");
+                if (!buttons || buttons.length === 0) return;
+
+                const syncButtons = () => {
+                  buttons.forEach((button) => {
+                    const isActive = button.dataset.view === state.viewMode;
+                    button.classList.toggle("active", isActive);
+                  });
+                };
+
+                buttons.forEach((button) => {
+                  button.addEventListener("click", () => {
+                    const nextMode = button.dataset.view;
+                    if (!nextMode) return;
+                    state.viewMode = nextMode;
+                    if (typeof state.applyCameraView === "function") {
+                      state.applyCameraView();
+                    }
+                    syncButtons();
+                  });
+                });
+
+                syncButtons();
+              }
 
               function bindSmoothingControls() {
                 const orientation = get("smoothOrientation");
@@ -1754,6 +1967,19 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 update();
               }
 
+              function bindSyncControls() {
+                const button = get("syncButton");
+                if (!button) return;
+                button.addEventListener("click", () => {
+                  if (window.webkit
+                      && window.webkit.messageHandlers
+                      && window.webkit.messageHandlers.locusqControl
+                      && typeof window.webkit.messageHandlers.locusqControl.postMessage === "function") {
+                    window.webkit.messageHandlers.locusqControl.postMessage({ type: "sync" });
+                  }
+                });
+              }
+
               function initThreeScene() {
                 if (!window.THREE) {
                   const notice = get("threeNotice");
@@ -1771,6 +1997,34 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 state.cameraTarget = new THREE.Vector3(0, 0, 0);
                 state.camera.position.set(0.0, 1.08, 2.92);
                 state.camera.lookAt(state.cameraTarget);
+
+                state.applyCameraView = () => {
+                  if (!state.camera) return;
+                  const target = state.cameraTarget || new THREE.Vector3(0, 0, 0);
+                  const containerWidth = Math.max(120, container.clientWidth || 120);
+                  const containerHeight = Math.max(120, container.clientHeight || 120);
+                  const aspect = Math.max(0.6, Math.min(2.6, containerWidth / containerHeight));
+                  const halfFovRad = (state.camera.fov * Math.PI / 180) * 0.5;
+                  const fitRadius = 1.52;
+                  const fitDistance = (fitRadius / Math.tan(halfFovRad)) * (aspect < 1 ? (1 / aspect) : 1);
+                  const distance = Math.max(2.25, Math.min(4.3, fitDistance * 0.84));
+
+                  if (state.viewMode === "top") {
+                    state.camera.up.set(0, 0, -1);
+                    state.camera.position.set(0.0, distance, 0.001);
+                  } else if (state.viewMode === "front") {
+                    state.camera.up.set(0, 1, 0);
+                    state.camera.position.set(0.0, 0.0, distance);
+                  } else if (state.viewMode === "side") {
+                    state.camera.up.set(0, 1, 0);
+                    state.camera.position.set(distance, 0.0, 0.0);
+                  } else {
+                    state.camera.up.set(0, 1, 0);
+                    const elevation = Math.max(0.85, Math.min(1.32, 1.00 + (1.0 / aspect - 1.0) * 0.18));
+                    state.camera.position.set(0, elevation, distance);
+                  }
+                  state.camera.lookAt(target);
+                };
 
                 state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 state.renderer.setPixelRatio(window.devicePixelRatio || 1);
@@ -1923,15 +2177,9 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                   state.camera.updateProjectionMatrix();
                   state.renderer.setSize(width, height, true);
                   state.renderer.setViewport(0, 0, width, height);
-                  const target = state.cameraTarget || new THREE.Vector3(0, 0, 0);
-                  const aspect = Math.max(0.6, Math.min(2.6, width / height));
-                  const halfFovRad = (state.camera.fov * Math.PI / 180) * 0.5;
-                  const fitRadius = 1.52;
-                  const fitDistance = (fitRadius / Math.tan(halfFovRad)) * (aspect < 1 ? (1 / aspect) : 1);
-                  const distance = Math.max(2.25, Math.min(4.3, fitDistance * 0.84));
-                  const elevation = Math.max(0.85, Math.min(1.32, 1.00 + (1.0 / aspect - 1.0) * 0.18));
-                  state.camera.position.set(0, elevation, distance);
-                  state.camera.lookAt(target);
+                  if (typeof state.applyCameraView === "function") {
+                    state.applyCameraView();
+                  }
                 };
                 window.addEventListener("resize", resize);
                 if (window.ResizeObserver) {
@@ -1969,11 +2217,23 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
 
                 const ageMs = num(snapshot.ageMs, 0);
                 const hasErrors = num(snapshot.sendErrors, 0) > 0 || num(snapshot.invalidSamples, 0) > 0;
+                const readiness = readinessLabel(snapshot.readinessState);
+                const sendGateOpen = !!snapshot.sendGateOpen;
+                const syncRequired = !!snapshot.syncRequired;
 
                 pill.className = "";
                 if (hasErrors) {
                   pill.classList.add("error");
                   pill.textContent = "ERROR";
+                } else if (readiness === "disabled_disconnected") {
+                  pill.classList.add("warn");
+                  pill.textContent = "DISCONNECTED";
+                } else if (readiness !== "active_ready") {
+                  pill.classList.add("warn");
+                  pill.textContent = "NOT READY";
+                } else if (syncRequired && !sendGateOpen) {
+                  pill.classList.add("warn");
+                  pill.textContent = "SYNC NEEDED";
                 } else if (ageMs > 120.0) {
                   pill.classList.add("warn");
                   pill.textContent = "STALE";
@@ -2011,9 +2271,15 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 const plugin = snapshot.pluginIngest || {};
                 const outputDevice = snapshot.outputDevice || {};
                 const controls = snapshot.controls || {};
+                const readiness = readinessLabel(snapshot.readinessState);
+                const sendGateOpen = !!snapshot.sendGateOpen;
+                const syncRequired = !!snapshot.syncRequired;
+                const syncButton = get("syncButton");
+                const syncHint = get("syncHint");
 
                 setText("quatRaw", "[" + f(num(q.x), 4) + ", " + f(num(q.y), 4) + ", " + f(num(q.z), 4) + ", " + f(num(q.w, 1), 4) + "]");
                 setText("yprRaw", f(num(ypr.yaw), 2) + " / " + f(num(ypr.pitch), 2) + " / " + f(num(ypr.roll), 2) + " deg");
+                setText("frameMapping", snapshot.frameMapping || "n/a");
                 setText("rotRateRaw", f(num(rot.x), 2) + " / " + f(num(rot.y), 2) + " / " + f(num(rot.z), 2));
                 setText("angularSpeedDegPerSec", f(num(snapshot.angularSpeedDegPerSec), 2) + " deg/s");
                 setText("gravityG", "[" + f(num(grav.x), 3) + ", " + f(num(grav.y), 3) + ", " + f(num(grav.z), 3) + "]");
@@ -2028,6 +2294,8 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 setText("streamEffectiveRateHz", f(num(stream.effectiveRateHz), 1) + " Hz");
                 setText("streamIntervalJitter", f(num(stream.intervalMs), 1) + " ms / " + f(num(stream.jitterMs), 2) + " ms");
                 setText("streamSeqGap", String(stream.seqGap ?? "0"));
+                setText("readinessState", readiness);
+                setText("sendGateOpen", sendGateOpen ? "open" : "closed");
                 setText("pluginIngestState", plugin.state || "n/a");
                 setText("pluginIngestCounts", String(plugin.sourceCount ?? "0") + " / " + String(plugin.consumerCount ?? "0"));
                 setText("pluginIngestEndpoint", plugin.endpoint || "n/a");
@@ -2040,9 +2308,25 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
                 setText("outputDeviceSampleRateCh", f(num(outputDevice.sampleRateHz), 1) + " Hz / " + String(outputDevice.channels ?? "0"));
                 setText("outputDeviceConnected", outputDevice.connected ? "true" : "false");
                 setText("recenterOnStart", controls.recenterOnStart ? "true" : "false");
+                setText("baselineState", snapshot.baselineState || "n/a");
                 setText("stabilizationAlpha", f(num(controls.stabilizationAlpha), 3));
                 setText("deadbandDeg", f(num(controls.deadbandDeg), 3));
                 setText("velocityDamping", f(num(controls.velocityDamping), 3));
+
+                if (syncButton) {
+                  syncButton.disabled = readiness !== "active_ready";
+                }
+                if (syncHint) {
+                  if (readiness !== "active_ready") {
+                    syncHint.textContent = "Waiting for in-ear ready state";
+                  } else if (syncRequired && !sendGateOpen) {
+                    syncHint.textContent = "Ready. Press Center / Sync to open send gate";
+                  } else if (sendGateOpen) {
+                    syncHint.textContent = "Synced. Streaming pose to plugin";
+                  } else {
+                    syncHint.textContent = "Ready";
+                  }
+                }
               }
 
               function applySmoothing(snapshot) {
@@ -2119,6 +2403,8 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
               };
 
               bindSmoothingControls();
+              bindSyncControls();
+              bindViewControls();
               initThreeScene();
             })();
           </script>
@@ -2322,6 +2608,16 @@ private func nowEpochMilliseconds() -> UInt64 {
     UInt64((Date().timeIntervalSince1970 * 1000.0).rounded())
 }
 
+private func seededSequenceStart() -> UInt32 {
+    // Seed from epoch milliseconds so relaunches do not restart from 1 and get
+    // rejected by monotonic-sequence receivers in already-running plugin hosts.
+    var seed = UInt32(truncatingIfNeeded: nowEpochMilliseconds())
+    if seed == 0 {
+        seed = 1
+    }
+    return seed
+}
+
 private func mergePluginAndDeviceDiagnostics(store: SnapshotStore,
                                              pluginAckReceiver: PluginAckReceiver?,
                                              cachedOutputDevice: inout OutputDeviceSnapshot,
@@ -2380,7 +2676,7 @@ private func runSynthetic(arguments: CompanionArguments,
         "companion_start mode=synthetic host=\(arguments.host) port=\(arguments.port) hz=\(arguments.hz) seconds=\(arguments.seconds) retries=\(ReliabilityConfig.maxSendRetries)"
     )
 
-    var seq: UInt32 = 1
+    var seq: UInt32 = seededSequenceStart()
     var sentPackets = 0
     var stopReason = "duration_complete"
     var cachedOutputDevice = readDefaultOutputDeviceSnapshot()
@@ -2417,6 +2713,11 @@ private func runSynthetic(arguments: CompanionArguments,
             snapshot.mode = .synthetic
             snapshot.source = "synthetic_generator"
             snapshot.connection = "simulated"
+            snapshot.frameMapping = "synthetic_steam_basis_identity"
+            snapshot.baselineState = arguments.recenterOnStart ? "synthetic_not_applicable" : "disabled"
+            snapshot.readinessState = "active_ready"
+            snapshot.sendGateOpen = true
+            snapshot.syncRequired = arguments.requireSyncToStart
             snapshot.sequence = seq
             snapshot.timestampMs = timestampMs
             snapshot.ageMs = 0.0
@@ -2499,9 +2800,13 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
     private let sender: UDPSender
     private let store: SnapshotStore
 
-    private var sequence: UInt32 = 1
+    private var sequence: UInt32 = seededSequenceStart()
     private var lastSentMotionTimestamp: TimeInterval = -.greatestFiniteMagnitude
     private var baselineInverse: Quaternion?
+    private var baselineCapturePending = true
+    private var baselineStableSampleCount = 0
+    private var baselineSensorLocation = "unknown"
+    private var sendGateOpen = false
     private var smoothedQuaternion = Quaternion.identity
     private var hasSmoothedQuaternion = false
 
@@ -2525,10 +2830,28 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
         self.arguments = arguments
         self.sender = sender
         self.store = store
+        self.sendGateOpen = !arguments.requireSyncToStart
     }
 
     func setConnectionState(_ state: String) {
         connectionState = state
+        if arguments.recenterOnStart, state == "connected" {
+            baselineInverse = nil
+            baselineCapturePending = true
+            baselineStableSampleCount = 0
+            hasSmoothedQuaternion = false
+            sendGateOpen = !arguments.requireSyncToStart
+        }
+        store.update { snapshot in
+            snapshot.connection = state
+            if state == "connected" {
+                snapshot.readinessState = "active_not_ready"
+            } else {
+                snapshot.readinessState = "disabled_disconnected"
+                snapshot.sendGateOpen = false
+            }
+            snapshot.syncRequired = arguments.requireSyncToStart
+        }
     }
 
     func registerError(_ message: String) {
@@ -2542,21 +2865,74 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
     }
 
     func handleMotion(_ motion: CMDeviceMotion) {
-        let rawQuaternion = Quaternion(
+        let rawCoreMotionQuaternion = Quaternion(
             x: Float(motion.attitude.quaternion.x),
             y: Float(motion.attitude.quaternion.y),
             z: Float(motion.attitude.quaternion.z),
             w: Float(motion.attitude.quaternion.w)
         ).normalized()
+        // CoreMotion attitude quaternion is reference->device.
+        // LocusQ orientation path expects device->reference for listener basis.
+        let rawQuaternion = applyOrientationSignCorrections(
+            remapCoreMotionQuaternionToSteamBasis(rawCoreMotionQuaternion)
+                .conjugate()
+                .normalized()
+        )
+
+        let sensorLocation: String
+        switch motion.sensorLocation {
+        case .default:
+            sensorLocation = "default"
+        case .headphoneLeft:
+            sensorLocation = "headphone_left"
+        case .headphoneRight:
+            sensorLocation = "headphone_right"
+        @unknown default:
+            sensorLocation = "unknown"
+        }
+
+        let gravityCoreMotion = Vector3(
+            x: motion.gravity.x,
+            y: motion.gravity.y,
+            z: motion.gravity.z
+        )
+        let userAccelerationCoreMotionG = Vector3(
+            x: motion.userAcceleration.x,
+            y: motion.userAcceleration.y,
+            z: motion.userAcceleration.z
+        )
+
+        if arguments.recenterOnStart {
+            if sensorLocation != baselineSensorLocation {
+                baselineSensorLocation = sensorLocation
+                baselineInverse = nil
+                baselineCapturePending = true
+                baselineStableSampleCount = 0
+                hasSmoothedQuaternion = false
+            }
+
+            if baselineCapturePending || baselineInverse == nil {
+                let rawAngularSpeedDeg = sqrt(
+                    (motion.rotationRate.x * motion.rotationRate.x)
+                        + (motion.rotationRate.y * motion.rotationRate.y)
+                        + (motion.rotationRate.z * motion.rotationRate.z)
+                ) * 57.2957795
+                let rawAccelMagG = userAccelerationCoreMotionG.magnitude()
+                let sampleStable = rawAngularSpeedDeg < 12.0 && rawAccelMagG < 0.08
+                baselineStableSampleCount = sampleStable ? (baselineStableSampleCount + 1) : 0
+                if baselineStableSampleCount >= 10 {
+                    baselineInverse = rawQuaternion.conjugate().normalized()
+                    baselineCapturePending = false
+                    baselineStableSampleCount = 0
+                }
+            }
+        } else {
+            baselineCapturePending = false
+        }
 
         var recenteredQuaternion = rawQuaternion
-        if arguments.recenterOnStart {
-            if baselineInverse == nil {
-                baselineInverse = rawQuaternion.conjugate().normalized()
-            }
-            if let baselineInverse {
-                recenteredQuaternion = baselineInverse.multiplied(by: rawQuaternion).normalized()
-            }
+        if arguments.recenterOnStart, let baselineInverse {
+            recenteredQuaternion = baselineInverse.multiplied(by: rawQuaternion).normalized()
         }
 
         let filteredQuaternion: Quaternion
@@ -2582,25 +2958,24 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
         }
         previousMotionTimestamp = motionTimestamp
 
-        let gravity = Vector3(
-            x: motion.gravity.x,
-            y: motion.gravity.y,
-            z: motion.gravity.z
-        )
-        let userAccelerationG = Vector3(
-            x: motion.userAcceleration.x,
-            y: motion.userAcceleration.y,
-            z: motion.userAcceleration.z
-        )
+        let gravity = remapCoreMotionVectorToSteamBasis(gravityCoreMotion)
+        let userAccelerationG = remapCoreMotionVectorToSteamBasis(userAccelerationCoreMotionG)
 
         let accelerationMps2 = userAccelerationG * 9.80665
         velocityEstimateMps = ((velocityEstimateMps + (accelerationMps2 * dtSec)) * arguments.velocityDamping)
             .clamped(min: -3.0, max: 3.0)
         displacementEstimateM = (displacementEstimateM + (velocityEstimateMps * dtSec)).clamped(min: -1.5, max: 1.5)
 
-        let rotationRateXDeg = motion.rotationRate.x * 57.2957795
-        let rotationRateYDeg = motion.rotationRate.y * 57.2957795
-        let rotationRateZDeg = motion.rotationRate.z * 57.2957795
+        let rotationRateCoreMotionDeg = remapCoreMotionVectorToSteamBasis(
+            Vector3(
+                x: motion.rotationRate.x * 57.2957795,
+                y: motion.rotationRate.y * 57.2957795,
+                z: motion.rotationRate.z * 57.2957795
+            )
+        )
+        let rotationRateXDeg = rotationRateCoreMotionDeg.x
+        let rotationRateYDeg = rotationRateCoreMotionDeg.y
+        let rotationRateZDeg = rotationRateCoreMotionDeg.z
         let angularSpeed = sqrt(
             (rotationRateXDeg * rotationRateXDeg)
                 + (rotationRateYDeg * rotationRateYDeg)
@@ -2610,12 +2985,38 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
         let motionNorm = clamp01((angularSpeed / 220.0) * 0.7 + (userAccelerationG.magnitude() / 1.8) * 0.3)
         let stabilityNorm = clamp01(1.0 - motionNorm)
 
+        let hasInEarSensor = (sensorLocation == "headphone_left" || sensorLocation == "headphone_right")
+        let baselineLocked = !arguments.recenterOnStart || (baselineInverse != nil && !baselineCapturePending)
+        let readinessState: String
+        if connectionState == "connected" {
+            readinessState = (hasInEarSensor && baselineLocked) ? "active_ready" : "active_not_ready"
+        } else {
+            readinessState = "disabled_disconnected"
+        }
+
+        if readinessState != "active_ready" {
+            sendGateOpen = false
+        }
+
+        if consumeSyncRequest() {
+            if readinessState == "active_ready" {
+                baselineInverse = rawQuaternion.conjugate().normalized()
+                baselineCapturePending = false
+                baselineStableSampleCount = 0
+                hasSmoothedQuaternion = false
+                sendGateOpen = true
+            }
+        } else if !arguments.requireSyncToStart && readinessState == "active_ready" {
+            sendGateOpen = true
+        }
+
         let nowMs = nowEpochMilliseconds()
         let shouldSend = (motionTimestamp - lastSentMotionTimestamp) >= (1.0 / Double(arguments.hz))
         var sentSeq = sequence == 0 ? 0 : sequence - 1
         var packetTimestampMs: UInt64 = nowMs
+        let allowPoseSend = (readinessState == "active_ready") && sendGateOpen
 
-        if shouldSend {
+        if shouldSend && allowPoseSend {
             let packet = PosePacketV1(
                 quaternion: filteredQuaternion,
                 timestampMs: nowMs,
@@ -2657,26 +3058,27 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
         let heading = motion.heading
         let headingValue = heading >= 0.0 ? heading : nil
 
-        let sensorLocation: String
-        switch motion.sensorLocation {
-        case .default:
-            sensorLocation = "default"
-        case .headphoneLeft:
-            sensorLocation = "headphone_left"
-        case .headphoneRight:
-            sensorLocation = "headphone_right"
-        @unknown default:
-            sensorLocation = "unknown"
-        }
-
         let ageMs = packetTimestampMs > 0 && nowMs >= packetTimestampMs
             ? Double(nowMs - packetTimestampMs)
             : 0.0
+        let baselineState: String
+        if !arguments.recenterOnStart {
+            baselineState = "disabled"
+        } else if baselineInverse == nil || baselineCapturePending {
+            baselineState = "capturing"
+        } else {
+            baselineState = "locked_\(baselineSensorLocation)"
+        }
 
         store.update { snapshot in
             snapshot.mode = .live
             snapshot.source = "coremotion_headphones"
             snapshot.connection = connectionState
+            snapshot.frameMapping = "coremotion->steam (x,+90degX,device^-1,rollSignFlip)"
+            snapshot.baselineState = baselineState
+            snapshot.readinessState = readinessState
+            snapshot.sendGateOpen = allowPoseSend
+            snapshot.syncRequired = arguments.requireSyncToStart
             snapshot.sequence = sentSeq
             snapshot.timestampMs = packetTimestampMs
             snapshot.ageMs = ageMs

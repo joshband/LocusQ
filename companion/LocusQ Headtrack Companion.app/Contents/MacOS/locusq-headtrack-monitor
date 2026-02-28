@@ -1,0 +1,57 @@
+#!/bin/zsh
+set -euo pipefail
+
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="/Users/artbox/Documents/Repos/LocusQ/companion"
+BUNDLED_BIN="$SELF_DIR/locusq-headtrack-companion"
+REPO_BIN="$REPO_DIR/.build/release/locusq-headtrack-companion"
+REPO_BIN_ARM64="$REPO_DIR/.build/arm64-apple-macosx/release/locusq-headtrack-companion"
+
+BIN=""
+
+if [[ -x "$BUNDLED_BIN" ]]; then
+  BIN="$BUNDLED_BIN"
+else
+  SOURCE_BIN=""
+  if [[ -x "$REPO_BIN" ]]; then
+    SOURCE_BIN="$REPO_BIN"
+  elif [[ -x "$REPO_BIN_ARM64" ]]; then
+    SOURCE_BIN="$REPO_BIN_ARM64"
+  fi
+
+  if [[ -n "$SOURCE_BIN" ]]; then
+    # Keep execution inside the app bundle so Dock/LaunchServices can track
+    # the UI process as a normal app launch.
+    if cp -f "$SOURCE_BIN" "$BUNDLED_BIN" && chmod +x "$BUNDLED_BIN"; then
+      BIN="$BUNDLED_BIN"
+    else
+      BIN="$SOURCE_BIN"
+    fi
+  fi
+fi
+
+if [[ -z "$BIN" ]]; then
+  echo "Companion binary missing. Expected one of:"
+  echo "  $BUNDLED_BIN"
+  echo "  $REPO_BIN"
+  echo "  $REPO_BIN_ARM64"
+  exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  # Safe default for manual sessions:
+  # - require explicit Center/Sync before UDP pose send opens
+  # - keep recenter enabled so sync locks current forward pose
+  # Prefer live AirPods motion stream; fallback to synthetic monitor
+  # so the app still opens when motion hardware/permission is unavailable.
+  set +e
+  "$BIN" --mode live --ui --seconds 0 --hz 60 --require-sync
+  launch_status=$?
+  set -e
+  if [[ $launch_status -eq 0 ]]; then
+    exit 0
+  fi
+  exec "$BIN" --mode synthetic --ui --seconds 0 --hz 60
+else
+  exec "$BIN" "$@"
+fi
