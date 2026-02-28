@@ -2,7 +2,7 @@ Title: BL-XXX Promotion Decision Template
 Document Type: Backlog Template
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-XXX Promotion Decision (`Slice Z*` Owner Sync)
 
@@ -25,6 +25,9 @@ Use this template for owner-authoritative promotion packets under:
 | Item lane replay | `[qa lane command]` | PASS | [PASS/FAIL] | [PASS/FAIL] | `validation_matrix.tsv` |
 | Contract lane(s) | `[qa contract command]` | PASS | [PASS/FAIL] | [PASS/FAIL] | `[lane log]` |
 | RT safety | `./scripts/rt-safety-audit.sh --print-summary --output .../rt_audit.tsv` | `non_allowlisted=0` | `[value]` | [PASS/FAIL] | `rt_audit.tsv` |
+| Replay cadence compliance | `runbook replay tier + run budget check` | PASS | [PASS/FAIL] | [PASS/FAIL] | `owner_decisions.md` |
+| Ownership safety | `SHARED_FILES_TOUCHED marker + ownership delta check` | `no` | `[no/yes]` | [PASS/FAIL] | `handoff_resolution.md` |
+| Evidence localization | `promotion evidence path check` | `TestEvidence/...` only | [PASS/FAIL] | [PASS/FAIL] | `handoff_resolution.md` |
 | Status schema | `jq empty status.json` | PASS | [PASS/FAIL] | [PASS/FAIL] | `status_json_check.log` |
 | Docs freshness | `./scripts/validate-docs-freshness.sh` | PASS | [PASS/FAIL] | [PASS/FAIL] | `docs_freshness.log` |
 
@@ -47,6 +50,14 @@ Use this template for owner-authoritative promotion packets under:
 | `TestEvidence/build-summary.md` | snapshot updated | [PASS/FAIL] | [notes] |
 | `TestEvidence/validation-trend.md` | trend entries appended | [PASS/FAIL] | [notes] |
 
+## Done Transition Readiness (Required if proposing Done)
+
+| Check | Expected | Status | Notes |
+|---|---|---|---|
+| Closeout template applied | `Documentation/backlog/_template-closeout.md` structure used | [PASS/FAIL] | [notes] |
+| Runbook move planned | `Documentation/backlog/done/bl-XXX-*.md` target path explicit | [PASS/FAIL] | [notes] |
+| Index row ready | row state/status/path updated for Done | [PASS/FAIL] | [notes] |
+
 ## Blockers (if any)
 - [blocker 1]
 - [blocker 2]
@@ -67,4 +78,3 @@ Use this template for owner-authoritative promotion packets under:
 - `docs_freshness.log`
 - `owner_decisions.md`
 - `handoff_resolution.md`
-

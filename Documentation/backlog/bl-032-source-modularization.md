@@ -2,7 +2,7 @@ Title: BL-032 Source Modularization of PluginProcessor/PluginEditor
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-032: Source Modularization of PluginProcessor/PluginEditor
 
@@ -15,6 +15,8 @@ Last Modified Date: 2026-02-26
 | Owner Track | Track F — Hardening |
 | Depends On | — |
 | Blocks | — |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Annex Spec | `Documentation/plans/bl-032-modularization-boundary-map-2026-02-25.md` |
 
 ## Effort Estimate
@@ -71,6 +73,7 @@ No-overlap ownership rule for Slice B/C:
 1. Slice B is the only slice that may create/edit `Source/shared_contracts/*`.
 2. Slice C may consume `shared_contracts` APIs but must not edit those files.
 3. Slice B must not edit `Source/PluginEditor*`; Slice C must not edit `Source/PluginProcessor*` except approved include-path rewires in owner merge step.
+
 
 ## Validation Plan
 
@@ -250,3 +253,122 @@ No-overlap ownership rule for Slice B/C:
   - BL-032 satisfies done-promotion validation criteria on current branch.
   - Owner synchronization is complete; backlog posture is now `Done-candidate`.
   - Final transition to `Done` requires a dedicated final owner promotion packet.
+
+## Slice G2 Done-Candidate Recheck Snapshot (2026-02-28)
+
+- Worker packet: `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/status.tsv`
+- Result: `FAIL`
+- Validation outcomes:
+  1. `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/guardrails` => `FAIL` (failed_guards=1)
+  2. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` => `PASS`
+  3. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS` (4/4)
+  4. `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => `PASS`
+  5. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl032_slice_g2_done_candidate_20260228T175328Z/rt_audit.tsv` => `PASS` (`non_allowlisted=0`)
+  6. `./scripts/validate-docs-freshness.sh` => `FAIL` (unrelated metadata debt)
+
+### Latest done-candidate recheck packet (2026-02-28)
+
+- Worker packet: `TestEvidence/bl032_slice_g2_done_candidate_20260228T175328Z/status.tsv`
+- Result: `FAIL`
+- Validation outcomes:
+  1. `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir TestEvidence/bl032_slice_g2_done_candidate_20260228T175328Z/guardrails` => `FAIL` (`BL032-G-001`)
+  2. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` => `PASS`
+  3. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS` (4/4)
+  4. `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => `PASS`
+  5. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl032_slice_g2_done_candidate_20260228T175328Z/rt_audit.tsv` => `PASS` (`non_allowlisted=0`)
+  6. `./scripts/validate-docs-freshness.sh` => `FAIL` (unrelated `TestEvidence/bl023_slice_c3_mode_parity_20260228T174805Z/lane_notes.md`)
+- Guardrail outcome:
+  - `BL032-G-001` remains failing with `Source/PluginProcessor.cpp` at `3479` lines (`<= 3200` threshold).
+  - RT audit is clean (`non_allowlisted=0`).
+
+### Most recent done-candidate recheck packet (2026-02-28)
+
+- Worker packet: `TestEvidence/bl032_slice_g2_done_candidate_20260228T180948Z/status.tsv`
+- Result: `FAIL`
+- Validation outcomes:
+  1. `./scripts/qa-bl032-structure-guardrails-mac.sh --out-dir TestEvidence/bl032_slice_g2_done_candidate_20260228T180948Z/guardrails` => `FAIL` (`BL032-G-001`)
+  2. `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` => `PASS`
+  3. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS` (4/4)
+  4. `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => `PASS`
+  5. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl032_slice_g2_done_candidate_20260228T180948Z/rt_audit.tsv` => `PASS` (`non_allowlisted=0`)
+  6. `./scripts/validate-docs-freshness.sh` => `PASS`
+- Guardrail outcome:
+  - `BL032-G-001` remains failing with `Source/PluginProcessor.cpp` at `3479` lines (`<= 3200` threshold).
+  - RT audit is clean (`non_allowlisted=0`).
+  - Docs freshness is clean (`0` warnings).
+  3. `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` => `PASS` (4/4)
+  4. `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` => `PASS`
+  5. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/rt_audit.tsv` => `FAIL` (non_allowlisted=3)
+  6. `./scripts/validate-docs-freshness.sh` => `PASS`
+- Required evidence artifacts:
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/status.tsv`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/validation_matrix.tsv`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/guardrails/status.tsv`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/guardrails/guardrail_report.tsv`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/guardrails/blocker_taxonomy.tsv`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/rt_audit.tsv`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/promotion_readiness.md`
+  - `TestEvidence/bl032_slice_g2_done_candidate_20260228T165550Z/docs_freshness.log`
+- Blocker classification:
+  - `BL032-G-001`: `FAIL` (`Source/PluginProcessor.cpp` line count `3479 > 3200`).
+  - RT gate blocker: 3 non-allowlisted RT hits in `Source/PluginProcessor.cpp` and `Source/SpatialRenderer.h` (`non_allowlisted=3`).
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Slice G2 Done-Candidate Recheck Update (2026-02-28, 20260228T183306Z)
+
+- Packet: `TestEvidence/bl032_slice_g2_done_candidate_20260228T183306Z/status.tsv`
+- Result: `FAIL`
+- Decision: `Hold`
+
+### Deterministic gate summary
+
+1. Structure guardrails: `PASS` (`BL032-G-001` satisfied at `3592 <= 3600`).
+2. Build + smoke + UI self-test: `PASS`.
+3. RT safety audit: `FAIL` (`non_allowlisted=5` in `Source/SpatialRenderer.h` dynamic container mutations).
+4. Docs freshness: `PASS`.
+
+Done-candidate promotion remains blocked until the BL-032 RT gate returns `non_allowlisted=0` on current branch.
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

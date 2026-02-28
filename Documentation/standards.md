@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-02-28
 
 # Documentation Standards
 
@@ -50,6 +50,31 @@ Every in-scope markdown file must include, in this order, at the top of file:
 3. Plan docs under `Documentation/plans/` carry deep architecture content but must not become competing backlog ledgers.
 4. New backlog items enter via `Documentation/backlog/_template-intake.md` and are promoted to full runbooks using `Documentation/backlog/_template-runbook.md`.
 5. The legacy files `Documentation/backlog-post-v1-agentic-sprints.md` and `Documentation/runbooks/backlog-execution-runbooks.md` are superseded and retained as Tier 2 reference only.
+
+## Backlog Lifecycle Governance Standard
+
+Applies to all remaining open backlog items and all future backlog items.
+
+1. Intake must use `Documentation/backlog/_template-intake.md` and include replay/cost planning plus ownership boundaries.
+2. Active runbooks must include replay tiering via `Documentation/backlog/_template-runbook.md` fields (`Default Replay Tier`, `Heavy Lane Budget`, and `Replay Cadence Plan`).
+3. Owner promotion packets must use `Documentation/backlog/_template-promotion-decision.md`, including explicit:
+   - replay cadence compliance,
+   - ownership safety (`SHARED_FILES_TOUCHED: no|yes`),
+   - evidence localization under `TestEvidence/`.
+4. Done transitions must use `Documentation/backlog/_template-closeout.md` and move runbooks to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+5. Done/closeout evidence is not valid when canonical promotion artifacts only exist in `/tmp`; canonical copies must be under repository `TestEvidence/`.
+6. Conformance scope:
+   - active/open runbooks (`Documentation/backlog/bl-*.md`) must satisfy the current runbook schema and cadence policy;
+   - legacy done runbooks (`Documentation/backlog/done/*.md`) are grandfathered and need not be bulk-retrofitted unless touched;
+   - backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields but must preserve canonical runbook linkage.
+
+## Backlog Validation Cadence Standard
+
+Default cadence tiers are defined in `Documentation/backlog/index.md` and are normative unless owner-approved stricter overrides are documented.
+
+1. Use the minimum tier needed for the current stage (`T0/T1` dev, `T2` intake, `T3` promotion, `T4` sentinel only).
+2. Avoid blind full reruns after a single failure; diagnose the failing run index first.
+3. Heavy wrappers (>=20 binary launches per wrapper run) must use cost-contained reruns unless owner explicitly requests wider sweeps.
 
 ## Cross-Reference Requirements
 When code behavior changes, updated docs must reference:

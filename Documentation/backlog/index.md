@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28 (BL-052 done archive sync)
+Last Modified Date: 2026-02-28 (BL-064/065/066 I3 payload materialization sync)
 
 # LocusQ Master Backlog Index
 
@@ -20,6 +20,23 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 6. Any status/priority change must update this file, the runbook's Status Ledger, and evidence surfaces in the same changeset.
 7. Intake process for new items uses `Documentation/backlog/_template-intake.md`.
 8. Owner promotion decisions should use `Documentation/backlog/_template-promotion-decision.md` inside the owner sync evidence bundle.
+9. Validation replay cadence policy defined in this file is default for all open and future backlog items unless a runbook documents a stricter owner-approved override.
+
+## Backlog Lifecycle Contract
+
+Applies to all remaining open items and all future backlog items.
+
+1. New work starts with `Documentation/backlog/_template-intake.md`.
+2. Promoted work uses `Documentation/backlog/_template-runbook.md` and must define replay cadence and ownership boundaries.
+3. Owner promotion packets use `Documentation/backlog/_template-promotion-decision.md`.
+4. Done transitions use `Documentation/backlog/_template-closeout.md`.
+5. When an item becomes Done, move its runbook from `Documentation/backlog/` to `Documentation/backlog/done/` in the same change set as index/status/evidence sync.
+6. All worker and owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+7. Evidence for canonical promotions must be repo-local under `TestEvidence/` (not `/tmp` paths).
+8. Conformance scope:
+   - Active/open runbooks (`Documentation/backlog/bl-*.md`) must satisfy current lifecycle and replay-cadence contract.
+   - Legacy done runbooks under `Documentation/backlog/done/` are grandfathered; retrofit is optional unless touched for a new promotion/change.
+   - Backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields and must link to their canonical runbook authority.
 
 ## Layer Model
 
@@ -30,32 +47,73 @@ Single canonical backlog authority for priority, ordering, status, dependencies,
 | Annex specs (`Documentation/plans/*.md`) | Deep architecture/spec details per BL lane | Supporting |
 | Archive (`Documentation/archive/`) | Historical context and extraction source | Reference only |
 
+## Global Replay Cadence Policy
+
+Applies to all remaining open backlog items and all new backlog items by default.
+
+### Purpose
+
+Preserve determinism guarantees while reducing rerun tax during active development.
+
+### Tiered Replay Contract
+
+| Tier | Name | Default Use | Typical Runs | Required Evidence |
+|---|---|---|---|---|
+| T0 | Syntax/Usage Smoke | Script contract sanity and argument semantics | 1 | syntax/help logs, exit probes, docs freshness |
+| T1 | Dev Loop Determinism | Day-to-day implementation checks | 3 | contract/execute matrices + replay hashes |
+| T2 | Candidate Gate | Pre-owner intake confidence gate | 5 | stable replay summary + blocker taxonomy |
+| T3 | Promotion Gate | Final owner promotion validation | 10 (or owner-approved equivalent) | promotion packet + deterministic replay evidence |
+| T4 | Long-Run Sentinel | Explicit soak/regression sentinel only | 20/50/100 (explicitly requested) | long-run sentinel summaries and parity artifacts |
+
+### Execution Rules
+
+1. Start at T1 for active development unless the runbook explicitly requires T0 only (docs-only lanes).
+2. Escalate to T2 only after T1 is green and intake is pending.
+3. Escalate to T3 once per promotion cycle; avoid repeated full T3 reruns unless code changed or owner requests.
+4. Reserve T4 for sentinel slices and post-fix confidence drills, not routine iteration.
+5. If a replay fails, run targeted diagnostics on the failing run index before repeating full multi-run sweeps.
+6. Heavy wrappers (>=20 binary launches per wrapper run) must use cost containment:
+   - debugging: single-run targeted repro;
+   - candidate check: 2 runs;
+   - promotion check: 3 runs unless owner requires broader coverage.
+
+### Override Contract
+
+- Runbook-specific stricter cadence is allowed only when documented in that runbook's Validation Plan.
+- Owner prompts may temporarily raise cadence for deterministic tie-breaks; the reason must be recorded in `owner_decisions.md` or `lane_notes.md`.
+- Any cadence override must include a cost rationale and a rollback path to normal tiering.
+
 ## Active Queue
 
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
-| 1 | BL-030 | Release governance and device rerun | P2 | In Validation (N13 owner replay reconcile remains `FAIL` 3/3; `device_matrix_capture` aborts with exit `143` before gate emission, so RL-05 stays blocked) | G | BL-024, BL-025, HX-06 | — | [bl-030](bl-030-release-governance.md) |
+| 1 | BL-030 | Release governance and device rerun | P2 | **Done** (N15 owner authoritative confirm `UNANIMOUS_PASS`; RL-03..RL-09 closeout matrix PASS; release decision `GO`) | G | BL-024, BL-025, HX-06 | — | [bl-030](done/bl-030-release-governance.md) |
 | 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Implementation (C1 additive native bridge intake integrated; build/smoke PASS; RT gate still red `non_allowlisted=85` in owner N9 replay) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with deterministic signatures and zero row drift) | C | BL-025 | — | [bl-023](bl-023-resize-dpi-hardening.md) |
 | 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (D1 guardrail remediation PASS, D2 RT reconciliation PASS, E1 owner replay PASS, F1 done-promotion PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
-| 6 | BL-035 | RT lock-free registration | P0 | In Implementation (owner D6 replay keeps build/smoke/selftest/RT/schema green and `BL035-A-001/A-002` closed, but docs freshness gate fails on external metadata debt in `TestEvidence/bl030_rl05_manual_closure_g5_20260225T210303Z/harness_contract.md`) | F | HX-02, BL-032 | BL-030 | [bl-035](bl-035-rt-lock-free-registration.md) |
-| 7 | BL-036 | DSP finite output guardrails | P0 | In Implementation (Z7 owner intake accepted H2 + C5c exit-semantics packet; deterministic replay and docs freshness are green) | F | BL-035 | BL-030 | [bl-036](bl-036-dsp-finite-output-guardrails.md) |
-| 8 | BL-037 | Emitter snapshot CPU budget | P1 | In Implementation (Z7 owner intake accepted H2 + C5c exit-semantics packet; deterministic replay and docs freshness are green) | F | BL-035 | BL-030 | [bl-037](bl-037-emitter-snapshot-cpu-budget.md) |
-| 9 | BL-038 | Calibration threading and telemetry | P1 | In Implementation (Z7 owner intake accepted H2 + C6r execute-mode parity packet; deterministic parity, strict usage exits, and docs freshness are green) | E | BL-026, BL-034 | — | [bl-038](bl-038-calibration-threading-and-telemetry.md) |
-| 10 | BL-039 | Parameter relay spec generation | P1 | In Implementation (Z7 owner intake accepted H2 + C5c execute-mode parity packet; deterministic parity and docs freshness are green) | B | BL-027, BL-032 | — | [bl-039](bl-039-parameter-relay-spec-generation.md) |
-| 11 | BL-040 | UI modularization and authority status UX | P1 | In Implementation (Z7 owner intake accepted H2 + C5c authority diagnostics exit-semantics packet; deterministic lane and docs freshness are green) | B | BL-027, BL-039 | — | [bl-040](bl-040-ui-modularization-and-authority-status.md) |
-| 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | In Implementation (Z7 owner intake accepted H2 + C3c replay sentinel/mode parity packet; deterministic contract/execute artifacts and docs freshness are green) | E | BL-036 | — | [bl-041](bl-041-doppler-v2-and-vbap-geometry-validation.md) |
-| 13 | BL-042 | QA CI regression gates | P1 | In Planning (derived from repo review 2026-02-26 P1 findings) | G | BL-035, BL-036, BL-041, HX-06 | BL-030 | [bl-042](bl-042-qa-ci-regression-gates.md) |
-| 14 | BL-044 | Quality-tier seamless switching | P1 | In Planning (derived from full architecture review 2026-02-26 gap G-02/G-13) | F | BL-043 (Done) | — | [bl-044](bl-044-quality-tier-seamless-switching.md) |
-| 15 | BL-045 | Head tracking fidelity v1.1 | P1 | **Done** (all slices + full QA lane 10/10 PASS 2026-02-27; `TestEvidence/bl045_headtracking_fidelity_20260227T034917Z`) | E | BL-017, BL-034 | BL-046, BL-047 | [bl-045](done/bl-045-head-tracking-fidelity-v11.md) |
-| 16 | BL-046 | SOFA HRTF and binaural expansion | P1 | In Planning (derived from full architecture review 2026-02-26 gap G-10/G-11) | A | BL-045, BL-033 | — | [bl-046](bl-046-sofa-hrtf-binaural-expansion.md) |
-| 17 | BL-047 | Spatial coordinate contract | P1 | In Planning (derived from full architecture review 2026-02-26 gap G-12) | E | BL-018, BL-045 | — | [bl-047](bl-047-spatial-coordinate-contract.md) |
-| 18 | BL-048 | Cross-platform shipping hardening | P1 | In Planning (derived from full architecture review 2026-02-26 gap G-08/G-09/G-25) | G | BL-030, BL-042 | — | [bl-048](bl-048-cross-platform-shipping-hardening.md) |
-| 19 | BL-049 | Unit test framework and tracker automation | P1 | In Planning (derived from full architecture review 2026-02-26 gap G-16/G-17) | D | BL-042 | — | [bl-049](bl-049-unit-test-framework-and-tracker-automation.md) |
-| 20 | BL-050 | High-rate delay and FIR hardening | P2 | In Planning (derived from full architecture review 2026-02-26 gap G-14/G-24) | F | BL-043 (Done), BL-046 | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
-| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | In Planning (derived from full architecture review 2026-02-26 gap G-20/G-21/G-24 follow-on) | E | BL-046, BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
-| 22 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
+| 6 | BL-035 | RT lock-free registration | P0 | In Implementation (owner D6 replay keeps build/smoke/selftest/RT/schema green and `BL035-A-001/A-002` closed, but docs freshness gate fails on external metadata debt in `TestEvidence/bl030_rl05_manual_closure_g5_20260225T210303Z/harness_contract.md`) | F | HX-02, BL-032 | — | [bl-035](bl-035-rt-lock-free-registration.md) |
+| 7 | BL-036 | DSP finite output guardrails | P0 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-036](bl-036-dsp-finite-output-guardrails.md) |
+| 8 | BL-037 | Emitter snapshot CPU budget | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-037](bl-037-emitter-snapshot-cpu-budget.md) |
+| 9 | BL-038 | Calibration threading and telemetry | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | E | BL-026, BL-034 | — | [bl-038](bl-038-calibration-threading-and-telemetry.md) |
+| 10 | BL-039 | Parameter relay spec generation | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | B | BL-027, BL-032 | — | [bl-039](bl-039-parameter-relay-spec-generation.md) |
+| 11 | BL-040 | UI modularization and authority status UX | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) | B | BL-027, BL-039 | — | [bl-040](bl-040-ui-modularization-and-authority-status.md) |
+| 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | E | BL-036 | — | [bl-041](bl-041-doppler-v2-and-vbap-geometry-validation.md) |
+| 13 | BL-042 | QA CI regression gates | P1 | **Done** (Z16c RT reconcile PASS; Z16P_r2c preflight PASS; Z18 owner done-promotion PASS) | G | BL-035, BL-036, BL-041, HX-06 | BL-030 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
+| 14 | BL-044 | Quality-tier seamless switching | P1 | **Done** (Z17 owner done-promotion PASS; deterministic e2e evidence localized and ownership-safe) | F | BL-043 (Done) | — | [bl-044](done/bl-044-quality-tier-seamless-switching.md) |
+| 15 | BL-045 | Head tracking fidelity v1.1 | P1 | **Done** (all slices + full QA lane 10/10 PASS 2026-02-27; `TestEvidence/bl045_headtracking_fidelity_20260227T034917Z`) | E | BL-017, BL-034 | — | [bl-045](done/bl-045-head-tracking-fidelity-v11.md) |
+| 16 | BL-046 | SOFA HRTF and binaural expansion | P1 | **Done** (Z17 owner done-promotion PASS; owner-ready + long-run parity evidence complete) | A | BL-045, BL-033 | — | [bl-046](done/bl-046-sofa-hrtf-binaural-expansion.md) |
+| 17 | BL-047 | Spatial coordinate contract | P1 | **Done** (Z16b ownership-safe reconcile PASS; Z17 owner done-promotion PASS) | E | BL-018, BL-045 | — | [bl-047](done/bl-047-spatial-coordinate-contract.md) |
+| 18 | BL-048 | Cross-platform shipping hardening | P1 | **Done** (Z16b e2e promotion reconcile PASS; Z17 owner done-promotion PASS) | G | BL-030, BL-042 | — | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
+| 19 | BL-049 | Unit test framework and tracker automation | P1 | **Done** (D2 done-promotion parity PASS; Z17 owner done-promotion PASS) | D | BL-042 | — | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
+| 20 | BL-050 | High-rate delay and FIR hardening | P2 | In Planning (derived from full architecture review 2026-02-26 gap G-14/G-24) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
+| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | In Validation (A1b owner intake accepted; A2 contract drafted; ADR-0014 formalized; C1 decomposition complete; WI lanes registered as BL-062..BL-066) | E | BL-046 (Done), BL-050 | BL-062, BL-064, BL-065 | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
+| 22 | BL-062 | Ambisonics IR interface contract | P2 | In Implementation (I1 contract snapshot scaffold landed; bridge telemetry schema published for downstream lanes) | E | BL-051 | BL-063 | [bl-062](bl-062-ambisonics-ir-interface-contract.md) |
+| 23 | BL-063 | Ambisonics renderer compatibility guardrails | P2 | In Implementation (I1 guardrail telemetry emitted; deterministic blocker/status contract published) | E | BL-062 | BL-066 | [bl-063](bl-063-ambisonics-renderer-compatibility-guardrails.md) |
+| 24 | BL-064 | ADM mapping contract | P2 | In Implementation (I3 runtime payload materialization landed; ADM payload object metadata now emitted for intake/verification lanes) | E | BL-051 | BL-066 | [bl-064](bl-064-adm-mapping-contract.md) |
+| 25 | BL-065 | IAMF mapping contract | P2 | In Implementation (I3 runtime payload materialization landed; IAMF payload element metadata now emitted for intake/verification lanes) | E | BL-051 | BL-066 | [bl-065](bl-065-iamf-mapping-contract.md) |
+| 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | In Implementation (I3 intake gate now composes concrete ADM/IAMF runtime payload objects with execution guard signals) | E | BL-063, BL-064, BL-065 | — | [bl-066](bl-066-ambisonics-adm-pilot-execution-intake.md) |
+| 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done-candidate) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 
 ## Dependency Graph
 
@@ -87,11 +145,24 @@ graph TD
         HX-02[HX-02 Reg Lock Done]
         HX-06[HX-06 RT Audit Done]
         BL-043[BL-043 FDN Sample-Rate Done]
+        BL-042[BL-042 QA CI Gates Done]
+        BL-044[BL-044 Quality Switch Continuity Done]
+        BL-045[BL-045 Head Tracking Fidelity Done]
+        BL-046[BL-046 SOFA + Binaural Done]
+        BL-047[BL-047 Coordinate Contract Done]
+        BL-048[BL-048 Shipping Hardening Done]
+        BL-049[BL-049 Unit Tests + Tracker Automation Done]
+        BL-030[BL-030 Release Gov Done]
     end
 
-    subgraph "In Validation"
-        BL-030[BL-030 Release Gov]
+    subgraph "In Validation / Done-candidate"
         BL-032[BL-032 Source Modularization]
+        BL-036[BL-036 Finite Guardrails]
+        BL-037[BL-037 Snapshot CPU Budget]
+        BL-038[BL-038 Calibration Thread/Telemetry]
+        BL-039[BL-039 Parameter Relay Generation]
+        BL-040[BL-040 UI Modularization]
+        BL-041[BL-041 Doppler + VBAP]
     end
 
     subgraph "In Implementation / Open"
@@ -99,21 +170,13 @@ graph TD
         BL-021[BL-021 Room Story]
         BL-023[BL-023 Resize/DPI]
         BL-035[BL-035 RT Lock-Free Registration]
-        BL-036[BL-036 Finite Guardrails]
-        BL-037[BL-037 Snapshot CPU Budget]
-        BL-038[BL-038 Calibration Thread/Telemetry]
-        BL-039[BL-039 Parameter Relay Generation]
-        BL-040[BL-040 UI Modularization]
-        BL-041[BL-041 Doppler + VBAP]
-        BL-042[BL-042 QA CI Gates]
-        BL-044[BL-044 Quality Switch Continuity]
-        BL-045[BL-045 Head Tracking Fidelity]
-        BL-046[BL-046 SOFA + Binaural]
-        BL-047[BL-047 Coordinate Contract]
-        BL-048[BL-048 Shipping Hardening]
-        BL-049[BL-049 Unit Tests + Tracker Automation]
         BL-050[BL-050 High-Rate Delay/FIR]
         BL-051[BL-051 Ambisonics + ADM]
+        BL-062[BL-062 Ambisonics IR Contract]
+        BL-063[BL-063 Renderer Compatibility Guardrails]
+        BL-064[BL-064 ADM Mapping Contract]
+        BL-065[BL-065 IAMF Mapping Contract]
+        BL-066[BL-066 Pilot Execution Intake]
     end
 
     BL-014 --> BL-018
@@ -172,6 +235,13 @@ graph TD
     BL-046 --> BL-050
     BL-046 --> BL-051
     BL-050 --> BL-051
+    BL-051 --> BL-062
+    BL-062 --> BL-063
+    BL-051 --> BL-064
+    BL-051 --> BL-065
+    BL-063 --> BL-066
+    BL-064 --> BL-066
+    BL-065 --> BL-066
     BL-009 --> BL-033
     BL-017 --> BL-033
     BL-026 --> BL-033
@@ -187,7 +257,7 @@ graph TD
 | B | Scene/UI Runtime | BL-039, BL-040 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
 | C | UX Authoring | BL-023 | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
-| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
+| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-062, BL-063, BL-064, BL-065, BL-066 | `skill_plan`, `skill_dream`, `reactive-av`, `threejs` |
 | F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030, BL-042, BL-048 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
 
@@ -297,7 +367,14 @@ Any status change must update in the same changeset:
 | BL-031 | Tempo-locked visual token scheduler | 2026-02-25 | [bl-031](done/bl-031-tempo-token-scheduler.md) |
 | BL-033 | Headphone calibration core path | 2026-02-26 | [bl-033](done/bl-033-headphone-calibration-core.md) |
 | BL-034 | Headphone calibration verification and profile governance | 2026-02-26 | [bl-034](done/bl-034-headphone-calibration-verification.md) |
+| BL-042 | QA CI regression gates | 2026-02-28 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
 | BL-043 | FDN sample-rate integrity | 2026-02-26 | [bl-043](done/bl-043-fdn-sample-rate-integrity.md) |
+| BL-044 | Quality-tier seamless switching | 2026-02-27 | [bl-044](done/bl-044-quality-tier-seamless-switching.md) |
+| BL-045 | Head tracking fidelity v1.1 | 2026-02-27 | [bl-045](done/bl-045-head-tracking-fidelity-v11.md) |
+| BL-046 | SOFA HRTF and binaural expansion | 2026-02-27 | [bl-046](done/bl-046-sofa-hrtf-binaural-expansion.md) |
+| BL-047 | Spatial coordinate contract | 2026-02-27 | [bl-047](done/bl-047-spatial-coordinate-contract.md) |
+| BL-048 | Cross-platform shipping hardening | 2026-02-27 | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
+| BL-049 | Unit test framework and tracker automation | 2026-02-27 | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
 | BL-052 | Steam Audio virtual surround + quad layout | 2026-02-28 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |

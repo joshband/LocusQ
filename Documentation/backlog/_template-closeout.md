@@ -14,6 +14,9 @@ Last Modified Date: [YYYY-MM-DD]
 | Status | Done |
 | Completed | [YYYY-MM-DD] |
 | Owner Track | [Track X — Name] |
+| Promotion Decision Packet | `TestEvidence/<owner_sync_or_promotion_packet>/promotion_decision.md` |
+| Final Evidence Root | `TestEvidence/<bl_or_hx>_<slice>_<timestamp>/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-XXX-[slug].md` |
 
 ## Objective
 
@@ -36,6 +39,28 @@ Last Modified Date: [YYYY-MM-DD]
 - [Link or path to validation artifacts]
 - [TestEvidence/ entries]
 - [Self-test lane results]
+
+## Promotion Gate Summary
+
+| Gate | Status | Evidence |
+|---|---|---|
+| Build + smoke | [PASS/FAIL] | `[path]` |
+| Lane replay/parity | [PASS/FAIL] | `[path]` |
+| RT safety | [PASS/FAIL] | `[path]` |
+| Docs freshness | [PASS/FAIL] | `[path]` |
+| Status schema | [PASS/FAIL] | `[path]` |
+| Ownership safety (`SHARED_FILES_TOUCHED`) | [PASS/FAIL] | `[path]` |
+
+## Backlog/Status Sync Checklist
+
+- [ ] Runbook moved from `Documentation/backlog/` to `Documentation/backlog/done/`
+- [ ] `Documentation/backlog/index.md` row updated to Done with done-path link
+- [ ] `status.json` updated
+- [ ] `TestEvidence/build-summary.md` updated
+- [ ] `TestEvidence/validation-trend.md` updated
+- [ ] Owner decision + handoff resolution linked
+- [ ] `./scripts/validate-docs-freshness.sh` passes
+- [ ] `jq empty status.json` passes
 
 ## Completion Date
 

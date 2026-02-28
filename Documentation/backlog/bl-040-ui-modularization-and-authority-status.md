@@ -2,7 +2,7 @@ Title: BL-040 UI Modularization and Authority Status UX
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-02-28
 
 # BL-040 UI Modularization and Authority Status UX
 
@@ -12,11 +12,13 @@ Last Modified Date: 2026-02-27
 |---|---|
 | ID | BL-040 |
 | Priority | P1 |
-| Status | In Implementation (C6 long-run exit-semantics sentinel PASS after Z7 intake; deterministic lane and docs freshness gates are green) |
+| Status | Done-candidate (Owner Z10 accepted D2 done-promotion sentinel intake; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) |
 | Track | B - Scene/UI Runtime |
 | Effort | High / L |
 | Depends On | BL-027 (Done), BL-039 |
 | Blocks | — |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
 
 ## Objective
@@ -188,6 +190,8 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 | B1 | UI diagnostics bootstrap + contract harness | Acceptance IDs `BL040-B1-001..008` satisfied |
 | B | Runtime modularization refactor | No BL-029/BL-034 UI regressions |
 | C | Authority UX implementation + deterministic lane | Replay-stable authority diagnostics and selftests pass |
+| D1 | Done-candidate long-run sentinel packet | `runs=75` deterministic replay + strict usage exits + docs freshness gate pass |
+| D2 | Done promotion sentinel packet | `runs=100` deterministic replay + strict usage exits + docs freshness gate pass with promotion readiness packet |
 
 ## TODOs (Slice A1)
 
@@ -235,6 +239,21 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 - [x] Re-validate strict usage exit semantics for `--runs 0` and `--bad-flag` (`exit 2`).
 - [x] Emit machine-readable long-run sentinel rollups (`status.tsv`, `validation_matrix.tsv`, `ui_diagnostics_summary.tsv`).
 - [x] Capture C6 evidence packet with docs freshness gate status.
+
+## TODOs (Slice D1 Done-Candidate)
+
+- [x] Extend UI authority diagnostics sentinel depth to `--runs 75` for done-candidate readiness.
+- [x] Preserve strict usage exit semantics for `--runs 0` and `--bad-flag` (`exit 2`).
+- [x] Emit machine-readable D1 done-candidate rollups (`status.tsv`, `validation_matrix.tsv`, `ui_diagnostics_summary.tsv`).
+- [x] Capture D1 evidence packet with docs freshness gate status and input handoff resolution.
+
+## TODOs (Slice D2 Done Promotion)
+
+- [x] Extend UI authority diagnostics sentinel depth to `--runs 100` for done-promotion readiness.
+- [x] Preserve strict usage exit semantics for `--runs 0` and `--bad-flag` (`exit 2`).
+- [x] Emit machine-readable D2 promotion rollups (`status.tsv`, `validation_matrix.tsv`, `ui_diagnostics_summary.tsv`).
+- [x] Capture D2 evidence packet including promotion readiness decision memo and docs freshness gate status.
+
 
 ## Validation Plan (A1)
 
@@ -308,6 +327,26 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 50 --out-dir TestEvidence/bl040_slice_c6_ui_longrun_<timestamp>/contract_runs`
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## Validation Plan (D1 Done-Candidate Long-Run Sentinel)
+
+- `node --check Source/ui/public/js/index.js`
+- `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl040_slice_d1_done_candidate_<timestamp>/contract_runs`
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## Validation Plan (D2 Done Promotion Sentinel)
+
+- `node --check Source/ui/public/js/index.js`
+- `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
+- `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl040_slice_d2_done_promotion_<timestamp>/contract_runs`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`)
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`)
 - `./scripts/validate-docs-freshness.sh`
@@ -445,6 +484,38 @@ Required files:
 - `ui_diagnostics_summary.tsv`
 - `exit_semantics_probe.tsv`
 - `ui_diagnostics_notes.md`
+- `docs_freshness.log`
+
+## Evidence Contract (D1 Done-Candidate Long-Run Sentinel)
+
+Evidence bundle path:
+- `TestEvidence/bl040_slice_d1_done_candidate_<timestamp>/`
+
+Required files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `ui_diagnostics_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `ui_diagnostics_notes.md`
+- `docs_freshness.log`
+
+## Evidence Contract (D2 Done Promotion Sentinel)
+
+Evidence bundle path:
+- `TestEvidence/bl040_slice_d2_done_promotion_<timestamp>/`
+
+Required files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `ui_diagnostics_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
 - `docs_freshness.log`
 
 ## Slice A1 Execution Snapshot (2026-02-27)
@@ -682,6 +753,73 @@ Required files:
   - C6 long-run sentinel is deterministic and strict usage-exit semantics remain stable.
   - Docs freshness gate remains green.
 
+## Slice D1 Done-Candidate Long-Run Sentinel Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl040_slice_c6_ui_longrun_20260227T033800Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/*`
+- Evidence packet:
+  - `TestEvidence/bl040_slice_d1_done_candidate_20260227T183452Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `ui_diagnostics_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `ui_diagnostics_notes.md`
+  - `docs_freshness.log`
+- Validation:
+  - `node --check Source/ui/public/js/index.js` => `PASS`
+  - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl040_slice_d1_done_candidate_20260227T183452Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`) => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`) => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Determinism/taxonomy/semantics summary:
+  - `runs_observed=75`
+  - `signature_drift_count=0`
+  - `row_drift_count=0`
+  - `taxonomy_nonzero_rows=0`
+  - `usage_probe_runs0_exit=2`
+  - `usage_probe_badflag_exit=2`
+- Result:
+  - D1 done-candidate packet is deterministic with stable strict usage-exit semantics and green docs freshness gate.
+
+## Slice D2 Done Promotion Sentinel Snapshot (2026-02-27)
+
+- Input handoffs resolved:
+  - `TestEvidence/bl040_slice_d1_done_candidate_20260227T183452Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/*`
+- Evidence packet:
+  - `TestEvidence/bl040_slice_d2_done_promotion_20260227T201804Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `ui_diagnostics_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation:
+  - `node --check Source/ui/public/js/index.js` => `PASS`
+  - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl040_slice_d2_done_promotion_20260227T201804Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`) => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`) => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Determinism/taxonomy/semantics summary:
+  - `runs_observed=100`
+  - `signature_drift_count=0`
+  - `row_drift_count=0`
+  - `taxonomy_nonzero_rows=0`
+  - `usage_probe_runs0_exit=2`
+  - `usage_probe_badflag_exit=2`
+- Result:
+  - D2 done-promotion packet is deterministic with stable strict usage-exit semantics and green docs freshness gate.
+  - Promotion readiness memo records `PROMOTE_TO_DONE`.
+
 ### Owner Intake Sync Z6 (2026-02-27)
 
 - Owner packet:
@@ -711,3 +849,93 @@ Required files:
   - `jq empty status.json` => `PASS`
 - Disposition:
   - BL-040 remains `In Implementation`; C5c packet is accepted and H2 metadata hygiene closure is integrated.
+
+### Owner Intake Sync Z8 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-040 remains `In Implementation`; C6 long-run authority diagnostics packet is accepted.
+
+### Owner Intake Sync Z9 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-040 advances to `In Validation`; D1 done-candidate long-run authority diagnostics intake is accepted.
+
+### Owner Intake Sync Z10 (2026-02-27)
+
+- Owner packet:
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `owner_decisions.md`
+  - `handoff_resolution.md`
+- Owner replay:
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl041_recheck` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 5 --out-dir TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/bl040_recheck` => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Disposition:
+  - BL-040 is normalized to owner-governed `Done-candidate`; D2 done-promotion sentinel intake is accepted and out-of-band `Done` labeling is reconciled.
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

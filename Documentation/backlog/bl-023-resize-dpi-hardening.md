@@ -2,7 +2,7 @@ Title: BL-023 Resize/DPI Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-023: Resize/DPI Hardening
 
@@ -11,10 +11,13 @@ Last Modified Date: 2026-02-26
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Implementation (C2 soak packet PASS; N13 owner recheck `--contract-only --runs 3` PASS with deterministic signatures and row-count parity; deterministic confidence reinforced) |
+| Status | In Implementation (C3 mode parity revalidation PASS at `TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z`; runtime lane preserved deterministic outputs with one bounded `exit=143` recovery event) |
 | Owner Track | Track C - UX Authoring |
 | Depends On | BL-025 (Done) |
 | Blocks | BL-030 RL-03 regression visibility when UI resize behavior is unstable |
+| Annex Spec | `[Documentation/testing/bl-023-resize-dpi-hardening-qa.md](/Users/artbox/Documents/Repos/LocusQ/Documentation/testing/bl-023-resize-dpi-hardening-qa.md)` |
+| Default Replay Tier | T1 (dev-loop deterministic replay) |
+| Heavy Lane Budget | High-cost wrapper (follow global heavy-wrapper containment for replay tiers) |
 
 ## Objective
 
@@ -85,11 +88,54 @@ Each lane must record outcome per breakpoint and DPI scenario with deterministic
 | A2 | Runtime/UI implementation hardening | Code | Required BL-023 lanes PASS |
 | A3 | Soak and promotion packet | Validation/docs | Promotion decision packet complete |
 
+## A2 Execution Steps (Runtime/UI Implementation Hardening)
+
+| Step ID | Workstream | Action | Primary File Targets | Completion Signal |
+|---|---|---|---|---|
+| A2-01 | Breakpoint/bounds hardening | Enforce deterministic compact/standard/wide breakpoints and minimum/maximum bounds behavior per `BL023-BP-*` and `BL023-BD-*`. | `Source/ui/public/js/index.js`, `Source/ui/public/js/*layout*` | No overflow/clipping regressions in BL023 host matrix lanes. |
+| A2-02 | DPI scale conformance | Normalize DPI/scale handling for `1.0/1.5/2.0` with ratio tolerance `<= 0.05` per `BL023-DPI-*`. | `Source/ui/public/js/index.js`, `Source/ui/public/js/*dpi*` | Pixel ratio checks remain within tolerance in matrix evidence. |
+| A2-03 | Resize cadence/settle hardening | Bound resize event cadence and settle window (`<= 250ms`) per `BL023-CD-001..003`. | `Source/ui/public/js/index.js`, resize/debounce helpers | Settle-latency check remains PASS in lane outputs. |
+| A2-04 | Hit-target synchronization | Guarantee hit-target map refresh completes before interaction checks after resize/DPI transitions. | `Source/ui/public/js/index.js`, hit-test mapping logic | No `BL023-RZ-002` taxonomy hits in runtime matrix replay. |
+| A2-05 | Host matrix runtime verification | Validate HM-001..HM-004 behavior in runtime matrix mode with deterministic replay counters. | `scripts/qa-bl023-resize-dpi-matrix-mac.sh`, `Documentation/testing/bl-023-resize-dpi-hardening-qa.md` | Runtime `--runs` lane exits `0` with zero signature/row drift. |
+| A2-06 | Gate/exit semantics lock-in | Preserve strict usage exit semantics (`0/1/2`) while runtime hardening lands. | `scripts/qa-bl023-resize-dpi-matrix-mac.sh` | `--runs 0` and unknown-arg probes consistently return exit `2`. |
+| A2-07 | Evidence + handoff prep | Capture canonical A2 evidence packet and owner-intake summary with ownership marker. | `TestEvidence/bl023_slice_a2_*`, runbook snapshots | Owner intake packet complete; `SHARED_FILES_TOUCHED` explicitly reported. |
+
+### A2 Completion Gate
+
+A2 is complete when:
+- required BL-023 contract + runtime lanes pass at the requested cadence tier;
+- no blocking BL023-RZ taxonomy failures remain in the canonical packet;
+- docs/evidence are synchronized for owner intake.
+
+## Lifecycle Contract Alignment
+
+- Intake lane follows `Documentation/backlog/_template-intake.md`.
+- Promotion decisions are captured using `Documentation/backlog/_template-promotion-decision.md`.
+- Done transition must follow `Documentation/backlog/_template-closeout.md` and move the runbook to `Documentation/backlog/done/` in the same change set.
+- Canonical promotion evidence stays under `TestEvidence/` (never `/tmp`-only packets).
+
 ## Validation (A1)
 
 | Lane | Command | Expected |
 |---|---|---|
 | BL-023-docs-freshness | `./scripts/validate-docs-freshness.sh` | Exit 0 |
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 3 --out-dir TestEvidence/<packet>/contract_runs` | `validation_matrix.tsv`, `determinism_summary.tsv` |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs <N> ...` then `--runs <N> ...` | `contract_runs/*`, `exec_runs/*`, taxonomy summary |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected contract+execute replay command set | owner packet + replay evidence |
+| Sentinel | T4 | 20 (explicit only) | C3 mode parity drill (`--contract-only --runs 20`, `--runs 20`) | parity and sentinel artifacts |
+
+### Cost/Flake Policy
+
+- For replay failures, diagnose the failing run index before repeating full sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) must use targeted debug reruns, with candidate at 2 runs and promotion at 3 runs unless owner requests broader coverage.
+- Any cadence override must be documented in `lane_notes.md` or `owner_decisions.md` with rationale.
 
 ## Slice C1/C2 Harness Contract
 
@@ -216,3 +262,180 @@ Required artifacts:
   - Deterministic confidence is reinforced by fresh owner-authoritative replay.
 - Note:
   - Requested C3 sentinel packet path was not present; owner used latest available C2 soak packet plus fresh N13 recheck.
+
+## Slice C3 Mode Parity + Exit Semantics Revalidation (2026-02-28)
+
+Objective:
+- Revalidate deterministic replay across contract-only and runtime matrix modes at 20-run depth.
+- Enforce strict usage-exit semantics for invalid invocations.
+
+Acceptance matrix:
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL023-C3-001 | Contract-only determinism replay | `--contract-only --runs 20` exits `0` with deterministic summary PASS (`signature_divergence_count=0`, `row_count_drift=0`) |
+| BL023-C3-002 | Runtime matrix determinism replay | `--runs 20` exits `0` with deterministic summary PASS (`signature_divergence_count=0`, `row_count_drift=0`) |
+| BL023-C3-003 | Cross-mode parity | contract and runtime summaries report equal deterministic counters and zero taxonomy drift rows |
+| BL023-C3-004 | Contract run schema completeness | `contract_runs` includes `validation_matrix.tsv`, `host_matrix_results.tsv`, `failure_taxonomy.tsv`, `determinism_summary.tsv` |
+| BL023-C3-005 | Runtime run schema completeness | `exec_runs` includes `validation_matrix.tsv`, `host_matrix_results.tsv`, `failure_taxonomy.tsv`, `determinism_summary.tsv` |
+| BL023-C3-006 | Usage exit semantics | `--runs 0` and `--unknown` both return exit `2` |
+| BL023-C3-007 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+
+Failure taxonomy additions:
+
+| failure_id | category | trigger | classification | blocking |
+|---|---|---|---|---|
+| BL023-RZ-920 | mode_parity_mismatch | cross-mode deterministic counters differ or non-zero drift appears | deterministic_replay_failure | yes |
+| BL023-RZ-921 | usage_exit_semantics_failure | invalid usage probes return non-`2` exit code | deterministic_contract_failure | yes |
+| BL023-RZ-922 | c3_evidence_schema_incomplete | required C3 packet files missing | deterministic_evidence_failure | yes |
+| BL023-RZ-923 | docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes |
+
+## Validation Plan (C3)
+
+- `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --help`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl023_slice_c3_mode_parity_<timestamp>/contract_runs`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 20 --out-dir TestEvidence/bl023_slice_c3_mode_parity_<timestamp>/exec_runs`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## Evidence Contract (C3)
+
+Required files under `TestEvidence/bl023_slice_c3_mode_parity_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/host_matrix_results.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `contract_runs/determinism_summary.tsv`
+- `exec_runs/validation_matrix.tsv`
+- `exec_runs/host_matrix_results.tsv`
+- `exec_runs/failure_taxonomy.tsv`
+- `exec_runs/determinism_summary.tsv`
+- `mode_parity.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice C3 Execution Snapshot (2026-02-28)
+
+- Canonical packet:
+  - `TestEvidence/bl023_slice_c3_mode_parity_20260228T180543Z`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh` => `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 20 --out-dir .../contract_runs` => `PASS`
+  - `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143=1 LOCUSQ_BL023_RUNTIME_RETRY_LIMIT=2 LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS=1 LOCUSQ_BL023_SELFTEST_MAX_ATTEMPTS=6 LOCUSQ_BL023_SELFTEST_RETRY_DELAY_SECONDS=4 LOCUSQ_BL023_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS=8 ./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 20 --out-dir .../exec_runs` => `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0` => `PASS` (exit `2`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown` => `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Determinism summary:
+  - `signature_divergence_count`: contract `0`, runtime `0`
+  - `row_count_drift`: contract `0`, runtime `0`
+  - `runtime_failure_count`: contract `0`, runtime `0`
+  - `taxonomy_row_count`: contract `7`, runtime `7`
+- Verdict:
+  - C3 mode parity and exit semantics gates are green; packet is owner-intake ready.
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: BL-023 Resize/DPI Hardening
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+## Slice C3 Worker Revalidation Intake (2026-02-28)
+
+- Worker packet directory: `TestEvidence/bl023_slice_c3_mode_parity_20260228T171824Z`
+- Validation summary:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`: `PASS`
+  - `--help`: `PASS` (exit `0`)
+  - `--contract-only --runs 20`: `PASS`
+  - `--runs 20`: `FAIL` (`run=7`, `runtime_lane_fail:exit=143`)
+  - `--runs 0` / `--unknown`: `PASS` (both exit `2`)
+  - docs freshness: `PASS`
+- Determinism counters:
+  - contract lane: `signature_divergence_count=0`, `row_count_drift=0`, `runtime_failure_count=0`
+  - runtime lane: `signature_divergence_count=1`, `row_count_drift=0`, `runtime_failure_count=1`
+- Failure taxonomy snapshot (`exec_runs/failure_taxonomy.tsv`):
+  - `BL023-RZ-900`: count `1`, first_run `7`, lane `BL023-HM-ALL`, detail `runtime_lane_fail`
+  - `BL023-RZ-910`: count `1`, first_run `7`, lane `BL023-HM-ALL`, detail `determinism_signature_mismatch`
+- Classification:
+  - `BL023-C3-001`, `BL023-C3-004`, `BL023-C3-005`, `BL023-C3-006`, `BL023-C3-007`: `PASS`
+  - `BL023-C3-002`, `BL023-C3-003`: `FAIL`
+  - BL-023 remains `In Implementation` pending runtime replay stabilization.
+
+## Slice C3 Worker Revalidation Intake R2 (2026-02-28)
+
+- Worker packet directory: `TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z`
+- Runtime hardening applied in lane wrapper:
+  - bounded retry-on-`143` path in runtime mode only (`LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143`, `LOCUSQ_BL023_RUNTIME_RETRY_LIMIT`, `LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS`)
+  - retry events are logged in per-run logs and surfaced in `validation_matrix.tsv` detail.
+- Validation summary:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`: `PASS`
+  - `--help`: `PASS` (exit `0`)
+  - `--contract-only --runs 20`: `PASS`
+  - `--runs 20`: `PASS` (overall gate pass)
+  - `--runs 0` / `--unknown`: `PASS` (both exit `2`)
+  - docs freshness: `PASS`
+- Determinism counters:
+  - contract lane: `signature_divergence_count=0`, `row_count_drift=0`, `runtime_failure_count=0`
+  - runtime lane: `signature_divergence_count=0`, `row_count_drift=0`, `runtime_failure_count=0`
+  - runtime observability: `runtime_retry143_recovery_count=1` (non-gate metric; recovered at `run=8`)
+- Failure taxonomy snapshot (`exec_runs/failure_taxonomy.tsv`):
+  - `BL023-RZ-900`: count `0`
+  - `BL023-RZ-910`: count `0`
+  - `BL023-RZ-911`: count `0`
+- Classification:
+  - `BL023-C3-001`..`BL023-C3-007`: `PASS`
+  - mode parity packet gate: `PASS`
+
+## Slice C3 T4 Sentinel Addendum (2026-02-28)
+
+- Sentinel packet directory: `TestEvidence/bl023_slice_c3_mode_parity_20260228T180258Z`
+- Cadence policy posture:
+  - executed as explicit `T4` long-run sentinel (user-requested), not as routine gating cadence.
+  - canonical promotion/gating packet remains `TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z`.
+- Sentinel lane outcome (`exec_runs_retry_on`):
+  - command exit: `0`
+  - `runtime_failure_count=0`
+  - `runtime_retry143_recovery_count=2`
+- Interpretation:
+  - bounded retry path remained stable over extended replay depth.
+  - no additional blocker taxonomy surfaced in the sentinel run.
+
+## A2-01 Runtime/UI Hardening Snapshot (2026-02-28)
+
+- A2-01 scope:
+  - responsive breakpoint threshold alignment (`<960` compact/tight path),
+  - dynamic per-resize DPR handling,
+  - resize hit-target refresh observability in diagnostics.
+- T1 replay packet:
+  - `TestEvidence/bl023_slice_a2_t1_replay_20260228T200917Z`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh` => `PASS` (`0`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 3 --out-dir .../contract_runs` => `PASS` (`0`)
+  - `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143=1 LOCUSQ_BL023_RUNTIME_RETRY_LIMIT=2 LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS=1 LOCUSQ_BL023_SELFTEST_MAX_ATTEMPTS=6 LOCUSQ_BL023_SELFTEST_RETRY_DELAY_SECONDS=4 LOCUSQ_BL023_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS=8 ./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 3 --out-dir .../exec_runs` => `PASS` (`0`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS` (`0`)
+- Interpretation:
+  - A2 runtime/UI hardening entrypoint is green at T1 cadence with no immediate replay regressions.
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

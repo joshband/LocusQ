@@ -2,7 +2,7 @@ Title: BL-020 Confidence Masking Overlay
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-020 Confidence/Masking Overlay
 
@@ -17,6 +17,8 @@ Last Modified Date: 2026-02-26
 | Effort | Med / M |
 | Depends On | BL-014 (Done), BL-019 (Done) |
 | Blocks | none |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
 
 ## Objective
@@ -226,3 +228,136 @@ Validation and evidence contract:
 - C3 conclusion:
   - BL-020 C1 is now green end-to-end at this branch snapshot after C2 RT reconciliation.
   - Packet is owner-consumable for promotion posture review.
+
+## Slice C4 Execute-Mode Parity + Exit Guard (2026-02-28)
+
+Objective:
+- Prove deterministic parity between `--contract-only` and `--execute-suite` lane modes at 20-run depth.
+- Enforce strict usage-exit semantics for invalid invocations (`exit=2`).
+- Keep C4 deterministic by treating `--execute-suite` as execute-mode parity contract checks (runtime suite execution is reserved).
+
+Acceptance matrix:
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL020-C4-001 | Contract-only replay sentinel | `--contract-only --runs 20` with `replay_hash_drift_count=0` and zero failing validation rows |
+| BL020-C4-002 | Execute-suite replay sentinel | `--execute-suite --runs 20` with `replay_hash_drift_count=0` and zero failing validation rows |
+| BL020-C4-003 | Cross-mode parity | `cross_mode_doc_hash_mismatch_count=0` and `cross_mode_scenario_hash_mismatch_count=0` |
+| BL020-C4-004 | Contract taxonomy stability | `contract_failure_rows_nonzero=0` and `execute_failure_rows_nonzero=0` |
+| BL020-C4-005 | Usage negative probe (`--runs 0`) | exit code must be `2` |
+| BL020-C4-006 | Usage negative probe (`--unknown-flag`) | exit code must be `2` |
+| BL020-C4-007 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+
+Failure taxonomy additions:
+
+| failure_id | category | trigger | classification | blocking |
+|---|---|---|---|---|
+| BL020-C4-FX-001 | c4_backlog_contract_missing | backlog doc missing C4 validation/evidence clauses | deterministic_contract_failure | yes |
+| BL020-C4-FX-002 | c4_qa_contract_missing | QA doc missing C4 validation/evidence clauses | deterministic_contract_failure | yes |
+| BL020-C4-FX-003 | c4_scenario_contract_missing | scenario missing C4 mode-parity/exit contract metadata | deterministic_contract_failure | yes |
+| BL020-C4-FX-004 | c4_script_exit_semantics_missing | lane script missing strict mode/usage-exit declarations | deterministic_contract_failure | yes |
+| BL020-FX-401 | lane_c4_mode_parity_failure | contract and execute mode evidence mismatch | deterministic_replay_failure | yes |
+| BL020-FX-402 | lane_c4_exit_semantics_failure | usage probes do not return strict exit `2` | deterministic_contract_failure | yes |
+| BL020-FX-403 | lane_c4_docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes |
+| BL020-FX-404 | lane_c4_evidence_schema_incomplete | required C4 evidence files missing | deterministic_evidence_failure | yes |
+
+
+## Validation Plan (C4)
+
+- `bash -n scripts/qa-bl020-confidence-masking-lane-mac.sh`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --help`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/contract_runs`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --execute-suite --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/execute_runs`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --unknown-flag` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## Evidence Contract (C4)
+
+Required files under `TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `execute_runs/validation_matrix.tsv`
+- `execute_runs/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice C4 Done-Candidate Recheck (2026-02-28)
+
+- Worker packet: `TestEvidence/bl020_slice_c4_mode_parity_20260228T170633Z`
+- Contract-only replay: `PASS` (20 runs, deterministic replay hash drift count `0`)
+- Execute-suite replay: `PASS` (20 runs, deterministic replay hash drift count `0`)
+- Cross-mode doc hash mismatch count: `0`
+- Cross-mode scenario hash mismatch count: `0`
+- Contract failure rows: `0`
+- Execute failure rows: `0`
+- Exit-probe checks:
+  - `--runs 0`: `2` (`PASS`)
+  - `--unknown-flag`: `2` (`PASS`)
+- Docs freshness: `PASS`
+- Packet status: `PASS` (lane result `PASS`; canonical signatures differ by mode by design)
+
+## Latest C4 Done-Candidate Recheck Packet (2026-02-28)
+
+- Worker packet: `TestEvidence/bl020_slice_c4_mode_parity_20260228T175923Z`
+- Contract-only replay: `PASS` (20 runs, deterministic replay hash drift count `0`)
+- Execute-suite replay: `PASS` (20 runs, deterministic replay hash drift count `0`)
+- Cross-mode doc hash mismatch count: `0`
+- Cross-mode scenario hash mismatch count: `0`
+- Contract failure rows: `0`
+- Execute failure rows: `0`
+- Exit-probe checks:
+  - `--runs 0`: `2` (`PASS`)
+  - `--unknown-flag`: `2` (`PASS`)
+- Docs freshness: `PASS`
+- Packet status: `PASS`
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+All worker and owner handoffs for this runbook must include:
+- `SHARED_FILES_TOUCHED: no|yes`
+
+Required return block:
+```
+HANDOFF_READY
+TASK: <BL ID + Title>
+RESULT: PASS|FAIL
+FILES_TOUCHED: ...
+VALIDATION: ...
+ARTIFACTS: ...
+SHARED_FILES_TOUCHED: no|yes
+BLOCKERS: ...
+```
+
+
+## Governance Alignment (2026-02-28)
+
+This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+
+- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
+- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
+- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
+- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).

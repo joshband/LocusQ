@@ -2,14 +2,14 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 
 # Documentation Index
 
 ## Purpose
 Keep documentation lean, canonical, and current while preserving traceability from specs to code to validation evidence.
-Backlog model: `Documentation/backlog/index.md` is the single backlog catalog authority; individual runbook docs in `Documentation/backlog/` hold execution detail and agent prompts; annex plan specs in `Documentation/plans/` hold deep architecture.
+Backlog model: `Documentation/backlog/index.md` is the single backlog catalog authority; individual runbook docs in `Documentation/backlog/` hold execution detail and agent prompts; lifecycle templates (`_template-intake.md`, `_template-runbook.md`, `_template-promotion-decision.md`, `_template-closeout.md`) are the required process contract for future and remaining backlog work; annex plan specs in `Documentation/plans/` hold deep architecture.
 
 ## Source-of-Truth Tiers
 
@@ -33,6 +33,9 @@ Only these documents are normative for implementation, release status, and close
 Used for implementation planning and validation flow, but status truth remains Tier 0:
 - `Documentation/backlog/*.md` (individual runbook docs with agent prompts and validation plans)
 - `Documentation/backlog/_template-promotion-decision.md` (owner/orchestrator promotion packet template)
+- `Documentation/backlog/_template-intake.md` (new backlog intake contract)
+- `Documentation/backlog/_template-runbook.md` (execution/runbook contract)
+- `Documentation/backlog/_template-closeout.md` (done transition contract)
 - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md`
