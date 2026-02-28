@@ -31,6 +31,11 @@ Wire `CalibrationProfile.json` from companion to plugin state end-to-end. Primit
 - APVTS params update on profile change
 - smoke test `qa-bl059-calibration-integration-smoke-mac.sh` exits 0
 
+## Methodology Reference
+
+- Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Integration acceptance should preserve the orientation-path invariants validated by BL-053 (stale fallback, yaw offset composition, deterministic behavior).
+
 
 ## Validation Plan
 
