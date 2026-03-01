@@ -12,7 +12,7 @@ Last Modified Date: 2026-02-28
 |---|---|
 | ID | BL-043 |
 | Priority | P0 |
-| Status | Done-candidate |
+| Status | Done |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-032 (Done-candidate) |

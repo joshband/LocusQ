@@ -7,7 +7,7 @@ Title: Reactive Audio-Visual Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-03-01
 
 # Reactive Audio-Visual
 
@@ -40,6 +40,11 @@ Use this skill when visualization behavior must react to audio features and/or p
 - Apply smoothing and deadbands to prevent visual jitter.
 - Version mapping contracts when changing semantics.
 - When requirements include audio-thread behavior changes, hand off to `physics-reactive-audio`.
+
+## Head-Tracking Telemetry Mapping Notes
+- When rendering orientation-reactive visuals, include packet-age and effective-rate overlays where feasible.
+- Apply smoothing/deadband with explicit, logged parameters to avoid hidden behavior drift.
+- Preserve deterministic output for repeated telemetry playback inputs.
 
 ## Deliverables
 - Changed files with rationale.

@@ -2,7 +2,7 @@ Title: Spatial Audio Validation Lanes
 Document Type: Skill Reference
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-03-01
 
 # Validation Lanes
 
@@ -49,7 +49,8 @@ Expected:
 
 ## Evidence Closeout
 Update when acceptance claims change:
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
+- `Documentation/backlog/bl-057-device-preset-library.md` and `Documentation/backlog/bl-058-companion-profile-acquisition.md` (when profile-acquisition language is touched)
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`
 - `status.json` (if phase claims or shipped-capability fields changed)

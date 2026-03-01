@@ -25,6 +25,8 @@ Define deterministic, replay-ready QA requirements for BL-036 finite-output guar
 - Slice C5b evidence packet: `TestEvidence/bl036_slice_c5b_semantics_20260227T025149Z/`
 - Slice C5c evidence packet: `TestEvidence/bl036_slice_c5c_semantics_20260227T031011Z/`
 - Slice C6 evidence packet: `TestEvidence/bl036_slice_c6_release_sentinel_20260227T033705Z/`
+- Slice D1 evidence packet: `TestEvidence/bl036_slice_d1_done_candidate_20260227T183420Z/`
+- Slice D2 evidence packet: `TestEvidence/bl036_slice_d2_done_promotion_20260227T201716Z/`
 
 ## Acceptance IDs (A1)
 
@@ -113,6 +115,28 @@ Define deterministic, replay-ready QA requirements for BL-036 finite-output guar
 | `BL036-C6-004` | Usage probes continue to enforce strict exit `2` for invalid invocation | `exit_semantics_probe.tsv`, `probe_runs0.log`, `probe_unknown_flag.log` |
 | `BL036-C6-005` | Failure taxonomy remains zero for deterministic/runtime/missing-artifact classes | `contract_runs/failure_taxonomy.tsv`, `replay_sentinel_summary.tsv` |
 | `BL036-C6-006` | Required C6 evidence schema is complete and parseable with freshness captured | `status.tsv`, `lane_notes.md`, `docs_freshness.log` |
+
+## Acceptance IDs (D1)
+
+| Acceptance ID | Validation Contract | Evidence Signal |
+|---|---|---|
+| `BL036-D1-001` | 75-run done-candidate replay executes with zero command failures | `status.tsv`, `validation_matrix.tsv` |
+| `BL036-D1-002` | Replay signatures remain stable across all 75 runs | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL036-D1-003` | Semantic row signatures remain stable across all 75 runs | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL036-D1-004` | Usage probes continue to enforce strict exit `2` for invalid invocation | `exit_semantics_probe.tsv`, `probe_runs0.log`, `probe_unknown_flag.log` |
+| `BL036-D1-005` | Failure taxonomy remains zero for deterministic/runtime/missing-artifact classes | `contract_runs/failure_taxonomy.tsv`, `replay_sentinel_summary.tsv` |
+| `BL036-D1-006` | Required D1 evidence schema is complete and parseable with freshness captured | `status.tsv`, `lane_notes.md`, `docs_freshness.log` |
+
+## Acceptance IDs (D2)
+
+| Acceptance ID | Validation Contract | Evidence Signal |
+|---|---|---|
+| `BL036-D2-001` | 100-run done-promotion replay executes with zero command failures | `status.tsv`, `validation_matrix.tsv` |
+| `BL036-D2-002` | Replay signatures remain stable across all 100 runs | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL036-D2-003` | Semantic row signatures remain stable across all 100 runs | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL036-D2-004` | Usage probes continue to enforce strict exit `2` for invalid invocation | `exit_semantics_probe.tsv`, `probe_runs0.log`, `probe_unknown_flag.log` |
+| `BL036-D2-005` | Failure taxonomy remains zero for deterministic/runtime/missing-artifact classes | `contract_runs/failure_taxonomy.tsv`, `replay_sentinel_summary.tsv` |
+| `BL036-D2-006` | Required D2 evidence schema is complete and parseable with freshness captured | `status.tsv`, `promotion_readiness.md`, `docs_freshness.log` |
 
 ## Finite-Output Guardrail Contract Summary
 
@@ -223,6 +247,26 @@ bash -n scripts/qa-bl036-finite-output-lane-mac.sh
 ./scripts/validate-docs-freshness.sh
 ```
 
+D1 done-candidate readiness contract:
+```bash
+bash -n scripts/qa-bl036-finite-output-lane-mac.sh
+./scripts/qa-bl036-finite-output-lane-mac.sh --help
+./scripts/qa-bl036-finite-output-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl036_slice_d1_done_candidate_<timestamp>/contract_runs
+./scripts/qa-bl036-finite-output-lane-mac.sh --runs 0
+./scripts/qa-bl036-finite-output-lane-mac.sh --unknown-flag
+./scripts/validate-docs-freshness.sh
+```
+
+D2 done-promotion readiness contract:
+```bash
+bash -n scripts/qa-bl036-finite-output-lane-mac.sh
+./scripts/qa-bl036-finite-output-lane-mac.sh --help
+./scripts/qa-bl036-finite-output-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl036_slice_d2_done_promotion_<timestamp>/contract_runs
+./scripts/qa-bl036-finite-output-lane-mac.sh --runs 0
+./scripts/qa-bl036-finite-output-lane-mac.sh --unknown-flag
+./scripts/validate-docs-freshness.sh
+```
+
 Runtime implementation replay command set (A2/B2/C1 readiness):
 ```bash
 cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8
@@ -323,6 +367,28 @@ C6 required outputs:
 8. `lane_notes.md`
 9. `docs_freshness.log`
 
+D1 required outputs:
+1. `status.tsv`
+2. `validation_matrix.tsv`
+3. `contract_runs/validation_matrix.tsv`
+4. `contract_runs/replay_hashes.tsv`
+5. `contract_runs/failure_taxonomy.tsv`
+6. `replay_sentinel_summary.tsv`
+7. `exit_semantics_probe.tsv`
+8. `lane_notes.md`
+9. `docs_freshness.log`
+
+D2 required outputs:
+1. `status.tsv`
+2. `validation_matrix.tsv`
+3. `contract_runs/validation_matrix.tsv`
+4. `contract_runs/replay_hashes.tsv`
+5. `contract_runs/failure_taxonomy.tsv`
+6. `replay_sentinel_summary.tsv`
+7. `exit_semantics_probe.tsv`
+8. `promotion_readiness.md`
+9. `docs_freshness.log`
+
 ## C5c Execution Snapshot (2026-02-27)
 
 - Evidence packet:
@@ -367,6 +433,50 @@ C6 required outputs:
 - Result:
   - C6 confirms release-sentinel replay depth (50 runs) and strict usage-exit semantics remain deterministic and stable.
 
+## D1 Execution Snapshot (2026-02-27)
+
+- Evidence packet:
+  - `TestEvidence/bl036_slice_d1_done_candidate_20260227T183420Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl036-finite-output-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl036_slice_d1_done_candidate_20260227T183420Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --runs 0` => `PASS` (expected usage exit `2`)
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --unknown-flag` => `PASS` (expected usage exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - D1 confirms done-candidate replay depth (75 runs) and strict usage-exit semantics remain deterministic and stable.
+
+## D2 Execution Snapshot (2026-02-27)
+
+- Evidence packet:
+  - `TestEvidence/bl036_slice_d2_done_promotion_20260227T201716Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation:
+  - `bash -n scripts/qa-bl036-finite-output-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl036_slice_d2_done_promotion_20260227T201716Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --runs 0` => `PASS` (expected usage exit `2`)
+  - `./scripts/qa-bl036-finite-output-lane-mac.sh --unknown-flag` => `PASS` (expected usage exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Result:
+  - D2 confirms done-promotion replay depth (100 runs) and strict usage-exit semantics remain deterministic and stable.
+
 Lane internal outputs (additive):
 1. `contract_runs/status.tsv`
 2. `contract_runs/qa_lane.log`
@@ -392,5 +502,7 @@ Future runtime implementation outputs (additive):
 6. If C5 usage probes return any exit other than `2`, classify as strict-exit-semantics blocker and require remediation before owner intake.
 7. If C5b recheck retains replay/exit pass but docs freshness still fails, classify explicitly as external-docs blocker (not lane-logic regression).
 8. If C6 release-sentinel replay diverges or usage probes return any exit other than `2`, classify as a release-sentinel blocker and require rerun before owner intake.
-9. If docs freshness fails, resolve metadata violations first.
-10. For implementation slices, classify failures as deterministic contract failures versus runtime blockers before owner intake.
+9. If D1 done-candidate replay diverges or usage probes return any exit other than `2`, classify as done-candidate readiness blocker and require rerun before owner intake.
+10. If D2 done-promotion replay diverges or usage probes return any exit other than `2`, classify as done-promotion readiness blocker and require rerun before owner intake.
+11. If docs freshness fails, resolve metadata violations first.
+12. For implementation slices, classify failures as deterministic contract failures versus runtime blockers before owner intake.

@@ -7,7 +7,7 @@ Title: Steam Audio C API Integration Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-21
-Last Modified Date: 2026-02-21
+Last Modified Date: 2026-03-01
 
 # Steam Audio C API
 
@@ -31,12 +31,21 @@ Use this skill when implementing or debugging Steam Audio runtime integration in
 5. In audio processing, reuse preallocated buffers and fallback to existing stereo downmix on any unavailable/failure path.
 6. Keep telemetry explicit (`requested` mode vs `active` mode + availability) for UI assertions.
 7. Validate with production selftest plus optional BL-009 assertion gate.
+8. For BL-053 class orientation work, verify requested vs active path coherence.
+   - Orientation pointer is present at call boundary.
+   - Orientation pointer is consumed in active monitoring render path.
+   - Fallback/activation telemetry clearly indicates active mode and fallback reason.
 
 ## Realtime Rules
 - Never allocate/free on audio thread.
 - Never block on dynamic loading or file IO in audio thread.
 - Never assume runtime library availability even when compiled with Steam option on.
 - On failure, fall back immediately and keep output deterministic.
+
+## Orientation Consumption Checks (BL-053+)
+- Verify orientation parameter presence in both caller and cal-monitor render entry points.
+- Verify no dead-path bypass (for example ignore-unused orientation) in active `virtual_binaural` monitoring render.
+- Verify stale/disconnect behavior falls back to deterministic identity orientation without glitches.
 
 ## Validation Commands
 - Build with Steam path enabled:

@@ -2,7 +2,7 @@ Title: Spatial Audio Canonical Sources
 Document Type: Skill Reference
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-03-01
 
 # Canonical Sources
 
@@ -40,4 +40,10 @@ Freshness note: verify release pages before pinning dependencies.
 ## LocusQ Local Anchors
 - BL-009 automation lane: `scripts/qa-bl009-headphone-contract-mac.sh`
 - BL-018 automation lane: `scripts/qa-bl018-ambisonic-contract-mac.sh`
-- Backlog source of truth: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Backlog source of truth: `Documentation/backlog/index.md`
+
+## BL-057/BL-058 Research Anchors
+- `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`
+- `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`
+- `Documentation/backlog/bl-057-device-preset-library.md`
+- `Documentation/backlog/bl-058-companion-profile-acquisition.md`

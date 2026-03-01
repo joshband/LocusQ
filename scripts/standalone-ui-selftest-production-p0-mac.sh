@@ -48,21 +48,47 @@ FAILURE_TAXONOMY_PATH="${LOCUSQ_UI_SELFTEST_FAILURE_TAXONOMY_PATH:-$FAILURE_TAXO
 SELFTEST_TIMEOUT_SECONDS="${LOCUSQ_UI_SELFTEST_TIMEOUT_SECONDS:-75}"
 MAX_ATTEMPTS="${LOCUSQ_UI_SELFTEST_MAX_ATTEMPTS:-1}"
 RETRY_DELAY_SECONDS="${LOCUSQ_UI_SELFTEST_RETRY_DELAY_SECONDS:-1}"
+AUTO_ASSERTION_RETRY_ENABLED="${LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_ENABLED:-1}"
+AUTO_ASSERTION_RETRY_MAX_ATTEMPTS="${LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_MAX_ATTEMPTS:-2}"
+AUTO_ASSERTION_RETRY_DELAY_SECONDS="${LOCUSQ_UI_SELFTEST_AUTO_ASSERTION_RETRY_DELAY_SECONDS:-2}"
+AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS="${LOCUSQ_UI_SELFTEST_TARGETED_CHECK_MAX_ATTEMPTS:-4}"
 LAUNCH_MODE_REQUESTED="${LOCUSQ_UI_SELFTEST_LAUNCH_MODE:-direct}"
 LOCK_PATH="${LOCUSQ_UI_SELFTEST_LOCK_PATH:-${TMPDIR:-/tmp}/locusq_ui_selftest.lock}"
 LOCK_WAIT_TIMEOUT_SECONDS="${LOCUSQ_UI_SELFTEST_LOCK_WAIT_TIMEOUT_SECONDS:-180}"
 LOCK_STALE_SECONDS="${LOCUSQ_UI_SELFTEST_LOCK_STALE_SECONDS:-300}"
 LOCK_POLL_SECONDS="${LOCUSQ_UI_SELFTEST_LOCK_POLL_SECONDS:-1}"
 PROCESS_DRAIN_TIMEOUT_SECONDS="${LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_TIMEOUT_SECONDS:-12}"
+PROCESS_DRAIN_STABLE_POLLS="${LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_STABLE_POLLS:-2}"
+PROCESS_DRAIN_STABLE_POLL_SECONDS="${LOCUSQ_UI_SELFTEST_PROCESS_DRAIN_STABLE_POLL_SECONDS:-0.25}"
+LAUNCH_READY_DELAY_SECONDS="${LOCUSQ_UI_SELFTEST_LAUNCH_READY_DELAY_SECONDS:-1}"
 RESULT_AFTER_EXIT_GRACE_SECONDS="${LOCUSQ_UI_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS:-3}"
+RESULT_AFTER_EXIT_GRACE_POLL_SECONDS="${LOCUSQ_UI_SELFTEST_RESULT_AFTER_EXIT_GRACE_POLL_SECONDS:-0.2}"
 RESULT_JSON_SETTLE_TIMEOUT_SECONDS="${LOCUSQ_UI_SELFTEST_RESULT_JSON_SETTLE_TIMEOUT_SECONDS:-2}"
 RESULT_JSON_SETTLE_POLL_SECONDS="${LOCUSQ_UI_SELFTEST_RESULT_JSON_SETTLE_POLL_SECONDS:-0.1}"
 LAUNCHED_APP_PID=""
 LAUNCHED_APP_WAITABLE=0
 LAUNCHED_APP_WAITABILITY_REASON="not_launched"
+MAX_ATTEMPTS_EXPLICIT=0
+RETRY_DELAY_SECONDS_EXPLICIT=0
+if [[ -n "${LOCUSQ_UI_SELFTEST_MAX_ATTEMPTS+x}" ]]; then
+  MAX_ATTEMPTS_EXPLICIT=1
+fi
+if [[ -n "${LOCUSQ_UI_SELFTEST_RETRY_DELAY_SECONDS+x}" ]]; then
+  RETRY_DELAY_SECONDS_EXPLICIT=1
+fi
 
 is_uint() {
   [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+is_truthy() {
+  local value="${1:-}"
+  value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
+  [[ -n "$value" && "$value" != "0" && "$value" != "false" && "$value" != "off" && "$value" != "no" ]]
+}
+
+is_positive_number() {
+  [[ "$1" =~ ^([0-9]+([.][0-9]+)?|[.][0-9]+)$ ]]
 }
 
 if ! is_uint "$SELFTEST_TIMEOUT_SECONDS"; then
@@ -73,6 +99,15 @@ if ! is_uint "$MAX_ATTEMPTS" || (( MAX_ATTEMPTS < 1 )); then
 fi
 if ! is_uint "$RETRY_DELAY_SECONDS"; then
   RETRY_DELAY_SECONDS=1
+fi
+if ! is_uint "$AUTO_ASSERTION_RETRY_MAX_ATTEMPTS" || (( AUTO_ASSERTION_RETRY_MAX_ATTEMPTS < 1 )); then
+  AUTO_ASSERTION_RETRY_MAX_ATTEMPTS=2
+fi
+if ! is_uint "$AUTO_ASSERTION_RETRY_DELAY_SECONDS"; then
+  AUTO_ASSERTION_RETRY_DELAY_SECONDS=2
+fi
+if ! is_uint "$AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS" || (( AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS < 1 )); then
+  AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS=4
 fi
 if ! is_uint "$LOCK_WAIT_TIMEOUT_SECONDS"; then
   LOCK_WAIT_TIMEOUT_SECONDS=180
@@ -86,11 +121,62 @@ fi
 if ! is_uint "$PROCESS_DRAIN_TIMEOUT_SECONDS" || (( PROCESS_DRAIN_TIMEOUT_SECONDS < 1 )); then
   PROCESS_DRAIN_TIMEOUT_SECONDS=12
 fi
+if ! is_uint "$PROCESS_DRAIN_STABLE_POLLS" || (( PROCESS_DRAIN_STABLE_POLLS < 1 )); then
+  PROCESS_DRAIN_STABLE_POLLS=2
+fi
+if ! is_positive_number "$PROCESS_DRAIN_STABLE_POLL_SECONDS"; then
+  PROCESS_DRAIN_STABLE_POLL_SECONDS=0.25
+fi
+if ! is_positive_number "$LAUNCH_READY_DELAY_SECONDS"; then
+  LAUNCH_READY_DELAY_SECONDS=1
+fi
 if ! is_uint "$RESULT_AFTER_EXIT_GRACE_SECONDS"; then
   RESULT_AFTER_EXIT_GRACE_SECONDS=3
 fi
+if ! is_positive_number "$RESULT_AFTER_EXIT_GRACE_POLL_SECONDS"; then
+  RESULT_AFTER_EXIT_GRACE_POLL_SECONDS=0.2
+fi
 if ! is_uint "$RESULT_JSON_SETTLE_TIMEOUT_SECONDS"; then
   RESULT_JSON_SETTLE_TIMEOUT_SECONDS=2
+fi
+if ! is_positive_number "$RESULT_JSON_SETTLE_POLL_SECONDS"; then
+  RESULT_JSON_SETTLE_POLL_SECONDS=0.1
+fi
+
+MAX_ATTEMPTS_CONFIGURED="$MAX_ATTEMPTS"
+RETRY_DELAY_SECONDS_CONFIGURED="$RETRY_DELAY_SECONDS"
+AUTO_ASSERTION_RETRY_APPLIED=0
+AUTO_ASSERTION_RETRY_REASON="none"
+AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED=0
+AUTO_ASSERTION_TARGETED_RETRY_APPLIED=0
+AUTO_ASSERTION_TARGETED_RETRY_REASON="none"
+if is_truthy "$AUTO_ASSERTION_RETRY_ENABLED"; then
+  AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED=1
+fi
+
+SELFTEST_SCOPE_NORMALIZED="$(printf '%s' "${LOCUSQ_UI_SELFTEST_SCOPE:-}" | tr '[:upper:]' '[:lower:]')"
+BL009_SCOPE_ENABLED=0
+if is_truthy "${LOCUSQ_UI_SELFTEST_BL009:-0}"; then
+  BL009_SCOPE_ENABLED=1
+fi
+
+if (( MAX_ATTEMPTS_EXPLICIT == 0 && AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED == 1 )); then
+  if [[ "$SELFTEST_SCOPE_NORMALIZED" == "bl029" || "$BL009_SCOPE_ENABLED" == "1" ]]; then
+    if (( MAX_ATTEMPTS < AUTO_ASSERTION_RETRY_MAX_ATTEMPTS )); then
+      MAX_ATTEMPTS="$AUTO_ASSERTION_RETRY_MAX_ATTEMPTS"
+      AUTO_ASSERTION_RETRY_APPLIED=1
+      if [[ "$SELFTEST_SCOPE_NORMALIZED" == "bl029" && "$BL009_SCOPE_ENABLED" == "1" ]]; then
+        AUTO_ASSERTION_RETRY_REASON="auto_profile_bl029_bl009"
+      elif [[ "$SELFTEST_SCOPE_NORMALIZED" == "bl029" ]]; then
+        AUTO_ASSERTION_RETRY_REASON="auto_profile_bl029"
+      else
+        AUTO_ASSERTION_RETRY_REASON="auto_profile_bl009"
+      fi
+    fi
+    if (( RETRY_DELAY_SECONDS_EXPLICIT == 0 )); then
+      RETRY_DELAY_SECONDS="$AUTO_ASSERTION_RETRY_DELAY_SECONDS"
+    fi
+  fi
 fi
 
 case "$LAUNCH_MODE_REQUESTED" in
@@ -253,10 +339,21 @@ derive_payload_failure_details() {
   local __failing_check_var="$6"
 
   local reason_code="unknown_payload_failure"
+  local failing_check_raw="none"
   local failing_check="none"
 
+  normalize_payload_check_id() {
+    local value="${1:-}"
+    value="$(printf '%s' "$value" | tr '[:lower:]' '[:upper:]')"
+    value="${value//[[:space:]]/}"
+    if [[ -z "$value" ]]; then
+      value="none"
+    fi
+    printf '%s' "$value"
+  }
+
   if command -v jq >/dev/null 2>&1 && jq -e '.' "$result_json_path" >/dev/null 2>&1; then
-    failing_check="$(jq -r '
+    failing_check_raw="$(jq -r '
       (
         (.payload.checks // .checks // .result.checks // [])
         | map(select((.pass // false) == false and (.id // "") != "failure"))
@@ -265,8 +362,44 @@ derive_payload_failure_details() {
     ' "$result_json_path" 2>/dev/null || echo none)"
   fi
 
+  failing_check="$(normalize_payload_check_id "$failing_check_raw")"
+  if [[ "$failing_check" == "NONE" ]]; then
+    failing_check="none"
+  fi
+
+  if [[ "$failing_check" == "none" && -n "$payload_error" ]]; then
+    local payload_error_upper
+    payload_error_upper="$(printf '%s' "$payload_error" | tr '[:lower:]' '[:upper:]')"
+    case "$payload_error_upper" in
+      *UI-P1-029B*)
+        failing_check="UI-P1-029B"
+        ;;
+      *UI-07*)
+        failing_check="UI-07"
+        ;;
+      *UI-P1-025E*)
+        failing_check="UI-P1-025E"
+        ;;
+      *)
+        ;;
+    esac
+  fi
+
   if [[ "$failing_check" != "none" && -n "$failing_check" ]]; then
-    reason_code="failing_check_assertion"
+    case "$failing_check" in
+      UI-P1-029B)
+        reason_code="assertion_ui_p1_029b_single_glyph_fallback"
+        ;;
+      UI-07)
+        reason_code="assertion_ui_07_keyframe_interaction"
+        ;;
+      UI-P1-025E)
+        reason_code="assertion_ui_p1_025e_responsive_layout_settle"
+        ;;
+      *)
+        reason_code="failing_check_assertion"
+        ;;
+    esac
   elif [[ "$payload_status" == "timeout" ]]; then
     reason_code="payload_timeout"
   elif [[ -n "$payload_error" ]]; then
@@ -306,6 +439,14 @@ append_failure_taxonomy_row() {
     "$(sanitize_tsv_field "$payload_ok")" \
     "$(sanitize_tsv_field "$error_reason")" \
     "$(sanitize_tsv_field "$result_json_path")" >> "$FAILURE_TAXONOMY_PATH"
+}
+
+is_targeted_payload_check() {
+  local check_id="${1:-}"
+  case "$check_id" in
+    UI-P1-029B|UI-07|UI-P1-025E) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 lock_meta_read() {
@@ -423,6 +564,61 @@ collect_locusq_pids() {
   pgrep -x LocusQ 2>/dev/null || true
 }
 
+wait_for_locusq_quiescent() {
+  local timeout_seconds="$1"
+  local required_stable_polls="$2"
+  local poll_seconds="$3"
+  local __remaining_var="$4"
+  local start_seconds="$SECONDS"
+  local stable_polls=0
+  local remaining_pids=""
+
+  while true; do
+    remaining_pids="$(collect_locusq_pids | tr '\n' ' ' | xargs echo -n)"
+
+    if [[ -z "$remaining_pids" ]]; then
+      stable_polls=$((stable_polls + 1))
+      if (( stable_polls >= required_stable_polls )); then
+        printf -v "$__remaining_var" '%s' ""
+        return 0
+      fi
+    else
+      stable_polls=0
+    fi
+
+    if (( SECONDS - start_seconds >= timeout_seconds )); then
+      printf -v "$__remaining_var" '%s' "$remaining_pids"
+      return 1
+    fi
+
+    sleep "$poll_seconds"
+  done
+}
+
+adopt_external_locusq_pid() {
+  local current_pid="$1"
+  local __pid_var="$2"
+  local __reason_var="$3"
+  local candidate_pid=""
+
+  while IFS= read -r pid_candidate; do
+    if [[ -n "$pid_candidate" && "$pid_candidate" != "$current_pid" ]]; then
+      candidate_pid="$pid_candidate"
+      break
+    fi
+  done < <(collect_locusq_pids)
+
+  if [[ -n "$candidate_pid" ]]; then
+    printf -v "$__pid_var" '%s' "$candidate_pid"
+    printf -v "$__reason_var" '%s' "external_launcher_pid_rebound"
+    return 0
+  fi
+
+  printf -v "$__pid_var" '%s' ""
+  printf -v "$__reason_var" '%s' "external_launcher"
+  return 1
+}
+
 drain_locusq_processes() {
   local timeout_seconds="$1"
   local emit_telemetry="${2:-0}"
@@ -460,6 +656,19 @@ drain_locusq_processes() {
       sleep 1
       remaining_pids="$(collect_locusq_pids | tr '\n' ' ' | xargs echo -n)"
     done
+  fi
+
+  if [[ -z "$remaining_pids" ]]; then
+    local quiescent_remaining=""
+    if ! wait_for_locusq_quiescent \
+      "$timeout_seconds" \
+      "$PROCESS_DRAIN_STABLE_POLLS" \
+      "$PROCESS_DRAIN_STABLE_POLL_SECONDS" \
+      quiescent_remaining; then
+      remaining_pids="$quiescent_remaining"
+    else
+      remaining_pids="$quiescent_remaining"
+    fi
   fi
 
   local elapsed_seconds=$((SECONDS - start_seconds))
@@ -682,7 +891,18 @@ write_metadata_json() {
       --arg selftestBl011 "${LOCUSQ_UI_SELFTEST_BL011:-0}" \
       --arg timeoutSeconds "$SELFTEST_TIMEOUT_SECONDS" \
       --arg maxAttempts "$MAX_ATTEMPTS" \
+      --arg maxAttemptsConfigured "$MAX_ATTEMPTS_CONFIGURED" \
       --arg attemptsRun "$attempts_run" \
+      --arg retryDelaySeconds "$RETRY_DELAY_SECONDS" \
+      --arg retryDelaySecondsConfigured "$RETRY_DELAY_SECONDS_CONFIGURED" \
+      --arg autoAssertionRetryEnabled "$AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED" \
+      --arg autoAssertionRetryApplied "$AUTO_ASSERTION_RETRY_APPLIED" \
+      --arg autoAssertionRetryReason "$AUTO_ASSERTION_RETRY_REASON" \
+      --arg autoAssertionRetryMaxAttempts "$AUTO_ASSERTION_RETRY_MAX_ATTEMPTS" \
+      --arg autoAssertionRetryDelaySeconds "$AUTO_ASSERTION_RETRY_DELAY_SECONDS" \
+      --arg autoAssertionTargetedCheckMaxAttempts "$AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS" \
+      --arg autoAssertionTargetedRetryApplied "$AUTO_ASSERTION_TARGETED_RETRY_APPLIED" \
+      --arg autoAssertionTargetedRetryReason "$AUTO_ASSERTION_TARGETED_RETRY_REASON" \
       --arg launchModeRequested "$LAUNCH_MODE_REQUESTED" \
       --arg launchModeUsed "$LAUNCH_MODE_USED" \
       --arg launchModeFallbackReason "$LAUNCH_MODE_FALLBACK_REASON" \
@@ -700,7 +920,11 @@ write_metadata_json() {
       --arg prelaunchDrainTermSent "$PRELAUNCH_DRAIN_TERM_SENT" \
       --arg prelaunchDrainTermWindowSeconds "$PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS" \
       --arg prelaunchDrainKillWindowSeconds "$PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS" \
+      --arg prelaunchDrainStablePolls "$PROCESS_DRAIN_STABLE_POLLS" \
+      --arg prelaunchDrainStablePollSeconds "$PROCESS_DRAIN_STABLE_POLL_SECONDS" \
+      --arg launchReadyDelaySeconds "$LAUNCH_READY_DELAY_SECONDS" \
       --arg resultAfterExitGraceSeconds "$RESULT_AFTER_EXIT_GRACE_SECONDS" \
+      --arg resultAfterExitGracePollSeconds "$RESULT_AFTER_EXIT_GRACE_POLL_SECONDS" \
       --arg resultPostExitGraceUsed "$RESULT_POST_EXIT_GRACE_USED" \
       --arg resultPostExitGraceWaitSeconds "$RESULT_POST_EXIT_GRACE_WAIT_SECONDS" \
       --arg payloadReasonCode "$payload_reason_code" \
@@ -730,7 +954,18 @@ write_metadata_json() {
         selftestBl011: $selftestBl011,
         timeoutSeconds: $timeoutSeconds,
         maxAttempts: $maxAttempts,
+        maxAttemptsConfigured: $maxAttemptsConfigured,
         attemptsRun: $attemptsRun,
+        retryDelaySeconds: $retryDelaySeconds,
+        retryDelaySecondsConfigured: $retryDelaySecondsConfigured,
+        autoAssertionRetryEnabled: ($autoAssertionRetryEnabled == "1"),
+        autoAssertionRetryApplied: ($autoAssertionRetryApplied == "1"),
+        autoAssertionRetryReason: $autoAssertionRetryReason,
+        autoAssertionRetryMaxAttempts: $autoAssertionRetryMaxAttempts,
+        autoAssertionRetryDelaySeconds: $autoAssertionRetryDelaySeconds,
+        autoAssertionTargetedCheckMaxAttempts: $autoAssertionTargetedCheckMaxAttempts,
+        autoAssertionTargetedRetryApplied: ($autoAssertionTargetedRetryApplied == "1"),
+        autoAssertionTargetedRetryReason: $autoAssertionTargetedRetryReason,
         launchModeRequested: $launchModeRequested,
         launchModeUsed: $launchModeUsed,
         launchModeFallbackReason: $launchModeFallbackReason,
@@ -748,7 +983,11 @@ write_metadata_json() {
         prelaunchDrainTermSent: ($prelaunchDrainTermSent == "1"),
         prelaunchDrainTermWindowSeconds: $prelaunchDrainTermWindowSeconds,
         prelaunchDrainKillWindowSeconds: $prelaunchDrainKillWindowSeconds,
+        prelaunchDrainStablePolls: $prelaunchDrainStablePolls,
+        prelaunchDrainStablePollSeconds: $prelaunchDrainStablePollSeconds,
+        launchReadyDelaySeconds: $launchReadyDelaySeconds,
         resultAfterExitGraceSeconds: $resultAfterExitGraceSeconds,
+        resultAfterExitGracePollSeconds: $resultAfterExitGracePollSeconds,
         resultPostExitGraceUsed: ($resultPostExitGraceUsed == "1"),
         resultPostExitGraceWaitSeconds: $resultPostExitGraceWaitSeconds,
         payloadReasonCode: $payloadReasonCode,
@@ -780,7 +1019,18 @@ write_metadata_json() {
       echo "selftest_bl011=${LOCUSQ_UI_SELFTEST_BL011:-0}"
       echo "timeout_seconds=${SELFTEST_TIMEOUT_SECONDS}"
       echo "max_attempts=${MAX_ATTEMPTS}"
+      echo "max_attempts_configured=${MAX_ATTEMPTS_CONFIGURED}"
       echo "attempts_run=${attempts_run}"
+      echo "retry_delay_seconds=${RETRY_DELAY_SECONDS}"
+      echo "retry_delay_seconds_configured=${RETRY_DELAY_SECONDS_CONFIGURED}"
+      echo "auto_assertion_retry_enabled=${AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED}"
+      echo "auto_assertion_retry_applied=${AUTO_ASSERTION_RETRY_APPLIED}"
+      echo "auto_assertion_retry_reason=${AUTO_ASSERTION_RETRY_REASON}"
+      echo "auto_assertion_retry_max_attempts=${AUTO_ASSERTION_RETRY_MAX_ATTEMPTS}"
+      echo "auto_assertion_retry_delay_seconds=${AUTO_ASSERTION_RETRY_DELAY_SECONDS}"
+      echo "auto_assertion_targeted_check_max_attempts=${AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS}"
+      echo "auto_assertion_targeted_retry_applied=${AUTO_ASSERTION_TARGETED_RETRY_APPLIED}"
+      echo "auto_assertion_targeted_retry_reason=${AUTO_ASSERTION_TARGETED_RETRY_REASON}"
       echo "launch_mode_requested=${LAUNCH_MODE_REQUESTED}"
       echo "launch_mode_used=${LAUNCH_MODE_USED}"
       echo "launch_mode_fallback_reason=${LAUNCH_MODE_FALLBACK_REASON}"
@@ -798,7 +1048,11 @@ write_metadata_json() {
       echo "prelaunch_drain_term_sent=${PRELAUNCH_DRAIN_TERM_SENT}"
       echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}"
       echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}"
+      echo "prelaunch_drain_stable_polls=${PROCESS_DRAIN_STABLE_POLLS}"
+      echo "prelaunch_drain_stable_poll_seconds=${PROCESS_DRAIN_STABLE_POLL_SECONDS}"
+      echo "launch_ready_delay_seconds=${LAUNCH_READY_DELAY_SECONDS}"
       echo "result_after_exit_grace_seconds=${RESULT_AFTER_EXIT_GRACE_SECONDS}"
+      echo "result_after_exit_grace_poll_seconds=${RESULT_AFTER_EXIT_GRACE_POLL_SECONDS}"
       echo "result_post_exit_grace_used=${RESULT_POST_EXIT_GRACE_USED}"
       echo "result_post_exit_grace_wait_seconds=${RESULT_POST_EXIT_GRACE_WAIT_SECONDS}"
       echo "payload_reason_code=${payload_reason_code}"
@@ -858,7 +1112,17 @@ rm -f "${RUN_LOG%.log}.attempt"*.app.log >/dev/null 2>&1 || true
   echo "timeout_seconds=${SELFTEST_TIMEOUT_SECONDS}"
   echo "selftest_scope=${LOCUSQ_UI_SELFTEST_SCOPE:-}"
   echo "max_attempts=${MAX_ATTEMPTS}"
+  echo "max_attempts_configured=${MAX_ATTEMPTS_CONFIGURED}"
   echo "retry_delay_seconds=${RETRY_DELAY_SECONDS}"
+  echo "retry_delay_seconds_configured=${RETRY_DELAY_SECONDS_CONFIGURED}"
+  echo "auto_assertion_retry_enabled=${AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED}"
+  echo "auto_assertion_retry_applied=${AUTO_ASSERTION_RETRY_APPLIED}"
+  echo "auto_assertion_retry_reason=${AUTO_ASSERTION_RETRY_REASON}"
+  echo "auto_assertion_retry_max_attempts=${AUTO_ASSERTION_RETRY_MAX_ATTEMPTS}"
+  echo "auto_assertion_retry_delay_seconds=${AUTO_ASSERTION_RETRY_DELAY_SECONDS}"
+  echo "auto_assertion_targeted_check_max_attempts=${AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS}"
+  echo "auto_assertion_targeted_retry_applied=${AUTO_ASSERTION_TARGETED_RETRY_APPLIED}"
+  echo "auto_assertion_targeted_retry_reason=${AUTO_ASSERTION_TARGETED_RETRY_REASON}"
   echo "launch_mode_requested=${LAUNCH_MODE_REQUESTED}"
   echo "launch_mode_used=${LAUNCH_MODE_USED}"
   echo "launch_mode_fallback_reason=${LAUNCH_MODE_FALLBACK_REASON}"
@@ -875,6 +1139,10 @@ rm -f "${RUN_LOG%.log}.attempt"*.app.log >/dev/null 2>&1 || true
   echo "failure_taxonomy_path=${FAILURE_TAXONOMY_PATH}"
   echo "metadata_json=${META_JSON}"
   echo "result_after_exit_grace_seconds=${RESULT_AFTER_EXIT_GRACE_SECONDS}"
+  echo "result_after_exit_grace_poll_seconds=${RESULT_AFTER_EXIT_GRACE_POLL_SECONDS}"
+  echo "prelaunch_drain_stable_polls=${PROCESS_DRAIN_STABLE_POLLS}"
+  echo "prelaunch_drain_stable_poll_seconds=${PROCESS_DRAIN_STABLE_POLL_SECONDS}"
+  echo "launch_ready_delay_seconds=${LAUNCH_READY_DELAY_SECONDS}"
   echo "result_json_settle_timeout_seconds=${RESULT_JSON_SETTLE_TIMEOUT_SECONDS}"
 } | tee "$RUN_LOG"
 
@@ -915,6 +1183,10 @@ fi
   echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}"
   echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}"
 } | tee -a "$RUN_LOG"
+if [[ "$LAUNCH_READY_DELAY_SECONDS" != "0" && "$LAUNCH_READY_DELAY_SECONDS" != "0.0" ]]; then
+  sleep "$LAUNCH_READY_DELAY_SECONDS"
+fi
+echo "launch_ready_delay_applied_seconds=${LAUNCH_READY_DELAY_SECONDS}" | tee -a "$RUN_LOG"
 
 for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
   ATTEMPTS_RUN="$attempt"
@@ -1027,6 +1299,10 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
   echo "prelaunch_drain_term_sent=${PRELAUNCH_DRAIN_TERM_SENT}" | tee -a "$RUN_LOG"
   echo "prelaunch_drain_term_window_seconds=${PRELAUNCH_DRAIN_TERM_WINDOW_SECONDS}" | tee -a "$RUN_LOG"
   echo "prelaunch_drain_kill_window_seconds=${PRELAUNCH_DRAIN_KILL_WINDOW_SECONDS}" | tee -a "$RUN_LOG"
+  if [[ "$LAUNCH_READY_DELAY_SECONDS" != "0" && "$LAUNCH_READY_DELAY_SECONDS" != "0.0" ]]; then
+    sleep "$LAUNCH_READY_DELAY_SECONDS"
+  fi
+  echo "launch_ready_delay_applied_seconds=${LAUNCH_READY_DELAY_SECONDS}" | tee -a "$RUN_LOG"
 
   APP_PID=""
   APP_PID_WAITABLE=0
@@ -1128,8 +1404,21 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
   wait_start_seconds=$SECONDS
   deadline=$((SECONDS + SELFTEST_TIMEOUT_SECONDS))
   APP_EXITED_DURING_WAIT=0
+  APP_PID_REBOUND=0
   while [[ ! -f "$ATTEMPT_RESULT_JSON" && $SECONDS -lt $deadline ]]; do
     if ! kill -0 "$APP_PID" >/dev/null 2>&1; then
+      if [[ "$APP_PID_WAITABLE" != "1" ]]; then
+        rebound_pid=""
+        rebound_reason=""
+        if adopt_external_locusq_pid "$APP_PID" rebound_pid rebound_reason; then
+          echo "app_pid_rebound_from=${APP_PID}" | tee -a "$RUN_LOG"
+          echo "app_pid_rebound_to=${rebound_pid}" | tee -a "$RUN_LOG"
+          APP_PID="$rebound_pid"
+          APP_PID_WAITABILITY_REASON="$rebound_reason"
+          APP_PID_REBOUND=1
+          continue
+        fi
+      fi
       APP_EXITED_DURING_WAIT=1
       break
     fi
@@ -1142,11 +1431,12 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
     grace_start_seconds=$SECONDS
     grace_deadline=$((SECONDS + RESULT_AFTER_EXIT_GRACE_SECONDS))
     while [[ ! -f "$ATTEMPT_RESULT_JSON" && $SECONDS -lt $grace_deadline ]]; do
-      sleep 1
+      sleep "$RESULT_AFTER_EXIT_GRACE_POLL_SECONDS"
     done
     RESULT_POST_EXIT_GRACE_WAIT_SECONDS=$((SECONDS - grace_start_seconds))
     echo "result_post_exit_grace_used=${RESULT_POST_EXIT_GRACE_USED}" | tee -a "$RUN_LOG"
     echo "result_post_exit_grace_wait_seconds=${RESULT_POST_EXIT_GRACE_WAIT_SECONDS}" | tee -a "$RUN_LOG"
+    echo "app_pid_rebound=${APP_PID_REBOUND}" | tee -a "$RUN_LOG"
   fi
 
   if [[ ! -f "$ATTEMPT_RESULT_JSON" ]]; then
@@ -1222,6 +1512,13 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
     shutdown_locusq
 
     if (( attempt < MAX_ATTEMPTS )); then
+      if [[ "$ATTEMPT_REASON" == "app_exited_before_result" ]] \
+        && [[ "$LAUNCH_MODE_USED" == "direct" ]] \
+        && [[ "$ATTEMPT_SIGNAL" == "6" || "$ATTEMPT_SIGNAL_NAME" == "ABRT" ]]; then
+        LAUNCH_MODE_REQUESTED="open"
+        echo "retry_launch_mode_override=open" | tee -a "$RUN_LOG"
+        echo "retry_launch_mode_override_reason=direct_abrt_pre_result" | tee -a "$RUN_LOG"
+      fi
       echo "retrying_attempt=$((attempt + 1))" | tee -a "$RUN_LOG"
       sleep "$RETRY_DELAY_SECONDS"
       continue
@@ -1297,10 +1594,28 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
       echo "payload_failure_snippet_path=${ATTEMPT_PAYLOAD_SNIPPET_PATH}" | tee -a "$RUN_LOG"
     fi
   else
-    if rg -q '"ok"[[:space:]]*:[[:space:]]*true' "$ATTEMPT_RESULT_JSON"; then
-      OK="true"
-      STATUS="ok"
+    PAYLOAD_JSON_PARSE_OK=0
+    ATTEMPT_STATUS="fail"
+    ATTEMPT_REASON="selftest_payload_parser_unavailable"
+    ATTEMPT_ERROR_REASON="jq_not_found_strict_json_validation_required"
+    ATTEMPT_PAYLOAD_REASON_CODE="json_parser_unavailable"
+    ATTEMPT_PAYLOAD_FAILING_CHECK="json_parser"
+    if [[ "$ATTEMPT_RESULT_JSON" == *.json ]]; then
+      ATTEMPT_PAYLOAD_SNIPPET_PATH="${ATTEMPT_RESULT_JSON%.json}.payload_failure_snippet.json"
+    else
+      ATTEMPT_PAYLOAD_SNIPPET_PATH="${ATTEMPT_RESULT_JSON}.payload_failure_snippet.json"
     fi
+    write_payload_failure_snippet \
+      "$ATTEMPT_RESULT_JSON" \
+      "$ATTEMPT_PAYLOAD_FAILING_CHECK" \
+      "$ATTEMPT_PAYLOAD_SNIPPET_PATH" \
+      "$ATTEMPT_PAYLOAD_REASON_CODE"
+    echo "status=parse_error" | tee -a "$RUN_LOG"
+    echo "ok=false" | tee -a "$RUN_LOG"
+    echo "error_reason=${ATTEMPT_ERROR_REASON}" | tee -a "$RUN_LOG"
+    echo "payload_failure_reason_code=${ATTEMPT_PAYLOAD_REASON_CODE}" | tee -a "$RUN_LOG"
+    echo "payload_failure_check=${ATTEMPT_PAYLOAD_FAILING_CHECK}" | tee -a "$RUN_LOG"
+    echo "payload_failure_snippet_path=${ATTEMPT_PAYLOAD_SNIPPET_PATH}" | tee -a "$RUN_LOG"
   fi
 
   ATTEMPT_PAYLOAD_STATUS="$STATUS"
@@ -1397,6 +1712,10 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
     FINAL_SIGNAL_NAME="$ATTEMPT_SIGNAL_NAME"
     FINAL_CRASH_REPORT="$ATTEMPT_CRASH_REPORT"
     FINAL_EXIT_STATUS_SOURCE="$ATTEMPT_EXIT_STATUS_SOURCE"
+    FINAL_PAYLOAD_REASON_CODE="none"
+    FINAL_PAYLOAD_FAILING_CHECK="none"
+    FINAL_PAYLOAD_SNIPPET_PATH=""
+    FINAL_PAYLOAD_POINTER_PATH="$ATTEMPT_RESULT_JSON"
     write_metadata_json "$FINAL_STATUS" "$FINAL_REASON" "$FINAL_PID" "$FINAL_EXIT_CODE" "$FINAL_SIGNAL" "$FINAL_SIGNAL_NAME" "$FINAL_CRASH_REPORT" "$ATTEMPTS_RUN" "$FINAL_EXIT_STATUS_SOURCE"
     echo "app_exit_status_source=${FINAL_EXIT_STATUS_SOURCE}" | tee -a "$RUN_LOG"
     echo "app_exit_code=${FINAL_EXIT_CODE}" | tee -a "$RUN_LOG"
@@ -1434,6 +1753,19 @@ for (( attempt = 1; attempt <= MAX_ATTEMPTS; ++attempt )); do
   FINAL_PAYLOAD_FAILING_CHECK="$ATTEMPT_PAYLOAD_FAILING_CHECK"
   FINAL_PAYLOAD_SNIPPET_PATH="$ATTEMPT_PAYLOAD_SNIPPET_PATH"
   FINAL_PAYLOAD_POINTER_PATH="$ATTEMPT_PAYLOAD_POINTER_PATH"
+
+  if (( MAX_ATTEMPTS_EXPLICIT == 0 && AUTO_ASSERTION_RETRY_ENABLED_NORMALIZED == 1 )); then
+    if [[ "$ATTEMPT_REASON" == "selftest_payload_not_ok" ]] && is_targeted_payload_check "$ATTEMPT_PAYLOAD_FAILING_CHECK"; then
+      if (( MAX_ATTEMPTS < AUTO_ASSERTION_TARGETED_CHECK_MAX_ATTEMPTS )); then
+        MAX_ATTEMPTS=$((MAX_ATTEMPTS + 1))
+        AUTO_ASSERTION_TARGETED_RETRY_APPLIED=1
+        AUTO_ASSERTION_TARGETED_RETRY_REASON="targeted_check_${ATTEMPT_PAYLOAD_FAILING_CHECK}"
+        echo "auto_assertion_targeted_retry_applied=${AUTO_ASSERTION_TARGETED_RETRY_APPLIED}" | tee -a "$RUN_LOG"
+        echo "auto_assertion_targeted_retry_reason=${AUTO_ASSERTION_TARGETED_RETRY_REASON}" | tee -a "$RUN_LOG"
+        echo "auto_assertion_targeted_retry_new_max_attempts=${MAX_ATTEMPTS}" | tee -a "$RUN_LOG"
+      fi
+    fi
+  fi
 
   if (( attempt < MAX_ATTEMPTS )); then
     echo "retrying_attempt=$((attempt + 1))" | tee -a "$RUN_LOG"

@@ -2,7 +2,7 @@ Title: BL-030 Release Governance QA
 Document Type: Testing Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-030 Release Governance QA
 
@@ -18,7 +18,7 @@ Define the command-lane replay contract used for release-governance decision pac
 | RL-04 | `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap` | REAPER host smoke |
 | RL-06 | `/Applications/pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 30000 build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3` | pluginval strict validation |
 | RL-08 | `./scripts/validate-docs-freshness.sh` | docs metadata/freshness gate |
-| RL-09 | `rg -n "RL-09|release note|release governance" CHANGELOG.md Documentation/backlog/bl-030-release-governance.md Documentation/testing/bl-030-release-governance-qa.md` | Release-note closeout traceability |
+| RL-09 | `rg -n "RL-09|release note|release governance" CHANGELOG.md Documentation/backlog/done/bl-030-release-governance.md Documentation/testing/bl-030-release-governance-qa.md` | Release-note closeout traceability |
 | RL-05-HARNESS | `./scripts/qa-bl030-device-matrix-capture-mac.sh` | Deterministic DEV-01..DEV-06 capture with machine-readable blocker taxonomy |
 | RL-05-MANUAL-INTAKE | `./scripts/qa-bl030-manual-evidence-validate-mac.sh --input <checklist.tsv> --out-dir <artifact_dir>` | Deterministic manual-evidence completeness validation |
 | RL-04-DIAG | `./scripts/diagnose-reaper-bootstrap-abrt-mac.sh --runs 10 --out-dir <artifact_dir>` | RL-04 bootstrap ABRT diagnostics with crash-report linkage |
@@ -101,7 +101,7 @@ RL-09 is `PASS` only when all checks are true:
 3. The closeout entry also states current RL-05 state (must not imply RL-05 pass when blocked).
 4. The RL-09 grep traceability command returns matches across:
    - `CHANGELOG.md`
-   - `Documentation/backlog/bl-030-release-governance.md`
+   - `Documentation/backlog/done/bl-030-release-governance.md`
    - `Documentation/testing/bl-030-release-governance-qa.md`
 
 ## RL-05 Clean Replay (Slice G1)
@@ -579,3 +579,111 @@ Decision rule:
   3. G6 real-input intake remains `FAIL` (`header_schema=FAIL`, `manual_evidence_gate=FAIL`).
   4. I1 compiler output remains fixture-valid only and cannot close RL-05 without authoritative note linkage.
   5. I3 consolidated matrix remains `RL-05=FAIL`; release posture stays `NO-GO`.
+
+## RL-05 Replay Reconcile Deterministic Recheck Snapshot (Slice N14, 2026-02-28)
+
+- Packet directory: `TestEvidence/bl030_slice_n14_rl05_reconcile_20260228T173208Z`
+- Canonical input:
+  - `--notes-dir TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes`
+- Wrapper replay outcomes:
+  - run1: `PASS` (`exit 0`, `capture_exit_code=0`, capture emits `rl05_gate_decision=PASS`)
+  - run2: `PASS` (`exit 0`, `capture_exit_code=0`, capture emits `rl05_gate_decision=PASS`)
+  - run3: `PASS` (`exit 0`, `capture_exit_code=0`, `rl05_gate_decision=PASS`)
+- Determinism classification:
+  - `replay_consistency=CONSISTENT`
+  - `pass_runs=3`
+  - `fail_runs=0`
+  - `rl05_state=GREEN`
+- Required machine-readable blocker taxonomy (N14):
+  - `blocker_taxonomy.tsv` has `0` rows
+- Deterministic closure contract remains unchanged:
+  - RL-05 is green only when all three replay runs exit `0` with reconcile `PASS`.
+  - In this packet RL-05 is green.
+
+## RL-05 Signal-Safe Replay Closeout Contract (Slice N15)
+
+Signal-safe capture harness requirements (`qa-bl030-device-matrix-capture-mac.sh`):
+- Trap `HUP|INT|QUIT|TERM`.
+- On trapped signal, emit machine-readable closeout before process exit:
+  - `status.tsv` row: `signal_termination` with signal, mapped exit code (`128 + signal`), and `current_step`.
+  - `blocker_taxonomy.tsv` row: `category=runtime_flake_abrt`, detail token starting with `capture_aborted_without_gate`.
+  - if `rl05_gate_decision` is not yet emitted, emit `rl05_gate_decision=FAIL` with the same termination detail.
+- Exit code on signal remains the mapped shell signal exit code (`129/130/131/143`).
+
+Signal-safe wrapper requirements (`qa-bl030-rl05-replay-reconcile-mac.sh`):
+- Trap `HUP|INT|QUIT|TERM`.
+- On trapped signal, emit machine-readable closeout before process exit:
+  - `status.tsv` row: `signal_termination`.
+  - `validation_matrix.tsv` row: `signal_termination`.
+  - `blocker_taxonomy.tsv` row with wrapper source and `category=runtime_flake_abrt`.
+  - if reconcile decision not yet emitted, emit `rl05_reconcile_decision=FAIL` plus summary rows.
+- Exit code on signal remains mapped shell signal exit code (`129/130/131/143`).
+
+## RL-05 Signal-Safe Deterministic Recheck Snapshot (Slice N15, 2026-02-28)
+
+- Packet directory: `TestEvidence/bl030_slice_n15_rl05_reconcile_20260228T175020Z`
+- Canonical input:
+  - `--notes-dir TestEvidence/bl030_rl05_real_closure_m2_20260226T155558Z/manual_notes`
+- Wrapper replay outcomes:
+  - run1: `PASS` (`exit 0`, `capture_exit_code=0`, capture emits `rl05_gate_decision=PASS`)
+  - run2: `PASS` (`exit 0`, `capture_exit_code=0`, capture emits `rl05_gate_decision=PASS`)
+  - run3: `PASS` (`exit 0`, `capture_exit_code=0`, capture emits `rl05_gate_decision=PASS`)
+- Determinism classification:
+  - `replay_consistency=UNANIMOUS_PASS`
+  - `pass_runs=3`
+  - `fail_runs=0`
+  - `rl05_state=GREEN`
+- Blocker taxonomy:
+  - aggregate `blocker_taxonomy.tsv` rows: `0`
+- Contract interpretation:
+  - signal-safe hardening preserves machine-readable closure semantics for interrupted runs and does not regress pass-path behavior.
+
+## RL-05 Owner Authoritative Confirmation Snapshot (Slice N15, 2026-02-28)
+
+- Packet directory: `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z`
+- Replay outcomes:
+  - run1: `PASS` (`exit 0`, `capture_exit_code=0`, `rl05_gate_decision=PASS`)
+  - run2: `PASS` (`exit 0`, `capture_exit_code=0`, `rl05_gate_decision=PASS`)
+  - run3: `PASS` (`exit 0`, `capture_exit_code=0`, `rl05_gate_decision=PASS`)
+- Determinism classification:
+  - `replay_consistency=UNANIMOUS_PASS`
+  - `pass_runs=3`
+  - `fail_runs=0`
+  - `rl05_state=GREEN`
+- Blocker taxonomy:
+  - aggregate owner `blocker_taxonomy.tsv` rows: `0`
+- Authoritative gate interpretation:
+  - RL-05 closure criteria are satisfied (`3/3` reconcile replays pass with capture gate rows present).
+
+## RL-03..RL-09 Owner Closeout Matrix Snapshot (N15b, 2026-02-28)
+
+- Packet directory: `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z`
+- Matrix artifacts:
+  - `rl_gate_matrix.tsv`
+  - `release_decision.md`
+  - `rl09_traceability.log`
+- Consolidated gate expectations in this snapshot:
+  - `RL-03=PASS` (payload determinism evidence path retained from M3)
+  - `RL-04=PASS` (bootstrap recovery evidence path retained from L1)
+  - `RL-05=PASS` (N15 owner authoritative replay `UNANIMOUS_PASS`)
+  - `RL-06=PASS` (pluginval stability evidence path retained from L3)
+  - `RL-08=PASS` (docs freshness pass in owner packet)
+  - `RL-09=PASS` (active-window traceability grep includes `CHANGELOG.md`, backlog runbook, and testing runbook)
+- Closeout interpretation:
+  - This packet is the authoritative governance summary proving RL-03..RL-09 green in a single owner matrix after N15 hardening.
+
+## RL-05 N14 Deterministic Recheck Refresh (2026-02-28, 20260228T203445Z)
+
+- Packet root: `TestEvidence/bl030_slice_n14_rl05_reconcile_20260228T203445Z/`
+- 3-run replay outcome: `PASS / FAIL / PASS` (wrapper exits `0 / 1 / 0`).
+- Determinism gate: `FAIL`.
+- RL-05 classification on current branch snapshot: `BLOCKED` (not deterministic-green).
+
+Run-level readout:
+- run1: `PASS` (`rl05_green`)
+- run2: `FAIL` (`device_matrix_capture` failed; DEV-02/03/04 failed in capture matrix)
+- run3: `PASS` (`rl05_green`)
+
+Linked evidence notes:
+- run2 capture failure aligns with BL-009 determinism drift signatures in referenced lane packets (`bl009_headphone_contract_20260228T203929Z`, `bl009_headphone_profile_contract_20260228T203933Z`, `bl009_headphone_contract_20260228T203936Z`).
+- Because all three runs are not green, N14 decision remains `NO-GO` for RL-05 deterministic closure.

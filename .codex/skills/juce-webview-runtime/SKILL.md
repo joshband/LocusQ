@@ -7,7 +7,7 @@ Title: JUCE WebView Runtime Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-03-01
 
 # JUCE WebView Runtime
 
@@ -42,6 +42,11 @@ Use this skill for deep runtime issues in JUCE WebView plugin UIs (interop glitc
 - Keep browser-preview fallbacks functional for non-host testing.
 - Add explicit status/error feedback in UI for native call failures.
 - Never ship host-specific hacks without documenting scope and rationale.
+
+## Startup Hydration And Sync Contract
+- Validate startup sequencing for runtime states that depend on hardware readiness.
+- Prefer explicit UI gating (ready/not-ready + manual sync) over implicit startup assumptions.
+- Capture bridge ordering and timeout behavior when state transitions involve async device availability.
 
 ## Deliverables
 - Repro steps (host + format + exact action path).

@@ -7,7 +7,7 @@ Title: Documentation Governance Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
+Last Modified Date: 2026-03-01
 
 # SKILL: DOCUMENTATION GOVERNANCE
 
@@ -18,6 +18,8 @@ Keep documentation lean, current, and enforceably consistent with specs, invaria
 - User asks to standardize docs, naming, structure, ADRs, or evidence logging.
 - A phase changes behavior or implementation contracts.
 - Validation results are produced and need durable snapshots/trends.
+- Documentation cleanup intent is primarily governance/contract-focused rather than repo-wide de-bloat refactoring.
+- Root documentation (`README.md`, `CHANGELOG.md`, routing contracts) must be synchronized with current project behavior.
 
 ## Required References
 1. `Documentation/standards.md`
@@ -43,6 +45,23 @@ Keep documentation lean, current, and enforceably consistent with specs, invaria
 4. Keep ADRs as separate files named `ADR-XXXX-kebab-case.md`.
 5. Update validation snapshot and trend logs after each meaningful run.
 6. Mark checklist/task status where applicable in plan/evidence docs.
+7. When routing/skill posture changes, update root docs in one change set:
+   - `README.md`, `CHANGELOG.md`, `AGENTS.md`, `CODEX.md`, `CLAUDE.md`, `SKILLS.md`, `AGENT_RULE.md`
+8. If canonical `TestEvidence` packets match ignore patterns, stage them intentionally with force-add and document why.
+9. Exempt skill/system markdown from this skill unless explicitly requested:
+   - `.codex/skills/**`
+   - `.claude/skills/**`
+   - `.codex/workflows/**`
+   - `.claude/workflows/**`
+   - `.codex/rules/**`
+   - `.claude/rules/**`
+
+## Cross-Skill Routing
+- For heavy documentation cleanup, deduplication, and freshness remediation, pair with `documentation-hygiene-expert`.
+- Keep `skill_docs` focused on governance contracts, metadata discipline, traceability, and root-doc sync.
+- Ownership boundary:
+  - `documentation-hygiene-expert` leads backlog/root/API-doc/code-comment hygiene cleanup passes.
+  - `skill_docs` leads ADR/invariant traceability, metadata standards, routing-contract parity, and validation-governance closeout.
 
 ## Output Requirements
 - Updated docs with metadata and cross-references.

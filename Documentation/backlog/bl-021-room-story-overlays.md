@@ -2,7 +2,7 @@ Title: BL-021 Room-Story Overlays
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-021 Room-Story Overlays
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-28
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Implementation (C2 soak packet PASS; C4 execute-mode parity + exit-guard packet PASS on 2026-02-28; N13 owner recheck `--contract-only --runs 3` PASS with stable replay signatures and zero row drift; deterministic confidence reinforced) |
+| Status | In Implementation (C4 execute-mode parity packet PASS at `20260228T170131Z`; C4b post-R1 non-interference packet PASS at `20260228T202813Z`; owner intake/promotion decision pending) |
 | Owner Track | Track E — R&D Expansion |
 | Depends On | BL-014 (Done), BL-015 (Done), HX-05 |
 | Blocks | — |
@@ -320,6 +320,30 @@ bash -n scripts/qa-bl021-room-story-overlays-lane-mac.sh
 - Notes:
   - Replay parity and strict usage-exit semantics remain deterministic.
   - C4 required evidence set includes `execute_runs/failure_taxonomy.tsv`.
+
+## Slice C4b Post-R1 Non-Interference Recheck (2026-02-28)
+
+- Recheck packet directory: `TestEvidence/bl021_slice_c4b_mode_parity_20260228T202813Z`
+- Recheck summary:
+  - contract-only replay (`runs=5`): `PASS`
+  - execute-suite replay (`runs=5`): `PASS`
+  - usage/configuration probes: `PASS` (`--runs 0` => `2`, `--unknown-flag` => `2`)
+  - docs freshness: `PASS`
+- Determinism summary:
+  - contract-only signature divergence: `0`, row drift: `0`
+  - execute-suite signature divergence: `0`, row drift: `0`
+  - mode parity gate: `PASS`
+- Notes:
+  - C4b was executed as a non-interference worker packet using owned surfaces only.
+  - Required C4b evidence set includes both `contract_runs/failure_taxonomy.tsv` and `execute_runs/failure_taxonomy.tsv`.
+
+## Status Refresh (2026-03-01)
+
+- Backlog state remains `In Implementation` pending owner intake.
+- Latest C4/C4b parity evidence is green:
+  - `TestEvidence/bl021_slice_c4_mode_parity_20260228T170131Z/status.tsv`
+  - `TestEvidence/bl021_slice_c4b_mode_parity_20260228T202813Z/status.tsv`
+- No new BL-021 deterministic parity blocker is recorded in this refresh.
 
 ## Replay Cadence Plan (Required)
 

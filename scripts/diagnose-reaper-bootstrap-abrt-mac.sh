@@ -82,7 +82,7 @@ REPRO_COMMANDS_MD="${OUT_DIR}/repro_commands.md"
 TRANSCRIPT_LOG="${OUT_DIR}/command_transcript.log"
 
 printf "step\tresult\texit_code\tdetail\tartifact\n" > "$STATUS_TSV"
-printf "run_index\ttimestamp_utc\texit_code\tstage\tterminal_reason\tclassification\tcrash_report_present\tcrash_report_path\tartifact_dir\trun_log\n" > "$REPLAY_RUNS_TSV"
+printf "run_index\ttimestamp_utc\texit_code\tstage\tterminal_reason\tterminal_reason_class\tterminal_signal_number\tclassification\tcrash_report_present\tcrash_report_path\tartifact_dir\trun_log\n" > "$REPLAY_RUNS_TSV"
 printf "dimension\tkey\tcount\n" > "$CRASH_TAXONOMY_TSV"
 : > "$TRANSCRIPT_LOG"
 
@@ -115,19 +115,50 @@ log_transcript() {
 
 classify_reason() {
   local reason="$1"
-  local exit_code="$2"
+  local reason_class="$2"
+  local signal_number="$3"
+  local exit_code="$4"
 
   if [[ "$exit_code" == "0" ]]; then
     printf "pass"
     return
   fi
 
-  if [[ "$reason" == *"abrt"* ]] || [[ "$reason" == *"ABRT"* ]] || [[ "$reason" == *"134"* ]]; then
+  if [[ "$reason_class" == "abrt" ]] || [[ "$reason" == *"abrt"* ]] || [[ "$reason" == *"ABRT"* ]] || [[ "$reason" == *"134"* ]] || [[ "$signal_number" == "6" ]]; then
     printf "transient_runtime_abort"
     return
   fi
 
-  printf "deterministic_failure"
+  if [[ "$reason_class" == "signal" ]]; then
+    printf "transient_runtime_signal"
+    return
+  fi
+
+  case "$reason" in
+    bootstrap_failed_*)
+      printf "deterministic_bootstrap_failure"
+      return
+      ;;
+    install_failed_*)
+      printf "deterministic_install_failure"
+      return
+      ;;
+    render_failed_*)
+      printf "deterministic_render_failure"
+      return
+      ;;
+    output_failed_*)
+      printf "deterministic_output_failure"
+      return
+      ;;
+    contract_failed_*)
+      printf "deterministic_contract_failure"
+      return
+      ;;
+    *)
+      printf "deterministic_failure"
+      ;;
+  esac
 }
 
 latest_reaper_artifact_dir() {
@@ -166,18 +197,22 @@ append_run_row() {
   local exit_code="$2"
   local stage="$3"
   local reason="$4"
-  local classification="$5"
-  local crash_present="$6"
-  local crash_path="$7"
-  local artifact_dir="$8"
-  local run_log="$9"
+  local reason_class="$5"
+  local signal_number="$6"
+  local classification="$7"
+  local crash_present="$8"
+  local crash_path="$9"
+  local artifact_dir="${10}"
+  local run_log="${11}"
 
-  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$(sanitize_tsv_field "$run_index")" \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     "$(sanitize_tsv_field "$exit_code")" \
     "$(sanitize_tsv_field "$stage")" \
     "$(sanitize_tsv_field "$reason")" \
+    "$(sanitize_tsv_field "$reason_class")" \
+    "$(sanitize_tsv_field "$signal_number")" \
     "$(sanitize_tsv_field "$classification")" \
     "$(sanitize_tsv_field "$crash_present")" \
     "$(sanitize_tsv_field "$crash_path")" \
@@ -217,9 +252,15 @@ for run_idx in $(seq 1 "$RUNS"); do
 
   stage="unknown"
   terminal_reason="unknown"
+  terminal_reason_class="unknown"
+  terminal_signal_number="0"
 
   if [[ "$artifact_dir" != "none" && -f "$artifact_dir/status.json" ]]; then
     status_value="$(jq -r '.status // "unknown"' "$artifact_dir/status.json" 2>/dev/null || echo unknown)"
+    terminal_stage_json="$(jq -r '.terminalStage // "unknown"' "$artifact_dir/status.json" 2>/dev/null || echo unknown)"
+    terminal_reason_json="$(jq -r '.terminalReasonCode // "unknown"' "$artifact_dir/status.json" 2>/dev/null || echo unknown)"
+    terminal_reason_class_json="$(jq -r '.terminalReasonClass // "unknown"' "$artifact_dir/status.json" 2>/dev/null || echo unknown)"
+    terminal_signal_json="$(jq -r '.terminalSignalNumber // 0' "$artifact_dir/status.json" 2>/dev/null || echo 0)"
     bootstrap_ok="$(jq -r '.bootstrapOk // false' "$artifact_dir/status.json" 2>/dev/null || echo false)"
     bootstrap_ec="$(jq -r '.bootstrapExitCode // "na"' "$artifact_dir/status.json" 2>/dev/null || echo na)"
     bootstrap_err="$(jq -r '.bootstrapError // ""' "$artifact_dir/status.json" 2>/dev/null || true)"
@@ -229,6 +270,13 @@ for run_idx in $(seq 1 "$RUNS"); do
     if [[ "$status_value" == "pass" ]]; then
       stage="complete"
       terminal_reason="pass"
+      terminal_reason_class="pass"
+      terminal_signal_number="0"
+    elif [[ "$terminal_reason_json" != "unknown" && "$terminal_reason_json" != "none" ]]; then
+      stage="$terminal_stage_json"
+      terminal_reason="$(sanitize_tsv_field "$terminal_reason_json")"
+      terminal_reason_class="$(sanitize_tsv_field "$terminal_reason_class_json")"
+      terminal_signal_number="$(sanitize_tsv_field "$terminal_signal_json")"
     elif [[ "$bootstrap_ok" != "true" ]]; then
       stage="bootstrap"
       if [[ -n "$bootstrap_err" ]]; then
@@ -236,32 +284,44 @@ for run_idx in $(seq 1 "$RUNS"); do
       else
         terminal_reason="bootstrap_exit_${bootstrap_ec}"
       fi
+      terminal_reason_class="bootstrap_failed"
     elif [[ "$render_ec" != "0" && "$render_ec" != "na" ]]; then
       stage="render"
       terminal_reason="render_exit_${render_ec}"
+      terminal_reason_class="render_failed"
     elif [[ "$render_output" != "true" ]]; then
       stage="post_render"
       terminal_reason="render_output_not_detected"
+      terminal_reason_class="output_failed"
     else
       stage="unknown"
       terminal_reason="status_${status_value}"
+      terminal_reason_class="unknown"
     fi
   else
     if [[ "$run_ec" == "0" ]]; then
       stage="complete"
       terminal_reason="pass_without_status_json"
+      terminal_reason_class="pass"
+      terminal_signal_number="0"
     else
       stage="unknown"
       terminal_reason="exit_${run_ec}"
+      terminal_reason_class="unknown"
+      if [[ "$run_ec" =~ ^[0-9]+$ ]] && (( run_ec >= 129 && run_ec <= 255 )); then
+        terminal_signal_number="$((run_ec - 128))"
+      fi
     fi
   fi
 
   if grep -Eiq 'Abort trap|ABRT|signal 6|renderExitCode=134|bootstrap.*134' "$run_log" "$artifact_dir/run.log" "$artifact_dir/bootstrap.log" "$artifact_dir/render.log" 2>/dev/null; then
-    if [[ "$terminal_reason" == "unknown" ]]; then
+    if [[ "$terminal_reason" == "unknown" || "$terminal_reason" == "none" ]]; then
       terminal_reason="abrt_detected"
     else
       terminal_reason="${terminal_reason}|abrt"
     fi
+    terminal_reason_class="abrt"
+    terminal_signal_number="6"
   fi
 
   crash_report_path="$(detect_crash_report_after "$marker_file")"
@@ -270,8 +330,8 @@ for run_idx in $(seq 1 "$RUNS"); do
     crash_report_present="yes"
   fi
 
-  classification="$(classify_reason "$terminal_reason" "$run_ec")"
-  append_run_row "$run_idx" "$run_ec" "$stage" "$terminal_reason" "$classification" "$crash_report_present" "$crash_report_path" "$artifact_dir" "$run_log"
+  classification="$(classify_reason "$terminal_reason" "$terminal_reason_class" "$terminal_signal_number" "$run_ec")"
+  append_run_row "$run_idx" "$run_ec" "$stage" "$terminal_reason" "$terminal_reason_class" "$terminal_signal_number" "$classification" "$crash_report_present" "$crash_report_path" "$artifact_dir" "$run_log"
 
   if (( run_ec == 0 )); then
     RUN_PASSES=$((RUN_PASSES + 1))
@@ -285,13 +345,17 @@ awk -F'\t' '
   {
     stage[$4]++
     reason[$5]++
-    class[$6]++
-    crash[$7]++
+    reasonClass[$6]++
+    signal[$7]++
+    class[$8]++
+    crash[$9]++
     exitc[$3]++
   }
   END {
     for (k in stage) printf "stage\t%s\t%d\n", k, stage[k]
     for (k in reason) printf "terminal_reason\t%s\t%d\n", k, reason[k]
+    for (k in reasonClass) printf "terminal_reason_class\t%s\t%d\n", k, reasonClass[k]
+    for (k in signal) printf "terminal_signal_number\t%s\t%d\n", k, signal[k]
     for (k in class) printf "classification\t%s\t%d\n", k, class[k]
     for (k in crash) printf "crash_report_present\t%s\t%d\n", k, crash[k]
     for (k in exitc) printf "exit_code\t%s\t%d\n", k, exitc[k]

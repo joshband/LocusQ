@@ -7,7 +7,7 @@ Title: Three.js Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-03-01
 
 # Three.js
 
@@ -41,6 +41,15 @@ Use this skill to produce production-grade Three.js code with deterministic life
 - Gate expensive features behind capability checks and quality tiers.
 - Preserve existing bridge event names and JS entry points unless a migration is requested.
 - When fixing bugs, capture a reproducible case and include before and after evidence.
+
+## Diagnostic Addendum (Head-Tracking Views)
+- Prefer explicit diagnostic views when companion orientation is in scope:
+  - perspective view,
+  - top view,
+  - front/side mini-views or equivalent toggle path.
+- Keep frame contract visible in UI (`+X right`, `+Y up`, `-Z ahead`).
+- Include synthetic axis sweeps (yaw/pitch/roll) in validation evidence for mapping regressions.
+- Ensure stale pose state cannot keep animating active orientation cues.
 
 ## Deliverables
 - List changed files and the reason each change was required.

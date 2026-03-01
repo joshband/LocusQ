@@ -7,7 +7,7 @@ Title: SKILL: TESTING (DSP QA HARNESS FIRST)
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-18
+Last Modified Date: 2026-03-01
 
 
 # SKILL: TESTING (DSP QA HARNESS FIRST)
@@ -65,3 +65,12 @@ if (-not (Test-Path $HarnessPath)) {
    - Retry from a normal Terminal session or launch via:
      - `open -na /Applications/pluginval.app --args --strictness-level 5 --timeout-ms 30000 --validate "<path-to-plugin.vst3>"`
 6. **Crash Analysis:** If crash reported, read `Documents/APC_CRASH_REPORT.txt` and correlate with QA artifacts.
+
+## Backlog Replay Tier Discipline
+When testing backlog lanes, enforce replay tiers from `Documentation/backlog/index.md`:
+- `T1` dev loop default,
+- `T2` candidate gate,
+- `T3` promotion gate,
+- `T4` sentinel only when explicitly requested.
+
+For heavy wrappers, prefer targeted reruns before broad sweeps and record any owner-approved cadence override in evidence notes.

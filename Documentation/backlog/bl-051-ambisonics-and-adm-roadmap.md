@@ -12,7 +12,7 @@ Last Modified Date: 2026-02-28
 |---|---|
 | ID | BL-051 |
 | Priority | P3 |
-| Status | In Validation (A1b owner intake accepted; A2 contract drafted; ADR formalized; C-slice decomposition complete; execution intake pending) |
+| Status | Done-candidate |
 | Track | E - R&D Expansion |
 | Effort | Very High / XL |
 | Depends On | BL-046, BL-050 |
@@ -134,11 +134,11 @@ Follow-on implementation items:
 
 | Workstream ID | Concrete Backlog Lane | Contract Focus | Evidence Anchor |
 | --- | --- | --- | --- |
-| WI-001 | [BL-062 Ambisonics IR Interface Contract](bl-062-ambisonics-ir-interface-contract.md) | IR loader/ownership contract, deterministic handoff boundaries | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/decomposition_plan.tsv` |
-| WI-002 | [BL-063 Ambisonics Renderer Compatibility Guardrails](bl-063-ambisonics-renderer-compatibility-guardrails.md) | Renderer-side compatibility and rollout gate criteria | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/dependency_graph.tsv` |
-| WI-003 | [BL-064 ADM Mapping Contract](bl-064-adm-mapping-contract.md) | ADM schema mapping, validation invariants, downgrade behavior | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/decomposition_plan.tsv` |
-| WI-004 | [BL-065 IAMF Mapping Contract](bl-065-iamf-mapping-contract.md) | IAMF lane contract and migration protections | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/decomposition_plan.tsv` |
-| WI-005 | [BL-066 Ambisonics + ADM Pilot Execution Intake](bl-066-ambisonics-adm-pilot-execution-intake.md) | Intake bridge for execution lanes with explicit readiness gates | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/status.tsv` |
+| WI-001 | [BL-062 Ambisonics IR Interface Contract](done/bl-062-ambisonics-ir-interface-contract.md) | IR loader/ownership contract, deterministic handoff boundaries | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/decomposition_plan.tsv` |
+| WI-002 | [BL-063 Ambisonics Renderer Compatibility Guardrails](done/bl-063-ambisonics-renderer-compatibility-guardrails.md) | Renderer-side compatibility and rollout gate criteria | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/dependency_graph.tsv` |
+| WI-003 | [BL-064 ADM Mapping Contract](done/bl-064-adm-mapping-contract.md) | ADM schema mapping, validation invariants, downgrade behavior | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/decomposition_plan.tsv` |
+| WI-004 | [BL-065 IAMF Mapping Contract](done/bl-065-iamf-mapping-contract.md) | IAMF lane contract and migration protections | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/decomposition_plan.tsv` |
+| WI-005 | [BL-066 Ambisonics + ADM Pilot Execution Intake](done/bl-066-ambisonics-adm-pilot-execution-intake.md) | Intake bridge for execution lanes with explicit readiness gates | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/status.tsv` |
 
 
 ## Replay Cadence Plan (Required)
@@ -185,3 +185,17 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+
+## BL-051 Parent Closeout Sync (BL-062..BL-066 Done)
+
+Resolution:
+- BL-062 through BL-066 have been promoted to Done in TestEvidence/bl062_bl066_done_promotion_20260228_153040.
+- BL-051 parent lane now advances to Done-candidate.
+- Dependency policy holds BL-051 below Done until BL-050 is closed.
+
+Evidence:
+- TestEvidence/bl051_parent_closeout_sync_20260228_153306/status.tsv
+- TestEvidence/bl051_parent_closeout_sync_20260228_153306/validation_matrix.tsv
+- TestEvidence/bl051_parent_closeout_sync_20260228_153306/lane_notes.md
+- TestEvidence/bl062_bl066_done_promotion_20260228_153040/status.tsv
+- TestEvidence/bl062_bl066_done_promotion_20260228_153040/validation_matrix.tsv

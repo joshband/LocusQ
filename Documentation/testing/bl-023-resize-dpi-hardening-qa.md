@@ -2,7 +2,7 @@ Title: BL-023 Resize/DPI Hardening QA
 Document Type: QA Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-023 Resize/DPI Hardening QA
 
@@ -153,6 +153,158 @@ Required C2 packet artifacts:
 - `harness_notes.md`
 - `docs_freshness.log`
 
+## C3 Validation (Mode Parity + Exit Semantics Revalidation)
+
+Acceptance mapping:
+
+| C3 ID | Lane Check | Pass Criteria | Artifact |
+|---|---|---|---|
+| `BL023-C3-001` | contract replay determinism | `--contract-only --runs 20` exits `0`; `signature_divergence_count=0`; `row_count_drift=0` | `contract_runs/validation_matrix.tsv`, `contract_runs/determinism_summary.tsv` |
+| `BL023-C3-002` | runtime replay determinism | `--runs 20` exits `0`; `signature_divergence_count=0`; `row_count_drift=0` | `exec_runs/validation_matrix.tsv`, `exec_runs/determinism_summary.tsv` |
+| `BL023-C3-003` | mode parity summary | contract and runtime deterministic counters match; taxonomy drift rows are zero | `mode_parity.tsv` |
+| `BL023-C3-004` | usage exit semantics (`--runs 0`) | observed exit code is `2` | `exit_semantics_probe.tsv` |
+| `BL023-C3-005` | usage exit semantics (`--unknown`) | observed exit code is `2` | `exit_semantics_probe.tsv` |
+| `BL023-C3-006` | docs freshness | `./scripts/validate-docs-freshness.sh` exits `0` | `docs_freshness.log` |
+| `BL023-C3-007` | evidence completeness | all required C3 files exist | `status.tsv` |
+
+C3 failure taxonomy additions:
+
+| failure_id | category | trigger | classification | blocking | severity | expected_artifact |
+|---|---|---|---|---|---|---|
+| BL023-RZ-920 | mode_parity_mismatch | cross-mode deterministic counters differ | deterministic_replay_failure | yes | critical | mode_parity.tsv |
+| BL023-RZ-921 | usage_exit_semantics_failure | `--runs 0` or `--unknown` exit code is not `2` | deterministic_contract_failure | yes | major | exit_semantics_probe.tsv |
+| BL023-RZ-922 | c3_evidence_schema_incomplete | required C3 files missing | deterministic_evidence_failure | yes | major | status.tsv |
+| BL023-RZ-923 | docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes | major | docs_freshness.log |
+
+## C3 Validation Plan
+
+- `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --help`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl023_slice_c3_mode_parity_<timestamp>/contract_runs`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 20 --out-dir TestEvidence/bl023_slice_c3_mode_parity_<timestamp>/exec_runs`
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## C3 Evidence Contract
+
+Required C3 packet artifacts:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/host_matrix_results.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `contract_runs/determinism_summary.tsv`
+- `exec_runs/validation_matrix.tsv`
+- `exec_runs/host_matrix_results.tsv`
+- `exec_runs/failure_taxonomy.tsv`
+- `exec_runs/determinism_summary.tsv`
+- `mode_parity.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## C3 Execution Snapshot (2026-02-28)
+
+- Packet directory: `TestEvidence/bl023_slice_c3_mode_parity_20260228T171824Z`
+- Command outcomes:
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 20 --out-dir .../contract_runs`: `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 20 --out-dir .../exec_runs`: `FAIL`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0`: `PASS` (exit `2`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown`: `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Runtime failure detail:
+  - `run=7`, `BL023-C1-RUN-001=FAIL`, detail `runtime_lane_fail:exit=143`
+  - deterministic follow-on: `BL023-C1-DET-001=FAIL` (`signature_mismatch` vs baseline)
+- Taxonomy evidence (`exec_runs/failure_taxonomy.tsv`):
+  - `BL023-RZ-900`: `count=1`, `first_run=7`, `first_lane=BL023-HM-ALL`, `detail=runtime_lane_fail`
+  - `BL023-RZ-910`: `count=1`, `first_run=7`, `first_lane=BL023-HM-ALL`, `detail=determinism_signature_mismatch`
+- Gate classification:
+  - `BL023-C3-001`: `PASS`
+  - `BL023-C3-002`: `FAIL`
+  - `BL023-C3-003`: `FAIL`
+  - `BL023-C3-004`..`BL023-C3-007`: `PASS`
+
+## C3 Execution Snapshot R2 (2026-02-28)
+
+- Packet directory: `TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z`
+- Runtime lane hardening:
+  - bounded retry-on-`143` wrapper logic in `scripts/qa-bl023-resize-dpi-matrix-mac.sh`
+  - retry controls: `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143`, `LOCUSQ_BL023_RUNTIME_RETRY_LIMIT`, `LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS`
+- Command outcomes:
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 20 --out-dir .../contract_runs`: `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 20 --out-dir .../exec_runs`: `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0`: `PASS` (exit `2`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown`: `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Runtime recovery evidence:
+  - `exec_runs/determinism_summary.tsv`: `runtime_retry143_recovery_count=1` with result `PASS` (`exit143_recovered_by_bounded_retry`)
+  - `lane_notes.md`: `run=8;runtime_lane_pass_after_exit143_retry:attempts=2`
+- Gate classification:
+  - `BL023-C3-001`: `PASS`
+  - `BL023-C3-002`: `PASS`
+  - `BL023-C3-003`: `PASS`
+  - `BL023-C3-004`..`BL023-C3-007`: `PASS`
+
+## C3 T4 Sentinel Snapshot (2026-02-28)
+
+- Sentinel directory: `TestEvidence/bl023_slice_c3_mode_parity_20260228T180258Z/exec_runs_retry_on`
+- Policy alignment:
+  - classified as `T4` sentinel-only cadence (explicit request), separate from routine gate cadence.
+  - gating authority remains the C3 packet at `TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z`.
+- Sentinel metrics:
+  - command exit `0`
+  - `runtime_failure_count=0`
+  - `runtime_retry143_recovery_count=2`
+- Sentinel verdict:
+  - retry-enabled runtime lane stayed deterministic and recovered transient `143` exits without gate failure.
+
+## C3 Canonical PASS Snapshot (2026-02-28)
+
+- Canonical owner-intake packet:
+  - `TestEvidence/bl023_slice_c3_mode_parity_20260228T180543Z`
+- Command outcomes:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`: `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --help`: `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 20 --out-dir .../contract_runs`: `PASS`
+  - `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143=1 LOCUSQ_BL023_RUNTIME_RETRY_LIMIT=2 LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS=1 LOCUSQ_BL023_SELFTEST_MAX_ATTEMPTS=6 LOCUSQ_BL023_SELFTEST_RETRY_DELAY_SECONDS=4 LOCUSQ_BL023_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS=8 ./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 20 --out-dir .../exec_runs`: `PASS`
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0`: `PASS` (exit `2`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown`: `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS`
+- Determinism parity summary:
+  - `signature_divergence_count`: contract `0`, runtime `0`
+  - `row_count_drift`: contract `0`, runtime `0`
+  - `runtime_failure_count`: contract `0`, runtime `0`
+  - `taxonomy_row_count`: contract `7`, runtime `7`
+- Gate classification:
+  - `BL023-C3-001`..`BL023-C3-007`: `PASS`
+
+## A2-01 T1 Replay Snapshot (2026-02-28)
+
+- Packet directory:
+  - `TestEvidence/bl023_slice_a2_t1_replay_20260228T200917Z`
+- Command outcomes:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`: `PASS` (`0`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 3 --out-dir .../contract_runs`: `PASS` (`0`)
+  - `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143=1 LOCUSQ_BL023_RUNTIME_RETRY_LIMIT=2 LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS=1 LOCUSQ_BL023_SELFTEST_MAX_ATTEMPTS=6 LOCUSQ_BL023_SELFTEST_RETRY_DELAY_SECONDS=4 LOCUSQ_BL023_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS=8 ./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 3 --out-dir .../exec_runs`: `PASS` (`0`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS` (`0`)
+- Result:
+  - A2-01 post-change T1 replay is green in both contract and runtime lanes.
+
+## A2-02 T2 Candidate Replay Snapshot (2026-02-28)
+
+- Packet directory:
+  - `TestEvidence/bl023_slice_a2_t2_candidate_20260228T201215Z`
+- Cadence note:
+  - Candidate tier executed with heavy-wrapper `2`-run cap.
+- Command outcomes:
+  - `bash -n scripts/qa-bl023-resize-dpi-matrix-mac.sh`: `PASS` (`0`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 2 --out-dir .../contract_runs`: `PASS` (`0`)
+  - `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143=1 LOCUSQ_BL023_RUNTIME_RETRY_LIMIT=2 LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS=1 LOCUSQ_BL023_SELFTEST_MAX_ATTEMPTS=6 LOCUSQ_BL023_SELFTEST_RETRY_DELAY_SECONDS=4 LOCUSQ_BL023_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS=8 ./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 2 --out-dir .../exec_runs`: `PASS` (`0`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS` (`0`)
+- Result:
+  - A2 candidate-tier replay is green for both lanes with no gate failures.
+
 ## Validation
 
 - `./scripts/validate-docs-freshness.sh`
@@ -161,3 +313,54 @@ Validation state labels:
 - `tested`: Command executed and exited as expected.
 - `partially tested`: Some required lanes missing.
 - `not tested`: Command not executed.
+
+## A2-03 T3 Promotion Replay Snapshot (2026-02-28)
+
+- Packet directory:
+  - `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z`
+- Command outcomes:
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --contract-only --runs 3 --out-dir .../contract_runs`: `PASS` (`0`)
+  - `LOCUSQ_BL023_RUNTIME_RETRY_ON_EXIT143=1 LOCUSQ_BL023_RUNTIME_RETRY_LIMIT=2 LOCUSQ_BL023_RUNTIME_RETRY_DELAY_SECONDS=1 LOCUSQ_BL023_SELFTEST_MAX_ATTEMPTS=6 LOCUSQ_BL023_SELFTEST_RETRY_DELAY_SECONDS=4 LOCUSQ_BL023_SELFTEST_RESULT_AFTER_EXIT_GRACE_SECONDS=8 ./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 3 --out-dir .../exec_runs`: `PASS` (`0`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --runs 0`: `PASS` (exit `2`)
+  - `./scripts/qa-bl023-resize-dpi-matrix-mac.sh --unknown`: `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh`: `PASS` (`0`)
+- Determinism/parity summary:
+  - `contract_runs/determinism_summary.tsv`: `signature_divergence_count=0`, `row_count_drift=0`
+  - `exec_runs/determinism_summary.tsv`: `signature_divergence_count=0`, `row_count_drift=0`
+  - `mode_parity.tsv`: `PASS`
+- Exit semantics:
+  - `exit_semantics_probe.tsv` confirms expected usage exits for invalid invocations.
+
+## A2-04 Owner Intake Handoff (2026-02-28)
+
+- Readiness: `READY_FOR_OWNER_PROMOTION_REVIEW`
+- Canonical packet: `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z`
+- Required gate summary:
+  - lint/help/contract/runtime/docs freshness: `PASS`
+  - usage exit probes (`--runs 0`, `--unknown`): expected exit `2` observed `2`
+  - parity counters: `signature_divergence_count=0`, `row_count_drift=0`
+- Ownership safety marker:
+  - `SHARED_FILES_TOUCHED: yes`
+
+## A3-01 Owner Promotion Decision Snapshot (2026-02-28)
+
+- Decision: `APPROVED_FOR_CLOSEOUT`
+- Canonical promotion packet: `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z`
+- Gate confirmation:
+  - contract lane: `PASS` (`0`)
+  - runtime lane: `PASS` (`0`)
+  - invalid usage exits: `--runs 0 => 2`, `--unknown => 2`
+  - parity counters: `signature_divergence_count=0`, `row_count_drift=0`
+  - docs freshness: `PASS` (`0`)
+- Handoff marker:
+  - `SHARED_FILES_TOUCHED: yes`
+
+## A3-02 Done Transition Snapshot (2026-02-28)
+
+- Transition status: `DONE_TRANSITION_COMPLETE`
+- Archived runbook path:
+  - `Documentation/backlog/done/bl-023-resize-dpi-hardening.md`
+- Index synchronization:
+  - `Documentation/backlog/index.md` BL-023 row is `Done` and linked to done archive path.
+- Canonical packet:
+  - `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z`
