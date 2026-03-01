@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-075 |
 | Priority | P2 |
-| Status | In Validation (execute lane pass: remediation matrix + contributor/API coverage packet generated) |
+| Status | In Validation (execute lane pass + T2 candidate packet pass: 5/5 runs, zero TODO rows) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -110,5 +110,8 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - non-obvious rationale comments added in calibration generation guard, headtracking sequence-stale logic, coherent bridge snapshot publication, and shared contract headers.
 - Execute evidence:
   - `TestEvidence/bl075_doc_accessibility_execute_20260301T220148Z/status.tsv` (execute mode pass, zero TODO rows).
+- T2 candidate evidence:
+  - `TestEvidence/bl075_candidate_t2_20260301T220718Z/run_summary.tsv` (5/5 PASS, zero TODO rows).
+  - `TestEvidence/bl075_candidate_t2_20260301T220718Z/candidate_decision.md`.
 - Remaining BL-075 scope:
-  - run candidate/promotion cadence packets per replay policy and owner intake timeline.
+  - advance to T3 promotion packet per replay policy and owner intake timeline.
