@@ -1,57 +1,47 @@
-Title: BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+Title: BL-069 RT-Safe Headphone Preset Pipeline and Failure Backoff
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
 Last Modified Date: 2026-03-01
 
-# BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+# BL-069 RT-Safe Headphone Preset Pipeline and Failure Backoff
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
-| ID | BL-068 |
-| Priority | P1 |
-| Status | Open (execute-lane scaffold-only; no promotion while any execute evidence row is `TODO`; BL-073 gate required) |
-| Track | E - R&D Expansion |
+| ID | BL-069 |
+| Priority | P0 |
+| Status | In Implementation (Wave 1 kickoff: cache-only preset load path landed in runtime code) |
+| Track | F - Hardening |
 | Effort | Med / M |
-| Depends On | BL-050, BL-055 |
+| Depends On | BL-050 |
 | Blocks | — |
-| Annex Spec | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
+| Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
-Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable.
+Remove RT-unsafe file/config loading from the headphone preset path by moving preset hydration and parse work out of `processBlock()`, introducing atomic runtime handoff for prepared coefficients, and enforcing retry backoff semantics when preset assets are missing or invalid.
 
 ## Acceptance IDs
 
-- Delay/echo timing and feedback behavior are stable from 44.1kHz through 192kHz.
-- Feedback-network safety ceiling prevents runaway/non-finite output in stress lanes.
-- Looper overdub/clear/transport interactions are deterministic on session recall.
-- Parameter automation and mode transitions are click-safe and zipper-safe.
-- Temporal-effect lanes remain compatible with existing spatial and FIR paths.
-- Execute-mode QA evidence contains zero `TODO` rows (BL-073 scaffold-truthfulness gate).
-
-## Implementation Slices
-
-| Slice | Description | Exit Criteria |
-|---|---|---|
-| A | Delay/echo and bounded feedback architecture | finite-output and runaway-guard lanes pass |
-| B | Looper + frippertronics-style layering behavior | transport/recall lanes pass without drift or clicks |
-| C | Evidence and visualization handshake contracts | deterministic replay + telemetry evidence packet captured |
+- No filesystem access, parse work, or blocking I/O is executed from `processBlock()` during profile changes.
+- Missing/invalid preset assets do not retrigger load attempts every callback block.
+- Prepared preset coefficients are atomically swapped into audio path without discontinuities.
+- Failure/backoff diagnostics are visible in scene/runtime status payloads.
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl068-temporal-effects-mac.sh`.
-Evidence schema: `TestEvidence/bl068_*/status.tsv`.
+QA harness script: `scripts/qa-bl069-rt-safe-preset-pipeline-mac.sh` (to be authored).
+Evidence schema: `TestEvidence/bl069_*/status.tsv`.
 
 Minimum evidence additions:
-- `temporal_matrix.tsv` (delay/echo/looper scenario results)
-- `runaway_guard.tsv` (feedback safety + finite-output checks)
-- `transport_recall.tsv` (timeline/recall determinism checks)
-- `cpu_latency_budget.tsv` (sample-rate and topology budget snapshots)
+- `rt_access_audit.tsv`
+- `preset_retry_backoff.tsv`
+- `coefficient_swap_stability.tsv`
+- `failure_taxonomy.tsv`
 
 ## Replay Cadence Plan (Required)
 
@@ -95,4 +85,13 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
-- Immediate promotion blocker policy (2026-03-01): contract-only evidence is non-promotable; execute-mode packets with any `TODO` rows are automatic `NO-GO`.
+
+## Execution Notes (2026-03-01)
+
+- Initial remediation landed in runtime code:
+  - `Source/SpatialRenderer.h` now preloads bundled PEQ presets during `prepare()`.
+  - `loadPeqPresetForProfile()` now uses cache-only preset data (no filesystem access on callback path).
+  - Failed/missing preset states are now cached through invalid preset entries and no longer trigger per-block file retries.
+- Remaining BL-069 scope:
+  - Add explicit QA harness lane and backoff evidence packet (`preset_retry_backoff.tsv`).
+  - Add diagnostics surfacing for cache hit/miss/backoff reason in bridge payloads.

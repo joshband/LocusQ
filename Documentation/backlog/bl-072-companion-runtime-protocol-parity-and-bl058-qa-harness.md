@@ -1,57 +1,48 @@
-Title: BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+Title: BL-072 Companion Runtime Protocol Parity and BL-058 QA Harness
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
 Last Modified Date: 2026-03-01
 
-# BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+# BL-072 Companion Runtime Protocol Parity and BL-058 QA Harness
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
-| ID | BL-068 |
-| Priority | P1 |
-| Status | Open (execute-lane scaffold-only; no promotion while any execute evidence row is `TODO`; BL-073 gate required) |
+| ID | BL-072 |
+| Priority | P0 |
+| Status | Open |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
-| Depends On | BL-050, BL-055 |
-| Blocks | — |
-| Annex Spec | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
+| Depends On | BL-058, BL-059 |
+| Blocks | BL-060 |
+| Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
-Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable.
+Align companion runtime packet contract behavior with validated model semantics and establish a real BL-058 QA lane that verifies readiness/sync gating, stale-packet behavior, sequence continuity, and axis-sweep correctness.
 
 ## Acceptance IDs
 
-- Delay/echo timing and feedback behavior are stable from 44.1kHz through 192kHz.
-- Feedback-network safety ceiling prevents runaway/non-finite output in stress lanes.
-- Looper overdub/clear/transport interactions are deterministic on session recall.
-- Parameter automation and mode transitions are click-safe and zipper-safe.
-- Temporal-effect lanes remain compatible with existing spatial and FIR paths.
-- Execute-mode QA evidence contains zero `TODO` rows (BL-073 scaffold-truthfulness gate).
-
-## Implementation Slices
-
-| Slice | Description | Exit Criteria |
-|---|---|---|
-| A | Delay/echo and bounded feedback architecture | finite-output and runaway-guard lanes pass |
-| B | Looper + frippertronics-style layering behavior | transport/recall lanes pass without drift or clicks |
-| C | Evidence and visualization handshake contracts | deterministic replay + telemetry evidence packet captured |
+- Companion executable packet contract is parity-verified against the chosen runtime schema (single-version or explicitly dual-version).
+- `--require-sync` semantics are consistent between synthetic and live runtime paths.
+- BL-058 QA harness exists and emits required deterministic evidence bundle.
+- Stale-packet fallback and readiness-state transitions are asserted by automated or hybrid repeatable checks.
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl068-temporal-effects-mac.sh`.
-Evidence schema: `TestEvidence/bl068_*/status.tsv`.
+QA harness script: `scripts/qa-bl072-companion-protocol-parity-mac.sh` (to be authored).
+Evidence schema: `TestEvidence/bl072_*/status.tsv`.
 
 Minimum evidence additions:
-- `temporal_matrix.tsv` (delay/echo/looper scenario results)
-- `runaway_guard.tsv` (feedback safety + finite-output checks)
-- `transport_recall.tsv` (timeline/recall determinism checks)
-- `cpu_latency_budget.tsv` (sample-rate and topology budget snapshots)
+- `protocol_parity.tsv`
+- `readiness_gate.tsv`
+- `axis_sweeps.md`
+- `sequence_age_contract.tsv`
+- `bl058_lane_packet.md`
 
 ## Replay Cadence Plan (Required)
 
@@ -95,4 +86,3 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
-- Immediate promotion blocker policy (2026-03-01): contract-only evidence is non-promotable; execute-mode packets with any `TODO` rows are automatic `NO-GO`.

@@ -11,7 +11,7 @@ Last Modified Date: 2026-03-01
 | Field | Value |
 |---|---|
 | ID | BL-058 |
-| Priority | P1 |
+| Priority | P0 |
 | Status | Open |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
