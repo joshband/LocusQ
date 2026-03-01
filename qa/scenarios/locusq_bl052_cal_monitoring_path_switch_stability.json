@@ -1,0 +1,87 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl052_cal_monitoring_path_switch_stability",
+  "name": "LocusQ BL-052 Calibration Monitoring — Path Switch Stability",
+  "category": "stability",
+  "description": "Validates deterministic path switch: exercises the steam_binaural path across two reset passes to confirm monitoring mode stability (BL-052 acceptance: 'monitoring mode switch is deterministic'). Multi-pass with reset validates that repeated mode activation produces consistent output without state leakage, NaN/Inf, or discontinuities above the expected threshold.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQCalibrateAdapter (--calibrate flag). cal_monitoring_path = steam_binaural (0.667). Two passes with reset to verify deterministic mode switch."
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.25,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.667,
+    "1": 0.5,
+    "2": 0.0,
+    "3": 1.0
+  },
+
+  "multi_pass": {
+    "num_passes": 2,
+    "reset_between_passes": true
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.0,
+      "description": "Full window used for NaN/Inf and discontinuity guards across each pass"
+    }
+  },
+
+  "expected_invariants": {
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "No NaN/Inf across both reset passes — monitoring path must be deterministically safe."
+    },
+    "allocation_free": {
+      "metric": "perf_allocation_free",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "soft_warn",
+      "description": "BL-052 C13: Allocation-free guard across both passes of steam_binaural path. Soft warn: CalibrationEngine may allocate on first block per pass."
+    },
+    "continuity": {
+      "metric": "discontinuity_count",
+      "window": "full",
+      "threshold": {
+        "max_count": 4800,
+        "detection_threshold_db": -18.0
+      },
+      "severity": "soft_warn",
+      "description": "Discontinuity count between passes should be within reset-transition tolerance (~100ms at 48 kHz)."
+    }
+  },
+
+  "use_cases": [
+    "BL-052 acceptance: monitoring mode switch is deterministic across consecutive activations",
+    "Regression guard: reset between passes must not leave SteamAudioVirtualSurround in corrupt state",
+    "Validates that repeated prepare/reset cycles through steam_binaural path remain stable"
+  ],
+
+  "pass_criteria": "no_nan_inf must pass (hard_fail). allocation_free and continuity are soft_warn only. Calibrate mode outputs silence by design.",
+
+  "example_failures": [
+    "non_finite → NaN introduced by state leak across reset boundary in applyBlock()",
+    "perf_allocation_free=false (soft_warn) → unexpected heap allocation on mode re-entry after reset"
+  ]
+}

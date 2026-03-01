@@ -1,0 +1,104 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl037_snapshot_budget_suite",
+  "name": "LocusQ BL-037 Snapshot Budget Lane Suite",
+  "category": "stability",
+  "description": "Deterministic BL-037 lane scaffold for snapshot budget/degradation replay signatures.",
+  "scenario_ids": [
+    "locusq_emitter_passthrough",
+    "locusq_renderer_spatial_output"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl037_snapshot_budget_lane"
+  },
+  "bl037_contract_checks": {
+    "acceptance_ids": [
+      { "id": "BL037-B1-001", "description": "Contract acceptance IDs are complete." },
+      { "id": "BL037-B1-002", "description": "Base failure taxonomy IDs are complete." },
+      { "id": "BL037-B1-003", "description": "Publish decision token contract is explicit." },
+      { "id": "BL037-B1-004", "description": "CPU budget threshold contract is explicit." },
+      { "id": "BL037-B1-005", "description": "Replay determinism clause is explicit." },
+      { "id": "BL037-B1-006", "description": "Artifact schema contract is explicit." },
+      { "id": "BL037-B1-007", "description": "Lane failure taxonomy coverage is explicit." },
+      { "id": "BL037-B1-008", "description": "Replay hash stability is enforced across reruns." },
+      { "id": "BL037-C5c-001", "description": "Post-H2 20-run contract replay remains deterministic." },
+      { "id": "BL037-C5c-002", "description": "Post-H2 --runs 0 usage probe exits with code 2." },
+      { "id": "BL037-C5c-003", "description": "Post-H2 --bad-arg usage probe exits with code 2." }
+    ],
+    "required_publish_decisions": [
+      "publish",
+      "skip_no_demand",
+      "skip_budget_guard",
+      "force_publish_late_join"
+    ],
+    "required_fallback_tokens": [
+      "none",
+      "skip_no_demand",
+      "skip_budget_guard",
+      "force_publish_late_join",
+      "non_finite_cpu_sample"
+    ],
+    "thresholds": {
+      "snapshot_cpu_us_per_block_p95_max": 120,
+      "snapshot_cpu_us_per_block_max": 150,
+      "snapshot_budget_overrun_ratio_max": 0.01,
+      "late_join_max_blocks": 1,
+      "guard_entry_consecutive_overruns": 8,
+      "guard_exit_blocks": 64,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 50,
+      "soak_runs": 10,
+      "c3_replay_sentinel_runs": 20,
+      "c4_replay_sentinel_soak_runs": 50,
+      "c5_exit_semantics_runs": 20,
+      "c5c_exit_semantics_runs": 20,
+      "usage_error_expected_exit_code": 2,
+      "replay_sentinel_runs": 50,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "deterministic_hash_inputs": {
+      "include": [
+        "mode",
+        "runbook_contract_hash",
+        "qa_contract_hash",
+        "scenario_hash",
+        "acceptance_id_count",
+        "failure_id_count",
+        "decision_clause_presence",
+        "budget_clause_presence"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "wall_clock_duration",
+        "log_line_numbers"
+      ]
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Contract/schema mismatch for BL-037 lane declarations."
+      },
+      {
+        "failure_class": "deterministic_lane_failure",
+        "description": "Replay signature divergence or runtime lane failure."
+      },
+      {
+        "failure_class": "deterministic_evidence_failure",
+        "description": "Required machine-readable artifacts are missing or incomplete."
+      }
+    ]
+  }
+}

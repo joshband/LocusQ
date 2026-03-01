@@ -1,0 +1,363 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl038_calibration_telemetry_suite",
+  "name": "LocusQ BL-038 Calibration Threading and Telemetry Suite",
+  "category": "contract",
+  "description": "Deterministic BL-038 B1 QA contract for threading-state and telemetry-schema validation.",
+  "scenario_ids": [
+    "locusq_emitter_passthrough",
+    "locusq_renderer_spatial_output"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl038_calibration_threading_telemetry"
+  },
+  "capability_requirements": {
+    "required_effect_types": [
+      "SPATIAL"
+    ],
+    "required_behaviors": [
+      "STATEFUL"
+    ],
+    "excluded_behaviors": []
+  },
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.2,
+      "duration_seconds": 1.5
+    }
+  },
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 1.5
+    }
+  },
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "BL-038 suite must emit deterministic non-empty output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Render output must remain finite."
+    }
+  },
+  "bl038_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL038-B1-001",
+        "description": "Scenario and lane schema exists and is parseable."
+      },
+      {
+        "id": "BL038-B1-002",
+        "description": "Thread/state ownership contract is declared and complete."
+      },
+      {
+        "id": "BL038-B1-003",
+        "description": "Telemetry schema contract is declared and complete."
+      },
+      {
+        "id": "BL038-B1-004",
+        "description": "Timeout/error and failure taxonomy contract is declared and complete."
+      },
+      {
+        "id": "BL038-B1-005",
+        "description": "Replay hash stability contract is enforced for deterministic reruns."
+      },
+      {
+        "id": "BL038-B1-006",
+        "description": "Required artifact schema is complete and machine-readable."
+      },
+      {
+        "id": "BL038-B1-007",
+        "description": "Hash input contract excludes nondeterministic fields."
+      },
+      {
+        "id": "BL038-B1-008",
+        "description": "Execution mode semantics are explicit for contract_only and execute_suite."
+      },
+      {
+        "id": "BL038-C2-001",
+        "description": "Determinism soak summary is emitted and reports pass for configured soak runs."
+      },
+      {
+        "id": "BL038-C2-002",
+        "description": "Replay hash signatures remain stable across deterministic soak reruns."
+      },
+      {
+        "id": "BL038-C2-003",
+        "description": "Replay row signatures remain stable across deterministic soak reruns."
+      },
+      {
+        "id": "BL038-C3-001",
+        "description": "Replay sentinel summary is emitted and reports pass for configured sentinel runs."
+      },
+      {
+        "id": "BL038-C3-002",
+        "description": "Replay hash signatures remain stable across deterministic replay sentinel reruns."
+      },
+      {
+        "id": "BL038-C3-003",
+        "description": "Replay row signatures remain stable across deterministic replay sentinel reruns."
+      },
+      {
+        "id": "BL038-C5-001",
+        "description": "Deterministic replay guard requires sentinel replay summary pass for 20-run contract execution."
+      },
+      {
+        "id": "BL038-C5-002",
+        "description": "Invalid runs usage probe (`--runs 0`) must fail with exit code 2."
+      },
+      {
+        "id": "BL038-C5-003",
+        "description": "Unknown argument usage probe (`--unknown`) must fail with exit code 2."
+      },
+      {
+        "id": "BL038-C6-001",
+        "description": "Execute-mode parity requires contract_only and execute_suite replay summaries to pass with zero deterministic failure counters."
+      },
+      {
+        "id": "BL038-C6-002",
+        "description": "C6 usage probe (`--runs 0`) must fail with exit code 2."
+      },
+      {
+        "id": "BL038-C6-003",
+        "description": "C6 usage probe (`--unknown`) must fail with exit code 2."
+      }
+    ],
+    "required_thread_states": [
+      "cal_idle",
+      "cal_arm_pending",
+      "cal_capturing",
+      "cal_analyzing",
+      "cal_publish_ready",
+      "cal_complete",
+      "cal_aborting",
+      "cal_error"
+    ],
+    "required_telemetry_fields": [
+      "schema",
+      "snapshot_seq",
+      "state",
+      "publish_timestamp_ms",
+      "analysis_confidence",
+      "clipping_ratio",
+      "input_route",
+      "timeout_class",
+      "error_class",
+      "stale_ms"
+    ],
+    "required_timeout_classes": [
+      "start_timeout",
+      "capture_timeout",
+      "analysis_timeout",
+      "publish_timeout"
+    ],
+    "required_error_classes": [
+      "route_unavailable",
+      "non_finite_metric",
+      "sequence_regression",
+      "thread_ownership_violation",
+      "worker_shutdown_incomplete"
+    ],
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 3,
+      "soak_runs": 10,
+      "sentinel_runs": 20,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "qa_lane.log",
+      "scenario_contract.log",
+      "scenario_result.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "artifact_schema_execute_additions": [
+      "build.log",
+      "scenario_run.log",
+      "scenario_result.json"
+    ],
+    "artifact_schema_multi_run": [
+      "status.tsv",
+      "qa_lane.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv",
+      "soak_summary.tsv",
+      "replay_sentinel_summary.tsv"
+    ],
+    "execution_contract": {
+      "default_mode": "contract_only",
+      "suite_mode": "execute_suite",
+      "requires_qa_bin": true,
+      "requires_build": false,
+      "usage_error_exit_code": 2,
+      "success_exit_code": 0,
+      "failure_exit_code": 1
+    },
+    "deterministic_hash_inputs": {
+      "include": [
+        "status.semantic.check_result_pairs",
+        "scenario_contract.semantic.kv_pairs",
+        "scenario_result.summary.status_warn_pass_fail_total",
+        "failure_taxonomy.rows.class_count"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "log_line_numbers",
+        "wall_clock_duration"
+      ]
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Scenario/schema/threshold contract mismatch."
+      },
+      {
+        "failure_class": "runtime_execution_failure",
+        "description": "Runner/tools returned non-zero exit."
+      },
+      {
+        "failure_class": "missing_result_artifact",
+        "description": "Expected contract artifact not produced."
+      },
+      {
+        "failure_class": "deterministic_replay_divergence",
+        "description": "Replay hash signatures diverged beyond configured thresholds."
+      },
+      {
+        "failure_class": "deterministic_replay_row_drift",
+        "description": "Replay semantic row signatures diverged beyond configured thresholds."
+      }
+    ],
+    "check_rows": [
+      {
+        "acceptance_id": "BL038-B1-001",
+        "lane_check": "BL038-B1-001_contract_schema",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL038-B1-002",
+        "lane_check": "BL038-B1-002_thread_state_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL038-B1-003",
+        "lane_check": "BL038-B1-003_telemetry_schema_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL038-B1-004",
+        "lane_check": "BL038-B1-004_timeout_error_taxonomy_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL038-B1-005",
+        "lane_check": "BL038-B1-005_replay_hash_stability",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL038-B1-006",
+        "lane_check": "BL038-B1-006_artifact_schema_complete",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL038-B1-007",
+        "lane_check": "BL038-B1-007_hash_input_contract",
+        "artifact": "scenario_contract.log"
+      },
+      {
+        "acceptance_id": "BL038-B1-008",
+        "lane_check": "BL038-B1-008_execution_mode_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C2-001",
+        "lane_check": "BL038-C2-001_soak_summary",
+        "artifact": "soak_summary.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C2-002",
+        "lane_check": "BL038-B1-005_replay_hash_stability",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C2-003",
+        "lane_check": "BL038-B1-007_hash_input_contract",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C3-001",
+        "lane_check": "BL038-C3-001_replay_sentinel_summary",
+        "artifact": "replay_sentinel_summary.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C3-002",
+        "lane_check": "BL038-B1-005_replay_hash_stability",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C3-003",
+        "lane_check": "BL038-B1-007_hash_input_contract",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C5-001",
+        "lane_check": "BL038-C5-001_replay_sentinel_guard",
+        "artifact": "replay_sentinel_summary.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C5-002",
+        "lane_check": "BL038-C5-002_exit_semantics_runs_zero",
+        "artifact": "exit_semantics_probe.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C5-003",
+        "lane_check": "BL038-C5-003_exit_semantics_unknown_arg",
+        "artifact": "exit_semantics_probe.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C6-001",
+        "lane_check": "BL038-C6-001_mode_parity_contract",
+        "artifact": "replay_sentinel_summary.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C6-002",
+        "lane_check": "BL038-C6-002_exit_semantics_runs_zero",
+        "artifact": "exit_semantics_probe.tsv"
+      },
+      {
+        "acceptance_id": "BL038-C6-003",
+        "lane_check": "BL038-C6-003_exit_semantics_unknown_arg",
+        "artifact": "exit_semantics_probe.tsv"
+      }
+    ]
+  },
+  "pass_criteria": "Lane status must be PASS with deterministic replay signatures and zero taxonomy failures above thresholds."
+}

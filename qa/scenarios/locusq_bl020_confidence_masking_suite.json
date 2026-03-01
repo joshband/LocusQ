@@ -1,0 +1,101 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl020_confidence_masking_suite",
+  "name": "LocusQ BL-020 Confidence/Masking Contract Suite",
+  "category": "stability",
+  "description": "Deterministic replay suite scaffold for BL-020 confidence/masking lane validation with C4 execute-mode parity and strict usage-exit semantics.",
+  "scenario_ids": [
+    "locusq_26_animation_internal_smoke",
+    "locusq_25_directivity_focus"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl020_confidence_masking_contract"
+  },
+  "bl020_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL020-C4-001",
+        "description": "Runbook includes C4 validation plan and evidence contract for execute-mode parity."
+      },
+      {
+        "id": "BL020-C4-002",
+        "description": "QA runbook includes C4 validation and evidence contract for execute-mode parity."
+      },
+      {
+        "id": "BL020-C4-003",
+        "description": "Scenario contract captures C4 required runs, expected modes, and usage-exit expectations."
+      },
+      {
+        "id": "BL020-C4-004",
+        "description": "Lane script declares contract/execute modes and strict usage error exit semantics."
+      },
+      {
+        "id": "BL020-C4-005",
+        "description": "Contract-only and execute-suite 20-run replay outputs remain deterministic with no taxonomy failures."
+      },
+      {
+        "id": "BL020-C4-006",
+        "description": "Mode parity summary reports zero cross-mode mismatches."
+      },
+      {
+        "id": "BL020-C4-007",
+        "description": "Negative probes for --runs 0 and --unknown-flag return usage exit code 2."
+      }
+    ],
+    "replay_contract": {
+      "default_runs": 1,
+      "sentinel_runs": 20,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "c4_mode_parity": {
+      "required_runs": 20,
+      "expected_modes": [
+        "contract_only",
+        "execute_suite"
+      ],
+      "negative_probe_expected_exit_code": 2,
+      "required_evidence": [
+        "status.tsv",
+        "validation_matrix.tsv",
+        "contract_runs/validation_matrix.tsv",
+        "contract_runs/replay_hashes.tsv",
+        "contract_runs/failure_taxonomy.tsv",
+        "execute_runs/validation_matrix.tsv",
+        "execute_runs/replay_hashes.tsv",
+        "mode_parity.tsv",
+        "exit_semantics_probe.tsv",
+        "lane_notes.md",
+        "docs_freshness.log"
+      ]
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "deterministic_hash_inputs": {
+      "include": [
+        "mode",
+        "contract_doc_sha256",
+        "scenario_sha256",
+        "acceptance_id_count",
+        "failure_id_count",
+        "formula_clause_presence",
+        "artifact_schema_clause_presence",
+        "c4_backlog_clause_presence",
+        "c4_qa_clause_presence",
+        "c4_scenario_clause_presence",
+        "script_exit_semantics_clause_presence"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "wall_clock_duration",
+        "log_line_numbers"
+      ]
+    }
+  }
+}

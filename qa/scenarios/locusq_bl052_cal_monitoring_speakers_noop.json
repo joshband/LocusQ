@@ -1,0 +1,80 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl052_cal_monitoring_speakers_noop",
+  "name": "LocusQ BL-052 Calibration Monitoring — Speakers Path (No-Op)",
+  "category": "stability",
+  "description": "Validates that the speakers monitoring path returns early without modifying audio (BL-052 C12). Calibrate mode outputs silence by design — validates no NaN/Inf and RT deadline only. allocation_free is a soft warn because CalibrationEngine may allocate on first block.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQCalibrateAdapter (--calibrate flag). Cal monitoring path = speakers (index 0, normalized 0.0)."
+  },
+
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.25,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameters": {
+    "0": 0.0,
+    "1": 0.5,
+    "2": 0.0,
+    "3": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.0,
+      "description": "Full signal window excluding startup transient"
+    }
+  },
+
+  "expected_invariants": {
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "BL-052 C12: Speakers path must not introduce NaN/Inf — early return must leave buffer intact."
+    },
+    "allocation_free": {
+      "metric": "perf_allocation_free",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "soft_warn",
+      "description": "BL-052 C13: Allocation-free guard for monitoring path processBlock. Soft warn: CalibrationEngine may allocate on first block."
+    },
+    "meets_deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Speakers early-return path must complete within audio buffer deadline."
+    }
+  },
+
+  "use_cases": [
+    "BL-052 C12: kSpeakers path returns early (no-op passthrough verification)",
+    "BL-052 C13: RT allocation-free guard for all monitoring paths",
+    "Regression guard: speakers path must never apply binaural processing"
+  ],
+
+  "pass_criteria": "no_nan_inf and meets_deadline must pass (hard_fail). allocation_free soft_warn acceptable. Calibrate mode outputs silence by design.",
+
+  "example_failures": [
+    "non_finite → NaN propagated through monitoring path despite early return",
+    "perf_meets_deadline=false → early-return code path exceeded audio buffer deadline"
+  ]
+}

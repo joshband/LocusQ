@@ -1,0 +1,83 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl052_cal_monitoring_virtual_binaural_rt_safe",
+  "name": "LocusQ BL-052 Calibration Monitoring — Virtual Binaural Path (RT Safety)",
+  "category": "stability",
+  "description": "Validates RT safety and output integrity of the virtual_binaural monitoring path (BL-052 C5/C6/C13). Exercises SteamAudioVirtualSurround.applyBlock() with the virtual_binaural mode flag. Calibrate mode outputs silence by design — validates no NaN/Inf and RT deadline only. allocation_free is soft_warn because CalibrationEngine may allocate on first block.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": [],
+    "notes": "Uses LocusQCalibrateAdapter (--calibrate flag). cal_monitoring_path = virtual_binaural (index 3 of 4, normalized 1.0)."
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 200.0,
+      "end_hz": 8000.0,
+      "amplitude": 0.25,
+      "duration_seconds": 2.0
+    }
+  },
+
+  "parameters": {
+    "0": 1.0,
+    "1": 0.5,
+    "2": 0.0,
+    "3": 0.0
+  },
+
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.0,
+      "description": "Full sweep window after startup transient"
+    }
+  },
+
+  "expected_invariants": {
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "BL-052 C5/C6: virtual_binaural path (renderVirtualSurroundForMonitoring) must never emit NaN/Inf."
+    },
+    "allocation_free": {
+      "metric": "perf_allocation_free",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "soft_warn",
+      "description": "BL-052 C13: Allocation-free guard for virtual_binaural monitoring path. Soft warn: CalibrationEngine may allocate on first block."
+    },
+    "meets_deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "virtual_binaural path must complete within audio buffer deadline."
+    }
+  },
+
+  "use_cases": [
+    "BL-052 C5: SteamAudioVirtualSurround.applyBlock() exercised via virtual_binaural mode",
+    "BL-052 C6: renderVirtualSurroundForMonitoring verified across sweep stimulus",
+    "BL-052 C13: RT allocation-free guard for virtual binaural path",
+    "Regression guard: sweep through virtual_binaural path must remain NaN-free across frequency range"
+  ],
+
+  "pass_criteria": "no_nan_inf and meets_deadline must pass (hard_fail). allocation_free soft_warn acceptable. Calibrate mode outputs silence by design.",
+
+  "example_failures": [
+    "non_finite → NaN introduced at high frequencies in renderVirtualSurroundForMonitoring",
+    "perf_meets_deadline=false → virtual_binaural path exceeded audio buffer deadline"
+  ]
+}
