@@ -27,6 +27,7 @@ Only these documents are normative for implementation, release status, and close
 - `Documentation/skill-selection-matrix.md`
 - `Documentation/spatial-audio-profiles-usage.md`
 - `Documentation/adr/` (all ADR files)
+- `Documentation/adr-index.md`
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`
 

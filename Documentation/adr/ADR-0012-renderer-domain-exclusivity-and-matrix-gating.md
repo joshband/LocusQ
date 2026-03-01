@@ -2,7 +2,7 @@ Title: ADR-0012 Renderer Domain Exclusivity and Matrix Gating
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-01
 
 # ADR-0012: Renderer Domain Exclusivity and Matrix Gating
 
@@ -27,9 +27,10 @@ Adopt a renderer-domain exclusivity contract and matrix-gated legality model:
    - `Multichannel`
    - `ExternalSpatial`
 2. Invalid domain/layout combinations are blocked, not silently auto-corrected.
-3. Device profile selection (`generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`) is non-authoritative; it does not auto-switch renderer domain.
-4. Head tracking for plugin runtime applies to `InternalBinaural` only and uses bridge telemetry contracts (`BL-017`) with stale-timeout safeguards.
-5. Snapshot diagnostics must publish requested/active/stage authority and matrix-rule state so UI and automated lanes can assert legality deterministically.
+3. Device profile selection (`generic`, `airpods_pro_2`, `airpods_pro_3`, `sony_wh1000xm5`, `custom_sofa`) is non-authoritative; it does not auto-switch renderer domain.
+4. `custom_sofa` profile resolution is capability-gated and must follow deterministic fallback behavior when profile/runtime prerequisites are not satisfied (see `ADR-0019`).
+5. Head tracking for plugin runtime applies to `InternalBinaural` only and uses bridge telemetry contracts (`BL-017`) with stale-timeout safeguards.
+6. Snapshot diagnostics must publish requested/active/stage authority and matrix-rule state so UI and automated lanes can assert legality deterministically.
 
 ## Rationale
 
@@ -55,17 +56,17 @@ Adopt a renderer-domain exclusivity contract and matrix-gated legality model:
 
 1. No heap allocation, locks, or blocking I/O are introduced in `processBlock()`.
 2. Matrix legality decisions are made from deterministic runtime state and published as diagnostics.
-3. Any matrix-rule changes require synchronized updates to:
+3. Any matrix-rule or profile-catalog changes require synchronized updates to:
    - `Documentation/scene-state-contract.md`
-   - `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md`
+   - `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md`
    - validation lane documentation/evidence.
 
 ## Related
 
-- `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md`
+- `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md`
 - `Documentation/plans/bl-017-head-tracked-monitoring-companion-bridge-plan-2026-02-22.md`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md`
 - `Documentation/scene-state-contract.md`
 - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
-
+- `Documentation/adr/ADR-0019-custom-sofa-profile-readiness-and-fallback-contract.md`

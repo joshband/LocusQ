@@ -2,7 +2,7 @@ Title: ADR-0006 Device Compatibility Profiles and Monitoring Contract
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-03-01
 
 # ADR-0006: Device Compatibility Profiles and Monitoring Contract
 
@@ -30,7 +30,10 @@ Adopt an explicit device-profile contract for v1 closeout and near-term phases:
    - stereo host output layout with deterministic downmix from canonical scene/render state.
 3. **Headphone Profile (portable):**
    - stereo host output layout suitable for headphone monitoring.
-   - advanced personalized binaural/HRTF remains post-v1.
+   - profile catalog is explicit and deterministic: `generic`, `airpods_pro_2`,
+     `airpods_pro_3`, `sony_wh1000xm5`, `custom_sofa`.
+   - advanced personalized binaural/HRTF paths are capability-gated; when prerequisites
+     are missing, runtime must deterministically fall back to a safe profile target.
 4. **Mic Input Profiles:**
    - calibration is valid with built-in or external microphones through explicit channel selection (`cal_mic_channel`).
 
@@ -58,6 +61,7 @@ Release/closeout gating must include manual checks covering quad (when available
 1. Output-layout switching must not alter parameter IDs or preset schema semantics.
 2. Stereo/headphone paths must remain deterministic and finite under existing QA scenarios.
 3. Any non-functional user-exposed control must be documented as deferred/no-op until implemented.
+4. Custom SOFA profile behavior must follow explicit readiness/fallback policy (see `ADR-0019`).
 
 ## Related
 
@@ -66,3 +70,4 @@ Release/closeout gating must include manual checks covering quad (when available
 - `.ideas/architecture.md`
 - `.ideas/parameter-spec.md`
 - `.ideas/plan.md`
+- `Documentation/adr/ADR-0019-custom-sofa-profile-readiness-and-fallback-contract.md`
