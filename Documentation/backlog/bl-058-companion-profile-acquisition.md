@@ -47,8 +47,8 @@ Build guided ear-photo capture UI in companion app (left ear + right ear + front
 - Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
 - Reconciliation review: `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`.
 - Additional review baselines:
-  - `Documentation/reviews/2026-02-26-full-architecture-review.md`
-  - `Documentation/reviews/LocusQ Repo Review 02262026.md`
+  - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/2026-02-26-full-architecture-review.md`
+  - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/LocusQ Repo Review 02262026.md`
 - Companion execution for this backlog item must include math/visualization sanity checks:
   - synthetic pure yaw/pitch/roll axis sweeps,
   - sensor-location transition diagnostics,

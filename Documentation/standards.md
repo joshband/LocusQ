@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # Documentation Standards
 
@@ -43,6 +43,7 @@ Every in-scope markdown file must include, in this order, at the top of file:
 - Tier 1 docs are active execution specs and may drive implementation detail, but they must not supersede Tier 0 status surfaces.
 - Tier 2 docs are historical/research references and are non-authoritative.
 - Tier 3 docs are archived artifacts under `Documentation/archive/`.
+- Cross-system architecture authority should be consolidated in `ARCHITECTURE.md`; duplicate architecture review docs should be archived once consolidated.
 
 ## Master Backlog Contract
 1. `Documentation/backlog/index.md` is the single backlog authority for priority, ordering, and state.
@@ -130,3 +131,15 @@ When documentation bloat or ambiguity appears:
 1. Tier 1 execution specs now include `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`.
 2. Tier 1 execution specs now include `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md`.
 2. Tier 1 execution specs include `Documentation/runbooks/backlog-execution-runbooks.md` as the procedural companion to the master backlog.
+
+## Closeout Sync Snapshot (2026-02-28)
+
+1. BL-023 done-transition moved runbook authority from `Documentation/backlog/bl-023-resize-dpi-hardening.md` to `Documentation/backlog/done/bl-023-resize-dpi-hardening.md`.
+2. Backlog catalog authority was synchronized in `Documentation/backlog/index.md` in the same change set.
+3. Canonical promotion evidence remains repo-local under `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z/`.
+
+## Architecture Consolidation Snapshot (2026-03-01)
+
+1. Cross-system architecture source-of-truth is consolidated in `ARCHITECTURE.md`.
+2. Prior standalone architecture reviews were archived under `Documentation/archive/2026-03-01-architecture-review-consolidation/`.
+3. Any future architecture review with durable value must be merged into `ARCHITECTURE.md` and archived in the same change set.
