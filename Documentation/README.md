@@ -63,6 +63,8 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/archive/2026-02-25-research-legacy/`
 - `Documentation/archive/2026-02-24-multi-agent-thread-watchdog/`
 - `Documentation/archive/2026-03-01-architecture-review-consolidation/`
+- `Documentation/archive/2026-03-01-build-summary-compaction/`
+- `Documentation/archive/2026-03-01-validation-trend-compaction/`
 - `Documentation/lessons-learned.md`
 - `Documentation/plans/2026-02-20-full-project-review.md`
 - `Documentation/archive/2026-02-23-clap-reference-bundle/`
@@ -73,19 +75,32 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/archive/`
 - Archived docs are discoverable and preserved, but excluded from source-of-truth decisions unless explicitly re-promoted.
 
-## 2026-02-23 Archival Pass
-Completed:
-1. Moved generated exports and an operational report snapshot out of top-level `Documentation/` into:
-- `Documentation/archive/2026-02-23-ops-artifacts/exports/`
-- `Documentation/archive/2026-02-23-ops-artifacts/reports-final/`
-2. Tightened this index so source-of-truth is explicitly Tier 0.
-3. Archived historical full-review and checklist bundles into:
-- `Documentation/archive/2026-02-23-historical-review-bundles/`
-4. Rewired active references (backlog/README/status/evidence/docs) to archived paths.
-5. Enforced docs-freshness guard for scratch output: populated top-level `Documentation/exports/` fails closeout checks.
-6. Re-promoted the 2026-02-23 executive-brief report set into active `Documentation/reports/` for non-archived access.
-7. Archived CLAP reference markdown/PDF artifacts into `Documentation/archive/2026-02-23-clap-reference-bundle/` and promoted one canonical BL-011 CLAP closeout plan.
-8. Archived superseded quadraphonic and harness research artifacts into `Documentation/archive/2026-02-25-research-legacy/`; retained only active calibration research under `Documentation/research/`.
+## Freshness Ownership Contract (2026-03-01)
+
+Default ownership/cadence for critical docs:
+
+| Surface | Role | Default Owner | Review Cadence | Trigger Conditions |
+|---|---|---|---|---|
+| `Documentation/backlog/index.md` | backlog/status authority | active lane owner + owner/orchestrator | on each state transition | intake, promotion, done/archive moves |
+| `status.json` | runtime/phase authority | active lane owner + owner/orchestrator | on each phase/status update | phase change, release posture change, authoritative gate decision |
+| `README.md` | operator-facing project contract | documentation hygiene owner | weekly and before release decisions | behavior/routing/posture claim changes |
+| `CHANGELOG.md` | chronological change contract | implementation owner + documentation hygiene owner | per meaningful merged change set | added/changed/fixed user-visible or governance behavior |
+| `AGENTS.md`, `CODEX.md`, `CLAUDE.md`, `SKILLS.md`, `AGENT_RULE.md` | routing/governance contract | docs governance owner | when skill/routing/execution posture changes | new skill, trigger change, contract override |
+| `TestEvidence/build-summary.md` | closeout snapshot authority | docs governance owner | after meaningful validation/governance passes | closeout or governance reconciliation updates |
+| `TestEvidence/validation-trend.md` | run-history trend authority | docs governance owner | after meaningful validation/governance passes | new gate runs, reconciliations, release readiness checks |
+
+Escalation path:
+- If a trigger condition is missed or ownership is unclear, escalate to the owner/orchestrator.
+- Record resolution and new owner/timing in:
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
+
+## Archive Governance Snapshot (2026-03-01)
+- Top-level generated scratch remains constrained:
+  - `Documentation/exports/` must stay empty/absent at closeout.
+  - `Documentation/reports/` is active non-canonical report surface only.
+- Historical narratives and one-off bundles are preserved under `Documentation/archive/`.
+- Legacy backlog companions (`Documentation/backlog-post-v1-agentic-sprints.md`, `Documentation/runbooks/backlog-execution-runbooks.md`) remain Tier 2 reference-only.
 
 ## Normative Inputs For Implementation
 - `.ideas/architecture.md`
@@ -96,16 +111,20 @@ Completed:
 
 ## Exclusions
 - `qa_output/` markdown reports are generated artifacts and are not manually normalized for metadata.
+- Skill/runtime markdown under `.codex/skills/`, `.claude/skills/`, `.codex/workflows/`, `.claude/workflows/`, `.codex/rules/`, and `.claude/rules/` follows Codex/Claude runtime standards and is excluded from documentation-hygiene/skill_docs normalization unless explicitly requested.
 
-## Compliance Snapshot (2026-02-23)
+## Compliance Contract (Current)
 - All non-generated markdown files are metadata-compliant.
 - Generated markdown under `qa_output/` remains intentionally unmanaged.
 - Root `README.md` and `CHANGELOG.md` are canonical Tier 0 surfaces.
 - Top-level `Documentation/exports/` remains scratch-only and is blocked by closeout guard checks.
 - `Documentation/reports/` is an active non-canonical report surface (archive snapshots remain under `Documentation/archive/`).
 - Phase closeout updates are gated by ADR-0005 and validated via `scripts/validate-docs-freshness.sh`.
-- Latest acceptance-claim sync: `BL-019` is `Done (2026-02-23)` with refreshed physics-lens evidence (`TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`, `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`) and synchronized Tier 0 status/evidence surfaces (`status.json`, `Documentation/backlog-post-v1-agentic-sprints.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, `README.md`, `CHANGELOG.md`).
-- HX-04 closure sync: deterministic scenario-audit evidence is captured at `TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv` with BL-012 embedded enforcement evidence at `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`.
+- Current acceptance/status claims must resolve through:
+  - `Documentation/backlog/index.md`
+  - `status.json`
+  - `TestEvidence/build-summary.md`
+  - `TestEvidence/validation-trend.md`
 
 ## Closeout Sync Snapshot (2026-02-28)
 
@@ -120,3 +139,15 @@ Completed:
 - Prior standalone architecture review docs were archived to:
   - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/2026-02-26-full-architecture-review.md`
   - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/LocusQ Repo Review 02262026.md`
+
+## Build Summary Compaction Snapshot (2026-03-01)
+
+- `TestEvidence/build-summary.md` was compacted to current governance and closeout highlights for faster review.
+- Full historical narrative was archived to:
+  - `Documentation/archive/2026-03-01-build-summary-compaction/build-summary-legacy-2026-03-01.md`
+
+## Validation Trend Compaction Snapshot (2026-03-01)
+
+- `TestEvidence/validation-trend.md` was compacted to a recent high-signal trend window for faster review.
+- Full historical trend chronology was archived to:
+  - `Documentation/archive/2026-03-01-validation-trend-compaction/validation-trend-legacy-2026-03-01.md`

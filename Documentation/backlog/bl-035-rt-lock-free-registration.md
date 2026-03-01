@@ -2,7 +2,7 @@ Title: BL-035 RT Lock-Free Registration
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-035 RT Lock-Free Registration
 
@@ -12,13 +12,22 @@ Last Modified Date: 2026-02-28
 |---|---|
 | ID | BL-035 |
 | Priority | P0 |
-| Status | In Implementation (Owner D7 recheck on current branch: build/smoke pass, selftest/RT fail: `app_exited_before_result` and `non_allowlisted=3`) |
+| Status | In Validation (Owner D8 recheck on current branch: build/smoke/selftest/RT/docs all pass; `non_allowlisted=0`) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | HX-02 (Done), BL-032 (Done-candidate) |
 | Blocks | BL-030 |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+
+## Resume Checkpoint (2026-03-01)
+
+- Current posture: **In Validation** (D7 blockers cleared by D8 owner replay).
+- Latest owner-ready evidence: `TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/status.tsv` (`overall=PASS`, `non_allowlisted=0`).
+- Last blocker state (historical): D7 failed on selftest startup abort + RT allowlist drift; both remediated in D8.
+- Next work to resume:
+  - Run candidate/promotion cadence replay for BL-035 (per Global Replay Cadence Policy) and capture owner packet artifacts.
+  - If cadence gates stay green, advance BL-035 to done-candidate through owner promotion decision packet.
 
 ## Objective
 
@@ -118,6 +127,23 @@ Task: `BL-035 RT Lock-Free Registration D7 Owner-Readiness Recheck`
   - `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_slice_d7_owner_ready_20260228_115509/rt_audit.tsv` ❌
   - `./scripts/validate-docs-freshness.sh` ✅
 - Decision: remain **In Implementation** until both selftest and RT audit blockers are cleared.
+
+## Owner D8 Recheck (2026-02-28)
+
+Task: `BL-035 RT Lock-Free Registration D8 Owner-Readiness Recheck`
+
+- Validation package: `TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/`
+- Validation result: `PASS`
+- Remediation applied before replay:
+  - Fixed retry fallback routing in `scripts/standalone-ui-selftest-production-p0-mac.sh` so direct-launch `ABRT` on `app_exited_before_result` correctly retries with `open`.
+  - Reconciled RT allowlist line-map drift in `scripts/rt-safety-allowlist.txt` for `Source/SpatialRenderer.h` dynamic container mutation entries.
+- Required command recheck:
+  - `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` ✅
+  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` ✅
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh` ✅ (`status=pass`)
+  - `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/rt_audit.tsv` ✅ (`non_allowlisted=0`)
+  - `./scripts/validate-docs-freshness.sh` ✅
+- Decision: D7 blockers are cleared; BL-035 remains **In Validation** pending next promotion packet cadence step.
 
 ## Skill Routing (Per Slice)
 

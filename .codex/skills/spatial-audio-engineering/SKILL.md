@@ -7,7 +7,7 @@ Title: Spatial Audio Engineering Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-03-01
 
 # Spatial Audio Engineering
 
@@ -35,6 +35,7 @@ Use this skill for end-to-end spatial audio work in LocusQ: architecture, integr
    - No heap allocation, locks, or blocking I/O in `processBlock()`.
    - Keep processing deterministic for fixed input + fixed parameter/state timeline.
    - Make fallback decisions explicit and observable in scene-state telemetry.
+   - For head-tracking lanes, enforce stale-pose fallback and explicit age/sequence observability.
 5. Run objective automation lanes.
    - Binaural fallback lane: `scripts/qa-bl009-headphone-contract-mac.sh`.
    - Ambisonic/layout lane: `scripts/qa-bl018-ambisonic-contract-mac.sh`.
@@ -42,8 +43,13 @@ Use this skill for end-to-end spatial audio work in LocusQ: architecture, integr
 6. Run targeted manual listening checks.
    - AirPods Pro 2: validate as stereo endpoint in DAW; do not claim plugin-level head-tracked personalization control.
    - Sony WH-1000XM5: validate downmix/binaural behavior as stereo endpoint unless host/app-specific 360 pipeline is explicitly integrated.
-7. Close evidence and routing docs.
-   - Update `Documentation/backlog-post-v1-agentic-sprints.md` row status.
+7. For BL-053..BL-061 lanes, map to specialist subskills deliberately.
+   - Companion runtime anomalies -> `headtracking-companion-runtime`.
+   - FIR/interpolation parity and crossfade checks -> `hrtf-rendering-validation-lab`.
+   - Blind protocol execution and statistics gating -> `perceptual-listening-harness`.
+8. Close evidence and routing docs.
+   - Update `Documentation/backlog/index.md` row status and runbook links when claims change.
+   - Keep BL-057/BL-058 runbook language aligned to canonical research anchors.
    - Update `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md` when acceptance claims change.
    - Update skill routing docs when new specialist behavior is introduced.
 
@@ -53,10 +59,19 @@ Use this skill for end-to-end spatial audio work in LocusQ: architecture, integr
 - Keep channel-map transforms and ambisonic decode matrices deterministic and finite.
 - Validate non-finite protection (`NaN`/`Inf`) in every new spatial lane.
 
+## BL-053..BL-061 Quick Gates
+- BL-053: orientation pointer must be provided and consumed in `virtual_binaural` path.
+- BL-055: direct/partitioned latency contracts + no-zipper profile swap behavior.
+- BL-058: readiness/sync state machine and axis-sweep diagnostics.
+- BL-060: blind trial schema + gate metrics + reproducibility packet.
+- BL-061: interpolation promotion blocked unless BL-060 gate benefit is demonstrated.
+
 ## Resource Map
 - `references/sources.md`: canonical official docs/repos/releases.
 - `references/layout-and-codec-notes.md`: channel/layout conventions and codec notes.
 - `references/validation-lanes.md`: objective + manual QA protocol.
+- `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`: canonical BL-057/BL-058 methodology baseline.
+- `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`: research-to-runbook reconciliation and priority gates.
 - `scripts/run_spatial_lanes.sh`: wrapper to execute key spatial QA lanes.
 
 ## Deliverables

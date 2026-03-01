@@ -2,7 +2,7 @@ Title: BL-020 Confidence Masking QA Contract
 Document Type: Testing Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-02-28
 
 # BL-020 Confidence/Masking QA Contract
 
@@ -181,7 +181,164 @@ C3 required evidence bundle:
 - `TestEvidence/bl020_slice_c3_reverify_<timestamp>/reverify_notes.md`
 - `TestEvidence/bl020_slice_c3_reverify_<timestamp>/docs_freshness.log`
 
+## C4 Validation (Execute-Mode Parity + Exit Guard)
+
+Acceptance matrix:
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL020-C4-001 | Contract-only replay sentinel | `--contract-only --runs 20` with deterministic replay (`deterministic_match=yes` for all rows) |
+| BL020-C4-002 | Execute-suite replay sentinel | `--execute-suite --runs 20` with deterministic replay (`deterministic_match=yes` for all rows) |
+| BL020-C4-003 | Cross-mode parity summary | contract/execute doc and scenario hashes remain identical (`mismatch_count=0`) |
+| BL020-C4-004 | Contract taxonomy stability | contract/execute taxonomy files contain zero blocking failure rows |
+| BL020-C4-005 | Usage probe `--runs 0` | exit code must be `2` |
+| BL020-C4-006 | Usage probe `--unknown-flag` | exit code must be `2` |
+| BL020-C4-007 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+
+Execution-mode note:
+- For C4 parity determinism, `--execute-suite` runs execute-mode parity contract checks while runtime suite execution remains reserved.
+
+C4 failure taxonomy:
+
+| failure_id | category | trigger | classification | blocking | severity | expected_artifact |
+|---|---|---|---|---|---|---|
+| BL020-C4-FX-001 | c4_backlog_contract_missing | backlog C4 validation/evidence references absent | deterministic_contract_failure | yes | major | contract_runs/validation_matrix.tsv |
+| BL020-C4-FX-002 | c4_qa_contract_missing | QA C4 validation/evidence references absent | deterministic_contract_failure | yes | major | execute_runs/validation_matrix.tsv |
+| BL020-C4-FX-003 | c4_scenario_contract_missing | scenario C4 mode-parity/exit metadata absent | deterministic_contract_failure | yes | major | qa/scenarios/locusq_bl020_confidence_masking_suite.json |
+| BL020-C4-FX-004 | c4_script_exit_semantics_missing | script mode/usage exit semantics declaration absent | deterministic_contract_failure | yes | major | scripts/qa-bl020-confidence-masking-lane-mac.sh |
+| BL020-FX-401 | lane_c4_mode_parity_failure | mode parity summary contains mismatches | deterministic_replay_failure | yes | critical | mode_parity.tsv |
+| BL020-FX-402 | lane_c4_exit_semantics_failure | usage probe exit code differs from `2` | deterministic_contract_failure | yes | major | exit_semantics_probe.tsv |
+| BL020-FX-403 | lane_c4_docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes | major | docs_freshness.log |
+| BL020-FX-404 | lane_c4_evidence_schema_incomplete | required C4 files missing from bundle | deterministic_evidence_failure | yes | major | status.tsv |
+
+C4 validation commands:
+- `bash -n scripts/qa-bl020-confidence-masking-lane-mac.sh`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --help`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/contract_runs`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --execute-suite --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/execute_runs`
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --unknown-flag` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## C4 Evidence Contract
+
+Required files under `TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `execute_runs/validation_matrix.tsv`
+- `execute_runs/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
 Validation status labels:
 - `tested` = command run and exit as expected
 - `partially tested` = command run but incomplete evidence
 - `not tested` = command not run
+
+## C4 Done-Candidate Outcome (2026-02-28)
+
+### Packet
+- `TestEvidence/bl020_slice_c4_mode_parity_20260228T170633Z` (prior)
+
+### Validation Result
+- `bash -n scripts/qa-bl020-confidence-masking-lane-mac.sh`: PASS
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --help`: PASS
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 20 ...`: PASS
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --execute-suite --runs 20 ...`: PASS
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --runs 0`: PASS (`2`)
+- `./scripts/qa-bl020-confidence-masking-lane-mac.sh --unknown-flag`: PASS (`2`)
+- `./scripts/validate-docs-freshness.sh`: PASS
+
+### C4 Parity Readout
+- Contract runs observed: `20`
+- Execute runs observed: `20`
+- Contract signature drift count: `0`
+- Execute signature drift count: `0`
+- Cross-mode doc hash mismatch count: `0`
+- Cross-mode scenario hash mismatch count: `0`
+- Contract failure rows: `0`
+- Execute failure rows: `0`
+- `lane_result`: `PASS`
+
+### Latest Packet (2026-02-28)
+
+- Packet: `TestEvidence/bl020_slice_c4_mode_parity_20260228T175923Z`
+- Validation command outcomes:
+  - `bash -n scripts/qa-bl020-confidence-masking-lane-mac.sh` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --help` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_20260228T175923Z/contract_runs` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --execute-suite --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_20260228T175923Z/execute_runs` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --runs 0` => `2` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --unknown-flag` => `2` (`PASS`)
+  - `./scripts/validate-docs-freshness.sh` => `0` (`PASS`)
+- Parity readout:
+  - Contract runs observed: `20`
+  - Execute runs observed: `20`
+  - Contract signature drift count: `0`
+  - Execute signature drift count: `0`
+  - Cross-mode doc hash mismatch count: `0`
+  - Cross-mode scenario hash mismatch count: `0`
+  - Contract failure rows: `0`
+  - Execute failure rows: `0`
+  - Lane result: `PASS`
+
+### C4b Post-R1 Non-Interference Packet (2026-02-28)
+
+- Packet: `TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z`
+- Validation command outcomes:
+  - `bash -n scripts/qa-bl020-confidence-masking-lane-mac.sh` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --help` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 5 --out-dir TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z/contract_runs` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --execute-suite --runs 5 --out-dir TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z/execute_runs` => `0` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --runs 0` => `2` (`PASS`)
+  - `./scripts/qa-bl020-confidence-masking-lane-mac.sh --unknown-flag` => `2` (`PASS`)
+  - `./scripts/validate-docs-freshness.sh` => `0` (`PASS`)
+- Parity readout:
+  - Contract runs observed: `5`
+  - Execute runs observed: `5`
+  - Contract signature drift count: `0`
+  - Execute signature drift count: `0`
+  - Cross-mode doc hash mismatch count: `0`
+  - Cross-mode scenario hash mismatch count: `0`
+  - Contract failure rows: `0`
+  - Execute failure rows: `0`
+  - Lane result: `PASS`
+
+## C4 Owner Intake Snapshot (2026-02-28)
+
+- Readiness: `READY_FOR_OWNER_PROMOTION_REVIEW`
+- Canonical packet: `TestEvidence/bl020_slice_c4_mode_parity_20260228T175923Z`
+- Supporting non-interference packet: `TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z`
+- Required gate summary:
+  - `--contract-only --runs 20`: `PASS`
+  - `--execute-suite --runs 20`: `PASS`
+  - parity mismatches: `0`
+  - contract/execute failure rows: `0`
+  - exit probes: `--runs 0 => 2`, `--unknown-flag => 2`
+  - docs freshness: `PASS`
+- Ownership safety marker:
+  - `SHARED_FILES_TOUCHED: yes`
+
+## C4 Recheck Refresh (2026-02-28, 20260228T203021Z)
+
+Packet:
+- `TestEvidence/bl020_slice_c4_mode_parity_20260228T203021Z`
+
+Validation result:
+- syntax/help: `PASS`
+- contract-only (`runs=20`): `PASS`
+- execute-suite (`runs=20`): `PASS`
+- usage probes (`--runs 0`, `--unknown-flag`): `PASS` (exit `2`)
+- docs freshness: `PASS`
+
+Parity readout:
+- contract/execute runs observed: `20/20`
+- deterministic replay drift counts: `0/0`
+- cross-mode doc/scenario hash mismatch count: `0/0`
+- contract/execute failure taxonomy blocking rows: `0/0`
+- packet verdict: `PASS`

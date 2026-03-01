@@ -2,7 +2,7 @@ Title: BL-020 Confidence Masking Overlay
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-020 Confidence/Masking Overlay
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-02-28
 |---|---|
 | ID | BL-020 |
 | Priority | P2 |
-| Status | In Implementation (Slice B1 lane contract replay-stable; C1 additive native bridge intake integrated; C3 post-C2 reverify is green end-to-end with `non_allowlisted=0`) |
+| Status | In Validation (latest C4 refresh packet PASS at `20260228T203021Z`; C4b post-R1 packet PASS at `20260228T202240Z`; owner promotion review pending) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-014 (Done), BL-019 (Done) |
@@ -317,6 +317,38 @@ Required files under `TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/`:
 - Docs freshness: `PASS`
 - Packet status: `PASS`
 
+## C4b Post-R1 Non-Interference Packet (2026-02-28)
+
+- Worker packet: `TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z`
+- Contract-only replay: `PASS` (5 runs, deterministic replay hash drift count `0`)
+- Execute-suite replay: `PASS` (5 runs, deterministic replay hash drift count `0`)
+- Cross-mode doc hash mismatch count: `0`
+- Cross-mode scenario hash mismatch count: `0`
+- Contract failure rows: `0`
+- Execute failure rows: `0`
+- Exit-probe checks:
+  - `--runs 0`: `2` (`PASS`)
+  - `--unknown-flag`: `2` (`PASS`)
+- Docs freshness: `PASS`
+- Packet status: `PASS` (non-interference C4b gate set green)
+
+## C4 Owner Intake Handoff (2026-02-28)
+
+- Intake decision: `READY_FOR_OWNER_PROMOTION_REVIEW`
+- Canonical C4 packet:
+  - `TestEvidence/bl020_slice_c4_mode_parity_20260228T175923Z`
+- Supporting non-interference packet:
+  - `TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z`
+- Gate summary:
+  - contract replay (`--contract-only --runs 20`): `PASS`
+  - execute-mode replay (`--execute-suite --runs 20`): `PASS`
+  - cross-mode parity mismatches: `0`
+  - failure taxonomy blocking rows: `0`
+  - usage exit probes: `--runs 0 => 2`, `--unknown-flag => 2`
+  - docs freshness: `PASS`
+- Ownership safety marker:
+  - `SHARED_FILES_TOUCHED: yes`
+
 ## Replay Cadence Plan (Required)
 
 Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
@@ -361,3 +393,21 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+
+## Slice C4 Recheck Refresh (2026-02-28, 20260228T203021Z)
+
+- Evidence packet: `TestEvidence/bl020_slice_c4_mode_parity_20260228T203021Z/status.tsv`
+- Result: `PASS`
+- Determinism summary:
+  1. `--contract-only --runs 20` and `--execute-suite --runs 20` are replay-stable.
+  2. Cross-mode doc/scenario hashes remain aligned (`mismatch_count=0`).
+  3. Strict usage exit semantics remain enforced (`--runs 0` and `--unknown-flag` => exit `2`).
+  4. Docs freshness gate passes.
+
+## Status Refresh (2026-03-01)
+
+- Backlog state remains `In Validation`.
+- Latest authoritative lane packets for C4/C4b are green:
+  - `TestEvidence/bl020_slice_c4_mode_parity_20260228T203021Z/status.tsv`
+  - `TestEvidence/bl020_slice_c4b_mode_parity_20260228T202240Z/status.tsv`
+- No additional BL-020 blocker was introduced in this refresh; promotion decision remains owner-gated.

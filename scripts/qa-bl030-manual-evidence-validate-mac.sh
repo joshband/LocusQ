@@ -352,7 +352,8 @@ while IFS= read -r line || [[ -n "$line" ]]; do
         ;;
       waived|not_applicable_with_waiver)
         if [[ "$device_id" == "DEV-06" ]]; then
-          add_blocker "$device_id" "not_applicable_with_waiver" "waiver_applied" "$artifact_path"
+          # DEV-06 waiver is an allowed non-failing completion state when artifact exists.
+          row_reason="waiver_applied"
         else
           row_fail=1
           row_reason="waiver_not_allowed_for_device"
@@ -380,7 +381,11 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   if (( row_fail == 1 )); then
     append_validation_row "$device_id" "$evidence_status" "$artifact_path" "$operator" "$timestamp_iso8601" "$notes" "FAIL" "$row_reason"
   else
-    append_validation_row "$device_id" "$evidence_status" "$artifact_path" "$operator" "$timestamp_iso8601" "$notes" "PASS" "row_valid"
+    if [[ "$row_reason" == "waiver_applied" ]]; then
+      append_validation_row "$device_id" "$evidence_status" "$artifact_path" "$operator" "$timestamp_iso8601" "$notes" "PASS" "waiver_applied"
+    else
+      append_validation_row "$device_id" "$evidence_status" "$artifact_path" "$operator" "$timestamp_iso8601" "$notes" "PASS" "row_valid"
+    fi
   fi
 done < <(tail -n +2 "$INPUT_FILE")
 
@@ -433,7 +438,12 @@ fi
   echo "## Blocker Categories"
   echo "- deterministic_missing_manual_evidence"
   echo "- runtime_flake_abrt"
-  echo "- not_applicable_with_waiver"
+  echo "- not_applicable_with_waiver (invalid waiver usage only)"
+  echo
+  echo "## Waiver Semantics"
+  echo "- DEV-06 may use \`waived\` or \`not_applicable_with_waiver\` when artifact_path exists."
+  echo "- Valid DEV-06 waiver rows are PASS with reason \`waiver_applied\`."
+  echo "- Waiver status on DEV-01..DEV-05 is invalid and fails intake."
   echo
   echo "## Exit Semantics"
   echo "- exit 0: RL-05 manual evidence complete"

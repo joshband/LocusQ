@@ -25,7 +25,7 @@ Normative anchors:
 - `.ideas/parameter-spec.md`
 - `Documentation/invariants.md`
 - `Documentation/scene-state-contract.md`
-- `Documentation/adr/ADR-0001` through `ADR-0014`
+- `Documentation/adr/ADR-0001` through `ADR-0015`
 
 ## 2. Executive Snapshot (5-Minute Read)
 
