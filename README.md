@@ -258,6 +258,9 @@ Install pinned Steam Audio dependency when needed:
 ./scripts/install-steam-audio-sdk.sh
 ```
 
+The extracted SDK payload under `third_party/steam-audio/sdk/` is local-only and gitignored.
+Re-run the installer after a fresh clone or when rotating local caches.
+
 ### Configure and build
 
 ```bash
@@ -269,6 +272,14 @@ Useful flags:
 - `-DLOCUSQ_ENABLE_CLAP=ON`
 - `-DLOCUSQ_ENABLE_STEAM_AUDIO=ON`
 - `-DBUILD_LOCUSQ_QA=ON`
+
+Steam-enabled local configure example:
+
+```bash
+./scripts/install-steam-audio-sdk.sh
+cmake -S . -B build_steam_local -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DLOCUSQ_ENABLE_STEAM_AUDIO=ON
+cmake --build build_steam_local --config Release --target LocusQ_Standalone locusq_qa -j 8
+```
 
 ## Validation Commands
 

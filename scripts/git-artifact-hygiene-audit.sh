@@ -124,13 +124,15 @@ if [[ "${TRACKED_IGNORED_COUNT}" -gt 0 ]]; then
   problem
   COMPANION_BUILD_COUNT="$(printf '%s\n' "${TRACKED_IGNORED}" | grep -c '^companion/\.build/' || true)"
   TEST_EVIDENCE_COUNT="$(printf '%s\n' "${TRACKED_IGNORED}" | grep -c '^TestEvidence/' || true)"
-  OTHER_IGNORED_COUNT=$((TRACKED_IGNORED_COUNT - COMPANION_BUILD_COUNT - TEST_EVIDENCE_COUNT))
+  STEAM_SDK_COUNT="$(printf '%s\n' "${TRACKED_IGNORED}" | grep -c '^third_party/steam-audio/sdk/' || true)"
+  OTHER_IGNORED_COUNT=$((TRACKED_IGNORED_COUNT - COMPANION_BUILD_COUNT - TEST_EVIDENCE_COUNT - STEAM_SDK_COUNT))
 
   echo "1. ${REF} currently contains committed generated/ignored artifacts (problem)."
   echo
   echo "- ${TRACKED_IGNORED_COUNT} tracked paths match ignore rules."
   echo "- ${COMPANION_BUILD_COUNT} are under companion/.build (Swift build cache/output)."
   echo "- ${TEST_EVIDENCE_COUNT} are under TestEvidence/* ignored patterns."
+  echo "- ${STEAM_SDK_COUNT} are under third_party/steam-audio/sdk (local Steam SDK cache)."
   if [[ "${OTHER_IGNORED_COUNT}" -gt 0 ]]; then
     echo "- ${OTHER_IGNORED_COUNT} additional ignored tracked paths exist in other locations."
   fi
