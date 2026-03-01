@@ -2,7 +2,7 @@ Title: BL-061 HRTF Interpolation + Crossfade (Phase C, conditional)
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-061 HRTF Interpolation + Crossfade (Phase C, conditional)
 
@@ -22,7 +22,7 @@ Last Modified Date: 2026-02-28
 
 ## Objective
 
-Replace nearest-neighbor HRIR selection with `libmysofa` continuous azimuth/elevation interpolation. Add crossfaded filter updates to eliminate zipper artifacts when source direction changes during head movement.
+Replace nearest-neighbor HRIR selection with `libmysofa` continuous azimuth/elevation interpolation. Add crossfaded filter updates (dual-convolver or equivalent) to eliminate zipper artifacts when source direction changes during head movement.
 
 ## Acceptance IDs
 
@@ -30,6 +30,14 @@ Replace nearest-neighbor HRIR selection with `libmysofa` continuous azimuth/elev
 - crossfade duration ≤ 10ms
 - no RT allocation during direction update
 - libmysofa version pinned in CMakeLists.txt
+- no RT locks/blocking I/O during interpolation or crossfade updates
+- deterministic parity check against nearest-neighbor baseline is captured
+- promotion is blocked unless BL-060 gate indicates measurable benefit
+
+## Methodology Reference
+
+- Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Reconciliation review: `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`.
 
 
 ## Validation Plan

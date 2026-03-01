@@ -2,7 +2,7 @@ Title: BL-055 FIR Convolution Engine
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-055 FIR Convolution Engine
 
@@ -22,7 +22,7 @@ Last Modified Date: 2026-02-28
 
 ## Objective
 
-Integrate `FirEngineManager` (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Atomic engine swap on tap-count change. Report latency via `setLatencySamples()`.
+Integrate `FirEngineManager` (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Engine/profile swaps must be atomic and click-safe, with output crossfade when filter topology changes. Report latency via `setLatencySamples()` and keep offline parity references for truth-render validation.
 
 ## Acceptance IDs
 
@@ -30,12 +30,20 @@ Integrate `FirEngineManager` (DirectFirConvolver ≤256 taps / PartitionedFftCon
 - partitioned engine latency = nextPow2(blockSize)
 - engine swap is glitch-free
 - `setLatencySamples()` called on every engine change
+- no RT allocation/locks/blocking I/O in any FIR update or apply path
+- FIR/partitioned output transition is crossfaded (no zipper/click artifacts on profile change)
+- deterministic offline parity check is captured against reference render assets
 
 
 ## Validation Plan
 
 QA harness script: `scripts/qa-bl055-fir-convolution-engine-mac.sh` (to be authored).
 Evidence schema: `TestEvidence/bl055_*/status.tsv`.
+
+Minimum evidence additions:
+- `latency_contract.tsv` (direct vs partitioned)
+- `swap_crossfade_check.tsv`
+- `offline_parity_summary.md` (reference to offline truth-render comparison lane)
 
 ## Replay Cadence Plan (Required)
 

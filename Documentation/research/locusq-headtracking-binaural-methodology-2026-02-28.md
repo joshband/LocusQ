@@ -2,7 +2,7 @@ Title: LocusQ Head-Tracking + Binaural Methodology (Canonical)
 Document Type: Research Methodology
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # LocusQ Head-Tracking + Binaural Methodology (Canonical)
 
@@ -87,6 +87,7 @@ This methodology is maintained against the following additional documentation su
 - Architecture and risk reviews:
   - `Documentation/reviews/2026-02-26-full-architecture-review.md`
   - `Documentation/reviews/LocusQ Repo Review 02262026.md`
+  - `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`
 - Generated report snapshots (governance-controlled):
   - `Documentation/reports/` (for extraction/audit only; do not treat as canonical long-term source)
 - Research tier indexing:

@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28 (BL-053..BL-060 queue reconciliation + head-tracking methodology sync)
+Last Modified Date: 2026-03-01 (BL-053 manual sync evidence note + BL-055/058/059/060/061 methodology tightening)
 
 # LocusQ Master Backlog Index
 
@@ -114,7 +114,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 25 | BL-065 | IAMF mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-065](done/bl-065-iamf-mapping-contract.md) |
 | 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-063, BL-064, BL-065 | — | [bl-066](done/bl-066-ambisonics-adm-pilot-execution-intake.md) |
 | 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done-candidate) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
-| 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual listening acceptance pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
+| 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual operator sync evidence captured; owner promotion packet pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
 | 29 | BL-054 | PEQ cascade RT integration | P1 | Open | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
 | 30 | BL-055 | FIR convolution engine | P1 | Open | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |

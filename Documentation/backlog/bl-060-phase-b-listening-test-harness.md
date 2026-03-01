@@ -2,7 +2,7 @@ Title: BL-060 Phase B Listening Test Harness + Evaluation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-060 Phase B Listening Test Harness + Evaluation
 
@@ -22,7 +22,7 @@ Last Modified Date: 2026-02-28
 
 ## Objective
 
-Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ vs WH-1000XM5 EQ) across ≥5 participants × ≥10 scenes. Run statistical analysis. Gate: ≥20% mean externalization improvement OR p<0.05 localization gain.
+Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ vs WH-1000XM5 EQ) across >=5 participants x >=10 scenes. Run reproducible statistical analysis and persist machine-readable results. Gate: >=20% mean externalization improvement OR p<0.05 localization gain.
 
 ## Acceptance IDs
 
@@ -30,10 +30,14 @@ Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ
 - analysis script exits 0
 - Phase B gate result recorded in `verification` fields of CalibrationProfile
 - result documented in TestEvidence
+- blind trial logs contain at minimum: condition, true angle, response angle, absolute error, reaction time
+- per-condition metrics are exported: MAE, front/back confusion rate, externalization summary
+- run-to-run reproducibility packet exists (same input session => stable stats output)
 
 ## Methodology Reference
 
 - Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Reconciliation review: `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`.
 - This backlog item must follow the blinded 2x2 protocol and gate criteria defined in that methodology.
 
 
@@ -41,6 +45,13 @@ Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ
 
 QA harness script: `scripts/qa-bl060-phase-b-listening-test-mac.sh` (to be authored).
 Evidence schema: `TestEvidence/bl060_*/status.tsv`.
+
+Required analysis artifacts:
+- `trial_log.csv`
+- `metrics_summary.tsv`
+- `stats_report.md`
+- `gate_decision.md`
+- `reproducibility_check.tsv`
 
 ## Replay Cadence Plan (Required)
 

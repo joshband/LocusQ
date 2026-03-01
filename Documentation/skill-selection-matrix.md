@@ -2,7 +2,7 @@ Title: LocusQ Skill Selection Matrix
 Document Type: Routing Guide
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # Skill Selection Matrix (Codex + Claude)
 
@@ -102,3 +102,17 @@ Use this bundle for the current calibration/head-tracking execution lane.
 
 ## Agent Output Requirement
 At task start, state selected skills and execution order when one or more skills are active.
+
+## 2026-03-01 Reconciliation Skill-Use Map
+
+Use this sequence when reconciling research -> backlog -> evidence for BL-053..BL-061:
+
+| Step | Primary Outcome | Skills (ordered) |
+|---|---|---|
+| 1 | Build scoped plan and decide integration vs refactor posture | `skill_plan` |
+| 2 | Normalize methodology/review/runbook language and metadata | `skill_docs` |
+| 3 | Validate quaternion/renderer contracts and monitoring-path math expectations | `spatial-audio-engineering`, `steam-audio-capi` |
+| 4 | Validate companion visualization frame mapping, axis sweeps, and UI diagnostics | `threejs`, `skill_troubleshooting` |
+| 5 | Encode deterministic acceptance/replay evidence requirements in runbooks | `skill_docs`, `skill_testing` |
+| 6 | Apply targeted implementation fixes only when evidence cannot be satisfied by docs/process alignment | `skill_impl` |
+| 7 | Execute replay/manual lanes and capture canonical evidence under `TestEvidence/` | `skill_test`, `skill_testing` |

@@ -1,0 +1,4 @@
+check_id	result	notes	timestamp_utc
+BL053-MAN-001	PASS	Head rotation direction updates tracked correctly after orientation fixes.	2026-03-01T00:01:00Z
+BL053-MAN-002	PASS	Fallback/relaunch path remained glitch-safe in operator session.	2026-03-01T00:01:00Z
+BL053-MAN-003	PASS	Yaw offset/recenter behavior validated through interactive session adjustments.	2026-03-01T00:01:00Z

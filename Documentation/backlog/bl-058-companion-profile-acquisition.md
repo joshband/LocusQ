@@ -2,7 +2,7 @@ Title: BL-058 Companion Profile Acquisition UI + HRTF Matching
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-058 Companion Profile Acquisition UI + HRTF Matching
 
@@ -22,7 +22,7 @@ Last Modified Date: 2026-02-28
 
 ## Objective
 
-Build guided ear-photo capture UI in companion app (left ear + right ear + frontal). Run MobileNetV3 embedding + cosine similarity against SADIE II subjects. Write selected `subject_id` and `sofa_ref` to `CalibrationProfile.json`. Discard images after embedding.
+Build guided ear-photo capture UI in companion app (left ear + right ear + frontal), then ship a deterministic nearest-neighbor subject selection baseline for SADIE II mapping. Write selected `subject_id` and `sofa_ref` to `CalibrationProfile.json`, discard images after embedding, and enforce readiness/sync gating so pose streaming only starts from a known-good state.
 
 ## Acceptance IDs
 
@@ -30,12 +30,22 @@ Build guided ear-photo capture UI in companion app (left ear + right ear + front
 - fallback subject used when similarity <0.6
 - images not persisted to disk after embedding
 - privacy: no network calls
+- readiness state machine is explicit and testable:
+  - `disabled_disconnected`
+  - `active_not_ready`
+  - `active_ready`
+- send gate remains closed until `active_ready` + explicit `Center/Sync`
 - top/T viewport head-tracking arrow is derived from quaternion forward projected onto XZ plane (not serialized yaw only)
 - stale pose packets do not continue rotating head/arrow visuals; stale state renders explicit fallback orientation
+- synthetic axis sweeps are captured and pass principal-axis checks:
+  - pure yaw -> dominant left/right heading motion
+  - pure pitch -> dominant up/down motion
+  - pure roll -> dominant roll/tilt motion
 
 ## Methodology Reference
 
 - Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Reconciliation review: `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`.
 - Additional review baselines:
   - `Documentation/reviews/2026-02-26-full-architecture-review.md`
   - `Documentation/reviews/LocusQ Repo Review 02262026.md`
@@ -49,6 +59,12 @@ Build guided ear-photo capture UI in companion app (left ear + right ear + front
 
 QA harness script: `scripts/qa-bl058-companion-profile-acquisition-mac.sh` (to be authored).
 Evidence schema: `TestEvidence/bl058_*/status.tsv`.
+
+Required manual packet (companion runtime):
+- `TestEvidence/bl058_manual_runtime_<timestamp>/status.tsv`
+- `TestEvidence/bl058_manual_runtime_<timestamp>/results.tsv`
+- `TestEvidence/bl058_manual_runtime_<timestamp>/axis_sweeps.md`
+- `TestEvidence/bl058_manual_runtime_<timestamp>/readiness_gate.md`
 
 ## Replay Cadence Plan (Required)
 

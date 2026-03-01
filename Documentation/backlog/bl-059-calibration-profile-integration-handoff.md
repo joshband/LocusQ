@@ -2,7 +2,7 @@ Title: BL-059 CalibrationProfile Integration Handoff
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-059 CalibrationProfile Integration Handoff
 
@@ -30,10 +30,13 @@ Wire `CalibrationProfile.json` from companion to plugin state end-to-end. Primit
 - SOFA swap is atomic
 - APVTS params update on profile change
 - smoke test `qa-bl059-calibration-integration-smoke-mac.sh` exits 0
+- orientation/tracking fields preserve BL-053 invariants (stale fallback, yaw composition, deterministic behavior)
+- profile reload path preserves packet-age/sequence diagnostics visibility for companion handoff debugging
 
 ## Methodology Reference
 
 - Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
+- Reconciliation review: `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`.
 - Integration acceptance should preserve the orientation-path invariants validated by BL-053 (stale fallback, yaw offset composition, deterministic behavior).
 
 
