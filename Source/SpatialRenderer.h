@@ -63,7 +63,12 @@ class SpatialRenderer
 public:
     static constexpr int NUM_SPEAKERS = 4;
     static constexpr int NUM_HEADPHONE_DEVICE_PROFILES = 5;
-    static constexpr int MAX_DELAY_SAMPLES = 4410; // 50ms @ 88.2kHz
+    static constexpr int MAX_SPEAKER_DELAY_MS = 50;
+    static constexpr int MAX_DELAY_SAMPLE_RATE_HZ = 192000;
+    // +1 sample keeps full-delay coverage because the ring buffer clamps to (N - 1).
+    static constexpr int MAX_DELAY_SAMPLES = ((MAX_SPEAKER_DELAY_MS * MAX_DELAY_SAMPLE_RATE_HZ) / 1000) + 1;
+    static_assert ((MAX_DELAY_SAMPLES - 1) >= ((MAX_SPEAKER_DELAY_MS * MAX_DELAY_SAMPLE_RATE_HZ) / 1000),
+                   "speaker delay buffer must preserve full max delay at 192kHz");
     static constexpr int MAX_AUDITION_REACTIVE_SOURCES = 8;
     enum class HeadphoneRenderMode : int
     {

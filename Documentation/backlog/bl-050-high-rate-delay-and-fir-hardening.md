@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-050 |
 | Priority | P0 |
-| Status | In Planning |
+| Status | In Implementation (Slice A landed; docs-freshness blocker remains) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-043, BL-046 |
@@ -45,11 +45,19 @@ Out of scope:
 
 ## TODOs
 
-- [ ] Validate and adjust delay max bounds for 192kHz support.
+- [x] Validate and adjust delay max bounds for 192kHz support.
 - [ ] Define partitioned FIR migration contract (latency/cpu/quality bounds).
-- [ ] Add high-rate soak lane for delay + FIR paths.
-- [ ] Add deterministic failure taxonomy for high-rate regressions.
+- [x] Add high-rate soak lane for delay + FIR paths.
+- [x] Add deterministic failure taxonomy for high-rate regressions.
 - [ ] Capture promotion evidence and update runbook status.
+
+## Slice A Execution Snapshot (2026-03-01)
+
+- Code hardening landed in `Source/SpatialRenderer.h`: speaker-delay ring buffer headroom now preserves a full 50.00 ms delay at 192 kHz (`MAX_DELAY_SAMPLES=9601`, with compile-time guard).
+- Added deterministic BL-050 lane script: `scripts/qa-bl050-highrate-lane-mac.sh`.
+- Latest execution packet: `TestEvidence/bl050_slice_a_lane_20260301T233154Z/`.
+- Packet highlights: build PASS; high-rate delay matrix PASS across 44.1/48/88.2/96/192 kHz; FIR profile runs completed with WARN rows at 44.1/48/88.2 kHz from allocation metrics.
+- Open blocker: docs freshness gate failed due pre-existing unrelated metadata debt in `TestEvidence/bl035_parallel_20260301_182623/summary.md`.
 
 
 ## Validation Plan
