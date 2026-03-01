@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-072 |
 | Priority | P0 |
-| Status | In Validation (execute lane pass + T2 candidate packet pass: 5/5 runs, zero TODO rows) |
+| Status | Done-candidate (execute + T2 + T3 packets pass; owner promotion decision pending) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-058, BL-059 |
@@ -100,5 +100,8 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - T2 candidate evidence:
   - `TestEvidence/bl072_candidate_t2_20260301T220718Z/run_summary.tsv` (5/5 PASS, zero TODO rows).
   - `TestEvidence/bl072_candidate_t2_20260301T220718Z/candidate_decision.md`.
+- T3 promotion evidence:
+  - `TestEvidence/bl072_promotion_t3_20260301T220915Z/run_summary.tsv` (10/10 PASS, zero TODO rows).
+  - `TestEvidence/bl072_promotion_t3_20260301T220915Z/promotion_decision.md`.
 - Remaining BL-072 scope:
-  - advance to T3 promotion packet per replay policy and owner intake timing.
+  - owner promotion decision and done-transition archive sync.
