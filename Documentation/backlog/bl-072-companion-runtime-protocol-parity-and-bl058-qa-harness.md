@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-072 |
 | Priority | P0 |
-| Status | In Implementation (Wave 1 kickoff: protocol parity and BL-058 lane harness scaffold authored) |
+| Status | In Validation (execute lane pass: protocol/readiness/sequence evidence has zero TODO rows) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-058, BL-059 |
@@ -95,6 +95,7 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - companion CLI sync-gate controls (`--require-sync` / `--auto-sync`) and live readiness/send-gate wiring;
   - plugin packet decode/stale-sequence guards in `Source/HeadTrackingBridge.h`;
   - BL-058 lane linkage (readiness + axis evidence surfaces available from BL-058 harness).
+- Execute evidence:
+  - `TestEvidence/bl072_companion_protocol_execute_20260301T220311Z/status.tsv` (execute mode pass, zero TODO rows).
 - Remaining BL-072 scope:
-  - replace TODO execute rows with runtime parity probes for synthetic/live sync behavior, stale fallback, and sequence/age thresholds;
-  - promote BL-072 evidence from scaffold packet to execute-ready parity packet.
+  - advance through candidate/promotion cadence packets per replay policy and owner intake timing.

@@ -209,10 +209,34 @@ else
   record "BL075-C8-shared_contract_headers" "FAIL" "shared contract headers missing" "$SHARED_CONTRACT_DIR"
 fi
 
-printf "calibration_engine_non_obvious_paths\tTODO\tmanual review of generation/error-state rationale comments pending\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
-printf "headtracking_bridge_sequence_and_stale_logic\tTODO\tmanual review of sequence restart/stale fallback comment clarity pending\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
-printf "processor_bridge_snapshot_publication\tTODO\tmanual review of snapshot/telemetry publication rationale comments pending\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
-printf "shared_contract_headers_doxygen_surface\tTODO\tmanual review of doxygen coverage for shared contracts pending\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+if [[ -f "$CALIBRATION_HDR" ]] && rg -q 'Bump generation at run start so the worker can reject stale analysis' "$CALIBRATION_HDR"; then
+  printf "calibration_engine_non_obvious_paths\tPASS\tgeneration guard rationale comment present\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+else
+  printf "calibration_engine_non_obvious_paths\tFAIL\tgeneration guard rationale comment missing\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+  record "BL075-R1-calibration_remediation" "FAIL" "generation guard rationale comment missing" "$CALIBRATION_HDR"
+fi
+
+if [[ -f "$HEADTRACKING_BRIDGE" ]] && rg -q 'Accept sequence restarts only when the prior' "$HEADTRACKING_BRIDGE"; then
+  printf "headtracking_bridge_sequence_and_stale_logic\tPASS\tsequence restart rationale comment present\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+else
+  printf "headtracking_bridge_sequence_and_stale_logic\tFAIL\tsequence restart rationale comment missing\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+  record "BL075-R2-headtracking_remediation" "FAIL" "sequence restart rationale comment missing" "$HEADTRACKING_BRIDGE"
+fi
+
+if [[ -f "$SCENE_BRIDGE_OPS" ]] && rg -q 'Read coherent audio snapshot once per emitter' "$SCENE_BRIDGE_OPS"; then
+  printf "processor_bridge_snapshot_publication\tPASS\tsnapshot publication rationale comment present\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+else
+  printf "processor_bridge_snapshot_publication\tFAIL\tsnapshot publication rationale comment missing\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+  record "BL075-R3-scene_bridge_remediation" "FAIL" "snapshot publication rationale comment missing" "$SCENE_BRIDGE_OPS"
+fi
+
+shared_contract_comment_count="$(rg -n 'Canonical .*contract|Canonical bridge status keys|Canonical wire contract keys|Canonical confidence/masking contract|Canonical operation/outcome enums' "$SHARED_CONTRACT_DIR"/*.h | wc -l | tr -d '[:space:]')"
+if [[ "${shared_contract_comment_count}" -ge 5 ]]; then
+  printf "shared_contract_headers_doxygen_surface\tPASS\tshared contract headers include canonical boundary comments\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+else
+  printf "shared_contract_headers_doxygen_surface\tFAIL\tshared contract boundary comments incomplete (found=${shared_contract_comment_count})\n" >> "$STALE_COMMENT_REMEDIATION_TSV"
+  record "BL075-R4-shared_contract_remediation" "FAIL" "shared contract boundary comments incomplete (found=${shared_contract_comment_count})" "$SHARED_CONTRACT_DIR"
+fi
 
 cat > "$API_DOC_COVERAGE_MAP_MD" <<EOF_MAP
 Title: BL-075 API Doc Coverage Map (Stub)
@@ -280,7 +304,7 @@ if [[ "$MODE" == "execute" ]]; then
     record "BL075-E1-execute_todo_rows" "PASS" "execute mode has zero TODO rows" "$STATUS_TSV"
   fi
 else
-  record "BL075-C9-contract_mode" "PASS" "contract-only mode allows TODO execute rows (count=${todo_rows})" "$STATUS_TSV"
+  record "BL075-C9-contract_mode" "PASS" "contract-only mode completed remediation checks (todo_rows=${todo_rows})" "$STATUS_TSV"
 fi
 
 if [[ "$fail_count" -eq 0 ]]; then

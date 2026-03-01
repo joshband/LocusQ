@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-075 |
 | Priority | P2 |
-| Status | In Implementation (kickoff: docs/comment accessibility harness scaffold authored) |
+| Status | In Validation (execute lane pass: remediation matrix + contributor/API coverage packet generated) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -106,6 +106,9 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - API doc coverage map anchored to `Documentation/Doxyfile` and standards authority;
   - stale-comment remediation TODO matrix;
   - contributor entrypoint map for human and AI onboarding.
+- Remediation closure landed in code/docs:
+  - non-obvious rationale comments added in calibration generation guard, headtracking sequence-stale logic, coherent bridge snapshot publication, and shared contract headers.
+- Execute evidence:
+  - `TestEvidence/bl075_doc_accessibility_execute_20260301T220148Z/status.tsv` (execute mode pass, zero TODO rows).
 - Remaining BL-075 scope:
-  - replace TODO review rows with executed remediation outcomes per file/surface;
-  - land comment/API doc updates in touched high-value files and re-run execute-mode checks.
+  - run candidate/promotion cadence packets per replay policy and owner intake timeline.

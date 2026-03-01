@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-071 |
 | Priority | P0 |
-| Status | In Implementation (Wave 1 kickoff: calibration generation/error-state/snapshot hardening landed) |
+| Status | In Validation (execute lane pass: generation/error-state/snapshot evidence has zero TODO rows) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-056, BL-059 |
@@ -95,6 +95,7 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - progress/result publication now uses atomic snapshots plus locked result-copy reads.
 - Initial QA scaffold authored:
   - `scripts/qa-bl071-calibration-generation-guard-mac.sh` with `--contract-only` and `--execute` modes.
+- Execute evidence:
+  - `TestEvidence/bl071_calibration_generation_guard_execute_20260301T220310Z/status.tsv` (execute mode pass, zero TODO rows).
 - Remaining BL-071 scope:
-  - add runtime execute probes to replace TODO rows in generation/error/snapshot evidence tables;
-  - promote lane from scaffold evidence to execute-ready packet.
+  - advance through candidate/promotion cadence packets per replay policy and owner intake timing.

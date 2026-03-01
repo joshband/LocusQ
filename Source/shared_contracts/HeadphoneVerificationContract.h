@@ -3,6 +3,7 @@
 #include <cmath>
 #include <juce_core/juce_core.h>
 
+// Canonical wire contract keys and sanitizers for headphone verification payloads.
 namespace locusq::shared_contracts::headphone_verification
 {
 inline constexpr const char* kSchemaV1 = "locusq-headphone-verification-contract-v1";
