@@ -58,6 +58,11 @@ std::unique_ptr<qa::DspUnderTest> createSpatialDut()
     return std::make_unique<locusq::qa::LocusQSpatialAdapter>();
 }
 
+std::unique_ptr<qa::DspUnderTest> createCalibrateDut()
+{
+    return std::make_unique<locusq::qa::LocusQCalibrateAdapter>();
+}
+
 //------------------------------------------------------------------------------
 // Runner factory helper
 
@@ -93,13 +98,15 @@ struct HostRunnerOptions
     std::string outputDir;
 };
 
-qa::scenario::ExecutionConfig makeConfig(bool useSpatial, const RunOptions& options)
+qa::scenario::ExecutionConfig makeConfig(bool useSpatial, const RunOptions& options,
+                                         bool useCalibrate = false)
 {
     qa::scenario::ExecutionConfig cfg;
     cfg.sampleRate   = options.sampleRate;
     cfg.blockSize    = options.blockSize;
     cfg.numChannels  = options.numChannels;
-    cfg.outputDir    = "qa_output/locusq" + std::string(useSpatial ? "_spatial" : "_emitter");
+    const char* suffix = useCalibrate ? "_calibrate" : (useSpatial ? "_spatial" : "_emitter");
+    cfg.outputDir    = "qa_output/locusq" + std::string(suffix);
     return cfg;
 }
 
@@ -514,10 +521,12 @@ void printSuiteSummary(const qa::scenario::TestSuiteResult& r)
               << "  Skip: " << r.skipCount << "\n";
 }
 
-int runSingleScenario(const std::string& path, bool useSpatial, const RunOptions& options)
+int runSingleScenario(const std::string& path, bool useSpatial, const RunOptions& options,
+                      bool useCalibrate = false)
 {
+    const char* adapterLabel = useCalibrate ? "Calibrate" : (useSpatial ? "Spatial" : "Emitter");
     std::cout << "Running scenario: " << path
-              << " [" << (useSpatial ? "Spatial" : "Emitter") << " adapter]\n";
+              << " [" << adapterLabel << " adapter]\n";
 
     auto loadResult = qa::scenario::loadScenarioFile(path);
     if (!loadResult.ok)
@@ -528,8 +537,8 @@ int runSingleScenario(const std::string& path, bool useSpatial, const RunOptions
         return 1;
     }
 
-    auto dutFactory = useSpatial ? createSpatialDut : createEmitterDut;
-    auto cfg = makeConfig(useSpatial, options);
+    auto dutFactory = useCalibrate ? createCalibrateDut : (useSpatial ? createSpatialDut : createEmitterDut);
+    auto cfg = makeConfig(useSpatial, options, useCalibrate);
 
     qa::scenario::ScenarioExecutor executor(makeRunnerFactory(dutFactory), dutFactory, cfg);
     qa::scenario::ScenarioResult result = executor.execute(loadResult.scenario);
@@ -583,10 +592,11 @@ int runSingleScenario(const std::string& path, bool useSpatial, const RunOptions
 qa::scenario::TestSuiteResult executeSuite(const qa::scenario::TestSuite& suite,
                                            const std::vector<qa::scenario::ScenarioSpec>& scenarios,
                                            bool useSpatial,
-                                           const RunOptions& options)
+                                           const RunOptions& options,
+                                           bool useCalibrate = false)
 {
-    auto dutFactory = useSpatial ? createSpatialDut : createEmitterDut;
-    auto cfg = applySuiteRuntimeConfigCompat(makeConfig(useSpatial, options), suite);
+    auto dutFactory = useCalibrate ? createCalibrateDut : (useSpatial ? createSpatialDut : createEmitterDut);
+    auto cfg = applySuiteRuntimeConfigCompat(makeConfig(useSpatial, options, useCalibrate), suite);
 
     qa::scenario::ScenarioExecutor executor(makeRunnerFactory(dutFactory), dutFactory, cfg);
     qa::scenario::InvariantEvaluator evaluator;
@@ -656,7 +666,8 @@ qa::scenario::TestSuiteResult executeSuite(const qa::scenario::TestSuite& suite,
     return suiteResult;
 }
 
-int runSuite(const std::string& path, bool useSpatial, const RunOptions& options)
+int runSuite(const std::string& path, bool useSpatial, const RunOptions& options,
+             bool useCalibrate = false)
 {
     std::cout << "Running suite: " << path << "\n";
 
@@ -670,7 +681,7 @@ int runSuite(const std::string& path, bool useSpatial, const RunOptions& options
         return 1;
     }
 
-    auto result = executeSuite(resolved.suite, resolved.scenarios, useSpatial, options);
+    auto result = executeSuite(resolved.suite, resolved.scenarios, useSpatial, options, useCalibrate);
     printSuiteSummary(result);
 
     return result.passed ? 0 : 1;
@@ -683,6 +694,7 @@ void printUsage(const char* prog)
               << "  " << prog << " <scenario.json>          Run single scenario (Emitter adapter)\n"
               << "  " << prog << " <suite.json>             Run test suite (Emitter adapter)\n"
               << "  " << prog << " --spatial <path>         Run scenario/suite with Spatial adapter\n"
+              << "  " << prog << " --calibrate <path>       Run scenario/suite with Calibrate adapter (BL-052)\n"
               << "  " << prog << " --discover <dir>         Auto-discover scenarios in directory\n"
               << "  " << prog << " --profile                Force profiling for all scenarios\n"
               << "  " << prog << " --profile-iterations N   Override profiling iterations (default 1000)\n"
@@ -708,6 +720,7 @@ int main(int argc, char** argv)
     try
     {
         bool useSpatial = false;
+        bool useCalibrate = false;
         std::string inputPath;
         bool discoverMode = false;
         std::string discoverDir;
@@ -726,6 +739,11 @@ int main(int argc, char** argv)
             else if (arg == "--spatial")
             {
                 useSpatial = true;
+                ++i;
+            }
+            else if (arg == "--calibrate")
+            {
+                useCalibrate = true;
                 ++i;
             }
             else if (arg == "--discover")
@@ -873,7 +891,7 @@ int main(int argc, char** argv)
             }
             std::cout << "Discovered " << resolved.scenarios.size() << " scenarios\n";
 
-            auto result = executeSuite(resolved.suite, resolved.scenarios, useSpatial, runOptions);
+            auto result = executeSuite(resolved.suite, resolved.scenarios, useSpatial, runOptions, useCalibrate);
             printSuiteSummary(result);
             return result.passed ? 0 : 1;
         }
@@ -881,8 +899,8 @@ int main(int argc, char** argv)
         {
             // Detect suite vs scenario by filename convention
             bool isSuite = (inputPath.find("suite") != std::string::npos);
-            return isSuite ? runSuite(inputPath, useSpatial, runOptions)
-                           : runSingleScenario(inputPath, useSpatial, runOptions);
+            return isSuite ? runSuite(inputPath, useSpatial, runOptions, useCalibrate)
+                           : runSingleScenario(inputPath, useSpatial, runOptions, useCalibrate);
         }
         else
         {

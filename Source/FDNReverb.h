@@ -185,11 +185,16 @@ public:
 
 private:
     static constexpr int NUM_LINES = 8;
-    static constexpr int MAX_DELAY_SAMPLES = 32768;
+    // Reference sample rate for which the base delay sample counts below are calibrated.
+    static constexpr double REFERENCE_SAMPLE_RATE = 44100.0;
+    // Buffer sized for finalBaseDelays[7] * ROOM_SIZE_MAX at 192 kHz:
+    //   3989 * (192000/44100) * 5.0 ≈ 86837 → next power-of-two = 131072.
+    static constexpr int MAX_DELAY_SAMPLES = 131072;
     static constexpr int MIN_DELAY_SAMPLES = 64;
     static constexpr float ROOM_SIZE_MIN = 0.5f;
     static constexpr float ROOM_SIZE_MAX = 5.0f;
-    static constexpr float MAX_MOD_DEPTH_SAMPLES = 48.0f;
+    // Modulation depth cap at REFERENCE_SAMPLE_RATE; scaled by srScale in updateCoefficients().
+    static constexpr float MAX_MOD_DEPTH_SAMPLES_REF = 48.0f;
 
     static std::array<float, NUM_LINES> hadamard8 (const std::array<float, NUM_LINES>& input) noexcept
     {
@@ -245,6 +250,9 @@ private:
 
     void configureDelayLengths()
     {
+        // Base delay lengths in samples at REFERENCE_SAMPLE_RATE (44100 Hz).
+        // Multiplied by srScale = currentSampleRate / REFERENCE_SAMPLE_RATE so that
+        // delay times in milliseconds remain constant across all sample rates.
         static constexpr std::array<int, NUM_CHANNELS> draftBaseDelays {
             1499, 1877, 2137, 2557
         };
@@ -253,6 +261,7 @@ private:
         };
 
         const int activeLines = getActiveLineCount();
+        const float srScale = static_cast<float> (currentSampleRate / REFERENCE_SAMPLE_RATE);
 
         for (int lineIdx = 0; lineIdx < NUM_LINES; ++lineIdx)
         {
@@ -266,7 +275,8 @@ private:
                     baseDelay = draftBaseDelays[static_cast<size_t> (lineIdx)];
             }
 
-            const auto scaledDelay = static_cast<int> (std::lround (static_cast<float> (baseDelay) * roomSize));
+            const auto scaledDelay = static_cast<int> (
+                std::lround (static_cast<float> (baseDelay) * roomSize * srScale));
             delaySamples[static_cast<size_t> (lineIdx)] = juce::jlimit (
                 MIN_DELAY_SAMPLES,
                 MAX_DELAY_SAMPLES - 2,
@@ -313,11 +323,14 @@ private:
             float modRateHz = 0.0f;
             if (qualityHigh)
             {
+                const float srScale = static_cast<float> (currentSampleRate / REFERENCE_SAMPLE_RATE);
                 modRateHz = finalModRatesHz[idx];
-                modDepth = (2.0f + roomNorm * 18.0f) * (1.0f - damping * 0.65f);
+                modDepth = (2.0f + roomNorm * 18.0f) * (1.0f - damping * 0.65f) * srScale;
             }
 
-            modDepthSamples[idx] = juce::jlimit (0.0f, MAX_MOD_DEPTH_SAMPLES, modDepth);
+            const float maxModDepth = MAX_MOD_DEPTH_SAMPLES_REF
+                                    * static_cast<float> (currentSampleRate / REFERENCE_SAMPLE_RATE);
+            modDepthSamples[idx] = juce::jlimit (0.0f, maxModDepth, modDepth);
             lfoIncrement[idx] = juce::MathConstants<float>::twoPi
                               * modRateHz
                               / static_cast<float> (currentSampleRate);

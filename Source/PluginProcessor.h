@@ -17,6 +17,7 @@
 #include "KeyframeTimeline.h"
 #include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/RegistrationLockFreeContract.h"
+#include "SteamAudioVirtualSurround.h"
 
 #if LOCUSQ_ENABLE_CLAP
  #if __has_include(<clap-juce-extensions/clap-juce-extensions.h>)
@@ -270,11 +271,20 @@ private:
     //==============================================================================
     // Spatialization engine (Phase 2.2)
     SpatialRenderer spatialRenderer;
+    // BL-052: calibration monitoring virtual-surround adapter (constructed after
+    // spatialRenderer to ensure valid reference lifetime).
+    SteamAudioVirtualSurround calMonitorVirtualSurround { spatialRenderer };
     HeadTrackingBridge   headTrackingBridge;
     HeadPoseInterpolator headPoseInterpolator;
+    std::atomic<bool>    calibrationProfileTrackingEnabled { false };
+    std::atomic<float>   calibrationProfileYawOffsetDeg { 0.0f };
 
     // Update renderer parameters from APVTS (called before processing)
     void updateRendererParameters();
+
+    // BL-052: apply cal_monitoring_path routing after calibrationEngine.processBlock.
+    // monPathIndex is the raw integer value from the "cal_monitoring_path" APVTS param.
+    void applyCalibrationMonitoringPath (juce::AudioBuffer<float>& buffer, int monPathIndex);
 
     //==============================================================================
     // Room calibration engine (Phase 2.3)

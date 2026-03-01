@@ -235,6 +235,9 @@ juce::var LocusQAudioProcessor::redetectCalibrationRoutingFromUI()
         layoutOutputChannels,
         lastAutoDetectedOutputChannels,
         getCurrentCalibrationSpeakerRouting());
+    const auto previousSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
+    const auto previousTopologyProfile = getCurrentCalibrationTopologyProfileIndex();
+    const auto previousRouting = getCurrentCalibrationSpeakerRouting();
 
     applyAutoDetectedCalibrationRoutingIfAppropriate (effectiveWritableChannels, true);
 
@@ -245,17 +248,23 @@ juce::var LocusQAudioProcessor::redetectCalibrationRoutingFromUI()
 
     result->setProperty ("ok", true);
     result->setProperty ("outputChannels", effectiveWritableChannels);
+    result->setProperty ("snapshotOutputChannels", snapshotOutputChannels);
+    result->setProperty ("layoutOutputChannels", layoutOutputChannels);
+    result->setProperty ("effectiveWritableChannels", effectiveWritableChannels);
     const auto topologyProfile = getCurrentCalibrationTopologyProfileIndex();
     const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
     const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
+    const auto speakerConfig = getCurrentCalibrationSpeakerConfigIndex();
     const auto requiredChannels = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
     const auto writableChannels = resolveCalibrationWritableChannels (
         snapshotOutputChannels,
         layoutOutputChannels,
         lastAutoDetectedOutputChannels,
         getCurrentCalibrationSpeakerRouting());
-    result->setProperty ("speakerConfigIndex", getCurrentCalibrationSpeakerConfigIndex());
+    result->setProperty ("speakerConfigIndex", speakerConfig);
+    result->setProperty ("previousSpeakerConfigIndex", previousSpeakerConfig);
     result->setProperty ("topologyProfileIndex", topologyProfile);
+    result->setProperty ("previousTopologyProfileIndex", previousTopologyProfile);
     result->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyProfile));
     result->setProperty ("monitoringPathIndex", monitoringPath);
     result->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPath));
@@ -270,6 +279,16 @@ juce::var LocusQAudioProcessor::redetectCalibrationRoutingFromUI()
     for (const auto channel : map)
         routing.add (juce::jlimit (1, 8, channel));
     result->setProperty ("routing", juce::var (routing));
+
+    juce::Array<juce::var> previousRoutingVar;
+    for (const auto channel : previousRouting)
+        previousRoutingVar.add (juce::jlimit (1, 8, channel));
+    result->setProperty ("previousRouting", juce::var (previousRoutingVar));
+
+    const bool changed = map != previousRouting
+                         || topologyProfile != previousTopologyProfile
+                         || speakerConfig != previousSpeakerConfig;
+    result->setProperty ("changed", changed);
 
     return resultVar;
 }
