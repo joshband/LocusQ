@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-075 |
 | Priority | P2 |
-| Status | Open |
+| Status | In Implementation (kickoff: docs/comment accessibility harness scaffold authored) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -46,7 +46,7 @@ Out of scope:
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl075-doc-accessibility-and-api-contract-review.sh` (to be authored).
+QA harness script: `scripts/qa-bl075-doc-accessibility-and-api-contract-review.sh`.
 Evidence schema: `TestEvidence/bl075_*/status.tsv`.
 
 Minimum evidence additions:
@@ -96,3 +96,16 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+
+## Execution Notes (2026-03-01)
+
+- Initial QA scaffold authored:
+  - `scripts/qa-bl075-doc-accessibility-and-api-contract-review.sh` with `--contract-only` and `--execute` modes.
+- Scaffold output now captures:
+  - comment review matrix for critical runtime/bridge surfaces;
+  - API doc coverage map anchored to `Documentation/Doxyfile` and standards authority;
+  - stale-comment remediation TODO matrix;
+  - contributor entrypoint map for human and AI onboarding.
+- Remaining BL-075 scope:
+  - replace TODO review rows with executed remediation outcomes per file/surface;
+  - land comment/API doc updates in touched high-value files and re-run execute-mode checks.
