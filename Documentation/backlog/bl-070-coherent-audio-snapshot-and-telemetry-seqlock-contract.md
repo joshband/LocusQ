@@ -34,7 +34,7 @@ Eliminate torn snapshot and telemetry race risks by introducing coherent audio s
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl070-snapshot-telemetry-contract-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl070-snapshot-telemetry-contract-mac.sh`.
 Evidence schema: `TestEvidence/bl070_*/status.tsv`.
 
 Minimum evidence additions:
