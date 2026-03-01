@@ -1,0 +1,3 @@
+failure_id	classification	mitigation
+BL069-F001	preset_asset_missing	fallback_generic_or_clear_peq
+BL069-F002	invalid_preset_payload	clear_peq_and_report_contract

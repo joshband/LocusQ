@@ -1,0 +1,3 @@
+check	result	detail
+preload_bundled_presets	PASS	preloadBundledPeqPresets symbol present
+cache_only_profile_load	PASS	loadPeqPresetForProfile consumes bundled cache
