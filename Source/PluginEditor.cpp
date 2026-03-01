@@ -334,12 +334,24 @@ void LocusQAudioProcessorEditor::timerCallback()
     if (webView == nullptr) return;
 
     updateStandaloneWindowTitle();
+    audioProcessor.pollCompanionCalibrationProfileFromDisk();
 
     // Push scene + calibration payloads in one JS evaluation so panel updates stay
     // deterministic under rapid profile switch bursts.
     auto sceneJSON = audioProcessor.getSceneStateJSON();
     auto calibrationJSON = juce::JSON::toString (audioProcessor.getCalibrationStatus());
     locusq::editor_shell::pushSceneAndCalibrationUpdate (*webView, sceneJSON, calibrationJSON);
+
+    // BL-045 Slice C: push drift telemetry at ~500ms intervals (every 15 ticks at 30Hz).
+    if (++driftTelemetryTickCount >= kDriftTelemetryIntervalTicks)
+    {
+        driftTelemetryTickCount = 0;
+        const bool refSet = audioProcessor.yawReferenceSet.load (std::memory_order_relaxed);
+        const float rawYaw = audioProcessor.lastHeadTrackYawDeg.load (std::memory_order_relaxed);
+        const float refYaw = audioProcessor.yawReferenceDeg.load (std::memory_order_relaxed);
+        const float driftDeg = refSet ? std::abs (rawYaw - refYaw) : 0.0f;
+        locusq::editor_shell::pushHeadTrackDrift (*webView, driftDeg, refSet);
+    }
 
     if (! runtimeProbeDone)
     {

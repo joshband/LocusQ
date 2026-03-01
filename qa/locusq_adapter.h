@@ -173,5 +173,50 @@ private:
     void setRendererParam(const char* id, float normalized);
 };
 
+
+//==============================================================================
+/**
+ * LocusQCalibrateAdapter
+ *
+ * Wraps a single LocusQAudioProcessor in Calibrate mode.
+ * Exercises the BL-052 cal_monitoring_path switch and the
+ * applyCalibrationMonitoringPath() audio routing.
+ *
+ * Parameter mapping (normalized [0,1]):
+ *   0: cal_monitoring_path (0.0=speakers, 0.333=stereo_downmix,
+ *                           0.667=steam_binaural, 1.0=virtual_binaural)
+ *   1: cal_test_level      (0..1)
+ *   2: cal_mic_channel     (choice: Left=0, Right=1)
+ *   3: cal_test_type       (choice: Sweep=0, Noise=1, Tone=2)
+ */
+class LocusQCalibrateAdapter : public ::qa::DspUnderTest
+{
+public:
+    LocusQCalibrateAdapter();
+    ~LocusQCalibrateAdapter() override = default;
+
+    void prepare(double sampleRate, int maxBlockSize, int numChannels) override;
+    void release() override;
+    void reset() noexcept override;
+
+    void processBlock(float** channelData, int numChannels, int numSamples) noexcept override;
+
+    void setParameter(int index, ::qa::NormalizedParam value) noexcept override;
+    int getParameterCount() const noexcept override { return kNumParameters; }
+    const char* getParameterName(int index) const override;
+
+    bool getCapabilities(::qa::EffectCapabilities& out) const override;
+    ::qa::OptionalFeatures getOptionalFeatures() const override;
+
+private:
+    static constexpr int kNumParameters = 4;
+
+    std::unique_ptr<LocusQAudioProcessor> processor_;
+    juce::AudioBuffer<float> audioBuffer_;
+    juce::MidiBuffer midiBuffer_;
+
+    void setJuceParam(const char* id, float normalized);
+};
+
 } // namespace qa
 } // namespace locusq

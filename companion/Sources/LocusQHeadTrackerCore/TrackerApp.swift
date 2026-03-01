@@ -3,11 +3,16 @@ import Foundation
 public final class TrackerApp {
     private let motionService: MotionService
     private let udpSender: UdpSender
-    private var seq: UInt32 = 0
+    private var seq: UInt32
 
     public init(motionService: MotionService = HeadphoneMotionService(), udpSender: UdpSender) {
         self.motionService = motionService
         self.udpSender = udpSender
+        var seed = UInt32((Date().timeIntervalSince1970 * 1000.0).rounded()) // truncating wrap is intentional
+        if seed == 0 {
+            seed = 1
+        }
+        self.seq = seed
     }
 
     public func start() throws {

@@ -247,6 +247,10 @@ private:
     bool uiSelfTestResultWritten = false;
     int uiSelfTestPollTicks = 0;
 
+    // BL-045 Slice C: drift telemetry push — fires every ~500ms (15 ticks at 30Hz)
+    static constexpr int kDriftTelemetryIntervalTicks = 15;
+    int driftTelemetryTickCount = 0;
+
     // Reference to processor
     LocusQAudioProcessor& audioProcessor;
 

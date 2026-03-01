@@ -276,6 +276,16 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                                  const juce::var opt = args.isEmpty() ? juce::var() : args[0];
                                  completion (audioProcessor.deleteEmitterPresetFromUI (opt));
                              })
+        .withNativeFunction ("locusqSetForwardYaw",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 // BL-045-C: capture current raw yaw as the re-center reference.
+                                 const float rawYaw = audioProcessor.lastHeadTrackYawDeg.load (
+                                     std::memory_order_relaxed);
+                                 audioProcessor.setYawReference (rawYaw);
+                                 completion (true);
+                             })
         .withNativeFunction ("locusqGetUiState",
                              [&audioProcessor] (const juce::Array<juce::var>&,
                                                 juce::WebBrowserComponent::NativeFunctionCompletion completion)

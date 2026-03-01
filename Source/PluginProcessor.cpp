@@ -204,6 +204,56 @@ int toSignalTypeIndex (juce::String type)
     return 0;
 }
 
+juce::File resolveCompanionCalibrationProfileFile()
+{
+    const auto userAppDataDir = juce::File::getSpecialLocation (
+        juce::File::SpecialLocationType::userApplicationDataDirectory);
+    const auto userHomeDir = juce::File::getSpecialLocation (
+        juce::File::SpecialLocationType::userHomeDirectory);
+
+    const std::array<juce::File, 4> candidates
+    {
+        // Legacy/plugin path (current in-plugin storage root).
+        userAppDataDir.getChildFile ("LocusQ").getChildFile ("CalibrationProfile.json"),
+        // Companion path when userAppDataDir resolves to ~/Library.
+        userAppDataDir.getChildFile ("Application Support")
+            .getChildFile ("LocusQ")
+            .getChildFile ("CalibrationProfile.json"),
+        // Explicit companion path.
+        userHomeDir.getChildFile ("Library")
+            .getChildFile ("Application Support")
+            .getChildFile ("LocusQ")
+            .getChildFile ("CalibrationProfile.json"),
+        // Explicit legacy/plugin path.
+        userHomeDir.getChildFile ("Library")
+            .getChildFile ("LocusQ")
+            .getChildFile ("CalibrationProfile.json")
+    };
+
+    juce::File newestExisting;
+    juce::int64 newestModifiedMs = 0;
+    bool foundExisting = false;
+
+    for (const auto& candidate : candidates)
+    {
+        if (! candidate.existsAsFile())
+            continue;
+
+        const auto modifiedMs = candidate.getLastModificationTime().toMilliseconds();
+        if (! foundExisting || modifiedMs > newestModifiedMs)
+        {
+            newestExisting = candidate;
+            newestModifiedMs = modifiedMs;
+            foundExisting = true;
+        }
+    }
+
+    if (foundExisting)
+        return newestExisting;
+
+    return candidates[0];
+}
+
 const juce::String kTrackPosAzimuth { "pos_azimuth" };
 const juce::String kTrackPosElevation { "pos_elevation" };
 const juce::String kTrackPosDistance { "pos_distance" };
@@ -435,6 +485,75 @@ void computeHeadTrackingEulerDegrees (const HeadTrackingBridge::PoseSnapshot& po
     yawDeg = yaw * kRadToDeg;
     pitchDeg = pitch * kRadToDeg;
     rollDeg = roll * kRadToDeg;
+}
+
+void applyYawOffsetToPose (SpatialRenderer::PoseSnapshot& pose, float yawOffsetDeg) noexcept
+{
+    if (! std::isfinite (yawOffsetDeg))
+        return;
+
+    const float refRad = yawOffsetDeg * (juce::MathConstants<float>::pi / 180.0f);
+    const float halfRef = refRad * 0.5f;
+    // q_ref = rotation about Z by -refDeg = (0, 0, -sin(halfRef), cos(halfRef))
+    const float qrz = -std::sin (halfRef);
+    const float qrw =  std::cos (halfRef);
+    // q_eff = q_ref * pose  (quaternion product; q_ref.x = q_ref.y = 0)
+    const float bx = pose.qx;
+    const float by = pose.qy;
+    const float bz = pose.qz;
+    const float bw = pose.qw;
+    pose.qx = qrw * bx - qrz * by;
+    pose.qy = qrz * bx + qrw * by;
+    pose.qz = qrw * bz + qrz * bw;
+    pose.qw = qrw * bw - qrz * bz;
+}
+
+bool poseSnapshotToCoordinateSpace (const SpatialRenderer::PoseSnapshot& pose,
+                                    IPLCoordinateSpace3& coordinateSpace) noexcept
+{
+    const float normSq = (pose.qx * pose.qx)
+                       + (pose.qy * pose.qy)
+                       + (pose.qz * pose.qz)
+                       + (pose.qw * pose.qw);
+    if (! std::isfinite (normSq) || normSq <= 1.0e-12f)
+        return false;
+
+    const float invNorm = 1.0f / std::sqrt (normSq);
+    const float x = pose.qx * invNorm;
+    const float y = pose.qy * invNorm;
+    const float z = pose.qz * invNorm;
+    const float w = pose.qw * invNorm;
+
+    const float xx = x * x;
+    const float yy = y * y;
+    const float zz = z * z;
+    const float xy = x * y;
+    const float xz = x * z;
+    const float yz = y * z;
+    const float xw = x * w;
+    const float yw = y * w;
+    const float zw = z * w;
+
+    coordinateSpace.right = { 1.0f - 2.0f * (yy + zz),
+                              2.0f * (xy + zw),
+                              2.0f * (xz - yw) };
+    coordinateSpace.up = { 2.0f * (xy - zw),
+                           1.0f - 2.0f * (xx + zz),
+                           2.0f * (yz + xw) };
+    coordinateSpace.ahead = { -(2.0f * (xz + yw)),
+                              -(2.0f * (yz - xw)),
+                              -(1.0f - 2.0f * (xx + yy)) };
+    coordinateSpace.origin = { 0.0f, 0.0f, 0.0f };
+
+    return std::isfinite (coordinateSpace.right.x)
+           && std::isfinite (coordinateSpace.right.y)
+           && std::isfinite (coordinateSpace.right.z)
+           && std::isfinite (coordinateSpace.up.x)
+           && std::isfinite (coordinateSpace.up.y)
+           && std::isfinite (coordinateSpace.up.z)
+           && std::isfinite (coordinateSpace.ahead.x)
+           && std::isfinite (coordinateSpace.ahead.y)
+           && std::isfinite (coordinateSpace.ahead.z);
 }
 
 RendererHeadTrackingSnapshot buildRendererHeadTrackingSnapshot (
@@ -1765,6 +1884,9 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     // Prepare calibration engine (Phase 2.3)
     calibrationEngine.prepare (sampleRate, samplesPerBlock);
 
+    // BL-052: prepare calibration monitoring virtual-surround adapter.
+    calMonitorVirtualSurround.prepare (samplesPerBlock);
+
     headTrackingBridge.start();
 
     syncSceneGraphRegistrationForMode (getCurrentMode());
@@ -1863,9 +1985,23 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             int micCh = static_cast<int> (apvts.getRawParameterValue ("cal_mic_channel")->load()) - 1;
             micCh = juce::jlimit (0, buffer.getNumChannels() - 1, micCh);
 
-            // CalibrationEngine manages signal generation, recording, and analysis.
-            // processBlock() is RT safe: no allocation, atomic state reads only.
-            calibrationEngine.processBlock (buffer, micCh);
+            // Preserve host-program passthrough while calibration is not actively
+            // running. The engine is allowed to own the signal path only during
+            // active run states.
+            const auto calibrationState = calibrationEngine.getState();
+            if (calibrationState == CalibrationEngine::State::Playing
+                || calibrationState == CalibrationEngine::State::Recording
+                || calibrationState == CalibrationEngine::State::Analyzing)
+            {
+                // CalibrationEngine manages signal generation, recording, and analysis.
+                // processBlock() is RT safe: no allocation, atomic state reads only.
+                calibrationEngine.processBlock (buffer, micCh);
+            }
+
+            // BL-052: apply cal_monitoring_path (speakers / steam_binaural / virtual_binaural).
+            const int monPathIndex = static_cast<int> (
+                apvts.getRawParameterValue ("cal_monitoring_path")->load());
+            applyCalibrationMonitoringPath (buffer, monPathIndex);
 
             for (auto& rms : sceneSpeakerRms)
                 rms *= 0.92f;
@@ -1943,23 +2079,7 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
                 // BL-045-C: apply yaw reference offset (pre-rotate by -yawReferenceDeg about Z)
                 if (yawReferenceSet.load (std::memory_order_relaxed))
-                {
-                    const float refRad = yawReferenceDeg.load (std::memory_order_relaxed)
-                                         * (juce::MathConstants<float>::pi / 180.0f);
-                    const float halfRef = refRad * 0.5f;
-                    // q_ref = rotation about Z by -refDeg = (0, 0, -sin(halfRef), cos(halfRef))
-                    const float qrz = -std::sin (halfRef);
-                    const float qrw =  std::cos (halfRef);
-                    // q_eff = q_ref * rendererPose  (quaternion product; q_ref.x = q_ref.y = 0)
-                    const float bx = rendererPose.qx;
-                    const float by = rendererPose.qy;
-                    const float bz = rendererPose.qz;
-                    const float bw = rendererPose.qw;
-                    rendererPose.qx = qrw * bx - qrz * by;
-                    rendererPose.qy = qrz * bx + qrw * by;
-                    rendererPose.qz = qrw * bz + qrz * bw;
-                    rendererPose.qw = qrw * bw - qrz * bz;
-                }
+                    applyYawOffsetToPose (rendererPose, yawReferenceDeg.load (std::memory_order_relaxed));
 
                 spatialRenderer.applyHeadPose (rendererPose);
             }
@@ -2243,6 +2363,100 @@ void LocusQAudioProcessor::updateRendererParameters()
     spatialRenderer.setSpeakerDelay (1, apvts.getRawParameterValue ("rend_spk2_delay")->load());
     spatialRenderer.setSpeakerDelay (2, apvts.getRawParameterValue ("rend_spk3_delay")->load());
     spatialRenderer.setSpeakerDelay (3, apvts.getRawParameterValue ("rend_spk4_delay")->load());
+}
+
+//==============================================================================
+// BL-052: Calibration monitoring path routing.
+// Called after calibrationEngine.processBlock() in the Calibrate mode audio path.
+// RT-safe: no allocation. Monitoring mode is read atomically from APVTS.
+//
+// Path semantics:
+//   speakers (0)        — no-op; audio reaches speakers unchanged (current default).
+//   stereo_downmix (1)  — no-op here; CalibrationEngine already outputs mono-ish signal.
+//   steam_binaural (2)  — fold quad output to stereo binaural via Steam Audio virtual surround.
+//   virtual_binaural (3)— steam_binaural plus optional head-tracking orientation injection.
+//                         Companion disconnect/stale pose falls back to identity.
+void LocusQAudioProcessor::applyCalibrationMonitoringPath (juce::AudioBuffer<float>& buffer,
+                                                            int monPathIndex)
+{
+    using namespace locusq::shared_contracts::headphone_calibration;
+
+    const auto monPathId = calibrationMonitoringPathIdForIndex (monPathIndex);
+
+    // speakers and stereo_downmix: leave the buffer untouched.
+    if (monPathId == path::kSpeakers || monPathId == path::kStereoDownmix)
+        return;
+
+    // steam_binaural or virtual_binaural: attempt quad → stereo binaural via Steam Audio.
+    const int numCh      = buffer.getNumChannels();
+    const int numSamples = buffer.getNumSamples();
+
+    if (numCh < 2 || numSamples <= 0)
+        return;
+
+    // Assemble quad input channel pointers (host output order: FL=0, FR=1, RL=2, RR=3).
+    // SteamAudioVirtualSurround zero-pads any channel index beyond numCh.
+    const float* inputPtrs[kQuadSpeakerCount] {};
+    for (int ch = 0; ch < kQuadSpeakerCount; ++ch)
+        inputPtrs[ch] = ch < numCh ? buffer.getReadPointer (ch) : nullptr;
+
+    float* outL = buffer.getWritePointer (0);
+    float* outR = buffer.getWritePointer (1);
+
+    IPLCoordinateSpace3 monitoringOrientation {};
+    const IPLCoordinateSpace3* monitoringOrientationPtr = nullptr;
+
+    if (monPathId == path::kVirtualBinaural
+        && calibrationProfileTrackingEnabled.load (std::memory_order_relaxed))
+    {
+        if (const auto* headTrackingPose = headTrackingBridge.currentPose())
+        {
+            const auto nowEpochMs = static_cast<std::uint64_t> (juce::Time::currentTimeMillis());
+            const bool poseFresh = headTrackingPose->timestampMs > 0
+                                   && nowEpochMs >= headTrackingPose->timestampMs
+                                   && static_cast<double> (nowEpochMs - headTrackingPose->timestampMs)
+                                          <= kRendererHeadTrackingStaleMs;
+
+            if (poseFresh)
+            {
+                const float nowInterpMs = static_cast<float> (juce::Time::getMillisecondCounterHiRes());
+                headPoseInterpolator.ingest (*headTrackingPose, nowInterpMs);
+                const auto interpolated = headPoseInterpolator.interpolatedAt (nowInterpMs);
+
+                SpatialRenderer::PoseSnapshot listenerPose {};
+                listenerPose.qx          = interpolated.qx;
+                listenerPose.qy          = interpolated.qy;
+                listenerPose.qz          = interpolated.qz;
+                listenerPose.qw          = interpolated.qw;
+                listenerPose.timestampMs = interpolated.timestampMs;
+                listenerPose.seq         = interpolated.seq;
+
+                const float profileYawOffsetDeg = calibrationProfileYawOffsetDeg.load (std::memory_order_relaxed);
+                const float runtimeYawOffsetDeg = yawReferenceSet.load (std::memory_order_relaxed)
+                    ? yawReferenceDeg.load (std::memory_order_relaxed)
+                    : 0.0f;
+                applyYawOffsetToPose (listenerPose, profileYawOffsetDeg + runtimeYawOffsetDeg);
+
+                if (poseSnapshotToCoordinateSpace (listenerPose, monitoringOrientation))
+                    monitoringOrientationPtr = &monitoringOrientation;
+            }
+        }
+    }
+
+    if (calMonitorVirtualSurround.applyBlock (inputPtrs,
+                                              numCh,
+                                              outL,
+                                              outR,
+                                              numSamples,
+                                              QuadSpeakerLayout::Quadraphonic,
+                                              monitoringOrientationPtr))
+    {
+        // Binaural applied — clear remaining channels so no quad signal leaks out.
+        for (int ch = 2; ch < numCh; ++ch)
+            buffer.clear (ch, 0, numSamples);
+    }
+    // If applyBlock returns false (Steam unavailable), the buffer passes through
+    // unchanged (speakers path fallback is implicit).
 }
 
 //==============================================================================
@@ -2608,13 +2822,20 @@ void LocusQAudioProcessor::primeRendererStateFromCurrentParameters()
 
 void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
 {
-    const auto profileFile = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-        .getChildFile ("LocusQ")
-        .getChildFile ("CalibrationProfile.json");
+    const auto profileFile = resolveCompanionCalibrationProfileFile();
 
     if (! profileFile.existsAsFile())
     {
         companionCalibrationProfileLastModifiedMs = -1;
+        cachedCalibrationDevice = "unknown";
+        cachedCalibrationEqMode = "off";
+        cachedCalibrationHrtfMode = "default";
+        cachedCalibrationTrackingEnabled = false;
+        cachedCalibrationFirLatency = 0;
+        cachedExternalizationScore = -1.0f;
+        cachedFrontBackConfusionRate = -1.0f;
+        calibrationProfileTrackingEnabled.store (false, std::memory_order_relaxed);
+        calibrationProfileYawOffsetDeg.store (0.0f, std::memory_order_relaxed);
         return;
     }
 
@@ -2692,7 +2913,7 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     //
     // The sofa_ref is resolved at runtime to an absolute path:
     //   ~/Library/Application Support/LocusQ/sofa/<sofa_ref>
-    // The loader gracefully returns valid=false if the file is absent (new device / not yet downloaded).
+    // The loader gracefully returns valid=false if the file is absent (first-run device / not yet downloaded).
     {
         const auto hrtfMode = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
         const auto sofaRef  = headphone->getProperty ("sofa_ref").toString().trim();
@@ -2727,23 +2948,43 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         const auto hrtfModeForCache = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
         cachedCalibrationHrtfMode = hrtfModeForCache.isEmpty() ? "default" : hrtfModeForCache;
 
-        const auto trackingVar = headphone->getProperty ("hp_tracking_enabled");
-        cachedCalibrationTrackingEnabled = trackingVar.isBool() ? static_cast<bool> (trackingVar)
-                                                                : (trackingVar.toString().trim().toLowerCase() == "true");
-
         cachedCalibrationFirLatency = spatialRenderer.getHeadphoneCalibrationLatencySamples();
 
-        // Verification scores: populated by Phase B write-back (Task 17).
-        // For now read from profile if present (companion may write them after verification run).
-        const auto extScoreVar = headphone->getProperty ("externalization_score");
-        cachedExternalizationScore = extScoreVar.isDouble() || extScoreVar.isInt()
-                                       ? static_cast<float> (static_cast<double> (extScoreVar))
-                                       : -1.0f;
+        // hp_tracking_enabled and hp_yaw_offset_deg live under the "tracking" object.
+        bool trackingEnabled = false;
+        float trackingYawOffsetDeg = 0.0f;
+        auto* tracking = root->getProperty ("tracking").getDynamicObject();
+        if (tracking != nullptr)
+        {
+            const auto trackingVar = tracking->getProperty ("hp_tracking_enabled");
+            trackingEnabled = trackingVar.isBool()
+                ? static_cast<bool> (trackingVar)
+                : trackingVar.toString().trim().toLowerCase() == "true";
 
-        const auto fbConfusionVar = headphone->getProperty ("front_back_confusion_rate");
-        cachedFrontBackConfusionRate = fbConfusionVar.isDouble() || fbConfusionVar.isInt()
-                                         ? static_cast<float> (static_cast<double> (fbConfusionVar))
-                                         : -1.0f;
+            const auto yawOffsetVar = tracking->getProperty ("hp_yaw_offset_deg");
+            if (yawOffsetVar.isDouble() || yawOffsetVar.isInt())
+                trackingYawOffsetDeg = static_cast<float> (static_cast<double> (yawOffsetVar));
+            else
+                trackingYawOffsetDeg = yawOffsetVar.toString().getFloatValue();
+        }
+        trackingYawOffsetDeg = juce::jlimit (-180.0f, 180.0f, trackingYawOffsetDeg);
+        cachedCalibrationTrackingEnabled = trackingEnabled;
+        calibrationProfileTrackingEnabled.store (trackingEnabled, std::memory_order_relaxed);
+        calibrationProfileYawOffsetDeg.store (trackingYawOffsetDeg, std::memory_order_relaxed);
+
+        // Verification scores live under the "verification" sub-object, not "headphone".
+        // Populated by Phase B write-back (Task 17); companion may also write them after a run.
+        auto* verification = root->getProperty ("verification").getDynamicObject();
+        if (verification != nullptr)
+        {
+            const auto extScoreVar = verification->getProperty ("externalization_score");
+            if (extScoreVar.isDouble() || extScoreVar.isInt())
+                cachedExternalizationScore = static_cast<float> (static_cast<double> (extScoreVar));
+
+            const auto fbVar = verification->getProperty ("front_back_confusion_rate");
+            if (fbVar.isDouble() || fbVar.isInt())
+                cachedFrontBackConfusionRate = static_cast<float> (static_cast<double> (fbVar));
+        }
     }
 
     companionCalibrationProfileLastModifiedMs = modifiedMs;
@@ -2915,7 +3156,7 @@ void LocusQAudioProcessor::changeProgramName (int, const juce::String&) {}
 //
 // Schema note: the state version is currently encoded as the string property
 // kSnapshotSchemaValueV2 ("locusq-state-v2").  No schema bump is required by this
-// task because no new keys were added; the existing APVTS keys were already present
+// task because no additional keys were added; the existing APVTS keys were already present
 // in v2 sessions.
 void LocusQAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
