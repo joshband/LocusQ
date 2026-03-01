@@ -34,7 +34,7 @@ Remove RT-unsafe file/config loading from the headphone preset path by moving pr
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl069-rt-safe-preset-pipeline-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl069-rt-safe-preset-pipeline-mac.sh`.
 Evidence schema: `TestEvidence/bl069_*/status.tsv`.
 
 Minimum evidence additions:
