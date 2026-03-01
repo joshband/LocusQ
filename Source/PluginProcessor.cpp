@@ -2004,7 +2004,7 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             applyCalibrationMonitoringPath (buffer, monPathIndex);
 
             for (auto& rms : sceneSpeakerRms)
-                rms *= 0.92f;
+                rms.store (rms.load (std::memory_order_relaxed) * 0.92f, std::memory_order_relaxed);
             break;
         }
 
@@ -2029,7 +2029,7 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
             // Audio passes through unchanged in Emitter mode
             for (auto& rms : sceneSpeakerRms)
-                rms *= 0.94f;
+                rms.store (rms.load (std::memory_order_relaxed) * 0.94f, std::memory_order_relaxed);
             break;
         }
 
@@ -2129,7 +2129,9 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             for (size_t i = 0; i < sceneSpeakerRms.size(); ++i)
             {
                 const auto clamped = juce::jlimit (0.0f, 4.0f, blockSpeakerRms[i]);
-                sceneSpeakerRms[i] += (clamped - sceneSpeakerRms[i]) * kRmsSmoothing;
+                const auto current = sceneSpeakerRms[i].load (std::memory_order_relaxed);
+                const auto smoothed = current + (clamped - current) * kRmsSmoothing;
+                sceneSpeakerRms[i].store (smoothed, std::memory_order_relaxed);
             }
 
             const auto auditionReactive = spatialRenderer.getAuditionReactiveSnapshot();
@@ -3083,16 +3085,18 @@ juce::var LocusQAudioProcessor::getConfidenceMaskingStatus() const
 
 #include "processor_bridge/ProcessorUiBridgeOps.h"
 
-void LocusQAudioProcessor::updatePerfEma (double& accumulator, double sampleMs) noexcept
+void LocusQAudioProcessor::updatePerfEma (std::atomic<float>& accumulator, double sampleMs) noexcept
 {
     if (sampleMs <= 0.0)
         return;
 
-    constexpr double alpha = 0.08;
-    if (accumulator <= 0.0)
-        accumulator = sampleMs;
-    else
-        accumulator += (sampleMs - accumulator) * alpha;
+    constexpr float alpha = 0.08f;
+    const auto sample = static_cast<float> (sampleMs);
+    const auto current = accumulator.load (std::memory_order_relaxed);
+    const auto next = current <= 0.0f
+        ? sample
+        : current + (sample - current) * alpha;
+    accumulator.store (next, std::memory_order_relaxed);
 }
 
 //==============================================================================

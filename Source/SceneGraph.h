@@ -67,6 +67,12 @@ class EmitterSlot
 {
 public:
     static constexpr int MAX_SHARED_AUDIO_SAMPLES = 8192;
+    struct AudioReadSnapshot
+    {
+        const float* mono = nullptr;
+        int numSamples = 0;
+        bool valid = false;
+    };
 
     EmitterSlot() = default;
 
@@ -132,16 +138,29 @@ public:
         audioReadIndex.store (writeIdx, std::memory_order_release);
     }
 
+    AudioReadSnapshot readAudioSnapshot() const
+    {
+        const int readIdx = audioReadIndex.load (std::memory_order_acquire);
+        const auto& readBuffer = audioBuffers[readIdx];
+
+        AudioReadSnapshot snapshot;
+        snapshot.valid = readBuffer.valid;
+        if (! snapshot.valid)
+            return snapshot;
+
+        snapshot.mono = readBuffer.mono.data();
+        snapshot.numSamples = readBuffer.numSamples;
+        return snapshot;
+    }
+
     const float* getAudioMono() const
     {
-        const auto& readBuffer = audioBuffers[audioReadIndex.load (std::memory_order_acquire)];
-        return readBuffer.valid ? readBuffer.mono.data() : nullptr;
+        return readAudioSnapshot().mono;
     }
 
     int getAudioNumSamples() const
     {
-        const auto& readBuffer = audioBuffers[audioReadIndex.load (std::memory_order_acquire)];
-        return readBuffer.valid ? readBuffer.numSamples : 0;
+        return readAudioSnapshot().numSamples;
     }
 
 private:

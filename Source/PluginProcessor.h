@@ -347,11 +347,16 @@ private:
     void applyEmitterLabelToSceneSlotIfAvailable (const juce::String& label);
 
     // Runtime perf telemetry (EMA values in milliseconds)
-    static void updatePerfEma (double& accumulator, double sampleMs) noexcept;
-    double perfProcessBlockMs = 0.0;
-    double perfEmitterPublishMs = 0.0;
-    double perfRendererProcessMs = 0.0;
-    std::array<float, SpatialRenderer::NUM_SPEAKERS> sceneSpeakerRms { 0.0f, 0.0f, 0.0f, 0.0f };
+    static void updatePerfEma (std::atomic<float>& accumulator, double sampleMs) noexcept;
+    std::atomic<float> perfProcessBlockMs { 0.0f };
+    std::atomic<float> perfEmitterPublishMs { 0.0f };
+    std::atomic<float> perfRendererProcessMs { 0.0f };
+    std::array<std::atomic<float>, SpatialRenderer::NUM_SPEAKERS> sceneSpeakerRms {
+        std::atomic<float> { 0.0f },
+        std::atomic<float> { 0.0f },
+        std::atomic<float> { 0.0f },
+        std::atomic<float> { 0.0f }
+    };
     std::uint64_t sceneSnapshotSequence = 0;
     mutable juce::SpinLock publishedHeadphoneCalibrationLock;
     mutable PublishedHeadphoneCalibrationDiagnostics publishedHeadphoneCalibrationDiagnostics;

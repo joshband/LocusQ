@@ -62,6 +62,7 @@ class SpatialRenderer
 {
 public:
     static constexpr int NUM_SPEAKERS = 4;
+    static constexpr int NUM_HEADPHONE_DEVICE_PROFILES = 5;
     static constexpr int MAX_DELAY_SAMPLES = 4410; // 50ms @ 88.2kHz
     static constexpr int MAX_AUDITION_REACTIVE_SOURCES = 8;
     enum class HeadphoneRenderMode : int
@@ -391,6 +392,9 @@ public:
         auditionHistoryWritePos = 0;
         resetAuditionVoiceFieldStates();
         resetAuditionReactiveTelemetry();
+        preloadBundledPeqPresets();
+        lastLoadedPeqPresetIndex = -1;
+        lastLoadedPeqSampleRate = 0.0;
         updateHeadphoneCompensationForProfile (HeadphoneDeviceProfile::Generic);
         headphoneCalibrationChain.prepare (sampleRate, maxBlockSize);
         headphoneCalibrationChain.setEnabled (requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed));
@@ -634,7 +638,7 @@ public:
 
     void setHeadphoneDeviceProfile (int profileIndex)
     {
-        const auto clamped = juce::jlimit (0, 4, profileIndex);
+        const auto clamped = juce::jlimit (0, NUM_HEADPHONE_DEVICE_PROFILES - 1, profileIndex);
         if (requestedHeadphoneProfileIndex.load (std::memory_order_relaxed) == clamped)
             return;
 
@@ -643,53 +647,25 @@ public:
 
     void loadPeqPresetForProfile (int profileIndex, double sampleRate)
     {
-        if (lastLoadedPeqPresetIndex == profileIndex && lastLoadedPeqSampleRate == sampleRate)
+        const auto clampedProfileIndex = juce::jlimit (0, NUM_HEADPHONE_DEVICE_PROFILES - 1, profileIndex);
+        if (lastLoadedPeqPresetIndex == clampedProfileIndex && lastLoadedPeqSampleRate == sampleRate)
             return;
 
-        const auto profile = static_cast<HeadphoneDeviceProfile> (
-            juce::jlimit (0, 4, profileIndex));
+        const auto& preset = bundledPeqPresets[static_cast<size_t> (clampedProfileIndex)].preset;
 
-        juce::String presetFilename;
-        switch (profile)
-        {
-            case HeadphoneDeviceProfile::AirPodsPro2:   presetFilename = "airpods_pro_2_anc_on.yaml"; break;
-            case HeadphoneDeviceProfile::AirPodsPro3:   presetFilename = "airpods_pro_3_anc_on.yaml"; break;
-            case HeadphoneDeviceProfile::SonyWH1000XM5: presetFilename = "sony_wh1000xm5_anc_on.yaml"; break;
-            default: break;
-        }
-
-        if (presetFilename.isEmpty() || sampleRate <= 0.0)
+        if (sampleRate <= 0.0 || ! preset.valid || preset.bands.empty())
         {
             headphoneCalibrationChain.clearPeqPreset();
-            lastLoadedPeqPresetIndex = profileIndex;
+            lastLoadedPeqPresetIndex = clampedProfileIndex;
             lastLoadedPeqSampleRate  = sampleRate;
             return;
         }
-
-        // Resolve preset from plugin bundle.
-        // NOTE: path traversal assumes macOS AU/VST3 bundle layout (Contents/MacOS/ + Contents/Resources/).
-        // On Windows/Linux presetsDir will not resolve and loadHeadphonePreset will return invalid.
-#if JUCE_MAC
-        const auto presetsDir = juce::File::getSpecialLocation (
-            juce::File::currentExecutableFile)
-            .getParentDirectory()
-            .getSiblingFile ("Resources")
-            .getChildFile ("eq_presets");
-#else
-        const juce::File presetsDir {};
-#endif
-
-        const auto preset = locusq::headphone_dsp::loadHeadphonePreset (
-            presetsDir.getChildFile (presetFilename));
 
         headphoneCalibrationChain.clearPeqPreset();
 
         // NOTE: clearPeqPreset -> setPeqPreampDb -> setPeqStage writes are not atomic with respect
         // to the audio thread. A brief glitch may occur during a profile switch while audio is
         // processing. This is acceptable: profile changes are non-RT events on the message thread.
-        if (! preset.valid || preset.bands.empty())
-            return;  // Do not cache — allow retry if file was temporarily unavailable.
-
         headphoneCalibrationChain.setPeqPreampDb (preset.preampDb);
 
         const auto sr = static_cast<float> (sampleRate);
@@ -713,7 +689,7 @@ public:
             headphoneCalibrationChain.setPeqStage (i, c);
         }
 
-        lastLoadedPeqPresetIndex = profileIndex;
+        lastLoadedPeqPresetIndex = clampedProfileIndex;
         lastLoadedPeqSampleRate  = sampleRate;
     }
 
@@ -1068,7 +1044,7 @@ public:
 
     static const char* headphoneDeviceProfileToString (int profileIndex) noexcept
     {
-        switch (juce::jlimit (0, 4, profileIndex))
+        switch (juce::jlimit (0, NUM_HEADPHONE_DEVICE_PROFILES - 1, profileIndex))
         {
             case static_cast<int> (HeadphoneDeviceProfile::AirPodsPro2): return "airpods_pro_2";
             case static_cast<int> (HeadphoneDeviceProfile::AirPodsPro3): return "airpods_pro_3";
@@ -1414,9 +1390,9 @@ public:
             const auto& candidate = selectedEmitters[static_cast<size_t> (selectedIdx)];
             const int slotIdx = candidate.slotIdx;
 
-            // Get emitter's audio data
-            const float* emitterAudio = scene.getSlot (slotIdx).getAudioMono();
-            const int emitterSamples = scene.getSlot (slotIdx).getAudioNumSamples();
+            const auto audioSnapshot = scene.getSlot (slotIdx).readAudioSnapshot();
+            const float* emitterAudio = audioSnapshot.mono;
+            const int emitterSamples = audioSnapshot.numSamples;
 
             if (emitterAudio == nullptr || emitterSamples <= 0)
                 continue;
@@ -1567,7 +1543,7 @@ public:
         const auto requestedHeadphoneMode = static_cast<HeadphoneRenderMode> (
             requestedHeadphoneModeIndex.load (std::memory_order_relaxed));
         const auto requestedHeadphoneProfile = static_cast<HeadphoneDeviceProfile> (
-            juce::jlimit (0, 4, requestedHeadphoneProfileIndex.load (std::memory_order_relaxed)));
+            juce::jlimit (0, NUM_HEADPHONE_DEVICE_PROFILES - 1, requestedHeadphoneProfileIndex.load (std::memory_order_relaxed)));
         const auto steamBackendAvailable = isSteamAudioBackendAvailable();
         const bool profileAllowsHeadphoneRender = isStereoOrBinauralProfile (activeSpatialProfile)
                                                   || numOutputChannels <= 2;
@@ -2339,6 +2315,11 @@ private:
     float headphoneCompCrossfeed = 0.0f;
     float headphoneCompLowStateLeft = 0.0f;
     float headphoneCompLowStateRight = 0.0f;
+    struct BundledPeqPresetCacheEntry
+    {
+        locusq::headphone_dsp::HeadphonePreset preset;
+    };
+    std::array<BundledPeqPresetCacheEntry, NUM_HEADPHONE_DEVICE_PROFILES> bundledPeqPresets {};
     int    lastAppliedHeadphoneProfileIndex = -1;
     int    lastLoadedPeqPresetIndex         = -1;
     double lastLoadedPeqSampleRate          = 0.0;
@@ -2424,6 +2405,60 @@ private:
         vector[1] *= invMagnitude;
         vector[2] *= invMagnitude;
         return std::isfinite (vector[0]) && std::isfinite (vector[1]) && std::isfinite (vector[2]);
+    }
+
+    static juce::String getBundledPeqPresetFilenameForProfile (HeadphoneDeviceProfile profile)
+    {
+        switch (profile)
+        {
+            case HeadphoneDeviceProfile::AirPodsPro2:   return "airpods_pro_2_anc_on.yaml";
+            case HeadphoneDeviceProfile::AirPodsPro3:   return "airpods_pro_3_anc_on.yaml";
+            case HeadphoneDeviceProfile::SonyWH1000XM5: return "sony_wh1000xm5_anc_on.yaml";
+            case HeadphoneDeviceProfile::Generic:
+            case HeadphoneDeviceProfile::CustomSOFA:
+            default: break;
+        }
+
+        return {};
+    }
+
+    juce::File resolveBundledPeqPresetFile (const juce::String& presetFilename) const
+    {
+        if (presetFilename.isEmpty())
+            return {};
+
+        // NOTE: path traversal assumes macOS AU/VST3 bundle layout (Contents/MacOS/ + Contents/Resources/).
+        // On Windows/Linux this resolves empty and cache entries remain invalid.
+#if JUCE_MAC
+        return juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+            .getParentDirectory()
+            .getSiblingFile ("Resources")
+            .getChildFile ("eq_presets")
+            .getChildFile (presetFilename);
+#else
+        juce::ignoreUnused (presetFilename);
+        return {};
+#endif
+    }
+
+    void preloadBundledPeqPresets()
+    {
+        for (int profileIndex = 0; profileIndex < NUM_HEADPHONE_DEVICE_PROFILES; ++profileIndex)
+        {
+            auto& cacheEntry = bundledPeqPresets[static_cast<size_t> (profileIndex)];
+            cacheEntry = BundledPeqPresetCacheEntry {};
+
+            const auto profile = static_cast<HeadphoneDeviceProfile> (profileIndex);
+            const auto presetFilename = getBundledPeqPresetFilenameForProfile (profile);
+            if (presetFilename.isEmpty())
+                continue;
+
+            const auto presetFile = resolveBundledPeqPresetFile (presetFilename);
+            if (! presetFile.existsAsFile())
+                continue;
+
+            cacheEntry.preset = locusq::headphone_dsp::loadHeadphonePreset (presetFile);
+        }
     }
 
     static bool tryBuildListenerOrientationFromCoordinateSpace (const IPLCoordinateSpace3& coordinateSpace,
