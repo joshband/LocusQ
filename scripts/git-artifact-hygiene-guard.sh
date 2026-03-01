@@ -97,6 +97,7 @@ RULES=(
   '^TestEvidence/.*\.(tar|tar\.gz|tgz|zip)$::compressed test evidence bundle'
   '^Documentation/Calibration POC/.*\.zip$::Calibration POC zip archive'
   '^third_party/steam-audio/steamaudio_.*\.zip$::Steam Audio SDK zip archive'
+  '^third_party/steam-audio/sdk/::Steam Audio SDK extracted payload (local-only cache)'
 )
 
 ISSUE_COUNT=0
