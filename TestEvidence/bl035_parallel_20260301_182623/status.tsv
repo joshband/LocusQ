@@ -1,0 +1,6 @@
+command	exit_code	result
+cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8	0	PASS
+./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json	0	PASS
+LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh	0	PASS
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv	1	FAIL
+./scripts/validate-docs-freshness.sh	0	PASS
