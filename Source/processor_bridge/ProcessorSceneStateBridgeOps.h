@@ -1079,8 +1079,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
         if (! first) json += ",";
         first = false;
 
-        const auto* emitterAudio = sceneGraph.getSlot (i).getAudioMono();
-        const auto emitterAudioSamples = sceneGraph.getSlot (i).getAudioNumSamples();
+        const auto audioSnapshot = sceneGraph.getSlot (i).readAudioSnapshot();
+        const auto* emitterAudio = audioSnapshot.mono;
+        const auto emitterAudioSamples = audioSnapshot.numSamples;
         const auto emitterRmsLinear = computeMonoRmsLinear (emitterAudio, emitterAudioSamples);
         const auto emitterRmsDb = juce::Decibels::gainToDecibels (juce::jmax (1.0e-6f, emitterRmsLinear), -120.0f);
 
@@ -1125,7 +1126,10 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
             speakersJson << ",";
         }
 
-        const auto speakerRms = juce::jlimit (0.0f, 4.0f, sceneSpeakerRms[i]);
+        const auto speakerRms = juce::jlimit (
+            0.0f,
+            4.0f,
+            sceneSpeakerRms[i].load (std::memory_order_relaxed));
         speakerRmsJson << juce::String (speakerRms, 5);
 
         speakersJson << "{\"id\":" << juce::String (static_cast<int> (i))
@@ -1604,9 +1608,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
           + ",\"animTime\":" + juce::String (timelineTime, 3)
           + ",\"animDuration\":" + juce::String (timelineDuration, 3)
           + ",\"animLooping\":" + juce::String (timelineLooping ? "true" : "false")
-          + ",\"perfBlockMs\":" + juce::String (perfProcessBlockMs, 4)
-          + ",\"perfEmitterMs\":" + juce::String (perfEmitterPublishMs, 4)
-          + ",\"perfRendererMs\":" + juce::String (perfRendererProcessMs, 4)
+          + ",\"perfBlockMs\":" + juce::String (perfProcessBlockMs.load (std::memory_order_relaxed), 4)
+          + ",\"perfEmitterMs\":" + juce::String (perfEmitterPublishMs.load (std::memory_order_relaxed), 4)
+          + ",\"perfRendererMs\":" + juce::String (perfRendererProcessMs.load (std::memory_order_relaxed), 4)
           + "}";
 
     return json;
