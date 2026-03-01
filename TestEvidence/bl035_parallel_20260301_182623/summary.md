@@ -1,3 +1,9 @@
+Title: BL-035 RT Lock-Free Registration Evidence Summary (Parallel Replay)
+Document Type: Test Evidence Summary
+Author: APC Codex
+Created Date: 2026-03-01
+Last Modified Date: 2026-03-01
+
 # BL-035 Evidence-Only Replay Summary
 
 Evidence directory: `TestEvidence/bl035_parallel_20260301_182623`
