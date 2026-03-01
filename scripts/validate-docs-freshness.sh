@@ -67,6 +67,12 @@ check_markdown_metadata_scope() {
 
   local file
   for file in "${md_files[@]}"; do
+    # Skill files under .codex/.claude are governed by Codex/Claude runtime
+    # standards and are intentionally exempt from repository metadata headers.
+    if [[ "${file}" == "./.codex/skills/"* || "${file}" == "./.claude/skills/"* ]]; then
+      continue
+    fi
+
     check_metadata_header "${file}"
 
     if [[ "${file}" == "./Documentation/adr/"* ]]; then
