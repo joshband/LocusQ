@@ -2,9 +2,23 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # LocusQ Build Summary (Acceptance Closeout)
+
+## Backlog Reconciliation + Docs Gate Boundary Update (UTC 2026-03-01)
+
+1. Backlog authority reconciliation:
+- done runbook archive paths repaired for BL-023/030/042/044/046/047/048/049 and BL-062..BL-066.
+- active queue reconciliation includes explicit BL-061 row and dependency mapping in `Documentation/backlog/index.md`.
+
+2. Governance boundary update:
+- docs freshness gate now exempts `.codex/skills/**` and `.claude/skills/**` from repository metadata-header enforcement.
+- standards boundary is codified in `Documentation/adr/ADR-0015-skill-runtime-doc-standards-boundary.md`.
+
+3. Verification:
+- backlog done-link audit: PASS (`missing_done_links=0`).
+- docs freshness gate: rerun required after this summary/trend sync entry.
 
 ## BL-052 Done Archive Sync Z1 (UTC 2026-02-28)
 
