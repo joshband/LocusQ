@@ -9,14 +9,14 @@ Last Modified Date: 2026-03-01
 ## Scope
 Applies to human-authored markdown in:
 - repository root (`AGENTS.md`, `AGENT_RULE.md`, `CLAUDE.md`, `SKILLS.md`)
-- `.codex/`
-- `.claude/`
 - `.ideas/`
 - `Design/`
 - `Documentation/`
 - `TestEvidence/`
 
 Generated markdown under `qa_output/` is exempt.
+
+Skill-runtime markdown under `.codex/skills/**` and `.claude/skills/**` is also exempt from this repository metadata-header contract and follows Codex/Claude skill standards.
 
 ## Required Metadata Header
 Every in-scope markdown file must include, in this order, at the top of file:
