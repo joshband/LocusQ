@@ -1,57 +1,47 @@
-Title: BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+Title: BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
 Last Modified Date: 2026-03-01
 
-# BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+# BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
-| ID | BL-068 |
-| Priority | P1 |
-| Status | Open (execute-lane scaffold-only; no promotion while any execute evidence row is `TODO`; BL-073 gate required) |
-| Track | E - R&D Expansion |
+| ID | BL-070 |
+| Priority | P0 |
+| Status | In Implementation (Wave 1 kickoff: coherent snapshot + atomic telemetry publication landed) |
+| Track | F - Hardening |
 | Effort | Med / M |
-| Depends On | BL-050, BL-055 |
+| Depends On | BL-050 |
 | Blocks | — |
-| Annex Spec | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
+| Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
-Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable.
+Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (`ptr + sample_count` from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads.
 
 ## Acceptance IDs
 
-- Delay/echo timing and feedback behavior are stable from 44.1kHz through 192kHz.
-- Feedback-network safety ceiling prevents runaway/non-finite output in stress lanes.
-- Looper overdub/clear/transport interactions are deterministic on session recall.
-- Parameter automation and mode transitions are click-safe and zipper-safe.
-- Temporal-effect lanes remain compatible with existing spatial and FIR paths.
-- Execute-mode QA evidence contains zero `TODO` rows (BL-073 scaffold-truthfulness gate).
-
-## Implementation Slices
-
-| Slice | Description | Exit Criteria |
-|---|---|---|
-| A | Delay/echo and bounded feedback architecture | finite-output and runaway-guard lanes pass |
-| B | Looper + frippertronics-style layering behavior | transport/recall lanes pass without drift or clicks |
-| C | Evidence and visualization handshake contracts | deterministic replay + telemetry evidence packet captured |
+- Audio snapshot consumers read coherent tuples (`buffer pointer`, `num samples`, `valid`) from one publication epoch.
+- Cross-thread telemetry reads are sequence-consistent and race-free under concurrent polling.
+- Scene-state bridge contracts preserve deterministic output under high-frequency UI polling.
+- Concurrency validation lane reports zero contract drift under stress replay.
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl068-temporal-effects-mac.sh`.
-Evidence schema: `TestEvidence/bl068_*/status.tsv`.
+QA harness script: `scripts/qa-bl070-snapshot-telemetry-contract-mac.sh` (to be authored).
+Evidence schema: `TestEvidence/bl070_*/status.tsv`.
 
 Minimum evidence additions:
-- `temporal_matrix.tsv` (delay/echo/looper scenario results)
-- `runaway_guard.tsv` (feedback safety + finite-output checks)
-- `transport_recall.tsv` (timeline/recall determinism checks)
-- `cpu_latency_budget.tsv` (sample-rate and topology budget snapshots)
+- `snapshot_coherency.tsv`
+- `telemetry_seqlock_contract.tsv`
+- `scene_bridge_stress.tsv`
+- `tsan_or_equivalent_report.md`
 
 ## Replay Cadence Plan (Required)
 
@@ -95,4 +85,13 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
-- Immediate promotion blocker policy (2026-03-01): contract-only evidence is non-promotable; execute-mode packets with any `TODO` rows are automatic `NO-GO`.
+
+## Execution Notes (2026-03-01)
+
+- Initial remediation landed in runtime code:
+  - `Source/SceneGraph.h` adds `readAudioSnapshot()` for coherent tuple reads (`mono`, `numSamples`, `valid`).
+  - `Source/SpatialRenderer.h` and `Source/processor_bridge/ProcessorSceneStateBridgeOps.h` now consume coherent snapshots instead of split reads.
+  - `Source/PluginProcessor.h/.cpp` and bridge ops now use atomic telemetry fields for speaker RMS and perf EMA publication/reads.
+- Remaining BL-070 scope:
+  - Add sequence-stamped telemetry packet semantics (if seqlock contract is kept as strict requirement).
+  - Add dedicated stress validation lane (`scene_bridge_stress.tsv` / thread-safety diagnostics).

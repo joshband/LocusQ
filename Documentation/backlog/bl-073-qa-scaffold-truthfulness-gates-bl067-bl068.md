@@ -1,57 +1,47 @@
-Title: BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+Title: BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
 Last Modified Date: 2026-03-01
 
-# BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
+# BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
-| ID | BL-068 |
+| ID | BL-073 |
 | Priority | P1 |
-| Status | Open (execute-lane scaffold-only; no promotion while any execute evidence row is `TODO`; BL-073 gate required) |
-| Track | E - R&D Expansion |
+| Status | Open |
+| Track | G - Release/Governance |
 | Effort | Med / M |
-| Depends On | BL-050, BL-055 |
-| Blocks | — |
-| Annex Spec | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
+| Depends On | — |
+| Blocks | BL-067, BL-068 |
+| Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
-Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable.
+Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO.
 
 ## Acceptance IDs
 
-- Delay/echo timing and feedback behavior are stable from 44.1kHz through 192kHz.
-- Feedback-network safety ceiling prevents runaway/non-finite output in stress lanes.
-- Looper overdub/clear/transport interactions are deterministic on session recall.
-- Parameter automation and mode transitions are click-safe and zipper-safe.
-- Temporal-effect lanes remain compatible with existing spatial and FIR paths.
-- Execute-mode QA evidence contains zero `TODO` rows (BL-073 scaffold-truthfulness gate).
-
-## Implementation Slices
-
-| Slice | Description | Exit Criteria |
-|---|---|---|
-| A | Delay/echo and bounded feedback architecture | finite-output and runaway-guard lanes pass |
-| B | Looper + frippertronics-style layering behavior | transport/recall lanes pass without drift or clicks |
-| C | Evidence and visualization handshake contracts | deterministic replay + telemetry evidence packet captured |
+- BL-067 and BL-068 QA lanes expose explicit `--contract-only` and `--execute` modes.
+- Execute mode fails whenever required matrix rows contain `TODO` outcomes.
+- Promotion checklists reject evidence bundles with scaffold-only execute rows.
+- Status/evidence packets clearly distinguish contract scaffolding from runtime execution.
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl068-temporal-effects-mac.sh`.
-Evidence schema: `TestEvidence/bl068_*/status.tsv`.
+QA harness script: `scripts/qa-bl073-scaffold-truthfulness-gates-mac.sh` (to be authored).
+Evidence schema: `TestEvidence/bl073_*/status.tsv`.
 
 Minimum evidence additions:
-- `temporal_matrix.tsv` (delay/echo/looper scenario results)
-- `runaway_guard.tsv` (feedback safety + finite-output checks)
-- `transport_recall.tsv` (timeline/recall determinism checks)
-- `cpu_latency_budget.tsv` (sample-rate and topology budget snapshots)
+- `mode_semantics_contract.tsv`
+- `todo_row_enforcement.tsv`
+- `promotion_gate_policy.md`
+- `bl067_bl068_matrix_reconcile.tsv`
 
 ## Replay Cadence Plan (Required)
 
@@ -95,4 +85,3 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
-- Immediate promotion blocker policy (2026-03-01): contract-only evidence is non-promotable; execute-mode packets with any `TODO` rows are automatic `NO-GO`.

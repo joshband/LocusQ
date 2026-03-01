@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01 (BL-061 queue reconciliation + done-archive link repair + priority/parallel-session safety contract)
+Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff)
 
 # LocusQ Master Backlog Index
 
@@ -106,7 +106,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 17 | BL-047 | Spatial coordinate contract | P1 | **Done** (Z16b ownership-safe reconcile PASS; Z17 owner done-promotion PASS) | E | BL-018, BL-045 | — | [bl-047](done/bl-047-spatial-coordinate-contract.md) |
 | 18 | BL-048 | Cross-platform shipping hardening | P1 | **Done** (Z16b e2e promotion reconcile PASS; Z17 owner done-promotion PASS) | G | BL-030, BL-042 | — | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | 19 | BL-049 | Unit test framework and tracker automation | P1 | **Done** (D2 done-promotion parity PASS; Z17 owner done-promotion PASS) | D | BL-042 | — | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
-| 20 | BL-050 | High-rate delay and FIR hardening | P2 | In Planning (derived from full architecture review 2026-02-26 gap G-14/G-24) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
+| 20 | BL-050 | High-rate delay and FIR hardening | P0 | In Planning (reprioritized from code-review risk packet: RT safety/data-race containment) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
 | 21 | BL-051 | Ambisonics and ADM roadmap | P3 | Done-candidate (BL-062..BL-066 promoted to Done; parent lane reconciled; BL-050 dependency remains open) | E | BL-046 (Done), BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
 | 22 | BL-062 | Ambisonics IR interface contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-063 | [bl-062](done/bl-062-ambisonics-ir-interface-contract.md) |
 | 23 | BL-063 | Ambisonics renderer compatibility guardrails | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-062 | BL-066 | [bl-063](done/bl-063-ambisonics-renderer-compatibility-guardrails.md) |
@@ -119,12 +119,20 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 30 | BL-055 | FIR convolution engine | P1 | Open | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | Open | E | BL-046 | BL-058 | [bl-057](bl-057-device-preset-library.md) |
-| 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P1 | Open | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
-| 34 | BL-059 | CalibrationProfile integration handoff | P1 | Open | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
+| 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | Open (reprioritized from code-review protocol/gating risk packet) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
+| 34 | BL-059 | CalibrationProfile integration handoff | P0 | Open (reprioritized from code-review calibration correctness/race risk packet) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
-| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
-| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P2 | Open | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
+| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
+| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Open (reprioritized from code-review risk packet; no promotion while any execute evidence row is `TODO`; BL-073 gate required) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
+| 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | In Implementation (Wave 1 kickoff: cache-only preset load path landed) | F | BL-050 | — | [bl-069](bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
+| 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | In Implementation (Wave 1 kickoff: coherent snapshot reads + atomic telemetry landed) | F | BL-050 | — | [bl-070](bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
+| 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | Open | E | BL-056, BL-059 | BL-060 | [bl-071](bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
+| 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | Open | E | BL-058, BL-059 | BL-060 | [bl-072](bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
+| 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | Open | G | — | BL-067, BL-068 | [bl-073](bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
+| 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
+| 45 | BL-075 | Code comment and API documentation accessibility review | P2 | Open | G | — | — | [bl-075](bl-075-code-comment-and-api-documentation-accessibility-review.md) |
+| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | Open | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -139,6 +147,12 @@ Priority changes require same-changeset updates to:
 1. Active Queue row in this file.
 2. Runbook `Status Ledger`.
 3. `status.json` note/date surfaces when execution posture changes.
+
+### Immediate Promotion Blockers (2026-03-01)
+
+1. BL-067 and BL-068 are not eligible for promotion while any required execute-mode evidence row remains `TODO`.
+2. Contract-only scaffold evidence may support planning but cannot satisfy promotion gates for BL-067/BL-068.
+3. BL-073 acceptance must be met (execute-mode semantics + TODO-row enforcement) before BL-067/BL-068 promotion review.
 
 ### Parallel Session Safety Contract
 
@@ -216,6 +230,14 @@ graph TD
         BL-061[BL-061 HRTF Interpolation + Crossfade]
         BL-067[BL-067 AUv3 Lifecycle + Host Validation]
         BL-068[BL-068 Temporal Effects Core]
+        BL-069[BL-069 RT-Safe Preset Pipeline]
+        BL-070[BL-070 Snapshot + Telemetry Seqlock]
+        BL-071[BL-071 Calibration Generation Guard]
+        BL-072[BL-072 Companion Protocol + BL-058 QA]
+        BL-073[BL-073 QA Scaffold Truthfulness Gates]
+        BL-074[BL-074 WebView Reliability Diagnostics]
+        BL-075[BL-075 Comment/API Docs Accessibility]
+        BL-076[BL-076 SpatialRenderer Decomposition]
         BL-062[BL-062 Ambisonics IR Contract]
         BL-063[BL-063 Renderer Compatibility Guardrails]
         BL-064[BL-064 ADM Mapping Contract]
@@ -279,6 +301,11 @@ graph TD
     BL-043 --> BL-050
     BL-046 --> BL-050
     BL-050 --> BL-068
+    BL-050 --> BL-069
+    BL-050 --> BL-070
+    BL-050 --> BL-076
+    BL-069 --> BL-076
+    BL-070 --> BL-076
     BL-046 --> BL-051
     BL-050 --> BL-051
     BL-045 --> BL-053
@@ -296,6 +323,16 @@ graph TD
     BL-058 --> BL-059
     BL-059 --> BL-060
     BL-060 --> BL-061
+    BL-071 --> BL-060
+    BL-072 --> BL-060
+    BL-056 --> BL-071
+    BL-059 --> BL-071
+    BL-058 --> BL-072
+    BL-059 --> BL-072
+    BL-073 --> BL-067
+    BL-073 --> BL-068
+    BL-040 --> BL-074
+    BL-067 --> BL-074
     BL-051 --> BL-062
     BL-062 --> BL-063
     BL-051 --> BL-064
@@ -315,12 +352,12 @@ graph TD
 | Track | Name | Scope | Skills |
 |---|---|---|---|
 | A | Runtime Formats | BL-046, BL-067 | `steam-audio-capi`, `clap-plugin-lifecycle`, `auv3-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
-| B | Scene/UI Runtime | BL-039, BL-040 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
+| B | Scene/UI Runtime | BL-039, BL-040, BL-074 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
 | C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
-| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
-| F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
-| G | Release/Governance | BL-030, BL-042, BL-048 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
+| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068, BL-071, BL-072 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
+| F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
+| G | Release/Governance | BL-030, BL-042, BL-048, BL-073, BL-075 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship`, `documentation-hygiene-expert` |
 
 ## Intake Process
 
@@ -328,6 +365,16 @@ graph TD
 2. **Triage** — Assign BL/HX ID, determine dependencies, set priority, assign to track.
 3. **Promote** — Convert to full runbook (`bl-XXX-<slug>.md`), add row to this index.
 4. **Archive** — Delete the intake doc after promotion.
+
+## Execution Wave Plan (2026-03-01)
+
+Authority document: `Documentation/reports/2026-03-01-execution-wave-triage.md`.
+
+| Wave | BL IDs | Owner Pod | Sequencing Notes |
+|---|---|---|---|
+| 1 | BL-050, BL-058, BL-059, BL-073 | Hardening + Calibration + QA Governance pods | Start immediately; complete promotion-blocker policy enforcement before Wave 2 promotions |
+| 2 | BL-067, BL-068, BL-074 | Runtime Formats + Temporal DSP + WebView Runtime pods | Starts after Wave 1 blocker outputs are in place (`BL-073` execute gate active) |
+| 3 | BL-060, BL-061 (conditional) | Listening Harness + HRTF Validation pods | BL-061 remains conditional on BL-060 gate pass |
 
 ## Owner Sync Packet Contract
 
@@ -405,6 +452,14 @@ Any status change must update in the same changeset:
 | BL-061 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
 | BL-067 | `Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md` |
 | BL-068 | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
+| BL-069 | `(pending annex spec)` |
+| BL-070 | `(pending annex spec)` |
+| BL-071 | `(pending annex spec)` |
+| BL-072 | `(pending annex spec)` |
+| BL-073 | `(pending annex spec)` |
+| BL-074 | `(pending annex spec)` |
+| BL-075 | `(pending annex spec)` |
+| BL-076 | `(pending annex spec)` |
 
 ## Closed Archive
 

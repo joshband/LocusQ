@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-067 |
 | Priority | P1 |
-| Status | Open |
+| Status | Open (promotion blocked: no promotion while any execute evidence row is `TODO`; BL-073 execute-mode gate required) |
 | Track | A - Runtime Formats |
 | Effort | High / L |
 | Depends On | BL-048 |
@@ -32,6 +32,7 @@ Add production-ready AUv3 format support for LocusQ with deterministic extension
 - Audio-thread invariants remain intact (no allocation/locks/blocking I/O in realtime callbacks).
 - AUv3-specific constraints degrade deterministically without host-name branching behavior.
 - AU/VST3/CLAP regression lanes remain green after AUv3 enablement.
+- Execute-mode QA evidence contains zero `TODO` rows (BL-073 scaffold-truthfulness gate).
 
 ## Implementation Slices
 
@@ -94,3 +95,4 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+- Immediate promotion blocker policy (2026-03-01): contract-only evidence is non-promotable; execute-mode packets with any `TODO` rows are automatic `NO-GO`.

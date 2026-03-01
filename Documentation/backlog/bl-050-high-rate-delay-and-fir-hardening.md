@@ -2,7 +2,7 @@ Title: BL-050 High-Rate Delay and FIR Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-050 High-Rate Delay and FIR Hardening
 
@@ -11,7 +11,7 @@ Last Modified Date: 2026-02-28
 | Field | Value |
 |---|---|
 | ID | BL-050 |
-| Priority | P2 |
+| Priority | P0 |
 | Status | In Planning |
 | Track | F - Hardening |
 | Effort | Med / M |
