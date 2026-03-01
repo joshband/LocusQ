@@ -2871,12 +2871,10 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
             z: Float(motion.attitude.quaternion.z),
             w: Float(motion.attitude.quaternion.w)
         ).normalized()
-        // CoreMotion attitude quaternion is reference->device.
-        // LocusQ orientation path expects device->reference for listener basis.
+        // CoreMotion attitude quaternion should remain non-inverted after Steam-basis
+        // remap; applying conjugate here mirrors yaw/pitch in operator diagnostics.
         let rawQuaternion = applyOrientationSignCorrections(
             remapCoreMotionQuaternionToSteamBasis(rawCoreMotionQuaternion)
-                .conjugate()
-                .normalized()
         )
 
         let sensorLocation: String
@@ -3074,7 +3072,7 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
             snapshot.mode = .live
             snapshot.source = "coremotion_headphones"
             snapshot.connection = connectionState
-            snapshot.frameMapping = "coremotion->steam (x,+90degX,device^-1,rollSignFlip)"
+            snapshot.frameMapping = "coremotion->steam (x,+90degX,rollSignFlip)"
             snapshot.baselineState = baselineState
             snapshot.readinessState = readinessState
             snapshot.sendGateOpen = allowPoseSend
