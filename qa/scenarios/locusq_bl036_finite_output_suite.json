@@ -1,0 +1,254 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl036_finite_output_suite",
+  "name": "LocusQ BL-036 Finite Output Guardrails Suite",
+  "category": "stability",
+  "description": "Deterministic BL-036 finite-output contract lane scaffold for NaN/Inf/denormal containment and replay-hash stability.",
+  "scenario_ids": [
+    "locusq_emitter_passthrough",
+    "locusq_renderer_spatial_output"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl036_finite_output_guardrails"
+  },
+  "capability_requirements": {
+    "required_effect_types": [
+      "SPATIAL"
+    ],
+    "required_behaviors": [
+      "STATEFUL"
+    ],
+    "excluded_behaviors": []
+  },
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.25,
+      "duration_seconds": 2.0
+    }
+  },
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.05,
+      "end_seconds": 2.0
+    }
+  },
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -90.0
+      },
+      "severity": "hard_fail",
+      "description": "BL-036 lane should produce deterministic non-empty output."
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail",
+      "description": "Finite-output lane must not emit non-finite samples."
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail",
+      "description": "Finite-output guardrail lane must remain deadline-safe."
+    }
+  },
+  "bl036_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL036-B1-001",
+        "description": "Scenario schema and acceptance inventory are parseable and complete."
+      },
+      {
+        "id": "BL036-B1-002",
+        "description": "Required finite-output guarded boundaries are declared."
+      },
+      {
+        "id": "BL036-B1-003",
+        "description": "Containment and bounded-threshold rules are declared."
+      },
+      {
+        "id": "BL036-B1-004",
+        "description": "Replay hash stability contract is enforced for deterministic reruns."
+      },
+      {
+        "id": "BL036-B1-005",
+        "description": "Required lane artifact schema is complete and machine-readable."
+      },
+      {
+        "id": "BL036-B1-006",
+        "description": "Deterministic hash input contract excludes nondeterministic fields."
+      },
+      {
+        "id": "BL036-B1-007",
+        "description": "Execution mode semantics are explicit for contract_only and execute_suite."
+      },
+      {
+        "id": "BL036-B1-008",
+        "description": "Failure taxonomy schema includes deterministic/runtime/missing-artifact classes."
+      },
+      {
+        "id": "BL036-B1-009",
+        "description": "Multi-run soak summary contract is emitted and bounded."
+      }
+    ],
+    "required_guarded_boundaries": [
+      "dsp_ingress",
+      "dsp_intermediate_accumulation",
+      "output_pre_host_write",
+      "diagnostics_publication"
+    ],
+    "required_containment_rules": [
+      "nan_inf_replace_finite_fallback",
+      "denormal_flush_zero",
+      "post_limiter_non_finite_force_zero",
+      "hard_clamp_pre_write"
+    ],
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0,
+      "hard_clamp_max_abs": 4.0,
+      "denormal_abs_threshold_max": 1.0e-30,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 3,
+      "sentinel_runs": 20,
+      "sentinel_soak_runs": 50,
+      "semantics_guard_runs": 20,
+      "semantics_guard_recheck_runs": 20,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "qa_lane.log",
+      "scenario_contract.log",
+      "scenario_result.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "artifact_schema_execute_additions": [
+      "build.log",
+      "scenario_run.log",
+      "scenario_result.json"
+    ],
+    "artifact_schema_multi_run": [
+      "status.tsv",
+      "qa_lane.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv",
+      "soak_summary.tsv"
+    ],
+    "execution_contract": {
+      "default_mode": "contract_only",
+      "suite_mode": "execute_suite",
+      "requires_qa_bin": true,
+      "requires_build": true,
+      "usage_error_exit_code": 2,
+      "strict_usage_error_cases": [
+        "--runs 0",
+        "--unknown-flag"
+      ]
+    },
+    "deterministic_hash_inputs": {
+      "include": [
+        "status.semantic.check_result_pairs",
+        "scenario_contract.semantic.kv_pairs",
+        "scenario_result.summary.status_warn_pass_fail_total",
+        "failure_taxonomy.rows.class_count"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "log_line_numbers",
+        "wall_clock_duration"
+      ]
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Scenario/schema/threshold contract mismatch."
+      },
+      {
+        "failure_class": "runtime_execution_failure",
+        "description": "Build or QA runner returned non-zero exit."
+      },
+      {
+        "failure_class": "missing_result_artifact",
+        "description": "Expected suite or lane artifact was not produced."
+      },
+      {
+        "failure_class": "deterministic_replay_divergence",
+        "description": "Replay hash signatures diverged beyond configured threshold."
+      },
+      {
+        "failure_class": "deterministic_replay_row_drift",
+        "description": "Replay semantic row signatures diverged beyond configured threshold."
+      }
+    ],
+    "check_rows": [
+      {
+        "acceptance_id": "BL036-B1-001",
+        "lane_check": "BL036-B1-001_contract_schema",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-002",
+        "lane_check": "BL036-B1-002_boundary_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-003",
+        "lane_check": "BL036-B1-003_containment_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-004",
+        "lane_check": "BL036-B1-004_replay_hash_stability",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-005",
+        "lane_check": "BL036-B1-005_artifact_schema_complete",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-006",
+        "lane_check": "BL036-B1-006_hash_input_contract",
+        "artifact": "scenario_contract.log"
+      },
+      {
+        "acceptance_id": "BL036-B1-007",
+        "lane_check": "BL036-B1-007_execution_mode_contract",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-008",
+        "lane_check": "BL036-B1-008_failure_taxonomy_schema",
+        "artifact": "failure_taxonomy.tsv"
+      },
+      {
+        "acceptance_id": "BL036-B1-009",
+        "lane_check": "BL036-B1-009_soak_summary",
+        "artifact": "soak_summary.tsv"
+      }
+    ]
+  },
+  "pass_criteria": "Lane status must be PASS with deterministic replay signatures and no taxonomy failures above thresholds."
+}

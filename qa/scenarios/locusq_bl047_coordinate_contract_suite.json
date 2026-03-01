@@ -1,0 +1,82 @@
+{
+  "suite_id": "bl047_coordinate_contract_suite",
+  "suite_version": "2.0.0",
+  "slice": "D2",
+  "contract_type": "docs_contract_lane",
+  "description": "Deterministic BL-047 coordinate-contract lane suite for frame authority, conversion invariants, normalization/clamping, and taxonomy parity checks.",
+  "mode_semantics": {
+    "contract_only": "evaluates contract-surface determinism from runbook + QA docs",
+    "execute_suite": "alias mode for parity; same contract checks and artifacts"
+  },
+  "acceptance_ids": [
+    "BL047-B1-001",
+    "BL047-B1-002",
+    "BL047-B1-003",
+    "BL047-B1-004",
+    "BL047-B1-005",
+    "BL047-B1-006",
+    "BL047-B1-007"
+  ],
+  "c2_acceptance_ids": [
+    "BL047-C2-001",
+    "BL047-C2-002",
+    "BL047-C2-003"
+  ],
+  "c3_acceptance_ids": [
+    "BL047-C3-001"
+  ],
+  "c4_acceptance_ids": [
+    "BL047-C4-001"
+  ],
+  "c5_acceptance_ids": [
+    "BL047-C5-001",
+    "BL047-C5-002"
+  ],
+  "d1_acceptance_ids": [
+    "BL047-D1-001"
+  ],
+  "d2_acceptance_ids": [
+    "BL047-D2-001"
+  ],
+  "required_artifacts": [
+    "status.tsv",
+    "validation_matrix.tsv",
+    "replay_hashes.tsv",
+    "failure_taxonomy.tsv",
+    "soak_summary.tsv"
+  ],
+  "determinism_contract": {
+    "hash_alg": "sha256",
+    "replay_expectation": "stable_hashes_and_row_signatures",
+    "max_signature_divergence": 0,
+    "max_row_drift": 0
+  },
+  "c2_determinism_soak": {
+    "runs": 10,
+    "max_signature_divergence": 0,
+    "max_row_drift": 0
+  },
+  "c3_replay_sentinel": {
+    "runs": 20,
+    "max_signature_divergence": 0,
+    "max_row_drift": 0
+  },
+  "c4_replay_soak": {
+    "runs": 50,
+    "max_signature_divergence": 0,
+    "max_row_drift": 0
+  },
+  "c5_exit_semantics_guard": {
+    "negative_probe_exit_code": 2
+  },
+  "d1_done_candidate": {
+    "runs": 75,
+    "max_signature_divergence": 0,
+    "max_row_drift": 0
+  },
+  "d2_done_promotion": {
+    "runs": 100,
+    "max_signature_divergence": 0,
+    "max_row_drift": 0
+  }
+}

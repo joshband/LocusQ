@@ -1,0 +1,312 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl041_doppler_vbap_suite",
+  "name": "LocusQ BL-041 Doppler v2 + VBAP Geometry Suite",
+  "category": "stability",
+  "description": "Deterministic BL-041 B1 bootstrap + C2 soak + C3 replay sentinel/mode parity contract lane for Doppler v2 and VBAP geometry validation.",
+  "scenario_ids": [
+    "locusq_25_doppler_motion",
+    "locusq_26_animation_internal_smoke"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl041_doppler_vbap_contract"
+  },
+  "bl041_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL041-B1-001",
+        "description": "Scenario schema exists and matches BL-041 lane contract."
+      },
+      {
+        "id": "BL041-B1-002",
+        "description": "B1 acceptance IDs and lane check rows are complete."
+      },
+      {
+        "id": "BL041-B1-003",
+        "description": "Deterministic hash input contract includes all required Doppler/VBAP identity fields."
+      },
+      {
+        "id": "BL041-B1-004",
+        "description": "Fallback/degradation tokens are complete and deterministic."
+      },
+      {
+        "id": "BL041-B1-005",
+        "description": "Artifact schema contract is complete and machine-readable."
+      },
+      {
+        "id": "BL041-B1-006",
+        "description": "Runbook contract alignment is present for B1 lane bootstrap."
+      },
+      {
+        "id": "BL041-B1-007",
+        "description": "QA contract alignment is present for B1 lane bootstrap."
+      },
+      {
+        "id": "BL041-B1-008",
+        "description": "Execution mode semantics and strict exit behavior are explicit."
+      },
+      {
+        "id": "BL041-C2-001",
+        "description": "C2 soak replay contract is explicit with required_runs=10 and zero drift thresholds."
+      },
+      {
+        "id": "BL041-C2-002",
+        "description": "C2 acceptance IDs are complete and deterministic across scenario/runbook/QA docs."
+      },
+      {
+        "id": "BL041-C2-003",
+        "description": "C2 evidence artifact schema is complete and machine-readable."
+      },
+      {
+        "id": "BL041-C2-004",
+        "description": "Runbook includes explicit C2 validation and evidence contract references."
+      },
+      {
+        "id": "BL041-C2-005",
+        "description": "QA runbook includes explicit C2 validation and evidence contract references."
+      },
+      {
+        "id": "BL041-C3-001",
+        "description": "C3 replay sentinel contract is explicit with required_runs=20 and zero drift thresholds."
+      },
+      {
+        "id": "BL041-C3-002",
+        "description": "C3 acceptance IDs are complete and deterministic across scenario/runbook/QA docs."
+      },
+      {
+        "id": "BL041-C3-003",
+        "description": "C3 mode-parity and exit-semantics evidence schema is complete and machine-readable."
+      },
+      {
+        "id": "BL041-C3-004",
+        "description": "Runbook includes explicit C3 validation and evidence contract references."
+      },
+      {
+        "id": "BL041-C3-005",
+        "description": "QA runbook includes explicit C3 validation and evidence contract references."
+      },
+      {
+        "id": "BL041-C3-006",
+        "description": "Script mode and exit semantics are explicit for contract-only, execute-suite, and invalid runs."
+      }
+    ],
+    "required_doppler_fields": [
+      "relative_velocity_mps",
+      "distance_m",
+      "doppler_ratio",
+      "delay_samples",
+      "interp_mode"
+    ],
+    "required_vbap_fields": [
+      "speaker_triplet_id",
+      "triplet_area",
+      "gain_vector",
+      "gain_sum",
+      "inside_simplex"
+    ],
+    "required_fallback_tokens": [
+      "none",
+      "doppler_non_finite_input",
+      "doppler_non_finite_state",
+      "doppler_ratio_out_of_bounds",
+      "vbap_degenerate_triplet",
+      "vbap_invalid_gain_vector",
+      "vbap_boundary_discontinuity",
+      "geometry_payload_incomplete"
+    ],
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 3,
+      "soak_runs": 10,
+      "sentinel_runs": 20,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "c2_soak": {
+      "required_runs": 10,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0,
+      "required_evidence": [
+        "status.tsv",
+        "validation_matrix.tsv",
+        "contract_runs/validation_matrix.tsv",
+        "contract_runs/replay_hashes.tsv",
+        "contract_runs/failure_taxonomy.tsv",
+        "soak_summary.tsv",
+        "lane_notes.md",
+        "docs_freshness.log"
+      ]
+    },
+    "c3_mode_parity": {
+      "required_runs": 20,
+      "expected_modes": [
+        "contract_only",
+        "execute_suite"
+      ],
+      "negative_probe_expected_exit_code": 2,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0,
+      "required_evidence": [
+        "status.tsv",
+        "validation_matrix.tsv",
+        "contract_runs_contract/validation_matrix.tsv",
+        "contract_runs_contract/replay_hashes.tsv",
+        "contract_runs_contract/failure_taxonomy.tsv",
+        "contract_runs_execute/validation_matrix.tsv",
+        "contract_runs_execute/replay_hashes.tsv",
+        "mode_parity.tsv",
+        "soak_summary.tsv",
+        "exit_semantics_probe.tsv",
+        "lane_notes.md",
+        "docs_freshness.log"
+      ]
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv"
+    ],
+    "deterministic_hash_inputs": {
+      "include": [
+        "schema_version",
+        "sample_rate",
+        "block_size",
+        "interp_mode",
+        "smoothing_thresholds",
+        "geometry_thresholds",
+        "speaker_layout_signature",
+        "velocity_distance_sequence_signature"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "log_line_numbers",
+        "wall_clock_duration"
+      ]
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Scenario/schema/threshold contract mismatch."
+      },
+      {
+        "failure_class": "deterministic_replay_divergence",
+        "description": "Replay hash signatures diverged beyond configured thresholds."
+      },
+      {
+        "failure_class": "deterministic_replay_row_drift",
+        "description": "Replay semantic row signatures diverged beyond configured thresholds."
+      },
+      {
+        "failure_class": "runtime_execution_failure",
+        "description": "Lane script returned non-zero exit."
+      }
+    ],
+    "check_rows": [
+      {
+        "acceptance_id": "BL041-B1-001",
+        "lane_check": "BL041-B1-001_scenario_schema",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-002",
+        "lane_check": "BL041-B1-002_acceptance_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-003",
+        "lane_check": "BL041-B1-003_hash_input_contract",
+        "artifact": "replay_hashes.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-004",
+        "lane_check": "BL041-B1-004_fallback_contract",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-005",
+        "lane_check": "BL041-B1-005_artifact_schema_complete",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-006",
+        "lane_check": "BL041-B1-006_runbook_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-007",
+        "lane_check": "BL041-B1-007_qa_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-B1-008",
+        "lane_check": "BL041-B1-008_mode_semantics",
+        "artifact": "status.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C2-001",
+        "lane_check": "BL041-C2-001_soak_contract_thresholds",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C2-002",
+        "lane_check": "BL041-C2-002_acceptance_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C2-003",
+        "lane_check": "BL041-C2-003_evidence_schema",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C2-004",
+        "lane_check": "BL041-C2-004_runbook_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C2-005",
+        "lane_check": "BL041-C2-005_qa_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C3-001",
+        "lane_check": "BL041-C3-001_sentinel_contract_thresholds",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C3-002",
+        "lane_check": "BL041-C3-002_acceptance_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C3-003",
+        "lane_check": "BL041-C3-003_mode_parity_evidence_schema",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C3-004",
+        "lane_check": "BL041-C3-004_runbook_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C3-005",
+        "lane_check": "BL041-C3-005_qa_alignment",
+        "artifact": "validation_matrix.tsv"
+      },
+      {
+        "acceptance_id": "BL041-C3-006",
+        "lane_check": "BL041-C3-006_mode_exit_semantics",
+        "artifact": "status.tsv"
+      }
+    ]
+  },
+  "pass_criteria": "Lane status must be PASS with deterministic replay signatures, deterministic rows, and stable taxonomy."
+}

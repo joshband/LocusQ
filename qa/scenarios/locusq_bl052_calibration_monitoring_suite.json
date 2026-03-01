@@ -1,0 +1,17 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl052_calibration_monitoring_suite",
+  "name": "LocusQ BL-052 Calibration Monitoring Path Suite",
+  "category": "stability",
+  "description": "Runtime DSP validation for BL-052 SteamAudioVirtualSurround quad→binaural monitoring paths. Exercises all four cal_monitoring_path modes via LocusQCalibrateAdapter. Acceptance criteria: no RT allocation, no NaN/Inf, speakers path is a passthrough no-op, binaural paths are deterministic across reset cycles.",
+  "scenario_ids": [
+    "locusq_bl052_cal_monitoring_speakers_noop",
+    "locusq_bl052_cal_monitoring_steam_binaural_rt_safe",
+    "locusq_bl052_cal_monitoring_virtual_binaural_rt_safe",
+    "locusq_bl052_cal_monitoring_path_switch_stability"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl052_calibration_monitoring"
+  }
+}
