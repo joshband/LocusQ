@@ -175,6 +175,19 @@ juce_add_binary_data(LocusQ_WebUI
 )
 
 # ============================================
+# STANDALONE APP ICON (macOS)
+# ============================================
+set(LOCUSQ_PLUGIN_ICON_ARGS)
+set(LOCUSQ_STANDALONE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Resources/LocusQ.png")
+if(APPLE)
+    if(EXISTS "${LOCUSQ_STANDALONE_ICON}")
+        list(APPEND LOCUSQ_PLUGIN_ICON_ARGS ICON_BIG "${LOCUSQ_STANDALONE_ICON}")
+    else()
+        message(WARNING "LocusQ: standalone icon missing at ${LOCUSQ_STANDALONE_ICON}")
+    endif()
+endif()
+
+# ============================================
 # PLUGIN DEFINITION
 # ============================================
 juce_add_plugin(LocusQ
@@ -183,6 +196,7 @@ juce_add_plugin(LocusQ
     PLUGIN_CODE LcQd
     FORMATS ${PLUGIN_FORMATS}
     PRODUCT_NAME "LocusQ"
+    ${LOCUSQ_PLUGIN_ICON_ARGS}
     NEEDS_WEBVIEW2 ${NEEDS_WEBVIEW2}
     NEEDS_WEB_BROWSER ${NEEDS_WEB_BROWSER}
     VST3_CATEGORIES Fx Spatial
