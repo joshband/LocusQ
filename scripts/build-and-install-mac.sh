@@ -6,6 +6,7 @@ BUILD_DIR="${LOCUSQ_BUILD_DIR:-$ROOT_DIR/build_local}"
 BUILD_CONFIG="${LOCUSQ_BUILD_CONFIG:-Release}"
 BUILD_JOBS="${LOCUSQ_BUILD_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 8)}"
 WITH_STANDALONE_INSTALL="${LOCUSQ_INSTALL_STANDALONE:-0}"
+STANDALONE_INSTALL_DIR="${LOCUSQ_STANDALONE_INSTALL_DIR:-}"
 ENABLE_CLAP="${LOCUSQ_ENABLE_CLAP:-0}"
 INSTALL_CLAP="${LOCUSQ_INSTALL_CLAP:-$ENABLE_CLAP}"
 CLAP_FETCH="${LOCUSQ_CLAP_FETCH:-1}"
@@ -33,7 +34,8 @@ Environment overrides:
   LOCUSQ_BUILD_DIR            CMake build directory (default: build_local)
   LOCUSQ_BUILD_CONFIG         Build config (default: Release)
   LOCUSQ_BUILD_JOBS           Parallel jobs (default: hw.ncpu)
-  LOCUSQ_INSTALL_STANDALONE   If 1, also copy LocusQ.app to ~/Applications
+  LOCUSQ_INSTALL_STANDALONE   If 1, also copy LocusQ.app to install dir
+  LOCUSQ_STANDALONE_INSTALL_DIR  Standalone app install dir (default: /Applications if LocusQ.app exists there, else ~/Applications)
   LOCUSQ_ENABLE_CLAP          If 1, configure/build LocusQ_CLAP target (default: 0)
   LOCUSQ_INSTALL_CLAP         If 1, install LocusQ.clap to user CLAP folder (default: LOCUSQ_ENABLE_CLAP)
   LOCUSQ_CLAP_FETCH           If 1, allow CMake to fetch clap-juce-extensions when missing (default: 1)
@@ -60,6 +62,14 @@ to_cmake_bool() {
     *) echo "OFF" ;;
   esac
 }
+
+if [[ -z "$STANDALONE_INSTALL_DIR" ]]; then
+  if [[ -d "/Applications/LocusQ.app" ]]; then
+    STANDALONE_INSTALL_DIR="/Applications"
+  else
+    STANDALONE_INSTALL_DIR="$HOME/Applications"
+  fi
+fi
 
 ENABLE_CLAP_CMAKE="$(to_cmake_bool "$ENABLE_CLAP")"
 CLAP_FETCH_CMAKE="$(to_cmake_bool "$CLAP_FETCH")"
@@ -199,6 +209,7 @@ echo "build_dir: $BUILD_DIR"
 echo "build_config: $BUILD_CONFIG"
 echo "build_jobs: $BUILD_JOBS"
 echo "install_standalone: $WITH_STANDALONE_INSTALL"
+echo "standalone_install_dir: $STANDALONE_INSTALL_DIR"
 echo "enable_clap: $ENABLE_CLAP"
 echo "enable_head_tracking: $ENABLE_HEAD_TRACKING"
 echo "install_clap: $INSTALL_CLAP"
@@ -285,7 +296,7 @@ fi
 
 if [[ "$WITH_STANDALONE_INSTALL" == "1" ]]; then
   APP_SRC="$BUILD_DIR/LocusQ_artefacts/$BUILD_CONFIG/Standalone/LocusQ.app"
-  APP_DST="$HOME/Applications"
+  APP_DST="$STANDALONE_INSTALL_DIR"
   if [[ -d "$APP_SRC" ]]; then
     mkdir -p "$APP_DST"
     rsync -a --delete "$APP_SRC" "$APP_DST/"
