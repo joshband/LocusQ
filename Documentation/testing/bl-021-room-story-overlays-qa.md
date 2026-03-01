@@ -245,3 +245,17 @@ Required files under `TestEvidence/bl021_slice_c4_mode_parity_<timestamp>/`:
   - contract-only replay drift: `signature_divergence=0`, `row_drift=0`
   - execute-suite replay drift: `signature_divergence=0`, `row_drift=0`
   - mode parity gate: `PASS`
+
+## C4b Post-R1 Non-Interference Snapshot (2026-02-28)
+
+- Evidence path: `TestEvidence/bl021_slice_c4b_mode_parity_20260228T202813Z/`
+- Validation outcome:
+  - syntax + help: `PASS`
+  - contract-only (`runs=5`): `PASS`
+  - execute-suite (`runs=5`): `PASS`
+  - usage/configuration probes: `PASS` (`--runs 0` => `2`, `--unknown-flag` => `2`)
+  - docs freshness: `PASS`
+- Determinism/parity summary:
+  - contract-only replay drift: `signature_divergence=0`, `row_drift=0`
+  - execute-suite replay drift: `signature_divergence=0`, `row_drift=0`
+  - mode parity gate: `PASS`

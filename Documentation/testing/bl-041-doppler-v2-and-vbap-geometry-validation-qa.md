@@ -292,6 +292,104 @@ Required files under `TestEvidence/bl041_slice_c4_longrun_mode_parity_<timestamp
 - `lane_notes.md`
 - `docs_freshness.log`
 
+## D1 Acceptance Matrix (Done-Candidate Long-Run Mode Parity)
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL041-D1-001 | Contract-only done-candidate sentinel | `--contract-only --runs 75` with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D1-002 | Execute-suite done-candidate sentinel | `--execute-suite --runs 75` with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D1-003 | Cross-mode parity at D1 depth | `cross_mode_signature_mismatch_count=0` and `cross_mode_row_mismatch_count=0` |
+| BL041-D1-004 | Taxonomy stability at D1 depth | contract/execute `taxonomy_nonzero_rows=0` |
+| BL041-D1-005 | Exit semantics guard | `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` exits `2` |
+| BL041-D1-006 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+| BL041-D1-007 | Evidence schema completeness | all required D1 artifacts emitted |
+
+## D1 Taxonomy
+
+| failure_id | category | trigger | classification | blocking | expected_artifact |
+|---|---|---|---|---|---|
+| BL041-FX-501 | lane_d1_contract_longrun_drift | contract-only 75-run replay drift | deterministic_replay_failure | yes | contract_runs_contract/replay_hashes.tsv |
+| BL041-FX-502 | lane_d1_execute_longrun_drift | execute-suite 75-run replay drift | deterministic_replay_failure | yes | contract_runs_execute/replay_hashes.tsv |
+| BL041-FX-503 | lane_d1_mode_parity_failure | contract/execute parity mismatch | deterministic_replay_failure | yes | mode_parity.tsv |
+| BL041-FX-504 | lane_d1_taxonomy_drift | non-zero/unstable taxonomy rows | deterministic_replay_failure | yes | soak_summary.tsv |
+| BL041-FX-505 | lane_d1_exit_semantics_failure | negative probe exit code != 2 | deterministic_contract_failure | yes | exit_semantics_probe.tsv |
+| BL041-FX-506 | lane_d1_docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes | docs_freshness.log |
+| BL041-FX-507 | lane_d1_evidence_schema_incomplete | required evidence rows/files missing | deterministic_evidence_failure | yes | status.tsv |
+
+## D1 Validation
+
+- `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl041_slice_d1_done_candidate_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl041_slice_d1_done_candidate_<timestamp>/contract_runs_execute`
+- Negative probe: `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## D1 Evidence Contract
+
+Required files under `TestEvidence/bl041_slice_d1_done_candidate_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `soak_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## D2 Acceptance Matrix (Done Promotion Mode-Parity)
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL041-D2-001 | Contract-only done-promotion sentinel | `--contract-only --runs 100` with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D2-002 | Execute-suite done-promotion sentinel | `--execute-suite --runs 100` with `signature_drift_count=0`, `row_drift_count=0` |
+| BL041-D2-003 | Cross-mode parity at D2 depth | `cross_mode_signature_mismatch_count=0` and `cross_mode_row_mismatch_count=0` |
+| BL041-D2-004 | Taxonomy stability at D2 depth | contract/execute `taxonomy_nonzero_rows=0` |
+| BL041-D2-005 | Exit semantics guard | `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` exits `2` |
+| BL041-D2-006 | Docs freshness gate | `./scripts/validate-docs-freshness.sh` exits `0` |
+| BL041-D2-007 | Evidence schema completeness | all required D2 artifacts emitted |
+
+## D2 Taxonomy
+
+| failure_id | category | trigger | classification | blocking | expected_artifact |
+|---|---|---|---|---|---|
+| BL041-FX-601 | lane_d2_contract_longrun_drift | contract-only 100-run replay drift | deterministic_replay_failure | yes | contract_runs_contract/replay_hashes.tsv |
+| BL041-FX-602 | lane_d2_execute_longrun_drift | execute-suite 100-run replay drift | deterministic_replay_failure | yes | contract_runs_execute/replay_hashes.tsv |
+| BL041-FX-603 | lane_d2_mode_parity_failure | contract/execute parity mismatch | deterministic_replay_failure | yes | mode_parity.tsv |
+| BL041-FX-604 | lane_d2_taxonomy_drift | non-zero/unstable taxonomy rows | deterministic_replay_failure | yes | soak_summary.tsv |
+| BL041-FX-605 | lane_d2_exit_semantics_failure | negative probe exit code != 2 | deterministic_contract_failure | yes | exit_semantics_probe.tsv |
+| BL041-FX-606 | lane_d2_docs_freshness_failure | docs freshness gate exits non-zero | governance_failure | yes | docs_freshness.log |
+| BL041-FX-607 | lane_d2_evidence_schema_incomplete | required evidence rows/files missing | deterministic_evidence_failure | yes | status.tsv |
+
+## D2 Validation
+
+- `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl041_slice_d2_done_promotion_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl041_slice_d2_done_promotion_<timestamp>/contract_runs_execute`
+- Negative probe: `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+## D2 Evidence Contract
+
+Required files under `TestEvidence/bl041_slice_d2_done_promotion_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `soak_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
 Validation status labels:
 - `tested` = command executed and expected exit observed.
 - `partially tested` = command executed with warnings or incomplete artifacts.
@@ -387,6 +485,48 @@ Validation status labels:
 - Long-run parity and sentinel results:
   - `contract_runs_observed=50`
   - `execute_runs_observed=50`
+  - `signature_drift_count(contract/execute)=0/0`
+  - `row_drift_count(contract/execute)=0/0`
+  - `cross_mode_signature_mismatch_count=0`
+  - `cross_mode_row_mismatch_count=0`
+  - `mode_parity_gate=PASS`
+  - `exit_semantics_gate=PASS`
+  - `docs_freshness_gate=PASS`
+
+## D1 Done-Candidate Long-Run Snapshot (2026-02-27)
+
+- Evidence path: `TestEvidence/bl041_slice_d1_done_candidate_20260227T183530Z/`
+- Validation results:
+  - `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 75 --out-dir .../contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 75 --out-dir .../contract_runs_execute` => `PASS`
+  - Negative probe `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` => `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Done-candidate parity and sentinel results:
+  - `contract_runs_observed=75`
+  - `execute_runs_observed=75`
+  - `signature_drift_count(contract/execute)=0/0`
+  - `row_drift_count(contract/execute)=0/0`
+  - `cross_mode_signature_mismatch_count=0`
+  - `cross_mode_row_mismatch_count=0`
+  - `mode_parity_gate=PASS`
+  - `exit_semantics_gate=PASS`
+  - `docs_freshness_gate=PASS`
+
+## D2 Done Promotion Mode-Parity Snapshot (2026-02-27)
+
+- Evidence path: `TestEvidence/bl041_slice_d2_done_promotion_20260227T201910Z/`
+- Validation results:
+  - `bash -n scripts/qa-bl041-doppler-vbap-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --contract-only --runs 100 --out-dir .../contract_runs_contract` => `PASS`
+  - `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --execute-suite --runs 100 --out-dir .../contract_runs_execute` => `PASS`
+  - Negative probe `./scripts/qa-bl041-doppler-vbap-lane-mac.sh --runs 0` => `PASS` (exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+- Done-promotion parity and sentinel results:
+  - `contract_runs_observed=100`
+  - `execute_runs_observed=100`
   - `signature_drift_count(contract/execute)=0/0`
   - `row_drift_count(contract/execute)=0/0`
   - `cross_mode_signature_mismatch_count=0`

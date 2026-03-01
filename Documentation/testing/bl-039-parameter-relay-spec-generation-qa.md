@@ -602,6 +602,86 @@ Required bundle:
 - `lane_notes.md`
 - `docs_freshness.log`
 
+## Slice D1 Done-Candidate Long-Run Mode Parity Contract
+
+Purpose:
+- Prove done-candidate readiness with 75-run deterministic execute-mode parity and strict usage-exit semantics.
+
+Validation matrix:
+- `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_<timestamp>/contract_runs_execute`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+### D1 Acceptance Matrix Contract
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL039-D1-001 | done-candidate parity contract | parity checks all `PASS` for contract-only and execute-suite at `runs=75` |
+| BL039-D1-002 | contract-only 75-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, `run_failure_count=0` |
+| BL039-D1-003 | execute-suite 75-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, `run_failure_count=0` |
+| BL039-D1-004 | done-candidate mode parity artifact contract | `mode_parity.tsv` present with `BL039-D1-PAR-RESULT=PASS` |
+| BL039-D1-005 | strict usage exit semantics | negative probe `--runs 0` exits with code `2` |
+| BL039-D1-006 | docs freshness gate | `./scripts/validate-docs-freshness.sh` exit `0` |
+
+### D1 Artifact Contract
+
+Required bundle:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `drift_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice D2 Done Promotion Parity Contract
+
+Purpose:
+- Prove done-promotion parity confidence with 100-run deterministic execute-mode parity and strict usage-exit semantics.
+
+Validation matrix:
+- `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_<timestamp>/contract_runs_contract`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_<timestamp>/contract_runs_execute`
+- `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` (expect exit `2`)
+- `./scripts/validate-docs-freshness.sh`
+
+### D2 Acceptance Matrix Contract
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL039-D2-001 | done-promotion parity contract | parity checks all `PASS` for contract-only and execute-suite at `runs=100` |
+| BL039-D2-002 | contract-only 100-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, `run_failure_count=0` |
+| BL039-D2-003 | execute-suite 100-run determinism | `signature_divergence_count=0`, `row_drift_count=0`, `run_failure_count=0` |
+| BL039-D2-004 | done-promotion mode parity artifact contract | `mode_parity.tsv` present with `BL039-D2-PAR-RESULT=PASS` |
+| BL039-D2-005 | strict usage exit semantics | negative probe `--runs 0` exits with code `2` |
+| BL039-D2-006 | docs freshness gate | `./scripts/validate-docs-freshness.sh` exit `0` |
+
+### D2 Artifact Contract
+
+Required bundle:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `drift_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
 ### C5c Recheck Snapshot (2026-02-27)
 
 - Input handoffs:
@@ -651,5 +731,57 @@ Required bundle:
   - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help` => PASS
   - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 50 --out-dir TestEvidence/bl039_slice_c6_longrun_parity_20260227T033754Z/contract_runs_contract` => PASS
   - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 50 --out-dir TestEvidence/bl039_slice_c6_longrun_parity_20260227T033754Z/contract_runs_execute` => PASS
+  - negative probe `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` => exit `2` (PASS)
+  - `./scripts/validate-docs-freshness.sh` => PASS
+
+### D1 Done-Candidate Long-Run Snapshot (2026-02-27)
+
+- Input handoffs:
+  - `TestEvidence/bl039_slice_c6_longrun_parity_20260227T033754Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/*`
+- Evidence bundle:
+  - `TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `drift_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh` => PASS
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help` => PASS
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/contract_runs_contract` => PASS
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/contract_runs_execute` => PASS
+  - negative probe `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` => exit `2` (PASS)
+  - `./scripts/validate-docs-freshness.sh` => PASS
+
+### D2 Done Promotion Snapshot (2026-02-27)
+
+- Input handoffs:
+  - `TestEvidence/bl039_slice_d1_done_candidate_20260227T183730Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/*`
+- Evidence bundle:
+  - `TestEvidence/bl039_slice_d2_done_promotion_20260227T201844Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `drift_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl039-parameter-relay-drift-mac.sh` => PASS
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --help` => PASS
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_20260227T201844Z/contract_runs_contract` => PASS
+  - `./scripts/qa-bl039-parameter-relay-drift-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl039_slice_d2_done_promotion_20260227T201844Z/contract_runs_execute` => PASS
   - negative probe `./scripts/qa-bl039-parameter-relay-drift-mac.sh --runs 0` => exit `2` (PASS)
   - `./scripts/validate-docs-freshness.sh` => PASS

@@ -450,3 +450,127 @@ Required bundle:
   - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` => expected exit `2`, observed `2` (PASS)
   - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` => expected exit `2`, observed `2` (PASS)
   - `./scripts/validate-docs-freshness.sh` => PASS
+
+## D1 Done-Candidate Long-Run Parity Contract
+
+### D1 Acceptance Mapping
+
+| Acceptance ID | Lane Check | Threshold |
+|---|---|---|
+| `BL038-D1-001` | `BL038-D1-PAR-*` done-candidate long-run parity checks | contract-only + execute-suite replay summaries both PASS at `runs=75` with zero deterministic failure counters |
+| `BL038-D1-002` | `BL038-D1-VAL-005` usage probe | command `--runs 0` exits `2` |
+| `BL038-D1-003` | `BL038-D1-VAL-006` usage probe | command `--unknown` exits `2` |
+
+### D1 Validation Matrix
+
+```bash
+bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/contract_runs_contract
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_<timestamp>/contract_runs_execute
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown
+./scripts/validate-docs-freshness.sh
+```
+
+### D1 Artifact Contract
+
+Required bundle:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## D1 Execution Snapshot (2026-02-27)
+
+- Evidence bundle:
+  - `TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/contract_runs_contract` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 75 --out-dir TestEvidence/bl038_slice_d1_done_candidate_20260227T183540Z/contract_runs_execute` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` => expected exit `2`, observed `2` (PASS)
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` => expected exit `2`, observed `2` (PASS)
+  - `./scripts/validate-docs-freshness.sh` => PASS
+
+## D2 Done Promotion Parity Contract
+
+### D2 Acceptance Mapping
+
+| Acceptance ID | Lane Check | Threshold |
+|---|---|---|
+| `BL038-D2-001` | `BL038-D2-PAR-*` done-promotion parity checks | contract-only + execute-suite replay summaries both PASS at `runs=100` with zero deterministic failure counters |
+| `BL038-D2-002` | `BL038-D2-VAL-005` usage probe | command `--runs 0` exits `2` |
+| `BL038-D2-003` | `BL038-D2-VAL-006` usage probe | command `--unknown` exits `2` |
+
+### D2 Validation Matrix
+
+```bash
+bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/contract_runs_contract
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_<timestamp>/contract_runs_execute
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0
+./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown
+./scripts/validate-docs-freshness.sh
+```
+
+### D2 Artifact Contract
+
+Required bundle:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs_contract/validation_matrix.tsv`
+- `contract_runs_contract/replay_hashes.tsv`
+- `contract_runs_contract/failure_taxonomy.tsv`
+- `contract_runs_execute/validation_matrix.tsv`
+- `contract_runs_execute/replay_hashes.tsv`
+- `mode_parity.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
+## D2 Execution Snapshot (2026-02-27)
+
+- Evidence bundle:
+  - `TestEvidence/bl038_slice_d2_done_promotion_20260227T201829Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs_contract/validation_matrix.tsv`
+  - `contract_runs_contract/replay_hashes.tsv`
+  - `contract_runs_contract/failure_taxonomy.tsv`
+  - `contract_runs_execute/validation_matrix.tsv`
+  - `contract_runs_execute/replay_hashes.tsv`
+  - `mode_parity.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl038-calibration-telemetry-lane-mac.sh` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --help` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_20260227T201829Z/contract_runs_contract` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --execute-suite --runs 100 --out-dir TestEvidence/bl038_slice_d2_done_promotion_20260227T201829Z/contract_runs_execute` => PASS
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --runs 0` => expected exit `2`, observed `2` (PASS)
+  - `./scripts/qa-bl038-calibration-telemetry-lane-mac.sh --unknown` => expected exit `2`, observed `2` (PASS)
+  - `./scripts/validate-docs-freshness.sh` => PASS
