@@ -1,3 +1,9 @@
+Title: BL-053 Companion Readiness + Sync Checklist
+Document Type: Test Checklist
+Author: APC Codex
+Created Date: 2026-02-28
+Last Modified Date: 2026-03-01
+
 # BL-053 Companion Readiness + Sync Checklist
 
 ## Preconditions

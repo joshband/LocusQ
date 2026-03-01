@@ -2,7 +2,7 @@ Title: BL-053 Head Tracking Orientation Injection
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # BL-053 Head Tracking Orientation Injection
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-02-28
 |---|---|
 | ID | BL-053 |
 | Priority | P1 |
-| Status | In Validation |
+| Status | In Validation (structural replay PASS; manual operator verification synced; owner promotion packet pending) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-052, BL-045 |
@@ -29,11 +29,14 @@ Inject head pose quaternion from the companion bridge into `SteamAudioVirtualSur
 - head rotation updates HRTF direction within one processBlock
 - null fallback is silent (no glitch)
 - yaw offset is applied correctly
+- stale pose fallback does not continue orientation animation/routing
+- orientation pointer is both provided and consumed in `virtual_binaural` monitoring path
 
 ## Methodology Reference
 
 - Canonical methodology: `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md`.
 - Manual listening acceptance for this item must explicitly verify post-restore orientation behavior in `virtual_binaural` mode.
+- Reconciliation review: `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`.
 
 
 ## Validation Plan
@@ -70,6 +73,10 @@ Evidence schema: `TestEvidence/bl053_*/status.tsv`.
 - Manual checklist packet prepared for operator walk-through:
   - `TestEvidence/bl053_manual_listening_checklist_20260228T183523Z/checklist.md`
   - `TestEvidence/bl053_manual_listening_checklist_20260228T183523Z/results.tsv`
+- Live operator sync evidence (companion + plugin behavior):
+  - `TestEvidence/bl053_manual_acceptance_sync_20260301T000100Z/status.tsv`
+  - `TestEvidence/bl053_manual_acceptance_sync_20260301T000100Z/manual_acceptance.md`
+  - `TestEvidence/bl053_manual_acceptance_sync_20260301T000100Z/results.tsv`
 
 ## Replay Cadence Plan (Required)
 
