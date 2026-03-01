@@ -85,8 +85,8 @@ This methodology is maintained against the following additional documentation su
   - `Documentation/plans/calibration-profile-schema-v1.md`
   - `Documentation/plans/bl-045-head-tracking-fidelity-v11-spec-2026-02-26.md`
 - Architecture and risk reviews:
-  - `Documentation/reviews/2026-02-26-full-architecture-review.md`
-  - `Documentation/reviews/LocusQ Repo Review 02262026.md`
+  - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/2026-02-26-full-architecture-review.md`
+  - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/LocusQ Repo Review 02262026.md`
   - `Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md`
 - Generated report snapshots (governance-controlled):
   - `Documentation/reports/` (for extraction/audit only; do not treat as canonical long-term source)

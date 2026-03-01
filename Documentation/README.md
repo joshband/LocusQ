@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 
 # Documentation Index
@@ -17,6 +17,7 @@ Backlog model: `Documentation/backlog/index.md` is the single backlog catalog au
 Only these documents are normative for implementation, release status, and closeout claims:
 - `README.md`
 - `CHANGELOG.md`
+- `ARCHITECTURE.md`
 - `status.json`
 - `Documentation/standards.md`
 - `Documentation/invariants.md`
@@ -61,6 +62,7 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/research/` (active research files only)
 - `Documentation/archive/2026-02-25-research-legacy/`
 - `Documentation/archive/2026-02-24-multi-agent-thread-watchdog/`
+- `Documentation/archive/2026-03-01-architecture-review-consolidation/`
 - `Documentation/lessons-learned.md`
 - `Documentation/plans/2026-02-20-full-project-review.md`
 - `Documentation/archive/2026-02-23-clap-reference-bundle/`
@@ -104,3 +106,17 @@ Completed:
 - Phase closeout updates are gated by ADR-0005 and validated via `scripts/validate-docs-freshness.sh`.
 - Latest acceptance-claim sync: `BL-019` is `Done (2026-02-23)` with refreshed physics-lens evidence (`TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log`, `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log`) and synchronized Tier 0 status/evidence surfaces (`status.json`, `Documentation/backlog-post-v1-agentic-sprints.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, `README.md`, `CHANGELOG.md`).
 - HX-04 closure sync: deterministic scenario-audit evidence is captured at `TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv` with BL-012 embedded enforcement evidence at `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`.
+
+## Closeout Sync Snapshot (2026-02-28)
+
+- BL-023 done-transition sync recorded:
+  - open runbook moved to `Documentation/backlog/done/bl-023-resize-dpi-hardening.md`
+  - master index row updated at `Documentation/backlog/index.md`
+  - canonical promotion packet remains `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z/`
+
+## Architecture Consolidation Snapshot (2026-03-01)
+
+- `ARCHITECTURE.md` is the active architecture source-of-truth document.
+- Prior standalone architecture review docs were archived to:
+  - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/2026-02-26-full-architecture-review.md`
+  - `Documentation/archive/2026-03-01-architecture-review-consolidation/reviews/LocusQ Repo Review 02262026.md`
