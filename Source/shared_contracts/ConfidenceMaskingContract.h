@@ -3,6 +3,7 @@
 #include <cmath>
 #include <juce_core/juce_core.h>
 
+// Canonical confidence/masking contract shared between DSP outputs and UI overlays.
 namespace locusq::shared_contracts::confidence_masking
 {
 inline constexpr const char* kSchemaV1 = "locusq-confidence-masking-contract-v1";

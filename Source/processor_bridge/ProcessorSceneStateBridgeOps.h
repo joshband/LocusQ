@@ -1079,6 +1079,8 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
         if (! first) json += ",";
         first = false;
 
+        // Read coherent audio snapshot once per emitter so pointer/count stay
+        // generation-aligned while UI polling races audio-thread writes.
         const auto audioSnapshot = sceneGraph.getSlot (i).readAudioSnapshot();
         const auto* emitterAudio = audioSnapshot.mono;
         const auto emitterAudioSamples = audioSnapshot.numSamples;
@@ -1126,6 +1128,8 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
             speakersJson << ",";
         }
 
+        // Speaker RMS is atomically published on the audio thread; clamp to
+        // defensive bounds before serializing for UI diagnostics.
         const auto speakerRms = juce::jlimit (
             0.0f,
             4.0f,

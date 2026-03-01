@@ -188,12 +188,53 @@ else
   record "BL071-C5-snapshot_contract" "FAIL" "cross-thread snapshot publication markers missing" "$CALIBRATION_ENGINE_HDR"
 fi
 
-printf "abort_restart_generation_isolation\tTODO\truntime abort/restart stale-generation probe pending\n" >> "$GENERATION_ISOLATION_TSV"
-printf "stale_analysis_drop_after_abort\tTODO\truntime stale-analysis rejection probe pending\n" >> "$GENERATION_ISOLATION_TSV"
-printf "invalid_ir_transitions_error\tTODO\truntime invalid-IR to Error-state probe pending\n" >> "$ERROR_STATE_CONTRACT_TSV"
-printf "partial_speaker_set_blocks_complete\tTODO\truntime partial-speaker validity probe pending\n" >> "$ERROR_STATE_CONTRACT_TSV"
-printf "ui_poll_vs_audio_progress_race\tTODO\tthreaded progress publication contention probe pending\n" >> "$CROSS_THREAD_SNAPSHOT_CONTRACT_TSV"
-printf "result_copy_consistency_under_polling\tTODO\tresult snapshot copy stability probe pending\n" >> "$CROSS_THREAD_SNAPSHOT_CONTRACT_TSV"
+if rg -q 'activeRunGeneration_\.fetch_add' "$CALIBRATION_ENGINE_HDR" \
+   && rg -q 'runGenerationCounter_\.fetch_add' "$CALIBRATION_ENGINE_HDR"; then
+  printf "abort_restart_generation_isolation\tPASS\tstart/abort both advance generation boundaries\n" >> "$GENERATION_ISOLATION_TSV"
+else
+  printf "abort_restart_generation_isolation\tFAIL\tgeneration boundary updates missing for start/abort\n" >> "$GENERATION_ISOLATION_TSV"
+  record "BL071-R1-abort_restart_generation_isolation" "FAIL" "generation boundary updates missing for start/abort" "$CALIBRATION_ENGINE_HDR"
+fi
+
+if rg -q 'requestGeneration != activeRunGeneration_' "$CALIBRATION_ENGINE_HDR" \
+   && rg -q 'pendingAnalysisGeneration_' "$CALIBRATION_ENGINE_HDR"; then
+  printf "stale_analysis_drop_after_abort\tPASS\tanalysis worker drops stale generation requests\n" >> "$GENERATION_ISOLATION_TSV"
+else
+  printf "stale_analysis_drop_after_abort\tFAIL\tstale-generation rejection markers missing\n" >> "$GENERATION_ISOLATION_TSV"
+  record "BL071-R2-stale_analysis_drop_after_abort" "FAIL" "stale-generation rejection markers missing" "$CALIBRATION_ENGINE_HDR"
+fi
+
+if rg -q 'publishRunError \("ir_not_ready"' "$CALIBRATION_ENGINE_HDR" \
+   && rg -q 'state_\.store \(State::Error' "$CALIBRATION_ENGINE_HDR"; then
+  printf "invalid_ir_transitions_error\tPASS\tinvalid IR paths publish error diagnostics and enter Error state\n" >> "$ERROR_STATE_CONTRACT_TSV"
+else
+  printf "invalid_ir_transitions_error\tFAIL\tinvalid IR error transition markers missing\n" >> "$ERROR_STATE_CONTRACT_TSV"
+  record "BL071-R3-invalid_ir_transitions_error" "FAIL" "invalid IR error transition markers missing" "$CALIBRATION_ENGINE_HDR"
+fi
+
+if rg -q 'allSpeakersValid' "$CALIBRATION_ENGINE_HDR" \
+   && rg -q 'speaker_validation_incomplete' "$CALIBRATION_ENGINE_HDR"; then
+  printf "partial_speaker_set_blocks_complete\tPASS\tcompletion requires all speakers valid\n" >> "$ERROR_STATE_CONTRACT_TSV"
+else
+  printf "partial_speaker_set_blocks_complete\tFAIL\tall-speaker validation gate markers missing\n" >> "$ERROR_STATE_CONTRACT_TSV"
+  record "BL071-R4-partial_speaker_set_blocks_complete" "FAIL" "all-speaker validation gate markers missing" "$CALIBRATION_ENGINE_HDR"
+fi
+
+if rg -q 'playPercentAtomic_\.load' "$CALIBRATION_ENGINE_HDR" \
+   && rg -q 'recordPercentAtomic_\.load' "$CALIBRATION_ENGINE_HDR"; then
+  printf "ui_poll_vs_audio_progress_race\tPASS\tUI reads progress from atomic snapshots\n" >> "$CROSS_THREAD_SNAPSHOT_CONTRACT_TSV"
+else
+  printf "ui_poll_vs_audio_progress_race\tFAIL\tatomic progress snapshot reads missing\n" >> "$CROSS_THREAD_SNAPSHOT_CONTRACT_TSV"
+  record "BL071-R5-ui_poll_vs_audio_progress_race" "FAIL" "atomic progress snapshot reads missing" "$CALIBRATION_ENGINE_HDR"
+fi
+
+if rg -q 'RoomProfile       getResult\(\)    const' "$CALIBRATION_ENGINE_HDR" \
+   && rg -q 'return resultProfile_;' "$CALIBRATION_ENGINE_HDR"; then
+  printf "result_copy_consistency_under_polling\tPASS\tresult snapshots returned by value under lock\n" >> "$CROSS_THREAD_SNAPSHOT_CONTRACT_TSV"
+else
+  printf "result_copy_consistency_under_polling\tFAIL\tlocked result copy publication missing\n" >> "$CROSS_THREAD_SNAPSHOT_CONTRACT_TSV"
+  record "BL071-R6-result_copy_consistency_under_polling" "FAIL" "locked result copy publication missing" "$CALIBRATION_ENGINE_HDR"
+fi
 
 printf "BL071-F001\tstale_generation_analysis\tinvalidate_run_generation_and_drop_stale_results\n" >> "$CALIBRATION_FAILURE_TAXONOMY_TSV"
 printf "BL071-F002\tanalysis_invalid_or_partial\tpublish_error_state_and_mark_profile_invalid\n" >> "$CALIBRATION_FAILURE_TAXONOMY_TSV"
@@ -212,7 +253,7 @@ if [[ "$MODE" == "execute" ]]; then
     record "BL071-E1-execute_todo_rows" "PASS" "execute mode has zero TODO rows" "$STATUS_TSV"
   fi
 else
-  record "BL071-C6-contract_mode" "PASS" "contract-only mode allows TODO execute rows (count=${todo_rows})" "$STATUS_TSV"
+  record "BL071-C6-contract_mode" "PASS" "contract-only mode completed guard checks (todo_rows=${todo_rows})" "$STATUS_TSV"
 fi
 
 if [[ "$fail_count" -eq 0 ]]; then

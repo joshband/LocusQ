@@ -439,6 +439,9 @@ private:
                                     const bool currentPoseStale = currentTimestampMs == 0
                                         || (nowMs >= (currentTimestampMs + staleThresholdMs));
                                     const bool incomingTimestampAdvanced = snapshot.timestampMs > currentTimestampMs;
+                                    // Accept sequence restarts only when the prior
+                                    // stream is stale and the sender timestamp has
+                                    // moved forward (process restarts).
                                     acceptSequenceRestart = currentPoseStale && incomingTimestampAdvanced;
                                 }
                                 else

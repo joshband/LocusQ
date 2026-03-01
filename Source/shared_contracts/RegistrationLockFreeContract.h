@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+// Canonical operation/outcome enums for lock-free registration diagnostics and payloads.
 namespace locusq::shared_contracts::registration_lock_free
 {
 inline constexpr const char* kSchemaV1 = "locusq-registration-lock-free-contract-v1";

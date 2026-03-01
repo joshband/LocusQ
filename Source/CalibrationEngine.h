@@ -169,6 +169,8 @@ public:
             return false;
         }
 
+        // Bump generation at run start so the worker can reject stale analysis
+        // publications from any run that was aborted/restarted earlier.
         const auto runGeneration = runGenerationCounter_.fetch_add (1u, std::memory_order_acq_rel) + 1u;
         activeRunGeneration_.store (runGeneration, std::memory_order_release);
         abortRequested_.store (false, std::memory_order_release);
@@ -217,6 +219,7 @@ public:
         abortRequested_.store (true, std::memory_order_release);
         analysisRequested_.store (false, std::memory_order_release);
         pendingAnalysisGeneration_.store (0u, std::memory_order_release);
+        // Invalidate any in-flight analysis tied to an older generation.
         activeRunGeneration_.fetch_add (1u, std::memory_order_acq_rel);
         playPercentAtomic_.store (0.0f, std::memory_order_release);
         recordPercentAtomic_.store (0.0f, std::memory_order_release);
@@ -358,6 +361,7 @@ public:
     bool              isComplete()   const { return state_.load() == State::Complete; }
     RoomProfile       getResult()    const
     {
+        // Publish immutable result snapshots to UI/editor readers.
         const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
         return resultProfile_;
     }
@@ -485,6 +489,8 @@ private:
                         }
 
                         {
+                            // Serialize multi-field speaker writes so UI snapshots
+                            // never observe partially updated profile state.
                             const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
                             auto& spkProfile = resultProfile_.speakers[spk];
                             spkProfile.delayComp = res.delayMs;

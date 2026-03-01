@@ -1,5 +1,6 @@
 #pragma once
 
+// Canonical wire contract keys for headphone calibration path/stage payloads.
 namespace locusq::shared_contracts::headphone_calibration
 {
 inline constexpr const char* kSchemaV1 = "locusq-headphone-calibration-contract-v1";
