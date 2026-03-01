@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-073 |
 | Priority | P1 |
-| Status | Open |
+| Status | In Implementation (mode semantics + TODO-row enforcement script authored) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -34,7 +34,7 @@ Prevent false-green promotions by separating contract-only and execute-mode QA s
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl073-scaffold-truthfulness-gates-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl073-scaffold-truthfulness-gates-mac.sh`.
 Evidence schema: `TestEvidence/bl073_*/status.tsv`.
 
 Minimum evidence additions:
