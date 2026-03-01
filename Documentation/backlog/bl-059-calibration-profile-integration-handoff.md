@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-059 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Implementation (Wave 1 kickoff: smoke harness upgraded with contract/execute semantics) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 |
@@ -42,7 +42,7 @@ Wire `CalibrationProfile.json` from companion to plugin state end-to-end. Primit
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl059-calibration-integration-smoke-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl059-calibration-integration-smoke-mac.sh`.
 Evidence schema: `TestEvidence/bl059_*/status.tsv`.
 
 ## Replay Cadence Plan (Required)

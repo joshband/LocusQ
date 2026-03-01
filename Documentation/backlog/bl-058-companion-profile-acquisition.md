@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-058 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Implementation (Wave 1 kickoff: QA harness authored with contract/execute semantics) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-057 |
@@ -57,7 +57,7 @@ Build guided ear-photo capture UI in companion app (left ear + right ear + front
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl058-companion-profile-acquisition-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl058-companion-profile-acquisition-mac.sh`.
 Evidence schema: `TestEvidence/bl058_*/status.tsv`.
 
 Required manual packet (companion runtime):

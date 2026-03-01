@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 QA harness authoring)
+Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring)
 
 # LocusQ Master Backlog Index
 
@@ -119,8 +119,8 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 30 | BL-055 | FIR convolution engine | P1 | Open | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | Open | E | BL-046 | BL-058 | [bl-057](bl-057-device-preset-library.md) |
-| 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | Open (reprioritized from code-review protocol/gating risk packet) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
-| 34 | BL-059 | CalibrationProfile integration handoff | P0 | Open (reprioritized from code-review calibration correctness/race risk packet) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
+| 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | In Implementation (reprioritized from code-review protocol/gating risk packet; QA harness authored) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
+| 34 | BL-059 | CalibrationProfile integration handoff | P0 | In Implementation (reprioritized from code-review calibration correctness/race risk packet; smoke harness upgraded) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
 | 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
