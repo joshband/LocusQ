@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-071 |
 | Priority | P0 |
-| Status | In Validation (execute lane pass: generation/error-state/snapshot evidence has zero TODO rows) |
+| Status | In Validation (execute lane pass + T2 candidate packet pass: 5/5 runs, zero TODO rows) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-056, BL-059 |
@@ -97,5 +97,8 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - `scripts/qa-bl071-calibration-generation-guard-mac.sh` with `--contract-only` and `--execute` modes.
 - Execute evidence:
   - `TestEvidence/bl071_calibration_generation_guard_execute_20260301T220310Z/status.tsv` (execute mode pass, zero TODO rows).
+- T2 candidate evidence:
+  - `TestEvidence/bl071_candidate_t2_20260301T220718Z/run_summary.tsv` (5/5 PASS, zero TODO rows).
+  - `TestEvidence/bl071_candidate_t2_20260301T220718Z/candidate_decision.md`.
 - Remaining BL-071 scope:
-  - advance through candidate/promotion cadence packets per replay policy and owner intake timing.
+  - advance to T3 promotion packet per replay policy and owner intake timing.

@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-072 |
 | Priority | P0 |
-| Status | In Validation (execute lane pass: protocol/readiness/sequence evidence has zero TODO rows) |
+| Status | In Validation (execute lane pass + T2 candidate packet pass: 5/5 runs, zero TODO rows) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-058, BL-059 |
@@ -97,5 +97,8 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - BL-058 lane linkage (readiness + axis evidence surfaces available from BL-058 harness).
 - Execute evidence:
   - `TestEvidence/bl072_companion_protocol_execute_20260301T220311Z/status.tsv` (execute mode pass, zero TODO rows).
+- T2 candidate evidence:
+  - `TestEvidence/bl072_candidate_t2_20260301T220718Z/run_summary.tsv` (5/5 PASS, zero TODO rows).
+  - `TestEvidence/bl072_candidate_t2_20260301T220718Z/candidate_decision.md`.
 - Remaining BL-072 scope:
-  - advance through candidate/promotion cadence packets per replay policy and owner intake timing.
+  - advance to T3 promotion packet per replay policy and owner intake timing.
