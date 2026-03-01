@@ -2,7 +2,7 @@ Title: APC Agent Rule Contract
 Document Type: Rule
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-01
 
 # AGENT_RULE.md
 
@@ -28,6 +28,15 @@ Do not edit those copies directly. After editing this file, sync both copies wit
 - Slash commands and natural-language intent map through `AGENTS.md`.
 - Enforce one phase at a time.
 - Do not auto-advance to the next phase when a phase completes.
+- When specialist intents are present, select the minimal specialist skill bundle from `SKILLS.md` / `Documentation/skill-selection-matrix.md` and announce order.
+- For repository-scale docs cleanup/de-bloat requests (including backlog/root/API-doc/code-comment hygiene), include `documentation-hygiene-expert`.
+- For git artifact hygiene requests (tracked ignored files, stale archives, history bloat, pre-commit/CI guardrails), include `documentation-hygiene-expert`.
+- For governance metadata, ADR/invariant traceability, and routing-contract sync, include `skill_docs` (pair with `documentation-hygiene-expert` when large cleanup passes are in scope).
+- For companion Apple platform API/capture/privacy intents (AirPods/CoreMotion/Vision, BL-057/BL-058), include `apple-spatial-companion-platform` in the specialist bundle.
+- For AUv3 format/lifecycle/app-extension intents, include `auv3-plugin-lifecycle`.
+- For temporal DSP intents (delay/echo/looper/frippertronics-style feedback evolution), include `temporal-effects-engineering`.
+- For complex simulation-driven audio+visual intents (fluid/crowd/flocking/herd), include `simulation-behavior-audio-visual` (plus `physics-reactive-audio` when DSP-thread behavior is in scope).
+- For realtime 2D/3D/4D information-visualization and high-quality plugin UI direction, include `realtime-dimensional-visualization`.
 
 ## Required Load Sequence
 For phase execution, always load in this order:
@@ -60,7 +69,9 @@ After phase work:
 - Keep docs concise: update canonical docs instead of creating parallel duplicates.
 - Follow folder and naming conventions in `Documentation/standards.md`.
 - Follow source-of-truth tiers in `Documentation/README.md` (`Tier 0..3`).
-- Keep `Documentation/reports/` and `Documentation/exports/` empty/absent at closeout; archive outputs under `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
+- Treat skill/runtime markdown under `.codex/skills/`, `.claude/skills/`, `.codex/workflows/`, `.claude/workflows/`, `.codex/rules/`, and `.claude/rules/` as runtime-standard surfaces; exclude them from normal docs-hygiene/doc-governance passes unless explicitly requested.
+- Keep `Documentation/exports/` empty/absent at closeout; archive outputs under `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
+- `Documentation/reports/` may hold active non-canonical report artifacts when intentionally referenced by current docs.
 - Record validation snapshots and trend entries in `TestEvidence/validation-trend.md`.
 - Run `./scripts/validate-docs-freshness.sh`; populated generated doc output dirs must be treated as closeout blockers.
 

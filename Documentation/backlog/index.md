@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01 (BL-053 manual sync evidence note + BL-055/058/059/060/061 methodology tightening)
+Last Modified Date: 2026-03-01 (BL-053 manual sync evidence note + BL-055/058/059/060/061 methodology tightening + BL-067/BL-068 scaffold intake + annex/spec/qa-stub linkage)
 
 # LocusQ Master Backlog Index
 
@@ -88,7 +88,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
 | 1 | BL-030 | Release governance and device rerun | P2 | **Done** (N15 owner authoritative confirm `UNANIMOUS_PASS`; RL-03..RL-09 closeout matrix PASS; release decision `GO`) | G | BL-024, BL-025, HX-06 | — | [bl-030](done/bl-030-release-governance.md) |
-| 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Implementation (C1 additive native bridge intake integrated; build/smoke PASS; RT gate still red `non_allowlisted=85` in owner N9 replay) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
+| 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Validation (C4 mode parity + exit semantics packets are green; owner promotion review pending) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | **Done** (A2 runtime/UI hardening complete; T3 heavy-wrapper equivalent replay PASS; strict usage exits and mode parity confirmed) | C | BL-025 | — | [bl-023](done/bl-023-resize-dpi-hardening.md) |
 | 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (D1 guardrail remediation PASS, D2 RT reconciliation PASS, E1 owner replay PASS, F1 done-promotion PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
@@ -122,6 +122,8 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P1 | Open | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
 | 34 | BL-059 | CalibrationProfile integration handoff | P1 | Open | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
+| 36 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
+| 37 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P2 | Open | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 
 ## Dependency Graph
 
@@ -188,6 +190,8 @@ graph TD
         BL-058[BL-058 Companion Profile Acquisition]
         BL-059[BL-059 CalibrationProfile Integration Handoff]
         BL-060[BL-060 Phase B Listening Test Harness]
+        BL-067[BL-067 AUv3 Lifecycle + Host Validation]
+        BL-068[BL-068 Temporal Effects Core]
         BL-062[BL-062 Ambisonics IR Contract]
         BL-063[BL-063 Renderer Compatibility Guardrails]
         BL-064[BL-064 ADM Mapping Contract]
@@ -247,14 +251,17 @@ graph TD
     BL-030 --> BL-048
     BL-042 --> BL-048
     BL-042 --> BL-049
+    BL-048 --> BL-067
     BL-043 --> BL-050
     BL-046 --> BL-050
+    BL-050 --> BL-068
     BL-046 --> BL-051
     BL-050 --> BL-051
     BL-045 --> BL-053
     BL-052 --> BL-053
     BL-052 --> BL-054
     BL-054 --> BL-056
+    BL-055 --> BL-068
     BL-055 --> BL-056
     BL-046 --> BL-057
     BL-057 --> BL-058
@@ -282,11 +289,11 @@ graph TD
 
 | Track | Name | Scope | Skills |
 |---|---|---|---|
-| A | Runtime Formats | BL-046 | `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
+| A | Runtime Formats | BL-046, BL-067 | `steam-audio-capi`, `clap-plugin-lifecycle`, `auv3-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
 | B | Scene/UI Runtime | BL-039, BL-040 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
 | C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
-| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-062, BL-063, BL-064, BL-065, BL-066 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs` |
+| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
 | F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030, BL-042, BL-048 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
 
@@ -370,6 +377,8 @@ Any status change must update in the same changeset:
 | BL-058 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md`; `Documentation/plans/calibration-profile-schema-v1.md` |
 | BL-059 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md`; `Documentation/plans/calibration-profile-schema-v1.md` |
 | BL-060 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
+| BL-067 | `Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md` |
+| BL-068 | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
 
 ## Closed Archive
 

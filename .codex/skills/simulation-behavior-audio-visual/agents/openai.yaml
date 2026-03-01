@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simulation Behavior AV"
+  short_description: "Complex simulation for audio and visualization"
+  default_prompt: "Use $simulation-behavior-audio-visual to implement fluid/crowd/flocking/herd-driven sound and synced visuals with deterministic realtime contracts."

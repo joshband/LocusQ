@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # Changelog
 
@@ -11,510 +11,63 @@ All notable changes to LocusQ are documented here.
 ## [Unreleased]
 
 Operational snapshot:
-- Live backlog state and P0-P2 priorities are tracked in `Documentation/backlog/index.md`.
-- Canonical runtime/state snapshot is tracked in `status.json`.
+- Live backlog authority: `Documentation/backlog/index.md`
+- Canonical runtime/state authority: `status.json`
+
+### Added
+
+- Specialist execution skills for active lanes:
+  - `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`
+  - `headtracking-companion-runtime`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
+  - `documentation-hygiene-expert` for repo-scale documentation cleanup and freshness ownership.
+- Backlog execution expansion for post-v1 delivery orchestration:
+  - `Documentation/backlog-post-v1-agentic-sprints.md`
+- Git artifact hygiene automation surfaces:
+  - `scripts/git-artifact-hygiene-audit.sh`
+  - `scripts/git-artifact-hygiene-guard.sh`
+  - `scripts/git-artifact-cleanup-index.sh`
+  - `scripts/install-git-hygiene-hooks.sh`
+  - `.github/workflows/git-artifact-hygiene.yml`
+  - `.githooks/pre-commit`
+
+### Changed
+
+- Documentation skill ownership split is explicit and normalized:
+  - `documentation-hygiene-expert` owns cleanup, dedupe, simplification, freshness ownership, and stale comment/API-doc hygiene.
+  - `skill_docs` owns governance metadata, ADR/invariant traceability, standards/tier enforcement, and routing-contract parity.
+- Root routing/governance contracts were synchronized:
+  - `AGENTS.md`, `CODEX.md`, `CLAUDE.md`, `SKILLS.md`, `AGENT_RULE.md`, `Documentation/skill-selection-matrix.md`.
+- Documentation cleanup/compaction pass completed:
+  - `Documentation/README.md`, `Documentation/standards.md`, `README.md` deduped and simplified.
+  - Evidence surfaces compacted with history preserved in archives:
+    - `Documentation/archive/2026-03-01-build-summary-compaction/build-summary-legacy-2026-03-01.md`
+    - `Documentation/archive/2026-03-01-validation-trend-compaction/validation-trend-legacy-2026-03-01.md`
+- Skill-runtime markdown exemption alignment (Codex + Claude):
+  - Standard documentation governance passes now exempt `.codex/*` and `.claude/*` skill/workflow/rule markdown unless explicitly requested.
+  - `scripts/validate-docs-freshness.sh` now prunes runtime skill/workflow/rule markdown paths from metadata-freshness checks.
+- Skill routing and references now map git artifact hygiene intent to `documentation-hygiene-expert` for both Codex and Claude.
 
 ### Fixed
 
-- **BL-043 FDN sample-rate integrity (P0)**: FDN reverb delay times are now
-  invariant in milliseconds across 44100/48000/96000/192000 Hz sample rates.
-  - `Source/FDNReverb.h`: added `REFERENCE_SAMPLE_RATE = 44100.0`, increased
-    `MAX_DELAY_SAMPLES` from 32768 → 131072 (sized for 192 kHz + max room size),
-    applied `srScale = currentSampleRate / REFERENCE_SAMPLE_RATE` in both
-    `configureDelayLengths()` and `updateCoefficients()`.
-  - New QA script `scripts/qa-bl043-fdn-samplerate-sweep-mac.sh` validates
-    timing parity across all four rates with a 0.05 ms tolerance gate.
-  - Mathematical parity check: PASS 48/48 delay-line × rate combinations;
-    max error 0.0104 ms.
-  - Runbook archived: `Documentation/backlog/done/bl-043-fdn-sample-rate-integrity.md`.
+- BL-043 FDN sample-rate integrity (P0):
+  - Delay times are now invariant in milliseconds across `44.1k/48k/96k/192k`.
+  - QA parity sweep added: `scripts/qa-bl043-fdn-samplerate-sweep-mac.sh`.
+  - Canonical done runbook: `Documentation/backlog/done/bl-043-fdn-sample-rate-integrity.md`.
 
-### Added
+### Recent Done Promotions
 
-- WebView entrypoint routing override for host/runtime diagnostics:
-  - Production default now loads `Source/ui/public/index.html`.
-  - Incremental UI remains available via `LOCUSQ_UI_VARIANT=incremental`.
-  - UI self-test flow (`LOCUSQ_UI_SELFTEST`) now forces incremental stage12 automatically.
-- Steam Audio C API specialist skill for repeatable BL-009 integration:
-  - `.codex/skills/steam-audio-capi/SKILL.md`
-  - `.codex/skills/steam-audio-capi/references/sources.md`
-- CLAP and spatial-audio specialist skills for BL-011/BL-018 execution:
-  - `.codex/skills/clap-plugin-lifecycle/SKILL.md`
-  - `.codex/skills/spatial-audio-engineering/SKILL.md`
-- Specialist skills for current head-tracking and calibration lanes:
-  - `.codex/skills/headtracking-companion-runtime/SKILL.md`
-  - `.codex/skills/hrtf-rendering-validation-lab/SKILL.md`
-  - `.codex/skills/perceptual-listening-harness/SKILL.md`
-- Specialist documentation-cleanup skill:
-  - `.codex/skills/documentation-hygiene-expert/SKILL.md`
-- Holistic post-v1 backlog execution spec refresh:
-  - `Documentation/backlog-post-v1-agentic-sprints.md`
-  - Includes fresh `P0-P2` prioritization, dependency graphs, parallel agent tracks, and per-task Codex/Claude mega-prompts.
-
-### Changed
-
-- Skill routing and contracts refreshed for head-tracking research alignment:
-  - updated root routing docs: `AGENTS.md`, `CODEX.md`, `CLAUDE.md`, `SKILLS.md`, `AGENT_RULE.md`.
-  - updated canonical matrix: `Documentation/skill-selection-matrix.md`.
-  - enhanced specialist skills: `spatial-audio-engineering`, `steam-audio-capi`, `threejs`, `reactive-av`, `juce-webview-runtime`, `skill_docs`, `skill_testing`.
-
-- BL-023 Resize/DPI hardening done-transition closeout completed (2026-02-28):
-  - runbook archived to `Documentation/backlog/done/bl-023-resize-dpi-hardening.md`.
-  - backlog index synchronized to `Done` with done-path link.
-  - canonical promotion packet retained at `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z/`.
-  - owner closeout governance gates PASS (`jq empty status.json`, `./scripts/validate-docs-freshness.sh`).
-- BL-052 Steam Audio virtual surround + quad layout done closeout normalized (2026-02-28):
-  - runbook archived to `Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md`.
-  - backlog index synchronized (active queue + closed archive row).
-  - owner closeout packet published at `TestEvidence/bl052_owner_sync_z1_20260228T175701Z/`.
-  - governance gates PASS (`jq empty status.json`, `./scripts/validate-docs-freshness.sh`).
-- Owner preflight and promotion intake rerun completed for BL-042 (2026-02-28):
-  - preflight rerun PASS packet: `TestEvidence/owner_preflight_bl042_bl044_bl046_bl047_bl048_bl049_z16p_r2c_20260228T163446Z/`.
-  - fresh owner recheck packet PASS: `TestEvidence/owner_done_promotion_bl042_z18_20260228T163005Z/` (`contract-only --runs 20`, `execute-suite --runs 3`, exit-semantics probes, docs freshness, status schema all green).
-  - backlog row promoted to `Done`; runbook archived to `Documentation/backlog/done/bl-042-qa-ci-regression-gates.md`.
-- Owner done-promotion closeout completed for BL-044/BL-046/BL-047/BL-048/BL-049 (2026-02-27):
-  - backlog rows promoted to `Done`, runbooks archived under `Documentation/backlog/done/`.
-  - owner evidence packet: `TestEvidence/owner_done_promotion_bl044_bl046_bl047_bl048_bl049_z17_20260227T231736Z/`.
-  - `status.json`, `TestEvidence/build-summary.md`, and `TestEvidence/validation-trend.md` synchronized in the same changeset.
-- BL-025 and BL-014 closeout promotion completed (2026-02-24):
-  - backlog/state promoted both P0 rows to `Done`.
-  - refreshed evidence bundle: `TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`.
-- BL-018 spatial format matrix strict closeout completed (2026-02-24):
-  - backlog/state promoted BL-018 to `Done` with queue handoff to BL-022 as next P1 lane.
-  - fallback-prompt build lane confirmed: `cmake --build build --target all` (`PASS`, warnings only).
-  - strict matrix evidence bundle: `TestEvidence/bl018_profile_matrix_20260224T183138Z/per_profile_results.tsv` and `TestEvidence/bl018_profile_matrix_20260224T183138Z/diagnostics_snapshot.json` (`9/9` profiles pass; `warnings=0`; `fallback_triggered=false`; `rt_safe=true`; `diagnostics_match=true`).
-- BL-022 choreography lane closeout completed (2026-02-24):
-  - backlog/state promoted BL-022 to `Done` with queue handoff to BL-012 as next P1 lane.
-  - closeout bundle: `TestEvidence/bl022_validation_20260224T184032Z/status.tsv`.
-  - production self-test artifact: `TestEvidence/locusq_production_p0_selftest_20260224T184037Z.json` (`UI-P1-022` plus `UI-P1-025A..E` all pass).
-- BL-013 HostRunner feasibility promotion completed (2026-02-25):
-  - backlog/state promoted BL-013 to `Done` from Slice D promotion packet.
-  - closeout evidence: `TestEvidence/bl013_done_promotion_20260225T170341Z/status.tsv` and `TestEvidence/bl013_done_promotion_20260225T170341Z/promotion_decision.md`.
-- BL-017 head-tracked monitoring companion bridge promotion completed (2026-02-25):
-  - backlog/state promoted BL-017 to `Done` from Slice E promotion packet.
-  - closeout evidence: `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/status.tsv` and `TestEvidence/bl017_done_promotion_slice_e_20260225T174808Z/promotion_decision.md`.
-- BL-030 release governance lanes progressed to validation baseline (2026-02-24):
-  - Slice C CI integration landed at `.github/workflows/release-governance.yml` (tag/manual trigger, automated gates, explicit manual-device gate notice).
-  - Slice D dry-run execution captured baseline gate outcomes at `TestEvidence/bl030_release_governance_20260224T204022Z/release_checklist_run.md`.
-  - owner replay confirms required command lanes are green on current branch (`TestEvidence/owner_bl030_unblock_replay_20260225T170650Z/status.tsv`); release remains blocked on governance gates `RL-05` and `RL-09`.
-- BL-030 RL-09 release-note closeout packet finalized (2026-02-25):
-  - RL-09 traceability evidence captured in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl09_traceability.md`.
-  - RL-09 decision state recorded as `PASS` in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl_gate_matrix.tsv`.
-  - Release governance remains `NO-GO` because RL-05 is still `FAIL` per `TestEvidence/bl030_rl05_clean_replay_g1_20260225T175856Z/dev_matrix_results.tsv`.
-- BL-030 owner authoritative RL-05 closure + governance closeout summary finalized (2026-02-28):
-  - owner confirmation packet: `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z/`.
-  - RL-05 reconcile replay is `UNANIMOUS_PASS` (`run1/run2/run3` all `exit 0`) per `replay_determinism_summary.tsv`.
-  - RL-09 traceability refreshed for the active window at `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z/rl09_traceability.log`.
-  - consolidated owner gate matrix published at `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z/rl_gate_matrix.tsv` with governance release decision in `release_decision.md`.
-- HX-05 payload budget hardening advanced to Slice C harness contract (2026-02-25):
-  - deterministic soak harness added at `scripts/qa-hx05-payload-budget-soak-mac.sh`.
-  - fixture contract validated (`pass=>0`, `fail=>1`) and owner replay confirmed (`TestEvidence/owner_hx05_slice_c_replay_20260225T175333Z/status.tsv`).
-- Added plain-language validation lane documentation for operators:
-  - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
-  - linked from `Documentation/README.md`.
-- P0 host UI baseline now targets production UI by default (`BL-003`, `BL-004`, `BL-005` execution track).
-- BL-010 closeout promotion completed (2026-02-23):
-  - backlog state moved from `In Validation (blocked)` to `Done` after BL-009 dependency closure.
-  - deterministic evidence bundle remains authoritative at `TestEvidence/bl010_validation_20260222T191102Z/`.
-- BL-016 transport-contract closeout completed (2026-02-23):
-  - backlog/state promoted to `Done` after refreshing the required validation bundle.
-  - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T025859Z.json`, `TestEvidence/locusq_smoke_suite_spatial_bl016_20260223T025916Z.log` (warn-only baseline retained), `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl016_20260223T030005Z.log`, `TestEvidence/validate_docs_freshness_bl016_20260223T030010Z.log`.
-- BL-015 all-emitter realtime rendering closeout completed (2026-02-23):
-  - backlog/state promoted to `Done` after fresh production self-test and smoke-suite reruns.
-  - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T034704Z.json` (`UI-P1-015` pass: selected vs non-selected styling), `TestEvidence/locusq_smoke_suite_spatial_bl015_20260223T034751Z.log` (`3 PASS / 1 WARN / 0 FAIL` baseline retained).
-  - companion checks in the same self-test remain green (`UI-P1-014`, `UI-P1-019`, `UI-P1-022`) to protect downstream overlay lanes.
-- BL-019 physics interaction lens closeout completed (2026-02-23):
-  - backlog/state promoted to `Done` after refreshing the required closeout bundle.
-  - latest evidence set: `TestEvidence/locusq_production_p0_selftest_20260223T171542Z.json` (`UI-P1-019` pass: `physics lens overlays verified (force/collision/trajectory)`), `TestEvidence/locusq_smoke_suite_spatial_bl019_20260223T121613.log` (`3 PASS / 1 WARN / 0 FAIL` baseline retained), `TestEvidence/validate_docs_freshness_bl019_20260223T122029_postsync.log` (`PASS`).
-- BL-011 CLAP lifecycle and host/CI closeout completed (2026-02-23):
-  - backlog/state promoted to `Done` after deterministic CLAP closeout lane pass.
-  - closeout artifact: `TestEvidence/bl011_clap_closeout_20260223T032730Z/` (CLAP build/install, `clap-info`, `clap-validator`, QA smoke, phase 2.6 suite, BL-011 self-test, non-CLAP guard, REAPER discoverability probe).
-  - CLAP discoverability evidence: `TestEvidence/reaper_clap_discovery_probe_20260223T023314Z.json` (`matchedFxName=CLAP: LocusQ (Noizefield)`).
-- HX-01 shared_ptr atomic migration guard completed (2026-02-23):
-  - direct deprecated SceneGraph call sites were migrated to the contract wrapper path (`Source/SharedPtrAtomicContract.h`, `Source/SceneGraph.h`).
-  - validation artifacts: `TestEvidence/hx01_sharedptr_atomic_build_20260223T034848Z.log`, `TestEvidence/hx01_sharedptr_atomic_qa_smoke_20260223T034918Z.log`, `TestEvidence/hx01_sharedptr_atomic_deprecation_scan_excluding_wrapper_20260223T034931Z.log`.
-- HX-04 scenario coverage hardening completed (2026-02-23):
-  - Added required scenario manifest: `qa/scenarios/locusq_hx04_required_scenarios.json`.
-  - Added parity suite: `qa/scenarios/locusq_hx04_component_parity_suite.json`.
-  - Added reusable audit lane: `scripts/qa-hx04-scenario-audit.sh`.
-  - Wired BL-012 tranche-1 lane to execute HX-04 audit by default (`LQ_BL012_RUN_HX04_AUDIT=1`) with evidence at `TestEvidence/bl012_harness_backport_20260223T172301Z/status.tsv`.
-  - Standalone audit evidence: `TestEvidence/hx04_scenario_audit_20260223T172312Z/status.tsv`.
-- CLAP documentation consolidation for BL-011:
-  - new canonical closeout plan: `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
-  - governance ADR: `Documentation/adr/ADR-0009-clap-closeout-documentation-consolidation.md`
-  - archived CLAP references/PDFs: `Documentation/archive/2026-02-23-clap-reference-bundle/`
-- Physics preset stickiness hardening in production UI (`BL-002` execution track):
-  - `custom` promotion now checks against preset parameter signatures before flipping state.
-  - Added deferred re-check around host callback ordering window to avoid false preset reverts.
-- Root `README.md` structure standardized to concise quick-start/status/release-policy layout (`BL-001`).
-- BL-009 Steam headphone path is now integrated behind runtime availability checks:
-  - Added Steam Audio runtime load/init/teardown in `SpatialRenderer` with deterministic stereo fallback.
-  - Added Steam-enabled CMake include/runtime path wiring (`LOCUSQ_ENABLE_STEAM_AUDIO`).
-  - Added opt-in production self-test switch `LOCUSQ_UI_SELFTEST_BL009=1` and passing `UI-P1-009` evidence.
-- BL-009 diagnostics closeout hardening:
-  - Added explicit Steam init stage/error/runtime-lib/missing-symbol telemetry in `Source/SpatialRenderer.h`.
-  - Surfaced diagnostics in scene-state payload (`Source/PluginProcessor.cpp`) and production UI self-test reporting (`Source/ui/public/js/index.js`).
-- BL-011 CLAP lifecycle diagnostics (Slice 2):
-  - `LocusQAudioProcessor` now surfaces deterministic CLAP runtime telemetry (`clapBuildEnabled`, `clapPropertiesAvailable`, `clapIsPluginFormat`, `clapLifecycleStage`, `clapRuntimeMode`, `clapVersion`) in `getSceneStateJSON`.
-  - Added opt-in production self-test lane `UI-P2-011` (`selftest_bl011=1`) and environment passthrough (`LOCUSQ_UI_SELFTEST_BL011`).
-- REAPER host-lane planning scaffolding (`BL-024`):
-  - Added plan doc `Documentation/plans/reaper-host-automation-plan-2026-02-22.md`.
-  - Added manual QA runbook `Documentation/testing/reaper-manual-qa-session.md`.
-  - Added headless smoke runner `scripts/reaper-headless-render-smoke-mac.sh`.
-  - Added REAPER bootstrap script `qa/reaper/reascripts/LocusQ_Create_Manual_QA_Session.lua`.
-- Root docs contract tightened for clearer entrypoints and reduced drift:
-  - `README.md`
-  - `CODEX.md`
-  - `CLAUDE.md`
-  - `SKILLS.md`
-  - `AGENT_RULE.md`
+- BL-023, BL-052, BL-042, BL-044, BL-046, BL-047, BL-048, BL-049 moved to `Done` with synchronized backlog/archive/evidence updates.
+- BL-030 release-governance RL-09 closeout captured; RL-05 authoritative closure recorded in owner sync evidence packets.
+- BL-013 and BL-017 done promotions completed with promotion-decision packets.
 
 ## [v1.0.0-ga] - 2026-02-20
 
-### Added
+- Initial GA release baseline for LocusQ established with spatial renderer, host/runtime integration, QA harness lanes, and packaging/release foundations.
+- See archive for full detailed implementation and validation narrative.
 
-- Local macOS build/install automation command:
-  - `scripts/build-and-install-mac.sh` (builds `LocusQ_VST3` + `LocusQ_AU`, installs to `~/Library/Audio/Plug-Ins/{VST3,Components}`, prints hash/timestamp verification, and optionally installs standalone app with `LOCUSQ_INSTALL_STANDALONE=1`).
-- Harness comparison and backport analysis doc:
-  - `Documentation/archive/2026-02-25-research-legacy/qa-harness-upstream-backport-opportunities-2026-02-20.md`
-- Stage 14 review/release planning artifacts:
-  - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
-  - `Documentation/archive/2026-02-23-historical-review-bundles/stage14-review-release-checklist.md`
-- Phase 2.4 acceptance closure tooling:
-  - `qa/physics_probe_main.cpp` deterministic physics probe target
-  - `qa/scenarios/locusq_24_physics_spatial_motion.json`
-  - `qa/scenarios/locusq_24_physics_zero_g_drift.json`
-  - `qa/scenarios/locusq_phase_2_4_acceptance_suite.json`
-- Phase 2.6 timeline editor interaction surface in WebView:
-  - add/move/delete keyframes
-  - per-keyframe curve cycling
-  - timeline transport controls (rewind/stop/play bridge)
-- Native bridge APIs for timeline and presets:
-  - `locusqGetKeyframeTimeline`
-  - `locusqSetKeyframeTimeline`
-  - `locusqSetTimelineTime`
-  - `locusqListEmitterPresets`
-  - `locusqSaveEmitterPreset`
-  - `locusqLoadEmitterPreset`
-- Emitter preset JSON persistence for parameter + timeline state.
-- UI-visible perf telemetry (`perfBlockMs`, `perfEmitterMs`, `perfRendererMs`) sourced from processor EMA metrics.
-- Root project docs for this plugin:
-  - `README.md`
-  - `CHANGELOG.md`
-- Planning decision package artifacts:
-  - `Documentation/adr/ADR-0002-routing-model-v1.md`
-  - `Documentation/adr/ADR-0003-automation-authority-precedence.md`
-  - `Documentation/adr/ADR-0004-v1-ai-deferral.md`
-  - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
-  - `Documentation/scene-state-contract.md`
-  - `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md` (skill-plan-ready execution matrix)
-- Design v3 artifact set for persistent viewport + adaptive control rail enforcement:
-  - `Design/v3-ui-spec.md`
-  - `Design/v3-style-guide.md`
-  - `Design/v3-test.html`
-  - `Design/index.html`
-  - `Design/HANDOFF.md`
-- Shipping distribution artifacts:
-  - `dist/LocusQ-v0.1.0-macOS/`
-  - `dist/LocusQ-v0.1.0-macOS.zip`
-  - `dist/LocusQ-v0.1.0-macOS/BUILD_MANIFEST.md`
-  - `plugins/LocusQ/TestEvidence/locusq_ship_universal_configure.log`
-  - `plugins/LocusQ/TestEvidence/locusq_ship_universal_build.log`
-  - `plugins/LocusQ/TestEvidence/locusq_ship_package.log`
-- Manual host UI acceptance checklist artifact:
-  - `plugins/LocusQ/TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
-- Phase 2.7b validation artifacts:
-  - `plugins/LocusQ/TestEvidence/locusq_build_phase_2_7b_vst3.log`
-  - `plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7b_js_check.log`
-- Phase 2.7c native UI-state bridge APIs:
-  - `locusqGetUiState`
-  - `locusqSetUiState`
-- Phase 2.7c validation artifacts:
-  - `plugins/LocusQ/TestEvidence/locusq_build_phase_2_7c_vst3.log`
-  - `plugins/LocusQ/TestEvidence/locusq_ui_phase_2_7c_js_check.log`
-  - `plugins/LocusQ/TestEvidence/locusq_smoke_suite_phase_2_7c.log`
-- Standalone UI automation smoke runner (macOS):
-  - `scripts/standalone-ui-smoke-mac.sh`
-  - Captures screenshot deltas and publishes `TestEvidence/standalone_ui_smoke_<timestamp>/summary.tsv`
-- Multi-agent thread watchdog capability:
-  - `scripts/thread-watchdog`
-  - `TestEvidence/thread-contracts.tsv` (contract template)
-  - `TestEvidence/thread-heartbeats.tsv` (heartbeat template)
-  - Enforces contract completeness, heartbeat/artifact freshness, slot policy (`<=5` workers + `<=1` coordinator), stalled detection, and `DONE <result> <artifact/commit>` closeout format.
+## Legacy Changelog Archive
 
-### Changed
+The full pre-compaction changelog history was archived on 2026-03-01 at:
+- `Documentation/archive/2026-03-01-changelog-compaction/changelog-legacy-2026-03-01.md`
 
-- Stage 15 closeout tracked for draft-pre-release readiness:
-  - Task 15-A confirmed resolved: `emit_dir_azimuth` and `emit_dir_elevation` relay/attachment/UI exposure already landed.
-  - Task 15-B resolved: `phys_vel_x`, `phys_vel_y`, and `phys_vel_z` relay/attachment/UI wiring landed in production WebView controls.
-  - Task 15-C resolved: UI exposure decision captured in `Documentation/adr/ADR-0007-emitter-directivity-velocity-ui-exposure.md`.
-- Stage 16 hardening completed:
-  - Task 16-A added dedicated QA scenarios for `AirAbsorption`, `CalibrationEngine`, `KeyframeTimeline` loop playback, and `emit_dir` spatial effect.
-  - Task 16-B RT-safety audit confirmed processBlock allocation-free compliance (`0` RT-path violations).
-  - Task 16-C research integration recommendations published in `Documentation/archive/2026-02-25-research-legacy/section0-integration-recommendations-2026-02-20.md`.
-  - Task 16-D viewport scope decision formalized via `Documentation/adr/ADR-0008-viewport-scope-v1-vs-post-v1.md` (telemetry deferred post-v1).
-  - Task 16-E added directivity aim QA scenario `qa/scenarios/locusq_directivity_aim.json`.
-- Stage 17 GA-readiness progress:
-  - Task 17-A portable acceptance rerun recorded `PASS_WITH_NA` (`DEV-01..DEV-05=PASS`, `DEV-06=N/A`, external mic unavailable) at `2026-02-20T23:23:53Z`.
-  - Task 17-B docs freshness gate passed with `0 warning(s)`.
-  - Task 17-C release freeze applied: changelog finalized and CMake project version bumped to `1.0.0` (`v1.0.0-ga` target).
-- Documentation indices updated for new harness comparison artifact and local build/install command:
-  - `Documentation/README.md`
-  - `README.md`
-- Stage 14 contract alignment updates:
-  - `.ideas/creative-brief.md`
-  - `.ideas/architecture.md`
-  - `.ideas/parameter-spec.md`
-  - `.ideas/plan.md`
-  - `Documentation/invariants.md`
-  - `Documentation/implementation-traceability.md`
-  - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
-  - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
-  - `Documentation/README.md`
-  - `README.md`
-  - `status.json`
-  - `TestEvidence/build-summary.md`
-  - `TestEvidence/validation-trend.md`
-  - Added explicit laptop speaker/mic/headphone usability contract and Stage 14 comprehensive review/release gating checklist.
-  - Corrected spec/traceability drift notes for internal runtime fields (`room_profile`, `cal_state`) and deferred/no-op parameter (`rend_phys_interact`).
-- Stage 13 acceptance sweep closeout sync:
-  - Automated Stage 12 self-test + UI PR gate rerun, targeted non-UI parity matrix, pluginval strictness-5, and standalone smoke recorded under `TestEvidence/stage13_acceptance_sweep_20260220T180204Z/`.
-  - Closeout surfaces synchronized for Stage 13 progress with manual DAW signoff intentionally left open:
-    - `status.json`
-    - `README.md`
-    - `CHANGELOG.md`
-    - `Documentation/archive/2026-02-23-historical-review-bundles/v3-ui-parity-checklist.md`
-    - `Documentation/archive/2026-02-23-historical-review-bundles/v3-stage-9-plus-detailed-checklists.md`
-    - `TestEvidence/phase-2-7a-manual-host-ui-acceptance.md`
-    - `TestEvidence/build-summary.md`
-    - `TestEvidence/validation-trend.md`
-- Phase 2.4 acceptance state promoted from partial to complete across:
-  - `status.json`
-  - `.ideas/plan.md`
-  - `Documentation/implementation-traceability.md`
-  - `README.md`
-  - `TestEvidence/build-summary.md`
-  - `TestEvidence/validation-trend.md`
-- Phase records and traceability updated from "Phase 2.6 start" to "Phase 2.6 acceptance/tuning" in:
-  - `status.json`
-  - `.ideas/plan.md`
-  - `Documentation/implementation-traceability.md`
-- Research synthesis execution matrix updated to current resolved/open state with command sequencing for design/impl/test handoff:
-  - `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md`
-- WebView UI shell updated to enforce mode-adaptive rail behavior without viewport reset:
-  - `Source/ui/public/index.html`
-  - `Source/ui/public/js/index.js`
-- Phase 2.6 acceptance closeout evidence refreshed with full-system CPU and host edge matrix logs in:
-  - `TestEvidence/build-summary.md`
-  - `TestEvidence/validation-trend.md`
-- Phase and status surfaces aligned to reflect closed Phase 2.6 acceptance gates:
-  - `status.json`
-  - `.ideas/plan.md`
-  - `README.md`
-  - `Documentation/archive/2026-02-25-research-legacy/quadraphonic-audio-spatialization-next-steps.md`
-- `/test` focused acceptance matrix evidence and machine-readable suite output published:
-  - `qa_output/suite_result.json`
-  - `TestEvidence/test-summary.md`
-  - `TestEvidence/validation-trend.md`
-  - `status.json`
-- State advanced to shipping completion for local macOS universal release:
-  - `status.json`
-  - `README.md`
-- WebView runtime bootstrap hardened for post-ship host interactivity recovery:
-  - `Source/ui/public/js/index.js`
-  - Startup now keeps control wiring active even when viewport/WebGL init fails
-  - Added guarded DOM/viewport access paths to prevent early init aborts in host
-- `/test` UI interaction smoke matrix (harness-first) executed and published:
-  - `qa_output/suite_result.json`
-  - `TestEvidence/test-summary.md`
-  - `TestEvidence/validation-trend.md`
-  - `status.json`
-  - `.ideas/plan.md`
-  - `README.md`
-- Manual host UI acceptance handoff prepared for 2.7a closeout:
-  - `status.json`
-  - `.ideas/plan.md`
-  - `README.md`
-- Phase 2.7b viewport + calibration interaction wiring implemented:
-  - `Source/ui/public/js/index.js`
-  - `Source/ui/public/index.html`
-  - `Source/PluginProcessor.cpp`
-  - Added scene payload `localEmitterId` and calibration payload (`speakerLevels`, `profileValid`) to drive state-backed viewport selection/movement and calibration visualization.
-  - Replaced cosmetic calibration speaker/meter visuals with native-status-driven behavior.
-  - Updated phase/document state surfaces:
-    - `status.json`
-    - `.ideas/plan.md`
-    - `README.md`
-- Phase 2.7c control-path closure implemented:
-  - `Source/ui/public/js/index.js`
-  - `Source/PluginEditor.h`
-  - `Source/PluginEditor.cpp`
-  - `Source/PluginProcessor.h`
-  - `Source/PluginProcessor.cpp`
-  - Connected previously visual-only rail/header controls to APVTS relays/attachments.
-  - Added persisted native UI state for emitter label + physics preset (`locusq_ui_state_json`).
-  - Preserved emitter label through audio-thread publish path and host save/load snapshots.
-- Phase closeout documentation gate formalized and synchronized:
-  - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
-  - `Documentation/standards.md`
-  - `Documentation/README.md`
-  - `scripts/validate-docs-freshness.sh`
-  - `status.json`
-  - `.ideas/plan.md`
-  - `README.md`
-  - `TestEvidence/build-summary.md`
-  - `TestEvidence/validation-trend.md`
-- Phase 2.6c allocation-free closeout documentation aligned:
-  - `status.json`
-  - `.ideas/plan.md`
-  - `README.md`
-  - `TestEvidence/build-summary.md`
-  - `TestEvidence/validation-trend.md`
-  - `Documentation/implementation-traceability.md`
-- Phase 2.7d host-interaction closure prep aligned:
-  - `Source/PluginEditor.h`
-  - `Source/PluginEditor.cpp`
-  - `Source/PluginProcessor.cpp`
-  - `Source/ui/public/js/index.js`
-  - `README.md` (plain-language + v1 completion checklist)
-- Pluginval automation crash mitigation aligned:
-  - `Source/PluginProcessor.cpp`
-  - `Source/PluginProcessor.h`
-  - `Source/SceneGraph.h`
-  - Added mode-transition scene registration sync to prevent stale emitter-slot audio reads under aggressive mode automation.
-- Output-layout expansion groundwork aligned:
-  - `Source/PluginProcessor.cpp`
-  - Bus-layout support now accepts `mono`, `stereo`, and `quadraphonic`/`discrete(4)` outputs while retaining mono/stereo input support.
-- Output-layout robustness follow-through:
-  - `Source/SpatialRenderer.h`
-  - `Source/PluginProcessor.cpp`
-  - `Source/ui/public/js/index.js`
-  - `qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json`
-  - `qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json`
-  - `qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json`
-  - Added deterministic quad channel map (`FL, FR, RL, RR`) from internal speaker order and published layout/map telemetry to UI scene-state payload.
-  - Added explicit mono output-layout regression coverage so output route acceptance now runs in `1ch/2ch/4ch`.
-- CI QA hardening updates:
-  - `.github/workflows/qa_harness.yml` (stronger result gating + explicit 4-channel host-edge/full-system matrix lanes + seeded `pluginval` stress job on macOS)
-  - `.github/workflows/docs-freshness.yml`
-  - `scripts/validate-docs-freshness.sh`
-- Renderer CPU guardrail polish aligned:
-  - `Source/SpatialRenderer.h`
-  - `Source/PluginProcessor.cpp`
-  - `qa/locusq_adapter.h`
-  - `qa/locusq_adapter.cpp`
-  - `qa/scenarios/locusq_26_full_system_cpu_draft.json`
-  - `qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json`
-  - `qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json`
-  - `qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json`
-  - Added per-block emitter priority budget + activity culling in renderer hot path.
-  - Added scene-state guardrail telemetry (`rendererEligibleEmitters`, `rendererProcessedEmitters`, `rendererCulledBudget`, `rendererCulledActivity`, `rendererGuardrailActive`).
-  - Expanded QA spatial emitter ceiling to `16` and remapped existing normalized values to preserve prior baseline counts.
-- Renderer CPU trend expansion (`2.10b`) aligned:
-  - `qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`
-  - `qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`
-  - `.github/workflows/qa_harness.yml`
-  - Added final-quality high-emitter stress coverage and trend-suite rollups across `48k/512` + `96k/512`, `2ch/4ch`, with matching CI matrix lanes in `qa-critical`.
-- Preset/snapshot layout compatibility hardening aligned:
-  - `Source/PluginProcessor.h`
-  - `Source/PluginProcessor.cpp`
-  - `qa/locusq_adapter.h`
-  - `qa/locusq_adapter.cpp`
-  - `qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json`
-  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_stereo.json`
-  - `qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`
-  - Snapshot state now persists output-layout schema metadata and applies restore-time migration for legacy/mismatched layout payloads.
-  - Emitter preset schema now supports `locusq-emitter-preset-v2` with optional layout block while retaining `v1` compatibility.
-  - Added state-roundtrip migration QA modes to emulate legacy metadata stripping and forced layout mismatches.
-- Snapshot migration matrix expansion (`2.11b`) aligned:
-  - `qa/locusq_adapter.h`
-  - `qa/locusq_adapter.cpp`
-  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_mono_runtime.json`
-  - `qa/scenarios/locusq_211_snapshot_migration_layout_mismatch_quad_runtime.json`
-  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`
-  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`
-  - `qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`
-  - Expanded snapshot-migration emulation to five deterministic modes (`off`, `legacy-strip`, `force-mono`, `force-stereo`, `force-quad`).
-  - Added explicit mono/stereo/quad runtime suite coverage for layout mismatch migration checks.
-- Host UI interactivity bridge recovery aligned:
-  - `Source/ui/public/index.html`
-  - `Source/ui/public/js/juce/index.js`
-  - `Source/ui/public/js/index.js`
-  - `Source/PluginEditor.cpp`
-  - `CMakeLists.txt`
-  - Removed module-based WebView JS load path and restored global JUCE bridge bindings for in-host control wiring.
-  - Corrected platform backend/build flags (`webview2` Windows-only; `NEEDS_WEB_BROWSER=TRUE` on macOS).
-  - Published bridge-fix full acceptance rerun evidence (`test_full_acceptance_rerun_bridge_fix_20260219T212613Z`) with `PASS_WITH_WARNING` and no blocking suite failures.
-
-### Validation Snapshot (2026-02-19 UTC)
-
-- `phase_2_4_physics_probe`: `PASS` (`5/5` checks)
-- `locusq_24_physics_spatial_motion`: `PASS`
-- `locusq_24_physics_zero_g_drift`: `PASS`
-- `locusq_phase_2_4_acceptance_suite`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
-- `locusq_phase_2_6_acceptance_suite`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
-- `locusq_26_full_system_cpu_draft`: `PASS` (`perf_avg_block_time_ms=0.304457`, `perf_p95_block_time_ms=0.318466`, `perf_meets_deadline=true`, `perf_allocation_free=true`)
-- `locusq_26_host_edge_roundtrip_multipass`: `PASS` across `44.1k/256`, `48k/512`, `48k/1024`, `96k/512`
-- `LocusQ_VST3` and `LocusQ_Standalone` build: `PASS`
-- `pluginval` strictness 5 in-process: deterministic automation-segfault seed (`0x2a331c6`) now `PASS` after mitigation; post-fix stability probe `10/10 PASS`
-- Standalone launch smoke: `PASS`
-- Universal ship build (`x86_64 arm64`) and macOS package archive: `PASS`
-- `pluginval` on universal ship VST3: `PASS` (exit code `0`)
-- Standalone smoke on universal ship app: `PASS`
-- Focused matrix refresh deltas published in `qa_output/suite_result.json`:
-  - suite deltas unchanged (`Phase 2.6` and `Phase 2.5` acceptance counts)
-  - full-system CPU delta: `perf_avg_block_time_ms +0.006446`, `perf_p95_block_time_ms +0.003414`
-- UI interaction smoke matrix refresh published in `qa_output/suite_result.json`:
-  - `locusq_smoke_suite` (Emitter adapter): `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
-  - `locusq_26_animation_internal_smoke`: `PASS`
-  - `locusq_phase_2_6_acceptance_suite`: superseded by Phase 2.6c refresh (`3 PASS / 0 WARN / 0 FAIL`)
-  - full-system CPU delta (Phase 2.6c closeout): `perf_avg_block_time_ms -0.123656`, `perf_p95_block_time_ms -0.131328`
-- Phase 2.7b validation snapshot:
-  - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
-  - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 -j 8`: `PASS`
-  - `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
-- Phase 2.7c validation snapshot:
-  - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
-  - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 -j 8`: `PASS`
-  - `./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa plugins/LocusQ/qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
-- Phase 2.7d validation snapshot:
-  - `node --input-type=module --check < plugins/LocusQ/Source/ui/public/js/index.js`: `PASS`
-  - `cmake --build plugins/LocusQ/build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
-  - `locusq_smoke_suite`, `locusq_26_animation_internal_smoke`, `locusq_phase_2_6_acceptance_suite`, host-edge `48k/512`: `PASS`
-- Pluginval automation mitigation validation snapshot:
-  - repro before fix: `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6.log` (`FAIL`, segfault)
-  - crash backtrace: `plugins/LocusQ/TestEvidence/pluginval_lldb_btall_seed_0x2a331c6.log` (top frame `SpatialRenderer::process`)
-  - deterministic repro after fix: `plugins/LocusQ/TestEvidence/pluginval_repro_seed_0x2a331c6_after_fix.log` (`PASS`)
-  - stability probe: `plugins/LocusQ/TestEvidence/pluginval_postfix_stability_20260219T191544Z_status.tsv` (`10/10 PASS`)
-- Quad-layout validation snapshot:
-  - `cmake --build build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_renderer_spatial_output.json --channels 4`: `PASS`
-  - `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json --channels 4`: `PASS`
-- Output-layout regression-suite snapshot:
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_mono_suite.json`: `PASS`
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_stereo_suite.json`: `PASS`
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_8_output_layout_quad_suite.json`: `PASS`
-- Phase 2.9 CI harness expansion snapshot:
-  - `qa-critical` now emits quad matrix logs for smoke, renderer spatial output, host-edge, and full-system paths.
-  - `qa-pluginval-seeded-stress` now defines deterministic seed sweep (`0x2a331c6`..`0x2a331ca`) with per-seed logs + `status.tsv` artifact.
-  - First remote CI execution of the new lanes is pending.
-- Renderer CPU guardrail validation snapshot:
-  - `cmake --build build --target LocusQ_VST3 locusq_qa -j 8`: `PASS`
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_26_full_system_cpu_draft.json --sample-rate 48000 --block-size 512`: `PASS` (`perf_avg_block_time_ms=0.304505`, `perf_p95_block_time_ms=0.323633`, `perf_allocation_free=true`)
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_29_renderer_guardrail_high_emitters.json --sample-rate 48000 --block-size 512`: `PASS` (`perf_avg_block_time_ms=0.412833`, `perf_p95_block_time_ms=0.433221`, `perf_allocation_free=true`)
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_9_renderer_cpu_suite.json --sample-rate 48000 --block-size 512`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
-  - `./build/locusq_qa_artefacts/locusq_qa qa/scenarios/locusq_smoke_suite.json`: `PASS` (`4 PASS / 0 WARN / 0 FAIL`)
-- Renderer CPU trend expansion (`2.10b`) validation snapshot:
-  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`: `PASS` (`perf_avg_block_time_ms=0.068104`, `perf_p95_block_time_ms=0.074083`, `perf_total_allocations=0`)
-  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_210b_renderer_guardrail_high_emitters_final_quality.json`: `PASS` (`perf_avg_block_time_ms=0.0717689`, `perf_p95_block_time_ms=0.0775861`, `perf_total_allocations=0`)
-  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 48000 --block-size 512 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
-  - `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial --sample-rate 96000 --block-size 512 --channels 4 qa/scenarios/locusq_phase_2_10b_renderer_cpu_trend_suite.json`: `PASS` (`3 PASS / 0 WARN / 0 FAIL`)
-- Preset/snapshot migration validation snapshot:
-  - `cmake --build build --target locusq_qa -j 1`: `PASS`
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_phase_2_11_snapshot_migration_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
-  - `./build/locusq_qa_artefacts/locusq_qa --spatial qa/scenarios/locusq_211_snapshot_migration_legacy_layout.json --channels 4`: `PASS`
-- Snapshot migration matrix expansion (`2.11b`) validation snapshot:
-  - `cmake -S . -B build -DBUILD_LOCUSQ_QA=ON -DJUCE_DIR=/Users/artbox/Documents/Repos/audio-plugin-coder/_tools/JUCE -DQA_HARNESS_DIR=/Users/artbox/Documents/Repos/audio-dsp-qa-harness -DCMAKE_POLICY_VERSION_MINIMUM=3.5`: `PASS`
-  - `cmake --build build --target locusq_qa -j 1`: `PASS`
-  - `./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_mono_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
-  - `./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_stereo_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
-  - `./build/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_phase_2_11b_snapshot_migration_quad_suite.json`: `PASS` (`2 PASS / 0 WARN / 0 FAIL`)
+Use the archive for deep historical chronology; keep this file concise and current.

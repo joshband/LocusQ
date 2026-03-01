@@ -2,7 +2,7 @@ Title: LocusQ Root README
 Document Type: Project README
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-01
 
 # LocusQ
 
@@ -25,9 +25,24 @@ It provides three runtime modes:
 
 New specialist skills are available for current head-tracking and calibration lanes:
 - `headtracking-companion-runtime`
+- `apple-spatial-companion-platform` (Swift/CoreMotion/Vision companion API ownership for BL-057/BL-058)
 - `hrtf-rendering-validation-lab`
 - `perceptual-listening-harness`
-- `documentation-hygiene-expert` (repo-scale docs cleanup/de-bloat/freshness remediation with ADR alignment)
+- `auv3-plugin-lifecycle` (AUv3 app-extension lifecycle and host-validation lanes)
+- `temporal-effects-engineering` (delay/echo/looper/frippertronics-style temporal DSP contracts)
+- `simulation-behavior-audio-visual` (fluid/crowd/flocking/herd simulation-driven audio+visual behavior)
+- `realtime-dimensional-visualization` (beautiful, operator-focused 2D/3D/4D information-visualization systems)
+- `documentation-hygiene-expert` (repo-scale docs cleanup/de-bloat/freshness remediation with ADR alignment, plus git artifact hygiene automation)
+- `skill_docs` (documentation governance metadata/ADR traceability/root routing-contract sync)
+
+Documentation ownership split:
+- `documentation-hygiene-expert`: cleanup/de-bloat, backlog and architecture hygiene, root/API-doc freshness, stale code-comment remediation.
+- `skill_docs`: governance metadata, ADR/invariant traceability, standards/tier enforcement, and routing-contract parity.
+
+Git artifact hygiene automation commands:
+- `./scripts/git-artifact-hygiene-audit.sh --ref HEAD`
+- `./scripts/git-artifact-hygiene-guard.sh`
+- `./scripts/git-artifact-cleanup-index.sh --manifest TestEvidence/git_artifact_cleanup_candidates.tsv`
 
 Canonical routing references:
 - `SKILLS.md`
@@ -330,7 +345,7 @@ Validation caveats:
 
 ## Documentation Map
 
-- `Documentation/README.md` (tiered source-of-truth map)
+- `Documentation/README.md` (tiered source-of-truth map + freshness ownership/cadence contract)
 - `Documentation/invariants.md`
 - `Documentation/scene-state-contract.md`
 - `Documentation/implementation-traceability.md`

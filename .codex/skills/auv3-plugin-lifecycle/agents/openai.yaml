@@ -1,0 +1,4 @@
+interface:
+  display_name: "AUv3 Plugin Lifecycle"
+  short_description: "Plan and validate AUv3 extension lifecycle lanes"
+  default_prompt: "Use $auv3-plugin-lifecycle to implement or validate AUv3 app-extension architecture, runtime safety, and host-validation evidence."

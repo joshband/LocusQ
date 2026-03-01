@@ -1,0 +1,4 @@
+interface:
+  display_name: "Temporal Effects Engineering"
+  short_description: "Build and validate delay/loop feedback DSP lanes"
+  default_prompt: "Use $temporal-effects-engineering to implement or harden delay, echo, looper, and feedback-network behavior with deterministic realtime safety."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Realtime Dimensional Visualization"
+  short_description: "2D/3D/4D info-viz and UI art direction"
+  default_prompt: "Use $realtime-dimensional-visualization to design and implement beautiful realtime plugin visualizations with strong information hierarchy and performance-safe rendering."

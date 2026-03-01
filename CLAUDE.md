@@ -2,7 +2,7 @@ Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-01
 
 # CLAUDE.md
 
@@ -40,10 +40,22 @@ If directives conflict, preserve build/test stability, phase discipline, and sta
 - Specialist routing defaults:
   - WebView runtime/bridge/host interop issues -> `juce-webview-runtime`.
   - Audio-reactive or physics-reactive visualization behavior -> `reactive-av`.
+  - Realtime 2D/3D/4D information visualization and beautiful operator-facing UI direction -> `realtime-dimensional-visualization`.
+  - Complex simulation-driven audio+visual behavior (fluid/crowd/flocking/herd) -> `simulation-behavior-audio-visual`.
   - Physics/simulation to DSP/audio behavior -> `physics-reactive-audio`.
+  - Delay/echo/looper/frippertronics-style temporal DSP work -> `temporal-effects-engineering`.
+  - AUv3 format lifecycle, app-extension boundaries, and AUv3 host-validation lanes -> `auv3-plugin-lifecycle`.
   - CLAP format integration/migration and host/CI validation lanes -> `clap-plugin-lifecycle`.
   - Steam Audio C API runtime loading/lifecycle/fallback work -> `steam-audio-capi`.
   - Spatial audio layout/ambisonic/binaural architecture and QA -> `spatial-audio-engineering`.
+  - SDLC documentation cleanup/de-bloat/freshness remediation with ADR alignment -> `documentation-hygiene-expert` (pair `skill_docs` for governance sync).
+  - Git artifact hygiene (tracked ignored paths, stale archives, history-bloat audits, pre-commit/CI guards) -> `documentation-hygiene-expert`.
+  - Documentation governance metadata, ADR/invariant traceability, and root routing-contract parity -> `skill_docs`.
+  - API documentation cleanup or stale code-comment hygiene -> `documentation-hygiene-expert` (pair `skill_impl` when behavior-level edits are required).
+  - Companion readiness/sync/axis runtime diagnostics -> `headtracking-companion-runtime`.
+  - AirPods companion Apple API/capture/privacy contract work (BL-057/BL-058) -> `apple-spatial-companion-platform`.
+  - HRTF/FIR/interpolation parity and crossfade validation -> `hrtf-rendering-validation-lab`.
+  - Blind listening protocol and statistical gate decisions -> `perceptual-listening-harness`.
   - 3D scene/render architecture and performance -> `threejs`.
   - Unresolved failures and diagnostics -> `skill_troubleshooting`.
 - If multiple skills apply, declare selected skills and execution order in the response.
@@ -53,9 +65,11 @@ If directives conflict, preserve build/test stability, phase discipline, and sta
 Claude must consider the full repo skill catalog:
 - `skill_dream`, `skill_plan`, `skill_design`, `skill_impl`, `skill_test`, `skill_ship`
 - `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
+- `documentation-hygiene-expert`
 - `juce-webview-windows`, `juce-webview-runtime`
-- `threejs`, `reactive-av`, `physics-reactive-audio`
-- `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
+- `threejs`, `reactive-av`, `realtime-dimensional-visualization`, `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
+- `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
+- `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
 
 Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 
@@ -117,4 +131,5 @@ For simple tasks, use one short paragraph or up to three bullets.
 - Keep this file aligned with `AGENTS.md` and `.codex/workflows/*`.
 - When workflow/skill behavior changes, update this file in the same change set.
 - Enforce markdown metadata (`Title`, `Document Type`, `Author`, `Created Date`, `Last Modified Date`) for human-authored docs in root, `.codex/`, `.claude/`, `.ideas/`, `Design/`, `Documentation/`, and `TestEvidence/`.
+- Treat skill/runtime markdown under `.codex/skills/`, `.claude/skills/`, `.codex/workflows/`, `.claude/workflows/`, `.codex/rules/`, and `.claude/rules/` as runtime-standard surfaces; exclude them from normal documentation-hygiene and `skill_docs` passes unless explicitly requested.
 - Track validation snapshots/trends in `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
