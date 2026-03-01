@@ -67,9 +67,14 @@ check_markdown_metadata_scope() {
 
   local file
   for file in "${md_files[@]}"; do
-    # Skill files under .codex/.claude are governed by Codex/Claude runtime
-    # standards and are intentionally exempt from repository metadata headers.
-    if [[ "${file}" == "./.codex/skills/"* || "${file}" == "./.claude/skills/"* ]]; then
+    # Skill/workflow/rule runtime files under .codex/.claude are governed by
+    # Codex/Claude runtime standards and are exempt from repository metadata headers.
+    if [[ "${file}" == "./.codex/skills/"* \
+       || "${file}" == "./.claude/skills/"* \
+       || "${file}" == "./.codex/workflows/"* \
+       || "${file}" == "./.claude/workflows/"* \
+       || "${file}" == "./.codex/rules/"* \
+       || "${file}" == "./.claude/rules/"* ]]; then
       continue
     fi
 

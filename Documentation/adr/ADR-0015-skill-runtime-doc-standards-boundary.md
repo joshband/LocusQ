@@ -11,15 +11,15 @@ Accepted
 
 ## Context
 
-The repository docs-freshness gate currently enforces metadata headers across nearly all markdown files. This conflicts with how Codex/Claude skill runtime files are authored and maintained (`.codex/skills/**`, `.claude/skills/**`), where portable skill conventions are the governing standard rather than repository-specific metadata fields.
+The repository docs-freshness gate currently enforces metadata headers across nearly all markdown files. This conflicts with how Codex/Claude runtime files are authored and maintained (`.codex/skills/**`, `.claude/skills/**`, `.codex/workflows/**`, `.claude/workflows/**`, `.codex/rules/**`, `.claude/rules/**`), where portable runtime conventions are the governing standard rather than repository-specific metadata fields.
 
 ## Decision
 
 Define an explicit standards boundary:
 
 1. Repository documentation standards (`Documentation/standards.md`) apply to repository governance/architecture/backlog/evidence markdown.
-2. Skill runtime markdown under `.codex/skills/**` and `.claude/skills/**` follows Codex/Claude skill standards and is exempt from repository metadata-header enforcement.
-3. `scripts/validate-docs-freshness.sh` must skip metadata-header validation for these skill-runtime paths.
+2. Runtime markdown under `.codex/skills/**`, `.claude/skills/**`, `.codex/workflows/**`, `.claude/workflows/**`, `.codex/rules/**`, and `.claude/rules/**` follows Codex/Claude runtime standards and is exempt from repository metadata-header enforcement.
+3. `scripts/validate-docs-freshness.sh` must skip metadata-header validation for those runtime paths.
 
 ## Rationale
 

@@ -2,7 +2,7 @@ Title: ADR-0010 Repository Artifact Tracking and Retention Policy
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-01
 
 # ADR-0010: Repository Artifact Tracking and Retention Policy
 
@@ -34,7 +34,7 @@ This ADR is limited to artifact lifecycle policy: classification, retention, pro
 | Artifact Class | Representative Paths / Types | Repo Policy | Retention Rule |
 |---|---|---|---|
 | Source and configuration | `Source/**`, `qa/**`, `scripts/**`, `CMakeLists.txt`, `.json`, `.md` (human-authored) | Tracked | Long-lived |
-| Canonical governance/status docs | `README.md`, `CHANGELOG.md`, `status.json`, `Documentation/backlog-post-v1-agentic-sprints.md`, `Documentation/adr/**`, `Documentation/invariants.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md` | Tracked | Long-lived |
+| Canonical governance/status docs | `README.md`, `CHANGELOG.md`, `status.json`, `Documentation/backlog/index.md`, `Documentation/adr/**`, `Documentation/invariants.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md` | Tracked | Long-lived |
 | Active plans/specs | `Documentation/plans/**`, `Documentation/testing/**` | Tracked | Current cycle; archive when superseded |
 | Generated build outputs | `build/**`, `build_*/**`, `build_bl*/**`, `build_no_clap_check/**`, `cmake-build-*/**`, `out/**`, `dist/**` | Local-only, ignored | Ephemeral |
 | Generated scratch docs/exports | `Documentation/exports/**` | Local-only, ignored | Ephemeral; archive only when explicitly preserved |
@@ -57,7 +57,8 @@ A local-only artifact may be promoted to tracked only when all of the following 
 2. No smaller summary form provides equivalent decision evidence.
 3. The owning task references the artifact from a canonical Tier 0/1 surface.
 4. The promotion rationale is documented in:
-   - `Documentation/backlog-post-v1-agentic-sprints.md` (task note), and
+   - `Documentation/backlog/index.md` (state/priority trace), and
+   - owning runbook under `Documentation/backlog/` or `Documentation/backlog/done/` (promotion note),
    - `TestEvidence/build-summary.md` or `TestEvidence/validation-trend.md` (evidence row).
 
 ## Consequences
@@ -86,6 +87,6 @@ Policy-aligned repository changes completed:
 - `Documentation/standards.md`
 - `Documentation/README.md`
 - `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`

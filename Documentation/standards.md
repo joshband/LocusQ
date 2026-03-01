@@ -16,7 +16,7 @@ Applies to human-authored markdown in:
 
 Generated markdown under `qa_output/` is exempt.
 
-Skill-runtime markdown under `.codex/skills/**` and `.claude/skills/**` is also exempt from this repository metadata-header contract and follows Codex/Claude skill standards.
+Skill/runtime markdown under `.codex/skills/**`, `.claude/skills/**`, `.codex/workflows/**`, `.claude/workflows/**`, `.codex/rules/**`, and `.claude/rules/**` is exempt from this repository metadata-header contract and follows Codex/Claude runtime standards.
 
 ## Required Metadata Header
 Every in-scope markdown file must include, in this order, at the top of file:
@@ -92,11 +92,12 @@ When code behavior changes, updated docs must reference:
 ## Phase Closeout Freshness Gate
 Per `Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md`, any phase closeout that changes acceptance/status claims must update this canonical bundle in the same change set:
 - `status.json`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
 - `README.md`
 - `CHANGELOG.md`
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`
+
+When the same closeout also changes backlog status/priority, update `Documentation/backlog/index.md` in that change set.
 
 ## Validation Logging
 - Snapshot: update `TestEvidence/build-summary.md` after meaningful build/test runs.
@@ -130,7 +131,7 @@ When documentation bloat or ambiguity appears:
 ## Tier Promotion Snapshot (2026-02-24)
 1. Tier 1 execution specs now include `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`.
 2. Tier 1 execution specs now include `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md`.
-2. Tier 1 execution specs include `Documentation/runbooks/backlog-execution-runbooks.md` as the procedural companion to the master backlog.
+3. Historical note: `Documentation/runbooks/backlog-execution-runbooks.md` was a procedural companion and is now superseded by `Documentation/backlog/index.md` plus individual runbooks.
 
 ## Closeout Sync Snapshot (2026-02-28)
 
