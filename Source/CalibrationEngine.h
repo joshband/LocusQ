@@ -13,6 +13,7 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 
@@ -47,7 +48,7 @@
  *   // Poll from editor / timer:
  *   auto prog = engine.getProgress();
  *   if (engine.isComplete())
- *       auto& result = engine.getResult();
+ *       auto result = engine.getResult();
  */
 class CalibrationEngine
 {
@@ -135,6 +136,16 @@ public:
             return false;
         }
 
+        if (analysisInFlight_.load (std::memory_order_acquire)
+            || analysisRequested_.load (std::memory_order_acquire))
+        {
+            recordStartAttempt (false,
+                                "analysis_in_flight",
+                                "Calibration start rejected: previous analysis still in flight.",
+                                stateAtRequest);
+            return false;
+        }
+
         if (! std::isfinite (sampleRate_) || sampleRate_ <= 0.0)
         {
             recordStartAttempt (false,
@@ -158,7 +169,19 @@ public:
             return false;
         }
 
+        const auto runGeneration = runGenerationCounter_.fetch_add (1u, std::memory_order_acq_rel) + 1u;
+        activeRunGeneration_.store (runGeneration, std::memory_order_release);
         abortRequested_.store (false, std::memory_order_release);
+        analysisRequested_.store (false, std::memory_order_release);
+        pendingAnalysisGeneration_.store (0u, std::memory_order_release);
+        playPercentAtomic_.store (0.0f, std::memory_order_release);
+        recordPercentAtomic_.store (0.0f, std::memory_order_release);
+        runErrorSeq_.store (0u, std::memory_order_release);
+        {
+            const juce::SpinLock::ScopedLockType lock (runErrorLock_);
+            runErrorCode_ = "none";
+            runErrorMessage_.clear();
+        }
 
         type_          = type;
         testLevelDb_   = testLevelDb;
@@ -166,10 +189,16 @@ public:
         tailSeconds_   = tailSeconds;
         micChannel_    = micInputChannel;
         for (int i = 0; i < 4; ++i)
+        {
             speakerOutputCh_[i] = speakerOutputCh[i];
+            speakerAnalysisValid_[static_cast<size_t> (i)].store (false, std::memory_order_release);
+        }
 
-        resultProfile_ = RoomProfile{};
-        startSpeaker (0);
+        {
+            const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
+            resultProfile_ = RoomProfile {};
+        }
+        startSpeaker (0, runGeneration);
         const bool started = state_.load (std::memory_order_acquire) == State::Playing;
         if (started)
             recordStartAttempt (true, "accepted", "Calibration run started.", stateAtRequest);
@@ -187,6 +216,10 @@ public:
     {
         abortRequested_.store (true, std::memory_order_release);
         analysisRequested_.store (false, std::memory_order_release);
+        pendingAnalysisGeneration_.store (0u, std::memory_order_release);
+        activeRunGeneration_.fetch_add (1u, std::memory_order_acq_rel);
+        playPercentAtomic_.store (0.0f, std::memory_order_release);
+        recordPercentAtomic_.store (0.0f, std::memory_order_release);
         state_.store (State::Idle, std::memory_order_release);
     }
 
@@ -213,6 +246,13 @@ public:
             float* out = buffer.getWritePointer (outCh);
 
             bool stillPlaying = generator_.generateBlock (out, numSamps);
+            const int totalSamples = generator_.getTotalSamples();
+            const int playbackPos = generator_.getPlaybackPosition();
+            const float playPercent = totalSamples > 0
+                ? static_cast<float> (playbackPos) / static_cast<float> (totalSamples)
+                : 0.0f;
+            playPercentAtomic_.store (juce::jlimit (0.0f, 1.0f, playPercent), std::memory_order_release);
+            recordPercentAtomic_.store (0.0f, std::memory_order_release);
 
             if (! stillPlaying)
             {
@@ -228,17 +268,28 @@ public:
             int micCh = juce::jlimit (0, numCh - 1, micInputChannel);
             const float* mic = buffer.getReadPointer (micCh);
             capture_.recordBlock (mic, numSamps);
+            const int expectedLength = capture_.getExpectedLength();
+            const int recordedSamples = capture_.getRecordedSamples();
+            const float recordPercent = expectedLength > 0
+                ? static_cast<float> (recordedSamples) / static_cast<float> (expectedLength)
+                : 0.0f;
+            recordPercentAtomic_.store (juce::jlimit (0.0f, 1.0f, recordPercent), std::memory_order_release);
 
             buffer.clear();
 
             if (capture_.isComplete())
             {
                 state_.store (State::Analyzing, std::memory_order_release);
+                pendingAnalysisGeneration_.store (
+                    activeRunGeneration_.load (std::memory_order_acquire),
+                    std::memory_order_release);
                 analysisRequested_.store (true, std::memory_order_release);
             }
         }
         else
         {
+            playPercentAtomic_.store (0.0f, std::memory_order_release);
+            recordPercentAtomic_.store (0.0f, std::memory_order_release);
             buffer.clear();
         }
     }
@@ -258,9 +309,10 @@ public:
 
             case State::Playing:
             {
-                int total = generator_.getTotalSamples();
-                int pos   = generator_.getPlaybackPosition();
-                p.playPercent = total > 0 ? static_cast<float> (pos) / total : 0.0f;
+                p.playPercent = juce::jlimit (
+                    0.0f,
+                    1.0f,
+                    playPercentAtomic_.load (std::memory_order_acquire));
                 p.message = "Playing test signal - Speaker "
                           + juce::String (p.currentSpeaker + 1) + " of 4";
                 break;
@@ -268,9 +320,10 @@ public:
 
             case State::Recording:
             {
-                int exp = capture_.getExpectedLength();
-                int rec = capture_.getRecordedSamples();
-                p.recordPercent = exp > 0 ? static_cast<float> (rec) / exp : 0.0f;
+                p.recordPercent = juce::jlimit (
+                    0.0f,
+                    1.0f,
+                    recordPercentAtomic_.load (std::memory_order_acquire));
                 p.message = "Recording room response - Speaker "
                           + juce::String (p.currentSpeaker + 1) + " of 4";
                 break;
@@ -286,15 +339,28 @@ public:
                 break;
 
             case State::Error:
-                p.message = "Error during calibration";
+            {
+                juce::String runErrorMessage;
+                {
+                    const juce::SpinLock::ScopedLockType lock (runErrorLock_);
+                    runErrorMessage = runErrorMessage_;
+                }
+                p.message = runErrorMessage.isNotEmpty()
+                    ? "Error during calibration: " + runErrorMessage
+                    : "Error during calibration";
                 break;
+            }
         }
 
         return p;
     }
 
     bool              isComplete()   const { return state_.load() == State::Complete; }
-    const RoomProfile& getResult()   const { return resultProfile_; }
+    RoomProfile       getResult()    const
+    {
+        const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
+        return resultProfile_;
+    }
     State             getState()     const { return state_.load(); }
     StartDiagnostics  getLastStartDiagnostics() const
     {
@@ -340,12 +406,24 @@ private:
         startSeq_.fetch_add (1u, std::memory_order_acq_rel);
     }
 
+    void publishRunError (const juce::String& code, const juce::String& message)
+    {
+        {
+            const juce::SpinLock::ScopedLockType lock (runErrorLock_);
+            runErrorCode_ = code;
+            runErrorMessage_ = message;
+        }
+        runErrorSeq_.fetch_add (1u, std::memory_order_acq_rel);
+    }
+
     //==========================================================================
     // Prepare generator and kick off Playing state for a specific speaker.
     // Called from the analysis background thread — allocations are fine here.
-    void startSpeaker (int speakerIdx)
+    void startSpeaker (int speakerIdx, std::uint64_t runGeneration)
     {
-        if (abortRequested_.load (std::memory_order_acquire))
+        if (runGeneration == 0u
+            || runGeneration != activeRunGeneration_.load (std::memory_order_acquire)
+            || abortRequested_.load (std::memory_order_acquire))
         {
             state_.store (State::Idle, std::memory_order_release);
             return;
@@ -365,21 +443,29 @@ private:
         {
             if (analysisRequested_.exchange (false, std::memory_order_acq_rel))
             {
-                if (abortRequested_.load (std::memory_order_acquire)
+                analysisInFlight_.store (true, std::memory_order_release);
+                const auto requestGeneration = pendingAnalysisGeneration_.load (std::memory_order_acquire);
+                if (requestGeneration == 0u
+                    || requestGeneration != activeRunGeneration_.load (std::memory_order_acquire)
+                    || abortRequested_.load (std::memory_order_acquire)
                     || state_.load (std::memory_order_acquire) == State::Idle)
                 {
+                    analysisInFlight_.store (false, std::memory_order_release);
                     continue;
                 }
 
                 int spk = currentSpeaker_.load (std::memory_order_acquire);
+                bool speakerAnalysisValid = false;
 
                 // --- IR deconvolution (expensive) ---
                 capture_.computeIR (generator_.getInverseFilter());
 
-                if (abortRequested_.load (std::memory_order_acquire)
+                if (requestGeneration != activeRunGeneration_.load (std::memory_order_acquire)
+                    || abortRequested_.load (std::memory_order_acquire)
                     || state_.load (std::memory_order_acquire) == State::Idle)
                 {
                     state_.store (State::Idle, std::memory_order_release);
+                    analysisInFlight_.store (false, std::memory_order_release);
                     continue;
                 }
 
@@ -389,23 +475,29 @@ private:
 
                     if (res.valid)
                     {
-                        if (abortRequested_.load (std::memory_order_acquire)
+                        if (requestGeneration != activeRunGeneration_.load (std::memory_order_acquire)
+                            || abortRequested_.load (std::memory_order_acquire)
                             || state_.load (std::memory_order_acquire) == State::Idle)
                         {
                             state_.store (State::Idle, std::memory_order_release);
+                            analysisInFlight_.store (false, std::memory_order_release);
                             continue;
                         }
 
-                        auto& spkProfile = resultProfile_.speakers[spk];
-                        spkProfile.delayComp = res.delayMs;
-                        spkProfile.gainTrim  = res.gainTrimDb;
+                        {
+                            const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
+                            auto& spkProfile = resultProfile_.speakers[spk];
+                            spkProfile.delayComp = res.delayMs;
+                            spkProfile.gainTrim  = res.gainTrimDb;
 
-                        for (int b = 0; b < SpeakerProfile::NUM_FREQ_BINS; ++b)
-                            spkProfile.frequencyResponse[b] = res.frequencyResponse[b];
+                            for (int b = 0; b < SpeakerProfile::NUM_FREQ_BINS; ++b)
+                                spkProfile.frequencyResponse[b] = res.frequencyResponse[b];
 
-                        // Estimate speaker distance from time-of-arrival
-                        // (speed of sound ≈ 343 m/s)
-                        spkProfile.distance = (res.delayMs / 1000.0f) * 343.0f;
+                            // Estimate speaker distance from time-of-arrival
+                            // (speed of sound ≈ 343 m/s)
+                            spkProfile.distance = (res.delayMs / 1000.0f) * 343.0f;
+                        }
+                        speakerAnalysisValid = true;
 
                         DBG ("CalibrationEngine: Speaker " << (spk + 1)
                              << "  delay=" << res.delayMs  << " ms"
@@ -414,35 +506,86 @@ private:
                              << "  reflections=" << res.numReflections);
                     }
                 }
+                else
+                {
+                    publishRunError ("ir_not_ready", "IR capture was incomplete before analysis.");
+                }
+
+                speakerAnalysisValid_[static_cast<size_t> (spk)].store (speakerAnalysisValid, std::memory_order_release);
+
+                if (! speakerAnalysisValid)
+                {
+                    if (runErrorSeq_.load (std::memory_order_acquire) == 0u)
+                        publishRunError ("analysis_invalid", "Analysis result invalid for current speaker.");
+
+                    {
+                        const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
+                        resultProfile_.valid = false;
+                    }
+                    state_.store (State::Error, std::memory_order_release);
+                    analysisInFlight_.store (false, std::memory_order_release);
+                    continue;
+                }
 
                 // Advance to next speaker or finish
-                if (abortRequested_.load (std::memory_order_acquire)
+                if (requestGeneration != activeRunGeneration_.load (std::memory_order_acquire)
+                    || abortRequested_.load (std::memory_order_acquire)
                     || state_.load (std::memory_order_acquire) == State::Idle)
                 {
                     state_.store (State::Idle, std::memory_order_release);
+                    analysisInFlight_.store (false, std::memory_order_release);
                     continue;
                 }
 
                 if (spk < 3)
                 {
-                    startSpeaker (spk + 1);
+                    startSpeaker (spk + 1, requestGeneration);
+                    analysisInFlight_.store (false, std::memory_order_release);
                 }
                 else
                 {
-                    // All 4 speakers measured — assemble final profile
-                    resultProfile_.valid        = true;
-                    resultProfile_.estimatedRT60 = 0.0f;
+                    bool allSpeakersValid = true;
                     for (int i = 0; i < 4; ++i)
                     {
-                        resultProfile_.estimatedRT60 =
-                            std::max (resultProfile_.estimatedRT60,
-                                      resultProfile_.speakers[i].distance / 343.0f);
+                        if (! speakerAnalysisValid_[static_cast<size_t> (i)].load (std::memory_order_acquire))
+                        {
+                            allSpeakersValid = false;
+                            break;
+                        }
                     }
 
-                    // Publish to SceneGraph so Renderer mode picks it up
-                    SceneGraph::getInstance().setRoomProfile (resultProfile_);
+                    if (! allSpeakersValid)
+                    {
+                        publishRunError ("speaker_validation_incomplete",
+                                         "Calibration did not produce valid analysis for all speakers.");
+                        {
+                            const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
+                            resultProfile_.valid = false;
+                        }
+                        state_.store (State::Error, std::memory_order_release);
+                        analysisInFlight_.store (false, std::memory_order_release);
+                        continue;
+                    }
 
+                    RoomProfile completedProfile;
+                    {
+                        const juce::SpinLock::ScopedLockType lock (resultProfileLock_);
+                        // All 4 speakers measured — assemble final profile
+                        resultProfile_.valid = true;
+                        resultProfile_.estimatedRT60 = 0.0f;
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            resultProfile_.estimatedRT60 =
+                                std::max (resultProfile_.estimatedRT60,
+                                          resultProfile_.speakers[i].distance / 343.0f);
+                        }
+                        completedProfile = resultProfile_;
+                    }
+
+                    // Publish to SceneGraph so Renderer mode picks it up.
+                    SceneGraph::getInstance().setRoomProfile (completedProfile);
                     state_.store (State::Complete, std::memory_order_release);
+                    analysisInFlight_.store (false, std::memory_order_release);
 
                     DBG ("CalibrationEngine: Calibration complete — "
                          "Room Profile published to SceneGraph");
@@ -463,6 +606,18 @@ private:
     std::atomic<bool>  abortRequested_    { false };
     std::atomic<bool>  analysisRunning_   { false };
     std::atomic<bool>  analysisRequested_ { false };
+    std::atomic<bool>  analysisInFlight_  { false };
+    std::atomic<std::uint64_t> runGenerationCounter_ { 0 };
+    std::atomic<std::uint64_t> activeRunGeneration_ { 0 };
+    std::atomic<std::uint64_t> pendingAnalysisGeneration_ { 0 };
+    std::atomic<float> playPercentAtomic_ { 0.0f };
+    std::atomic<float> recordPercentAtomic_ { 0.0f };
+    std::array<std::atomic<bool>, 4> speakerAnalysisValid_ {
+        std::atomic<bool> { false },
+        std::atomic<bool> { false },
+        std::atomic<bool> { false },
+        std::atomic<bool> { false }
+    };
     std::thread        analysisThread_;
 
     // Start handshake diagnostics (UI-thread writes, UI timer reads).
@@ -473,6 +628,10 @@ private:
     mutable juce::SpinLock startMessageLock_;
     juce::String startCode_ { "none" };
     juce::String startMessage_;
+    std::atomic<std::uint32_t> runErrorSeq_ { 0 };
+    mutable juce::SpinLock runErrorLock_;
+    juce::String runErrorCode_ { "none" };
+    juce::String runErrorMessage_;
 
     // Configuration (set at startCalibration, read-only during calibration)
     double sampleRate_   = 44100.0;
@@ -489,6 +648,7 @@ private:
     RoomAnalyzer        analyzer_;
 
     // Result (written by background thread, read by UI/editor)
+    mutable juce::SpinLock resultProfileLock_;
     RoomProfile resultProfile_;
 
     JUCE_DECLARE_NON_COPYABLE (CalibrationEngine)
