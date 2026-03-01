@@ -2,7 +2,7 @@ Title: LocusQ Scene State Contract
 Document Type: Interface Contract
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-03-01
 
 # Scene State Contract
 
@@ -31,7 +31,7 @@ Applies to:
 Owned by audio thread in `processBlock`:
 
 - per-emitter metadata state (active, position, size, gain, spread, directivity, velocity, labels, flags)
-- ephemeral emitter audio block pointer fast path (v1)
+- ephemeral per-block copied mono audio snapshot fast path (v1)
 - renderer accumulation/output state
 
 Constraints:
@@ -77,7 +77,7 @@ Any conflict resolution beyond this contract requires ADR update.
 ## Routing Contract (V1)
 
 1. Emitter publishes metadata each block.
-2. Emitter also publishes an ephemeral audio pointer fast path for same-block renderer consumption.
+2. Emitter also publishes an ephemeral copied mono audio snapshot fast path for same-block renderer consumption.
 3. Renderer consumes scene state within the same callback cycle.
 4. If fast-path assumptions fail in a host/runtime context, runtime must degrade safely (no crash/non-finite output), and host-edge acceptance evidence must capture behavior.
 
@@ -177,11 +177,11 @@ For production viewport rendering, scene snapshots must include:
   - Headphone render diagnostics:
     - `rendererHeadphoneModeRequested` (string enum)
     - `rendererHeadphoneModeActive` (string enum)
-    - `rendererHeadphoneProfileRequested` (string enum: `generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`)
+    - `rendererHeadphoneProfileRequested` (string enum: `generic`, `airpods_pro_2`, `airpods_pro_3`, `sony_wh1000xm5`, `custom_sofa`)
     - `rendererHeadphoneProfileActive` (string enum)
     - `rendererHeadphoneProfileCatalogVersion` (string enum; current value `bl034-profile-catalog-v1`)
     - `rendererHeadphoneProfileFallbackReason` (string enum: `none`, `requested_profile_unavailable`, `requested_profile_invalid`, `custom_sofa_ref_missing`, `custom_sofa_ref_invalid`, `steam_unavailable`, `output_incompatible`, `monitoring_path_bypassed`, `catalog_version_mismatch`)
-    - `rendererHeadphoneProfileFallbackTarget` (string enum: `none`, `generic`, `airpods_pro_2`, `sony_wh1000xm5`, `custom_sofa`)
+    - `rendererHeadphoneProfileFallbackTarget` (string enum: `none`, `generic`, `airpods_pro_2`, `airpods_pro_3`, `sony_wh1000xm5`, `custom_sofa`)
     - `rendererHeadphoneProfileCustomSofaRef` (string; bounded token, empty when inactive)
     - `rendererHeadphoneProfileGovernance` (object mirror with `catalogVersion`, `requested`, `active`, `fallbackReason`, `fallbackTarget`, `customSofaRef`)
     - `rendererHeadphoneCalibrationSchema` (string; current value `locusq-headphone-calibration-contract-v1`)
@@ -337,7 +337,7 @@ Rules:
 16. `rendererMatrix*` diagnostics and the additive `rendererMatrix` object are backward-compatible; consumers that do not implement BL-028 matrix surfaces must ignore these fields without altering existing renderer profile/headphone diagnostics behavior.
 17. BL-033 calibration diagnostics are additive and backward-compatible; `rendererHeadphoneCalibration*` fields in scene snapshots and `headphoneCalibration*` fields in calibration status must resolve from the same published native snapshot cycle (`profileSyncSeq`) when both payloads are emitted in the same UI tick.
 18. BL-034 profile governance diagnostics are additive and backward-compatible; when `rendererHeadphoneProfileCatalogVersion`, `rendererHeadphoneProfileFallbackReason`, `rendererHeadphoneProfileFallbackTarget`, `rendererHeadphoneProfileCustomSofaRef`, or `rendererHeadphoneProfileGovernance` are absent, consumers must keep legacy BL-009/BL-033 behavior with no hard dependency on these fields.
-19. `rendererHeadphoneProfileRequested` and `rendererHeadphoneProfileActive` are bounded to the profile catalog domain `{generic, airpods_pro_2, sony_wh1000xm5, custom_sofa}`; unknown values must be treated as `generic` by deterministic fallback logic.
+19. `rendererHeadphoneProfileRequested` and `rendererHeadphoneProfileActive` are bounded to the profile catalog domain `{generic, airpods_pro_2, airpods_pro_3, sony_wh1000xm5, custom_sofa}`; unknown values must be treated as `generic` by deterministic fallback logic.
 20. `rendererHeadphoneProfileCustomSofaRef` is bounded to length `0..256` and pattern `[A-Za-z0-9._:/-]*`; it must be non-empty only when requested or active profile is `custom_sofa`, otherwise it must publish as an empty string.
 21. `rendererHeadphoneProfileFallbackReason` and `rendererHeadphoneProfileFallbackTarget` must publish deterministically as an ordered pair in every snapshot that includes BL-034 profile governance fields; `fallbackReason == "none"` requires `fallbackTarget == "none"`.
 
@@ -349,6 +349,7 @@ Rules:
 |---|---|---|---|
 | `generic` | `built_in_reference` | bundled | `false` |
 | `airpods_pro_2` | `built_in_reference` | bundled | `false` |
+| `airpods_pro_3` | `built_in_reference` | bundled | `false` |
 | `sony_wh1000xm5` | `built_in_reference` | bundled | `false` |
 | `custom_sofa` | `external_reference` | user reference | `true` |
 

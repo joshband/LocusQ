@@ -2,7 +2,7 @@ Title: ADR-0009 CLAP Closeout Documentation Consolidation
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-01
 
 # ADR-0009: CLAP Closeout Documentation Consolidation
 
@@ -31,7 +31,7 @@ Adopt a consolidated CLAP documentation model:
 - `Documentation/archive/2026-02-23-clap-reference-bundle/`
 4. Keep BL-011 acceptance authority in Tier 0 state/evidence surfaces:
 - `status.json`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`
 
@@ -65,5 +65,5 @@ Adopt a consolidated CLAP documentation model:
 - `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
 - `Documentation/plans/LocusQClapContract.h`
 - `Documentation/archive/2026-02-23-clap-reference-bundle/README.md`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
 - `status.json`

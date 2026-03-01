@@ -2,7 +2,7 @@ Title: ADR-0005 Phase Closeout Docs Freshness Gate
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-02-19
+Last Modified Date: 2026-03-01
 
 # ADR-0005: Phase Closeout Docs Freshness Gate
 
@@ -19,11 +19,11 @@ This creates planning churn, inaccurate command routing, and weak confidence in 
 
 Adopt a mandatory closeout bundle for every phase-state change that impacts implementation or validation status:
 
-1. `plugins/LocusQ/status.json`
-2. `plugins/LocusQ/README.md`
-3. `plugins/LocusQ/CHANGELOG.md`
-4. `plugins/LocusQ/TestEvidence/build-summary.md`
-5. `plugins/LocusQ/TestEvidence/validation-trend.md`
+1. `status.json`
+2. `README.md`
+3. `CHANGELOG.md`
+4. `TestEvidence/build-summary.md`
+5. `TestEvidence/validation-trend.md`
 
 Closeout is complete only when all five surfaces are updated in the same change set with consistent dates and status language.
 
@@ -32,6 +32,7 @@ Additional gate rules:
 1. `Documentation/standards.md` remains the normative policy for metadata/naming/folder placement.
 2. `scripts/validate-docs-freshness.sh` is the enforcement mechanism for freshness/metadata checks.
 3. Any invariant-impacting behavior change still requires an ADR update before closeout.
+4. When closeout also changes backlog status/priority, update `Documentation/backlog/index.md` in the same change set.
 
 ## Rationale
 

@@ -2,7 +2,7 @@ Title: ADR-0008 Viewport Scope v1 vs Post-v1
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-03-01
 
 # ADR-0008: Viewport Scope v1 vs Post-v1
 
@@ -18,33 +18,35 @@ trails, velocity vectors, and orbit-style interaction.
 Stage 16-D compared that spec against production UI code in
 `Source/ui/public/index.html` and `Source/ui/public/js/index.js`.
 
-The production UI already includes foundational viewport behavior (room/grid scene,
-speaker markers, draggable emitters, and orbit/navigation controls), but advanced
-telemetry visuals are incomplete.
+The production UI now includes foundational viewport behavior (room/grid scene,
+speaker markers, draggable emitters, and orbit/navigation controls) plus telemetry
+overlays for trails and velocity vectors.
 
 ## Decision
 
-For v1, keep the current control panel + foundational viewport as the required scope and
-defer non-critical viewport telemetry features to post-v1.
+For v1, keep the current control panel + foundational viewport as the required scope,
+with telemetry overlays (trails and velocity vectors) treated as implemented diagnostics
+behind renderer visualization controls.
 
 Feature classification:
 
-| Feature | Implementation status (2026-02-20) | Scope |
+| Feature | Implementation status (2026-03-01) | Scope |
 | --- | --- | --- |
 | Room wireframe + grid | Present | v1-required |
 | Speaker positions/cones | Present (marker meshes, not literal cone geometry) | v1-required |
 | Draggable emitters | Present | v1-required |
 | Orbit/drag viewport controls | Present | v1-required |
-| Motion trails | Absent | Post-v1 |
-| Velocity vectors | Absent | Post-v1 |
+| Motion trails | Present (toggle + runtime trail history) | v1-implemented |
+| Velocity vectors | Present (toggle + per-emitter velocity arrow) | v1-implemented |
 
 ## Rationale
 
-1. v1 audio behavior and parameter control do not depend on motion-trail/vector rendering.
-2. Foundational viewport interaction is already implemented and adequate for v1 spatial
-   context and control verification.
-3. Deferring trail/vector telemetry reduces release risk while preserving a documented
-   path for enhancement work.
+1. v1 scope now matches production behavior: foundational scene controls plus telemetry
+   overlays are both present.
+2. Telemetry controls are optional and bounded, so operators can disable overlays without
+   affecting canonical DSP/control behavior.
+3. Updating this ADR removes stale guidance that would otherwise misclassify implemented
+   functionality as deferred work.
 
 ## Consequences
 
@@ -56,15 +58,15 @@ Feature classification:
 
 ### Costs
 
-1. Users will not see trajectory or velocity overlays in v1.
-2. Post-v1 work must add trail/vector visuals without regressing UI responsiveness.
+1. Overlay rendering adds incremental scene-visualization cost and must stay performance-safe.
+2. Future telemetry enhancements should remain additive and preserve existing control IDs and toggles.
 
 ## Guardrails
 
-1. Any post-v1 viewport enhancement must preserve existing parameter IDs, relay contracts,
-   and deterministic control behavior.
-2. If motion trails or velocity vectors become release blockers, this ADR must be revised
-   before GA signoff.
+1. Telemetry overlays must preserve existing parameter IDs, relay contracts, and deterministic
+   control behavior.
+2. Any regression that removes trails/vectors from production behavior requires either a fix
+   or an ADR update in the same change set.
 3. Documentation and traceability records must remain synchronized with this scope decision.
 
 ## Related
