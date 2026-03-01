@@ -258,6 +258,11 @@ Source/PluginProcessor.cpp:5201:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:5205:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:5209:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:5212:DYNAMIC_CONTAINER_MUTATION
+# BL-035 owner replay reconcile entries (2026-03-01): static-audit line drift (comment/non-RT declarations)
+Source/CalibrationEngine.h:114:HEAP_ALLOC
+Source/CalibrationEngine.h:134:HEAP_ALLOC
+Source/SceneGraph.h:373:HEAP_ALLOC
+Source/SceneGraph.h:374:HEAP_ALLOC
 Source/PluginProcessor.cpp:5216:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:5219:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:5222:DYNAMIC_CONTAINER_MUTATION

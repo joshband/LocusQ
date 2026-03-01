@@ -24,7 +24,7 @@ Evidence directory: `TestEvidence/bl035_parallel_20260301_182623`
    - Result: `PASS`
    - Full output log: `TestEvidence/bl035_parallel_20260301_182623/selftest.log`
 
-4. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv`
+4. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv` (worker replay)
    - Exit code: `1`
    - Result: `FAIL`
    - Output artifact: `TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv`
@@ -32,6 +32,20 @@ Evidence directory: `TestEvidence/bl035_parallel_20260301_182623`
 5. `./scripts/validate-docs-freshness.sh`
    - Exit code: `0`
    - Result: `PASS`
+
+6. `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv` (owner replay, allowlist line-drift reconcile)
+   - Exit code: `0`
+   - Result: `PASS`
+   - Summary: `non_allowlisted=0`
+
+## Owner Reconciliation (2026-03-01)
+
+- Static-audit line drift was reconciled in `scripts/rt-safety-allowlist.txt` for:
+  - `Source/CalibrationEngine.h:114:HEAP_ALLOC`
+  - `Source/CalibrationEngine.h:134:HEAP_ALLOC`
+  - `Source/SceneGraph.h:373:HEAP_ALLOC`
+  - `Source/SceneGraph.h:374:HEAP_ALLOC`
+- Post-reconcile RT audit now passes for this evidence directory (`non_allowlisted=0`).
 
 ## Required Artifacts
 

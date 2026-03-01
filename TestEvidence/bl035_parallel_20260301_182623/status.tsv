@@ -4,3 +4,4 @@ cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa 
 LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh	0	PASS
 ./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv	1	FAIL
 ./scripts/validate-docs-freshness.sh	0	PASS
+./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv (owner replay 2026-03-01)	0	PASS
