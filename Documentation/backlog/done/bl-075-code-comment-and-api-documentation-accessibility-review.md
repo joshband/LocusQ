@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-075 |
 | Priority | P2 |
-| Status | Done-candidate (execute + T2 + T3 packets pass; owner promotion decision pending) |
+| Status | Done (execute + T2 + T3 packets pass; owner promotion decision recorded; done archive sync complete) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -20,6 +20,10 @@ Last Modified Date: 2026-03-01
 | Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T0 (docs/governance lane; escalate to T1 when code touch verification is needed) |
 | Heavy Lane Budget | Standard |
+| SHARED_FILES_TOUCHED | no |
+| Promotion Decision Packet | `TestEvidence/bl075_promotion_t3_20260301T220915Z/promotion_decision.md` |
+| Final Evidence Root | `TestEvidence/bl075_promotion_t3_20260301T220915Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-075-code-comment-and-api-documentation-accessibility-review.md` |
 
 ## Objective
 
@@ -116,5 +120,7 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - T3 promotion evidence:
   - `TestEvidence/bl075_promotion_t3_20260301T220915Z/run_summary.tsv` (10/10 PASS, zero TODO rows).
   - `TestEvidence/bl075_promotion_t3_20260301T220915Z/promotion_decision.md`.
-- Remaining BL-075 scope:
-  - owner promotion decision and done-transition archive sync.
+- Done transition checklist:
+  - runbook archived under `Documentation/backlog/done/`;
+  - backlog index + `status.json` synchronized to Done;
+  - promotion decision packet linked in Status Ledger.

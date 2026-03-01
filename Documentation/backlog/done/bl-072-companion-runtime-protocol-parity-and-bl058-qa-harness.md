@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-072 |
 | Priority | P0 |
-| Status | Done-candidate (execute + T2 + T3 packets pass; owner promotion decision pending) |
+| Status | Done (execute + T2 + T3 packets pass; owner promotion decision recorded; done archive sync complete) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-058, BL-059 |
@@ -20,6 +20,10 @@ Last Modified Date: 2026-03-01
 | Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+| SHARED_FILES_TOUCHED | no |
+| Promotion Decision Packet | `TestEvidence/bl072_promotion_t3_20260301T220915Z/promotion_decision.md` |
+| Final Evidence Root | `TestEvidence/bl072_promotion_t3_20260301T220915Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md` |
 
 ## Objective
 
@@ -103,5 +107,7 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - T3 promotion evidence:
   - `TestEvidence/bl072_promotion_t3_20260301T220915Z/run_summary.tsv` (10/10 PASS, zero TODO rows).
   - `TestEvidence/bl072_promotion_t3_20260301T220915Z/promotion_decision.md`.
-- Remaining BL-072 scope:
-  - owner promotion decision and done-transition archive sync.
+- Done transition checklist:
+  - runbook archived under `Documentation/backlog/done/`;
+  - backlog index + `status.json` synchronized to Done;
+  - promotion decision packet linked in Status Ledger.
