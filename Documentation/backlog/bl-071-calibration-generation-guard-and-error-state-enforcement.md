@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-071 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Implementation (Wave 1 kickoff: calibration generation/error-state/snapshot hardening landed) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-056, BL-059 |
@@ -34,7 +34,7 @@ Harden calibration lifecycle correctness by enforcing generation isolation acros
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl071-calibration-generation-guard-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl071-calibration-generation-guard-mac.sh`.
 Evidence schema: `TestEvidence/bl071_*/status.tsv`.
 
 Minimum evidence additions:
@@ -85,3 +85,16 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+
+## Execution Notes (2026-03-01)
+
+- Initial runtime hardening landed in `Source/CalibrationEngine.h`:
+  - generation counters now gate speaker start and reject stale/aborted analysis publications;
+  - restart is explicitly rejected while prior analysis is still in flight;
+  - invalid/partial analysis now transitions to explicit `State::Error` with failure diagnostics;
+  - progress/result publication now uses atomic snapshots plus locked result-copy reads.
+- Initial QA scaffold authored:
+  - `scripts/qa-bl071-calibration-generation-guard-mac.sh` with `--contract-only` and `--execute` modes.
+- Remaining BL-071 scope:
+  - add runtime execute probes to replace TODO rows in generation/error/snapshot evidence tables;
+  - promote lane from scaffold evidence to execute-ready packet.
