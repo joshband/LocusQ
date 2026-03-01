@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-072 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Implementation (Wave 1 kickoff: protocol parity and BL-058 lane harness scaffold authored) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-058, BL-059 |
@@ -34,7 +34,7 @@ Align companion runtime packet contract behavior with validated model semantics 
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl072-companion-protocol-parity-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl072-companion-protocol-parity-mac.sh`.
 Evidence schema: `TestEvidence/bl072_*/status.tsv`.
 
 Minimum evidence additions:
@@ -86,3 +86,15 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+
+## Execution Notes (2026-03-01)
+
+- Initial QA scaffold authored:
+  - `scripts/qa-bl072-companion-protocol-parity-mac.sh` with `--contract-only` and `--execute` modes.
+- Contract checks currently verify:
+  - companion CLI sync-gate controls (`--require-sync` / `--auto-sync`) and live readiness/send-gate wiring;
+  - plugin packet decode/stale-sequence guards in `Source/HeadTrackingBridge.h`;
+  - BL-058 lane linkage (readiness + axis evidence surfaces available from BL-058 harness).
+- Remaining BL-072 scope:
+  - replace TODO execute rows with runtime parity probes for synthetic/live sync behavior, stale fallback, and sequence/age thresholds;
+  - promote BL-072 evidence from scaffold packet to execute-ready parity packet.
