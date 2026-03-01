@@ -1,0 +1,6 @@
+check_id	result	detail	artifact
+BL069-C1-backlog_doc_exists	PASS	runbook present	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md
+BL069-C2-preload_symbol	PASS	preload helper present	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+BL069-C3-cache_only_load	PASS	cache-only load path present	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+BL069-C4-contract_mode	PASS	contract-only mode allows TODO execute rows (count=4)	TestEvidence/bl069_parallel_20260301T232702Z/status.tsv
+lane_result	PASS	mode=contract_only;bl069_contract_pass	TestEvidence/bl069_parallel_20260301T232702Z/status.tsv

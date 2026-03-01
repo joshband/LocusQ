@@ -1,0 +1,3 @@
+scenario	result	detail
+missing_preset_retry_backoff	TODO	runtime retry/backoff probe pending
+transient_asset_unavailable	TODO	recovery/backoff probe pending

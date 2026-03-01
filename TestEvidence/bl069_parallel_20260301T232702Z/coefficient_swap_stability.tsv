@@ -1,0 +1,3 @@
+scenario	result	detail
+profile_switch_no_glitch	TODO	coefficient swap stability probe pending
+rapid_profile_toggle	TODO	high-rate profile toggle stability probe pending
