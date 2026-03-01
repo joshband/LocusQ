@@ -14,6 +14,20 @@ Operational snapshot:
 - Live backlog state and P0-P2 priorities are tracked in `Documentation/backlog/index.md`.
 - Canonical runtime/state snapshot is tracked in `status.json`.
 
+### Fixed
+
+- **BL-043 FDN sample-rate integrity (P0)**: FDN reverb delay times are now
+  invariant in milliseconds across 44100/48000/96000/192000 Hz sample rates.
+  - `Source/FDNReverb.h`: added `REFERENCE_SAMPLE_RATE = 44100.0`, increased
+    `MAX_DELAY_SAMPLES` from 32768 → 131072 (sized for 192 kHz + max room size),
+    applied `srScale = currentSampleRate / REFERENCE_SAMPLE_RATE` in both
+    `configureDelayLengths()` and `updateCoefficients()`.
+  - New QA script `scripts/qa-bl043-fdn-samplerate-sweep-mac.sh` validates
+    timing parity across all four rates with a 0.05 ms tolerance gate.
+  - Mathematical parity check: PASS 48/48 delay-line × rate combinations;
+    max error 0.0104 ms.
+  - Runbook archived: `Documentation/backlog/done/bl-043-fdn-sample-rate-integrity.md`.
+
 ### Added
 
 - WebView entrypoint routing override for host/runtime diagnostics:
@@ -26,18 +40,41 @@ Operational snapshot:
 - CLAP and spatial-audio specialist skills for BL-011/BL-018 execution:
   - `.codex/skills/clap-plugin-lifecycle/SKILL.md`
   - `.codex/skills/spatial-audio-engineering/SKILL.md`
+- Specialist skills for current head-tracking and calibration lanes:
+  - `.codex/skills/headtracking-companion-runtime/SKILL.md`
+  - `.codex/skills/hrtf-rendering-validation-lab/SKILL.md`
+  - `.codex/skills/perceptual-listening-harness/SKILL.md`
+- Specialist documentation-cleanup skill:
+  - `.codex/skills/documentation-hygiene-expert/SKILL.md`
 - Holistic post-v1 backlog execution spec refresh:
   - `Documentation/backlog-post-v1-agentic-sprints.md`
   - Includes fresh `P0-P2` prioritization, dependency graphs, parallel agent tracks, and per-task Codex/Claude mega-prompts.
 
 ### Changed
 
+- Skill routing and contracts refreshed for head-tracking research alignment:
+  - updated root routing docs: `AGENTS.md`, `CODEX.md`, `CLAUDE.md`, `SKILLS.md`, `AGENT_RULE.md`.
+  - updated canonical matrix: `Documentation/skill-selection-matrix.md`.
+  - enhanced specialist skills: `spatial-audio-engineering`, `steam-audio-capi`, `threejs`, `reactive-av`, `juce-webview-runtime`, `skill_docs`, `skill_testing`.
+
+- BL-023 Resize/DPI hardening done-transition closeout completed (2026-02-28):
+  - runbook archived to `Documentation/backlog/done/bl-023-resize-dpi-hardening.md`.
+  - backlog index synchronized to `Done` with done-path link.
+  - canonical promotion packet retained at `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z/`.
+  - owner closeout governance gates PASS (`jq empty status.json`, `./scripts/validate-docs-freshness.sh`).
 - BL-052 Steam Audio virtual surround + quad layout done closeout normalized (2026-02-28):
   - runbook archived to `Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md`.
   - backlog index synchronized (active queue + closed archive row).
   - owner closeout packet published at `TestEvidence/bl052_owner_sync_z1_20260228T175701Z/`.
   - governance gates PASS (`jq empty status.json`, `./scripts/validate-docs-freshness.sh`).
-
+- Owner preflight and promotion intake rerun completed for BL-042 (2026-02-28):
+  - preflight rerun PASS packet: `TestEvidence/owner_preflight_bl042_bl044_bl046_bl047_bl048_bl049_z16p_r2c_20260228T163446Z/`.
+  - fresh owner recheck packet PASS: `TestEvidence/owner_done_promotion_bl042_z18_20260228T163005Z/` (`contract-only --runs 20`, `execute-suite --runs 3`, exit-semantics probes, docs freshness, status schema all green).
+  - backlog row promoted to `Done`; runbook archived to `Documentation/backlog/done/bl-042-qa-ci-regression-gates.md`.
+- Owner done-promotion closeout completed for BL-044/BL-046/BL-047/BL-048/BL-049 (2026-02-27):
+  - backlog rows promoted to `Done`, runbooks archived under `Documentation/backlog/done/`.
+  - owner evidence packet: `TestEvidence/owner_done_promotion_bl044_bl046_bl047_bl048_bl049_z17_20260227T231736Z/`.
+  - `status.json`, `TestEvidence/build-summary.md`, and `TestEvidence/validation-trend.md` synchronized in the same changeset.
 - BL-025 and BL-014 closeout promotion completed (2026-02-24):
   - backlog/state promoted both P0 rows to `Done`.
   - refreshed evidence bundle: `TestEvidence/locusq_production_p0_selftest_20260224T032239Z.json`, `TestEvidence/reaper_headless_render_20260224T032300Z/status.json`, `TestEvidence/locusq_smoke_suite_spatial_bl014_20260224T032355Z.log`, `TestEvidence/locusq_phase_2_6_acceptance_suite_spatial_bl014_20260224T032355Z.log`.
@@ -63,6 +100,11 @@ Operational snapshot:
   - RL-09 traceability evidence captured in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl09_traceability.md`.
   - RL-09 decision state recorded as `PASS` in `TestEvidence/bl030_rl09_closeout_g2_20260225T180904Z/rl_gate_matrix.tsv`.
   - Release governance remains `NO-GO` because RL-05 is still `FAIL` per `TestEvidence/bl030_rl05_clean_replay_g1_20260225T175856Z/dev_matrix_results.tsv`.
+- BL-030 owner authoritative RL-05 closure + governance closeout summary finalized (2026-02-28):
+  - owner confirmation packet: `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z/`.
+  - RL-05 reconcile replay is `UNANIMOUS_PASS` (`run1/run2/run3` all `exit 0`) per `replay_determinism_summary.tsv`.
+  - RL-09 traceability refreshed for the active window at `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z/rl09_traceability.log`.
+  - consolidated owner gate matrix published at `TestEvidence/owner_sync_bl030_rl05_n15_confirm_20260228T180756Z/rl_gate_matrix.tsv` with governance release decision in `release_decision.md`.
 - HX-05 payload budget hardening advanced to Slice C harness contract (2026-02-25):
   - deterministic soak harness added at `scripts/qa-hx05-payload-budget-soak-mac.sh`.
   - fixture contract validated (`pass=>0`, `fail=>1`) and owner replay confirmed (`TestEvidence/owner_hx05_slice_c_replay_20260225T175333Z/status.tsv`).
