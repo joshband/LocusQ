@@ -25,7 +25,7 @@ Normative anchors:
 - `.ideas/parameter-spec.md`
 - `Documentation/invariants.md`
 - `Documentation/scene-state-contract.md`
-- `Documentation/adr/ADR-0001` through `ADR-0015`
+- `Documentation/adr/ADR-0001` through `ADR-0019`
 
 ## 2. Executive Snapshot (5-Minute Read)
 
@@ -598,6 +598,11 @@ When extending this architecture doc:
 | ADR-0012 | renderer domain exclusivity and matrix gating | renderer legal-path contract and fallback gates |
 | ADR-0013 | audition authority and cross-mode control | renderer remains DSP authority with proxy control model |
 | ADR-0014 | ambisonics/ADM roadmap governance | roadmap architecture explicitly staged |
+| ADR-0015 | skill runtime doc standards boundary | docs-governance/runtime boundary reflected in operations contract |
+| ADR-0016 | head-tracking wire protocol compatibility and sunset policy | dual-version bridge contract and migration governance |
+| ADR-0017 | AUv3 app-extension boundary and lifecycle contract | extension boundary and cross-format parity enforcement posture |
+| ADR-0018 | temporal effects realtime architecture contract | temporal DSP safety contract and deterministic guardrails |
+| ADR-0019 | custom SOFA profile readiness and fallback contract | requested-vs-active profile governance and fallback semantics |
 
 ## Appendix B. Reference Index
 

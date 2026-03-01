@@ -2,7 +2,7 @@ Title: ADR-0011 Standalone Renderer Audition Source
 Document Type: Architecture Decision Record
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-01
 
 # ADR-0011: Standalone Renderer Audition Source
 
@@ -21,8 +21,12 @@ Add a built-in Renderer audition source with explicit parameter control and dete
 
 1. Expose four APVTS parameters and WebView controls:
    - `rend_audition_enable`
-   - `rend_audition_signal` (`Sine 440`, `Dual Tone`, `Pink Noise`, `Rain`, `Snow`, `Bouncing Balls`, `Wind Chimes`)
-   - `rend_audition_motion` (`Center`, `Orbit Slow`, `Orbit Fast`)
+   - `rend_audition_signal` with the current deterministic ID set:
+     `sine_440`, `dual_tone`, `pink_noise`, `rain_field`, `snow_drift`,
+     `bouncing_balls`, `wind_chimes`, `crickets`, `song_birds`, `karplus_plucks`,
+     `membrane_drops`, `krell_patch`, `generative_arp`
+   - `rend_audition_motion` with the current deterministic ID set:
+     `center`, `orbit_slow`, `orbit_fast`, `figure8_flow`, `helix_rise`, `wall_ricochet`
    - `rend_audition_level` (`-36`, `-30`, `-24`, `-18`, `-12 dBFS`)
 2. Render the internal audition source only when:
    - audition is enabled, and
@@ -42,7 +46,7 @@ Add a built-in Renderer audition source with explicit parameter control and dete
 1. Keeps normal emitter-driven rendering authoritative when emitters exist.
 2. Provides immediate standalone signal generation for manual Steam/stereo checks.
 3. Expands standalone test content to include tonal, stochastic, and impact-like content classes.
-4. Preserves deterministic behavior through fixed presets and block-stable motion stepping.
+4. Preserves deterministic behavior through bounded preset IDs and block-stable motion stepping.
 
 ## Consequences
 
@@ -62,7 +66,7 @@ Add a built-in Renderer audition source with explicit parameter control and dete
 
 1. Internal audition source must never run when real emitters are processed.
 2. Audition defaults stay conservative (`disabled`, moderate level preset) to avoid unintended output.
-3. Any future audition signal additions must update APVTS, WebView controls, and telemetry together.
+3. Any audition signal/motion catalog change must update APVTS choices, WebView controls, scene telemetry handling, and ADR/runtime docs in the same change set.
 
 ## Validation Notes (2026-02-24)
 

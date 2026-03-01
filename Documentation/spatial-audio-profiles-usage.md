@@ -2,7 +2,7 @@ Title: LocusQ Spatial Audio Profiles Usage Guide
 Document Type: Operator Guide
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-22
+Last Modified Date: 2026-03-01
 
 # LocusQ Spatial Audio Profiles Usage Guide
 
@@ -22,7 +22,7 @@ Document the supported audio profile surface in LocusQ and provide practical set
 | Function | Parameter ID | UI/Host Surface | Notes |
 |---|---|---|---|
 | Headphone render mode | `rend_headphone_mode` | Production UI (Renderer rail) and host automation | `Stereo Downmix`, `Steam Binaural` |
-| Headphone device profile | `rend_headphone_profile` | Production UI (Renderer rail) and host automation | `Generic`, `AirPods Pro 2`, `Sony WH-1000XM5`, `Custom SOFA` |
+| Headphone device profile | `rend_headphone_profile` | Production UI (Renderer rail) and host automation | `Generic`, `AirPods Pro 2`, `AirPods Pro 3`, `Sony WH-1000XM5`, `Custom SOFA` |
 | Spatial output profile (3D audio type) | `rend_spatial_profile` | Host automation (parameter list), QA scenarios | Not yet exposed as a production UI dropdown |
 
 ## Spatial Profiles (3D Audio Types)
@@ -63,7 +63,7 @@ Document the supported audio profile surface in LocusQ and provide practical set
 1. Set DAW/plugin output to stereo (2ch).
 2. Set plugin mode to `Renderer`.
 3. In UI set `Headphone` to `Steam Binaural`.
-4. Set `HP Profile` to `Generic`, `AirPods Pro 2`, `Sony WH-1000XM5`, or `Custom SOFA`.
+4. Set `HP Profile` to `Generic`, `AirPods Pro 2`, `AirPods Pro 3`, `Sony WH-1000XM5`, or `Custom SOFA`.
 5. Verify diagnostics in scene status:
    - `rendererHeadphoneModeRequested` / `rendererHeadphoneModeActive`
    - `rendererSteamAudioAvailable`
@@ -133,4 +133,4 @@ build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_
 
 - `Documentation/scene-state-contract.md`
 - `Documentation/adr/ADR-0006-device-compatibility-profiles-and-monitoring-contract.md`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
