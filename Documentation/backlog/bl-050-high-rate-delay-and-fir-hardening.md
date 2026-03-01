@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-050 |
 | Priority | P0 |
-| Status | In Implementation (Slice A landed; docs-freshness blocker remains) |
+| Status | In Implementation (Slice A landed; T1 owner replay PASS; Slice B/C pending) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-043, BL-046 |
@@ -57,7 +57,8 @@ Out of scope:
 - Added deterministic BL-050 lane script: `scripts/qa-bl050-highrate-lane-mac.sh`.
 - Latest execution packet: `TestEvidence/bl050_slice_a_lane_20260301T233154Z/`.
 - Packet highlights: build PASS; high-rate delay matrix PASS across 44.1/48/88.2/96/192 kHz; FIR profile runs completed with WARN rows at 44.1/48/88.2 kHz from allocation metrics.
-- Open blocker: docs freshness gate failed due pre-existing unrelated metadata debt in `TestEvidence/bl035_parallel_20260301_182623/summary.md`.
+- Docs-freshness blocker from BL-035 evidence metadata debt was resolved by owner reconciliation (`b446af5b`).
+- Owner T1 replay packet: `TestEvidence/bl050_owner_t1_20260301T234531Z/` with `3/3` lane passes (`run_01..run_03` all `lane_result=PASS`, `docs_freshness=PASS`, `fir_profile=PASS`).
 
 
 ## Validation Plan
