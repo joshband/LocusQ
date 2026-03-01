@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes)
+Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync)
 
 # LocusQ Master Backlog Index
 
@@ -127,11 +127,11 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Open (reprioritized from code-review risk packet; no promotion while any execute evidence row is `TODO`; BL-073 gate required) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 | 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | In Implementation (Wave 1 kickoff + QA harness authored; runtime execute probes still pending) | F | BL-050 | — | [bl-069](bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | In Implementation (Wave 1 kickoff + QA harness authored; stress/TSAN execute probes still pending) | F | BL-050 | — | [bl-070](bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
-| 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | Done-candidate (execute + T2 + T3 pass; owner promotion decision pending) | E | BL-056, BL-059 | BL-060 | [bl-071](bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
-| 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | Done-candidate (execute + T2 + T3 pass; owner promotion decision pending) | E | BL-058, BL-059 | BL-060 | [bl-072](bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
+| 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
+| 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-058, BL-059 | BL-060 | [bl-072](done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | In Implementation (mode semantics and execute TODO-row enforcement scripts authored) | G | — | BL-067, BL-068 | [bl-073](bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
-| 45 | BL-075 | Code comment and API documentation accessibility review | P2 | Done-candidate (execute + T2 + T3 pass; owner promotion decision pending) | G | — | — | [bl-075](bl-075-code-comment-and-api-documentation-accessibility-review.md) |
+| 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | Open | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
