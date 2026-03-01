@@ -372,3 +372,12 @@ This additive section aligns the runbook with current backlog lifecycle and evid
 - Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
 - Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 - Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+
+## Slice G2 Promotion Update (2026-02-28, 20260228T183306Z)
+
+- RT gate is now cleared on current branch (`non_allowlisted=0` in `TestEvidence/bl032_slice_g2_done_candidate_20260228T183306Z/rt_audit.tsv`).
+- Done-candidate recheck packet result is updated to `PASS` and promotion is no longer blocked by BL-032 structural/runtime gates.
+
+## Slice G2 Post-Fix Evidence Refresh (2026-02-28)
+
+Runtime gates were replayed after the RT-audit fix and all returned green (`build`, `qa_smoke`, `ui_selftest`). BL-032 done-candidate packet `TestEvidence/bl032_slice_g2_done_candidate_20260228T183306Z/` is fully promotion-ready.

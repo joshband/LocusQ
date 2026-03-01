@@ -487,6 +487,120 @@ C6 required files:
   - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` => `PASS` (expected usage exit `2`)
   - `./scripts/validate-docs-freshness.sh` => `PASS`
 
+## Slice D1 Done-Candidate Readiness QA Contract
+
+Scope:
+- Validate done-candidate confidence using 75 deterministic contract runs with strict usage-exit probes.
+
+D1 validation matrix:
+
+```bash
+bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl037_slice_d1_done_candidate_<timestamp>/contract_runs
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg
+./scripts/validate-docs-freshness.sh
+```
+
+D1 acceptance mapping:
+
+| Acceptance ID | Lane Check / Rule | Required Evidence |
+|---|---|---|
+| `BL037-D1-001` | `deterministic_match=yes` on all 75 replay rows | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL037-D1-002` | Contract validation matrix has `FAIL` rows = `0` | `contract_runs/validation_matrix.tsv` |
+| `BL037-D1-003` | Usage-negative probes return strict usage `exit=2` for both paths | `exit_semantics_probe.tsv` |
+| `BL037-D1-004` | Docs freshness gate remains pass | `docs_freshness.log` |
+| `BL037-D1-005` | Required D1 evidence schema is complete and parseable | `status.tsv`, `validation_matrix.tsv`, `lane_notes.md` |
+
+D1 required files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `lane_notes.md`
+- `docs_freshness.log`
+
+## Slice D1 Done-Candidate Execution Snapshot (2026-02-27)
+
+- Evidence bundle:
+  - `TestEvidence/bl037_slice_d1_done_candidate_20260227T035844Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `lane_notes.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl037_slice_d1_done_candidate_20260227T035844Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0` => `PASS` (expected usage exit `2`)
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` => `PASS` (expected usage exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+
+## Slice D2 Done-Promotion Readiness QA Contract
+
+Scope:
+- Validate done-promotion confidence using 100 deterministic contract runs with strict usage-exit probes.
+
+D2 validation matrix:
+
+```bash
+bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl037_slice_d2_done_promotion_<timestamp>/contract_runs
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0
+./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg
+./scripts/validate-docs-freshness.sh
+```
+
+D2 acceptance mapping:
+
+| Acceptance ID | Lane Check / Rule | Required Evidence |
+|---|---|---|
+| `BL037-D2-001` | `deterministic_match=yes` on all 100 replay rows | `contract_runs/replay_hashes.tsv`, `replay_sentinel_summary.tsv` |
+| `BL037-D2-002` | Contract validation matrix has `FAIL` rows = `0` | `contract_runs/validation_matrix.tsv` |
+| `BL037-D2-003` | Usage-negative probes return strict usage `exit=2` for both paths | `exit_semantics_probe.tsv` |
+| `BL037-D2-004` | Docs freshness gate remains pass | `docs_freshness.log` |
+| `BL037-D2-005` | Required D2 evidence schema is complete and parseable | `status.tsv`, `validation_matrix.tsv`, `promotion_readiness.md` |
+
+D2 required files:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `replay_sentinel_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
+## Slice D2 Done-Promotion Execution Snapshot (2026-02-27)
+
+- Evidence bundle:
+  - `TestEvidence/bl037_slice_d2_done_promotion_20260227T201737Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `replay_sentinel_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `bash -n scripts/qa-bl037-snapshot-budget-lane-mac.sh` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl037_slice_d2_done_promotion_20260227T201737Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --runs 0` => `PASS` (expected usage exit `2`)
+  - `./scripts/qa-bl037-snapshot-budget-lane-mac.sh --bad-arg` => `PASS` (expected usage exit `2`)
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+
 
 ## Validation
 

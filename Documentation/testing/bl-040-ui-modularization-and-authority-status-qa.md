@@ -476,3 +476,143 @@ Required files under `TestEvidence/bl040_slice_c6_ui_longrun_<timestamp>/`:
   - `taxonomy_nonzero_rows=0`
   - `usage_probe_runs0_exit=2`
   - `usage_probe_badflag_exit=2`
+
+## D1 Done-Candidate Long-Run Sentinel Contract
+
+Purpose:
+- Publish BL-040 done-candidate readiness packet with extended deterministic UI authority diagnostics soak depth and strict usage-exit semantics.
+
+D1 guard gate rules:
+1. Run count must be exactly `75`.
+2. `signature_drift_count` must be `0`.
+3. `row_drift_count` must be `0`.
+4. `taxonomy_nonzero_rows` must be `0` (only `none` row allowed in taxonomy output).
+5. Negative probe `--runs 0` must exit `2`.
+6. Negative probe `--bad-flag` must exit `2`.
+7. Required validation commands must execute and be captured in machine-readable evidence.
+
+## D1 Validation
+
+```bash
+node --check Source/ui/public/js/index.js
+bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl040_slice_d1_done_candidate_<timestamp>/contract_runs
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag
+./scripts/validate-docs-freshness.sh
+```
+
+## D1 Evidence Contract
+
+Required files under `TestEvidence/bl040_slice_d1_done_candidate_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `ui_diagnostics_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `ui_diagnostics_notes.md`
+- `docs_freshness.log`
+
+## D1 Execution Snapshot (2026-02-27)
+
+- Input handoffs:
+  - `TestEvidence/bl040_slice_c6_ui_longrun_20260227T033800Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z8_20260227T042149Z/*`
+- Evidence bundle:
+  - `TestEvidence/bl040_slice_d1_done_candidate_20260227T183452Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `ui_diagnostics_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `ui_diagnostics_notes.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `node --check Source/ui/public/js/index.js` => PASS
+  - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh` => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help` => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl040_slice_d1_done_candidate_20260227T183452Z/contract_runs` => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`) => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`) => PASS
+  - `./scripts/validate-docs-freshness.sh` => PASS
+- Determinism/taxonomy/semantics summary:
+  - `runs_observed=75`
+  - `signature_drift_count=0`
+  - `row_drift_count=0`
+  - `taxonomy_nonzero_rows=0`
+  - `usage_probe_runs0_exit=2`
+  - `usage_probe_badflag_exit=2`
+
+## D2 Done Promotion Sentinel Contract
+
+Purpose:
+- Promote BL-040 from D1 done-candidate to done state using an extended deterministic authority diagnostics sentinel with strict usage exits.
+
+D2 guard gate rules:
+1. Run count must be exactly `100`.
+2. `signature_drift_count` must be `0`.
+3. `row_drift_count` must be `0`.
+4. `taxonomy_nonzero_rows` must be `0` (only `none` row allowed in taxonomy output).
+5. Negative probe `--runs 0` must exit `2`.
+6. Negative probe `--bad-flag` must exit `2`.
+7. Required validation commands must execute and be captured in machine-readable evidence.
+
+## D2 Validation
+
+```bash
+node --check Source/ui/public/js/index.js
+bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl040_slice_d2_done_promotion_<timestamp>/contract_runs
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0
+./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag
+./scripts/validate-docs-freshness.sh
+```
+
+## D2 Evidence Contract
+
+Required files under `TestEvidence/bl040_slice_d2_done_promotion_<timestamp>/`:
+- `status.tsv`
+- `validation_matrix.tsv`
+- `contract_runs/validation_matrix.tsv`
+- `contract_runs/replay_hashes.tsv`
+- `contract_runs/failure_taxonomy.tsv`
+- `ui_diagnostics_summary.tsv`
+- `exit_semantics_probe.tsv`
+- `promotion_readiness.md`
+- `docs_freshness.log`
+
+## D2 Execution Snapshot (2026-02-27)
+
+- Input handoffs:
+  - `TestEvidence/bl040_slice_d1_done_candidate_20260227T183452Z/*`
+  - `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z9_20260227T195521Z/*`
+- Evidence bundle:
+  - `TestEvidence/bl040_slice_d2_done_promotion_20260227T201804Z/status.tsv`
+  - `validation_matrix.tsv`
+  - `contract_runs/validation_matrix.tsv`
+  - `contract_runs/replay_hashes.tsv`
+  - `contract_runs/failure_taxonomy.tsv`
+  - `ui_diagnostics_summary.tsv`
+  - `exit_semantics_probe.tsv`
+  - `promotion_readiness.md`
+  - `docs_freshness.log`
+- Validation outcomes:
+  - `node --check Source/ui/public/js/index.js` => PASS
+  - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh` => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help` => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl040_slice_d2_done_promotion_20260227T201804Z/contract_runs` => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`) => PASS
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`) => PASS
+  - `./scripts/validate-docs-freshness.sh` => PASS
+- Determinism/taxonomy/semantics summary:
+  - `runs_observed=100`
+  - `signature_drift_count=0`
+  - `row_drift_count=0`
+  - `taxonomy_nonzero_rows=0`
+  - `usage_probe_runs0_exit=2`
+  - `usage_probe_badflag_exit=2`

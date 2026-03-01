@@ -10,6 +10,7 @@ ENABLE_CLAP="${LOCUSQ_ENABLE_CLAP:-0}"
 INSTALL_CLAP="${LOCUSQ_INSTALL_CLAP:-$ENABLE_CLAP}"
 CLAP_FETCH="${LOCUSQ_CLAP_FETCH:-1}"
 CLAP_EXTENSIONS_DIR="${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR:-}"
+ENABLE_HEAD_TRACKING="${LOCUSQ_ENABLE_HEAD_TRACKING:-1}"
 REFRESH_AU_CACHE="${LOCUSQ_REFRESH_AU_CACHE:-1}"
 REFRESH_REAPER_CACHE="${LOCUSQ_REFRESH_REAPER_CACHE:-1}"
 REAPER_AUTO_QUIT="${LOCUSQ_REAPER_AUTO_QUIT:-1}"
@@ -37,6 +38,7 @@ Environment overrides:
   LOCUSQ_INSTALL_CLAP         If 1, install LocusQ.clap to user CLAP folder (default: LOCUSQ_ENABLE_CLAP)
   LOCUSQ_CLAP_FETCH           If 1, allow CMake to fetch clap-juce-extensions when missing (default: 1)
   LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR  Optional local clap-juce-extensions checkout path
+  LOCUSQ_ENABLE_HEAD_TRACKING If 1, enable companion UDP receiver bridge (default: 1)
   LOCUSQ_REFRESH_AU_CACHE     If 1, refresh AU registrar cache (default: 1)
   LOCUSQ_REFRESH_REAPER_CACHE If 1, remove LocusQ entries from REAPER plugin caches (default: 1)
   LOCUSQ_REAPER_AUTO_QUIT     If 1, request REAPER quit before install (default: 1)
@@ -61,6 +63,7 @@ to_cmake_bool() {
 
 ENABLE_CLAP_CMAKE="$(to_cmake_bool "$ENABLE_CLAP")"
 CLAP_FETCH_CMAKE="$(to_cmake_bool "$CLAP_FETCH")"
+HEAD_TRACKING_CMAKE="$(to_cmake_bool "$ENABLE_HEAD_TRACKING")"
 
 wait_for_reaper_exit() {
   local timeout_seconds="${1:-15}"
@@ -197,6 +200,7 @@ echo "build_config: $BUILD_CONFIG"
 echo "build_jobs: $BUILD_JOBS"
 echo "install_standalone: $WITH_STANDALONE_INSTALL"
 echo "enable_clap: $ENABLE_CLAP"
+echo "enable_head_tracking: $ENABLE_HEAD_TRACKING"
 echo "install_clap: $INSTALL_CLAP"
 echo "clap_fetch: $CLAP_FETCH"
 echo "refresh_au_cache: $REFRESH_AU_CACHE"
@@ -210,6 +214,7 @@ CONFIGURE_ARGS=(
   -DCMAKE_BUILD_TYPE="$BUILD_CONFIG"
   -DLOCUSQ_ENABLE_CLAP="$ENABLE_CLAP_CMAKE"
   -DLOCUSQ_CLAP_FETCH="$CLAP_FETCH_CMAKE"
+  -DLOCUS_HEAD_TRACKING="$HEAD_TRACKING_CMAKE"
   -DBUILD_LOCUSQ_QA=ON
 )
 if [[ -n "$CLAP_EXTENSIONS_DIR" ]]; then
@@ -253,11 +258,24 @@ VST3_DST="$HOME/Library/Audio/Plug-Ins/VST3"
 AU_DST="$HOME/Library/Audio/Plug-Ins/Components"
 CLAP_DST="$HOME/Library/Audio/Plug-Ins/CLAP"
 
+STEAM_RUNTIME_SRC="$ROOT_DIR/third_party/steam-audio/sdk/steamaudio/lib/osx/libphonon.dylib"
+
 mkdir -p "$VST3_DST" "$AU_DST"
 rsync -a --delete "$VST3_SRC" "$VST3_DST/"
 rsync -a --delete "$AU_SRC" "$AU_DST/"
 clear_bundle_quarantine "$VST3_DST/LocusQ.vst3"
 clear_bundle_quarantine "$AU_DST/LocusQ.component"
+
+if [[ -f "$STEAM_RUNTIME_SRC" ]]; then
+  cp -f "$STEAM_RUNTIME_SRC" "$VST3_DST/LocusQ.vst3/Contents/MacOS/libphonon.dylib"
+  cp -f "$STEAM_RUNTIME_SRC" "$AU_DST/LocusQ.component/Contents/MacOS/libphonon.dylib"
+  clear_bundle_quarantine "$VST3_DST/LocusQ.vst3/Contents/MacOS/libphonon.dylib"
+  clear_bundle_quarantine "$AU_DST/LocusQ.component/Contents/MacOS/libphonon.dylib"
+  echo "steam_runtime_embedded: $VST3_DST/LocusQ.vst3/Contents/MacOS/libphonon.dylib"
+  echo "steam_runtime_embedded: $AU_DST/LocusQ.component/Contents/MacOS/libphonon.dylib"
+else
+  echo "steam_runtime_embed_skipped: source_missing=$STEAM_RUNTIME_SRC"
+fi
 
 if [[ "$ENABLE_CLAP_CMAKE" == "ON" && "$INSTALL_CLAP" == "1" ]]; then
   mkdir -p "$CLAP_DST"
@@ -272,6 +290,11 @@ if [[ "$WITH_STANDALONE_INSTALL" == "1" ]]; then
     mkdir -p "$APP_DST"
     rsync -a --delete "$APP_SRC" "$APP_DST/"
     clear_bundle_quarantine "$APP_DST/LocusQ.app"
+    if [[ -f "$STEAM_RUNTIME_SRC" ]]; then
+      cp -f "$STEAM_RUNTIME_SRC" "$APP_DST/LocusQ.app/Contents/MacOS/libphonon.dylib"
+      clear_bundle_quarantine "$APP_DST/LocusQ.app/Contents/MacOS/libphonon.dylib"
+      echo "steam_runtime_embedded: $APP_DST/LocusQ.app/Contents/MacOS/libphonon.dylib"
+    fi
   else
     echo "WARN: standalone app not found, skipping: $APP_SRC"
   fi
