@@ -1,7 +1,0 @@
-theme	backlog_ids	status	notes
-orientation_pipeline	BL-053,BL-052,BL-045	aligned	Structural + manual sync evidence now linked.
-adaptive_smoothing	BL-053,BL-059	partial	Documented in methodology; rollout remains optional follow-up.
-readiness_sync_gating	BL-058,BL-053	aligned	State machine + sync gate now explicit in runbook acceptance.
-offline_truth_renderer	BL-055,BL-060	partial	Referenced as parity requirement; implementation remains open.
-partitioned_crossfade	BL-055,BL-061	aligned	Crossfade/no-zipper/no-RT-alloc criteria explicit.
-listening_protocol	BL-060	aligned	Blind trial schema + metrics artifacts required.

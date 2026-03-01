@@ -1,9 +1,0 @@
-check_id	result	notes
-research_canonical_doc	PASS	Reconciliation report created under Documentation/reviews/2026-03-01-headtracking-research-backlog-reconciliation.md.
-bl053_runbook_sync	PASS	BL-053 acceptance/methodology/evidence references tightened.
-bl055_runbook_sync	PASS	BL-055 acceptance tightened for crossfade/RT-safety/offline parity.
-bl058_runbook_sync	PASS	BL-058 readiness state machine and synthetic axis sweep checks formalized.
-bl059_runbook_sync	PASS	BL-059 integration invariants and diagnostics expectations tightened.
-bl060_runbook_sync	PASS	BL-060 protocol and required analysis artifacts formalized.
-bl061_runbook_sync	PASS	BL-061 conditional/promotion and crossfade constraints tightened.
-index_sync	PASS	Backlog index BL-053 status note aligned with manual sync evidence.

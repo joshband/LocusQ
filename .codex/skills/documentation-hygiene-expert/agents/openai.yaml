@@ -1,0 +1,4 @@
+interface:
+  display_name: "Documentation Hygiene Expert"
+  short_description: "Refactor docs and enforce git artifact hygiene"
+  default_prompt: "Use $documentation-hygiene-expert to de-bloat docs, ADR-align canonical sources, and run scripted git artifact hygiene cleanup/guardrails."

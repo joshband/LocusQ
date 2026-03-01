@@ -1,6 +1,0 @@
-[2026-02-19T05:33:12Z] STEP: phase_2_5_acceptance_suite
-CMD: ./plugins/LocusQ/build/locusq_qa_artefacts/locusq_qa --spatial plugins/LocusQ/qa/scenarios/locusq_phase_2_5_acceptance_suite.json
-Running suite: plugins/LocusQ/qa/scenarios/locusq_phase_2_5_acceptance_suite.json
-
-=== Suite: locusq_phase_2_5_acceptance_suite [PASS] ===
-  Total: 9  Pass: 9  Warn: 0  Fail: 0  Error: 0  Skip: 0
