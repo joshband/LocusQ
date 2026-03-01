@@ -1,5 +1,0 @@
-check	expected	actual	status	evidence
-open_runbook_schema	all open runbooks compliant	27/27	PASS	Documentation/backlog/bl-*.md
-done_retrofit_coverage	all done runbooks include retrofit block	46/46	PASS	Documentation/backlog/done/*.md
-index_lifecycle_contract	present	present	PASS	Documentation/backlog/index.md
-standards_lifecycle_contract	present	present	PASS	Documentation/standards.md

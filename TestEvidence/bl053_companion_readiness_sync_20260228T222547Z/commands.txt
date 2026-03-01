@@ -1,7 +1,0 @@
-cd companion && swift build -c release
-cp companion/.build/release/locusq-headtrack-companion "companion/LocusQ Headtrack Companion.app/Contents/MacOS/locusq-headtrack-companion"
-cp companion/.build/release/locusq-headtrack-companion "/Applications/LocusQ Headtrack Companion.app/Contents/MacOS/locusq-headtrack-companion"
-pkill -f "locusq-headtrack-companion" || true
-open -a "/Applications/LocusQ Headtrack Companion.app"
-pgrep -fal "locusq-headtrack-companion|locusq-headtrack-monitor"
-lsof -p <companion_pid> | rg UDP

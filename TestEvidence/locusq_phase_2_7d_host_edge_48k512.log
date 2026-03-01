@@ -1,7 +1,0 @@
-Running scenario: plugins/LocusQ/qa/scenarios/locusq_26_host_edge_roundtrip_multipass.json [Spatial adapter]
-
-Status: PASS
-  non_finite: PASS (value=0)
-  peak_level: PASS (value=-51.9764)
-  rms_energy: PASS (value=-66.4486)
-exit_code=0

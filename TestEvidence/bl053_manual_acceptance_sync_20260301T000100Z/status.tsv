@@ -1,8 +1,0 @@
-check_id	result	notes
-manual_audio_virtual_binaural	PASS	Operator confirmed stable audio in virtual_binaural after relaunch/sync.
-manual_profile_activation	PASS	Profile activation moved from fallback/fail to pass/active state in-session.
-manual_yaw_direction	PASS	Yaw inversion corrected and validated by operator.
-manual_pitch_direction	PASS	Pitch/up-down inversion corrected and validated by operator.
-manual_roll_direction	PASS	Roll/tilt inversion corrected and validated by operator.
-manual_readiness_sync_flow	PASS	Companion readiness/sync gate behavior verified during session.
-bl053_promotion_owner_packet	PENDING	Owner promotion packet and final gate replay still required.

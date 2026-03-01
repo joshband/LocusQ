@@ -1,7 +1,0 @@
-check	expected	actual	result	evidence
-lane_replay	PASS	PASS	PASS	TestEvidence/bl052_20260228_170811/status.tsv
-replay_cadence_compliance	runbook-defined cadence with documented override	PASS	PASS	Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md
-ownership_safety	SHARED_FILES_TOUCHED=no	no	PASS	TestEvidence/bl052_owner_sync_z1_20260228T175701Z/handoff_resolution.md
-evidence_localization	TestEvidence-only canonical paths	PASS	PASS	TestEvidence/bl052_owner_sync_z1_20260228T175701Z/handoff_resolution.md
-docs_freshness	PASS	PASS	PASS	TestEvidence/bl052_owner_sync_z1_20260228T175701Z/docs_freshness.log
-status_schema	PASS	PASS	PASS	TestEvidence/bl052_owner_sync_z1_20260228T175701Z/status_json.log

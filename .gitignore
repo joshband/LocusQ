@@ -58,6 +58,8 @@ __pycache__/
 
 # Local generated QA/TestEvidence artifacts (non-canonical)
 build_local/
+companion/.build/
+companion/LocusQ Headtrack Companion.app/
 tmp/
 qa_output/focused_matrix_runs.tsv
 qa_output/locusq_emitter/
@@ -87,6 +89,12 @@ TestEvidence/thread-heartbeats.tsv
 TestEvidence/suite_result_*.json
 TestEvidence/**/*.wav
 TestEvidence/**/*.gz
+TestEvidence/archive/*.tar.gz
+TestEvidence/archive/*.tgz
+TestEvidence/archive/*.zip
+
+# Large local research bundles (never commit)
+Documentation/Calibration POC/*.zip
 
 # Local secrets/env
 .env
