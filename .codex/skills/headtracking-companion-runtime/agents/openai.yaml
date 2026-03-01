@@ -1,0 +1,4 @@
+interface:
+  display_name: "Headtracking Companion Runtime"
+  short_description: "Validate companion runtime head-tracking gates"
+  default_prompt: "Use $headtracking-companion-runtime to validate readiness, sync gating, and axis/frame diagnostics for companion telemetry."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Perceptual Listening Harness"
+  short_description: "Design blinded listening studies with gate metrics"
+  default_prompt: "Use $perceptual-listening-harness to define blind trial schema, compute gate metrics, and produce reproducible decisions."
