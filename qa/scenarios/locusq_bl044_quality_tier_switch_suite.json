@@ -1,0 +1,105 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl044_quality_tier_switch_suite",
+  "name": "LocusQ BL-044 Quality Tier Seamless Switching Suite",
+  "category": "stability",
+  "description": "Deterministic BL-044 contract lane scaffold for seamless quality-tier switching continuity and fallback replay signatures.",
+  "scenario_ids": [
+    "locusq_emitter_passthrough",
+    "locusq_renderer_spatial_output"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl044_quality_tier_switch_lane"
+  },
+  "bl044_contract_checks": {
+    "acceptance_ids": [
+      { "id": "BL044-B1-001", "description": "A1 acceptance ID declarations are complete." },
+      { "id": "BL044-B1-002", "description": "BL044-FX taxonomy declarations are complete." },
+      { "id": "BL044-B1-003", "description": "Switch-state field contract is explicit." },
+      { "id": "BL044-B1-004", "description": "Continuity threshold contract is explicit." },
+      { "id": "BL044-B1-005", "description": "Fallback token contract is explicit." },
+      { "id": "BL044-B1-006", "description": "Replay determinism clause is explicit." },
+      { "id": "BL044-B1-007", "description": "Artifact schema clause is explicit." },
+      { "id": "BL044-B1-008", "description": "Lane failure taxonomy declarations are complete." },
+      { "id": "BL044-B1-009", "description": "Replay hash stability is enforced across reruns." }
+    ],
+    "required_switch_fields": [
+      "quality_tier_requested",
+      "quality_tier_active",
+      "quality_tier_switch_state",
+      "quality_tier_switch_crossfade_samples",
+      "quality_tier_switch_latency_samples",
+      "quality_tier_switch_fallback_reason"
+    ],
+    "required_continuity_fields": [
+      "switch_peak_discontinuity_abs",
+      "switch_rms_step_delta",
+      "switch_completion_latency_samples",
+      "switch_non_finite_count"
+    ],
+    "required_fallback_tokens": [
+      "none",
+      "invalid_requested_tier",
+      "crossfade_window_invalid",
+      "latency_budget_exceeded",
+      "non_finite_detected",
+      "contract_violation"
+    ],
+    "thresholds": {
+      "switch_peak_discontinuity_abs_max": 0.02,
+      "switch_rms_step_delta_max": 0.01,
+      "switch_completion_latency_samples_max": 1024,
+      "switch_non_finite_count_max": 0,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 1,
+      "closeout_runs": 3,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv",
+      "replay_sentinel_summary.tsv"
+    ],
+    "deterministic_hash_inputs": {
+      "include": [
+        "mode",
+        "runbook_contract_hash",
+        "qa_contract_hash",
+        "scenario_hash",
+        "acceptance_id_count",
+        "failure_id_count",
+        "switch_clause_presence",
+        "continuity_clause_presence",
+        "fallback_clause_presence",
+        "artifact_schema_presence"
+      ],
+      "exclude": [
+        "timestamp",
+        "absolute_paths",
+        "wall_clock_duration",
+        "log_line_numbers"
+      ]
+    },
+    "failure_taxonomy": [
+      {
+        "failure_class": "deterministic_contract_failure",
+        "description": "Contract/schema mismatch for BL-044 lane declarations."
+      },
+      {
+        "failure_class": "deterministic_lane_failure",
+        "description": "Replay signature divergence or runtime lane failure."
+      },
+      {
+        "failure_class": "deterministic_evidence_failure",
+        "description": "Required machine-readable artifacts are missing or incomplete."
+      }
+    ]
+  }
+}
