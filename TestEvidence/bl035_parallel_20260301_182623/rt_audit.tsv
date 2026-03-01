@@ -1,9 +1,9 @@
 file	line	pattern	severity	allowlisted	snippet
 Source/PhysicsEngine.h	30	HEAP_ALLOC	high	true	 * Audio thread interaction is lock-free via atomics and double-buffered state.
-Source/CalibrationEngine.h	114	HEAP_ALLOC	high	false	 /** Kick off a new calibration sequence. Call from a non-audio thread (UI).
-Source/CalibrationEngine.h	134	HEAP_ALLOC	high	false	 "Calibration engine busy: stop current run before starting a new one.",
+Source/CalibrationEngine.h	114	HEAP_ALLOC	high	true	 /** Kick off a new calibration sequence. Call from a non-audio thread (UI).
+Source/CalibrationEngine.h	134	HEAP_ALLOC	high	true	 "Calibration engine busy: stop current run before starting a new one.",
 Source/SceneGraph.h	11	HEAP_ALLOC	high	true	// Vec3 - Minimal 3D vector for lock-free scene data
 Source/SceneGraph.h	44	HEAP_ALLOC	high	true	// EmitterSlot - Lock-free double-buffered emitter state
 Source/SceneGraph.h	355	HEAP_ALLOC	high	true	 // Deterministic pseudo-random index to spread new emitters across the 16-color palette.
-Source/SceneGraph.h	373	HEAP_ALLOC	high	false	 SceneGraph (const SceneGraph&) = delete;
-Source/SceneGraph.h	374	HEAP_ALLOC	high	false	 SceneGraph& operator= (const SceneGraph&) = delete;
+Source/SceneGraph.h	373	HEAP_ALLOC	high	true	 SceneGraph (const SceneGraph&) = delete;
+Source/SceneGraph.h	374	HEAP_ALLOC	high	true	 SceneGraph& operator= (const SceneGraph&) = delete;
