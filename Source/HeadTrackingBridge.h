@@ -19,16 +19,20 @@
 
 struct alignas(16) HeadTrackingPoseSnapshot
 {
-    float qx = 0.0f;
-    float qy = 0.0f;
-    float qz = 0.0f;
-    float qw = 1.0f;
-    std::uint64_t timestampMs = 0;
-    std::uint32_t seq = 0;
-    std::uint32_t pad = 0;
-};
+    float qx = 0.0f;              // +0
+    float qy = 0.0f;              // +4
+    float qz = 0.0f;              // +8
+    float qw = 1.0f;              // +12
+    std::uint64_t timestampMs = 0; // +16
+    std::uint32_t seq = 0;        // +24
+    std::uint32_t pad = 0;        // +28  (layout compat)
+    float angVx = 0.0f;           // +32  rad/s body frame; 0 for v1 packets
+    float angVy = 0.0f;           // +36
+    float angVz = 0.0f;           // +40
+    std::uint32_t sensorLocationFlags = 0; // +44  bits[1:0]=location, bit[2]=hasRotationRate
+};                                // = 48 bytes
 
-static_assert (sizeof (HeadTrackingPoseSnapshot) == 32, "HeadTrackingPoseSnapshot size contract");
+static_assert (sizeof (HeadTrackingPoseSnapshot) == 48, "HeadTrackingPoseSnapshot size contract");
 
 #if LOCUS_HEAD_TRACKING
 class HeadTrackingBridge final
@@ -211,8 +215,8 @@ private:
        #endif
 
         static constexpr std::uint32_t packetMagic = 0x4C515054u; // "LQPT"
-        static constexpr std::uint32_t packetVersion = 1u;
-        static constexpr int packetSizeBytes = 40;
+        static constexpr int packetSizeV1 = 36; // v1 actual wire size (fixes prior off-by-4)
+        static constexpr int packetSizeV2 = 52; // v2 wire size with angV + sensorLocationFlags
         static constexpr std::uint32_t ackMagic = 0x4C514143u; // "LQAC"
         static constexpr std::uint32_t ackVersion = 1u;
         static constexpr int ackPacketSizeBytes = 48;
@@ -267,19 +271,46 @@ private:
 
         static bool decodePacket (const std::uint8_t* bytes, int numBytes, PoseSnapshot& snapshot) noexcept
         {
-            if (bytes == nullptr || numBytes < packetSizeBytes)
+            if (bytes == nullptr || numBytes < packetSizeV1)
                 return false;
 
-            if (readU32LE (bytes + 0) != packetMagic || readU32LE (bytes + 4) != packetVersion)
+            if (readU32LE (bytes + 0) != packetMagic)
                 return false;
 
-            snapshot.qx = readF32LE (bytes + 8);
-            snapshot.qy = readF32LE (bytes + 12);
-            snapshot.qz = readF32LE (bytes + 16);
-            snapshot.qw = readF32LE (bytes + 20);
-            snapshot.timestampMs = readU64LE (bytes + 24);
-            snapshot.seq = readU32LE (bytes + 32);
-            snapshot.pad = 0;
+            const auto version = readU32LE (bytes + 4);
+
+            if (version == 1u && numBytes >= packetSizeV1)
+            {
+                snapshot.qx          = readF32LE (bytes + 8);
+                snapshot.qy          = readF32LE (bytes + 12);
+                snapshot.qz          = readF32LE (bytes + 16);
+                snapshot.qw          = readF32LE (bytes + 20);
+                snapshot.timestampMs = readU64LE (bytes + 24);
+                snapshot.seq         = readU32LE (bytes + 32);
+                snapshot.pad         = 0;
+                snapshot.angVx       = 0.0f;
+                snapshot.angVy       = 0.0f;
+                snapshot.angVz       = 0.0f;
+                snapshot.sensorLocationFlags = 0;
+            }
+            else if (version == 2u && numBytes >= packetSizeV2)
+            {
+                snapshot.qx          = readF32LE (bytes + 8);
+                snapshot.qy          = readF32LE (bytes + 12);
+                snapshot.qz          = readF32LE (bytes + 16);
+                snapshot.qw          = readF32LE (bytes + 20);
+                snapshot.timestampMs = readU64LE (bytes + 24);
+                snapshot.seq         = readU32LE (bytes + 32);
+                snapshot.pad         = 0;
+                snapshot.angVx       = readF32LE (bytes + 36);
+                snapshot.angVy       = readF32LE (bytes + 40);
+                snapshot.angVz       = readF32LE (bytes + 44);
+                snapshot.sensorLocationFlags = readU32LE (bytes + 48);
+            }
+            else
+            {
+                return false;
+            }
 
             if (! std::isfinite (snapshot.qx)
                 || ! std::isfinite (snapshot.qy)
@@ -370,7 +401,7 @@ private:
             if (udpSocket == nullptr)
                 return;
 
-            std::array<std::uint8_t, packetSizeBytes> packetBytes {};
+            std::array<std::uint8_t, 64> packetBytes {}; // 64B headroom: v1=36, v2=52
             const auto ackIntervalMs = juce::jmax (20, config.ackIntervalMs);
             auto nextAckTick = juce::Time::getMillisecondCounterHiRes();
 
@@ -398,7 +429,26 @@ private:
                         {
                             const auto previousSeq = lastSeq.load (std::memory_order_relaxed);
                             if (snapshot.seq <= previousSeq)
-                                shouldPublish = false;
+                            {
+                                bool acceptSequenceRestart = false;
+                                const auto* currentPose = activePose.load (std::memory_order_acquire);
+                                if (currentPose != nullptr)
+                                {
+                                    const auto currentTimestampMs = currentPose->timestampMs;
+                                    const auto nowMs = static_cast<std::uint64_t> (juce::Time::currentTimeMillis());
+                                    const bool currentPoseStale = currentTimestampMs == 0
+                                        || (nowMs >= (currentTimestampMs + staleThresholdMs));
+                                    const bool incomingTimestampAdvanced = snapshot.timestampMs > currentTimestampMs;
+                                    acceptSequenceRestart = currentPoseStale && incomingTimestampAdvanced;
+                                }
+                                else
+                                {
+                                    acceptSequenceRestart = true;
+                                }
+
+                                if (! acceptSequenceRestart)
+                                    shouldPublish = false;
+                            }
                         }
 
                         if (shouldPublish)

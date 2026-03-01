@@ -625,5 +625,100 @@ void LocusQSpatialAdapter::setRendererParam(const char* id, float normalized)
     renderer_->primeRendererStateFromCurrentParameters();
 }
 
+
+//==============================================================================
+// LocusQCalibrateAdapter
+//==============================================================================
+
+LocusQCalibrateAdapter::LocusQCalibrateAdapter()
+    : processor_(std::make_unique<LocusQAudioProcessor>())
+{
+    // Force Calibrate mode (index 0 of the "Calibrate/Emitter/Renderer" choice)
+    setJuceParam("mode", 0.0f);
+}
+
+void LocusQCalibrateAdapter::prepare(double sampleRate, int maxBlockSize, int numChannels)
+{
+    processor_->setRateAndBufferSizeDetails(sampleRate, maxBlockSize);
+    processor_->prepareToPlay(sampleRate, maxBlockSize);
+
+    audioBuffer_.setSize(numChannels, maxBlockSize, false, true, true);
+    audioBuffer_.clear();
+    midiBuffer_.clear();
+}
+
+void LocusQCalibrateAdapter::release()
+{
+    processor_->releaseResources();
+    audioBuffer_.setSize(0, 0);
+}
+
+void LocusQCalibrateAdapter::reset() noexcept
+{
+    audioBuffer_.clear();
+    midiBuffer_.clear();
+}
+
+void LocusQCalibrateAdapter::processBlock(float** channelData, int numChannels, int numSamples) noexcept
+{
+    for (int ch = 0; ch < numChannels; ++ch)
+        if (channelData[ch])
+            std::memcpy(audioBuffer_.getWritePointer(ch), channelData[ch],
+                        static_cast<size_t>(numSamples) * sizeof(float));
+
+    processor_->processBlock(audioBuffer_, midiBuffer_);
+    midiBuffer_.clear();
+
+    for (int ch = 0; ch < numChannels; ++ch)
+        if (channelData[ch])
+            std::memcpy(channelData[ch], audioBuffer_.getReadPointer(ch),
+                        static_cast<size_t>(numSamples) * sizeof(float));
+}
+
+void LocusQCalibrateAdapter::setParameter(int index, ::qa::NormalizedParam value) noexcept
+{
+    switch (index)
+    {
+        case 0: setJuceParam("cal_monitoring_path", value); break;
+        case 1: setJuceParam("cal_test_level",      value); break;
+        case 2: setJuceParam("cal_mic_channel",     value); break;
+        case 3: setJuceParam("cal_test_type",       value); break;
+        default: break;
+    }
+}
+
+const char* LocusQCalibrateAdapter::getParameterName(int index) const
+{
+    static const char* names[] = {
+        "cal_monitoring_path", "cal_test_level", "cal_mic_channel", "cal_test_type"
+    };
+    if (index >= 0 && index < kNumParameters) return names[index];
+    return nullptr;
+}
+
+bool LocusQCalibrateAdapter::getCapabilities(::qa::EffectCapabilities& out) const
+{
+    out.effectTypes = ::qa::EffectType::SPATIAL;
+    out.behaviors   = ::qa::BehaviorFlag::STATEFUL;
+    out.description = "LocusQ Calibrate: monitoring path switch + quad-to-binaural (BL-052)";
+    return true;
+}
+
+::qa::OptionalFeatures LocusQCalibrateAdapter::getOptionalFeatures() const
+{
+    return { true,   // supportsReset
+             false,  // supportsMidiInput
+             false,  // supportsMidiOutput
+             false,  // supportsTransport
+             true,   // supportsCapabilities
+             false }; // supportsRoutingIntrospection
+}
+
+void LocusQCalibrateAdapter::setJuceParam(const char* id, float normalized)
+{
+    if (auto* p = processor_->apvts.getParameter(id))
+        p->setValueNotifyingHost(normalized);
+}
+
 } // namespace qa
 } // namespace locusq

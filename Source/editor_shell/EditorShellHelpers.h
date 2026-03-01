@@ -23,6 +23,21 @@ inline void notifyHostResized (juce::WebBrowserComponent& webView,
             + juce::String (width) + "," + juce::String (height) + ");");
 }
 
+// BL-045 Slice C: push drift telemetry to the WebView at 500ms intervals.
+inline void pushHeadTrackDrift (juce::WebBrowserComponent& webView,
+                                float driftDeg,
+                                bool referenceSet)
+{
+    const juce::String js =
+        "(()=>{"
+        "const d={type:'headTrackDrift',"
+        "driftDeg:" + juce::String (driftDeg, 2) + ","
+        "referenceSet:" + (referenceSet ? "true" : "false") + "};"
+        "if(typeof window.updateHeadTrackDrift==='function')window.updateHeadTrackDrift(d);"
+        "})();";
+    webView.evaluateJavascript (js);
+}
+
 inline juce::String getRuntimeProbeScript()
 {
     return R"JS(

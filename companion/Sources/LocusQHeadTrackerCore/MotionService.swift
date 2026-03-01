@@ -6,13 +6,29 @@ public struct MotionSample: Sendable, Equatable {
     public let qz: Float
     public let qw: Float
     public let timestampMs: UInt64
+    public let angVx: Float          // rad/s, body frame; 0 if unavailable
+    public let angVy: Float
+    public let angVz: Float
+    public let sensorLocation: UInt8 // 0=unknown, 1=left, 2=right
+    public let hasRotationRate: Bool
 
-    public init(qx: Float, qy: Float, qz: Float, qw: Float, timestampMs: UInt64) {
+    public init(
+        qx: Float, qy: Float, qz: Float, qw: Float,
+        timestampMs: UInt64,
+        angVx: Float = 0, angVy: Float = 0, angVz: Float = 0,
+        sensorLocation: UInt8 = 0,
+        hasRotationRate: Bool = false
+    ) {
         self.qx = qx
         self.qy = qy
         self.qz = qz
         self.qw = qw
         self.timestampMs = timestampMs
+        self.angVx = angVx
+        self.angVy = angVy
+        self.angVz = angVz
+        self.sensorLocation = sensorLocation
+        self.hasRotationRate = hasRotationRate
     }
 }
 
@@ -64,10 +80,29 @@ public final class HeadphoneMotionService: MotionService {
                 print("[LocusQHeadTracker] motion error: \(error)")
                 return
             }
-            guard let q = motion?.attitude.quaternion else { return }
+            guard let motion, let q = motion.attitude.quaternion as CMQuaternion? else { return }
 
             let ts = UInt64(Date().timeIntervalSince1970 * 1000.0)
-            let sample = MotionSample(qx: Float(q.x), qy: Float(q.y), qz: Float(q.z), qw: Float(q.w), timestampMs: ts)
+            let rot = motion.rotationRate
+
+            var loc: UInt8 = 0
+            #if swift(>=5.5)
+            if #available(macOS 12, iOS 15, *) {
+                switch motion.sensorLocation {
+                case .headphoneLeft:  loc = 1
+                case .headphoneRight: loc = 2
+                default:              loc = 0
+                }
+            }
+            #endif
+
+            let sample = MotionSample(
+                qx: Float(q.x), qy: Float(q.y), qz: Float(q.z), qw: Float(q.w),
+                timestampMs: ts,
+                angVx: Float(rot.x), angVy: Float(rot.y), angVz: Float(rot.z),
+                sensorLocation: loc,
+                hasRotationRate: true
+            )
             self?.onSample?(sample)
         }
     }

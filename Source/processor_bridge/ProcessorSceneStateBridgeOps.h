@@ -671,6 +671,160 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
     const juce::String rendererAmbiChannelOrder { "acn" };
     const juce::String rendererAmbiDecodeLayout { rendererSpatialProfileActive };
     const juce::String rendererAmbiStage { rendererSpatialProfileStage };
+    const auto rendererAmbiIrContract = spatialRenderer.getAmbisonicIrContractSnapshot();
+    const juce::String rendererAmbiIrNormalization {
+        SpatialRenderer::ambisonicNormalizationToString (rendererAmbiIrContract.normalizationIndex)
+    };
+    const juce::String rendererAmbiIrRequestedProfile {
+        SpatialRenderer::spatialOutputProfileToString (rendererAmbiIrContract.requestedSpatialProfileIndex)
+    };
+    const juce::String rendererAmbiIrActiveProfile {
+        SpatialRenderer::spatialOutputProfileToString (rendererAmbiIrContract.activeSpatialProfileIndex)
+    };
+    const juce::String rendererAmbiIrStage {
+        SpatialRenderer::spatialProfileStageToString (rendererAmbiIrContract.activeSpatialStageIndex)
+    };
+    const juce::String rendererAmbiIrRequestedHeadphoneMode {
+        SpatialRenderer::headphoneRenderModeToString (rendererAmbiIrContract.requestedHeadphoneModeIndex)
+    };
+    const juce::String rendererAmbiIrActiveHeadphoneMode {
+        SpatialRenderer::headphoneRenderModeToString (rendererAmbiIrContract.activeHeadphoneModeIndex)
+    };
+    const bool rendererCompatProfileMatch =
+        rendererAmbiIrContract.requestedSpatialProfileIndex == rendererAmbiIrContract.activeSpatialProfileIndex;
+    const bool rendererCompatHeadphoneModeMatch =
+        rendererAmbiIrContract.requestedHeadphoneModeIndex == rendererAmbiIrContract.activeHeadphoneModeIndex;
+    const bool rendererCompatAmbisonicRequested =
+        rendererAmbiIrContract.requestedSpatialProfileIndex == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicFOA)
+        || rendererAmbiIrContract.requestedSpatialProfileIndex == static_cast<int> (SpatialRenderer::SpatialOutputProfile::AmbisonicHOA);
+    const bool rendererCompatAmbisonicOrderValid =
+        ! rendererCompatAmbisonicRequested || rendererAmbiIrContract.order > 0;
+    const bool rendererCompatSteamRequested =
+        rendererAmbiIrContract.requestedHeadphoneModeIndex
+            == static_cast<int> (SpatialRenderer::HeadphoneRenderMode::SteamBinaural);
+    const bool rendererCompatSteamFallback =
+        rendererCompatSteamRequested
+        && ! rendererCompatHeadphoneModeMatch
+        && ! rendererAmbiIrContract.steamAudioAvailable;
+    juce::String rendererCompatGuardStatus { "pass" };
+    juce::String rendererCompatGuardBlocker { "none" };
+    juce::String rendererCompatGuardReason { "none" };
+    if (! rendererCompatAmbisonicOrderValid)
+    {
+        rendererCompatGuardStatus = "fail";
+        rendererCompatGuardBlocker = "BL063-B1";
+        rendererCompatGuardReason = "ambisonic_order_invalid";
+    }
+    else if (rendererAmbiIrContract.fallbackActive)
+    {
+        rendererCompatGuardStatus = "warn";
+        rendererCompatGuardBlocker = "BL063-B2";
+        rendererCompatGuardReason = "profile_fallback_active";
+    }
+    else if (rendererCompatSteamFallback)
+    {
+        rendererCompatGuardStatus = "warn";
+        rendererCompatGuardBlocker = "BL063-B3";
+        rendererCompatGuardReason = "steam_fallback_active";
+    }
+    else if (! rendererCompatProfileMatch)
+    {
+        rendererCompatGuardStatus = "warn";
+        rendererCompatGuardBlocker = "BL063-B4";
+        rendererCompatGuardReason = "profile_mismatch";
+    }
+    const auto rendererCodecExecution = spatialRenderer.getCodecMappingExecutionSnapshot();
+    const auto rendererAdmPayload = spatialRenderer.getCodecAdmRuntimePayloadSnapshot();
+    const auto rendererIamfPayload = spatialRenderer.getCodecIamfRuntimePayloadSnapshot();
+    const juce::String rendererCodecExecutionMode {
+        SpatialRenderer::codecMappingModeToString (rendererCodecExecution.modeIndex)
+    };
+    constexpr int rendererCodecContractRequiredFields = 8;
+    int rendererCodecContractCoveredFields = 0;
+    if (rendererAmbiIrContract.frameId > 0)
+        ++rendererCodecContractCoveredFields;
+    ++rendererCodecContractCoveredFields; // timestampSamples is always defined in snapshot
+    if (rendererAmbiIrContract.order >= 0)
+        ++rendererCodecContractCoveredFields;
+    if (rendererAmbiIrContract.channelCount >= 0)
+        ++rendererCodecContractCoveredFields;
+    if (rendererAmbiIrContract.normalizationIndex >= 0)
+        ++rendererCodecContractCoveredFields;
+    if (rendererCodecExecution.signature > 0)
+        ++rendererCodecContractCoveredFields;
+    if (rendererCodecExecution.mappedChannelCount >= 0)
+        ++rendererCodecContractCoveredFields;
+    if (rendererCodecExecution.frameId > 0)
+        ++rendererCodecContractCoveredFields;
+    const float rendererCodecContractCoverage =
+        static_cast<float> (rendererCodecContractCoveredFields)
+        / static_cast<float> (rendererCodecContractRequiredFields);
+    const bool rendererAdmModeActive =
+        rendererCodecExecution.modeIndex == static_cast<int> (SpatialRenderer::CodecMappingMode::ADM);
+    const bool rendererIamfModeActive =
+        rendererCodecExecution.modeIndex == static_cast<int> (SpatialRenderer::CodecMappingMode::IAMF);
+    const bool rendererAdmMappingReady =
+        ! rendererAdmModeActive
+        || (rendererCodecExecution.mappingApplied
+            && rendererCodecExecution.finite
+            && rendererCodecExecution.objectCount > 0
+            && rendererAdmPayload.active
+            && rendererAdmPayload.objectCount > 0);
+    const bool rendererIamfMappingReady =
+        ! rendererIamfModeActive
+        || (rendererCodecExecution.mappingApplied
+            && rendererCodecExecution.finite
+            && rendererCodecExecution.elementCount > 0
+            && rendererIamfPayload.active
+            && rendererIamfPayload.elementCount > 0);
+    const juce::String rendererAdmMappingStatus { rendererAdmMappingReady ? "pass" : "fail" };
+    const juce::String rendererIamfMappingStatus { rendererIamfMappingReady ? "pass" : "fail" };
+    const juce::uint64 rendererCodecContractSignature =
+        rendererCodecExecution.signature;
+    const bool rendererPilotIntakeFailed = rendererCompatGuardStatus == "fail"
+                                           || ! rendererAdmMappingReady
+                                           || ! rendererIamfMappingReady;
+    const bool rendererPilotIntakeConditional = ! rendererPilotIntakeFailed
+                                                && rendererCompatGuardStatus == "warn";
+    const juce::String rendererPilotIntakeStatus {
+        rendererPilotIntakeFailed ? "blocked" : (rendererPilotIntakeConditional ? "defer" : "ready")
+    };
+    const juce::String rendererPilotIntakeBlocker {
+        rendererPilotIntakeFailed
+            ? (rendererCompatGuardStatus == "fail" ? rendererCompatGuardBlocker : "BL066-B1")
+            : "none"
+    };
+    const juce::String rendererPilotIntakeReason {
+        rendererPilotIntakeFailed
+            ? (rendererCompatGuardStatus == "fail" ? rendererCompatGuardReason : "mapping_contract_incomplete")
+            : (rendererPilotIntakeConditional ? rendererCompatGuardReason : "none")
+    };
+    const juce::String rendererPilotIntakeExecutionMode {
+        rendererCodecExecutionMode
+    };
+    juce::String rendererAdmPayloadObjectsJson { "[" };
+    for (int i = 0; i < rendererAdmPayload.objectCount && i < SpatialRenderer::NUM_SPEAKERS; ++i)
+    {
+        if (i > 0)
+            rendererAdmPayloadObjectsJson << ",";
+        rendererAdmPayloadObjectsJson
+            << "{\"id\":\"adm_obj_" << juce::String (i + 1)
+            << "\",\"gain\":" << juce::String (rendererAdmPayload.objectGain[static_cast<size_t> (i)], 5)
+            << ",\"azimuthDeg\":" << juce::String (rendererAdmPayload.objectAzimuthDeg[static_cast<size_t> (i)], 3)
+            << "}";
+    }
+    rendererAdmPayloadObjectsJson << "]";
+    juce::String rendererIamfPayloadElementsJson { "[" };
+    for (int i = 0; i < rendererIamfPayload.elementCount && i < 2; ++i)
+    {
+        if (i > 0)
+            rendererIamfPayloadElementsJson << ",";
+        rendererIamfPayloadElementsJson
+            << "{\"id\":\"iamf_elem_" << juce::String (i + 1)
+            << "\",\"gain\":" << juce::String (rendererIamfPayload.elementGain[static_cast<size_t> (i)], 5)
+            << "}";
+    }
+    rendererIamfPayloadElementsJson << "]";
     const auto clapDiagnostics = getClapRuntimeDiagnostics();
     const juce::String clapWrapperType {
         escapeJsonString (clapDiagnostics.wrapperType)
@@ -728,6 +882,7 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
     };
     const auto* rendererHeadTrackingPose = headTrackingBridge.currentPose();
     const bool rendererHeadPoseAvailable = rendererHeadTrackingPose != nullptr;
+    const auto rendererHeadTrackingConsumers = headTrackingBridge.getConsumerCount();
     const auto rendererHeadTrackingSnapshot = buildRendererHeadTrackingSnapshot (
         rendererHeadTrackingPose,
         headTrackingBridge.getInvalidPacketCount(),
@@ -986,8 +1141,49 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
     speakerRmsJson << "]";
     speakersJson << "]";
 
+    const auto registrationTransitionSeq = registrationTransitionDiagnostics.seq.load (std::memory_order_acquire);
+    const auto registrationRequestedModeCode = juce::jlimit (
+        0,
+        2,
+        registrationTransitionDiagnostics.requestedMode.load (std::memory_order_relaxed));
+    const auto registrationRequestedMode = static_cast<LocusQMode> (registrationRequestedModeCode);
+    const auto registrationStage = registrationTransitionStageFromCode (
+        registrationTransitionDiagnostics.stageCode.load (std::memory_order_relaxed));
+    const auto registrationFallback = registrationTransitionFallbackReasonFromCode (
+        registrationTransitionDiagnostics.fallbackCode.load (std::memory_order_relaxed));
+    const auto registrationEmitterSlot = registrationTransitionDiagnostics.emitterSlot.load (std::memory_order_relaxed);
+    const auto registrationEmitterActive = registrationTransitionDiagnostics.emitterActive.load (std::memory_order_relaxed);
+    const auto registrationRendererOwned = registrationTransitionDiagnostics.rendererOwned.load (std::memory_order_relaxed);
+    const auto registrationAmbiguityCount = registrationTransitionDiagnostics.ambiguityCount.load (std::memory_order_relaxed);
+    const auto registrationStaleOwnerCount = registrationTransitionDiagnostics.staleOwnerCount.load (std::memory_order_relaxed);
+
     json += "],\"emitterCount\":" + juce::String (sceneGraph.getActiveEmitterCount())
           + ",\"localEmitterId\":" + juce::String (emitterSlotId)
+          + ",\"registrationTransitionSeq\":"
+              + juce::String (static_cast<juce::int64> (registrationTransitionSeq))
+          + ",\"registrationRequestedMode\":\""
+              + escapeJsonString (locusQModeToString (registrationRequestedMode)) + "\""
+          + ",\"registrationStage\":\""
+              + escapeJsonString (registrationTransitionStageToString (registrationStage)) + "\""
+          + ",\"registrationFallbackReason\":\""
+              + escapeJsonString (registrationTransitionFallbackReasonToString (registrationFallback)) + "\""
+          + ",\"registrationEmitterSlot\":" + juce::String (registrationEmitterSlot)
+          + ",\"registrationEmitterActive\":" + juce::String (registrationEmitterActive ? "true" : "false")
+          + ",\"registrationRendererOwned\":" + juce::String (registrationRendererOwned ? "true" : "false")
+          + ",\"registrationAmbiguityCount\":" + juce::String (registrationAmbiguityCount)
+          + ",\"registrationStaleOwnerCount\":" + juce::String (registrationStaleOwnerCount)
+          + ",\"registrationTransition\":{\"requestedMode\":\""
+              + escapeJsonString (locusQModeToString (registrationRequestedMode)) + "\""
+              + ",\"stage\":\"" + escapeJsonString (registrationTransitionStageToString (registrationStage)) + "\""
+              + ",\"fallbackReason\":\""
+              + escapeJsonString (registrationTransitionFallbackReasonToString (registrationFallback)) + "\""
+              + ",\"emitterSlot\":" + juce::String (registrationEmitterSlot)
+              + ",\"emitterActive\":" + juce::String (registrationEmitterActive ? "true" : "false")
+              + ",\"rendererOwned\":" + juce::String (registrationRendererOwned ? "true" : "false")
+              + ",\"ambiguityCount\":" + juce::String (registrationAmbiguityCount)
+              + ",\"staleOwnerCount\":" + juce::String (registrationStaleOwnerCount)
+              + ",\"seq\":" + juce::String (static_cast<juce::int64> (registrationTransitionSeq))
+              + "}"
           + ",\"rendererActive\":" + juce::String (sceneGraph.isRendererRegistered() ? "true" : "false")
           + ",\"rendererEligibleEmitters\":" + juce::String (spatialRenderer.getLastEligibleEmitterCount())
           + ",\"rendererProcessedEmitters\":" + juce::String (spatialRenderer.getLastProcessedEmitterCount())
@@ -1036,6 +1232,8 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
               + juce::String (rendererHeadTrackingSnapshot.orientationValid ? "true" : "false")
           + ",\"rendererHeadTrackingInvalidPackets\":"
               + juce::String (static_cast<juce::uint64> (rendererHeadTrackingSnapshot.invalidPacketCount))
+          + ",\"rendererHeadTrackingConsumers\":"
+              + juce::String (static_cast<juce::uint64> (rendererHeadTrackingConsumers))
           + ",\"rendererHeadTrackingSeq\":"
               + juce::String (static_cast<juce::uint64> (rendererHeadTrackingSnapshot.seq))
           + ",\"rendererHeadTrackingTimestampMs\":"
@@ -1060,6 +1258,8 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
               + juce::String (rendererHeadTrackingSnapshot.orientationValid ? "true" : "false")
               + ",\"invalidPackets\":"
               + juce::String (static_cast<juce::uint64> (rendererHeadTrackingSnapshot.invalidPacketCount))
+              + ",\"consumers\":"
+              + juce::String (static_cast<juce::uint64> (rendererHeadTrackingConsumers))
               + ",\"seq\":"
               + juce::String (static_cast<juce::uint64> (rendererHeadTrackingSnapshot.seq))
               + ",\"timestampMs\":"
@@ -1243,6 +1443,118 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
           + ",\"rendererAmbiChannelOrder\":\"" + rendererAmbiChannelOrder + "\""
           + ",\"rendererAmbiDecodeLayout\":\"" + rendererAmbiDecodeLayout + "\""
           + ",\"rendererAmbiStage\":\"" + rendererAmbiStage + "\""
+          + ",\"rendererAmbiIrFrameId\":"
+              + juce::String (static_cast<juce::int64> (rendererAmbiIrContract.frameId))
+          + ",\"rendererAmbiIrTimestampSamples\":"
+              + juce::String (static_cast<juce::int64> (rendererAmbiIrContract.timestampSamples))
+          + ",\"rendererAmbiIrOrder\":" + juce::String (rendererAmbiIrContract.order)
+          + ",\"rendererAmbiIrNormalization\":\"" + rendererAmbiIrNormalization + "\""
+          + ",\"rendererAmbiIrChannelCount\":" + juce::String (rendererAmbiIrContract.channelCount)
+          + ",\"rendererAmbiIrRequestedProfile\":\"" + rendererAmbiIrRequestedProfile + "\""
+          + ",\"rendererAmbiIrActiveProfile\":\"" + rendererAmbiIrActiveProfile + "\""
+          + ",\"rendererAmbiIrStage\":\"" + rendererAmbiIrStage + "\""
+          + ",\"rendererAmbiIrRequestedHeadphoneMode\":\"" + rendererAmbiIrRequestedHeadphoneMode + "\""
+          + ",\"rendererAmbiIrActiveHeadphoneMode\":\"" + rendererAmbiIrActiveHeadphoneMode + "\""
+          + ",\"rendererAmbiIrSteamAudioAvailable\":"
+              + juce::String (rendererAmbiIrContract.steamAudioAvailable ? "true" : "false")
+          + ",\"rendererAmbiIrHeadphoneRenderAllowed\":"
+              + juce::String (rendererAmbiIrContract.headphoneRenderAllowed ? "true" : "false")
+          + ",\"rendererAmbiIrFallbackActive\":"
+              + juce::String (rendererAmbiIrContract.fallbackActive ? "true" : "false")
+          + ",\"rendererAmbiIrContract\":{\"frameId\":"
+              + juce::String (static_cast<juce::int64> (rendererAmbiIrContract.frameId))
+              + ",\"timestampSamples\":"
+              + juce::String (static_cast<juce::int64> (rendererAmbiIrContract.timestampSamples))
+              + ",\"order\":" + juce::String (rendererAmbiIrContract.order)
+              + ",\"normalization\":\"" + rendererAmbiIrNormalization + "\""
+              + ",\"channelCount\":" + juce::String (rendererAmbiIrContract.channelCount)
+              + ",\"requestedProfile\":\"" + rendererAmbiIrRequestedProfile + "\""
+              + ",\"activeProfile\":\"" + rendererAmbiIrActiveProfile + "\""
+              + ",\"stage\":\"" + rendererAmbiIrStage + "\""
+              + ",\"requestedHeadphoneMode\":\"" + rendererAmbiIrRequestedHeadphoneMode + "\""
+              + ",\"activeHeadphoneMode\":\"" + rendererAmbiIrActiveHeadphoneMode + "\""
+              + ",\"steamAudioAvailable\":"
+              + juce::String (rendererAmbiIrContract.steamAudioAvailable ? "true" : "false")
+              + ",\"headphoneRenderAllowed\":"
+              + juce::String (rendererAmbiIrContract.headphoneRenderAllowed ? "true" : "false")
+              + ",\"fallbackActive\":"
+              + juce::String (rendererAmbiIrContract.fallbackActive ? "true" : "false")
+              + "}"
+          + ",\"rendererCompatGuardStatus\":\"" + escapeJsonString (rendererCompatGuardStatus) + "\""
+          + ",\"rendererCompatGuardBlocker\":\"" + escapeJsonString (rendererCompatGuardBlocker) + "\""
+          + ",\"rendererCompatGuardReason\":\"" + escapeJsonString (rendererCompatGuardReason) + "\""
+          + ",\"rendererCompatGuardrails\":{\"status\":\""
+              + escapeJsonString (rendererCompatGuardStatus) + "\""
+              + ",\"blocker\":\"" + escapeJsonString (rendererCompatGuardBlocker) + "\""
+              + ",\"reason\":\"" + escapeJsonString (rendererCompatGuardReason) + "\""
+              + ",\"profileMatch\":" + juce::String (rendererCompatProfileMatch ? "true" : "false")
+              + ",\"headphoneModeMatch\":" + juce::String (rendererCompatHeadphoneModeMatch ? "true" : "false")
+              + ",\"ambisonicRequested\":" + juce::String (rendererCompatAmbisonicRequested ? "true" : "false")
+              + ",\"ambisonicOrderValid\":" + juce::String (rendererCompatAmbisonicOrderValid ? "true" : "false")
+              + ",\"steamFallback\":" + juce::String (rendererCompatSteamFallback ? "true" : "false")
+              + ",\"fallbackActive\":" + juce::String (rendererAmbiIrContract.fallbackActive ? "true" : "false")
+              + ",\"seq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
+              + "}"
+          + ",\"rendererAdmMappingStatus\":\"" + escapeJsonString (rendererAdmMappingStatus) + "\""
+          + ",\"rendererIamfMappingStatus\":\"" + escapeJsonString (rendererIamfMappingStatus) + "\""
+          + ",\"rendererCodecMappingContract\":{\"admStatus\":\""
+              + escapeJsonString (rendererAdmMappingStatus) + "\""
+              + ",\"iamfStatus\":\"" + escapeJsonString (rendererIamfMappingStatus) + "\""
+              + ",\"requiredFields\":" + juce::String (rendererCodecContractRequiredFields)
+              + ",\"coveredFields\":" + juce::String (rendererCodecContractCoveredFields)
+              + ",\"coveragePct\":" + juce::String (rendererCodecContractCoverage, 4)
+              + ",\"signature\":" + juce::String (static_cast<juce::int64> (rendererCodecContractSignature))
+              + ",\"mode\":\"" + rendererCodecExecutionMode + "\""
+              + ",\"mappingApplied\":" + juce::String (rendererCodecExecution.mappingApplied ? "true" : "false")
+              + ",\"finite\":" + juce::String (rendererCodecExecution.finite ? "true" : "false")
+              + ",\"fallbackActive\":" + juce::String (rendererCodecExecution.fallbackActive ? "true" : "false")
+              + ",\"mappedChannelCount\":" + juce::String (rendererCodecExecution.mappedChannelCount)
+              + ",\"objectCount\":" + juce::String (rendererCodecExecution.objectCount)
+              + ",\"elementCount\":" + juce::String (rendererCodecExecution.elementCount)
+              + ",\"executionFrameId\":"
+              + juce::String (static_cast<juce::int64> (rendererCodecExecution.frameId))
+              + ",\"executionTimestampSamples\":"
+              + juce::String (static_cast<juce::int64> (rendererCodecExecution.timestampSamples))
+              + ",\"order\":" + juce::String (rendererAmbiIrContract.order)
+              + ",\"normalization\":\"" + rendererAmbiIrNormalization + "\""
+              + ",\"channelCount\":" + juce::String (rendererAmbiIrContract.channelCount)
+              + ",\"seq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
+              + "}"
+          + ",\"rendererPilotIntakeStatus\":\"" + escapeJsonString (rendererPilotIntakeStatus) + "\""
+          + ",\"rendererPilotIntakeBlocker\":\"" + escapeJsonString (rendererPilotIntakeBlocker) + "\""
+          + ",\"rendererPilotIntakeReason\":\"" + escapeJsonString (rendererPilotIntakeReason) + "\""
+          + ",\"rendererPilotIntakeGate\":{\"status\":\""
+              + escapeJsonString (rendererPilotIntakeStatus) + "\""
+              + ",\"blocker\":\"" + escapeJsonString (rendererPilotIntakeBlocker) + "\""
+              + ",\"reason\":\"" + escapeJsonString (rendererPilotIntakeReason) + "\""
+              + ",\"compatGuardStatus\":\"" + escapeJsonString (rendererCompatGuardStatus) + "\""
+              + ",\"admMappingStatus\":\"" + escapeJsonString (rendererAdmMappingStatus) + "\""
+              + ",\"iamfMappingStatus\":\"" + escapeJsonString (rendererIamfMappingStatus) + "\""
+              + ",\"executionMode\":\"" + escapeJsonString (rendererPilotIntakeExecutionMode) + "\""
+              + ",\"executionFinite\":" + juce::String (rendererCodecExecution.finite ? "true" : "false")
+              + ",\"executionFallbackActive\":"
+              + juce::String (rendererCodecExecution.fallbackActive ? "true" : "false")
+              + ",\"seq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
+              + "}"
+          + ",\"rendererAdmRuntimePayload\":{\"active\":"
+              + juce::String (rendererAdmPayload.active ? "true" : "false")
+              + ",\"frameId\":" + juce::String (static_cast<juce::int64> (rendererAdmPayload.frameId))
+              + ",\"timestampSamples\":"
+              + juce::String (static_cast<juce::int64> (rendererAdmPayload.timestampSamples))
+              + ",\"channelCount\":" + juce::String (rendererAdmPayload.channelCount)
+              + ",\"objectCount\":" + juce::String (rendererAdmPayload.objectCount)
+              + ",\"objects\":" + rendererAdmPayloadObjectsJson
+              + "}"
+          + ",\"rendererIamfRuntimePayload\":{\"active\":"
+              + juce::String (rendererIamfPayload.active ? "true" : "false")
+              + ",\"frameId\":" + juce::String (static_cast<juce::int64> (rendererIamfPayload.frameId))
+              + ",\"timestampSamples\":"
+              + juce::String (static_cast<juce::int64> (rendererIamfPayload.timestampSamples))
+              + ",\"channelCount\":" + juce::String (rendererIamfPayload.channelCount)
+              + ",\"elementCount\":" + juce::String (rendererIamfPayload.elementCount)
+              + ",\"sceneGain\":" + juce::String (rendererIamfPayload.sceneGain, 5)
+              + ",\"elements\":" + rendererIamfPayloadElementsJson
+              + "}"
           + ",\"clapBuildEnabled\":" + juce::String (clapDiagnostics.buildEnabled ? "true" : "false")
           + ",\"clapPropertiesAvailable\":" + juce::String (clapDiagnostics.propertiesAvailable ? "true" : "false")
           + ",\"clapIsPluginFormat\":" + juce::String (clapDiagnostics.isClapInstance ? "true" : "false")
