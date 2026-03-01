@@ -1,0 +1,4 @@
+interface:
+  display_name: "HRTF Rendering Validation Lab"
+  short_description: "Run deterministic HRTF parity and gate checks"
+  default_prompt: "Use $hrtf-rendering-validation-lab to run offline/realtime parity, latency, and crossfade gate validation."

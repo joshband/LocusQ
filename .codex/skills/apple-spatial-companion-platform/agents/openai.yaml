@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apple Spatial Companion Platform"
+  short_description: "Own Swift Apple-API companion integration lanes"
+  default_prompt: "Use $apple-spatial-companion-platform to implement or validate CoreMotion/capture/privacy contracts for AirPods companion workflows."
