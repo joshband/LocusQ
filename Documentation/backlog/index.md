@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071 runtime hardening/harness kickoff + BL-072 protocol parity harness kickoff)
+Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071 runtime hardening/harness kickoff + BL-072 protocol parity harness kickoff + BL-075 docs accessibility harness kickoff)
 
 # LocusQ Master Backlog Index
 
@@ -131,7 +131,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | In Implementation (Wave 1 kickoff: protocol parity + BL-058 linkage harness authored) | E | BL-058, BL-059 | BL-060 | [bl-072](bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | In Implementation (mode semantics and execute TODO-row enforcement scripts authored) | G | — | BL-067, BL-068 | [bl-073](bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
-| 45 | BL-075 | Code comment and API documentation accessibility review | P2 | Open | G | — | — | [bl-075](bl-075-code-comment-and-api-documentation-accessibility-review.md) |
+| 45 | BL-075 | Code comment and API documentation accessibility review | P2 | In Implementation (kickoff: docs/comment accessibility harness scaffold authored) | G | — | — | [bl-075](bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | Open | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
