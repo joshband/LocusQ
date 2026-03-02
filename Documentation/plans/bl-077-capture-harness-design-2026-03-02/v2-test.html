@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BL-077 v2 Preview</title>
+  <style>
+    :root { --bg:#050c17; --panel:#12233c; --line:#27456c; --ink:#dceaff; --accent:#8df4ff; --warn:#f3c168; }
+    body { margin:0; font-family: "SF Mono", Menlo, Consolas, monospace; background:radial-gradient(circle at 20% 0,#13305a,#040810); color:var(--ink); }
+    .wrap { max-width:980px; margin:24px auto; padding:0 16px; display:grid; gap:12px; grid-template-columns:1fr 1fr; }
+    .panel { border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:16px; }
+    .tag { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); }
+    .warn { color:var(--warn); }
+    @media (max-width:760px){ .wrap{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel"><div class="tag">State</div><p>capture_active</p></div>
+    <div class="panel"><div class="tag">Checkpoint Contract</div><p>Expected: 7 | Observed: 7</p></div>
+    <div class="panel"><div class="tag">Cue Stream</div><p>[cue t=24s] Rotate clockwise to 135 degrees</p></div>
+    <div class="panel"><div class="tag">Diagnostics</div><p class="warn">WARN: speech cues unavailable; continuing with terminal cues.</p></div>
+  </div>
+</body>
+</html>

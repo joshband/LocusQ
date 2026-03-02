@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BL-077 v3 Preview</title>
+  <style>
+    :root {
+      --bg0:#040912; --bg1:#091a33; --panel:#0f223f; --line:#30527b;
+      --ink:#e5efff; --muted:#8da5c8; --accent:#7de8ff; --ok:#79e3a0; --warn:#efc26a; --bad:#ff6f72;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; color:var(--ink);
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(900px 400px at 10% 0, #12396a66, transparent 70%),
+        radial-gradient(700px 320px at 90% 100%, #0f4d6f44, transparent 72%),
+        linear-gradient(165deg, var(--bg0), var(--bg1));
+      min-height:100vh;
+    }
+    .wrap { max-width:1100px; margin:24px auto; padding:0 16px 24px; }
+    .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    h1 { margin:0; font-size:28px; letter-spacing:.02em; }
+    .badge { border:1px solid #2d5d8e; border-radius:999px; padding:6px 10px; font-family: "SF Mono", Menlo, monospace; color:var(--accent); }
+    .grid { display:grid; gap:12px; grid-template-columns: 1.2fr 1fr; }
+    .panel { border:1px solid var(--line); border-radius:14px; background:color-mix(in srgb, var(--panel), #000 10%); padding:14px; }
+    .k { color:var(--muted); font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; }
+    .cue { font-family: "SF Mono", Menlo, monospace; margin:6px 0; }
+    .ok { color:var(--ok); }
+    .warn { color:var(--warn); }
+    .bad { color:var(--bad); }
+    .pulse { animation:pulse 2.6s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 #7de8ff22; } 50% { box-shadow: 0 0 0 10px #7de8ff00; } }
+    @media (max-width:860px){ .grid{ grid-template-columns:1fr; } h1{ font-size:24px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>BL-077 Unified Capture Runner</h1>
+      <div class="badge pulse">capture_active</div>
+    </div>
+    <div class="grid">
+      <section class="panel">
+        <div class="k">Live Cue Rail</div>
+        <div class="cue">[t=24s] Rotate clockwise to 135 degrees</div>
+        <div class="cue">Next: [t=32s] Rotate clockwise to 180 degrees</div>
+        <div class="cue warn">Drift: +0.08s (within tolerance)</div>
+      </section>
+      <section class="panel">
+        <div class="k">Artifact Checklist</div>
+        <div class="cue ok">PASS video_capture.mp4</div>
+        <div class="cue ok">PASS checkpoints.tsv</div>
+        <div class="cue ok">PASS replay_hashes.tsv</div>
+        <div class="cue ok">PASS contact_sheet_01.png</div>
+        <div class="cue">Cue clips: 7 windows</div>
+      </section>
+      <section class="panel">
+        <div class="k">Closeout</div>
+        <div class="cue">HANDOFF_READY</div>
+        <div class="cue">TASK: BL-077 Unified visual capture harness</div>
+        <div class="cue">RESULT: PASS</div>
+      </section>
+      <section class="panel">
+        <div class="k">Recovery Hint</div>
+        <div class="cue bad">If capture permission is denied:</div>
+        <div class="cue">System Settings -> Privacy & Security -> Screen Recording</div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
