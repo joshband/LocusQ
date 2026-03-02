@@ -3397,6 +3397,7 @@ let headTrackingTelemetryTarget = {
     rollDeg: 0.0,
 };
 let headTrackingDirectionScratch = null;
+let headTrackingRightScratch = null;
 let headTrackingQuaternionScratch = null;
 let auditionEmitterTarget = {
     x: 0.0,
@@ -8038,6 +8039,7 @@ function initThreeJS() {
     listenerGroup.add(listenerHeadTrackingRing);
 
     headTrackingDirectionScratch = new THREE.Vector3(0, 0, -1);
+    headTrackingRightScratch = new THREE.Vector3(1, 0, 0);
     headTrackingQuaternionScratch = new THREE.Quaternion();
 
     listenerGroup.position.set(listenerTarget.x, listenerTarget.y, listenerTarget.z);
@@ -12364,11 +12366,27 @@ function animate() {
                     listenerHeadRig.quaternion.copy(headTrackingQuaternionScratch);
                 }
                 if (activeViewportView === "top") {
-                    // Top view should track facing direction projected onto the floor plane.
+                    // Top view should track heading projected onto the floor plane.
+                    // When forward is near vertical, derive heading from the right axis
+                    // to avoid 180-degree flips around singular orientations.
                     headTrackingDirectionScratch.set(0, 0, -1).applyQuaternion(headTrackingQuaternionScratch);
-                    const projectedX = headTrackingDirectionScratch.x;
-                    const projectedZ = headTrackingDirectionScratch.z;
-                    const projectedLengthSq = projectedX * projectedX + projectedZ * projectedZ;
+                    let projectedX = headTrackingDirectionScratch.x;
+                    let projectedZ = headTrackingDirectionScratch.z;
+                    let projectedLengthSq = projectedX * projectedX + projectedZ * projectedZ;
+
+                    if (headTrackingRightScratch) {
+                        headTrackingRightScratch.set(1, 0, 0).applyQuaternion(headTrackingQuaternionScratch);
+                        const rightX = headTrackingRightScratch.x;
+                        const rightZ = headTrackingRightScratch.z;
+                        const rightLengthSq = rightX * rightX + rightZ * rightZ;
+
+                        if (projectedLengthSq < 0.08 && rightLengthSq > 1.0e-8) {
+                            // forward = up x right
+                            projectedX = rightZ;
+                            projectedZ = -rightX;
+                            projectedLengthSq = projectedX * projectedX + projectedZ * projectedZ;
+                        }
+                    }
 
                     if (projectedLengthSq > 1.0e-8) {
                         const invLen = 1.0 / Math.sqrt(projectedLengthSq);
