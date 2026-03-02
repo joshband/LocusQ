@@ -1,0 +1,26 @@
+{
+  "schema": "locusq-capture-profile-v1",
+  "session_name": "headtracking_dense",
+  "duration_sec": 72,
+  "fps": 30,
+  "extract_every_sec": 0.25,
+  "countdown_sec": 5,
+  "cue_points": [
+    { "t": 0, "label": "Center and sync" },
+    { "t": 8, "label": "Rotate clockwise to 30 degrees" },
+    { "t": 14, "label": "Rotate clockwise to 60 degrees" },
+    { "t": 20, "label": "Rotate clockwise to 90 degrees" },
+    { "t": 26, "label": "Rotate clockwise to 120 degrees" },
+    { "t": 32, "label": "Rotate clockwise to 150 degrees" },
+    { "t": 38, "label": "Rotate clockwise to 180 degrees" },
+    { "t": 44, "label": "Rotate clockwise to 210 degrees" },
+    { "t": 50, "label": "Rotate clockwise to 225 degrees" },
+    { "t": 56, "label": "Rotate clockwise to 240 degrees" },
+    { "t": 62, "label": "Rotate clockwise to 270 degrees" }
+  ],
+  "artifact_pack": {
+    "extract_frames": true,
+    "contact_sheet": false,
+    "cue_clips": false
+  }
+}
