@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-02
 |---|---|
 | ID | BL-055 |
 | Priority | P1 |
-| Status | In Implementation (QA lane scaffold landed; owner intake FAIL on C4/C6 acceptance markers) |
+| Status | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | — |
@@ -66,6 +66,20 @@ Evidence fields:
   - `BL055-C6-swap_crossfade_structure` -> `FAIL`
 - All other current structural checks and docs freshness gate pass.
 - Promotion readiness: blocked until missing partitioned-latency and swap-crossfade implementation markers land.
+
+## Owner Follow-Up Snapshot (2026-03-02)
+
+- Remediation landed in `Source/headphone_dsp/HeadphoneFirHook.h`:
+  - `FirEngineManager` markers with direct/partitioned selection contract.
+  - `nextPow2` partitioned latency marker path.
+  - swap `crossfade`/`blend` structure for topology transitions.
+- Follow-up evidence:
+  - Contract: `TestEvidence/bl055_owner_followup_contract2_20260302T042646Z/status.tsv` -> `lane_result=PASS`
+  - Execute: `TestEvidence/bl055_owner_followup_execute2_20260302T042646Z/status.tsv` -> `lane_result=PASS`
+- Compile safety check:
+  - `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8` -> `PASS` (warnings only).
+- Remaining maturity work:
+  - pursue runtime/parity hardening before Done promotion, but C3/C4/C6 structural blockers are cleared.
 
 ## Replay Cadence Plan (Required)
 
