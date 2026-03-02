@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay)
+Last Modified Date: 2026-03-01 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay + BL-050 slice B contract annex)
 
 # LocusQ Master Backlog Index
 
@@ -438,7 +438,7 @@ Any status change must update in the same changeset:
 | BL-047 | `(pending annex spec)` |
 | BL-048 | `(pending annex spec)` |
 | BL-049 | `(pending annex spec)` |
-| BL-050 | `(pending annex spec)` |
+| BL-050 | `Documentation/plans/bl-050-partitioned-fir-migration-contract-2026-03-01.md` |
 | BL-051 | `(pending annex spec)` |
 | BL-052 | `(no annex spec — self-contained runbook)` |
 | BL-053 | `(no annex spec — self-contained runbook)` |

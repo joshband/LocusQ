@@ -46,6 +46,7 @@ Used for implementation planning and validation flow, but status truth remains T
 - `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`
 - `Documentation/plans/bl-029-audition-platform-expansion-plan-2026-02-24.md`
 - `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md`
+- `Documentation/plans/bl-050-partitioned-fir-migration-contract-2026-03-01.md`
 - `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
 - `Documentation/reports/` (active report artifacts and companion data/visual bundles)
 - `Documentation/testing/`
