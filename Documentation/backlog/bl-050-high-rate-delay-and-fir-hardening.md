@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-02
 |---|---|
 | ID | BL-050 |
 | Priority | P0 |
-| Status | In Validation (Slice A + B landed; owner T2 replay PASS; Slice C T3 rerun pending after transient docs-freshness drift) |
+| Status | Done-candidate (owner T1/T2/T3 replay PASS; Slice C promotion packet refreshed after docs-freshness drift remediation) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-043, BL-046 |
@@ -49,7 +49,7 @@ Out of scope:
 - [x] Define partitioned FIR migration contract (latency/cpu/quality bounds).
 - [x] Add high-rate soak lane for delay + FIR paths.
 - [x] Add deterministic failure taxonomy for high-rate regressions.
-- [ ] Capture promotion evidence and update runbook status.
+- [x] Capture promotion evidence and update runbook status.
 
 ## Slice A Execution Snapshot (2026-03-01)
 
@@ -82,6 +82,24 @@ Out of scope:
 - Standalone docs-freshness recheck after metadata normalization:
   - `TestEvidence/bl050_owner_t3_promotion_20260302T035618Z/docs_freshness_recheck_20260302T035829Z.log` -> `PASS`.
 - Promotion readiness remains blocked until BL-050 T3 is rerun with stable docs-freshness throughout all runs.
+
+## Slice C Final Owner Replay Snapshot (2026-03-02)
+
+- Interim reruns that remained blocked:
+  - `TestEvidence/bl050_owner_t3_rerun_20260302T041205Z/`
+  - `TestEvidence/bl050_owner_t3_rerun2_20260302T041513Z/`
+  - Both failed only on `docs_freshness` due missing metadata in generated headtracking capture summaries.
+- Root-cause remediation:
+  - Added metadata headers to existing `TestEvidence/headtracking_rotation_capture_*/capture_summary.md` artifacts.
+  - Updated generator script `scripts/capture-headtracking-rotation-mac.sh` so future capture summaries include required metadata fields by default.
+- Canary confirmation:
+  - `TestEvidence/bl050_owner_t3_canary_20260302T041838Z/` -> `lane_result=PASS`, `docs_freshness=PASS`.
+- Final T3 promotion replay packet:
+  - `TestEvidence/bl050_owner_t3_final_20260302T041920Z/`
+  - `t3_summary.tsv`: `10/10` runs with `exit_code=0`, `lane_result=PASS`, `docs_freshness=PASS`.
+  - `promotion_readiness.md`: verdict `PASS` under configured gate rule (exit code + lane_result + docs_freshness).
+- Observed warning profile (non-blocking for current lane rule):
+  - `fir_profile=WARN` in `10/10` runs, driven by allocation markers at selected sample rates (tracked for follow-on profiling hardening).
 
 
 ## Validation Plan
