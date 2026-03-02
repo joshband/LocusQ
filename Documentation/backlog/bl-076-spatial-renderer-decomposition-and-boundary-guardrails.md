@@ -2,7 +2,7 @@ Title: BL-076 SpatialRenderer Decomposition and Boundary Guardrails
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-076 SpatialRenderer Decomposition and Boundary Guardrails
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-076 |
 | Priority | P1 |
-| Status | Open |
+| Status | Open (owner planning-packet replay blocked by global-lock workspace hygiene stop) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | BL-050, BL-069, BL-070 |
@@ -56,6 +56,15 @@ Minimum evidence additions:
 - `rt_audit.tsv`
 - `smoke_parity_matrix.tsv`
 - `bridge_payload_parity.tsv`
+
+## Owner Intake Blocker Snapshot (2026-03-02)
+
+- Handoff replay attempt for decomposition planning packet stopped before execution.
+- Blocker: global-lock guard detected unrelated workspace edits outside task ownership:
+  - `TestEvidence/locusq_production_p0_selftest_20260302T035100Z.attempts.tsv`
+  - `TestEvidence/locusq_production_p0_selftest_20260302T035100Z.failure_taxonomy.tsv`
+  - `TestEvidence/locusq_production_p0_selftest_20260302T035100Z.meta.json`
+- No scoped BL-076 files were changed and no validation artifacts were produced for that attempt.
 
 ## Replay Cadence Plan (Required)
 

@@ -2,7 +2,7 @@ Title: BL-050 High-Rate Delay and FIR Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-050 High-Rate Delay and FIR Hardening
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-050 |
 | Priority | P0 |
-| Status | In Implementation (Slice A landed; T1 owner replay PASS; Slice B/C pending) |
+| Status | In Validation (Slice A + B landed; owner T2 replay PASS; Slice C T3 rerun pending after transient docs-freshness drift) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-043, BL-046 |
@@ -69,6 +69,19 @@ Out of scope:
   - latency reporting semantics (`0` direct, `nextPow2(blockSize)` partitioned),
   - hard realtime/performance/quality bounds,
   - Slice B evidence additions and exit criteria.
+
+## Slice C Owner Replay Snapshot (2026-03-02)
+
+- T2 candidate replay packet: `TestEvidence/bl050_owner_t2_candidate_20260302T035502Z/`
+  - `t2_summary.tsv`: `5/5` runs `PASS` (`exit_code=0`, `lane_result=PASS`, `docs_freshness=PASS`, `fir_profile=PASS`).
+- T3 promotion replay packet: `TestEvidence/bl050_owner_t3_promotion_20260302T035618Z/`
+  - `t3_summary.tsv`: runs `01-04` and `10` `PASS`; runs `05-09` `FAIL` due `docs_freshness=FAIL`.
+  - `run_05/docs_freshness.log` attributes failures to missing metadata in:
+    - `TestEvidence/bl069_owner_t3_promotion_20260302T035658Z/promotion_readiness.md`
+    - `TestEvidence/bl070_owner_t3_promotion_20260302T035658Z/promotion_readiness.md`
+- Standalone docs-freshness recheck after metadata normalization:
+  - `TestEvidence/bl050_owner_t3_promotion_20260302T035618Z/docs_freshness_recheck_20260302T035829Z.log` -> `PASS`.
+- Promotion readiness remains blocked until BL-050 T3 is rerun with stable docs-freshness throughout all runs.
 
 
 ## Validation Plan

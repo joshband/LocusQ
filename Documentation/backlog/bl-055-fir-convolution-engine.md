@@ -2,7 +2,7 @@ Title: BL-055 FIR Convolution Engine
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-055 FIR Convolution Engine
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-055 |
 | Priority | P1 |
-| Status | Open |
+| Status | In Implementation (QA lane scaffold landed; owner intake FAIL on C4/C6 acceptance markers) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | — |
@@ -37,13 +37,35 @@ Integrate `FirEngineManager` (DirectFirConvolver ≤256 taps / PartitionedFftCon
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl055-fir-convolution-engine-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl055-fir-convolution-engine-mac.sh`.
 Evidence schema: `TestEvidence/bl055_*/status.tsv`.
 
 Minimum evidence additions:
 - `latency_contract.tsv` (direct vs partitioned)
 - `swap_crossfade_check.tsv`
 - `offline_parity_summary.md` (reference to offline truth-render comparison lane)
+
+Script modes and gates:
+- `--contract-only` (default): structural contract checks with evidence capture.
+- `--execute`: execute gate checks with strict zero-`TODO`-row enforcement.
+- Exit semantics: `0` pass, `1` gate fail, `2` usage/config error.
+
+Evidence fields:
+- `status.tsv`: `check_id`, `result`, `detail`, `artifact`
+- `latency_contract.tsv`: `check`, `result`, `detail`, `artifact`
+- `swap_crossfade_check.tsv`: `scenario`, `result`, `detail`, `artifact`
+
+## Owner Intake Snapshot (2026-03-02)
+
+- Script authored: `scripts/qa-bl055-fir-convolution-engine-mac.sh`.
+- Owner intake packets:
+  - Contract: `TestEvidence/bl055_owner_intake_contract_20260302T035854Z/`
+  - Execute: `TestEvidence/bl055_owner_intake_execute_20260302T035858Z/`
+- Both runs exit non-zero with `lane_result=FAIL` and the same blockers:
+  - `BL055-C4-partitioned_latency_next_pow2_contract` -> `FAIL`
+  - `BL055-C6-swap_crossfade_structure` -> `FAIL`
+- All other current structural checks and docs freshness gate pass.
+- Promotion readiness: blocked until missing partitioned-latency and swap-crossfade implementation markers land.
 
 ## Replay Cadence Plan (Required)
 
