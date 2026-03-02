@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-This runbook tracks **BL-041** (BL-041 Doppler v2 and VBAP Geometry Validation). Current status: **Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green)**. In plain terms: Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation.
+BL-041 in plain terms: Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -23,14 +23,13 @@ This runbook tracks **BL-041** (BL-041 Doppler v2 and VBAP Geometry Validation).
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
-| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
-| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
-
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Status Ledger
 
@@ -948,27 +947,15 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 
 ## Handoff Return Contract
 
-All worker and owner handoffs for this runbook must include:
-- `SHARED_FILES_TOUCHED: no|yes`
+Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
 
-Required return block:
-```
-HANDOFF_READY
-TASK: <BL ID + Title>
-RESULT: PASS|FAIL
-FILES_TOUCHED: ...
-VALIDATION: ...
-ARTIFACTS: ...
-SHARED_FILES_TOUCHED: no|yes
-BLOCKERS: ...
-```
-
+Only add runbook-specific handoff fields if they differ from the canonical contract.
 
 ## Governance Alignment (2026-02-28)
 
-This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+Canonical lifecycle/evidence rules are defined in:
+- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
-- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
-- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
-- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
-- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+This runbook should list only item-specific exceptions or additions.
+

@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-This runbook tracks **BL-020** (BL-020 Confidence/Masking Overlay). Current status: **In Validation (latest C4 refresh packet PASS at 20260228T203021Z; C4b post-R1 packet PASS at 20260228T202240Z; owner promotion review pending)**. In plain terms: Define a deterministic contract for confidence/masking overlays, including field-level input rules, deterministic rendering/degradation behavior, acceptance thresholds, and QA artifact schema.
+BL-020 in plain terms: Define a deterministic contract for confidence/masking overlays, including field-level input rules, deterministic rendering/degradation behavior, acceptance thresholds, and QA artifact schema. Current state: In Validation (latest C4 refresh packet PASS at 20260228T203021Z; C4b post-R1 packet PASS at 20260228T202240Z; owner promotion review pending). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -23,14 +23,13 @@ This runbook tracks **BL-020** (BL-020 Confidence/Masking Overlay). Current stat
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
-| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
-| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
-
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Status Ledger
 
@@ -395,30 +394,17 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 
 ## Handoff Return Contract
 
-All worker and owner handoffs for this runbook must include:
-- `SHARED_FILES_TOUCHED: no|yes`
+Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
 
-Required return block:
-```
-HANDOFF_READY
-TASK: <BL ID + Title>
-RESULT: PASS|FAIL
-FILES_TOUCHED: ...
-VALIDATION: ...
-ARTIFACTS: ...
-SHARED_FILES_TOUCHED: no|yes
-BLOCKERS: ...
-```
-
+Only add runbook-specific handoff fields if they differ from the canonical contract.
 
 ## Governance Alignment (2026-02-28)
 
-This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+Canonical lifecycle/evidence rules are defined in:
+- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
-- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
-- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
-- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
-- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+This runbook should list only item-specific exceptions or additions.
 
 ## Slice C4 Recheck Refresh (2026-02-28, 20260228T203021Z)
 
