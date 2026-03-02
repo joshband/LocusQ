@@ -14,6 +14,7 @@
 #include "FDNReverb.h"
 #include "headphone_dsp/HeadphoneCalibrationChain.h"
 #include "headphone_dsp/HeadphonePresetLoader.h"
+#include "spatial_renderer/SpatialProfileRouter.h"
 #include "spatial_renderer/SpatialRendererTypes.h"
 #include <algorithm>
 #include <atomic>
@@ -4268,26 +4269,11 @@ private:
         steamAudioAvailable.store (false, std::memory_order_relaxed);
     }
 
-    struct SpatialProfileResolution
-    {
-        SpatialOutputProfile profile = SpatialOutputProfile::Auto;
-        SpatialProfileStage stage = SpatialProfileStage::Direct;
-    };
+    using SpatialProfileResolution = locusq::spatial_profile_router::SpatialProfileResolution;
 
     static bool isStereoOrBinauralProfile (SpatialOutputProfile profile) noexcept
     {
-        switch (profile)
-        {
-            case SpatialOutputProfile::Stereo20:
-            case SpatialOutputProfile::Virtual3dStereo:
-            case SpatialOutputProfile::AmbisonicFOA:
-            case SpatialOutputProfile::AmbisonicHOA:
-                return true;
-            default:
-                break;
-        }
-
-        return false;
+        return locusq::spatial_profile_router::isStereoOrBinauralProfile (profile);
     }
 
     SpatialProfileResolution resolveSpatialProfileForHost (int numOutputChannels) const noexcept
@@ -4295,109 +4281,27 @@ private:
         const auto requested = static_cast<SpatialOutputProfile> (
             juce::jlimit (0, 11, requestedSpatialProfileIndex.load (std::memory_order_relaxed)));
 
-        if (requested == SpatialOutputProfile::Auto)
-        {
-            if (numOutputChannels >= 13)
-                return { SpatialOutputProfile::Surround742, SpatialProfileStage::Direct };
-            if (numOutputChannels >= 10)
-                return { SpatialOutputProfile::Surround721, SpatialProfileStage::Direct };
-            if (numOutputChannels >= 8)
-                return { SpatialOutputProfile::Surround521, SpatialProfileStage::Direct };
-            if (numOutputChannels >= NUM_SPEAKERS)
-                return { SpatialOutputProfile::Quad40, SpatialProfileStage::Direct };
-            return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
-        }
-
-        switch (requested)
-        {
-            case SpatialOutputProfile::Surround742:
-                if (numOutputChannels >= 13)
-                    return { requested, SpatialProfileStage::Direct };
-                if (numOutputChannels >= NUM_SPEAKERS)
-                    return { SpatialOutputProfile::Quad40, SpatialProfileStage::FallbackQuad };
-                return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
-
-            case SpatialOutputProfile::Surround721:
-            case SpatialOutputProfile::AtmosBed:
-                if (numOutputChannels >= 10)
-                    return { requested == SpatialOutputProfile::AtmosBed ? SpatialOutputProfile::AtmosBed
-                                                                         : SpatialOutputProfile::Surround721,
-                             SpatialProfileStage::Direct };
-                if (numOutputChannels >= NUM_SPEAKERS)
-                    return { SpatialOutputProfile::Quad40, SpatialProfileStage::FallbackQuad };
-                return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
-
-            case SpatialOutputProfile::Surround521:
-                if (numOutputChannels >= 8)
-                    return { requested, SpatialProfileStage::Direct };
-                if (numOutputChannels >= NUM_SPEAKERS)
-                    return { SpatialOutputProfile::Quad40, SpatialProfileStage::FallbackQuad };
-                return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
-
-            case SpatialOutputProfile::CodecIAMF:
-            case SpatialOutputProfile::CodecADM:
-                if (numOutputChannels >= 13)
-                    return { SpatialOutputProfile::Surround742, SpatialProfileStage::CodecLayoutPlaceholder };
-                if (numOutputChannels >= NUM_SPEAKERS)
-                    return { SpatialOutputProfile::Quad40, SpatialProfileStage::FallbackQuad };
-                return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
-
-            case SpatialOutputProfile::AmbisonicHOA:
-                if (numOutputChannels >= 16)
-                    return { requested, SpatialProfileStage::Direct };
-                if (numOutputChannels >= 4)
-                    return { SpatialOutputProfile::AmbisonicFOA, SpatialProfileStage::FallbackQuad };
-                return { SpatialOutputProfile::AmbisonicFOA, SpatialProfileStage::AmbiDecodeStereo };
-
-            case SpatialOutputProfile::AmbisonicFOA:
-                if (numOutputChannels >= 4)
-                    return { requested, SpatialProfileStage::Direct };
-                return { requested, SpatialProfileStage::AmbiDecodeStereo };
-
-            case SpatialOutputProfile::Quad40:
-                if (numOutputChannels >= NUM_SPEAKERS)
-                    return { requested, SpatialProfileStage::Direct };
-                return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
-
-            case SpatialOutputProfile::Stereo20:
-            case SpatialOutputProfile::Virtual3dStereo:
-                return { requested, SpatialProfileStage::Direct };
-
-            case SpatialOutputProfile::Auto:
-            default:
-                break;
-        }
-
-        return { SpatialOutputProfile::Stereo20, SpatialProfileStage::FallbackStereo };
+        return locusq::spatial_profile_router::resolveSpatialProfileForHost (
+            requested,
+            numOutputChannels,
+            NUM_SPEAKERS);
     }
 
     static int ambisonicOrderForProfile (SpatialOutputProfile profile) noexcept
     {
-        switch (profile)
-        {
-            case SpatialOutputProfile::AmbisonicFOA: return 1;
-            case SpatialOutputProfile::AmbisonicHOA: return 3;
-            default: break;
-        }
-
-        return 0;
+        return locusq::spatial_profile_router::ambisonicOrderForProfile (profile);
     }
 
     static void encodeAmbisonicFoaProxyFromQuad (float fl, float fr, float rr, float rl,
                                                  float& w, float& x, float& y, float& z) noexcept
     {
-        const float sum = fl + fr + rr + rl;
-        w = 0.35355339f * sum; // SN3D-style proxy
-        x = 0.5f * ((fr + rr) - (fl + rl));
-        y = 0.5f * ((fl + fr) - (rl + rr));
-        z = 0.0f; // No elevation energy in quad bed proxy.
+        locusq::spatial_profile_router::encodeAmbisonicFoaProxyFromQuad (fl, fr, rr, rl, w, x, y, z);
     }
 
     static void decodeAmbisonicFoaProxyToStereo (float w, float x, float y, float z,
                                                  float& left, float& right) noexcept
     {
-        left = 0.70710678f * w - 0.50f * x + 0.22f * y + 0.08f * z;
-        right = 0.70710678f * w + 0.50f * x + 0.22f * y + 0.08f * z;
+        locusq::spatial_profile_router::decodeAmbisonicFoaProxyToStereo (w, x, y, z, left, right);
     }
 
     inline void renderVirtual3dStereoSample (int sampleIndex, float& left, float& right) const noexcept
@@ -4414,74 +4318,35 @@ private:
 
     inline void writeSurround521Sample (juce::AudioBuffer<float>& outputBuffer, int sampleIndex, float masterGain) const noexcept
     {
-        // Order: L R C LFE1 LFE2 Ls Rs TopC
         const float fl = accumBuffer.getSample (0, sampleIndex);
         const float fr = accumBuffer.getSample (1, sampleIndex);
         const float rr = accumBuffer.getSample (2, sampleIndex);
         const float rl = accumBuffer.getSample (3, sampleIndex);
-        const float bed = (fl + fr + rr + rl) * 0.25f;
 
-        outputBuffer.setSample (0, sampleIndex, fl * masterGain);
-        outputBuffer.setSample (1, sampleIndex, fr * masterGain);
-        outputBuffer.setSample (2, sampleIndex, (fl + fr) * 0.70710678f * masterGain);
-        outputBuffer.setSample (3, sampleIndex, bed * 0.35f * masterGain);
-        outputBuffer.setSample (4, sampleIndex, bed * 0.35f * masterGain);
-        outputBuffer.setSample (5, sampleIndex, rl * masterGain);
-        outputBuffer.setSample (6, sampleIndex, rr * masterGain);
-        outputBuffer.setSample (7, sampleIndex, bed * 0.8f * masterGain);
+        locusq::spatial_profile_router::writeSurround521Sample (
+            outputBuffer, sampleIndex, masterGain, fl, fr, rr, rl);
     }
 
     inline void writeSurround721Sample (juce::AudioBuffer<float>& outputBuffer, int sampleIndex, float masterGain) const noexcept
     {
-        // Order: L R C LFE1 LFE2 Ls Rs Lrs Rrs TopC
         const float fl = accumBuffer.getSample (0, sampleIndex);
         const float fr = accumBuffer.getSample (1, sampleIndex);
         const float rr = accumBuffer.getSample (2, sampleIndex);
         const float rl = accumBuffer.getSample (3, sampleIndex);
-        const float bed = (fl + fr + rr + rl) * 0.25f;
-        const float lrs = (0.72f * rl) + (0.28f * fl);
-        const float rrs = (0.72f * rr) + (0.28f * fr);
 
-        outputBuffer.setSample (0, sampleIndex, fl * masterGain);
-        outputBuffer.setSample (1, sampleIndex, fr * masterGain);
-        outputBuffer.setSample (2, sampleIndex, (fl + fr) * 0.70710678f * masterGain);
-        outputBuffer.setSample (3, sampleIndex, bed * 0.33f * masterGain);
-        outputBuffer.setSample (4, sampleIndex, bed * 0.33f * masterGain);
-        outputBuffer.setSample (5, sampleIndex, rl * masterGain);
-        outputBuffer.setSample (6, sampleIndex, rr * masterGain);
-        outputBuffer.setSample (7, sampleIndex, lrs * masterGain);
-        outputBuffer.setSample (8, sampleIndex, rrs * masterGain);
-        outputBuffer.setSample (9, sampleIndex, bed * 0.8f * masterGain);
+        locusq::spatial_profile_router::writeSurround721Sample (
+            outputBuffer, sampleIndex, masterGain, fl, fr, rr, rl);
     }
 
     inline void writeSurround742Sample (juce::AudioBuffer<float>& outputBuffer, int sampleIndex, float masterGain) const noexcept
     {
-        // Order: L R C LFE1 LFE2 Ls Rs Lrs Rrs TopFL TopFR TopRL TopRR
         const float fl = accumBuffer.getSample (0, sampleIndex);
         const float fr = accumBuffer.getSample (1, sampleIndex);
         const float rr = accumBuffer.getSample (2, sampleIndex);
         const float rl = accumBuffer.getSample (3, sampleIndex);
-        const float bed = (fl + fr + rr + rl) * 0.25f;
-        const float lrs = (0.72f * rl) + (0.28f * fl);
-        const float rrs = (0.72f * rr) + (0.28f * fr);
-        const float topFl = (0.70f * fl) + (0.25f * rl);
-        const float topFr = (0.70f * fr) + (0.25f * rr);
-        const float topRl = (0.78f * rl) + (0.12f * fl);
-        const float topRr = (0.78f * rr) + (0.12f * fr);
 
-        outputBuffer.setSample (0, sampleIndex, fl * masterGain);
-        outputBuffer.setSample (1, sampleIndex, fr * masterGain);
-        outputBuffer.setSample (2, sampleIndex, (fl + fr) * 0.70710678f * masterGain);
-        outputBuffer.setSample (3, sampleIndex, bed * 0.30f * masterGain);
-        outputBuffer.setSample (4, sampleIndex, bed * 0.30f * masterGain);
-        outputBuffer.setSample (5, sampleIndex, rl * masterGain);
-        outputBuffer.setSample (6, sampleIndex, rr * masterGain);
-        outputBuffer.setSample (7, sampleIndex, lrs * masterGain);
-        outputBuffer.setSample (8, sampleIndex, rrs * masterGain);
-        outputBuffer.setSample (9, sampleIndex, topFl * masterGain);
-        outputBuffer.setSample (10, sampleIndex, topFr * masterGain);
-        outputBuffer.setSample (11, sampleIndex, topRl * masterGain);
-        outputBuffer.setSample (12, sampleIndex, topRr * masterGain);
+        locusq::spatial_profile_router::writeSurround742Sample (
+            outputBuffer, sampleIndex, masterGain, fl, fr, rr, rl);
     }
 
     inline void renderStereoDownmixSample (int sampleIndex, float& left, float& right) const noexcept
