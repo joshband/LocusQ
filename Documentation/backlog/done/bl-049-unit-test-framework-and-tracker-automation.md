@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-This runbook tracks **BL-049** (BL-049 Unit Test Framework and Tracker Automation). Current status: **In Planning**. In plain terms: Add deterministic component-level unit tests (DSP + scene + tracking bridge) and automate head-tracking bridge validation to close current coverage gaps.
+BL-049 in plain terms: Add deterministic component-level unit tests (DSP + scene + tracking bridge) and automate head-tracking bridge validation to close current coverage gaps. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -23,15 +23,14 @@ This runbook tracks **BL-049** (BL-049 Unit Test Framework and Tracker Automatio
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
-| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
-| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
-| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
-
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Status Ledger
 
