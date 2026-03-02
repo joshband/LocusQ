@@ -10,7 +10,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-This runbook tracks **BL-022** (BL-022: Choreography Lane Closeout). Current status: **Done (2026-02-24 closeout evidence refresh)**. In plain terms: Finalize choreography pack closure — validate that the keyframe timeline and transport system supports choreography workflows (multi-track keyframe sequences, preset-driven motion paths) while maintaining BL-025 EMITTER UI/UX v2 stability.
+BL-022 in plain terms: Finalize choreography pack closure — validate that the keyframe timeline and transport system supports choreography workflows (multi-track keyframe sequences, preset-driven motion paths) while maintaining BL-025 EMITTER UI/UX v2 stability. Current state: Done (2026-02-24 closeout evidence refresh). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -25,15 +25,14 @@ This runbook tracks **BL-022** (BL-022: Choreography Lane Closeout). Current sta
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
-| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
-| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
-| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
-
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Status Ledger
 
@@ -222,31 +221,9 @@ EVIDENCE:
 
 ## Governance Retrofit (2026-02-28)
 
-This additive retrofit preserves historical closeout context while aligning this done runbook with current backlog governance templates.
+Canonical lifecycle/evidence rules are defined in:
+- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
-### Status Ledger Addendum
+This runbook should list only item-specific exceptions or additions.
 
-| Field | Value |
-|---|---|
-| Promotion Decision Packet | `Legacy packet; see Evidence References and related owner sync artifacts.` |
-| Final Evidence Root | `Legacy TestEvidence bundle(s); see Evidence References.` |
-| Archived Runbook Path | `Documentation/backlog/done/bl-022-choreography-closeout.md` |
-
-### Promotion Gate Summary
-
-| Gate | Status | Evidence |
-|---|---|---|
-| Build + smoke | Legacy closeout documented | `Evidence References` |
-| Lane replay/parity | Legacy closeout documented | `Evidence References` |
-| RT safety | Legacy closeout documented | `Evidence References` |
-| Docs freshness | Legacy closeout documented | `Evidence References` |
-| Status schema | Legacy closeout documented | `Evidence References` |
-| Ownership safety (`SHARED_FILES_TOUCHED`) | Required for modern promotions; legacy packets may predate marker | `Evidence References` |
-
-### Backlog/Status Sync Checklist
-
-- [x] Runbook archived under `Documentation/backlog/done/`
-- [x] Backlog index links the done runbook
-- [x] Historical evidence references retained
-- [ ] Legacy packet retrofitted to modern owner packet template (`_template-promotion-decision.md`) where needed
-- [ ] Legacy closeout fully normalized to modern checklist fields where needed

@@ -52,6 +52,19 @@ def parse_active_queue(index_text: str) -> list[Row]:
     return rows
 
 
+def parse_done_runbooks() -> list[Row]:
+    rows: list[Row] = []
+    for path in sorted((ROOT / "Documentation/backlog/done").glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        id_match = re.search(r"\b((?:BL|HX)-\d{2,3})\b", text)
+        item_id = id_match.group(1) if id_match else path.stem.split("-")[0].upper()
+        pri_match = re.search(r"^\|\s*Priority\s*\|\s*(.*?)\s*\|\s*$", text, flags=re.M)
+        priority = normalize_space(pri_match.group(1)) if pri_match else "P2"
+        status = extract_status_from_ledger(text)
+        rows.append(Row(item_id=item_id, priority=priority, status=status, runbook_path=path))
+    return rows
+
+
 def normalize_space(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
@@ -160,7 +173,11 @@ def is_done_status(status: str) -> bool:
 def target_rows(rows: Iterable[Row], mode: str) -> list[Row]:
     out = []
     for r in rows:
-        if is_done_status(r.status):
+        done = is_done_status(r.status)
+        if mode == "done-all":
+            out.append(r)
+            continue
+        if done:
             continue
         if mode == "p0p1-open" and r.priority not in {"P0", "P1"}:
             continue
@@ -177,13 +194,17 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="Write changes")
     parser.add_argument(
         "--mode",
-        choices=["p0p1-open", "remaining-open", "all-open"],
+        choices=["p0p1-open", "remaining-open", "all-open", "done-all"],
         default="p0p1-open",
         help="Target selection mode",
     )
     args = parser.parse_args()
 
-    rows = target_rows(parse_active_queue(INDEX.read_text(encoding="utf-8")), args.mode)
+    if args.mode == "done-all":
+        source_rows = parse_done_runbooks()
+    else:
+        source_rows = parse_active_queue(INDEX.read_text(encoding="utf-8"))
+    rows = target_rows(source_rows, args.mode)
     changed = 0
     total_before = 0
     total_after = 0

@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-This runbook tracks **BL-030** (BL-030: Release Governance and Device Rerun). Current status: **In Validation (RL-09/RL-03/RL-04/RL-06 remain PASS; N13 owner replay reconcile is FAIL 3/3 with deterministic capture abort before rl05_gate_decision (capture exit 143), so RL-05 remains blocked)**. In plain terms: Operationalize a recurring release/device-rerun governance checklist that validates every release candidate across device profiles (quad studio, laptop stereo, headphone) before shipping.
+BL-030 in plain terms: Operationalize a recurring release/device-rerun governance checklist that validates every release candidate across device profiles (quad studio, laptop stereo, headphone) before shipping. Current state: In Validation (RL-09/RL-03/RL-04/RL-06 remain PASS; N13 owner replay reconcile is FAIL 3/3 with deterministic capture abort before rl05_gate_decision (capture exit 143), so RL-05 remains blocked). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -23,15 +23,14 @@ This runbook tracks **BL-030** (BL-030: Release Governance and Device Rerun). Cu
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
-| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
-| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
-| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
-
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Status Ledger
 
