@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-02
 |---|---|
 | ID | BL-069 |
 | Priority | P0 |
-| Status | In Validation (execute-mode probes landed; owner intake PASS) |
+| Status | Done-candidate (owner T2 + T3 replay PASS; closeout sync pending) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-050 |
@@ -109,3 +109,14 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - execute mode now emits zero TODO rows in `preset_retry_backoff.tsv` and `coefficient_swap_stability.tsv`,
   - `lane_result=PASS` in contract and execute modes,
   - docs freshness gate PASS.
+
+## Owner T2/T3 Replay Snapshot (2026-03-02)
+
+- T2 candidate replay (5 execute runs): `PASS`
+  - `TestEvidence/bl069_owner_t2_candidate_20260302T034928Z/`
+  - `t2_summary.tsv`: `5/5` runs with `exit_code=0`, `lane_result=PASS`, execute TODO gate `PASS`, `todo_count=0`.
+- T3 promotion replay (10 execute runs): `PASS`
+  - `TestEvidence/bl069_owner_t3_promotion_20260302T035658Z/`
+  - `t3_summary.tsv`: `10/10` runs with `exit_code=0`, `lane_result=PASS`, execute TODO gate `PASS`, `todo_count=0`.
+- Docs freshness:
+  - `./scripts/validate-docs-freshness.sh` passes after metadata normalization of promotion packet docs.
