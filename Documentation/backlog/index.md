@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-02 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay + BL-050 slice B contract annex + BL-069/BL-070 execute owner intake + BL-069/BL-070 T2/T3 owner replay + BL-050 T2/T3 replay intake + BL-055 owner intake blockers + BL-076 global-lock blocker capture + BL-050 T3 final replay PASS + headtracking capture metadata guardrail fix + BL-055 C4/C6 remediation PASS + BL-076 planning packet baseline)
+Last Modified Date: 2026-03-02 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay + BL-050 slice B contract annex + BL-069/BL-070 execute owner intake + BL-069/BL-070 T2/T3 owner replay + BL-050 T2/T3 replay intake + BL-055 owner intake blockers + BL-076 global-lock blocker capture + BL-050 T3 final replay PASS + headtracking capture metadata guardrail fix + BL-055 C4/C6 remediation PASS + BL-076 planning packet baseline + BL-077 P0 capture-harness planning intake)
 
 # LocusQ Master Backlog Index
 
@@ -133,6 +133,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Planning (owner planning packet authored; global-lock blocker cleared) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
+| 47 | BL-077 | Unified visual capture and replay harness | P0 | In Planning (P0 user-priority intake promoted to runbook; implementation slices defined) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](bl-077-unified-visual-capture-and-replay-harness.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -354,7 +355,7 @@ graph TD
 | A | Runtime Formats | BL-046, BL-067 | `steam-audio-capi`, `clap-plugin-lifecycle`, `auv3-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
 | B | Scene/UI Runtime | BL-039, BL-040, BL-074 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
 | C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
-| D | QA Platform | BL-049 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
+| D | QA Platform | BL-049, BL-077 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
 | E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068, BL-071, BL-072 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
 | F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030, BL-042, BL-048, BL-073, BL-075 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship`, `documentation-hygiene-expert` |
@@ -460,6 +461,7 @@ Any status change must update in the same changeset:
 | BL-074 | `(pending annex spec)` |
 | BL-075 | `(pending annex spec)` |
 | BL-076 | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
+| BL-077 | `(pending annex spec)` |
 
 ## Closed Archive
 
