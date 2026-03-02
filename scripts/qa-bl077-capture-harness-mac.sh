@@ -120,6 +120,43 @@ get_hash_value() {
   awk -F'\t' -v wanted="$key" 'NR > 1 && $1 == wanted { print $2; exit }' "$tsv_file"
 }
 
+count_fail_or_todo_rows() {
+  local file="$1"
+  [[ -f "$file" ]] || {
+    echo 0
+    return
+  }
+
+  awk -F'\t' '
+    NR == 1 { next }
+    {
+      for (i = 1; i <= NF; ++i)
+      {
+        if ($i == "FAIL" || $i == "TODO")
+        {
+          count++
+          break
+        }
+      }
+    }
+    END { print count + 0 }
+  ' "$file"
+}
+
+count_missing_required_artifacts() {
+  local inventory_file="$1"
+  [[ -f "$inventory_file" ]] || {
+    echo 0
+    return
+  }
+
+  awk -F'\t' '
+    NR == 1 { next }
+    $3 == "yes" && $4 != "yes" { count++ }
+    END { print count + 0 }
+  ' "$inventory_file"
+}
+
 run_capture_probe() {
   local run_id="$1"
   local probe_mode="$2"
@@ -214,7 +251,7 @@ INTEGRATION_CONSUMERS_TSV="${OUT_DIR}/integration_consumers.tsv"
 EXTENSION_CONTRACT_MD="${OUT_DIR}/extension_contract.md"
 
 printf "check_id\tresult\tdetail\tartifact\n" > "$STATUS_TSV"
-printf "run_id\tmode\tresult\texit_code\tprofile_contract_hash\tcue_schedule_hash\tartifact_contract_hash\tartifact_presence_hash\trun_dir\n" > "$CAPTURE_CONTRACT_MATRIX_TSV"
+printf "run_id\tmode\tresult\texit_code\tprofile_contract_hash\tcue_schedule_hash\tartifact_contract_hash\tartifact_presence_hash\tpostprocess_contract_hash\trequired_missing_rows\tpostprocess_nonpass_rows\trun_dir\n" > "$CAPTURE_CONTRACT_MATRIX_TSV"
 printf "profile\tresult\texit_code\tcue_count\tcue_schedule_hash\tartifact_dir\n" > "$CUE_PROFILE_MATRIX_TSV"
 printf "run_id\tartifact_id\trelative_path\trequired_in_execute\tpresent\tsize_bytes\tsha256\tnotes\n" > "$ARTIFACT_SCHEMA_INVENTORY_TSV"
 printf "run_id\tkey\tvalue\tdetail\n" > "$REPLAY_HASHES_TSV"
@@ -281,23 +318,37 @@ for ((run_idx=1; run_idx<=RUNS; run_idx++)); do
   manifest_file="${run_dir}/session_manifest.json"
   inventory_file="${run_dir}/artifact_schema_inventory.tsv"
   hashes_file="${run_dir}/replay_hashes.tsv"
+  checkpoint_map_file="${run_dir}/checkpoint_frame_map.tsv"
+  contact_sheets_file="${run_dir}/contact_sheets.tsv"
+  cue_clips_file="${run_dir}/cue_window_clips.tsv"
 
   profile_hash="$(get_hash_value "$hashes_file" "profile_contract_hash")"
   cue_hash="$(get_hash_value "$hashes_file" "cue_schedule_hash")"
   artifact_contract_hash="$(get_hash_value "$hashes_file" "artifact_contract_hash")"
   artifact_presence_hash="$(get_hash_value "$hashes_file" "artifact_presence_hash")"
+  postprocess_contract_hash="$(get_hash_value "$hashes_file" "postprocess_contract_hash")"
+  required_missing_rows="$(count_missing_required_artifacts "$inventory_file")"
+  postprocess_nonpass_rows="$(( \
+    $(count_fail_or_todo_rows "$checkpoint_map_file") \
+    + $(count_fail_or_todo_rows "$contact_sheets_file") \
+    + $(count_fail_or_todo_rows "$cue_clips_file") \
+  ))"
 
   run_result="PASS"
 
   if [[ "$run_exit" -ne 0 ]]; then
     run_result="FAIL"
-  elif [[ ! -f "$manifest_file" || ! -f "$inventory_file" || ! -f "$hashes_file" ]]; then
+  elif [[ ! -f "$manifest_file" || ! -f "$inventory_file" || ! -f "$hashes_file" || ! -f "$checkpoint_map_file" || ! -f "$contact_sheets_file" || ! -f "$cue_clips_file" ]]; then
     run_result="FAIL"
   elif [[ "$MODE" == "execute" && "$LIVE_CAPTURE" -eq 0 ]]; then
     run_result="TODO"
+  elif [[ "$MODE" == "execute" && "$required_missing_rows" -gt 0 ]]; then
+    run_result="FAIL"
+  elif [[ "$MODE" == "execute" && "$LIVE_CAPTURE" -eq 1 && "$postprocess_nonpass_rows" -gt 0 ]]; then
+    run_result="FAIL"
   fi
 
-  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+  printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$run_id" \
     "$MODE" \
     "$run_result" \
@@ -306,6 +357,9 @@ for ((run_idx=1; run_idx<=RUNS; run_idx++)); do
     "$cue_hash" \
     "$artifact_contract_hash" \
     "$artifact_presence_hash" \
+    "$postprocess_contract_hash" \
+    "$required_missing_rows" \
+    "$postprocess_nonpass_rows" \
     "$run_dir" \
     >> "$CAPTURE_CONTRACT_MATRIX_TSV"
 
@@ -328,11 +382,12 @@ done
 hash_unique_profile="$(awk -F'\t' 'NR>1 && $3 != "FAIL" { if ($5 != "") seen[$5]=1 } END { c=0; for (k in seen) c++; print c+0 }' "$CAPTURE_CONTRACT_MATRIX_TSV")"
 hash_unique_cue="$(awk -F'\t' 'NR>1 && $3 != "FAIL" { if ($6 != "") seen[$6]=1 } END { c=0; for (k in seen) c++; print c+0 }' "$CAPTURE_CONTRACT_MATRIX_TSV")"
 hash_unique_contract="$(awk -F'\t' 'NR>1 && $3 != "FAIL" { if ($7 != "") seen[$7]=1 } END { c=0; for (k in seen) c++; print c+0 }' "$CAPTURE_CONTRACT_MATRIX_TSV")"
+hash_unique_postprocess="$(awk -F'\t' 'NR>1 && $3 != "FAIL" { if ($9 != "") seen[$9]=1 } END { c=0; for (k in seen) c++; print c+0 }' "$CAPTURE_CONTRACT_MATRIX_TSV")"
 
-if [[ "$hash_unique_profile" -eq 1 && "$hash_unique_cue" -eq 1 && "$hash_unique_contract" -eq 1 ]]; then
-  record "BL077-C1-hash_stability" "PASS" "profile/cue/artifact contract hashes are stable across replay runs" "$CAPTURE_CONTRACT_MATRIX_TSV"
+if [[ "$hash_unique_profile" -eq 1 && "$hash_unique_cue" -eq 1 && "$hash_unique_contract" -eq 1 && "$hash_unique_postprocess" -eq 1 ]]; then
+  record "BL077-C1-hash_stability" "PASS" "profile/cue/artifact/postprocess contract hashes are stable across replay runs" "$CAPTURE_CONTRACT_MATRIX_TSV"
 else
-  record "BL077-C1-hash_stability" "FAIL" "hash stability mismatch profile=${hash_unique_profile} cue=${hash_unique_cue} contract=${hash_unique_contract}" "$CAPTURE_CONTRACT_MATRIX_TSV"
+  record "BL077-C1-hash_stability" "FAIL" "hash stability mismatch profile=${hash_unique_profile} cue=${hash_unique_cue} contract=${hash_unique_contract} postprocess=${hash_unique_postprocess}" "$CAPTURE_CONTRACT_MATRIX_TSV"
 fi
 
 printf "BL058\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
@@ -359,7 +414,7 @@ Last Modified Date: ${DATE_UTC}
 
 1. Invocation stays CLI-first (\`capture-headtracking-rotation-mac.sh\`), so downstream harnesses can call without plugin-internal imports.
 2. Profile schema is declarative JSON (\`locusq-capture-profile-v1\`) with deterministic cue-point ordering.
-3. Session artifacts always include machine-readable manifest, artifact inventory, and replay hash tables.
+3. Session artifacts always include machine-readable manifest, artifact inventory, replay hash tables, checkpoint-frame maps, contact-sheet indices, and cue-window clip indices.
 4. Execute-mode promotion remains blocked while integration consumers stay \`TODO\`.
 EOF_EXTENSION
 

@@ -30,12 +30,22 @@ PROFILE_SESSION_NAME=""
 PROFILE_SCHEMA="locusq-capture-profile-v1"
 PROFILE_CONTRACT_HASH=""
 PROFILE_EXTRACT_FRAMES=1
+PROFILE_CONTACT_SHEET=1
+PROFILE_CUE_CLIPS=1
+CUE_WINDOW_PRE_SEC=1.0
+CUE_WINDOW_POST_SEC=1.5
 DRY_RUN=0
 
 DURATION_SET=0
 FPS_SET=0
 EXTRACT_SET=0
 COUNTDOWN_SET=0
+CUE_WINDOW_PRE_SET=0
+CUE_WINDOW_POST_SET=0
+CONTACT_SHEET_SET=0
+CUE_CLIPS_SET=0
+MANUAL_CUE_WINDOW_PRE_SEC=""
+MANUAL_CUE_WINDOW_POST_SEC=""
 
 CUE_TIMES_SEC=()
 CUE_MESSAGES=()
@@ -53,6 +63,10 @@ set_cue_profile() {
       )
       PROFILE_SESSION_NAME="headtracking_coarse"
       PROFILE_SOURCE="builtin:coarse"
+      PROFILE_CONTACT_SHEET=1
+      PROFILE_CUE_CLIPS=1
+      CUE_WINDOW_PRE_SEC=1.0
+      CUE_WINDOW_POST_SEC=1.5
       ;;
     dense)
       CUE_TIMES_SEC=(0 8 16 24 32 40 48)
@@ -67,6 +81,10 @@ set_cue_profile() {
       )
       PROFILE_SESSION_NAME="headtracking_dense"
       PROFILE_SOURCE="builtin:dense"
+      PROFILE_CONTACT_SHEET=1
+      PROFILE_CUE_CLIPS=1
+      CUE_WINDOW_PRE_SEC=1.0
+      CUE_WINDOW_POST_SEC=1.5
       ;;
     *)
       echo "ERROR: Invalid cue profile '$1'. Use coarse or dense." >&2
@@ -94,6 +112,10 @@ Options:
   --cue-profile <name>        Cue schedule: coarse or dense (default: coarse)
   --profile <name>            Load profile from scripts/capture_profiles/<name>.json
   --profile-file <path>       Load profile from explicit JSON file path
+  --cue-window-pre <seconds>  Cue clip lead-in window (default: 1.0)
+  --cue-window-post <seconds> Cue clip tail window (default: 1.5)
+  --no-contact-sheet          Disable contact-sheet generation
+  --no-cue-clips              Disable cue-window clip generation
   --cue-speech                Speak cues using macOS 'say' command
   --dry-run                   Skip ffmpeg recording/extraction and emit contract artifacts only
   --open-output               Open output folder when complete
@@ -128,6 +150,11 @@ file_size_bytes() {
   else
     echo 0
   fi
+}
+
+is_nonnegative_number() {
+  local value="$1"
+  awk -v n="$value" 'BEGIN { if (n ~ /^([0-9]+([.][0-9]+)?|[.][0-9]+)$/ && n + 0 >= 0) exit 0; exit 1 }'
 }
 
 load_profile_from_json() {
@@ -216,6 +243,19 @@ if not isinstance(artifact_pack, dict):
 extract_frames = artifact_pack.get("extract_frames", True)
 if not isinstance(extract_frames, bool):
     raise SystemExit("artifact_pack.extract_frames must be boolean when provided")
+contact_sheet = artifact_pack.get("contact_sheet", True)
+if not isinstance(contact_sheet, bool):
+    raise SystemExit("artifact_pack.contact_sheet must be boolean when provided")
+cue_clips = artifact_pack.get("cue_clips", True)
+if not isinstance(cue_clips, bool):
+    raise SystemExit("artifact_pack.cue_clips must be boolean when provided")
+cue_window_pre_sec = artifact_pack.get("cue_window_pre_sec", 1.0)
+cue_window_post_sec = artifact_pack.get("cue_window_post_sec", 1.5)
+for key_name, value in [("artifact_pack.cue_window_pre_sec", cue_window_pre_sec), ("artifact_pack.cue_window_post_sec", cue_window_post_sec)]:
+    if not isinstance(value, (int, float)):
+        raise SystemExit(f"{key_name} must be numeric when provided")
+    if float(value) < 0:
+        raise SystemExit(f"{key_name} must be >= 0")
 
 canonical = json.dumps(data, sort_keys=True, separators=(",", ":"))
 contract_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -227,6 +267,10 @@ print(f"FPS\t{data['fps']}")
 print(f"EXTRACT_EVERY_SEC\t{data['extract_every_sec']}")
 print(f"COUNTDOWN_SEC\t{data['countdown_sec']}")
 print(f"EXTRACT_FRAMES\t{1 if extract_frames else 0}")
+print(f"CONTACT_SHEET\t{1 if contact_sheet else 0}")
+print(f"CUE_CLIPS\t{1 if cue_clips else 0}")
+print(f"CUE_WINDOW_PRE\t{cue_window_pre_sec}")
+print(f"CUE_WINDOW_POST\t{cue_window_post_sec}")
 print(f"PROFILE_CONTRACT_HASH\t{contract_hash}")
 
 for point in cue_points:
@@ -259,6 +303,18 @@ PY
         ;;
       EXTRACT_FRAMES)
         PROFILE_EXTRACT_FRAMES="$a"
+        ;;
+      CONTACT_SHEET)
+        PROFILE_CONTACT_SHEET="$a"
+        ;;
+      CUE_CLIPS)
+        PROFILE_CUE_CLIPS="$a"
+        ;;
+      CUE_WINDOW_PRE)
+        CUE_WINDOW_PRE_SEC="$a"
+        ;;
+      CUE_WINDOW_POST)
+        CUE_WINDOW_POST_SEC="$a"
         ;;
       PROFILE_CONTRACT_HASH)
         PROFILE_CONTRACT_HASH="$a"
@@ -307,6 +363,194 @@ append_artifact_row() {
     "$sha256" \
     "${notes//$'\t'/ }" \
     >> "$ARTIFACT_SCHEMA_TSV"
+}
+
+generate_checkpoint_frame_map() {
+  printf "checkpoint_id\tscheduled_sec\tlabel\tselected_frame\tselected_frame_sec\tdelta_sec\tresult\tdetail\n" > "$CHECKPOINT_FRAME_MAP_TSV"
+
+  if [[ "$NO_EXTRACT" -eq 1 ]]; then
+    for idx in "${!CUE_TIMES_SEC[@]}"; do
+      printf "cp_%02d\t%s\t%s\t-\t-\t-\tTODO\tframe extraction disabled\n" \
+        "$((idx + 1))" "${CUE_TIMES_SEC[$idx]}" "${CUE_MESSAGES[$idx]}" \
+        >> "$CHECKPOINT_FRAME_MAP_TSV"
+    done
+    return
+  fi
+
+  if [[ ! -d "$FRAMES_DIR" ]]; then
+    local missing_result="FAIL"
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      missing_result="TODO"
+    fi
+    for idx in "${!CUE_TIMES_SEC[@]}"; do
+      printf "cp_%02d\t%s\t%s\t-\t-\t-\t%s\tframes directory missing\n" \
+        "$((idx + 1))" "${CUE_TIMES_SEC[$idx]}" "${CUE_MESSAGES[$idx]}" "$missing_result" \
+        >> "$CHECKPOINT_FRAME_MAP_TSV"
+    done
+    return
+  fi
+
+  frame_files=()
+  while IFS= read -r frame_path; do
+    frame_files+=("$frame_path")
+  done < <(find "$FRAMES_DIR" -maxdepth 1 -type f -name 'frame_*.png' | sort)
+  local frame_count="${#frame_files[@]}"
+
+  if [[ "$frame_count" -eq 0 ]]; then
+    local empty_result="FAIL"
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      empty_result="TODO"
+    fi
+    for idx in "${!CUE_TIMES_SEC[@]}"; do
+      printf "cp_%02d\t%s\t%s\t-\t-\t-\t%s\tno extracted frames found\n" \
+        "$((idx + 1))" "${CUE_TIMES_SEC[$idx]}" "${CUE_MESSAGES[$idx]}" "$empty_result" \
+        >> "$CHECKPOINT_FRAME_MAP_TSV"
+    done
+    return
+  fi
+
+  for idx in "${!CUE_TIMES_SEC[@]}"; do
+    cue_time="${CUE_TIMES_SEC[$idx]}"
+    read -r best_index best_time best_delta <<< "$(awk -v t="$cue_time" -v step="$EXTRACT_EVERY_SEC" -v n="$frame_count" '
+      BEGIN {
+        best = 1;
+        bestd = 1e18;
+        for (i = 1; i <= n; ++i) {
+          ft = (i - 1) * step;
+          d = ft - t;
+          if (d < 0) d = -d;
+          if (d < bestd) {
+            best = i;
+            bestd = d;
+          }
+        }
+        printf "%d %.6f %.6f\n", best, ((best - 1) * step), bestd;
+      }
+    ')"
+
+    selected_file="${frame_files[$((best_index - 1))]}"
+    selected_rel="frames/$(basename "$selected_file")"
+    printf "cp_%02d\t%s\t%s\t%s\t%s\t%s\tPASS\tnearest extracted frame\n" \
+      "$((idx + 1))" \
+      "$cue_time" \
+      "${CUE_MESSAGES[$idx]}" \
+      "$selected_rel" \
+      "$best_time" \
+      "$best_delta" \
+      >> "$CHECKPOINT_FRAME_MAP_TSV"
+  done
+}
+
+generate_contact_sheets() {
+  printf "sheet_id\tresult\tfile\tdetail\n" > "$CONTACT_SHEETS_TSV"
+
+  if [[ "$PROFILE_CONTACT_SHEET" -eq 0 ]]; then
+    printf "sheet_01\tSKIP\t-\tcontact sheet disabled by profile/flags\n" >> "$CONTACT_SHEETS_TSV"
+    return
+  fi
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    printf "sheet_01\tTODO\t-\tdry-run mode skips contact sheet generation\n" >> "$CONTACT_SHEETS_TSV"
+    return
+  fi
+
+  if [[ ! -f "$VIDEO_PATH" ]]; then
+    printf "sheet_01\tFAIL\t-\tvideo file missing for contact sheet generation\n" >> "$CONTACT_SHEETS_TSV"
+    return
+  fi
+
+  mkdir -p "$CONTACT_SHEETS_DIR"
+  : > "$CONTACT_SHEETS_LOG"
+
+  interval_sec="$(awk -v d="$DURATION_SEC" 'BEGIN { v = d / 16.0; if (v < 0.1) v = 0.1; printf "%.3f", v }')"
+  half_offset="$(awk -v d="$DURATION_SEC" 'BEGIN { v = d / 2.0; if (v < 0) v = 0; printf "%.3f", v }')"
+
+  local sheet1_rel="contact_sheets/contact_sheet_01.png"
+  local sheet2_rel="contact_sheets/contact_sheet_02.png"
+
+  set +e
+  ffmpeg -y -hide_banner -loglevel warning \
+    -i "$VIDEO_PATH" \
+    -vf "fps=1/${interval_sec},scale=360:-1,tile=4x4:padding=4:margin=4" \
+    -frames:v 1 \
+    "${OUT_DIR}/${sheet1_rel}" >> "$CONTACT_SHEETS_LOG" 2>&1
+  sheet1_ec=$?
+
+  ffmpeg -y -hide_banner -loglevel warning \
+    -ss "$half_offset" -i "$VIDEO_PATH" \
+    -vf "fps=1/${interval_sec},scale=360:-1,tile=4x4:padding=4:margin=4" \
+    -frames:v 1 \
+    "${OUT_DIR}/${sheet2_rel}" >> "$CONTACT_SHEETS_LOG" 2>&1
+  sheet2_ec=$?
+  set -e
+
+  if [[ "$sheet1_ec" -eq 0 && -f "${OUT_DIR}/${sheet1_rel}" ]]; then
+    printf "sheet_01\tPASS\t%s\tprimary contact sheet generated\n" "$sheet1_rel" >> "$CONTACT_SHEETS_TSV"
+  else
+    printf "sheet_01\tFAIL\t%s\tfailed to generate primary contact sheet\n" "$sheet1_rel" >> "$CONTACT_SHEETS_TSV"
+  fi
+
+  if [[ "$sheet2_ec" -eq 0 && -f "${OUT_DIR}/${sheet2_rel}" ]]; then
+    printf "sheet_02\tPASS\t%s\tsecondary contact sheet generated from latter half of run\n" "$sheet2_rel" >> "$CONTACT_SHEETS_TSV"
+  else
+    printf "sheet_02\tFAIL\t%s\tfailed to generate secondary contact sheet\n" "$sheet2_rel" >> "$CONTACT_SHEETS_TSV"
+  fi
+}
+
+generate_cue_window_clips() {
+  printf "clip_id\tcheckpoint_id\tscheduled_sec\tstart_sec\tduration_sec\tfile\tresult\tdetail\n" > "$CUE_CLIPS_TSV"
+
+  if [[ "$PROFILE_CUE_CLIPS" -eq 0 ]]; then
+    printf "clip_00\t-\t-\t-\t-\t-\tSKIP\tcue-window clips disabled by profile/flags\n" >> "$CUE_CLIPS_TSV"
+    return
+  fi
+
+  clip_duration="$(awk -v pre="$CUE_WINDOW_PRE_SEC" -v post="$CUE_WINDOW_POST_SEC" 'BEGIN { d = pre + post; if (d <= 0) d = 0.1; printf "%.3f", d }')"
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    for idx in "${!CUE_TIMES_SEC[@]}"; do
+      cue_time="${CUE_TIMES_SEC[$idx]}"
+      start_sec="$(awk -v cue="$cue_time" -v pre="$CUE_WINDOW_PRE_SEC" 'BEGIN { s = cue - pre; if (s < 0) s = 0; printf "%.3f", s }')"
+      printf "clip_%02d\tcp_%02d\t%s\t%s\t%s\t-\tTODO\tdry-run mode skips clip rendering\n" \
+        "$((idx + 1))" "$((idx + 1))" "$cue_time" "$start_sec" "$clip_duration" \
+        >> "$CUE_CLIPS_TSV"
+    done
+    return
+  fi
+
+  if [[ ! -f "$VIDEO_PATH" ]]; then
+    printf "clip_00\t-\t-\t-\t-\t-\tFAIL\tvideo file missing for cue-window clips\n" >> "$CUE_CLIPS_TSV"
+    return
+  fi
+
+  mkdir -p "$CUE_CLIPS_DIR"
+  : > "$CUE_CLIPS_LOG"
+
+  for idx in "${!CUE_TIMES_SEC[@]}"; do
+    cue_time="${CUE_TIMES_SEC[$idx]}"
+    start_sec="$(awk -v cue="$cue_time" -v pre="$CUE_WINDOW_PRE_SEC" 'BEGIN { s = cue - pre; if (s < 0) s = 0; printf "%.3f", s }')"
+    clip_rel="cue_clips/cp_$(printf '%02d' "$((idx + 1))")_window.mp4"
+    clip_abs="${OUT_DIR}/${clip_rel}"
+
+    set +e
+    ffmpeg -y -hide_banner -loglevel warning \
+      -ss "$start_sec" -i "$VIDEO_PATH" \
+      -t "$clip_duration" \
+      -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p -an \
+      "$clip_abs" >> "$CUE_CLIPS_LOG" 2>&1
+    clip_ec=$?
+    set -e
+
+    if [[ "$clip_ec" -eq 0 && -f "$clip_abs" ]]; then
+      printf "clip_%02d\tcp_%02d\t%s\t%s\t%s\t%s\tPASS\tcue-window clip generated\n" \
+        "$((idx + 1))" "$((idx + 1))" "$cue_time" "$start_sec" "$clip_duration" "$clip_rel" \
+        >> "$CUE_CLIPS_TSV"
+    else
+      printf "clip_%02d\tcp_%02d\t%s\t%s\t%s\t%s\tFAIL\tfailed to generate cue-window clip\n" \
+        "$((idx + 1))" "$((idx + 1))" "$cue_time" "$start_sec" "$clip_duration" "$clip_rel" \
+        >> "$CUE_CLIPS_TSV"
+    fi
+  done
 }
 
 while [[ $# -gt 0 ]]; do
@@ -361,6 +605,28 @@ while [[ $# -gt 0 ]]; do
       PROFILE_FILE="$2"
       shift 2
       ;;
+    --cue-window-pre)
+      CUE_WINDOW_PRE_SEC="$2"
+      MANUAL_CUE_WINDOW_PRE_SEC="$2"
+      CUE_WINDOW_PRE_SET=1
+      shift 2
+      ;;
+    --cue-window-post)
+      CUE_WINDOW_POST_SEC="$2"
+      MANUAL_CUE_WINDOW_POST_SEC="$2"
+      CUE_WINDOW_POST_SET=1
+      shift 2
+      ;;
+    --no-contact-sheet)
+      PROFILE_CONTACT_SHEET=0
+      CONTACT_SHEET_SET=1
+      shift
+      ;;
+    --no-cue-clips)
+      PROFILE_CUE_CLIPS=0
+      CUE_CLIPS_SET=1
+      shift
+      ;;
     --cue-speech)
       CUE_SPEECH=1
       shift
@@ -395,18 +661,41 @@ if [[ -n "$PROFILE_NAME" ]]; then
 fi
 
 if [[ -n "$PROFILE_FILE" ]]; then
-  if (( DURATION_SET == 1 || FPS_SET == 1 || EXTRACT_SET == 1 || COUNTDOWN_SET == 1 || CUE_PROFILE_SET == 1 )); then
+  if (( DURATION_SET == 1 || FPS_SET == 1 || EXTRACT_SET == 1 || COUNTDOWN_SET == 1 || CUE_PROFILE_SET == 1 \
+    || CUE_WINDOW_PRE_SET == 1 || CUE_WINDOW_POST_SET == 1 || CONTACT_SHEET_SET == 1 || CUE_CLIPS_SET == 1 )); then
     echo "ERROR: profile contract controls duration/fps/extract/countdown/cue schedule. Remove manual overrides when using --profile/--profile-file." >&2
     exit 1
   fi
   load_profile_from_json "$PROFILE_FILE"
 else
   set_cue_profile "$CUE_PROFILE"
-  local_profile_payload="schema=${PROFILE_SCHEMA};session=${PROFILE_SESSION_NAME};duration=${DURATION_SEC};fps=${FPS};extract=${EXTRACT_EVERY_SEC};countdown=${COUNTDOWN_SEC};cue_profile=${CUE_PROFILE}"
+  if (( CUE_WINDOW_PRE_SET == 1 )); then
+    CUE_WINDOW_PRE_SEC="$MANUAL_CUE_WINDOW_PRE_SEC"
+  fi
+  if (( CUE_WINDOW_POST_SET == 1 )); then
+    CUE_WINDOW_POST_SEC="$MANUAL_CUE_WINDOW_POST_SEC"
+  fi
+  if (( CONTACT_SHEET_SET == 1 )); then
+    PROFILE_CONTACT_SHEET=0
+  fi
+  if (( CUE_CLIPS_SET == 1 )); then
+    PROFILE_CUE_CLIPS=0
+  fi
+  local_profile_payload="schema=${PROFILE_SCHEMA};session=${PROFILE_SESSION_NAME};duration=${DURATION_SEC};fps=${FPS};extract=${EXTRACT_EVERY_SEC};countdown=${COUNTDOWN_SEC};cue_profile=${CUE_PROFILE};contact_sheet=${PROFILE_CONTACT_SHEET};cue_clips=${PROFILE_CUE_CLIPS};cue_window_pre=${CUE_WINDOW_PRE_SEC};cue_window_post=${CUE_WINDOW_POST_SEC}"
   for idx in "${!CUE_TIMES_SEC[@]}"; do
     local_profile_payload+="|${CUE_TIMES_SEC[$idx]}:${CUE_MESSAGES[$idx]}"
   done
   PROFILE_CONTRACT_HASH="$(hash_string_sha256 "$local_profile_payload")"
+fi
+
+if ! is_nonnegative_number "$CUE_WINDOW_PRE_SEC"; then
+  echo "ERROR: --cue-window-pre must be a non-negative number (got '$CUE_WINDOW_PRE_SEC')." >&2
+  exit 1
+fi
+
+if ! is_nonnegative_number "$CUE_WINDOW_POST_SEC"; then
+  echo "ERROR: --cue-window-post must be a non-negative number (got '$CUE_WINDOW_POST_SEC')." >&2
+  exit 1
 fi
 
 if (( NO_EXTRACT_SET == 0 )) && [[ "$PROFILE_EXTRACT_FRAMES" == "0" ]]; then
@@ -431,6 +720,13 @@ SESSION_MANIFEST_JSON="${OUT_DIR}/session_manifest.json"
 ARTIFACT_SCHEMA_TSV="${OUT_DIR}/artifact_schema_inventory.tsv"
 REPLAY_HASHES_TSV="${OUT_DIR}/replay_hashes.tsv"
 DRY_RUN_NOTE="${OUT_DIR}/dry_run_note.txt"
+CHECKPOINT_FRAME_MAP_TSV="${OUT_DIR}/checkpoint_frame_map.tsv"
+CONTACT_SHEETS_DIR="${OUT_DIR}/contact_sheets"
+CONTACT_SHEETS_TSV="${OUT_DIR}/contact_sheets.tsv"
+CONTACT_SHEETS_LOG="${OUT_DIR}/ffmpeg_contact_sheets.log"
+CUE_CLIPS_DIR="${OUT_DIR}/cue_clips"
+CUE_CLIPS_TSV="${OUT_DIR}/cue_window_clips.tsv"
+CUE_CLIPS_LOG="${OUT_DIR}/ffmpeg_cue_clips.log"
 
 mkdir -p "$OUT_DIR"
 
@@ -487,6 +783,10 @@ echo "schema: $PROFILE_SCHEMA"
 echo "dry_run: $([[ "$DRY_RUN" -eq 1 ]] && echo enabled || echo disabled)"
 echo "cues: $([[ "$NO_CUES" -eq 1 ]] && echo disabled || echo enabled)"
 echo "cue_speech: $([[ "$CUE_SPEECH" -eq 1 ]] && echo enabled || echo disabled)"
+echo "contact_sheet: $([[ "$PROFILE_CONTACT_SHEET" -eq 1 ]] && echo enabled || echo disabled)"
+echo "cue_clips: $([[ "$PROFILE_CUE_CLIPS" -eq 1 ]] && echo enabled || echo disabled)"
+echo "cue_window_pre_sec: $CUE_WINDOW_PRE_SEC"
+echo "cue_window_post_sec: $CUE_WINDOW_POST_SEC"
 echo
 
 if [[ "$NO_CUES" -eq 0 ]]; then
@@ -597,6 +897,10 @@ if [[ "$NO_CUES" -eq 0 && "$DRY_RUN" -eq 1 ]]; then
   done
 fi
 
+generate_checkpoint_frame_map
+generate_contact_sheets
+generate_cue_window_clips
+
 {
   echo "Title: Headtracking Rotation Capture Summary"
   echo "Document Type: Test Evidence Summary"
@@ -611,9 +915,15 @@ fi
   echo "- Profile Source: ${PROFILE_SOURCE}"
   echo "- Profile Schema: ${PROFILE_SCHEMA}"
   echo "- Dry Run: $([[ "$DRY_RUN" -eq 1 ]] && echo true || echo false)"
+  echo "- Contact Sheet Enabled: $([[ "$PROFILE_CONTACT_SHEET" -eq 1 ]] && echo true || echo false)"
+  echo "- Cue Clips Enabled: $([[ "$PROFILE_CUE_CLIPS" -eq 1 ]] && echo true || echo false)"
+  echo "- Cue Window (pre/post sec): ${CUE_WINDOW_PRE_SEC}/${CUE_WINDOW_POST_SEC}"
   echo "- Video: ${VIDEO_PATH}"
   echo "- Checkpoints: ${CHECKPOINTS_TSV}"
   echo "- Cue Events: ${CUE_EVENTS_TSV}"
+  echo "- Checkpoint Frame Map: ${CHECKPOINT_FRAME_MAP_TSV}"
+  echo "- Contact Sheets Index: ${CONTACT_SHEETS_TSV}"
+  echo "- Cue Window Clips Index: ${CUE_CLIPS_TSV}"
   if [[ "$NO_EXTRACT" -eq 0 ]]; then
     echo "- Frames: ${FRAMES_DIR}"
     echo "- Extract interval: ${EXTRACT_EVERY_SEC}s"
@@ -621,6 +931,8 @@ fi
     echo "- Frames: skipped (--no-extract or profile extract_frames=false)"
   fi
   echo "- Record log: ${RECORD_LOG}"
+  echo "- Contact sheet log: ${CONTACT_SHEETS_LOG}"
+  echo "- Cue clips log: ${CUE_CLIPS_LOG}"
   if [[ "$NO_EXTRACT" -eq 0 ]]; then
     echo "- Extract log: ${EXTRACT_LOG}"
   fi
@@ -643,18 +955,29 @@ cat > "$SESSION_MANIFEST_JSON" <<EOF_MANIFEST
     "fps": ${FPS},
     "extract_every_sec": ${EXTRACT_EVERY_SEC},
     "countdown_sec": ${COUNTDOWN_SEC},
+    "cue_window_pre_sec": ${CUE_WINDOW_PRE_SEC},
+    "cue_window_post_sec": ${CUE_WINDOW_POST_SEC},
     "no_extract": $( [[ "$NO_EXTRACT" -eq 1 ]] && echo true || echo false ),
     "no_cues": $( [[ "$NO_CUES" -eq 1 ]] && echo true || echo false ),
-    "cue_speech": $( [[ "$CUE_SPEECH" -eq 1 ]] && echo true || echo false )
+    "cue_speech": $( [[ "$CUE_SPEECH" -eq 1 ]] && echo true || echo false ),
+    "contact_sheet_enabled": $( [[ "$PROFILE_CONTACT_SHEET" -eq 1 ]] && echo true || echo false ),
+    "cue_clips_enabled": $( [[ "$PROFILE_CUE_CLIPS" -eq 1 ]] && echo true || echo false )
   },
   "artifacts": {
     "summary_md": "capture_summary.md",
     "checkpoints_tsv": "checkpoints.tsv",
     "cue_events_tsv": "cue_events.tsv",
+    "checkpoint_frame_map_tsv": "checkpoint_frame_map.tsv",
+    "contact_sheets_tsv": "contact_sheets.tsv",
+    "cue_window_clips_tsv": "cue_window_clips.tsv",
     "record_log": "ffmpeg_record.log",
     "extract_log": "ffmpeg_extract.log",
+    "contact_sheet_log": "ffmpeg_contact_sheets.log",
+    "cue_clips_log": "ffmpeg_cue_clips.log",
     "video": "rotation_capture.mp4",
     "frames_dir": "frames",
+    "contact_sheets_dir": "contact_sheets",
+    "cue_clips_dir": "cue_clips",
     "artifact_inventory_tsv": "artifact_schema_inventory.tsv",
     "replay_hashes_tsv": "replay_hashes.tsv"
   },
@@ -663,12 +986,33 @@ cat > "$SESSION_MANIFEST_JSON" <<EOF_MANIFEST
 EOF_MANIFEST
 
 printf "artifact_id\trelative_path\trequired_in_execute\tpresent\tsize_bytes\tsha256\tnotes\n" > "$ARTIFACT_SCHEMA_TSV"
+required_frames_dir="no"
+if [[ "$NO_EXTRACT" -eq 0 ]]; then
+  required_frames_dir="yes"
+fi
+required_checkpoint_map="$required_frames_dir"
+required_contact_sheet="no"
+if [[ "$PROFILE_CONTACT_SHEET" -eq 1 ]]; then
+  required_contact_sheet="yes"
+fi
+required_cue_clips="no"
+if [[ "$PROFILE_CUE_CLIPS" -eq 1 ]]; then
+  required_cue_clips="yes"
+fi
+
 append_artifact_row "video_capture" "rotation_capture.mp4" "yes" "primary capture output"
 append_artifact_row "record_log" "ffmpeg_record.log" "yes" "capture backend log"
 append_artifact_row "extract_log" "ffmpeg_extract.log" "no" "frame extraction log"
-append_artifact_row "frames_dir" "frames" "no" "frame extraction directory"
+append_artifact_row "frames_dir" "frames" "$required_frames_dir" "frame extraction directory"
 append_artifact_row "checkpoints" "checkpoints.tsv" "yes" "scheduled checkpoint contract"
 append_artifact_row "cue_events" "cue_events.tsv" "yes" "cue emission event stream"
+append_artifact_row "checkpoint_frame_map" "checkpoint_frame_map.tsv" "$required_checkpoint_map" "checkpoint to frame labeling map"
+append_artifact_row "contact_sheets_index" "contact_sheets.tsv" "$required_contact_sheet" "contact sheet generation status index"
+append_artifact_row "contact_sheets_dir" "contact_sheets" "$required_contact_sheet" "contact sheet image bundle"
+append_artifact_row "contact_sheets_log" "ffmpeg_contact_sheets.log" "$required_contact_sheet" "contact sheet ffmpeg log"
+append_artifact_row "cue_window_clips_index" "cue_window_clips.tsv" "$required_cue_clips" "cue-window clip status index"
+append_artifact_row "cue_clips_dir" "cue_clips" "$required_cue_clips" "cue-window clip bundle"
+append_artifact_row "cue_clips_log" "ffmpeg_cue_clips.log" "$required_cue_clips" "cue-window clip ffmpeg log"
 append_artifact_row "summary" "capture_summary.md" "yes" "human-readable summary"
 append_artifact_row "manifest" "session_manifest.json" "yes" "machine-readable session manifest"
 append_artifact_row "dry_run_note" "dry_run_note.txt" "no" "dry-run-only note"
@@ -685,12 +1029,24 @@ artifact_presence_hash="$(hash_string_sha256 "$artifact_presence_payload")"
 artifact_inventory_hash="$(hash_file_sha256 "$ARTIFACT_SCHEMA_TSV")"
 session_manifest_hash="$(hash_file_sha256 "$SESSION_MANIFEST_JSON")"
 script_contract_hash="$(hash_file_sha256 "$0")"
+checkpoint_frame_map_hash="$(hash_file_sha256 "$CHECKPOINT_FRAME_MAP_TSV")"
+contact_sheets_index_hash="$(hash_file_sha256 "$CONTACT_SHEETS_TSV")"
+cue_window_clips_hash="$(hash_file_sha256 "$CUE_CLIPS_TSV")"
+
+postprocess_contract_payload="$(awk -F'\t' 'NR>1 { printf "%s|%s\n", $1, $7 }' "$CHECKPOINT_FRAME_MAP_TSV"; \
+  awk -F'\t' 'NR>1 { printf "%s|%s\n", $1, $2 }' "$CONTACT_SHEETS_TSV"; \
+  awk -F'\t' 'NR>1 { printf "%s|%s\n", $1, $7 }' "$CUE_CLIPS_TSV")"
+postprocess_contract_hash="$(hash_string_sha256 "$postprocess_contract_payload")"
 
 printf "key\tvalue\tdetail\n" > "$REPLAY_HASHES_TSV"
 printf "profile_contract_hash\t%s\tprofile schema/value contract hash\n" "$PROFILE_CONTRACT_HASH" >> "$REPLAY_HASHES_TSV"
 printf "cue_schedule_hash\t%s\tcheckpoint schedule hash\n" "$cue_schedule_hash" >> "$REPLAY_HASHES_TSV"
 printf "artifact_contract_hash\t%s\tartifact id/required contract hash\n" "$artifact_contract_hash" >> "$REPLAY_HASHES_TSV"
 printf "artifact_presence_hash\t%s\tartifact present/absent matrix hash\n" "$artifact_presence_hash" >> "$REPLAY_HASHES_TSV"
+printf "postprocess_contract_hash\t%s\tcheckpoint/contact-sheet/clip result contract hash\n" "$postprocess_contract_hash" >> "$REPLAY_HASHES_TSV"
+printf "checkpoint_frame_map_hash\t%s\tcheckpoint-frame-map file hash\n" "$checkpoint_frame_map_hash" >> "$REPLAY_HASHES_TSV"
+printf "contact_sheets_index_hash\t%s\tcontact-sheet index file hash\n" "$contact_sheets_index_hash" >> "$REPLAY_HASHES_TSV"
+printf "cue_window_clips_hash\t%s\tcue-window-clip index file hash\n" "$cue_window_clips_hash" >> "$REPLAY_HASHES_TSV"
 printf "artifact_inventory_hash\t%s\tfull artifact inventory file hash\n" "$artifact_inventory_hash" >> "$REPLAY_HASHES_TSV"
 printf "session_manifest_hash\t%s\tsession manifest hash\n" "$session_manifest_hash" >> "$REPLAY_HASHES_TSV"
 printf "capture_script_hash\t%s\tscript file hash\n" "$script_contract_hash" >> "$REPLAY_HASHES_TSV"
@@ -699,6 +1055,9 @@ printf "cue_count\t%s\tnumber of scheduled cues\n" "${#CUE_TIMES_SEC[@]}" >> "$R
 echo "Summary: $SUMMARY_MD"
 echo "Manifest: $SESSION_MANIFEST_JSON"
 echo "Inventory: $ARTIFACT_SCHEMA_TSV"
+echo "Checkpoint map: $CHECKPOINT_FRAME_MAP_TSV"
+echo "Contact sheets: $CONTACT_SHEETS_TSV"
+echo "Cue-window clips: $CUE_CLIPS_TSV"
 echo "Replay hashes: $REPLAY_HASHES_TSV"
 
 if [[ "$OPEN_OUTPUT" -eq 1 ]]; then

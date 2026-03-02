@@ -14,7 +14,9 @@
   ],
   "artifact_pack": {
     "extract_frames": true,
-    "contact_sheet": false,
-    "cue_clips": false
+    "contact_sheet": true,
+    "cue_clips": true,
+    "cue_window_pre_sec": 1.0,
+    "cue_window_post_sec": 1.5
   }
 }
