@@ -38,7 +38,7 @@ Use visuals only when they materially improve understanding.
 |---|---|
 | ID | BL-049 |
 | Priority | P1 |
-| Status | In Planning |
+| Status | Done (historical planning-state context retained in runbook history) |
 | Track | D - QA Platform |
 | Effort | High / L |
 | Depends On | BL-042 |

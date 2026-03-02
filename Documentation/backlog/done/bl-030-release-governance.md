@@ -37,7 +37,7 @@ Use visuals only when they materially improve understanding.
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Validation (RL-09/RL-03/RL-04/RL-06 remain PASS; N13 owner replay reconcile is `FAIL` 3/3 with deterministic capture abort before `rl05_gate_decision` (capture exit `143`), so RL-05 remains blocked) |
+| Status | Done (historical pre-closeout gate states retained in execution snapshots) |
 | Owner Track | Track G — Release/Governance |
 | Depends On | BL-024 (Done), BL-025 (Done), HX-06 |
 | Blocks | — |

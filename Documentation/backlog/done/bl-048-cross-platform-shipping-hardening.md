@@ -38,7 +38,7 @@ Use visuals only when they materially improve understanding.
 |---|---|
 | ID | BL-048 |
 | Priority | P1 |
-| Status | In Planning |
+| Status | Done (historical planning-state context retained in runbook history) |
 | Track | G - Release/Governance |
 | Effort | High / L |
 | Depends On | BL-030, BL-042 |
