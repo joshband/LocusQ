@@ -2,7 +2,7 @@ Title: BL-069 RT-Safe Headphone Preset Pipeline and Failure Backoff
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-069 RT-Safe Headphone Preset Pipeline and Failure Backoff
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-069 |
 | Priority | P0 |
-| Status | In Implementation (Wave 1 kickoff: cache-only preset load path landed in runtime code) |
+| Status | In Validation (execute-mode probes landed; owner intake PASS) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-050 |
@@ -93,5 +93,19 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - `loadPeqPresetForProfile()` now uses cache-only preset data (no filesystem access on callback path).
   - Failed/missing preset states are now cached through invalid preset entries and no longer trigger per-block file retries.
 - Remaining BL-069 scope:
-  - Add explicit QA harness lane and backoff evidence packet (`preset_retry_backoff.tsv`).
-  - Add diagnostics surfacing for cache hit/miss/backoff reason in bridge payloads.
+  - Promotion cadence replay (T2/T3) and owner promotion packet.
+
+## Owner Intake Snapshot (2026-03-02)
+
+- Execute-mode probe upgrades landed in:
+  - `scripts/qa-bl069-rt-safe-preset-pipeline-mac.sh`
+- Worker intake evidence (PASS):
+  - `TestEvidence/bl069_owner_intake_contract_20260302T011436Z/`
+  - `TestEvidence/bl069_owner_intake_execute_20260302T011436Z/`
+- Owner verification replay (PASS):
+  - `TestEvidence/bl069_owner_verify_contract_20260302T032812Z/`
+  - `TestEvidence/bl069_owner_verify_execute_20260302T032812Z/`
+- Validation highlights:
+  - execute mode now emits zero TODO rows in `preset_retry_backoff.tsv` and `coefficient_swap_stability.tsv`,
+  - `lane_result=PASS` in contract and execute modes,
+  - docs freshness gate PASS.
