@@ -8,6 +8,7 @@ fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+DATE_UTC="$(date -u +%Y-%m-%d)"
 
 OUT_DIR="${ROOT_DIR}/TestEvidence/headtracking_rotation_capture_${TIMESTAMP}"
 DURATION_SEC=40
@@ -19,15 +20,41 @@ NO_EXTRACT=0
 OPEN_OUTPUT=0
 NO_CUES=0
 CUE_SPEECH=0
+CUE_PROFILE="coarse"
 
-CUE_TIMES_SEC=(0 12 24 36 48)
-CUE_MESSAGES=(
-  "Center and sync"
-  "Rotate clockwise to 90 degrees"
-  "Rotate clockwise to 180 degrees"
-  "Rotate clockwise to 225 degrees"
-  "Rotate clockwise to 270 degrees"
-)
+CUE_TIMES_SEC=()
+CUE_MESSAGES=()
+
+set_cue_profile() {
+  case "$1" in
+    coarse)
+      CUE_TIMES_SEC=(0 12 24 36 48)
+      CUE_MESSAGES=(
+        "Center and sync"
+        "Rotate clockwise to 90 degrees"
+        "Rotate clockwise to 180 degrees"
+        "Rotate clockwise to 225 degrees"
+        "Rotate clockwise to 270 degrees"
+      )
+      ;;
+    dense)
+      CUE_TIMES_SEC=(0 8 16 24 32 40 48)
+      CUE_MESSAGES=(
+        "Center and sync"
+        "Rotate clockwise to 45 degrees"
+        "Rotate clockwise to 90 degrees"
+        "Rotate clockwise to 135 degrees"
+        "Rotate clockwise to 180 degrees"
+        "Rotate clockwise to 225 degrees"
+        "Rotate clockwise to 270 degrees"
+      )
+      ;;
+    *)
+      echo "ERROR: Invalid cue profile '$1'. Use coarse or dense." >&2
+      exit 1
+      ;;
+  esac
+}
 
 usage() {
   cat <<'USAGE'
@@ -45,6 +72,7 @@ Options:
   --device <id-or-name>       AVFoundation video device (default: auto-detect screen)
   --no-extract                Do not extract still frames
   --no-cues                   Disable timed rotation cues during recording
+  --cue-profile <name>        Cue schedule: coarse or dense (default: coarse)
   --cue-speech                Speak cues using macOS 'say' command
   --open-output               Open output folder when complete
   --help                      Show this message
@@ -52,6 +80,7 @@ Options:
 Examples:
   ./scripts/capture-headtracking-rotation-mac.sh
   ./scripts/capture-headtracking-rotation-mac.sh --duration 60 --extract-every 0.25
+  ./scripts/capture-headtracking-rotation-mac.sh --duration 60 --cue-profile dense
   ./scripts/capture-headtracking-rotation-mac.sh --duration 60 --cue-speech
   ./scripts/capture-headtracking-rotation-mac.sh --device 1 --out-dir TestEvidence/rotation_run_a
 USAGE
@@ -91,6 +120,10 @@ while [[ $# -gt 0 ]]; do
       NO_CUES=1
       shift
       ;;
+    --cue-profile)
+      CUE_PROFILE="$2"
+      shift 2
+      ;;
     --cue-speech)
       CUE_SPEECH=1
       shift
@@ -115,6 +148,8 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
   echo "ERROR: ffmpeg is required but not found on PATH." >&2
   exit 1
 fi
+
+set_cue_profile "$CUE_PROFILE"
 
 mkdir -p "$OUT_DIR"
 VIDEO_PATH="${OUT_DIR}/rotation_capture.mp4"
@@ -158,6 +193,7 @@ echo "fps: $FPS"
 echo "extract_every_sec: $EXTRACT_EVERY_SEC"
 echo "device: $VIDEO_DEVICE"
 echo "cues: $([[ "$NO_CUES" -eq 1 ]] && echo disabled || echo enabled)"
+echo "cue_profile: $CUE_PROFILE"
 echo "cue_speech: $([[ "$CUE_SPEECH" -eq 1 ]] && echo enabled || echo disabled)"
 echo
 echo "Set up both apps side-by-side now:"
@@ -248,6 +284,12 @@ if [[ "$NO_EXTRACT" -eq 0 ]]; then
 fi
 
 {
+  echo "Title: Headtracking Rotation Capture Summary"
+  echo "Document Type: Test Evidence Summary"
+  echo "Author: APC Codex"
+  echo "Created Date: ${DATE_UTC}"
+  echo "Last Modified Date: ${DATE_UTC}"
+  echo
   echo "# Headtracking Rotation Capture"
   echo
   echo "- Timestamp (UTC): ${TIMESTAMP}"
