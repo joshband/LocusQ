@@ -2,7 +2,7 @@ Title: BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 
@@ -12,7 +12,7 @@ Last Modified Date: 2026-03-01
 |---|---|
 | ID | BL-070 |
 | Priority | P0 |
-| Status | In Implementation (Wave 1 kickoff: coherent snapshot + atomic telemetry publication landed) |
+| Status | In Validation (execute-mode probes landed; owner intake PASS) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-050 |
@@ -93,5 +93,19 @@ This additive section aligns the runbook with current backlog lifecycle and evid
   - `Source/SpatialRenderer.h` and `Source/processor_bridge/ProcessorSceneStateBridgeOps.h` now consume coherent snapshots instead of split reads.
   - `Source/PluginProcessor.h/.cpp` and bridge ops now use atomic telemetry fields for speaker RMS and perf EMA publication/reads.
 - Remaining BL-070 scope:
-  - Add sequence-stamped telemetry packet semantics (if seqlock contract is kept as strict requirement).
-  - Add dedicated stress validation lane (`scene_bridge_stress.tsv` / thread-safety diagnostics).
+  - Promotion cadence replay (T2/T3) and owner promotion packet.
+
+## Owner Intake Snapshot (2026-03-02)
+
+- Execute-mode probe upgrades landed in:
+  - `scripts/qa-bl070-snapshot-telemetry-contract-mac.sh`
+- Worker intake evidence (PASS):
+  - `TestEvidence/bl070_owner_intake_contract_20260302T011425Z/`
+  - `TestEvidence/bl070_owner_intake_execute_20260302T011446Z/`
+- Owner verification replay (PASS):
+  - `TestEvidence/bl070_owner_verify_contract_20260302T032812Z/`
+  - `TestEvidence/bl070_owner_verify_execute_20260302T032812Z/`
+- Validation highlights:
+  - execute mode now emits zero TODO rows in stress/contract TSV outputs,
+  - `lane_result=PASS` in contract and execute modes,
+  - docs freshness gate PASS.
