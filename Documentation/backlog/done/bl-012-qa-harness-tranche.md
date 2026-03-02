@@ -3,10 +3,37 @@ Title: BL-012 QA Harness Tranche Closeout
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 ---
 
 # BL-012: QA Harness Tranche Closeout
+
+## Plain-Language Summary
+
+This runbook tracks **BL-012** (BL-012: QA Harness Tranche Closeout). Current status: **Done (2026-02-24 closeout evidence refresh)**. In plain terms: Complete QA harness tranche closeout with embedded HX-04 scenario parity guard, producing deterministic evidence that the harness test suite remains green and scenario coverage has not drifted.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-012: QA Harness Tranche Closeout |
+| Why is this important? | Complete QA harness tranche closeout with embedded HX-04 scenario parity guard, producing deterministic evidence that the harness test suite remains green and scenario coverage has not drifted. |
+| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-012-qa-harness-tranche.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

@@ -2,9 +2,65 @@ Title: BL-035 RT Lock-Free Registration
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-035 RT Lock-Free Registration
+
+## Plain-Language Summary
+
+BL-035 focuses on a clear, operator-visible outcome: Remove lock acquisition from all audio-thread registration paths so the realtime audio processing path remains lock-free and invariant-compliant under multi-instance stress. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: In Validation (D8 owner readiness replay PASS on build/smoke/selftest/RT/docs; non_allowlisted=0; D7 blockers cleared).
+
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, UI maintainers, and QA/release owners. |
+| What is changing? | Remove lock acquisition from all audio-thread registration paths so the realtime audio processing path remains lock-free and invariant-compliant under multi-instance stress. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: In Validation (D8 owner readiness replay PASS on build/smoke/selftest/RT/docs; non_allowlisted=0; D7 blockers cleared). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-035-rt-lock-free-registration.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
+
+## Evidence Visual Snapshot
+
+| Checkpoint | Result | Evidence |
+|---|---|---|
+| D7 owner readiness recheck | FAIL | `TestEvidence/bl035_slice_d7_owner_ready_20260228_115509/status.tsv` |
+| D8 owner readiness recheck | PASS | `TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/status.tsv` |
+| D8 RT audit | PASS (`non_allowlisted=0`) | `TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/rt_audit.tsv` |
+
+```mermaid
+flowchart LR
+    D7[D7 Owner Recheck
+FAIL] -->|selftest retry + allowlist drift fixed| D8[D8 Owner Recheck
+PASS]
+    D8 --> P[Promotion cadence replay pending]
+```
 
 ## Status Ledger
 

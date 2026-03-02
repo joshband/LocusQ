@@ -6,6 +6,32 @@ Last Modified Date: [YYYY-MM-DD]
 
 # BL-XXX: [TITLE]
 
+## Plain-Language Summary
+
+[1-3 non-technical sentences that explain the change, user/operator impact, and why this work is needed now.]
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | [Users/operators/QA/release owners/coding agents] |
+| What is changing? | [Simple plain-language statement] |
+| Why is this important? | [Risk/value rationale] |
+| How will we deliver it? | [High-level implementation + validation approach] |
+| When is it done? | [Clear outcome/gate in plain language] |
+| Where is the source of truth? | [Runbook path + evidence path] |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status table | Fast state scan for humans and agents | `## Status Ledger` |
+| Dependency/implementation table | Clarifies sequencing and ownership | `## Implementation Slices` |
+| Mermaid diagram (optional) | Clarifies flow/decision logic when text is dense | `## Flow Diagram` |
+| Screenshot/chart (optional) | Clarifies UI/operator outcomes or metrics | `TestEvidence/...` linked in evidence sections |
+
 ## Status Ledger
 
 | Field | Value |
@@ -164,6 +190,8 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - [ ] All implementation slices complete
 - [ ] All validation lanes pass
 - [ ] Evidence bundle captured at designated paths
+- [ ] Plain-language summary + 6W snapshot updated to match final behavior
+- [ ] Visual aid index updated and any diagrams/screenshots linked when they add clarity
 - [ ] `status.json` updated with current state and evidence notes
 - [ ] `Documentation/backlog/index.md` dashboard row updated
 - [ ] `TestEvidence/build-summary.md` snapshot updated

@@ -2,9 +2,35 @@ Title: BL-006 Motion Trail Overlays
 Document Type: Backlog Runbook (Closeout)
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-006: Motion Trail Overlays
+
+## Plain-Language Summary
+
+This runbook tracks **BL-006** (BL-006: Motion Trail Overlays). Current status: **Done**. In plain terms: Added visual motion trail paths for emitters in the 3D viewport, showing historical position trace as a fading polyline overlay.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-006: Motion Trail Overlays |
+| Why is this important? | Added visual motion trail paths for emitters in the 3D viewport, showing historical position trace as a fading polyline overlay. |
+| How will we deliver it? | Use the documented implementation summary and promotion gates in this closeout runbook to confirm what shipped and why it is safe. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-006-motion-trail-overlays.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Promotion gate table | Shows what passed/failed for closeout decisions. | `## Promotion Gate Summary` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

@@ -2,9 +2,35 @@ Title: BL-014 Listener/Speaker/Aim/RMS Overlay Strict Closeout
 Document Type: Backlog Runbook (Closeout)
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-014: Listener/Speaker/Aim/RMS Overlay Strict Closeout
+
+## Plain-Language Summary
+
+This runbook tracks **BL-014** (BL-014: Listener/Speaker/Aim/RMS Overlay Strict Closeout). Current status: **Done**. In plain terms: Finalized all viewport overlay confidence lanes (listener position, speaker positions, aim direction, RMS rings) with strict deterministic evidence.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-014: Listener/Speaker/Aim/RMS Overlay Strict Closeout |
+| Why is this important? | Finalized all viewport overlay confidence lanes (listener position, speaker positions, aim direction, RMS rings) with strict deterministic evidence. |
+| How will we deliver it? | Use the documented implementation summary and promotion gates in this closeout runbook to confirm what shipped and why it is safe. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-014-overlay-strict-closeout.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Promotion gate table | Shows what passed/failed for closeout decisions. | `## Promotion Gate Summary` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

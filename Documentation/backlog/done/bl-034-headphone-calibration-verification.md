@@ -2,9 +2,36 @@ Title: BL-034 Headphone Calibration Verification and Profile Governance
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-034: Headphone Calibration Verification and Profile Governance
+
+## Plain-Language Summary
+
+This runbook tracks **BL-034** (BL-034: Headphone Calibration Verification and Profile Governance). Current status: **Done (Owner Z6 promotion finalized; Owner Z7 post-done confidence replay remains green)**. In plain terms: Define and enforce a deterministic verification + profile-governance layer for headphone calibration so profile selection, fallback behavior, and perceptual verification outcomes are reproducible, machine-readable, and release-governance ready.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-034: Headphone Calibration Verification and Profile Governance |
+| Why is this important? | Define and enforce a deterministic verification + profile-governance layer for headphone calibration so profile selection, fallback behavior, and perceptual verification outcomes are reproducible, machine-readable, and release-governance ready. |
+| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-034-headphone-calibration-verification.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

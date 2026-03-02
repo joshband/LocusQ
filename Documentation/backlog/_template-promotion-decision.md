@@ -9,6 +9,34 @@ Last Modified Date: 2026-02-28
 Use this template for owner-authoritative promotion packets under:
 - `TestEvidence/<bl_or_hx>_owner_sync_<slice>_<timestamp>/promotion_decision.md`
 
+## Plain-Language Decision Summary
+
+- What changed: [Plain-language summary]
+- Why this decision: [Plain-language rationale]
+- Decision in simple terms: [promote/hold/block and why]
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is impacted by this decision? | [Users/operators/QA/release owners] |
+| What was reviewed? | [Implementation + validation slices] |
+| Why this outcome? | [Key evidence/risk rationale] |
+| How was confidence established? | [Replay/gate/evidence summary] |
+| When can this be revisited? | [Trigger/date/next review condition] |
+| Where is the evidence? | [`TestEvidence/<packet>/...`] |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Gate matrix table | Fast PASS/FAIL scan | `## Required Gate Matrix` |
+| Determinism table | Confidence in replay stability | `## Determinism / Reliability Checks` |
+| Mermaid decision flow (optional) | Clarifies promotion/no-go reasoning | `## Decision Flow` |
+| Screenshot/chart (optional) | Clarifies UI/metric evidence | `TestEvidence/...` linked path |
+
 ## Decision
 - Result: `PASS | FAIL`
 - Decision: `Done-candidate | In Validation | Blocked`

@@ -2,9 +2,36 @@ Title: BL-033 Headphone Calibration Core Path
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-033: Headphone Calibration Core Path
+
+## Plain-Language Summary
+
+This runbook tracks **BL-033** (BL-033: Headphone Calibration Core Path). Current status: **Done (Owner Z12 final replay PASS; promotion packet finalized)**. In plain terms: Implement an RT-safe, deterministic internal headphone calibration monitoring path for LocusQ using Steam binaural rendering plus optional EQ/FIR compensation, while preserving existing monitoring modes and publishing explicit diagnostics (requested, active, stage, fallback reason) for CALIBRATE and
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-033: Headphone Calibration Core Path |
+| Why is this important? | Implement an RT-safe, deterministic internal headphone calibration monitoring path for LocusQ using Steam binaural rendering plus optional EQ/FIR compensation, while preserving existing monitoring modes and publishing explicit diagnostics (requested, active, stage, fallback reason) for CALIBRATE and |
+| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-033-headphone-calibration-core.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

@@ -2,9 +2,35 @@ Title: HX-04 Scenario Coverage Audit and Drift Guard
 Document Type: Backlog Runbook (Closeout)
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # HX-04: Scenario Coverage Audit and Drift Guard
+
+## Plain-Language Summary
+
+This runbook tracks **BL-012** (HX-04: Scenario Coverage Audit and Drift Guard). Current status: **Done**. In plain terms: Completed deterministic scenario coverage audit across AirAbsorption, CalibrationEngine, and directivity paths with embedded BL-012 enforcement.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | HX-04: Scenario Coverage Audit and Drift Guard |
+| Why is this important? | Completed deterministic scenario coverage audit across AirAbsorption, CalibrationEngine, and directivity paths with embedded BL-012 enforcement. |
+| How will we deliver it? | Use the documented implementation summary and promotion gates in this closeout runbook to confirm what shipped and why it is safe. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/hx-04-scenario-coverage.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Promotion gate table | Shows what passed/failed for closeout decisions. | `## Promotion Gate Summary` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

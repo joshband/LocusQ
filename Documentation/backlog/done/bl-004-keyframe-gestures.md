@@ -2,9 +2,35 @@ Title: BL-004 Keyframe Editor Gestures in Production UI
 Document Type: Backlog Runbook (Closeout)
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-004: Keyframe Editor Gestures in Production UI
+
+## Plain-Language Summary
+
+This runbook tracks **BL-004** (BL-004: Keyframe Editor Gestures in Production UI). Current status: **Done**. In plain terms: Implemented full keyframe editing gestures (add/delete/drag/select/multi-select) in the production WebView timeline.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-004: Keyframe Editor Gestures in Production UI |
+| Why is this important? | Implemented full keyframe editing gestures (add/delete/drag/select/multi-select) in the production WebView timeline. |
+| How will we deliver it? | Use the documented implementation summary and promotion gates in this closeout runbook to confirm what shipped and why it is safe. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-004-keyframe-gestures.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Promotion gate table | Shows what passed/failed for closeout decisions. | `## Promotion Gate Summary` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

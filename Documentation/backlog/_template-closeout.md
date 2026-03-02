@@ -6,6 +6,32 @@ Last Modified Date: [YYYY-MM-DD]
 
 # BL-XXX: [TITLE]
 
+## Plain-Language Summary
+
+[1-3 non-technical sentences describing what was delivered, who benefits, and why this completed work matters.]
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who benefited? | [Users/operators/QA/release owners] |
+| What changed? | [Plain-language summary of delivered behavior] |
+| Why did this matter? | [Risk/value outcome] |
+| How was it delivered safely? | [High-level implementation + validation evidence summary] |
+| When was it considered complete? | [Date + gate/outcome summary] |
+| Where is the evidence? | [Runbook path + `TestEvidence/...`] |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Promotion gate table | Quick closeout confidence scan | `## Promotion Gate Summary` |
+| Evidence references table/list | Fast traceability for humans and agents | `## Evidence References` |
+| Mermaid diagram (optional) | Clarifies complex lifecycle/decision flow | `## Flow Diagram` |
+| Screenshot/chart (optional) | Clarifies user-visible or metric outcomes | `TestEvidence/...` linked path |
+
 ## Status Ledger
 
 | Field | Value |
@@ -55,6 +81,8 @@ Last Modified Date: [YYYY-MM-DD]
 
 - [ ] Runbook moved from `Documentation/backlog/` to `Documentation/backlog/done/`
 - [ ] `Documentation/backlog/index.md` row updated to Done with done-path link
+- [ ] Plain-language summary + 6W snapshot reflect final delivered state
+- [ ] Visual aid index updated and linked assets are current/relevant
 - [ ] `status.json` updated
 - [ ] `TestEvidence/build-summary.md` updated
 - [ ] `TestEvidence/validation-trend.md` updated

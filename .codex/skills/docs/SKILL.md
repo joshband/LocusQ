@@ -7,12 +7,13 @@ Title: Documentation Governance Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # SKILL: DOCUMENTATION GOVERNANCE
 
 ## Goal
 Keep documentation lean, current, and enforceably consistent with specs, invariants, ADRs, and validation evidence.
+Ensure backlog lifecycle documents are equally readable by non-technical humans and machine consumers (agents/scripts/LLMs).
 
 ## When To Use
 - User asks to standardize docs, naming, structure, ADRs, or evidence logging.
@@ -55,6 +56,13 @@ Keep documentation lean, current, and enforceably consistent with specs, invaria
    - `.claude/workflows/**`
    - `.codex/rules/**`
    - `.claude/rules/**`
+10. Enforce backlog readability contract for intake/runbook/closeout/promotion and archived done runbooks:
+   - `## Plain-Language Summary`
+   - `## 6W Snapshot (Who/What/Why/How/When/Where)`
+   - `## Visual Aid Index` (visuals only when they materially improve clarity)
+11. Run readability and freshness gates before closeout:
+   - `./scripts/validate-backlog-plain-language.sh`
+   - `./scripts/validate-docs-freshness.sh`
 
 ## Cross-Skill Routing
 - For heavy documentation cleanup, deduplication, and freshness remediation, pair with `documentation-hygiene-expert`.
@@ -67,4 +75,5 @@ Keep documentation lean, current, and enforceably consistent with specs, invaria
 - Updated docs with metadata and cross-references.
 - ADR updates for new/changed architectural decisions.
 - Validation snapshot/trend entries reflecting the latest evidence.
+- Readability report covering plain-language + 6W + visual-aid coverage for touched backlog docs.
 - Brief report of what was updated and what remains intentionally deferred.

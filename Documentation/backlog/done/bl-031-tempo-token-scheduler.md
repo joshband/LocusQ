@@ -2,9 +2,36 @@ Title: BL-031 Tempo-Locked Visual Token Scheduler
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-031: Tempo-Locked Visual Token Scheduler
+
+## Plain-Language Summary
+
+This runbook tracks **BL-031** (BL-031: Tempo-Locked Visual Token Scheduler). Current status: **Done (2026-02-25 owner promotion sync complete)**. In plain terms: Implement a host-tempo-synchronized visual timing contract using sample-stamped tokens (bar/beat/subdivision) published from the audio thread via a fixed-size atomic snapshot, consumed on the message thread for sub-frame UI interpolation.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-031: Tempo-Locked Visual Token Scheduler |
+| Why is this important? | Implement a host-tempo-synchronized visual timing contract using sample-stamped tokens (bar/beat/subdivision) published from the audio thread via a fixed-size atomic snapshot, consumed on the message thread for sub-frame UI interpolation. |
+| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-031-tempo-token-scheduler.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 
