@@ -1,0 +1,20 @@
+{
+  "schema": "locusq-capture-profile-v1",
+  "session_name": "headtracking_coarse",
+  "duration_sec": 55,
+  "fps": 30,
+  "extract_every_sec": 0.5,
+  "countdown_sec": 5,
+  "cue_points": [
+    { "t": 0, "label": "Center and sync" },
+    { "t": 12, "label": "Rotate clockwise to 90 degrees" },
+    { "t": 24, "label": "Rotate clockwise to 180 degrees" },
+    { "t": 36, "label": "Rotate clockwise to 225 degrees" },
+    { "t": 48, "label": "Rotate clockwise to 270 degrees" }
+  ],
+  "artifact_pack": {
+    "extract_frames": true,
+    "contact_sheet": false,
+    "cue_clips": false
+  }
+}
