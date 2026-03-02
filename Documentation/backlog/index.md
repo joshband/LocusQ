@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-02 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay + BL-050 slice B contract annex + BL-069/BL-070 execute owner intake + BL-069/BL-070 T2/T3 owner replay + BL-050 T2/T3 replay intake + BL-055 owner intake blockers + BL-076 global-lock blocker capture + BL-050 T3 final replay PASS + headtracking capture metadata guardrail fix)
+Last Modified Date: 2026-03-02 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay + BL-050 slice B contract annex + BL-069/BL-070 execute owner intake + BL-069/BL-070 T2/T3 owner replay + BL-050 T2/T3 replay intake + BL-055 owner intake blockers + BL-076 global-lock blocker capture + BL-050 T3 final replay PASS + headtracking capture metadata guardrail fix + BL-055 C4/C6 remediation PASS + BL-076 planning packet baseline)
 
 # LocusQ Master Backlog Index
 
@@ -116,7 +116,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done-candidate) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual operator sync evidence captured; owner promotion packet pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
 | 29 | BL-054 | PEQ cascade RT integration | P1 | Open | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
-| 30 | BL-055 | FIR convolution engine | P1 | In Implementation (QA lane scaffold landed; owner intake FAIL on C4/C6 acceptance markers) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
+| 30 | BL-055 | FIR convolution engine | P1 | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | Open | E | BL-046 | BL-058 | [bl-057](bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | In Implementation (reprioritized from code-review protocol/gating risk packet; QA harness authored) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
@@ -132,7 +132,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | In Implementation (mode semantics and execute TODO-row enforcement scripts authored) | G | — | BL-067, BL-068 | [bl-073](bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
-| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | Open (planning replay attempt blocked by global-lock workspace hygiene stop) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
+| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Planning (owner planning packet authored; global-lock blocker cleared) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -459,7 +459,7 @@ Any status change must update in the same changeset:
 | BL-073 | `(pending annex spec)` |
 | BL-074 | `(pending annex spec)` |
 | BL-075 | `(pending annex spec)` |
-| BL-076 | `(pending annex spec)` |
+| BL-076 | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
 
 ## Closed Archive
 

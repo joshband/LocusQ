@@ -12,12 +12,12 @@ Last Modified Date: 2026-03-02
 |---|---|
 | ID | BL-076 |
 | Priority | P1 |
-| Status | Open (owner planning-packet replay blocked by global-lock workspace hygiene stop) |
+| Status | In Planning (owner planning packet authored; global-lock blocker cleared) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | BL-050, BL-069, BL-070 |
 | Blocks | — |
-| Annex Spec | `(pending annex spec)` |
+| Annex Spec | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
@@ -65,6 +65,19 @@ Minimum evidence additions:
   - `TestEvidence/locusq_production_p0_selftest_20260302T035100Z.failure_taxonomy.tsv`
   - `TestEvidence/locusq_production_p0_selftest_20260302T035100Z.meta.json`
 - No scoped BL-076 files were changed and no validation artifacts were produced for that attempt.
+
+## Owner Planning Packet Snapshot (2026-03-02)
+
+- Planning packet authored:
+  - `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md`
+- Baseline captured:
+  - `Source/SpatialRenderer.h` currently spans `4837` LOC.
+  - extraction boundaries defined across 7 modules with a 6-wave migration plan.
+- Guardrails defined:
+  - dependency boundaries per module,
+  - size caps (`<=700` LOC per `.cpp`, `<=250` LOC per `.h`),
+  - RT-safety + validation-lane replay contract.
+- Previous global-lock blocker is no longer active in owner workspace.
 
 ## Replay Cadence Plan (Required)
 
