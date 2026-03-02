@@ -8,8 +8,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-BL-037 focuses on a clear, operator-visible outcome: Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green).
-
+BL-037 in plain terms: Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -25,23 +24,19 @@ BL-037 focuses on a clear, operator-visible outcome: Define a deterministic CPU-
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
-| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
-
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Delivery Flow Diagram
 
-```mermaid
-flowchart LR
-    A[Plan scope and dependencies] --> B[Implement slices]
-    B --> C[Run validation and replay lanes]
-    C --> D[Review evidence packet]
-    D --> E[Promote, hold, or close with owner decision]
-```
+Include a runbook-specific diagram only when it clarifies behavior not already obvious from `Status Ledger`, `Implementation Slices`, and `Validation Plan`.
+
+Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
 ## Status Ledger
 
@@ -872,27 +867,15 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 
 ## Handoff Return Contract
 
-All worker and owner handoffs for this runbook must include:
-- `SHARED_FILES_TOUCHED: no|yes`
+Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
 
-Required return block:
-```
-HANDOFF_READY
-TASK: <BL ID + Title>
-RESULT: PASS|FAIL
-FILES_TOUCHED: ...
-VALIDATION: ...
-ARTIFACTS: ...
-SHARED_FILES_TOUCHED: no|yes
-BLOCKERS: ...
-```
-
+Only add runbook-specific handoff fields if they differ from the canonical contract.
 
 ## Governance Alignment (2026-02-28)
 
-This additive section aligns the runbook with current backlog lifecycle and evidence governance without altering historical execution notes.
+Canonical lifecycle/evidence rules are defined in:
+- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
-- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
-- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/` (not `/tmp`-only paths).
-- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
-- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+This runbook should list only item-specific exceptions or additions.
+

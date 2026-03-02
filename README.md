@@ -1,3 +1,9 @@
+Title: LocusQ
+Document Type: Repository README
+Author: APC Codex
+Created Date: 2026-02-18
+Last Modified Date: 2026-03-01
+
 # LocusQ
 
 LocusQ is a JUCE-based spatial audio plugin and standalone app that empowers audio creators to craft and monitor immersive 3D soundscapes effortlessly. With its intuitive interfaces, users can calibrate their audio setups, manipulate sound emitters within a three-dimensional space, and render spatialized audio with advanced diagnostics.

@@ -8,8 +8,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-BL-077 focuses on a clear, operator-visible outcome: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: In Planning (P0 user-priority intake promoted to runbook; implementation slices defined).
-
+BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Planning (P0 user-priority intake promoted to runbook). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -25,25 +24,21 @@ BL-077 focuses on a clear, operator-visible outcome: Provide a robust, easy-to-u
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding; prefer compact tables first.
+Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status Ledger table | Fast snapshot of priority/state/dependencies. | `## Status Ledger` |
-| Implementation slices table | Clarifies staged rollout and ownership boundaries. | `## Implementation Slices` |
-| Capture pipeline diagram (optional) | Useful when orchestration flow gets dense. | `## Architecture Context` |
-| Example contact sheets + clips | Proves operator-ready evidence format. | `TestEvidence/bl077_*/` |
-| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Evidence visual snapshot | Consolidated replay/evidence view for promotion decisions. | `## Evidence Visual Snapshot` |
+| Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Delivery Flow Diagram
 
-```mermaid
-flowchart LR
-    A[Plan scope and dependencies] --> B[Implement slices]
-    B --> C[Run validation and replay lanes]
-    C --> D[Review evidence packet]
-    D --> E[Promote, hold, or close with owner decision]
-```
+Include a runbook-specific diagram only when it clarifies behavior not already obvious from `Status Ledger`, `Implementation Slices`, and `Validation Plan`.
+
+Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
 ## Evidence Visual Snapshot
 
@@ -154,26 +149,15 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 
 ## Handoff Return Contract
 
-All worker and owner handoffs for this runbook must include:
-- `SHARED_FILES_TOUCHED: no|yes`
+Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
 
-Required return block:
-```
-HANDOFF_READY
-TASK: <BL ID + Title>
-RESULT: PASS|FAIL
-FILES_TOUCHED: ...
-VALIDATION: ...
-ARTIFACTS: ...
-SHARED_FILES_TOUCHED: no|yes
-BLOCKERS: ...
-```
+Only add runbook-specific handoff fields if they differ from the canonical contract.
 
 ## Governance Alignment (2026-03-02)
 
-This additive section aligns the runbook with current backlog lifecycle and evidence governance.
+Canonical lifecycle/evidence rules are defined in:
+- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
-- Done transition contract: when this item reaches Done, move the runbook from `Documentation/backlog/` to `Documentation/backlog/done/bl-077-*.md` in the same change set as index/status/evidence sync.
-- Evidence localization contract: canonical promotion and closeout evidence must be repo-local under `TestEvidence/`.
-- Ownership safety contract: worker/owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
-- Cadence authority: replay tiering and overrides are governed by `Documentation/backlog/index.md` (`Global Replay Cadence Policy`).
+This runbook should list only item-specific exceptions or additions.
+
