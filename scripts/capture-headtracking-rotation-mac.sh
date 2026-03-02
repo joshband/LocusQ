@@ -17,6 +17,17 @@ COUNTDOWN_SEC=5
 VIDEO_DEVICE=""
 NO_EXTRACT=0
 OPEN_OUTPUT=0
+NO_CUES=0
+CUE_SPEECH=0
+
+CUE_TIMES_SEC=(0 12 24 36 48)
+CUE_MESSAGES=(
+  "Center and sync"
+  "Rotate clockwise to 90 degrees"
+  "Rotate clockwise to 180 degrees"
+  "Rotate clockwise to 225 degrees"
+  "Rotate clockwise to 270 degrees"
+)
 
 usage() {
   cat <<'USAGE'
@@ -33,12 +44,15 @@ Options:
   --countdown <seconds>       Countdown before recording starts (default: 5)
   --device <id-or-name>       AVFoundation video device (default: auto-detect screen)
   --no-extract                Do not extract still frames
+  --no-cues                   Disable timed rotation cues during recording
+  --cue-speech                Speak cues using macOS 'say' command
   --open-output               Open output folder when complete
   --help                      Show this message
 
 Examples:
   ./scripts/capture-headtracking-rotation-mac.sh
   ./scripts/capture-headtracking-rotation-mac.sh --duration 60 --extract-every 0.25
+  ./scripts/capture-headtracking-rotation-mac.sh --duration 60 --cue-speech
   ./scripts/capture-headtracking-rotation-mac.sh --device 1 --out-dir TestEvidence/rotation_run_a
 USAGE
 }
@@ -71,6 +85,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-extract)
       NO_EXTRACT=1
+      shift
+      ;;
+    --no-cues)
+      NO_CUES=1
+      shift
+      ;;
+    --cue-speech)
+      CUE_SPEECH=1
       shift
       ;;
     --open-output)
@@ -135,12 +157,22 @@ echo "duration_sec: $DURATION_SEC"
 echo "fps: $FPS"
 echo "extract_every_sec: $EXTRACT_EVERY_SEC"
 echo "device: $VIDEO_DEVICE"
+echo "cues: $([[ "$NO_CUES" -eq 1 ]] && echo disabled || echo enabled)"
+echo "cue_speech: $([[ "$CUE_SPEECH" -eq 1 ]] && echo enabled || echo disabled)"
 echo
 echo "Set up both apps side-by-side now:"
 echo "  - LocusQ Head-Tracking Companion"
 echo "  - LocusQ (CALIBRATE top view)"
 echo "Follow one clockwise pass: center -> 90 -> 180 -> 225 -> 270."
 echo
+
+if [[ "$NO_CUES" -eq 0 ]]; then
+  echo "Cue schedule:"
+  for idx in "${!CUE_TIMES_SEC[@]}"; do
+    printf "  t=%ss  %s\n" "${CUE_TIMES_SEC[$idx]}" "${CUE_MESSAGES[$idx]}"
+  done
+  echo
+fi
 
 if [[ "$COUNTDOWN_SEC" -gt 0 ]]; then
   for ((s=COUNTDOWN_SEC; s>=1; s--)); do
@@ -150,6 +182,26 @@ if [[ "$COUNTDOWN_SEC" -gt 0 ]]; then
 fi
 
 echo "Recording..."
+cue_pid=""
+if [[ "$NO_CUES" -eq 0 ]]; then
+  (
+    previous_time=0
+    cue_count="${#CUE_TIMES_SEC[@]}"
+    for ((idx=0; idx<cue_count; idx++)); do
+      cue_time="${CUE_TIMES_SEC[$idx]}"
+      cue_text="${CUE_MESSAGES[$idx]}"
+      delay="$(awk -v now="$cue_time" -v prev="$previous_time" 'BEGIN { d = now - prev; if (d < 0) d = 0; printf "%.3f", d }')"
+      sleep "$delay"
+      printf "[cue t=%ss] %s\n" "$cue_time" "$cue_text"
+      if [[ "$CUE_SPEECH" -eq 1 ]] && command -v say >/dev/null 2>&1; then
+        say "$cue_text" >/dev/null 2>&1 || true
+      fi
+      previous_time="$cue_time"
+    done
+  ) &
+  cue_pid="$!"
+fi
+
 set +e
 ffmpeg -y \
   -hide_banner \
@@ -164,6 +216,11 @@ ffmpeg -y \
   "$VIDEO_PATH" >"$RECORD_LOG" 2>&1
 record_ec=$?
 set -e
+
+if [[ -n "$cue_pid" ]]; then
+  kill "$cue_pid" >/dev/null 2>&1 || true
+  wait "$cue_pid" 2>/dev/null || true
+fi
 
 if [[ "$record_ec" -ne 0 ]]; then
   echo "ERROR: ffmpeg recording failed (exit ${record_ec}). See ${RECORD_LOG}" >&2
