@@ -2,9 +2,36 @@ Title: BL-030 Release Governance and Device Rerun
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-26
+Last Modified Date: 2026-03-02
 
 # BL-030: Release Governance and Device Rerun
+
+## Plain-Language Summary
+
+This runbook tracks **BL-030** (BL-030: Release Governance and Device Rerun). Current status: **In Validation (RL-09/RL-03/RL-04/RL-06 remain PASS; N13 owner replay reconcile is FAIL 3/3 with deterministic capture abort before rl05_gate_decision (capture exit 143), so RL-05 remains blocked)**. In plain terms: Operationalize a recurring release/device-rerun governance checklist that validates every release candidate across device profiles (quad studio, laptop stereo, headphone) before shipping.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-030: Release Governance and Device Rerun |
+| Why is this important? | Operationalize a recurring release/device-rerun governance checklist that validates every release candidate across device profiles (quad studio, laptop stereo, headphone) before shipping. |
+| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
+| When is it done? | This item is complete when required replay gates pass and owner promotion packet decisions are recorded without blockers. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-030-release-governance.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

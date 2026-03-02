@@ -2,9 +2,68 @@ Title: BL-058 Companion Profile Acquisition UI + HRTF Matching
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-058 Companion Profile Acquisition UI + HRTF Matching
+
+## Plain-Language Summary
+
+BL-058 focuses on a clear, operator-visible outcome: Build guided ear-photo capture UI in companion app (left ear + right ear + frontal), then ship a deterministic nearest-neighbor subject selection baseline for SADIE II mapping. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: In Implementation (reprioritized from code-review protocol/gating risk packet; QA harness authored).
+
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Headphone users, companion-app operators, QA/release owners, and audio-engine maintainers. |
+| What is changing? | Build guided ear-photo capture UI in companion app (left ear + right ear + frontal), then ship a deterministic nearest-neighbor subject selection baseline for SADIE II mapping. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: In Implementation (reprioritized from code-review protocol/gating risk packet; QA harness authored). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-058-companion-profile-acquisition.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
+
+## Evidence Visual Snapshot
+
+| Evidence Artifact | Purpose | Path |
+|---|---|---|
+| Runtime status packet | Capture pass/fail gate outcomes per run | `TestEvidence/bl058_manual_runtime_<timestamp>/status.tsv` |
+| Runtime results matrix | Capture per-step acquisition outcomes | `TestEvidence/bl058_manual_runtime_<timestamp>/results.tsv` |
+| Axis sweep notes | Capture operator-observed orientation behavior | `TestEvidence/bl058_manual_runtime_<timestamp>/axis_sweeps.md` |
+| Readiness decision | Capture promotion/no-go reasoning | `TestEvidence/bl058_manual_runtime_<timestamp>/readiness_gate.md` |
+
+```mermaid
+sequenceDiagram
+    participant U as Operator
+    participant C as Companion
+    participant P as Plugin
+    U->>C: Start profile acquisition
+    C->>P: Publish profile payload
+    P-->>U: Apply + report readiness state
+    U->>U: Record status/results/evidence packet
+```
 
 ## Status Ledger
 

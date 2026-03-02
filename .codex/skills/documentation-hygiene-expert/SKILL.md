@@ -7,7 +7,7 @@ Title: Documentation Hygiene Expert Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # Documentation Hygiene Expert
 
@@ -15,6 +15,7 @@ Use this skill when docs have become stale, duplicated, scattered, or hard to tr
 
 ## Goal
 Produce a lean, current, ADR-aligned documentation set that is easy to navigate and safe to operate during active SDLC work.
+Every backlog/runbook lifecycle document must also be understandable to non-technical readers while remaining machine-parseable for scripts and coding agents.
 
 ## When To Use
 - Documentation is bloated or duplicated across root folders, `Documentation/`, and feature/runbook surfaces.
@@ -89,6 +90,11 @@ Use both skills for high-impact cleanup:
    - Use precise language, avoid ambiguous claims, and remove filler.
    - Keep markdown consistent with repository metadata and formatting conventions.
    - Normalize API docs/examples and code-comment narrative where stale prose creates implementation risk.
+   - Enforce backlog readability contract:
+     - `## Plain-Language Summary`
+     - `## 6W Snapshot (Who/What/Why/How/When/Where)`
+     - `## Visual Aid Index`
+   - Add visuals only when they increase clarity (tables first; mermaid/images/charts/screenshots when needed).
 7. Publish governance outcome.
    - Record what moved, what merged, what was archived, and what was intentionally deferred.
    - Confirm freshness cadence (owner + trigger + review window) for critical docs.
@@ -102,6 +108,9 @@ Use both skills for high-impact cleanup:
      - `SKILLS.md`
      - `AGENT_RULE.md`
    - Escalate to `skill_docs` if governance metadata/sync contract updates are required.
+9. Validate readability tooling gates.
+   - `./scripts/validate-backlog-plain-language.sh`
+   - `./scripts/validate-docs-freshness.sh`
 
 ## Cross-Skill Routing
 - Pair with `skill_docs` for metadata/traceability/standards enforcement and root-doc sync.
@@ -116,6 +125,10 @@ Use both skills for high-impact cleanup:
   - unresolved follow-ups with owners.
 - ADR alignment summary for changed canonical docs.
 - Freshness contract summary (owner, cadence, trigger condition).
+- Backlog readability summary:
+  - plain-language coverage (open/done runbooks),
+  - 6W coverage,
+  - visual-aid coverage and rationale.
 - Git artifact hygiene summary:
   - tracked-ignored findings,
   - archive/history-bloat findings,

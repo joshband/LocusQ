@@ -3,10 +3,36 @@ Title: HX-05 Payload Budget and Throttle Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 ---
 
 # HX-05: Payload Budget and Throughput Contract
+
+## Plain-Language Summary
+
+This runbook tracks **BL-016** (HX-05: Payload Budget and Throughput Contract). Current status: **Done (owner sync packet finalized from Slice D promotion evidence)**. In plain terms: Define authoritative scene-state payload and bridge cadence limits so UI transport remains deterministic and bounded under load.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | HX-05: Payload Budget and Throughput Contract |
+| Why is this important? | Define authoritative scene-state payload and bridge cadence limits so UI transport remains deterministic and bounded under load. |
+| How will we deliver it? | Use the runbook steps, validation lanes, and evidence expectations to deliver and verify the work safely. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/hx-05-payload-budget.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Promotion gate table | Shows what passed/failed for closeout decisions. | `## Promotion Gate Summary` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

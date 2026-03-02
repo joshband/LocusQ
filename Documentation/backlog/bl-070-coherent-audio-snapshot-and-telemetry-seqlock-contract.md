@@ -6,6 +6,62 @@ Last Modified Date: 2026-03-02
 
 # BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 
+## Plain-Language Summary
+
+BL-070 focuses on a clear, operator-visible outcome: Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: Done-candidate (owner T2 5/5 + T3 10/10 execute replay PASS; closeout sync pending).
+
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, UI maintainers, and QA/release owners. |
+| What is changing? | Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: Done-candidate (owner T2 5/5 + T3 10/10 execute replay PASS; closeout sync pending). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
+
+## Evidence Visual Snapshot
+
+| Replay Stage | Result | Evidence |
+|---|---|---|
+| Owner intake execute replay | PASS | `TestEvidence/bl070_owner_intake_execute_20260302T011446Z/` |
+| Owner verify execute replay | PASS | `TestEvidence/bl070_owner_verify_execute_20260302T032812Z/` |
+| T2 candidate replay | PASS (`5/5`) | `TestEvidence/bl070_owner_t2_candidate_20260302T034928Z/t2_summary.tsv` |
+| T3 promotion replay | PASS (`10/10`) | `TestEvidence/bl070_owner_t3_promotion_20260302T035658Z/t3_summary.tsv` |
+
+```mermaid
+xychart-beta
+    title "BL-070 Owner Replay Coverage"
+    x-axis ["T2", "T3"]
+    y-axis "Passing Runs" 0 --> 10
+    bar [5, 10]
+```
+
 ## Status Ledger
 
 | Field | Value |

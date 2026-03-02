@@ -2,11 +2,37 @@ Title: BL-052 Steam Audio Virtual Surround + Quad Layout
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 Validated By: APC Codex
 Validation Date: 2026-02-28
 
 # BL-052 Steam Audio Virtual Surround + Quad Layout
+
+## Plain-Language Summary
+
+This runbook tracks **BL-052** (BL-052 Steam Audio Virtual Surround + Quad Layout). Current status: **Done (A1 harness PASS, test-phase gates PASS, done-archive sync PASS)**. In plain terms: Implement QuadSpeakerLayout enum and SteamAudioVirtualSurround class to render a quad speaker bed to stereo binaural via Steam Audio, and wire a deterministic monitoring mode switch (speakers / steam_binaural / virtual_binaural) in PluginProcessor.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-052 Steam Audio Virtual Surround + Quad Layout |
+| Why is this important? | Implement QuadSpeakerLayout enum and SteamAudioVirtualSurround class to render a quad speaker bed to stereo binaural via Steam Audio, and wire a deterministic monitoring mode switch (speakers / steam_binaural / virtual_binaural) in PluginProcessor. |
+| How will we deliver it? | Use the validation plan and evidence bundle contract in this runbook to prove behavior and safety before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-052-steam-audio-virtual-surround-quad-layout.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

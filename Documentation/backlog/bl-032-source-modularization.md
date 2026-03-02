@@ -2,9 +2,36 @@ Title: BL-032 Source Modularization of PluginProcessor/PluginEditor
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-032: Source Modularization of PluginProcessor/PluginEditor
+
+## Plain-Language Summary
+
+This runbook tracks **BL-032** (BL-032: Source Modularization of PluginProcessor/PluginEditor). Current status: **Done-candidate (Slice A/B/C1 complete; D1 closed BL032-G-001; D2 RT reconciliation PASS; E1 owner replay PASS Ready-for-In-Validation; F1 done-promotion PASS Done-candidate)**. In plain terms: Reduce maintenance and merge risk caused by oversized monolithic translation units by decomposing Source/PluginProcessor.cpp and Source/PluginEditor.cpp into coherent, testable modules with explicit ownership boundaries while preserving current behavior and realtime safety constraints.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-032: Source Modularization of PluginProcessor/PluginEditor |
+| Why is this important? | Reduce maintenance and merge risk caused by oversized monolithic translation units by decomposing Source/PluginProcessor.cpp and Source/PluginEditor.cpp into coherent, testable modules with explicit ownership boundaries while preserving current behavior and realtime safety constraints. |
+| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/bl-032-source-modularization.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

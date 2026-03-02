@@ -2,9 +2,47 @@ Title: BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068
+
+## Plain-Language Summary
+
+BL-073 focuses on a clear, operator-visible outcome: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: In Implementation (mode semantics and execute TODO-row enforcement scripts authored).
+
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | QA owners, release owners, and engineering maintainers who depend on deterministic evidence. |
+| What is changing? | Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: In Implementation (mode semantics and execute TODO-row enforcement scripts authored). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
 
 ## Status Ledger
 

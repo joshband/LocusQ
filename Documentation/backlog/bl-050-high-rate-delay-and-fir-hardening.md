@@ -6,6 +6,62 @@ Last Modified Date: 2026-03-02
 
 # BL-050 High-Rate Delay and FIR Hardening
 
+## Plain-Language Summary
+
+BL-050 focuses on a clear, operator-visible outcome: Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: Done-candidate (owner T1/T2/T3 replay PASS; final T3 10/10 lane_result/docs_freshness PASS; fir_profile WARN tracked).
+
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | DSP/engine maintainers, QA owners, and release owners protecting realtime safety. |
+| What is changing? | Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: Done-candidate (owner T1/T2/T3 replay PASS; final T3 10/10 lane_result/docs_freshness PASS; fir_profile WARN tracked). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-050-high-rate-delay-and-fir-hardening.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
+
+## Evidence Visual Snapshot
+
+| Replay Stage | Result | Evidence |
+|---|---|---|
+| Owner T1 replay | PASS (`3/3`) | `TestEvidence/bl050_owner_t1_20260301T234531Z/` |
+| Owner T2 candidate replay | PASS (`5/5`) | `TestEvidence/bl050_owner_t2_candidate_20260302T035502Z/` |
+| Owner T3 final replay | PASS (`10/10`) | `TestEvidence/bl050_owner_t3_final_20260302T041920Z/` |
+
+```mermaid
+xychart-beta
+    title "BL-050 Owner Replay Pass Counts"
+    x-axis ["T1", "T2", "T3"]
+    y-axis "Passing Runs" 0 --> 10
+    bar [3, 5, 10]
+```
+
 ## Status Ledger
 
 | Field | Value |

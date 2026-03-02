@@ -167,6 +167,14 @@ main() {
   check_markdown_metadata_scope
   check_generated_doc_output_dirs
 
+  if [[ -x "./scripts/validate-backlog-plain-language.sh" ]]; then
+    if ! ./scripts/validate-backlog-plain-language.sh; then
+      error "Backlog readability contract checks failed"
+    fi
+  else
+    warn "Backlog readability validator not found or not executable: ./scripts/validate-backlog-plain-language.sh"
+  fi
+
   local status_date
   status_date="$(extract_status_date || true)"
   if [[ -n "${status_date}" ]]; then

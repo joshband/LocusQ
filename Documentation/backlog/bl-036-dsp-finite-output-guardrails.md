@@ -2,9 +2,66 @@ Title: BL-036 DSP Finite Output Guardrails
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # BL-036 DSP Finite Output Guardrails
+
+## Plain-Language Summary
+
+BL-036 focuses on a clear, operator-visible outcome: Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green).
+
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | QA owners, release owners, and engineering maintainers who depend on deterministic evidence. |
+| What is changing? | Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-036-dsp-finite-output-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Implementation slices table | Explains step-by-step delivery order and boundaries. | `## Implementation Slices` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
+
+## Evidence Visual Snapshot
+
+| Replay Stage | Result | Evidence |
+|---|---|---|
+| B1 contract replay (`runs=3`) | PASS (`3/3`) | `TestEvidence/bl036_slice_b1_lane_20260227T005722Z/status.tsv` |
+| C4 sentinel replay (`runs=50`) | PASS (`50/50`) | `TestEvidence/bl036_slice_c4_soak_20260227T013722Z/status.tsv` |
+| D1 done-candidate replay (`runs=75`) | PASS (`75/75`) | `TestEvidence/bl036_slice_d1_done_candidate_20260227T183420Z/status.tsv` |
+| D2 done-promotion replay (`runs=100`) | PASS (`100/100`) | `TestEvidence/bl036_slice_d2_done_promotion_20260227T201716Z/status.tsv` |
+
+```mermaid
+xychart-beta
+    title "BL-036 Deterministic Replay Coverage"
+    x-axis ["B1", "C4", "D1", "D2"]
+    y-axis "Runs" 0 --> 100
+    bar [3, 50, 75, 100]
+```
 
 ## Status Ledger
 

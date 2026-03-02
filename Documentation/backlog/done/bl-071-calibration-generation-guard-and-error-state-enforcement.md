@@ -2,9 +2,35 @@ Title: BL-071 Calibration Generation Guard and Error-State Enforcement
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-071 Calibration Generation Guard and Error-State Enforcement
+
+## Plain-Language Summary
+
+This runbook tracks **BL-071** (BL-071 Calibration Generation Guard and Error-State Enforcement). Current status: **Done (execute + T2 + T3 packets pass; owner promotion decision recorded; done archive sync complete)**. In plain terms: Harden calibration lifecycle correctness by enforcing generation isolation across abort/restart transitions, guaranteeing explicit error-state behavior for invalid analysis, and publishing thread-safe immutable progress/result snapshots.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-071 Calibration Generation Guard and Error-State Enforcement |
+| Why is this important? | Harden calibration lifecycle correctness by enforcing generation isolation across abort/restart transitions, guaranteeing explicit error-state behavior for invalid analysis, and publishing thread-safe immutable progress/result snapshots. |
+| How will we deliver it? | Use the validation plan and evidence bundle contract in this runbook to prove behavior and safety before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-071-calibration-generation-guard-and-error-state-enforcement.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

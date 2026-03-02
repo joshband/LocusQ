@@ -2,9 +2,35 @@ Title: BL-021 Room-Story Overlays
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-021 Room-Story Overlays
+
+## Plain-Language Summary
+
+This runbook tracks **BL-021** (BL-021 Room-Story Overlays). Current status: **In Implementation (C4 execute-mode parity packet PASS at 20260228T170131Z; C4b post-R1 non-interference packet PASS at 20260228T202813Z; owner intake/promotion decision pending)**. In plain terms: Define a deterministic room-story overlay contract for the viewport so room analysis data can be rendered predictably, degrade safely on partial payloads, and be validated with replayable acceptance criteria.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-021 Room-Story Overlays |
+| Why is this important? | Define a deterministic room-story overlay contract for the viewport so room analysis data can be rendered predictably, degrade safely on partial payloads, and be validated with replayable acceptance criteria. |
+| How will we deliver it? | Use the validation plan and evidence bundle contract in this runbook to prove behavior and safety before promotion. |
+| When is it done? | This item is complete when required acceptance criteria, validation lanes, and evidence synchronization are all marked pass. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/bl-021-room-story-overlays.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

@@ -35,8 +35,14 @@ Applies to all remaining open items and all future backlog items.
 7. Evidence for canonical promotions must be repo-local under `TestEvidence/` (not `/tmp` paths).
 8. Conformance scope:
    - Active/open runbooks (`Documentation/backlog/bl-*.md`) must satisfy current lifecycle and replay-cadence contract.
-   - Legacy done runbooks under `Documentation/backlog/done/` are grandfathered; retrofit is optional unless touched for a new promotion/change.
+   - Done runbooks under `Documentation/backlog/done/` must preserve closeout evidence while satisfying lifecycle readability contract.
    - Backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields and must link to their canonical runbook authority.
+9. Backlog readability contract applies to open + done runbooks:
+   - required headings: `Plain-Language Summary`, `6W Snapshot (Who/What/Why/How/When/Where)`, `Visual Aid Index`;
+   - visuals are required only when they improve clarity (tables first, optional mermaid/images/charts/screenshots when needed).
+10. New-item scaffolding helper:
+   - `./scripts/new-backlog-item.py --id BL-078 --title \"Example Item\" --priority P1 --track \"Track E - R&D Expansion\"`
+   - This script pre-fills metadata plus plain-language/6W scaffolding for intake and runbook docs.
 
 ## Layer Model
 

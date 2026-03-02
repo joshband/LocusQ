@@ -9,7 +9,7 @@ Last Modified Date: 2026-03-01
 
 ## Purpose
 Keep documentation lean, canonical, and current while preserving traceability from specs to code to validation evidence.
-Backlog model: `Documentation/backlog/index.md` is the single backlog catalog authority; individual runbook docs in `Documentation/backlog/` hold execution detail and agent prompts; lifecycle templates (`_template-intake.md`, `_template-runbook.md`, `_template-promotion-decision.md`, `_template-closeout.md`) are the required process contract for future and remaining backlog work; annex plan specs in `Documentation/plans/` hold deep architecture.
+Backlog model: `Documentation/backlog/index.md` is the single backlog catalog authority; individual runbook docs in `Documentation/backlog/` hold execution detail and agent prompts; lifecycle templates (`_template-intake.md`, `_template-runbook.md`, `_template-promotion-decision.md`, `_template-closeout.md`) are the required process contract for future and remaining backlog work; annex plan specs in `Documentation/plans/` hold deep architecture. Backlog lifecycle docs must include plain-language + 6W + visual-aid sections so non-technical readers and agents/scripts can consume the same document safely.
 
 ## Source-of-Truth Tiers
 

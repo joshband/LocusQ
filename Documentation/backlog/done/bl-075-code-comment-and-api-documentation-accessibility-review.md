@@ -2,9 +2,35 @@ Title: BL-075 Code Comment and API Documentation Accessibility Review
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # BL-075 Code Comment and API Documentation Accessibility Review
+
+## Plain-Language Summary
+
+This runbook tracks **BL-075** (BL-075 Code Comment and API Documentation Accessibility Review). Current status: **Done (execute + T2 + T3 packets pass; owner promotion decision recorded; done archive sync complete)**. In plain terms: Run a structured review of in-code comments and LocusQ API documentation so non-obvious runtime logic, threading/RT decisions, and integration contracts are discoverable and understandable for contributors (human and AI).
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | BL-075 Code Comment and API Documentation Accessibility Review |
+| Why is this important? | Run a structured review of in-code comments and LocusQ API documentation so non-obvious runtime logic, threading/RT decisions, and integration contracts are discoverable and understandable for contributors (human and AI). |
+| How will we deliver it? | Use the validation plan and evidence bundle contract in this runbook to prove behavior and safety before promotion. |
+| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-075-code-comment-and-api-documentation-accessibility-review.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status Ledger table | Gives a fast plain-language view of priority, state, dependencies, and ownership. | `## Status Ledger` |
+| Validation table | Shows exactly how we verify success and safety. | `## Validation Plan` |
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Status Ledger
 

@@ -6,6 +6,31 @@ Last Modified Date: [YYYY-MM-DD]
 
 # Intake: [SHORT TITLE]
 
+## Plain-Language Summary
+
+[1-3 sentences in non-technical language explaining what changes for people and why this matters now.]
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | [End users / operators / QA / release owners / coding agents] |
+| What is changing? | [Simple statement of the change] |
+| Why is this important? | [Risk reduction, user value, quality, or delivery reason] |
+| How will we approach it? | [High-level implementation + validation approach] |
+| When is it considered complete? | [Done signal in plain language] |
+| Where is the source of truth? | [`Documentation/backlog/...` + `TestEvidence/...`] |
+
+## Visual Aid Plan
+
+Use visuals only when they improve understanding.
+
+| Visual Aid | Why it helps | Planned location |
+|---|---|---|
+| Table | Fast status/dependency scan for humans and agents | This intake doc |
+| Mermaid diagram (optional) | Explain sequence/ownership when text is hard to follow | `## Visual Diagram` |
+| Screenshot/chart (optional) | Clarify UI or metric behavior | `TestEvidence/...` with linked path |
+
 ## Origin
 
 | Field | Value |
@@ -58,4 +83,5 @@ Last Modified Date: [YYYY-MM-DD]
 - [ ] Add row to `Documentation/backlog/index.md`
 - [ ] Record replay tier + run budget in promoted runbook
 - [ ] Define owner packet template usage and done closeout path
+- [ ] Confirm plain-language summary + 6W + visual aid plan are complete and understandable by non-technical readers
 - [ ] Archive this intake doc

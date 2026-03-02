@@ -8,18 +8,20 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-This runbook tracks **BL-077** (BL-077 Unified Visual Capture and Replay Harness). Current status: **In Planning (P0 user-priority intake promoted to runbook)**. In plain terms: build a single, robust, one-command capture workflow for screenshots, video, cue-guided rotation drills, and post-processing so validation does not require manual still-taking or fragile ad-hoc steps.
+BL-077 focuses on a clear, operator-visible outcome: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. This matters because it improves reliability and decision confidence for nearby release lanes. Current state: In Planning (P0 user-priority intake promoted to runbook; implementation slices defined).
+
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
-| Who is this for? | Plugin users/operators, QA/release owners, and coding agents that need fast reproducible visual evidence. |
-| What is changing? | BL-077 Unified Visual Capture and Replay Harness |
-| Why is this important? | Manual capture is slowing validation and missing transient issues between named checkpoints; this creates a deterministic, low-friction evidence path for many backlog lanes. |
-| How will we deliver it? | Ship a profile-driven capture toolkit with guided cues, automatic frame/clip extraction, checkpoint labeling, and lane-ready evidence bundles. |
-| When is it done? | It is done when validation lanes can trigger one command and receive complete, readable visual evidence artifacts without manual stitching. |
-| Where is the source of truth? | Runbook: `Documentation/backlog/bl-077-unified-visual-capture-and-replay-harness.md` plus evidence under `TestEvidence/bl077_*/`. |
+| Who is this for? | Headphone users, companion-app operators, QA/release owners, and audio-engine maintainers. |
+| What is changing? | Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: In Planning (P0 user-priority intake promoted to runbook; implementation slices defined). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-077-unified-visual-capture-and-replay-harness.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
 
 ## Visual Aid Index
 
@@ -31,6 +33,34 @@ Use visuals only when they improve understanding; prefer compact tables first.
 | Implementation slices table | Clarifies staged rollout and ownership boundaries. | `## Implementation Slices` |
 | Capture pipeline diagram (optional) | Useful when orchestration flow gets dense. | `## Architecture Context` |
 | Example contact sheets + clips | Proves operator-ready evidence format. | `TestEvidence/bl077_*/` |
+| Evidence visual snapshot | Shows latest evidence packets and replay outcomes in one glance. | `## Evidence Visual Snapshot` |
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Plan scope and dependencies] --> B[Implement slices]
+    B --> C[Run validation and replay lanes]
+    C --> D[Review evidence packet]
+    D --> E[Promote, hold, or close with owner decision]
+```
+
+## Evidence Visual Snapshot
+
+| Target Artifact | Why it matters | Path |
+|---|---|---|
+| Run-level status | Fast PASS/FAIL visibility for operators and agents | `TestEvidence/bl077_capture_harness_<timestamp>/status.tsv` |
+| Capture contract matrix | Confirms capture profile + cue contract behavior | `TestEvidence/bl077_capture_harness_<timestamp>/capture_contract_matrix.tsv` |
+| Artifact schema inventory | Confirms all expected visual outputs are present | `TestEvidence/bl077_capture_harness_<timestamp>/artifact_schema_inventory.tsv` |
+| Contact-sheet/clip samples | Human-reviewable visual proof for promotion packets | `TestEvidence/bl077_capture_harness_<timestamp>/` |
+
+```mermaid
+flowchart LR
+    A[Guided capture run] --> B[Frame + checkpoint extraction]
+    B --> C[Contact sheets + cue clips]
+    C --> D[Machine-readable summary TSV/JSON]
+    D --> E[Owner promotion review]
+```
 
 ## Status Ledger
 

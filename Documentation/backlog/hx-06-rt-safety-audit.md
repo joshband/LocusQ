@@ -2,9 +2,33 @@ Title: HX-06 RT Safety Audit Reconciliation Ledger
 Document Type: Backlog Support
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-02
 
 # HX-06 RT Safety Audit Reconciliation Ledger
+
+## Plain-Language Summary
+
+This support ledger tracks **HX-06** reconciliation updates for RT-safety audit allowlists. Current status: **Open**. In plain terms: it records recurring audit cleanups and evidence links so operators and agents can quickly confirm ongoing RT-safety hygiene.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
+| What is changing? | HX-06 RT Safety Audit Reconciliation Ledger |
+| Why is this important? | This runbook defines a scoped change with explicit validation and evidence requirements. |
+| How will we deliver it? | Use the runbook steps, validation lanes, and evidence expectations to deliver and verify the work safely. |
+| When is it done? | This item is complete when required acceptance criteria, validation lanes, and evidence synchronization are all marked pass. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/hx-06-rt-safety-audit.md` plus repo-local evidence under `TestEvidence/...`. |
+
+## Visual Aid Index
+
+Use visuals only when they improve understanding; prefer compact tables first.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Optional diagram/screenshot/chart | Use only when it makes complex behavior easier to understand than text alone. | Link under the most relevant section (usually validation or evidence). |
+
 
 ## Purpose
 

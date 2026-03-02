@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-02
 
 # Documentation Standards
 
@@ -65,9 +65,37 @@ Applies to all remaining open backlog items and all future backlog items.
 4. Done transitions must use `Documentation/backlog/_template-closeout.md` and move runbooks to `Documentation/backlog/done/bl-XXX-*.md` in the same change set as index/status/evidence sync.
 5. Done/closeout evidence is not valid when canonical promotion artifacts only exist in `/tmp`; canonical copies must be under repository `TestEvidence/`.
 6. Conformance scope:
-   - active/open runbooks (`Documentation/backlog/bl-*.md`) must satisfy the current runbook schema and cadence policy;
-   - legacy done runbooks (`Documentation/backlog/done/*.md`) are grandfathered and need not be bulk-retrofitted unless touched;
+   - active/open runbooks (`Documentation/backlog/bl-*.md`, `Documentation/backlog/hx-*.md`) must satisfy the current runbook schema and cadence policy;
+   - done runbooks (`Documentation/backlog/done/*.md`) must preserve closeout evidence while conforming to readability schema;
    - backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields but must preserve canonical runbook linkage.
+
+## Backlog Plain-Language and Visual Clarity Standard
+
+Applies to backlog lifecycle documents:
+- `Documentation/backlog/_template-intake.md`
+- `Documentation/backlog/_template-runbook.md`
+- `Documentation/backlog/_template-closeout.md`
+- `Documentation/backlog/_template-promotion-decision.md`
+- open runbooks (`Documentation/backlog/bl-*.md`, `Documentation/backlog/hx-*.md`)
+- done runbooks (`Documentation/backlog/done/*.md`)
+
+Required sections:
+1. `## Plain-Language Summary`
+2. `## 6W Snapshot (Who/What/Why/How/When/Where)`
+3. `## Visual Aid Index`
+
+Visual policy:
+1. Use visuals only when they improve understanding.
+2. Prefer compact tables first.
+3. Add mermaid diagrams, screenshots, images, or charts only when they reduce ambiguity better than prose.
+4. Link visual evidence to repo-local artifacts (`TestEvidence/...`) when applicable.
+
+Validation:
+1. `./scripts/validate-backlog-plain-language.sh`
+2. `./scripts/validate-docs-freshness.sh`
+
+Recommended scaffolding helper for new items:
+1. `./scripts/new-backlog-item.py --id BL-078 --title "Example Item" --priority P1 --track "Track E - R&D Expansion"`
 
 ## Backlog Validation Cadence Standard
 
