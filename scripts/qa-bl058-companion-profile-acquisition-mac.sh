@@ -22,6 +22,7 @@ STATUS_TSV=""
 RESULTS_TSV=""
 AXIS_SWEEPS_MD=""
 READINESS_GATE_MD=""
+CAPTURE_CONSUMER_BRIDGE_TSV=""
 
 pass_count=0
 fail_count=0
@@ -43,6 +44,7 @@ Outputs:
   results.tsv
   axis_sweeps.md
   readiness_gate.md
+  capture_consumer_bridge.tsv
 USAGE
 }
 
@@ -133,12 +135,15 @@ STATUS_TSV="${OUT_DIR}/status.tsv"
 RESULTS_TSV="${OUT_DIR}/results.tsv"
 AXIS_SWEEPS_MD="${OUT_DIR}/axis_sweeps.md"
 READINESS_GATE_MD="${OUT_DIR}/readiness_gate.md"
+CAPTURE_CONSUMER_BRIDGE_TSV="${OUT_DIR}/capture_consumer_bridge.tsv"
 
 printf "check_id\tresult\tdetail\tartifact\n" > "$STATUS_TSV"
 printf "check\tresult\tdetail\n" > "$RESULTS_TSV"
+printf "check\tresult\tdetail\tartifact\n" > "$CAPTURE_CONSUMER_BRIDGE_TSV"
 
 BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-058-companion-profile-acquisition.md"
 COMPANION_MAIN="${ROOT_DIR}/companion/Sources/LocusQHeadTrackingCompanion/main.swift"
+BL077_CAPTURE_SCRIPT="${ROOT_DIR}/scripts/capture-headtracking-rotation-mac.sh"
 
 if [[ -f "$BACKLOG_DOC" ]]; then
   record "BL058-C1-backlog_doc_exists" "PASS" "runbook present" "$BACKLOG_DOC"
@@ -158,6 +163,61 @@ if rg -q 'active_not_ready|active_ready|disabled_disconnected' "$BACKLOG_DOC"; t
 else
   printf "readiness_state_contract\tFAIL\tstate-machine identifiers missing from runbook\n" >> "$RESULTS_TSV"
   record "BL058-C3-readiness_state_contract" "FAIL" "runbook readiness contract missing" "$BACKLOG_DOC"
+fi
+
+if [[ -x "$BL077_CAPTURE_SCRIPT" ]]; then
+  record "BL058-C4-bl077_capture_script_exists" "PASS" "BL-077 capture harness script is executable" "$BL077_CAPTURE_SCRIPT"
+else
+  record "BL058-C4-bl077_capture_script_exists" "FAIL" "BL-077 capture harness script missing or not executable" "$BL077_CAPTURE_SCRIPT"
+fi
+
+BL077_CONSUMER_DIR="${OUT_DIR}/bl077_capture_contract"
+BL077_CONSUMER_STDOUT="${BL077_CONSUMER_DIR}/stdout.log"
+BL077_CONSUMER_STDERR="${BL077_CONSUMER_DIR}/stderr.log"
+mkdir -p "$BL077_CONSUMER_DIR"
+
+bl077_consumer_result="FAIL"
+bl077_consumer_detail="capture harness contract probe failed"
+
+if [[ -x "$BL077_CAPTURE_SCRIPT" ]]; then
+  set +e
+  "$BL077_CAPTURE_SCRIPT" \
+    --out-dir "$BL077_CONSUMER_DIR" \
+    --profile dense \
+    --dry-run \
+    --no-cues >"$BL077_CONSUMER_STDOUT" 2>"$BL077_CONSUMER_STDERR"
+  bl077_capture_ec=$?
+  set -e
+
+  bl077_manifest="${BL077_CONSUMER_DIR}/session_manifest.json"
+  bl077_inventory="${BL077_CONSUMER_DIR}/artifact_schema_inventory.tsv"
+  bl077_hashes="${BL077_CONSUMER_DIR}/replay_hashes.tsv"
+  bl077_checkpoint_map="${BL077_CONSUMER_DIR}/checkpoint_frame_map.tsv"
+
+  if [[ "$bl077_capture_ec" -eq 0 && -f "$bl077_manifest" && -f "$bl077_inventory" && -f "$bl077_hashes" && -f "$bl077_checkpoint_map" ]]; then
+    bl077_consumer_result="PASS"
+    bl077_consumer_detail="BL-058 consumed BL-077 capture harness contract artifacts"
+  else
+    bl077_consumer_result="FAIL"
+    bl077_consumer_detail="BL-077 probe exit=${bl077_capture_ec}; required artifacts missing"
+  fi
+else
+  bl077_consumer_result="FAIL"
+  bl077_consumer_detail="BL-077 capture harness script unavailable"
+fi
+
+printf "bl077_capture_contract_probe\t%s\t%s\t%s\n" \
+  "$bl077_consumer_result" \
+  "$bl077_consumer_detail" \
+  "$BL077_CONSUMER_DIR" \
+  >> "$CAPTURE_CONSUMER_BRIDGE_TSV"
+
+if [[ "$bl077_consumer_result" == "PASS" ]]; then
+  printf "bl077_capture_contract_probe\tPASS\tBL-058 invokes BL-077 harness in contract mode\n" >> "$RESULTS_TSV"
+  record "BL058-C5-bl077_capture_consumer_contract" "PASS" "$bl077_consumer_detail" "$CAPTURE_CONSUMER_BRIDGE_TSV"
+else
+  printf "bl077_capture_contract_probe\tFAIL\tBL-058 failed to invoke BL-077 harness contract path\n" >> "$RESULTS_TSV"
+  record "BL058-C5-bl077_capture_consumer_contract" "FAIL" "$bl077_consumer_detail" "$CAPTURE_CONSUMER_BRIDGE_TSV"
 fi
 
 printf "manual_capture_flow\tTODO\tcompanion manual runtime packet pending\n" >> "$RESULTS_TSV"
@@ -214,6 +274,7 @@ echo "- $STATUS_TSV"
 echo "- $RESULTS_TSV"
 echo "- $AXIS_SWEEPS_MD"
 echo "- $READINESS_GATE_MD"
+echo "- $CAPTURE_CONSUMER_BRIDGE_TSV"
 
 if [[ "$fail_count" -gt 0 ]]; then
   exit 1

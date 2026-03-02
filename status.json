@@ -2128,8 +2128,9 @@
     "bl077_unified_visual_capture_design_spec": "Documentation/plans/bl-077-unified-visual-capture-harness-design-spec-2026-03-02.md",
     "bl077_unified_visual_capture_design_handoff": "Documentation/plans/bl-077-capture-harness-design-2026-03-02/HANDOFF.md",
     "bl077_capture_harness_script": "scripts/qa-bl077-capture-harness-mac.sh",
-    "bl077_capture_harness_status": "in_implementation_2026-03-02_wave_b_postprocess_packager_checkpoint_frames_contact_sheets_cue_clips_authored",
+    "bl077_capture_harness_status": "in_implementation_2026-03-02_wave_c_bl058_consumer_integration_contract_pass",
     "bl077_capture_harness_profiles_dir": "scripts/capture_profiles",
+    "bl077_capture_harness_required_consumer": "bl058_contract_pass_2026-03-02",
     "bl073_truthfulness_gate_script": "scripts/qa-bl073-scaffold-truthfulness-gates-mac.sh",
     "bl073_truthfulness_gate_status": "in_implementation_2026-03-01_mode_semantics_and_todo_enforcement_authored",
     "bl069_rt_safe_harness_script": "scripts/qa-bl069-rt-safe-preset-pipeline-mac.sh",
@@ -2173,7 +2174,7 @@
     "bl075_doc_accessibility_promotion_t3_decision_md": "TestEvidence/bl075_promotion_t3_20260301T220915Z/promotion_decision.md",
     "bl075_doc_accessibility_runbook": "Documentation/backlog/done/bl-075-code-comment-and-api-documentation-accessibility-review.md",
     "bl058_profile_acquisition_harness_script": "scripts/qa-bl058-companion-profile-acquisition-mac.sh",
-    "bl058_profile_acquisition_harness_status": "authored_2026-03-01_contract_execute_modes",
+    "bl058_profile_acquisition_harness_status": "integrated_2026-03-02_bl077_capture_consumer_contract",
     "bl059_integration_smoke_harness_status": "upgraded_2026-03-01_contract_execute_modes"
   }
 }

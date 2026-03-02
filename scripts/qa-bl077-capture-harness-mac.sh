@@ -110,6 +110,20 @@ count_todo_rows() {
   ' "$file"
 }
 
+count_integration_blockers() {
+  local file="$1"
+  [[ -f "$file" ]] || {
+    echo 0
+    return
+  }
+
+  awk -F'\t' '
+    NR == 1 { next }
+    $3 == "yes" && $2 != "PASS" { count++ }
+    END { print count + 0 }
+  ' "$file"
+}
+
 get_hash_value() {
   local tsv_file="$1"
   local key="$2"
@@ -255,11 +269,12 @@ printf "run_id\tmode\tresult\texit_code\tprofile_contract_hash\tcue_schedule_has
 printf "profile\tresult\texit_code\tcue_count\tcue_schedule_hash\tartifact_dir\n" > "$CUE_PROFILE_MATRIX_TSV"
 printf "run_id\tartifact_id\trelative_path\trequired_in_execute\tpresent\tsize_bytes\tsha256\tnotes\n" > "$ARTIFACT_SCHEMA_INVENTORY_TSV"
 printf "run_id\tkey\tvalue\tdetail\n" > "$REPLAY_HASHES_TSV"
-printf "consumer_id\tstatus\tdetail\n" > "$INTEGRATION_CONSUMERS_TSV"
+printf "consumer_id\tstatus\tblocking\tdetail\tartifact\n" > "$INTEGRATION_CONSUMERS_TSV"
 
 CAPTURE_SCRIPT="${ROOT_DIR}/scripts/capture-headtracking-rotation-mac.sh"
 PROFILE_DIR="${ROOT_DIR}/scripts/capture_profiles"
 SELECTED_PROFILE_FILE="${PROFILE_DIR}/${PROFILE_NAME}.json"
+BL058_SCRIPT="${ROOT_DIR}/scripts/qa-bl058-companion-profile-acquisition-mac.sh"
 
 if [[ -x "$CAPTURE_SCRIPT" ]]; then
   record "BL077-PRE-capture_script" "PASS" "capture script is executable" "$CAPTURE_SCRIPT"
@@ -390,12 +405,47 @@ else
   record "BL077-C1-hash_stability" "FAIL" "hash stability mismatch profile=${hash_unique_profile} cue=${hash_unique_cue} contract=${hash_unique_contract} postprocess=${hash_unique_postprocess}" "$CAPTURE_CONTRACT_MATRIX_TSV"
 fi
 
-printf "BL058\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
-printf "BL059\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
-printf "BL060\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
-printf "BL067\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
-printf "BL068\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
-printf "BL074\tTODO\tcapture lane integration wiring pending Wave C\n" >> "$INTEGRATION_CONSUMERS_TSV"
+BL058_CONSUMER_OUT="${OUT_DIR}/integration_bl058"
+BL058_CONSUMER_STATUS="${BL058_CONSUMER_OUT}/status.tsv"
+bl058_consumer_status="FAIL"
+bl058_consumer_detail="BL-058 consumer lane not executed"
+
+if [[ -x "$BL058_SCRIPT" ]]; then
+  mkdir -p "$BL058_CONSUMER_OUT"
+  set +e
+  "$BL058_SCRIPT" --contract-only --out-dir "$BL058_CONSUMER_OUT" >"${BL058_CONSUMER_OUT}/stdout.log" 2>"${BL058_CONSUMER_OUT}/stderr.log"
+  bl058_ec=$?
+  set -e
+
+  if [[ "$bl058_ec" -eq 0 && -f "$BL058_CONSUMER_STATUS" ]] && awk -F'\t' 'NR > 1 && $1 == "lane_result" && $2 == "PASS" { found=1 } END { exit(found ? 0 : 1) }' "$BL058_CONSUMER_STATUS"; then
+    bl058_consumer_status="PASS"
+    bl058_consumer_detail="BL-058 contract lane consumes BL-077 capture harness"
+  else
+    bl058_consumer_status="FAIL"
+    bl058_consumer_detail="BL-058 lane did not produce PASS consumer result (exit=${bl058_ec})"
+  fi
+else
+  bl058_consumer_status="FAIL"
+  bl058_consumer_detail="BL-058 script missing or not executable"
+fi
+
+printf "BL058\t%s\tyes\t%s\t%s\n" \
+  "$bl058_consumer_status" \
+  "$bl058_consumer_detail" \
+  "$BL058_CONSUMER_OUT" \
+  >> "$INTEGRATION_CONSUMERS_TSV"
+
+if [[ "$bl058_consumer_status" == "PASS" ]]; then
+  record "BL077-I1-bl058_consumer" "PASS" "$bl058_consumer_detail" "$INTEGRATION_CONSUMERS_TSV"
+else
+  record "BL077-I1-bl058_consumer" "FAIL" "$bl058_consumer_detail" "$INTEGRATION_CONSUMERS_TSV"
+fi
+
+printf "BL059\tPLANNED\tno\tconsumer integration planned for Wave C follow-on\t-\n" >> "$INTEGRATION_CONSUMERS_TSV"
+printf "BL060\tPLANNED\tno\tconsumer integration planned for Wave C follow-on\t-\n" >> "$INTEGRATION_CONSUMERS_TSV"
+printf "BL067\tPLANNED\tno\tconsumer integration planned for Wave C follow-on\t-\n" >> "$INTEGRATION_CONSUMERS_TSV"
+printf "BL068\tPLANNED\tno\tconsumer integration planned for Wave C follow-on\t-\n" >> "$INTEGRATION_CONSUMERS_TSV"
+printf "BL074\tPLANNED\tno\tconsumer integration planned for Wave C follow-on\t-\n" >> "$INTEGRATION_CONSUMERS_TSV"
 
 cat > "$EXTENSION_CONTRACT_MD" <<EOF_EXTENSION
 Title: BL-077 Extension Contract (audio-plugin-coder + audio-dsp-qa-harness)
@@ -415,24 +465,22 @@ Last Modified Date: ${DATE_UTC}
 1. Invocation stays CLI-first (\`capture-headtracking-rotation-mac.sh\`), so downstream harnesses can call without plugin-internal imports.
 2. Profile schema is declarative JSON (\`locusq-capture-profile-v1\`) with deterministic cue-point ordering.
 3. Session artifacts always include machine-readable manifest, artifact inventory, replay hash tables, checkpoint-frame maps, contact-sheet indices, and cue-window clip indices.
-4. Execute-mode promotion remains blocked while integration consumers stay \`TODO\`.
+4. Execute-mode promotion remains blocked while required integration consumers (blocking=yes) are unresolved.
 EOF_EXTENSION
 
 record "BL077-C2-extension_contract" "PASS" "extension contract artifact written" "$EXTENSION_CONTRACT_MD"
 
-todo_rows="$((
-  $(count_todo_rows "$CAPTURE_CONTRACT_MATRIX_TSV")
-  + $(count_todo_rows "$INTEGRATION_CONSUMERS_TSV")
-))"
+todo_rows_capture="$(count_todo_rows "$CAPTURE_CONTRACT_MATRIX_TSV")"
+integration_blockers="$(count_integration_blockers "$INTEGRATION_CONSUMERS_TSV")"
 
 if [[ "$MODE" == "execute" ]]; then
-  if [[ "$todo_rows" -gt 0 ]]; then
-    record "BL077-E1-execute_todo_rows" "FAIL" "execute mode requires zero TODO rows (found=${todo_rows})" "$STATUS_TSV"
+  if [[ "$todo_rows_capture" -gt 0 || "$integration_blockers" -gt 0 ]]; then
+    record "BL077-E1-execute_todo_rows" "FAIL" "execute mode requires zero TODO run rows and zero required integration blockers (todo_rows=${todo_rows_capture},integration_blockers=${integration_blockers})" "$STATUS_TSV"
   else
     record "BL077-E1-execute_todo_rows" "PASS" "execute mode has zero TODO rows" "$STATUS_TSV"
   fi
 else
-  record "BL077-C3-contract_mode" "PASS" "contract-only mode completed scaffold checks (todo_rows=${todo_rows})" "$STATUS_TSV"
+  record "BL077-C3-contract_mode" "PASS" "contract-only mode completed scaffold checks (todo_rows=${todo_rows_capture},integration_blockers=${integration_blockers})" "$STATUS_TSV"
 fi
 
 if [[ "$fail_count" -eq 0 ]]; then
