@@ -46,7 +46,7 @@ Out of scope:
 ## TODOs
 
 - [x] Validate and adjust delay max bounds for 192kHz support.
-- [ ] Define partitioned FIR migration contract (latency/cpu/quality bounds).
+- [x] Define partitioned FIR migration contract (latency/cpu/quality bounds).
 - [x] Add high-rate soak lane for delay + FIR paths.
 - [x] Add deterministic failure taxonomy for high-rate regressions.
 - [ ] Capture promotion evidence and update runbook status.
@@ -59,6 +59,16 @@ Out of scope:
 - Packet highlights: build PASS; high-rate delay matrix PASS across 44.1/48/88.2/96/192 kHz; FIR profile runs completed with WARN rows at 44.1/48/88.2 kHz from allocation metrics.
 - Docs-freshness blocker from BL-035 evidence metadata debt was resolved by owner reconciliation (`b446af5b`).
 - Owner T1 replay packet: `TestEvidence/bl050_owner_t1_20260301T234531Z/` with `3/3` lane passes (`run_01..run_03` all `lane_result=PASS`, `docs_freshness=PASS`, `fir_profile=PASS`).
+
+## Slice B Contract Snapshot (2026-03-01)
+
+- Partitioned FIR migration bounds are now defined in:
+  - `Documentation/plans/bl-050-partitioned-fir-migration-contract-2026-03-01.md`
+- Contract includes:
+  - engine-selection threshold (`<=256` direct, `>256` partitioned),
+  - latency reporting semantics (`0` direct, `nextPow2(blockSize)` partitioned),
+  - hard realtime/performance/quality bounds,
+  - Slice B evidence additions and exit criteria.
 
 
 ## Validation Plan
