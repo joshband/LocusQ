@@ -96,6 +96,7 @@ Validation:
 
 Recommended scaffolding helper for new items:
 1. `./scripts/new-backlog-item.py --id BL-078 --title "Example Item" --priority P1 --track "Track E - R&D Expansion"`
+2. Authoring guidance and anti-duplication policy: `Documentation/backlog/runbook-authoring-guide.md`
 
 ## Backlog Validation Cadence Standard
 

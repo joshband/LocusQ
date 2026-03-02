@@ -38,7 +38,7 @@ Use visuals only when they materially improve understanding.
 |---|---|
 | ID | BL-047 |
 | Priority | P1 |
-| Status | In Planning |
+| Status | Done (historical planning-state context retained in runbook history) |
 | Track | E - R&D Expansion |
 | Effort | Low / S |
 | Depends On | BL-018 (Done), BL-045 |

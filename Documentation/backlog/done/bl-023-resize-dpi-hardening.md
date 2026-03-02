@@ -36,7 +36,7 @@ Use visuals only when they materially improve understanding.
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | In Implementation (C3 mode parity revalidation PASS at `TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z`; runtime lane preserved deterministic outputs with one bounded `exit=143` recovery event) |
+| Status | Done (historical pre-closeout state retained in this runbook timeline and evidence sections) |
 | Owner Track | Track C - UX Authoring |
 | Depends On | BL-025 (Done) |
 | Blocks | BL-030 RL-03 regression visibility when UI resize behavior is unstable |

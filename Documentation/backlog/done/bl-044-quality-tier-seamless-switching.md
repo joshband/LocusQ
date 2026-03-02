@@ -38,7 +38,7 @@ Use visuals only when they materially improve understanding.
 |---|---|
 | ID | BL-044 |
 | Priority | P1 |
-| Status | In Planning |
+| Status | Done (historical planning-state context retained in runbook history) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-043 |

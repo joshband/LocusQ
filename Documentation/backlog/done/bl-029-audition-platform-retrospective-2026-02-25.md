@@ -10,7 +10,7 @@ Last Modified Date: 2026-03-02
 
 ## Plain-Language Summary
 
-BL-029 in plain terms: Deliver the scoped behavior with deterministic validation and evidence. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-029 retrospective in plain terms: this document captures what shipped, what failed, what recovered, and why the audition platform direction was kept. Current state: Done (retrospective archive).
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,9 +18,9 @@ BL-029 in plain terms: Deliver the scoped behavior with deterministic validation
 |---|---|
 | Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
 | What is changing? | BL-029 Audition Platform Retrospective (What, Why, How, When, Where) |
-| Why is this important? | This runbook defines a scoped change with explicit validation and evidence requirements. |
-| How will we deliver it? | Use the runbook steps, validation lanes, and evidence expectations to deliver and verify the work safely. |
-| When is it done? | This item is complete when required acceptance criteria, validation lanes, and evidence synchronization are all marked pass. |
+| Why is this important? | It preserves historical context, decision rationale, and evidence links that explain how BL-029 evolved. |
+| How will we deliver it? | This is a retrospective summary; no new implementation is executed from this document. |
+| When is it done? | Completed on 2026-02-25 as archived retrospective context for BL-029. |
 | Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-029-audition-platform-retrospective-2026-02-25.md` plus repo-local evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index
@@ -30,8 +30,18 @@ Use visuals only when they materially improve understanding.
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
-| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Timeline and architecture diagrams | Explains platform evolution and runtime architecture quickly. | `## 4) How The System Works Now (Conceptual)` and `## 5) Timeline: Start To Current State` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
+
+## Status Ledger
+
+| Field | Value |
+|---|---|
+| ID | BL-029 (Retrospective Companion) |
+| Priority | P2 |
+| Status | Done (retrospective archive summary) |
+| Completed | 2026-02-25 |
+| Archived Runbook Path | `Documentation/backlog/done/bl-029-audition-platform-retrospective-2026-02-25.md` |
 
 ## 1) Executive Summary
 
@@ -256,4 +266,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

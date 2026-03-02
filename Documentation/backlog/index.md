@@ -43,6 +43,8 @@ Applies to all remaining open items and all future backlog items.
 10. New-item scaffolding helper:
    - `./scripts/new-backlog-item.py --id BL-078 --title \"Example Item\" --priority P1 --track \"Track E - R&D Expansion\"`
    - This script pre-fills metadata plus plain-language/6W scaffolding for intake and runbook docs.
+11. Runbook authoring and anti-duplication guidance:
+   - `Documentation/backlog/runbook-authoring-guide.md`
 
 ## Layer Model
 
