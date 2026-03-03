@@ -368,8 +368,21 @@ const BASIC_CONTROL_VALUE_CHANGED_EVENT = "valueChanged";
 const queryParams = new URLSearchParams(window.location.search || "");
 const productionP0SelfTestRequested = queryParams.get("selftest") === "1";
 const productionP0SelfTestScope = String(queryParams.get("selftest_scope") || "").trim().toLowerCase();
-const strictGestureSelfTestRequested = queryParams.get("strict_gesture") === "1"
-    || queryParams.get("selftest_strict_gesture") === "1";
+const NATIVE_BRIDGE_DIAGNOSTICS_SCHEMA = "locusq-native-bridge-diagnostics-v1";
+const NATIVE_BRIDGE_RECENT_ERROR_LIMIT = 8;
+const startupCriticalNativeLabels = new Set([
+    "locusqGetUiState",
+    "locusqGetKeyframeTimeline",
+    "locusqListEmitterPresets",
+    "locusqListCalibrationProfiles",
+]);
+
+function parseQueryBooleanFlag(params, key) {
+    const raw = String(params.get(key) || "").trim().toLowerCase();
+    return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
+const strictGestureModeEnabled = parseQueryBooleanFlag(queryParams, "strict_gesture");
 const SELFTEST_STARTUP_POLL_MS = 120;
 const SELFTEST_STARTUP_TIMEOUT_MS = 8000;
 const SELFTEST_LAYOUT_SETTLE_TIMEOUT_MS = 1400;
@@ -387,32 +400,6 @@ const RESIZE_DIAGNOSTIC_COMPACT_MAX_WIDTH = 960;
 const RESIZE_DIAGNOSTIC_WIDE_MIN_WIDTH = 1440;
 const RESIZE_DIAGNOSTIC_SETTLE_WARN_MS = 250;
 const RESIZE_DIAGNOSTIC_HIT_TARGET_STALE_MS = 250;
-const BRIDGE_DIAGNOSTICS_EVENT_LIMIT = 64;
-const BRIDGE_DEGRADED_CONTROL_IDS = Object.freeze([
-    "timeline-rewind-btn",
-    "timeline-stop-btn",
-    "timeline-play-btn",
-    "preset-save-btn",
-    "preset-load-btn",
-    "preset-rename-btn",
-    "preset-delete-btn",
-    "cal-start-btn",
-    "cal-redetect-btn",
-    "cal-profile-save-btn",
-    "cal-profile-load-btn",
-    "cal-profile-rename-btn",
-    "cal-profile-delete-btn",
-    "set-forward-btn",
-]);
-const criticalStartupNativeLabels = new Set([
-    "locusqGetUiState",
-    "locusqSetUiState",
-    "locusqGetKeyframeTimeline",
-    "locusqSetKeyframeTimeline",
-    "locusqSetTimelineTime",
-    "locusqListEmitterPresets",
-    "locusqListCalibrationProfiles",
-]);
 const resizeDiagnosticsState = {
     viewportWidth: null,
     viewportHeight: null,
@@ -425,62 +412,6 @@ const resizeDiagnosticsState = {
     lastHitTargetRefreshMs: null,
     hitTargetRefreshPending: false,
 };
-const runtimeDiagnosticsState = {
-    nativeBridgeAvailable: hasNativeJuceBridge,
-    strictGestureRequested: strictGestureSelfTestRequested,
-    startupBindingFailures: 0,
-    nativeCallSuccesses: 0,
-    nativeCallFailures: 0,
-    nativeCallTimeouts: 0,
-    gestureFallbacks: 0,
-    strictGestureViolations: 0,
-    degradedMode: false,
-    degradedReason: "",
-    lastNativeError: "",
-    events: [],
-};
-
-function makeRuntimeDiagnosticsSnapshot() {
-    return {
-        nativeBridgeAvailable: runtimeDiagnosticsState.nativeBridgeAvailable,
-        strictGestureRequested: runtimeDiagnosticsState.strictGestureRequested,
-        startupBindingFailures: runtimeDiagnosticsState.startupBindingFailures,
-        nativeCallSuccesses: runtimeDiagnosticsState.nativeCallSuccesses,
-        nativeCallFailures: runtimeDiagnosticsState.nativeCallFailures,
-        nativeCallTimeouts: runtimeDiagnosticsState.nativeCallTimeouts,
-        gestureFallbacks: runtimeDiagnosticsState.gestureFallbacks,
-        strictGestureViolations: runtimeDiagnosticsState.strictGestureViolations,
-        degradedMode: runtimeDiagnosticsState.degradedMode,
-        degradedReason: runtimeDiagnosticsState.degradedReason,
-        lastNativeError: runtimeDiagnosticsState.lastNativeError,
-        events: runtimeDiagnosticsState.events.slice(),
-    };
-}
-
-function publishRuntimeDiagnosticsSnapshot() {
-    window.__LQ_RUNTIME_DIAGNOSTICS__ = makeRuntimeDiagnosticsSnapshot();
-}
-
-function pushRuntimeDiagnosticsEvent(kind, detail = "", extra = null) {
-    runtimeDiagnosticsState.events.push({
-        ts: new Date().toISOString(),
-        kind: String(kind || "event"),
-        detail: String(detail || ""),
-        extra: extra && typeof extra === "object" ? { ...extra } : undefined,
-    });
-    while (runtimeDiagnosticsState.events.length > BRIDGE_DIAGNOSTICS_EVENT_LIMIT) {
-        runtimeDiagnosticsState.events.shift();
-    }
-    publishRuntimeDiagnosticsSnapshot();
-}
-
-function setBridgeDegradedMode(enabled, reason = "") {
-    runtimeDiagnosticsState.degradedMode = !!enabled;
-    runtimeDiagnosticsState.degradedReason = enabled ? String(reason || "unknown_bridge_failure") : "";
-    publishRuntimeDiagnosticsSnapshot();
-}
-
-publishRuntimeDiagnosticsSnapshot();
 
 if (productionP0SelfTestRequested) {
     window.__LQ_SELFTEST_RESULT__ = {
@@ -521,37 +452,82 @@ function withNativeTimeout(promise, label) {
     });
 }
 
-async function callNative(label, fn, ...args) {
-    if (typeof fn !== "function") {
-        runtimeDiagnosticsState.nativeCallFailures += 1;
-        runtimeDiagnosticsState.startupBindingFailures += 1;
-        runtimeDiagnosticsState.lastNativeError = `${label} unavailable`;
-        pushRuntimeDiagnosticsEvent("native_call_unavailable", `${label} unavailable`);
-        if (criticalStartupNativeLabels.has(label) && !runtimeState.startupHydrationComplete) {
-            setBridgeDegradedMode(true, `critical_startup_binding_unavailable:${label}`);
-        }
-        throw new Error(`${label} unavailable`);
+function normaliseNativeBridgeReasonToken(value, fallback = "unknown") {
+    const token = String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    return token || fallback;
+}
+
+function recordNativeBridgeCallSuccess(label) {
+    nativeBridgeDiagnosticsState.lastCallLabel = String(label || "").trim();
+    nativeBridgeDiagnosticsState.lastCallAtUtc = new Date().toISOString();
+    publishOperatorDiagnosticsSnapshot();
+}
+
+function recordNativeBridgeCallFailure(label, reason, error) {
+    const safeLabel = String(label || "").trim() || "native_call";
+    const reasonToken = normaliseNativeBridgeReasonToken(reason, "runtime_error");
+    const message = error && error.message ? String(error.message) : String(error || "unknown error");
+
+    nativeBridgeDiagnosticsState.callsFailed += 1;
+    if (reasonToken === "timeout") nativeBridgeDiagnosticsState.callsTimeout += 1;
+    if (reasonToken === "unavailable") nativeBridgeDiagnosticsState.callsUnavailable += 1;
+    if (reasonToken === "blocked") nativeBridgeDiagnosticsState.callsBlocked += 1;
+
+    nativeBridgeDiagnosticsState.lastErrorLabel = safeLabel;
+    nativeBridgeDiagnosticsState.lastErrorReason = reasonToken;
+    nativeBridgeDiagnosticsState.lastErrorMessage = message;
+    nativeBridgeDiagnosticsState.lastErrorAtUtc = new Date().toISOString();
+
+    nativeBridgeDiagnosticsState.recentErrors.push({
+        label: safeLabel,
+        reason: reasonToken,
+        message,
+        atUtc: nativeBridgeDiagnosticsState.lastErrorAtUtc,
+    });
+    if (nativeBridgeDiagnosticsState.recentErrors.length > NATIVE_BRIDGE_RECENT_ERROR_LIMIT) {
+        nativeBridgeDiagnosticsState.recentErrors.shift();
     }
+
+    publishOperatorDiagnosticsSnapshot();
+}
+
+async function callNative(label, fn, ...args) {
+    const safeLabel = String(label || "").trim() || "native_call";
+    nativeBridgeDiagnosticsState.callsTotal += 1;
+
+    if (runtimeState.nativeBridgeDegraded) {
+        const error = new Error(
+            `${safeLabel} blocked while degraded mode is active (${runtimeState.nativeBridgeDegradedReason})`
+        );
+        recordNativeBridgeCallFailure(safeLabel, "blocked", error);
+        throw error;
+    }
+
+    if (typeof fn !== "function") {
+        const error = new Error(`${safeLabel} unavailable`);
+        recordNativeBridgeCallFailure(safeLabel, "unavailable", error);
+        if (runtimeState.startupHydrationInProgress && startupCriticalNativeLabels.has(safeLabel)) {
+            setNativeBridgeDegradedMode("critical_binding_unavailable", `${safeLabel} binding is unavailable`);
+        }
+        throw error;
+    }
+
     try {
-        const result = await withNativeTimeout(fn(...args), label);
-        runtimeDiagnosticsState.nativeCallSuccesses += 1;
-        publishRuntimeDiagnosticsSnapshot();
+        const result = await withNativeTimeout(fn(...args), safeLabel);
+        recordNativeBridgeCallSuccess(safeLabel);
         return result;
     } catch (error) {
-        const message = error && error.message ? String(error.message) : String(error);
-        const timeoutFailure = message.includes("timed out after");
-        runtimeDiagnosticsState.nativeCallFailures += 1;
-        if (timeoutFailure) {
-            runtimeDiagnosticsState.nativeCallTimeouts += 1;
-        }
-        runtimeDiagnosticsState.lastNativeError = `${label}: ${message}`;
-        pushRuntimeDiagnosticsEvent(
-            timeoutFailure ? "native_call_timeout" : "native_call_error",
-            `${label}: ${message}`
-        );
-        if (criticalStartupNativeLabels.has(label) && !runtimeState.startupHydrationComplete) {
-            runtimeDiagnosticsState.startupBindingFailures += 1;
-            setBridgeDegradedMode(true, `critical_startup_call_failure:${label}`);
+        const reason = String(error?.message || "").includes("timed out") ? "timeout" : "runtime_error";
+        recordNativeBridgeCallFailure(safeLabel, reason, error);
+        if (runtimeState.startupHydrationInProgress && startupCriticalNativeLabels.has(safeLabel)) {
+            const detail = error?.message
+                ? `${safeLabel} failed during startup: ${error.message}`
+                : `${safeLabel} failed during startup`;
+            setNativeBridgeDegradedMode("critical_startup_call_failure", detail);
         }
         throw error;
     }
@@ -2933,6 +2909,22 @@ let sceneData = {
     clapLifecycleStage: "not_compiled",
     clapRuntimeMode: "disabled",
     clapVersion: { major: 0, minor: 0, revision: 0 },
+    nativeBridgeDiagnosticsSchema: NATIVE_BRIDGE_DIAGNOSTICS_SCHEMA,
+    nativeBridgeAvailable: hasNativeJuceBridge,
+    nativeBridgeBackend: hasNativeJuceBridge ? "juce_webview" : "fallback_wrapper",
+    nativeBridgeDegraded: false,
+    nativeBridgeDegradedReason: "none",
+    nativeBridgeLastError: "none",
+    nativeBridgeDiagnostics: {
+        schema: NATIVE_BRIDGE_DIAGNOSTICS_SCHEMA,
+        available: hasNativeJuceBridge,
+        backend: hasNativeJuceBridge ? "juce_webview" : "fallback_wrapper",
+        degraded: false,
+        degradedReason: "none",
+        lastError: "none",
+        seq: 0,
+        publishedAtUtcMs: 0,
+    },
     rendererOutputChannels: ["L", "R"],
     rendererInternalSpeakers: ["FL", "FR", "RR", "RL"],
     rendererQuadMap: [0, 1, 3, 2],
@@ -3420,12 +3412,233 @@ const emitterAuthorityStepperIds = [
     "val-vel-y",
     "val-vel-z",
 ];
+const nativeBridgeDegradedControlIds = [
+    "cal-start-btn",
+    "cal-abort-btn",
+    "cal-redetect-btn",
+    "cal-profile-select",
+    "cal-profile-name",
+    "cal-profile-save-btn",
+    "cal-profile-load-btn",
+    "cal-profile-rename-btn",
+    "cal-profile-delete-btn",
+    "preset-type-select",
+    "preset-name-input",
+    "preset-select",
+    "preset-save-btn",
+    "preset-load-btn",
+    "preset-rename-btn",
+    "preset-delete-btn",
+    "timeline-rewind-btn",
+    "timeline-stop-btn",
+    "timeline-play-btn",
+    "motion-transport-rewind-btn",
+    "motion-transport-stop-btn",
+    "motion-transport-play-btn",
+    "choreo-apply-btn",
+    "choreo-save-btn",
+    "rend-headtrack-set-forward",
+];
 const runtimeState = {
     viewportReady: false,
     viewportDegraded: false,
-    bridgeDegraded: false,
-    startupHydrationComplete: false,
+    nativeBridgeDegraded: false,
+    nativeBridgeDegradedReason: "none",
+    startupHydrationInProgress: false,
+    nativeBridgeControlsLocked: false,
 };
+const nativeBridgeDiagnosticsState = {
+    schema: NATIVE_BRIDGE_DIAGNOSTICS_SCHEMA,
+    strictGesture: strictGestureModeEnabled,
+    backend: hasNativeJuceBridge ? "juce_webview" : "fallback_wrapper",
+    startupStage: "booting",
+    degraded: false,
+    degradedReason: "none",
+    degradedDetail: "",
+    controlsLocked: false,
+    bindingChecks: [],
+    missingCriticalBindings: [],
+    callsTotal: 0,
+    callsFailed: 0,
+    callsTimeout: 0,
+    callsUnavailable: 0,
+    callsBlocked: 0,
+    lastCallLabel: "",
+    lastCallAtUtc: "",
+    lastErrorLabel: "",
+    lastErrorReason: "",
+    lastErrorMessage: "",
+    lastErrorAtUtc: "",
+    recentErrors: [],
+    nativePayloadPresent: false,
+    nativePayloadSchema: "",
+    nativePayloadAvailable: false,
+    nativePayloadBackend: "",
+    nativePayloadDegraded: false,
+    nativePayloadReason: "",
+    nativePayloadLastError: "",
+    nativePayloadSeq: 0,
+    nativePayloadPublishedAtUtcMs: 0,
+};
+
+function publishNativeBridgeDiagnosticsSnapshot() {
+    window.__LQ_NATIVE_BRIDGE_DIAGNOSTICS__ = {
+        ...nativeBridgeDiagnosticsState,
+        bindingChecks: nativeBridgeDiagnosticsState.bindingChecks.slice(),
+        missingCriticalBindings: nativeBridgeDiagnosticsState.missingCriticalBindings.slice(),
+        recentErrors: nativeBridgeDiagnosticsState.recentErrors.slice(),
+    };
+}
+
+function buildOperatorDiagnosticsSnapshot() {
+    return {
+        schema: NATIVE_BRIDGE_DIAGNOSTICS_SCHEMA,
+        generatedAtUtc: new Date().toISOString(),
+        strictGesture: strictGestureModeEnabled,
+        runtime: {
+            viewportReady: runtimeState.viewportReady,
+            viewportDegraded: runtimeState.viewportDegraded,
+            nativeBridgeDegraded: runtimeState.nativeBridgeDegraded,
+            nativeBridgeDegradedReason: runtimeState.nativeBridgeDegradedReason,
+            controlsLocked: runtimeState.nativeBridgeControlsLocked,
+            startupHydrationInProgress: runtimeState.startupHydrationInProgress,
+        },
+        sceneTransport: {
+            schema: sceneTransportState.schema,
+            lastAcceptedSeq: sceneTransportState.lastAcceptedSeq,
+            cadenceHz: sceneTransportState.cadenceHz,
+            staleAfterMs: sceneTransportState.staleAfterMs,
+            stale: sceneTransportState.stale,
+        },
+        nativeBridge: window.__LQ_NATIVE_BRIDGE_DIAGNOSTICS__ || {},
+    };
+}
+
+function publishOperatorDiagnosticsSnapshot() {
+    publishNativeBridgeDiagnosticsSnapshot();
+    window.__LQ_OPERATOR_DIAGNOSTICS__ = buildOperatorDiagnosticsSnapshot();
+}
+
+function applyNativeBridgeControlLock(locked) {
+    const nextLocked = !!locked;
+    runtimeState.nativeBridgeControlsLocked = nextLocked;
+    nativeBridgeDiagnosticsState.controlsLocked = nextLocked;
+
+    nativeBridgeDegradedControlIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        setControlAuthorityLock(element, nextLocked);
+        if (nextLocked) {
+            element.dataset.nativeBridgeLock = "1";
+        } else {
+            delete element.dataset.nativeBridgeLock;
+        }
+    });
+
+    const timelineLanes = document.querySelector("#timeline .timeline-lanes");
+    if (timelineLanes) {
+        timelineLanes.style.pointerEvents = nextLocked ? "none" : "";
+        timelineLanes.style.opacity = nextLocked ? "0.64" : "";
+    }
+
+    if (nextLocked) {
+        setPresetStatus("Native bridge degraded: preset controls disabled.", true);
+        setCalibrationProfileStatus("Native bridge degraded: calibration controls disabled.", true);
+    }
+
+    publishOperatorDiagnosticsSnapshot();
+}
+
+function setNativeBridgeStartupStage(stage) {
+    nativeBridgeDiagnosticsState.startupStage = String(stage || "").trim() || "unknown";
+    publishOperatorDiagnosticsSnapshot();
+}
+
+function setNativeBridgeDegradedMode(reason, detail = "") {
+    const normalizedReason = normaliseNativeBridgeReasonToken(reason, "unknown");
+    const normalizedDetail = String(detail || "").trim();
+
+    runtimeState.nativeBridgeDegraded = true;
+    runtimeState.nativeBridgeDegradedReason = normalizedReason;
+    nativeBridgeDiagnosticsState.degraded = true;
+    nativeBridgeDiagnosticsState.degradedReason = normalizedReason;
+    if (normalizedDetail.length > 0) {
+        nativeBridgeDiagnosticsState.degradedDetail = normalizedDetail;
+    }
+    setNativeBridgeStartupStage("degraded");
+
+    if (!runtimeState.nativeBridgeControlsLocked) {
+        applyNativeBridgeControlLock(true);
+    }
+
+    const viewportInfo = document.getElementById("viewport-info");
+    if (viewportInfo) {
+        const detailText = nativeBridgeDiagnosticsState.degradedDetail
+            ? ` (${nativeBridgeDiagnosticsState.degradedDetail})`
+            : "";
+        viewportInfo.textContent = `Native bridge degraded · controls disabled in degraded mode${detailText}`;
+    }
+
+    const viewportLock = document.getElementById("viewport-lock");
+    if (viewportLock) {
+        viewportLock.textContent = "NATIVE DEGRADED";
+    }
+
+    publishOperatorDiagnosticsSnapshot();
+}
+
+function evaluateNativeBridgeBindingContract() {
+    const bindingMatrix = [
+        { label: "locusqGetUiState", fn: nativeFunctions.getUiState, critical: true },
+        { label: "locusqGetKeyframeTimeline", fn: nativeFunctions.getKeyframeTimeline, critical: true },
+        { label: "locusqListEmitterPresets", fn: nativeFunctions.listEmitterPresets, critical: true },
+        { label: "locusqListCalibrationProfiles", fn: nativeFunctions.listCalibrationProfiles, critical: true },
+        { label: "locusqSetUiState", fn: nativeFunctions.setUiState, critical: false },
+        { label: "locusqSetKeyframeTimeline", fn: nativeFunctions.setKeyframeTimeline, critical: false },
+    ];
+
+    nativeBridgeDiagnosticsState.bindingChecks = bindingMatrix.map(entry => ({
+        label: entry.label,
+        critical: entry.critical,
+        available: typeof entry.fn === "function",
+    }));
+
+    nativeBridgeDiagnosticsState.missingCriticalBindings = nativeBridgeDiagnosticsState.bindingChecks
+        .filter(entry => entry.critical && !entry.available)
+        .map(entry => entry.label);
+
+    if (!hasNativeJuceBridge) {
+        setNativeBridgeDegradedMode(
+            "juce_bridge_missing",
+            "window.Juce bridge unavailable; fallback wrapper is active"
+        );
+    } else if (nativeBridgeDiagnosticsState.missingCriticalBindings.length > 0) {
+        setNativeBridgeDegradedMode(
+            "critical_binding_missing",
+            `missing: ${nativeBridgeDiagnosticsState.missingCriticalBindings.join(", ")}`
+        );
+    }
+
+    publishOperatorDiagnosticsSnapshot();
+}
+
+function updateNativeBridgePayloadDiagnostics(payload = {}) {
+    nativeBridgeDiagnosticsState.nativePayloadPresent = !!payload.present;
+    nativeBridgeDiagnosticsState.nativePayloadSchema = String(payload.schema || "").trim();
+    nativeBridgeDiagnosticsState.nativePayloadAvailable = !!payload.available;
+    nativeBridgeDiagnosticsState.nativePayloadBackend = String(payload.backend || "").trim();
+    nativeBridgeDiagnosticsState.nativePayloadDegraded = !!payload.degraded;
+    nativeBridgeDiagnosticsState.nativePayloadReason = String(payload.reason || "").trim();
+    nativeBridgeDiagnosticsState.nativePayloadLastError = String(payload.lastError || "").trim();
+    nativeBridgeDiagnosticsState.nativePayloadSeq = Number.isFinite(Number(payload.seq))
+        ? Math.max(0, Math.round(Number(payload.seq)))
+        : 0;
+    nativeBridgeDiagnosticsState.nativePayloadPublishedAtUtcMs = Number.isFinite(Number(payload.publishedAtUtcMs))
+        ? Number(payload.publishedAtUtcMs)
+        : 0;
+    publishOperatorDiagnosticsSnapshot();
+}
+
 const MAX_PENDING_SCENE_SNAPSHOTS = 6;
 const pendingSceneSnapshots = [];
 const sceneTransportDefaults = {
@@ -3447,6 +3660,7 @@ const profileCoherenceState = {
     lastCalibrationStatusSeq: -1,
     lastRendererShellSeq: -1,
 };
+publishOperatorDiagnosticsSnapshot();
 
 function queuePendingSceneSnapshot(data) {
     if (!data || typeof data !== "object") return;
@@ -4546,6 +4760,17 @@ function hasRendererAuthorityDiagnosticsPayload(data) {
         || Object.prototype.hasOwnProperty.call(data, "authorityReplaySeq");
 }
 
+function hasNativeBridgeDiagnosticsPayload(data) {
+    if (!data || typeof data !== "object") return false;
+    return Object.prototype.hasOwnProperty.call(data, "nativeBridgeDiagnosticsSchema")
+        || Object.prototype.hasOwnProperty.call(data, "nativeBridgeAvailable")
+        || Object.prototype.hasOwnProperty.call(data, "nativeBridgeBackend")
+        || Object.prototype.hasOwnProperty.call(data, "nativeBridgeDegraded")
+        || Object.prototype.hasOwnProperty.call(data, "nativeBridgeDegradedReason")
+        || Object.prototype.hasOwnProperty.call(data, "nativeBridgeLastError")
+        || Object.prototype.hasOwnProperty.call(data, "nativeBridgeDiagnostics");
+}
+
 function readFiniteNumber(value, fallback = 0.0) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
@@ -5335,18 +5560,95 @@ function updateRendererPanelShell(data = sceneData) {
     setRendererText("rend-hpver-latency", hpVerificationLatencyText);
     updateRendererResizeDiagnosticsPanel();
 
+    const nativeBridgePayloadPresent = hasNativeBridgeDiagnosticsPayload(payload);
+    const nativeBridgePayload = (payload.nativeBridgeDiagnostics && typeof payload.nativeBridgeDiagnostics === "object")
+        ? payload.nativeBridgeDiagnostics
+        : {};
+    const nativeBridgePayloadSchema = String(
+        payload.nativeBridgeDiagnosticsSchema
+        || nativeBridgePayload.schema
+        || ""
+    ).trim();
+    const nativeBridgePayloadAvailable = Object.prototype.hasOwnProperty.call(payload, "nativeBridgeAvailable")
+        ? !!payload.nativeBridgeAvailable
+        : (Object.prototype.hasOwnProperty.call(nativeBridgePayload, "available")
+            ? !!nativeBridgePayload.available
+            : false);
+    const nativeBridgePayloadBackend = String(
+        payload.nativeBridgeBackend
+        || nativeBridgePayload.backend
+        || ""
+    ).trim();
+    const nativeBridgePayloadDegraded = Object.prototype.hasOwnProperty.call(payload, "nativeBridgeDegraded")
+        ? !!payload.nativeBridgeDegraded
+        : (Object.prototype.hasOwnProperty.call(nativeBridgePayload, "degraded")
+            ? !!nativeBridgePayload.degraded
+            : false);
+    const nativeBridgePayloadReason = String(
+        payload.nativeBridgeDegradedReason
+        || nativeBridgePayload.degradedReason
+        || "none"
+    ).trim();
+    const nativeBridgePayloadLastError = String(
+        payload.nativeBridgeLastError
+        || nativeBridgePayload.lastError
+        || ""
+    ).trim();
+    const nativeBridgePayloadSeq = Number(
+        nativeBridgePayload.seq
+        ?? payload.snapshotSeq
+        ?? 0
+    );
+    const nativeBridgePayloadPublishedAtUtcMs = Number(
+        nativeBridgePayload.publishedAtUtcMs
+        ?? payload.snapshotPublishedAtUtcMs
+        ?? 0
+    );
+    updateNativeBridgePayloadDiagnostics({
+        present: nativeBridgePayloadPresent,
+        schema: nativeBridgePayloadSchema,
+        available: nativeBridgePayloadAvailable,
+        backend: nativeBridgePayloadBackend,
+        degraded: nativeBridgePayloadDegraded,
+        reason: nativeBridgePayloadReason,
+        lastError: nativeBridgePayloadLastError,
+        seq: nativeBridgePayloadSeq,
+        publishedAtUtcMs: nativeBridgePayloadPublishedAtUtcMs,
+    });
+
     const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
     if (diagnosticsAvailability) {
-        const coreSummary = (!steamPayloadPresent && !ambiPayloadPresent && !headTrackingPayloadPresent && !hpVerificationPayloadPresent && !authorityPayloadPresent)
-            ? "Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults."
-            : `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · Authority ${authorityPayloadPresent ? "present" : "missing"} · HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
-        const runtimeSummary = `native ok=${runtimeDiagnosticsState.nativeCallSuccesses} fail=${runtimeDiagnosticsState.nativeCallFailures} timeout=${runtimeDiagnosticsState.nativeCallTimeouts} bindFail=${runtimeDiagnosticsState.startupBindingFailures} gestureFallback=${runtimeDiagnosticsState.gestureFallbacks}`;
-        if (runtimeDiagnosticsState.degradedMode) {
-            diagnosticsAvailability.textContent = `Bridge degraded (${runtimeDiagnosticsState.degradedReason || "unknown"}) · ${runtimeSummary}`;
+        const bridgeSummary = runtimeState.nativeBridgeDegraded
+            ? `Bridge degraded (${runtimeState.nativeBridgeDegradedReason})`
+            : "Bridge healthy";
+        const strictGestureSummary = `strict_gesture=${strictGestureModeEnabled ? "on" : "off"}`;
+        const nativePayloadSummary = nativeBridgePayloadPresent
+            ? `native payload ${nativeBridgePayloadAvailable ? "present" : "reported_unavailable"}`
+            : "native payload missing";
+        const errorSummary = nativeBridgeDiagnosticsState.lastErrorMessage
+            ? `last error ${nativeBridgeDiagnosticsState.lastErrorMessage}`
+            : "last error none";
+        const callSummary =
+            `call failures ${nativeBridgeDiagnosticsState.callsFailed} (timeout ${nativeBridgeDiagnosticsState.callsTimeout}, unavailable ${nativeBridgeDiagnosticsState.callsUnavailable}, blocked ${nativeBridgeDiagnosticsState.callsBlocked})`;
+
+        if (!steamPayloadPresent
+            && !ambiPayloadPresent
+            && !headTrackingPayloadPresent
+            && !hpVerificationPayloadPresent
+            && !authorityPayloadPresent
+            && !nativeBridgePayloadPresent
+            && !runtimeState.nativeBridgeDegraded
+            && nativeBridgeDiagnosticsState.callsFailed === 0) {
+            diagnosticsAvailability.textContent = `Bridge diagnostics awaiting payload · ${strictGestureSummary}.`;
         } else {
-            diagnosticsAvailability.textContent = `${coreSummary} · ${runtimeSummary}`;
+            diagnosticsAvailability.textContent =
+                `${bridgeSummary} · ${strictGestureSummary} · ${nativePayloadSummary} · ${callSummary} · ${errorSummary} · `
+                + `Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · `
+                + `HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · Authority ${authorityPayloadPresent ? "present" : "missing"} · `
+                + `HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
         }
     }
+    publishOperatorDiagnosticsSnapshot();
 }
 
 function resolveCalibrationTopologyId(topologyId, fallback = DEFAULT_CALIBRATION_TOPOLOGY_ID) {
@@ -5764,87 +6066,6 @@ function getCalibrationSpeakerColor(index) {
     return 0xE0E0E0;
 }
 
-function setBridgeImpactedControlsEnabled(enabled) {
-    const controlsEnabled = !!enabled;
-    BRIDGE_DEGRADED_CONTROL_IDS.forEach(controlId => {
-        const control = document.getElementById(controlId);
-        if (!control || typeof control.disabled !== "boolean") {
-            return;
-        }
-
-        if (!controlsEnabled) {
-            if (!Object.prototype.hasOwnProperty.call(control.dataset, "bridgePrevDisabled")) {
-                control.dataset.bridgePrevDisabled = control.disabled ? "1" : "0";
-            }
-            control.disabled = true;
-            control.classList.add("is-bridge-degraded");
-            return;
-        }
-
-        const restoreDisabled = control.dataset.bridgePrevDisabled === "1";
-        control.disabled = restoreDisabled;
-        delete control.dataset.bridgePrevDisabled;
-        control.classList.remove("is-bridge-degraded");
-    });
-}
-
-function applyBridgeDegradedMode(enabled, reason = "") {
-    const degraded = !!enabled;
-    runtimeState.bridgeDegraded = degraded;
-    setBridgeDegradedMode(degraded, reason);
-    setBridgeImpactedControlsEnabled(!degraded);
-
-    const viewportLock = document.getElementById("viewport-lock");
-    if (viewportLock) {
-        viewportLock.textContent = degraded ? "BRIDGE DEGRADED" : "VIEWPORT LOCK";
-    }
-
-    const viewportInfo = document.getElementById("viewport-info");
-    if (viewportInfo && degraded) {
-        viewportInfo.textContent = "Bridge degraded · impacted controls disabled";
-    }
-
-    const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
-    if (diagnosticsAvailability && degraded) {
-        diagnosticsAvailability.textContent = `Bridge degraded (${reason || "unknown"}) · native ok=${runtimeDiagnosticsState.nativeCallSuccesses} fail=${runtimeDiagnosticsState.nativeCallFailures} timeout=${runtimeDiagnosticsState.nativeCallTimeouts} bindFail=${runtimeDiagnosticsState.startupBindingFailures} gestureFallback=${runtimeDiagnosticsState.gestureFallbacks}`;
-    }
-}
-
-function evaluateCriticalStartupBindings() {
-    const missingBindings = [];
-    if (!hasNativeJuceBridge) {
-        missingBindings.push("window.Juce(native bridge)");
-    }
-
-    const criticalBindingMap = [
-        ["locusqGetUiState", nativeFunctions.getUiState],
-        ["locusqSetUiState", nativeFunctions.setUiState],
-        ["locusqGetKeyframeTimeline", nativeFunctions.getKeyframeTimeline],
-        ["locusqSetKeyframeTimeline", nativeFunctions.setKeyframeTimeline],
-        ["locusqSetTimelineTime", nativeFunctions.setTimelineTime],
-        ["locusqListEmitterPresets", nativeFunctions.listEmitterPresets],
-        ["locusqListCalibrationProfiles", nativeFunctions.listCalibrationProfiles],
-    ];
-    criticalBindingMap.forEach(([label, fn]) => {
-        if (typeof fn !== "function") {
-            missingBindings.push(label);
-        }
-    });
-
-    if (missingBindings.length === 0) {
-        return true;
-    }
-
-    runtimeDiagnosticsState.startupBindingFailures += missingBindings.length;
-    pushRuntimeDiagnosticsEvent(
-        "critical_startup_binding_failure",
-        missingBindings.join(", "),
-        { missingBindings }
-    );
-    applyBridgeDegradedMode(true, `missing_critical_bindings:${missingBindings.join(",")}`);
-    return false;
-}
-
 function markViewportDegraded(error) {
     runtimeState.viewportReady = false;
     runtimeState.viewportDegraded = true;
@@ -5854,20 +6075,22 @@ function markViewportDegraded(error) {
 
     const viewportInfo = document.getElementById("viewport-info");
     if (viewportInfo) {
-        viewportInfo.textContent = "Viewport unavailable · controls remain active";
+        viewportInfo.textContent = runtimeState.nativeBridgeDegraded
+            ? `Viewport unavailable · native bridge degraded (${runtimeState.nativeBridgeDegradedReason})`
+            : "Viewport unavailable · controls remain active";
     }
 
     const viewportLock = document.getElementById("viewport-lock");
     if (viewportLock) {
-        viewportLock.textContent = "VIEWPORT SAFE";
+        viewportLock.textContent = runtimeState.nativeBridgeDegraded ? "NATIVE DEGRADED" : "VIEWPORT SAFE";
     }
+    publishOperatorDiagnosticsSnapshot();
 }
 
 async function initialiseUIRuntime() {
+    setNativeBridgeStartupStage("init");
     syncResponsiveLayoutMode();
     window.addEventListener("resize", syncResponsiveLayoutMode);
-    runtimeState.startupHydrationComplete = false;
-    applyBridgeDegradedMode(false);
 
     try {
         initUIBindings();
@@ -5881,9 +6104,9 @@ async function initialiseUIRuntime() {
         console.error("LocusQ: initParameterListeners failed:", error);
     }
 
+    evaluateNativeBridgeBindingContract();
     applyUiStateToControls();
     applyCalibrationStatus();
-    evaluateCriticalStartupBindings();
 
     try {
         initThreeJS();
@@ -5895,46 +6118,57 @@ async function initialiseUIRuntime() {
         markViewportDegraded(error);
     }
 
-    const startupHydrationTasks = [
-        (async () => {
-            try {
-                await loadUiStateFromNative();
-                applyUiStateToControls();
-                if (uiState.physicsPreset !== "off") {
-                    applyPhysicsPreset(uiState.physicsPreset, false);
+    const startupHydrationTasks = [];
+    if (runtimeState.nativeBridgeDegraded) {
+        setNativeBridgeStartupStage("degraded");
+    } else {
+        runtimeState.startupHydrationInProgress = true;
+        setNativeBridgeStartupStage("hydrating");
+        startupHydrationTasks.push(
+            (async () => {
+                try {
+                    await loadUiStateFromNative();
+                    applyUiStateToControls();
+                    if (uiState.physicsPreset !== "off") {
+                        applyPhysicsPreset(uiState.physicsPreset, false);
+                    }
+                } catch (error) {
+                    console.error("LocusQ: loadUiStateFromNative failed:", error);
                 }
-            } catch (error) {
-                console.error("LocusQ: loadUiStateFromNative failed:", error);
-            }
-        })(),
-        (async () => {
-            try {
-                await loadTimelineFromNative();
-            } catch (error) {
-                console.error("LocusQ: loadTimelineFromNative failed:", error);
-            }
-        })(),
-        (async () => {
-            try {
-                await refreshPresetList();
-            } catch (error) {
-                console.error("LocusQ: refreshPresetList failed:", error);
-            }
-        })(),
-        (async () => {
-            try {
-                await refreshCalibrationProfileList();
-            } catch (error) {
-                console.error("LocusQ: refreshCalibrationProfileList failed:", error);
-            }
-        })(),
-    ];
+            })(),
+            (async () => {
+                try {
+                    await loadTimelineFromNative();
+                } catch (error) {
+                    console.error("LocusQ: loadTimelineFromNative failed:", error);
+                }
+            })(),
+            (async () => {
+                try {
+                    await refreshPresetList();
+                } catch (error) {
+                    console.error("LocusQ: refreshPresetList failed:", error);
+                }
+            })(),
+            (async () => {
+                try {
+                    await refreshCalibrationProfileList();
+                } catch (error) {
+                    console.error("LocusQ: refreshCalibrationProfileList failed:", error);
+                }
+            })()
+        );
+        await Promise.allSettled(startupHydrationTasks);
+        runtimeState.startupHydrationInProgress = false;
+    }
 
-    await Promise.allSettled(startupHydrationTasks);
-    runtimeState.startupHydrationComplete = true;
     syncAnimationUI();
     updateMotionStatusChips();
     syncMotionSourceUI();
+    if (!runtimeState.nativeBridgeDegraded) {
+        setNativeBridgeStartupStage("ready");
+    }
+    publishOperatorDiagnosticsSnapshot();
 
     console.log("LocusQ WebView initialized");
 }
@@ -5942,7 +6176,6 @@ async function initialiseUIRuntime() {
 async function runProductionP0SelfTest() {
     const report = {
         requested: productionP0SelfTestRequested,
-        strictGestureMode: strictGestureSelfTestRequested,
         startedAt: new Date().toISOString(),
         status: "running",
         ok: false,
@@ -7004,27 +7237,17 @@ async function runProductionP0SelfTest() {
         if (getTrackForLane(laneName).length !== 0) {
             failCheck("UI-07", "keyframe delete failed");
         }
-        if (gestureFallbacks.length > 0) {
-            runtimeDiagnosticsState.gestureFallbacks += gestureFallbacks.length;
-            pushRuntimeDiagnosticsEvent(
-                "gesture_fallback_used",
-                `UI-07 fallback(s): ${gestureFallbacks.join(", ")}`,
-                { gestureFallbacks: [...gestureFallbacks] }
-            );
-            if (strictGestureSelfTestRequested) {
-                runtimeDiagnosticsState.strictGestureViolations += gestureFallbacks.length;
-                pushRuntimeDiagnosticsEvent(
-                    "strict_gesture_violation",
-                    `strict gesture rejected fallback path: ${gestureFallbacks.join(", ")}`,
-                    { gestureFallbacks: [...gestureFallbacks] }
-                );
-                failCheck("UI-07", `strict_gesture rejected fallback path (${gestureFallbacks.join(", ")})`);
-            }
+        if (strictGestureModeEnabled && gestureFallbacks.length > 0) {
+            failCheck("UI-07", `strict_gesture enabled; fallback gesture path used (${gestureFallbacks.join(", ")})`);
         }
         const fallbackNote = gestureFallbacks.length > 0
             ? ` (fallbacks: ${gestureFallbacks.join(", ")})`
             : "";
-        recordCheck("UI-07", true, `add/move/delete/dbl-click curve cycle verified${fallbackNote}`);
+        recordCheck(
+            "UI-07",
+            true,
+            `add/move/delete/dbl-click curve cycle verified${fallbackNote}; strict_gesture=${strictGestureModeEnabled ? "on" : "off"}`
+        );
 
         // UI-P1-025A: position-mode visibility/editability contract + emitter scaffold controls.
         const positionMode = document.getElementById("pos-mode");
@@ -8964,11 +9187,9 @@ function initUIBindings() {
     if (setForwardBtn) {
         setForwardBtn.addEventListener("click", () => {
             if (setForwardBtn.disabled) return;
-            if (typeof nativeFunctions.setForwardYaw === "function") {
-                nativeFunctions.setForwardYaw().catch(error => {
-                    console.warn("LocusQ: setForwardYaw failed:", error);
-                });
-            }
+            callNative("locusqSetForwardYaw", nativeFunctions.setForwardYaw).catch(error => {
+                console.warn("LocusQ: setForwardYaw failed:", error);
+            });
         });
     }
 
