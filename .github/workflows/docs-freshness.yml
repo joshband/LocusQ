@@ -50,3 +50,14 @@ jobs:
         run: |
           chmod +x ./scripts/validate-docs-freshness.sh
           ./scripts/validate-docs-freshness.sh
+
+      - name: Upload backlog summary artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backlog-summary-${{ github.run_id }}
+          path: |
+            Documentation/reports/data/backlog-summary.json
+            Documentation/reports/data/backlog-summary.csv
+          if-no-files-found: warn
+          retention-days: 14
