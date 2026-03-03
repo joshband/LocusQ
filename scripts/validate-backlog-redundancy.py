@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+BACKLOG_INDEX = ROOT / "Documentation/backlog/index.md"
 GLOBS = [
     "Documentation/backlog/bl-*.md",
     "Documentation/backlog/hx-*.md",
@@ -56,6 +57,91 @@ def norm_heading(heading: str) -> str:
 
 def file_is_backlog_support(text: str) -> bool:
     return bool(re.search(r"^Document Type:\s*Backlog Support\s*$", text, re.M))
+
+
+def parse_markdown_table_row(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().split("|")[1:-1]]
+
+
+def extract_active_queue_rows(index_text: str) -> list[tuple[int, list[str]]]:
+    rows: list[tuple[int, list[str]]] = []
+    in_active_queue = False
+    for line_no, raw_line in enumerate(index_text.splitlines(), start=1):
+        line = raw_line.strip()
+        if line.startswith("## Active Queue"):
+            in_active_queue = True
+            continue
+        if in_active_queue and line.startswith("## "):
+            break
+        if not in_active_queue or not line.startswith("|"):
+            continue
+        if re.match(r"^\|\s*#\s*\|", line):
+            continue
+        if re.match(r"^\|\s*[-:]+\s*\|", line):
+            continue
+        rows.append((line_no, parse_markdown_table_row(line)))
+    return rows
+
+
+def strip_markdown_inline(text: str) -> str:
+    out = re.sub(r"`([^`]*)`", r"\1", text)
+    out = re.sub(r"\*\*([^*]+)\*\*", r"\1", out)
+    out = re.sub(r"\*([^*]+)\*", r"\1", out)
+    return out.strip()
+
+
+def status_is_done(status_cell: str) -> bool:
+    normalized = strip_markdown_inline(status_cell).strip().lower()
+    return bool(re.match(r"^done(?:\s|\(|$)", normalized))
+
+
+def extract_runbook_target(runbook_cell: str) -> str:
+    m = re.search(r"\[[^\]]+\]\(([^)]+)\)", runbook_cell)
+    return m.group(1).strip() if m else ""
+
+
+def check_active_queue_done_link_contract() -> list[str]:
+    if not BACKLOG_INDEX.exists():
+        return [f"{BACKLOG_INDEX.relative_to(ROOT)} missing; cannot validate Active Queue link contract"]
+
+    text = BACKLOG_INDEX.read_text(encoding="utf-8")
+    rows = extract_active_queue_rows(text)
+    if not rows:
+        return [
+            f"{BACKLOG_INDEX.relative_to(ROOT)} missing parsable Active Queue rows; cannot validate Done runbook link contract"
+        ]
+
+    errors: list[str] = []
+    for line_no, row in rows:
+        if len(row) < 9:
+            errors.append(
+                f"{BACKLOG_INDEX.relative_to(ROOT)}:{line_no} malformed Active Queue row; expected 9 columns and found {len(row)}"
+            )
+            continue
+
+        item_id = row[1]
+        status_cell = row[4]
+        runbook_cell = row[8]
+        runbook_target = extract_runbook_target(runbook_cell)
+        done_status = status_is_done(status_cell)
+        links_done_path = runbook_target.startswith("done/")
+
+        if not runbook_target:
+            errors.append(
+                f"{BACKLOG_INDEX.relative_to(ROOT)}:{line_no} {item_id} is missing a markdown runbook link target"
+            )
+            continue
+
+        if done_status and not links_done_path:
+            errors.append(
+                f"{BACKLOG_INDEX.relative_to(ROOT)}:{line_no} {item_id} is Done but runbook link is not under done/: {runbook_target}"
+            )
+        if not done_status and links_done_path:
+            errors.append(
+                f"{BACKLOG_INDEX.relative_to(ROOT)}:{line_no} {item_id} is not Done but runbook link points to done/: {runbook_target}"
+            )
+
+    return errors
 
 
 def check_file(path: Path) -> list[str]:
@@ -117,6 +203,7 @@ def main() -> int:
     all_errors: list[str] = []
     for path in files:
         all_errors.extend(check_file(path))
+    all_errors.extend(check_active_queue_done_link_contract())
 
     if all_errors:
         for msg in all_errors:
