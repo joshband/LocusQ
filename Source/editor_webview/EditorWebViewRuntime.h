@@ -15,6 +15,7 @@ struct RuntimeConfig
     bool selfTestEnabled = false;
     bool selfTestBl009Enabled = false;
     bool selfTestBl011Enabled = false;
+    bool selfTestStrictGestureEnabled = false;
     bool useIncrementalUi = false;
     juce::String selfTestScope;
     int selfTestTimeoutTicks = 600;
@@ -58,6 +59,7 @@ inline RuntimeConfig makeRuntimeConfig()
     config.selfTestEnabled = readFeatureFlag ("LOCUSQ_UI_SELFTEST");
     config.selfTestBl009Enabled = readFeatureFlag ("LOCUSQ_UI_SELFTEST_BL009");
     config.selfTestBl011Enabled = readFeatureFlag ("LOCUSQ_UI_SELFTEST_BL011");
+    config.selfTestStrictGestureEnabled = readFeatureFlag ("LOCUSQ_UI_SELFTEST_STRICT_GESTURE");
     config.selfTestScope = readSelfTestScope();
 
     if (const auto* variant = std::getenv ("LOCUSQ_UI_VARIANT"))
@@ -113,6 +115,9 @@ inline juce::String makeInitialUrl (const RuntimeConfig& config)
 
     if (config.selfTestBl011Enabled)
         initialUrl += "&selftest_bl011=1";
+
+    if (config.selfTestStrictGestureEnabled)
+        initialUrl += "&strict_gesture=1";
 
     if (config.selfTestScope.isNotEmpty())
         initialUrl += "&selftest_scope=" + config.selfTestScope;
