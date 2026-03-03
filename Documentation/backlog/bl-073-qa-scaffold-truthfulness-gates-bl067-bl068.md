@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-03
 
 ## Plain-Language Summary
 
-BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: In Implementation (mode semantics + TODO-row enforcement script authored). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: In Validation (clean verification packet merged via PR #6 on 2026-03-03; contract-only and execute `--runs 3` gates passed with zero execute TODO/SCAFFOLD rows). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-073 in plain terms: Prevent false-green promotions by separating contract-onl
 | What is changing? | Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (mode semantics and execute TODO-row enforcement scripts authored). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (clean verification merged via PR #6 on 2026-03-03). This item is done when owner closeout/archive sync is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-073 |
 | Priority | P1 |
-| Status | In Implementation (mode semantics + TODO-row enforcement script authored) |
+| Status | In Validation (clean verification merged via PR #6; owner closeout sync pending) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -74,6 +74,11 @@ Minimum evidence additions:
 - `todo_row_enforcement.tsv`
 - `promotion_gate_policy.md`
 - `bl067_bl068_matrix_reconcile.tsv`
+
+Verification evidence (2026-03-03 clean worktree replay):
+- `TestEvidence/bl073_truthfulness_20260303T005655Z/status.tsv` (`--contract-only --runs 3`)
+- `TestEvidence/bl073_truthfulness_20260303T005659Z/status.tsv` (`--execute --runs 3`)
+- PR: `https://github.com/joshband/LocusQ/pull/6`
 
 ### Mode Semantics Contract
 

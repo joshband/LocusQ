@@ -1398,7 +1398,7 @@
       "id": "BL-073",
       "title": "BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068",
       "state_bucket": "open",
-      "status": "In Implementation (mode semantics + TODO-row enforcement script authored)",
+      "status": "In Validation (clean verification merged via PR #6; owner closeout sync pending)",
       "priority": "P1",
       "track": "G - Release/Governance",
       "depends_on": "\u2014",
@@ -1409,7 +1409,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: In Implementation (mode semantics + TODO-row enforcement script authored). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: In Validation (clean verification packet merged via PR #6 on 2026-03-03; contract-only and execute --runs 3 gates passed with zero execute TODO/SCAFFOLD rows). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO.",
       "runbook_path": "Documentation/backlog/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md"
     },
