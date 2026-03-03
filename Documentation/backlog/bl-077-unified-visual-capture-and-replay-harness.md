@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-03
 
 ## Plain-Language Summary
 
-BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Progress (execution-ready harness contract delivered; promotion evidence cadence still active). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Validation (T1/T2/T3 plus live execute evidence complete; owner closeout/archive transition pending). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-077 in plain terms: Provide a robust, easy-to-use capture system that records
 | What is changing? | Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Progress (execution-ready harness contract delivered; implementation slices A/B complete). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (T1/T2/T3 plus live execute evidence complete). This item is done when required acceptance checks pass and promotion evidence is complete plus lifecycle closeout/archive sync is recorded. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-077-unified-visual-capture-and-replay-harness.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -63,7 +63,7 @@ flowchart LR
 |---|---|
 | ID | BL-077 |
 | Priority | P0 |
-| Status | In Progress (execution-ready contract lane passing; promotion cadence pending) |
+| Status | In Validation (T1/T2/T3 + live execute PASS; owner closeout/archive sync pending) |
 | Track | D - QA Platform |
 | Effort | High / L |
 | Depends On | BL-049 (Done), BL-073 |
@@ -141,6 +141,22 @@ Minimum evidence additions:
 - Evidence directories:
   - `TestEvidence/bl077_capture_harness_20260303T004858Z_contract/`
   - `TestEvidence/bl077_capture_harness_20260303T004858Z_execute/`
+
+## Promotion Cadence Update (2026-03-03)
+
+- Candidate intake replay (`T2`) result: PASS
+  - Command: `./scripts/qa-bl077-capture-harness-mac.sh --execute --runs 5 --out-dir TestEvidence/bl077_capture_harness_20260303T225142Z_t2`
+  - Evidence: `TestEvidence/bl077_capture_harness_20260303T225142Z_t2/`
+- Promotion replay (`T3`) result: PASS
+  - Command: `./scripts/qa-bl077-capture-harness-mac.sh --execute --runs 10 --out-dir TestEvidence/bl077_capture_harness_20260303T225142Z_t3`
+  - Evidence: `TestEvidence/bl077_capture_harness_20260303T225142Z_t3/`
+- Live execute sample run (`--live-capture`) result: PASS
+  - Command: `./scripts/qa-bl077-capture-harness-mac.sh --execute --runs 1 --live-capture --out-dir TestEvidence/bl077_capture_harness_20260303_live_execute`
+  - Evidence: `TestEvidence/bl077_capture_harness_20260303_live_execute/`
+- Owner sync packet prepared:
+  - `TestEvidence/bl077_owner_sync_z1_20260303T225142Z/promotion_decision.md`
+  - `TestEvidence/bl077_owner_sync_z1_20260303T225142Z/owner_decisions.md`
+  - `TestEvidence/bl077_owner_sync_z1_20260303T225142Z/handoff_resolution.md`
 
 ## Replay Cadence Plan (Required)
 
