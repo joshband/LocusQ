@@ -14,6 +14,7 @@
 #include "FDNReverb.h"
 #include "headphone_dsp/HeadphoneCalibrationChain.h"
 #include "headphone_dsp/HeadphonePresetLoader.h"
+#include "spatial_renderer/SpatialAuditionPrimitives.h"
 #include "spatial_renderer/SpatialHeadphonePoseAndCompensation.h"
 #include "spatial_renderer/SpatialProfileRouter.h"
 #include "spatial_renderer/SpatialRendererTypes.h"
@@ -2342,58 +2343,35 @@ private:
 
     static float auditionLevelDbForPreset (int presetIndex) noexcept
     {
-        switch (presetIndex)
-        {
-            case 0: return -36.0f;
-            case 1: return -30.0f;
-            case 2: return -24.0f;
-            case 3: return -18.0f;
-            case 4: return -12.0f;
-            default: break;
-        }
-
-        return -24.0f;
+        return locusq::spatial_audition_primitives::auditionLevelDbForPreset (presetIndex);
     }
 
     float advanceAuditionOscillator (double frequencyHz, double& phase) const noexcept
     {
-        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
-        const auto sample = std::sin (juce::MathConstants<double>::twoPi * phase);
-        phase += frequencyHz / sampleRate;
-        phase -= std::floor (phase);
-        return static_cast<float> (sample);
+        return locusq::spatial_audition_primitives::advanceOscillator (
+            frequencyHz,
+            phase,
+            currentSampleRate);
     }
 
     float nextAuditionWhiteNoise() noexcept
     {
-        auditionNoiseState = auditionNoiseState * 1664525u + 1013904223u;
-        return static_cast<float> ((auditionNoiseState >> 8) & 0x00FFFFFFu) / 8388608.0f - 1.0f;
+        return locusq::spatial_audition_primitives::nextWhiteNoise (auditionNoiseState);
     }
 
     float nextAuditionRand01() noexcept
     {
-        return 0.5f * (nextAuditionWhiteNoise() + 1.0f);
+        return locusq::spatial_audition_primitives::nextRand01 (auditionNoiseState);
     }
 
     static float wrapAuditionAzimuthDegrees (float azimuthDeg) noexcept
     {
-        while (azimuthDeg > 180.0f)
-            azimuthDeg -= 360.0f;
-        while (azimuthDeg < -180.0f)
-            azimuthDeg += 360.0f;
-        return azimuthDeg;
+        return locusq::spatial_audition_primitives::wrapAzimuthDegrees (azimuthDeg);
     }
 
     static float auditionVoiceHashUnit (int voiceIndex, std::uint32_t salt) noexcept
     {
-        auto hash = static_cast<std::uint32_t> (voiceIndex + 1);
-        hash ^= salt;
-        hash ^= hash >> 16;
-        hash *= 0x7FEB352Du;
-        hash ^= hash >> 15;
-        hash *= 0x846CA68Bu;
-        hash ^= hash >> 16;
-        return static_cast<float> (hash & 0x00FFFFFFu) / 16777215.0f;
+        return locusq::spatial_audition_primitives::voiceHashUnit (voiceIndex, salt);
     }
 
     void resetAuditionVoiceFieldStates() noexcept
@@ -2544,110 +2522,30 @@ private:
 
     bool isAuditionMultiSourceSignal (int signalIndex) const noexcept
     {
-        switch (signalIndex)
-        {
-            case 3:  // rain
-            case 4:  // snow
-            case 5:  // bouncing balls
-            case 6:  // wind chimes
-            case 7:  // crickets
-            case 8:  // song birds
-            case 9:  // karplus plucks
-            case 10: // membrane drops
-            case 11: // krell patch
-            case 12: // generative arp
-                return true;
-            default:
-                return false;
-        }
+        return locusq::spatial_audition_primitives::isMultiSourceSignal (signalIndex);
     }
 
     int getAuditionVoiceCountForSignal() const noexcept
     {
-        if (! isAuditionMultiSourceSignal (auditionSignalTypeIndex))
-            return 1;
-
-        switch (auditionSignalTypeIndex)
-        {
-            case 3: // rain
-            case 4: // snow
-            case 7: // crickets
-            case 8: // song birds
-                return qualityHigh ? 7 : 5;
-            case 5: // bouncing
-                return qualityHigh ? 6 : 4;
-            case 6: // chimes
-            case 9: // karplus
-            case 10: // membrane
-            case 12: // arp
-                return qualityHigh ? 5 : 4;
-            case 11: // krell
-                return qualityHigh ? 4 : 3;
-            default:
-                return 1;
-        }
+        return locusq::spatial_audition_primitives::voiceCountForSignal (
+            auditionSignalTypeIndex,
+            qualityHigh);
     }
 
     float getAuditionVoiceSpreadDegrees() const noexcept
     {
-        switch (auditionSignalTypeIndex)
-        {
-            case 3: // rain
-            case 4: // snow
-            case 5: // bouncing balls
-            case 7: // crickets
-            case 8: // song birds
-                return 172.0f;
-            case 6: // chimes
-            case 9: // karplus plucks
-            case 10: // membrane drops
-            case 11: // krell patch
-            case 12: // generative arp
-                return 156.0f;
-            default:
-                return 0.0f;
-        }
+        return locusq::spatial_audition_primitives::voiceSpreadDegreesForSignal (auditionSignalTypeIndex);
     }
 
     int getAuditionVoiceDelaySamples (int voiceIndex, int voiceCount) const noexcept
     {
-        if (voiceIndex <= 0 || voiceCount <= 1)
-            return 0;
-
-        int maxDelayMs = 18;
-        switch (auditionSignalTypeIndex)
-        {
-            case 3: // rain
-            case 4: // snow
-                maxDelayMs = qualityHigh ? 95 : 70;
-                break;
-            case 5: // bouncing balls
-                maxDelayMs = qualityHigh ? 140 : 95;
-                break;
-            case 7: // crickets
-            case 8: // birds
-                maxDelayMs = qualityHigh ? 82 : 56;
-                break;
-            case 6: // chimes
-            case 9: // plucks
-            case 10: // membrane
-            case 11: // krell
-            case 12: // arp
-                maxDelayMs = qualityHigh ? 62 : 44;
-                break;
-            default:
-                maxDelayMs = 18;
-                break;
-        }
-
-        const auto voiceNorm = static_cast<float> (voiceIndex) / static_cast<float> (juce::jmax (1, voiceCount - 1));
-        const auto jitterMs = 10.0f * auditionVoiceHashUnit (voiceIndex, 0xA53C9E11u);
-        const auto delayMs = juce::jlimit (0.0f, static_cast<float> (maxDelayMs), maxDelayMs * voiceNorm + jitterMs);
-        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
-        return juce::jlimit (
-            0,
-            AUDITION_HISTORY_BUFFER_SAMPLES - 1,
-            static_cast<int> (std::round (delayMs * static_cast<float> (sampleRate) * 0.001f)));
+        return locusq::spatial_audition_primitives::voiceDelaySamplesForSignal (
+            auditionSignalTypeIndex,
+            qualityHigh,
+            voiceIndex,
+            voiceCount,
+            currentSampleRate,
+            AUDITION_HISTORY_BUFFER_SAMPLES);
     }
 
     float readAuditionHistoryDelayed (int delaySamples) const noexcept
