@@ -43,7 +43,7 @@ BL-077 unified visual capture harness scaffold lane.
 Options:
   --out-dir <path>     Artifact output directory
   --contract-only      Contract checks only (default)
-  --execute            Execute-mode gate checks (fails while TODO rows remain)
+  --execute            Execute-mode gate checks (dry-run default, live with --live-capture)
   --runs <N>           Number of replay runs (default: 3 for contract-only, 1 for execute)
   --profile <name>     Capture profile name (default: dense)
   --live-capture       In execute mode, run live screen capture instead of dry-run probes
@@ -175,7 +175,7 @@ run_capture_probe() {
   local run_id="$1"
   local probe_mode="$2"
 
-  local run_dir="${OUT_DIR}/run_${run_id}"
+  local run_dir="${OUT_DIR}/${run_id}"
   mkdir -p "$run_dir"
 
   local args=(--out-dir "$run_dir" --profile "$PROFILE_NAME")
@@ -183,7 +183,7 @@ run_capture_probe() {
   if [[ "$probe_mode" == "contract_only" ]]; then
     args+=(--dry-run --no-cues)
   elif [[ "$probe_mode" == "execute" && "$LIVE_CAPTURE" -eq 0 ]]; then
-    args+=(--dry-run --no-cues)
+    args+=(--dry-run)
   fi
 
   set +e
@@ -355,11 +355,9 @@ for ((run_idx=1; run_idx<=RUNS; run_idx++)); do
     run_result="FAIL"
   elif [[ ! -f "$manifest_file" || ! -f "$inventory_file" || ! -f "$hashes_file" || ! -f "$checkpoint_map_file" || ! -f "$contact_sheets_file" || ! -f "$cue_clips_file" ]]; then
     run_result="FAIL"
-  elif [[ "$MODE" == "execute" && "$LIVE_CAPTURE" -eq 0 ]]; then
-    run_result="TODO"
   elif [[ "$MODE" == "execute" && "$required_missing_rows" -gt 0 ]]; then
     run_result="FAIL"
-  elif [[ "$MODE" == "execute" && "$LIVE_CAPTURE" -eq 1 && "$postprocess_nonpass_rows" -gt 0 ]]; then
+  elif [[ "$MODE" == "execute" && "$postprocess_nonpass_rows" -gt 0 ]]; then
     run_result="FAIL"
   fi
 
@@ -386,9 +384,11 @@ for ((run_idx=1; run_idx<=RUNS; run_idx++)); do
   fi
 
   if [[ "$run_result" == "PASS" ]]; then
-    record "BL077-RUN-${run_id}" "PASS" "capture probe completed" "$run_dir"
-  elif [[ "$run_result" == "TODO" ]]; then
-    record "BL077-RUN-${run_id}" "PASS" "execute mode currently running dry-run probe; use --live-capture for real capture" "$run_dir"
+    if [[ "$MODE" == "execute" && "$LIVE_CAPTURE" -eq 0 ]]; then
+      record "BL077-RUN-${run_id}" "PASS" "capture probe completed (deterministic dry-run execute lane)" "$run_dir"
+    else
+      record "BL077-RUN-${run_id}" "PASS" "capture probe completed" "$run_dir"
+    fi
   else
     record "BL077-RUN-${run_id}" "FAIL" "capture probe failed" "$run_dir"
   fi
@@ -465,7 +465,8 @@ Last Modified Date: ${DATE_UTC}
 1. Invocation stays CLI-first (\`capture-headtracking-rotation-mac.sh\`), so downstream harnesses can call without plugin-internal imports.
 2. Profile schema is declarative JSON (\`locusq-capture-profile-v1\`) with deterministic cue-point ordering.
 3. Session artifacts always include machine-readable manifest, artifact inventory, replay hash tables, checkpoint-frame maps, contact-sheet indices, and cue-window clip indices.
-4. Execute-mode promotion remains blocked while required integration consumers (blocking=yes) are unresolved.
+4. Dry-run execute probes emit deterministic placeholder media/log artifacts so contract lanes can verify full schema without host capture permissions.
+5. Execute-mode promotion remains blocked while required integration consumers (blocking=yes) are unresolved.
 EOF_EXTENSION
 
 record "BL077-C2-extension_contract" "PASS" "extension contract artifact written" "$EXTENSION_CONTRACT_MD"
