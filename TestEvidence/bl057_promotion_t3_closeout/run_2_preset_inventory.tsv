@@ -1,0 +1,12 @@
+run	preset_file	hp_model_id	hp_mode	preamp_db	filter_count	result	detail
+2	airpods_pro_1_anc_on.yaml	airpods_pro_1	anc_on	-1.200	3	PASS	ok
+2	airpods_pro_1_anc_off.yaml	airpods_pro_1	anc_off	-0.800	3	PASS	ok
+2	airpods_pro_1_transparency.yaml	airpods_pro_1	transparency	-1.100	3	PASS	ok
+2	airpods_pro_2_anc_on.yaml	airpods_pro_2	anc_on	-1.000	3	PASS	ok
+2	airpods_pro_2_anc_off.yaml	airpods_pro_2	anc_off	-0.900	3	PASS	ok
+2	airpods_pro_2_transparency.yaml	airpods_pro_2	transparency	-1.000	3	PASS	ok
+2	airpods_pro_3_anc_on.yaml	airpods_pro_3	anc_on	-1.000	3	PASS	ok
+2	airpods_pro_3_anc_off.yaml	airpods_pro_3	anc_off	-0.900	3	PASS	ok
+2	airpods_pro_3_transparency.yaml	airpods_pro_3	transparency	-1.000	3	PASS	ok
+2	sony_wh1000xm5_anc_on.yaml	sony_wh1000xm5	anc_on	-6.200	8	PASS	ok
+2	sony_wh1000xm5_anc_off.yaml	sony_wh1000xm5	anc_off	0.000	1	PASS	ok
