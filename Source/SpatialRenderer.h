@@ -14,6 +14,7 @@
 #include "FDNReverb.h"
 #include "headphone_dsp/HeadphoneCalibrationChain.h"
 #include "headphone_dsp/HeadphonePresetLoader.h"
+#include "spatial_renderer/SpatialAuditionEngine.h"
 #include "spatial_renderer/SpatialAuditionPrimitives.h"
 #include "spatial_renderer/SpatialHeadphonePoseAndCompensation.h"
 #include "spatial_renderer/SpatialProfileRouter.h"
@@ -2399,125 +2400,33 @@ private:
             && currentBlockSize <= (AUDITION_HISTORY_BUFFER_SAMPLES / 2);
     }
 
-    float nextAuditionVoiceWhiteNoise (int voiceIndex) noexcept
-    {
-        const auto idx = static_cast<size_t> (juce::jlimit (0, AUDITION_MAX_VOICES - 1, voiceIndex));
-        auto& state = auditionVoiceNoiseState[idx];
-        state = state * 1664525u + 1013904223u;
-        const auto scrambled = state ^ (state >> 11) ^ (state << 7);
-        return static_cast<float> (scrambled & 0x00FFFFFFu) / 8388608.0f - 1.0f;
-    }
-
     float renderAuditionVoiceExcitation (int voiceIndex, int activeVoices, float delayedSample) noexcept
     {
-        if (activeVoices <= 1 || ! isAuditionMultiSourceSignal (auditionSignalTypeIndex))
-            return delayedSample;
-
         const auto idx = static_cast<size_t> (juce::jlimit (0, AUDITION_MAX_VOICES - 1, voiceIndex));
-        auto& phaseA = auditionVoiceExciterPhaseA[idx];
-        auto& phaseB = auditionVoiceExciterPhaseB[idx];
-        auto& env = auditionVoiceExciterEnv[idx];
-        auto& cooldown = auditionVoiceExciterCooldownSamples[idx];
-        const auto sampleRate = juce::jmax (1.0, currentSampleRate);
-        const auto hashA = auditionVoiceHashUnit (voiceIndex, 0xB5297A4Du);
-        const auto hashB = auditionVoiceHashUnit (voiceIndex, 0x68E31DA4u);
-
-        const auto advanceSine = [&sampleRate] (double& phase, double frequencyHz) noexcept -> float
+        locusq::spatial_audition_engine::VoiceExcitationState state
         {
-            phase += frequencyHz / sampleRate;
-            phase -= std::floor (phase);
-            return static_cast<float> (std::sin (juce::MathConstants<double>::twoPi * phase));
+            auditionVoiceExciterPhaseA[idx],
+            auditionVoiceExciterPhaseB[idx],
+            auditionVoiceExciterEnv[idx],
+            auditionVoiceExciterCooldownSamples[idx],
+            auditionVoiceNoiseState[idx]
         };
-
-        if (cooldown > 0)
-            --cooldown;
-
-        switch (auditionSignalTypeIndex)
+        const locusq::spatial_audition_engine::VoiceExcitationInput input
         {
-            case 3: // rain
-            {
-                const auto toneA = advanceSine (phaseA, 740.0 + 2420.0 * (0.25 + 0.75 * hashA));
-                const auto toneB = advanceSine (phaseB, 520.0 + 1560.0 * (0.30 + 0.70 * hashB));
-                const auto triggerGate = qualityHigh ? 0.84f : 0.89f;
-                const auto voiceNoise = nextAuditionVoiceWhiteNoise (voiceIndex);
-                if (cooldown <= 0 && voiceNoise > triggerGate)
-                {
-                    const auto dropletPulse = 0.5f + 0.5f * toneB;
-                    env = juce::jmax (env, 0.24f + 0.72f * dropletPulse);
-                    const auto cooldownSeconds = 0.010f + 0.024f * hashB;
-                    cooldown = static_cast<int> (std::round (cooldownSeconds * static_cast<float> (sampleRate)));
-                }
-
-                env *= qualityHigh ? 0.9939f : 0.9920f;
-                const auto sparkle = toneA * std::abs (toneA);
-                const auto droplet = (0.66f * toneA + 0.34f * sparkle) * env;
-                const auto mist = 0.09f * voiceNoise * (0.35f + 0.65f * env);
-                return juce::jlimit (-2.0f, 2.0f, 0.76f * delayedSample + 0.24f * droplet + mist);
-            }
-            case 4: // snow
-            {
-                const auto drift = advanceSine (phaseA, 72.0 + 120.0 * hashA);
-                const auto flutter = advanceSine (phaseB, 0.38 + 0.44 * hashB);
-                const auto frostNoise = nextAuditionVoiceWhiteNoise (voiceIndex)
-                    * (0.26f + 0.74f * (0.5f + 0.5f * flutter));
-                const auto veil = 0.88f * delayedSample + 0.12f * frostNoise;
-                const auto shimmer = 0.17f * drift * (0.45f + 0.55f * std::abs (flutter));
-                return juce::jlimit (-2.0f, 2.0f, 0.84f * veil + shimmer);
-            }
-            case 5:  // bouncing balls
-            case 10: // membrane drops
-            {
-                const auto triggerGate = (auditionSignalTypeIndex == 5)
-                    ? (qualityHigh ? 0.80f : 0.86f)
-                    : (qualityHigh ? 0.78f : 0.84f);
-                const auto voiceNoise = nextAuditionVoiceWhiteNoise (voiceIndex);
-                if (cooldown <= 0 && voiceNoise > triggerGate)
-                {
-                    env = juce::jmax (env, 0.52f + 0.42f * (0.5f + 0.5f * voiceNoise));
-                    const auto cooldownSeconds = (auditionSignalTypeIndex == 5 ? 0.040f : 0.055f)
-                        + (auditionSignalTypeIndex == 5 ? 0.090f : 0.120f) * hashA;
-                    cooldown = static_cast<int> (std::round (cooldownSeconds * static_cast<float> (sampleRate)));
-                }
-
-                env *= qualityHigh ? 0.9898f : 0.9868f;
-                const auto modalA = advanceSine (phaseA, 130.0 + 410.0 * hashA + 170.0 * env);
-                const auto modalB = advanceSine (phaseB, 208.0 + 500.0 * hashB);
-                auto strikeEnv = env;
-                strikeEnv *= strikeEnv;
-                strikeEnv *= strikeEnv;
-                const auto resonant = (0.70f * modalA + 0.30f * modalB) * env;
-                const auto click = 0.24f * voiceNoise * strikeEnv;
-                const auto blended = (auditionSignalTypeIndex == 5)
-                    ? (0.70f * delayedSample + 0.30f * resonant + click)
-                    : (0.76f * delayedSample + 0.24f * resonant + 0.16f * click);
-                return juce::jlimit (-2.0f, 2.0f, blended);
-            }
-            case 6: // chimes
-            {
-                const auto voiceNoise = nextAuditionVoiceWhiteNoise (voiceIndex);
-                if (cooldown <= 0 && voiceNoise > (qualityHigh ? 0.88f : 0.92f))
-                {
-                    env = juce::jmax (env, 0.48f + 0.48f * (0.5f + 0.5f * voiceNoise));
-                    const auto cooldownSeconds = (qualityHigh ? 0.11f : 0.15f) + 0.18f * hashA;
-                    cooldown = static_cast<int> (std::round (cooldownSeconds * static_cast<float> (sampleRate)));
-                }
-
-                env *= qualityHigh ? 0.99934f : 0.99886f;
-                const auto partialA = advanceSine (phaseA, 520.0 + 1080.0 * hashA);
-                const auto partialB = advanceSine (phaseB, 780.0 + 1540.0 * hashB);
-                const auto inharmonic = static_cast<float> (std::sin (
-                    juce::MathConstants<double>::twoPi * (phaseA * 1.618 + phaseB * 0.337)));
-                auto strikeEnv = env;
-                strikeEnv *= strikeEnv;
-                strikeEnv *= strikeEnv;
-                strikeEnv *= strikeEnv;
-                const auto resonant = (0.58f * partialA + 0.29f * partialB + 0.13f * inharmonic) * env;
-                const auto strike = 0.18f * voiceNoise * strikeEnv;
-                return juce::jlimit (-2.0f, 2.0f, 0.64f * delayedSample + 0.36f * resonant + strike);
-            }
-            default:
-                return delayedSample;
-        }
+            voiceIndex,
+            activeVoices,
+            auditionSignalTypeIndex,
+            qualityHigh,
+            delayedSample,
+            currentSampleRate
+        };
+        const auto excited = locusq::spatial_audition_engine::renderVoiceExcitation (state, input);
+        auditionVoiceExciterPhaseA[idx] = state.phaseA;
+        auditionVoiceExciterPhaseB[idx] = state.phaseB;
+        auditionVoiceExciterEnv[idx] = state.env;
+        auditionVoiceExciterCooldownSamples[idx] = state.cooldownSamples;
+        auditionVoiceNoiseState[idx] = state.noiseState;
+        return excited;
     }
 
     bool isAuditionMultiSourceSignal (int signalIndex) const noexcept
@@ -2710,51 +2619,22 @@ private:
         float physicsDensity,
         float motionEnergy) noexcept
     {
-        const auto couplingBlend = juce::jlimit (
-            0.0f,
-            1.0f,
-            0.44f * physicsVelocity + 0.36f * physicsCollision + 0.20f * physicsDensity);
-        if (couplingBlend <= 1.0e-5f)
-            return sample;
-
-        const auto lowpassAlpha = juce::jlimit (0.02f, 0.34f, 0.055f + 0.18f * physicsVelocity);
-        auditionPhysicsReactiveTimbreLowpassState += (sample - auditionPhysicsReactiveTimbreLowpassState) * lowpassAlpha;
-        const auto high = sample - auditionPhysicsReactiveTimbreLowpassState;
-        const auto transient = 1.0f + 0.85f * physicsCollision;
-        const auto densityBody = 0.92f + 0.28f * physicsDensity;
-        float shaped = sample;
-
-        switch (auditionSignalTypeIndex)
+        locusq::spatial_audition_engine::PhysicsReactiveState state
         {
-            case 3: // rain
-                shaped = sample * densityBody
-                    + high * (0.18f + 0.44f * physicsVelocity)
-                    + high * (0.10f + 0.18f * motionEnergy) * transient;
-                break;
-            case 4: // snow
-                shaped = sample * (0.94f + 0.24f * physicsDensity)
-                    + high * (0.06f + 0.16f * physicsVelocity)
-                    - high * (0.04f + 0.10f * physicsCollision);
-                break;
-            case 5: // bouncing
-                shaped = std::tanh (sample * (1.0f + 0.56f * physicsCollision + 0.24f * physicsVelocity))
-                    + high * (0.10f + 0.16f * physicsVelocity);
-                break;
-            case 6: // chimes
-                shaped = sample * (1.0f + 0.26f * physicsCollision)
-                    + high * (0.14f + 0.26f * physicsVelocity + 0.08f * physicsDensity);
-                break;
-            default:
-                shaped = sample * (0.95f + 0.20f * couplingBlend)
-                    + high * (0.08f + 0.18f * physicsVelocity);
-                break;
-        }
-
-        const auto wet = juce::jlimit (
-            0.08f,
-            0.82f,
-            0.20f + 0.52f * couplingBlend + 0.10f * motionEnergy);
-        return juce::jlimit (-2.0f, 2.0f, sample + (shaped - sample) * wet);
+            auditionPhysicsReactiveTimbreLowpassState
+        };
+        const locusq::spatial_audition_engine::PhysicsReactiveInput input
+        {
+            auditionSignalTypeIndex,
+            sample,
+            physicsVelocity,
+            physicsCollision,
+            physicsDensity,
+            motionEnergy
+        };
+        const auto shaped = locusq::spatial_audition_engine::applyPhysicsReactiveTimbre (state, input);
+        auditionPhysicsReactiveTimbreLowpassState = state.timbreLowpassState;
+        return shaped;
     }
 
     float generateAuditionSignalSample() noexcept
