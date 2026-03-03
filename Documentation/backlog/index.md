@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-03 (docs redundancy guardrails + backlog summary export contract + BL-038..BL-041 targeted visual clarity pass)
+Last Modified Date: 2026-03-03 (backlog summary schema contract + pre-commit auto-refresh hook for machine-readable summaries)
 
 # LocusQ Master Backlog Index
 
@@ -53,6 +53,10 @@ Applies to all remaining open items and all future backlog items.
      - `Documentation/reports/data/backlog-summary.csv`
 14. Summary artifact freshness gate:
    - `./scripts/export-backlog-summaries.py --check` (called by `./scripts/validate-docs-freshness.sh`)
+15. Summary schema authority:
+   - `Documentation/backlog/backlog-summary-schema.md`
+16. Pre-commit auto-refresh hook:
+   - `.githooks/pre-commit` refreshes and stages summary artifacts when `Documentation/backlog/**` changes are staged.
 
 ## Layer Model
 

@@ -5,4 +5,21 @@ set -euo pipefail
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 cd "${ROOT_DIR}"
 
+staged_paths="$(git diff --cached --name-only --diff-filter=ACMRD)"
+refresh_backlog_summary=0
+
+while IFS= read -r path; do
+  [[ -z "${path}" ]] && continue
+  if [[ "${path}" == Documentation/backlog/* ]]; then
+    refresh_backlog_summary=1
+    break
+  fi
+done <<< "${staged_paths}"
+
+if [[ "${refresh_backlog_summary}" -eq 1 ]]; then
+  echo "INFO: backlog changes detected; refreshing machine-readable backlog summaries."
+  ./scripts/export-backlog-summaries.py
+  git add Documentation/reports/data/backlog-summary.json Documentation/reports/data/backlog-summary.csv
+fi
+
 ./scripts/git-artifact-hygiene-guard.sh

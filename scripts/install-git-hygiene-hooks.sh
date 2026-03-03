@@ -38,3 +38,4 @@ fi
 
 echo "Installed git hygiene pre-commit hook via core.hooksPath=.githooks"
 echo "Hook: .githooks/pre-commit"
+echo "Behavior: runs artifact guard and auto-refreshes backlog summary artifacts when Documentation/backlog/** changes are staged."

@@ -100,6 +100,8 @@ Recommended scaffolding helper for new items:
 1. `./scripts/new-backlog-item.py --id BL-078 --title "Example Item" --priority P1 --track "Track E - R&D Expansion"`
 2. Authoring guidance and anti-duplication policy: `Documentation/backlog/runbook-authoring-guide.md`
 3. Refresh machine-readable backlog summaries after backlog changes: `./scripts/export-backlog-summaries.py`
+4. Summary schema authority: `Documentation/backlog/backlog-summary-schema.md`
+5. Auto-refresh hook (local): `.githooks/pre-commit` refreshes/stages summary artifacts when `Documentation/backlog/**` changes are staged.
 
 ## Backlog Validation Cadence Standard
 
