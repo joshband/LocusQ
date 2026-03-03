@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-03
 
 ## Plain-Language Summary
 
-BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: In Validation (clean verification packet merged via PR #6 on 2026-03-03; contract-only and execute `--runs 3` gates passed with zero execute TODO/SCAFFOLD rows). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: Done (clean verification packet merged via PR #6 on 2026-03-03; closeout/archive sync completed). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-073 in plain terms: Prevent false-green promotions by separating contract-onl
 | What is changing? | Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (clean verification merged via PR #6 on 2026-03-03). This item is done when owner closeout/archive sync is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (verification + closeout/archive sync complete on 2026-03-03). |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -44,11 +44,11 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-073 |
 | Priority | P1 |
-| Status | In Validation (clean verification merged via PR #6; owner closeout sync pending) |
+| Status | Done (clean verification merged via PR #6; closeout/archive sync complete) |
 | Track | G - Release/Governance |
 | Effort | Med / M |
 | Depends On | — |
-| Blocks | BL-067, BL-068 |
+| Blocks | — |
 | Annex Spec | `(pending annex spec)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
