@@ -14,6 +14,7 @@
 #include "FDNReverb.h"
 #include "headphone_dsp/HeadphoneCalibrationChain.h"
 #include "headphone_dsp/HeadphonePresetLoader.h"
+#include "spatial_renderer/SpatialHeadphonePoseAndCompensation.h"
 #include "spatial_renderer/SpatialProfileRouter.h"
 #include "spatial_renderer/SpatialRendererTypes.h"
 #include <algorithm>
@@ -2204,23 +2205,6 @@ private:
 
     bool steamAudioRuntimeReady = false;
 
-    // World speaker vectors use scene coordinates where +Z is front.
-    static constexpr std::array<std::array<float, 3>, NUM_SPEAKERS> kQuadWorldSpeakerDirs
-    {{
-        { -0.70710678f, 0.0f,  0.70710678f }, // FL
-        {  0.70710678f, 0.0f,  0.70710678f }, // FR
-        {  0.70710678f, 0.0f, -0.70710678f }, // RR
-        { -0.70710678f, 0.0f, -0.70710678f }  // RL
-    }};
-
-    // Listener-local speaker vectors follow Steam canonical axes where -Z is ahead.
-    static constexpr std::array<std::array<float, 2>, NUM_SPEAKERS> kQuadListenerSpeakerDirsXZ
-    {{
-        { -0.70710678f, -0.70710678f }, // FL
-        {  0.70710678f, -0.70710678f }, // FR
-        {  0.70710678f,  0.70710678f }, // RR
-        { -0.70710678f,  0.70710678f }  // RL
-    }};
     static constexpr std::array<float, NUM_SPEAKERS> kCodecAdmObjectDefaultGains
     {
         1.0f, 1.0f, 1.0f, 1.0f
@@ -2233,24 +2217,6 @@ private:
     {
         0.70710678f, 0.70710678f
     };
-
-    static float dot3 (const std::array<float, 3>& lhs, const std::array<float, 3>& rhs) noexcept
-    {
-        return (lhs[0] * rhs[0]) + (lhs[1] * rhs[1]) + (lhs[2] * rhs[2]);
-    }
-
-    static bool normalizeVector3 (std::array<float, 3>& vector) noexcept
-    {
-        const float magnitudeSq = dot3 (vector, vector);
-        if (! std::isfinite (magnitudeSq) || magnitudeSq <= 1.0e-12f)
-            return false;
-
-        const float invMagnitude = 1.0f / std::sqrt (magnitudeSq);
-        vector[0] *= invMagnitude;
-        vector[1] *= invMagnitude;
-        vector[2] *= invMagnitude;
-        return std::isfinite (vector[0]) && std::isfinite (vector[1]) && std::isfinite (vector[2]);
-    }
 
     static juce::String getBundledPeqPresetFilenameForProfile (HeadphoneDeviceProfile profile)
     {
@@ -2313,9 +2279,9 @@ private:
         orientation.up = { coordinateSpace.up.x, coordinateSpace.up.y, coordinateSpace.up.z };
         orientation.ahead = { coordinateSpace.ahead.x, coordinateSpace.ahead.y, coordinateSpace.ahead.z };
 
-        if (! normalizeVector3 (orientation.right)
-            || ! normalizeVector3 (orientation.up)
-            || ! normalizeVector3 (orientation.ahead))
+        if (! locusq::spatial_headphone_pose::normalizeVector3 (orientation.right)
+            || ! locusq::spatial_headphone_pose::normalizeVector3 (orientation.up)
+            || ! locusq::spatial_headphone_pose::normalizeVector3 (orientation.ahead))
         {
             orientation = ListenerOrientation {};
             return false;
@@ -2324,69 +2290,9 @@ private:
         return true;
     }
 
-    static void buildSpeakerMixFromOrientation (const ListenerOrientation& orientation,
-                                                std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS>& speakerMix) noexcept
-    {
-        for (int sourceSpeaker = 0; sourceSpeaker < NUM_SPEAKERS; ++sourceSpeaker)
-        {
-            const auto& worldDir = kQuadWorldSpeakerDirs[static_cast<size_t> (sourceSpeaker)];
-            const float relX = dot3 (worldDir, orientation.right);
-            const float relZ = dot3 (worldDir, orientation.ahead);
-            const float planarMag = std::sqrt ((relX * relX) + (relZ * relZ));
-
-            float planarX = 0.0f;
-            float planarZ = -1.0f;
-            if (planarMag > 1.0e-6f && std::isfinite (planarMag))
-            {
-                const float invPlanar = 1.0f / planarMag;
-                planarX = relX * invPlanar;
-                planarZ = relZ * invPlanar;
-            }
-
-            float weightSum = 0.0f;
-            float bestDot = -2.0f;
-            int bestSpeaker = 0;
-            for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
-            {
-                const auto& targetDir = kQuadListenerSpeakerDirsXZ[static_cast<size_t> (targetSpeaker)];
-                const float projection = (planarX * targetDir[0]) + (planarZ * targetDir[1]);
-                if (projection > bestDot)
-                {
-                    bestDot = projection;
-                    bestSpeaker = targetSpeaker;
-                }
-
-                const float weight = juce::jmax (0.0f, projection);
-                speakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] = weight;
-                weightSum += weight;
-            }
-
-            if (weightSum > 1.0e-6f && std::isfinite (weightSum))
-            {
-                const float invWeightSum = 1.0f / weightSum;
-                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
-                {
-                    speakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] *= invWeightSum;
-                }
-            }
-            else
-            {
-                for (int targetSpeaker = 0; targetSpeaker < NUM_SPEAKERS; ++targetSpeaker)
-                {
-                    speakerMix[static_cast<size_t> (targetSpeaker)][static_cast<size_t> (sourceSpeaker)] =
-                        (targetSpeaker == bestSpeaker) ? 1.0f : 0.0f;
-                }
-            }
-        }
-    }
-
     void setHeadPoseIdentityMix() noexcept
     {
-        for (int dst = 0; dst < NUM_SPEAKERS; ++dst)
-        {
-            for (int src = 0; src < NUM_SPEAKERS; ++src)
-                headPoseSpeakerMix[static_cast<size_t> (dst)][static_cast<size_t> (src)] = (dst == src) ? 1.0f : 0.0f;
-        }
+        locusq::spatial_headphone_pose::setHeadPoseIdentityMix (headPoseSpeakerMix);
     }
 
     void resetHeadPoseState() noexcept
@@ -2401,36 +2307,12 @@ private:
     // Quaternion follows Steam canonical axes (right +X, up +Y, ahead -Z).
     void updateHeadPoseOrientationFromSnapshot() noexcept
     {
-        const float x = headPoseSnapshot.qx;
-        const float y = headPoseSnapshot.qy;
-        const float z = headPoseSnapshot.qz;
-        const float w = headPoseSnapshot.qw;
-
-        const float xx = x * x;
-        const float yy = y * y;
-        const float zz = z * z;
-        const float xy = x * y;
-        const float xz = x * z;
-        const float yz = y * z;
-        const float xw = x * w;
-        const float yw = y * w;
-        const float zw = z * w;
-
-        const float m00 = 1.0f - 2.0f * (yy + zz);
-        const float m10 = 2.0f * (xy + zw);
-        const float m20 = 2.0f * (xz - yw);
-
-        const float m01 = 2.0f * (xy - zw);
-        const float m11 = 1.0f - 2.0f * (xx + zz);
-        const float m21 = 2.0f * (yz + xw);
-
-        const float m02 = 2.0f * (xz + yw);
-        const float m12 = 2.0f * (yz - xw);
-        const float m22 = 1.0f - 2.0f * (xx + yy);
-
-        headPoseOrientation.right = { m00, m10, m20 };
-        headPoseOrientation.up = { m01, m11, m21 };
-        headPoseOrientation.ahead = { -m02, -m12, -m22 };
+        locusq::spatial_headphone_pose::updateOrientationFromQuaternion (
+            headPoseSnapshot.qx,
+            headPoseSnapshot.qy,
+            headPoseSnapshot.qz,
+            headPoseSnapshot.qw,
+            headPoseOrientation);
     }
 
     void rebuildHeadPoseSpeakerMix() noexcept
@@ -2440,7 +2322,9 @@ private:
             setHeadPoseIdentityMix();
             return;
         }
-        buildSpeakerMixFromOrientation (headPoseOrientation, headPoseSpeakerMix);
+        locusq::spatial_headphone_pose::buildSpeakerMixFromOrientation (
+            headPoseOrientation,
+            headPoseSpeakerMix);
     }
 
     inline void getHeadPoseAdjustedQuadSample (int sampleIndex, float& fl, float& fr, float& rr, float& rl) const noexcept
@@ -2458,20 +2342,16 @@ private:
         const float sourceFr = accumBuffer.getSample (1, sampleIndex);
         const float sourceRr = accumBuffer.getSample (2, sampleIndex);
         const float sourceRl = accumBuffer.getSample (3, sampleIndex);
-
-        const auto mixSpeaker = [this, sourceFl, sourceFr, sourceRr, sourceRl] (int targetSpeaker) noexcept
-        {
-            const auto& mix = headPoseSpeakerMix[static_cast<size_t> (targetSpeaker)];
-            return (mix[0] * sourceFl)
-                 + (mix[1] * sourceFr)
-                 + (mix[2] * sourceRr)
-                 + (mix[3] * sourceRl);
-        };
-
-        fl = mixSpeaker (0);
-        fr = mixSpeaker (1);
-        rr = mixSpeaker (2);
-        rl = mixSpeaker (3);
+        locusq::spatial_headphone_pose::mixHeadPoseAdjustedQuadSample (
+            headPoseSpeakerMix,
+            sourceFl,
+            sourceFr,
+            sourceRr,
+            sourceRl,
+            fl,
+            fr,
+            rr,
+            rl);
     }
 
     //==========================================================================
@@ -4311,9 +4191,13 @@ private:
         float rr = 0.0f;
         float rl = 0.0f;
         getHeadPoseAdjustedQuadSample (sampleIndex, fl, fr, rr, rl);
-        // Simple crossfeed/Haas-style stereo virtualization from quad bed.
-        left = (0.74f * fl) + (0.46f * rl) + (0.12f * fr) + (0.08f * rr);
-        right = (0.74f * fr) + (0.46f * rr) + (0.12f * fl) + (0.08f * rl);
+        locusq::spatial_headphone_pose::renderVirtual3dStereoFromQuad (
+            fl,
+            fr,
+            rr,
+            rl,
+            left,
+            right);
     }
 
     inline void writeSurround521Sample (juce::AudioBuffer<float>& outputBuffer, int sampleIndex, float masterGain) const noexcept
@@ -4356,83 +4240,49 @@ private:
         float rr = 0.0f;
         float rl = 0.0f;
         getHeadPoseAdjustedQuadSample (sampleIndex, fl, fr, rr, rl);
-        // Legacy headphone path: FL+RL -> Left, FR+RR -> Right.
-        left = (fl + rl) * 0.707f;
-        right = (fr + rr) * 0.707f;
+        locusq::spatial_headphone_pose::renderStereoDownmixFromQuad (
+            fl,
+            fr,
+            rr,
+            rl,
+            left,
+            right);
     }
 
     void resetHeadphoneCompensationState() noexcept
     {
-        headphoneCompLowStateLeft = 0.0f;
-        headphoneCompLowStateRight = 0.0f;
+        locusq::spatial_headphone_pose::resetHeadphoneCompensationState (
+            headphoneCompLowStateLeft,
+            headphoneCompLowStateRight);
     }
 
     void updateHeadphoneCompensationForProfile (HeadphoneDeviceProfile profile) noexcept
     {
-        constexpr float pi = 3.14159265358979323846f;
-        const float sampleRate = juce::jmax (1.0f, static_cast<float> (currentSampleRate));
-        const float lowCutoffHz = 700.0f;
-        headphoneCompLowAlpha = juce::jlimit (1.0e-4f, 1.0f, 1.0f - std::exp (-2.0f * pi * lowCutoffHz / sampleRate));
-
-        switch (profile)
-        {
-            case HeadphoneDeviceProfile::AirPodsPro2:
-                headphoneCompLowGain = 0.98f;
-                headphoneCompHighGain = 1.03f;
-                headphoneCompCrossfeed = 0.015f;
-                break;
-            case HeadphoneDeviceProfile::AirPodsPro3:
-                headphoneCompLowGain = 0.98f;
-                headphoneCompHighGain = 1.03f;
-                headphoneCompCrossfeed = 0.015f;
-                break;
-            case HeadphoneDeviceProfile::SonyWH1000XM5:
-                headphoneCompLowGain = 1.04f;
-                headphoneCompHighGain = 0.97f;
-                headphoneCompCrossfeed = 0.020f;
-                break;
-            case HeadphoneDeviceProfile::CustomSOFA:
-                headphoneCompLowGain = 1.00f;
-                headphoneCompHighGain = 1.00f;
-                headphoneCompCrossfeed = 0.010f;
-                break;
-            case HeadphoneDeviceProfile::Generic:
-            default:
-                headphoneCompLowGain = 1.00f;
-                headphoneCompHighGain = 1.00f;
-                headphoneCompCrossfeed = 0.0f;
-                break;
-        }
+        const auto config = locusq::spatial_headphone_pose::makeHeadphoneCompensationConfig (
+            static_cast<int> (profile),
+            currentSampleRate);
+        headphoneCompLowAlpha = config.lowAlpha;
+        headphoneCompLowGain = config.lowGain;
+        headphoneCompHighGain = config.highGain;
+        headphoneCompCrossfeed = config.crossfeed;
     }
 
     inline void applyHeadphoneProfileCompensation (float& left, float& right) noexcept
     {
-        if (headphoneCompCrossfeed == 0.0f
-            && headphoneCompLowGain == 1.0f
-            && headphoneCompHighGain == 1.0f)
+        const locusq::spatial_headphone_pose::HeadphoneCompensationConfig config
         {
-            return;
-        }
+            headphoneCompLowAlpha,
+            headphoneCompLowGain,
+            headphoneCompHighGain,
+            headphoneCompCrossfeed
+        };
 
-        const float inLeft = left;
-        const float inRight = right;
-        headphoneCompLowStateLeft += headphoneCompLowAlpha * (inLeft - headphoneCompLowStateLeft);
-        headphoneCompLowStateRight += headphoneCompLowAlpha * (inRight - headphoneCompLowStateRight);
-
-        const float highLeft = inLeft - headphoneCompLowStateLeft;
-        const float highRight = inRight - headphoneCompLowStateRight;
-        const float eqLeft = (headphoneCompLowStateLeft * headphoneCompLowGain)
-                             + (highLeft * headphoneCompHighGain);
-        const float eqRight = (headphoneCompLowStateRight * headphoneCompLowGain)
-                              + (highRight * headphoneCompHighGain);
-
-        left = eqLeft + (inRight * headphoneCompCrossfeed);
-        right = eqRight + (inLeft * headphoneCompCrossfeed);
-
-        if (! std::isfinite (left))
-            left = 0.0f;
-        if (! std::isfinite (right))
-            right = 0.0f;
+        locusq::spatial_headphone_pose::applyHeadphoneCompensation (
+            left,
+            right,
+            config,
+            headphoneCompLowStateLeft,
+            headphoneCompLowStateRight);
     }
 
     bool renderSteamBinauralBlock (int numSamples) noexcept
