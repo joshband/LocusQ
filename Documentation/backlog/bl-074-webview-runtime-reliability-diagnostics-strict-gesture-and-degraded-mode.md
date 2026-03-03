@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-03
 
 ## Plain-Language Summary
 
-BL-074 in plain terms: Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail. Current state: In Implementation (strict-gesture/degraded diagnostics runtime contracts and QA lane authored). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-074 in plain terms: Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail. Current state: In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-074 in plain terms: Improve WebView runtime trust by making gesture-path fail
 | What is changing? | Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (strict-gesture/degraded diagnostics runtime contracts and QA lane authored). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-074 |
 | Priority | P1 |
-| Status | In Implementation (strict-gesture/degraded diagnostics runtime contracts and QA lane authored) |
+| Status | In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored) |
 | Track | B - Scene/UI Runtime |
 | Effort | Med / M |
 | Depends On | BL-040, BL-067 |
@@ -74,6 +74,34 @@ Minimum evidence additions:
 - `degraded_mode_contract.tsv`
 - `native_error_surface.tsv`
 - `operator_diagnostics_snapshot.md`
+
+### Validation Commands
+
+```bash
+./scripts/qa-bl074-webview-reliability-diagnostics-mac.sh --contract-only --runs 3
+./scripts/qa-bl074-webview-reliability-diagnostics-mac.sh --execute --runs 1
+```
+
+### Latest Validation Evidence (2026-03-03)
+
+- `./scripts/qa-bl074-webview-reliability-diagnostics-mac.sh --contract-only --runs 3` -> `TestEvidence/bl074_webview_reliability_20260303T010046Z/` (`lane_result=PASS`)
+- `./scripts/qa-bl074-webview-reliability-diagnostics-mac.sh --execute --runs 1` -> `TestEvidence/bl074_webview_reliability_20260303T010050Z/` (`lane_result=PASS`)
+
+### Degraded-Mode Control Lock Contract
+
+- Critical native startup binding failures trigger deterministic degraded mode.
+- In degraded mode, native-dependent controls are disabled (calibration/preset/timeline/native command paths).
+- Operator-visible diagnostics explicitly state that controls are disabled in degraded mode.
+
+### Diagnostics Channel Schema Contract
+
+- `window.__LQ_NATIVE_BRIDGE_DIAGNOSTICS__`: native call counters, failure taxonomy, payload status.
+- `window.__LQ_OPERATOR_DIAGNOSTICS__`: centralized operator snapshot with runtime + scene transport + native diagnostics state.
+- Scene-state payload includes native diagnostics keys:
+  - `nativeBridgeDiagnosticsSchema`
+  - `nativeBridgeAvailable`
+  - `nativeBridgeBackend`
+  - `nativeBridgeDiagnostics`
 
 ## Replay Cadence Plan (Required)
 
