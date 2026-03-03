@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-03
 
 ## Plain-Language Summary
 
-BL-057 in plain terms: Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/transparency) and WH-1000XM5 (ANC on/off). Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-057 in plain terms: Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/transparency) and WH-1000XM5 (ANC on/off). Current state: Done. For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-057 in plain terms: Create validated YAML EQ presets for AirPods Pro 1, Pro 2
 | What is changing? | Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/transparency) and WH-1000XM5 (ANC on/off). |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Open. This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-057-device-preset-library.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done. Required acceptance checks and promotion evidence are complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-057-device-preset-library.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -44,11 +44,11 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-057 |
 | Priority | P1 |
-| Status | Open |
+| Status | **Done** (T1/T2/T3 replay PASS; full preset matrix complete; Nyquist resonance gate PASS) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-046 |
-| Blocks | BL-058 |
+| Blocks | — (resolved; BL-058 unblocked) |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
@@ -89,6 +89,17 @@ Evidence schema: `TestEvidence/bl057_*/status.tsv`.
 
 - `./scripts/qa-bl057-device-preset-library-mac.sh --contract-only --runs 3`
 - `./scripts/qa-bl057-device-preset-library-mac.sh --execute --runs 1`
+- `./scripts/qa-bl057-device-preset-library-mac.sh --execute --runs 5 --out-dir TestEvidence/bl057_candidate_t2_closeout`
+- `./scripts/qa-bl057-device-preset-library-mac.sh --execute --runs 10 --out-dir TestEvidence/bl057_promotion_t3_closeout`
+
+### Closeout Evidence (2026-03-03)
+
+| Stage | Artifact directory | Result |
+|---|---|---|
+| T2 candidate (execute, runs=5) | `TestEvidence/bl057_candidate_t2_closeout` | PASS |
+| T3 promotion (execute, runs=10) | `TestEvidence/bl057_promotion_t3_closeout` | PASS |
+
+Nyquist sweep maximum observed across T2/T3 evidence: `1.3413 dB` (`sony_wh1000xm5_anc_on.yaml` @ 44.1kHz), within `±3.0 dB` contract.
 
 ## Replay Cadence Plan (Required)
 

@@ -142,6 +142,15 @@ Escalation path:
   - master index row updated at `Documentation/backlog/index.md`
   - canonical promotion packet remains `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z/`
 
+## Closeout Sync Snapshot (2026-03-03)
+
+- BL-057 done-transition sync recorded:
+  - runbook authority moved to `Documentation/backlog/done/bl-057-device-preset-library.md`
+  - master index row updated at `Documentation/backlog/index.md`
+  - canonical replay evidence localized under:
+    - `TestEvidence/bl057_candidate_t2_closeout/`
+    - `TestEvidence/bl057_promotion_t3_closeout/`
+
 ## Architecture Consolidation Snapshot (2026-03-01)
 
 - `ARCHITECTURE.md` is the active architecture source-of-truth document.

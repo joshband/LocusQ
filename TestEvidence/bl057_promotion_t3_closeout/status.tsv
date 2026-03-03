@@ -1,0 +1,37 @@
+check_id	result	detail	artifact
+BL057-C1-eq_dir_exists	PASS	eq preset directory exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets
+BL057-C2-file-airpods_pro_1_anc_on.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_1_anc_on.yaml
+BL057-C2-file-airpods_pro_1_anc_off.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_1_anc_off.yaml
+BL057-C2-file-airpods_pro_1_transparency.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_1_transparency.yaml
+BL057-C2-file-airpods_pro_2_anc_on.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_2_anc_on.yaml
+BL057-C2-file-airpods_pro_2_anc_off.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_2_anc_off.yaml
+BL057-C2-file-airpods_pro_2_transparency.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_2_transparency.yaml
+BL057-C2-file-airpods_pro_3_anc_on.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_3_anc_on.yaml
+BL057-C2-file-airpods_pro_3_anc_off.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_3_anc_off.yaml
+BL057-C2-file-airpods_pro_3_transparency.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_3_transparency.yaml
+BL057-C2-file-sony_wh1000xm5_anc_on.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/sony_wh1000xm5_anc_on.yaml
+BL057-C2-file-sony_wh1000xm5_anc_off.yaml	PASS	preset file exists	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/sony_wh1000xm5_anc_off.yaml
+BL057-C3-preamp-airpods_pro_1_anc_on.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_1_anc_on.yaml
+BL057-C3-preamp-airpods_pro_1_anc_off.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_1_anc_off.yaml
+BL057-C3-preamp-airpods_pro_1_transparency.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_1_transparency.yaml
+BL057-C3-preamp-airpods_pro_2_anc_on.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_2_anc_on.yaml
+BL057-C3-preamp-airpods_pro_2_anc_off.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_2_anc_off.yaml
+BL057-C3-preamp-airpods_pro_2_transparency.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_2_transparency.yaml
+BL057-C3-preamp-airpods_pro_3_anc_on.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_3_anc_on.yaml
+BL057-C3-preamp-airpods_pro_3_anc_off.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_3_anc_off.yaml
+BL057-C3-preamp-airpods_pro_3_transparency.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/airpods_pro_3_transparency.yaml
+BL057-C3-preamp-sony_wh1000xm5_anc_on.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/sony_wh1000xm5_anc_on.yaml
+BL057-C3-preamp-sony_wh1000xm5_anc_off.yaml	PASS	preamp_db field present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets/sony_wh1000xm5_anc_off.yaml
+BL057-C4-sony_anc_mode_headers	PASS	WH-1000XM5 ANC-on/off mode headers present	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets
+BL057-C5-sony_anc_split	PASS	WH-1000XM5 ANC-on/off presets are distinct	/private/tmp/locusq-bl057-evidence-20260303T161545Z/Resources/eq_presets
+BL057-R1-validation	PASS	run 1 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R2-validation	PASS	run 2 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R3-validation	PASS	run 3 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R4-validation	PASS	run 4 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R5-validation	PASS	run 5 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R6-validation	PASS	run 6 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R7-validation	PASS	run 7 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R8-validation	PASS	run 8 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R9-validation	PASS	run 9 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-R10-validation	PASS	run 10 passed inventory+sweep checks	TestEvidence/bl057_promotion_t3_20260303T161545Z
+BL057-E1-execute_gate	PASS	execute mode requires zero failing runs and gate is satisfied	TestEvidence/bl057_promotion_t3_20260303T161545Z/run_summary.tsv
