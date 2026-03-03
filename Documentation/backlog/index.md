@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-03 (BL-057 done-transition archived runbook + repo-local T2/T3 closeout evidence)
+Last Modified Date: 2026-03-03 (BL-057 + BL-073 done-transition archived runbooks and closeout status sync)
 
 # LocusQ Master Backlog Index
 
@@ -149,7 +149,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | Done-candidate (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync pending) | F | BL-050 | — | [bl-070](bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
 | 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-058, BL-059 | BL-060 | [bl-072](done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
-| 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | In Validation (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; owner closeout sync pending) | G | — | BL-067, BL-068 | [bl-073](bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
+| 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | **Done** (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; closeout/archive sync complete) | G | — | — | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Implementation (Wave 3 pose/compensation extraction landed; contract+execute replay PASS on 2026-03-03) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
@@ -525,6 +525,7 @@ Any status change must update in the same changeset:
 | BL-048 | Cross-platform shipping hardening | 2026-02-27 | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | BL-049 | Unit test framework and tracker automation | 2026-02-27 | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
 | BL-052 | Steam Audio virtual surround + quad layout | 2026-02-28 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
+| BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | 2026-03-03 | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |
 | HX-03 | REAPER multi-instance stability lane | 2026-02-23 | [hx-03](done/hx-03-reaper-multi-instance.md) |
