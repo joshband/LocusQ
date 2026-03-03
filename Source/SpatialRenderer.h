@@ -1106,264 +1106,17 @@ public:
         // Clear accumulation buffer
         accumBuffer.clear();
 
-        struct EmitterCandidate
-        {
-            int slotIdx = -1;
-            EmitterData data {};
-            float distance = 0.0f;
-            float distanceGain = 0.0f;
-            float emitterGainLinear = 0.0f;
-            float priority = 0.0f;
-        };
-
-        std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
-        int selectedEmitterCount = 0;
-        int selectedMinPriorityIndex = -1;
-        float selectedMinPriority = std::numeric_limits<float>::max();
-
-        int eligibleEmitterCount = 0;
-        int budgetCulledEmitterCount = 0;
-        int activityCulledEmitterCount = 0;
-        int processedEmitterCount = 0;
-
-        const auto refreshMinPriority = [&]()
-        {
-            selectedMinPriorityIndex = -1;
-            selectedMinPriority = std::numeric_limits<float>::max();
-
-            for (int i = 0; i < selectedEmitterCount; ++i)
-            {
-                if (selectedEmitters[static_cast<size_t> (i)].priority < selectedMinPriority)
-                {
-                    selectedMinPriority = selectedEmitters[static_cast<size_t> (i)].priority;
-                    selectedMinPriorityIndex = i;
-                }
-            }
-        };
-
-        // First pass: collect eligible emitters and enforce a hard per-block budget.
-        for (int slotIdx = 0; slotIdx < SceneGraph::MAX_EMITTERS; ++slotIdx)
-        {
-            if (! scene.isSlotActive (slotIdx))
-                continue;
-
-            const auto emitterData = scene.getSlot (slotIdx).read();
-            if (! emitterData.active || emitterData.muted)
-                continue;
-
-            const float emitterGainLinear = juce::Decibels::decibelsToGain (emitterData.gain, -60.0f);
-            if (! std::isfinite (emitterGainLinear) || emitterGainLinear <= 0.0f)
-                continue;
-
-            const float distance = calculateDistance (emitterData.position);
-            if (! std::isfinite (distance))
-                continue;
-
-            const float distanceGain = distanceAttenuator.calculateGain (distance);
-            if (! std::isfinite (distanceGain) || distanceGain <= 0.0f)
-                continue;
-
-            const float priority = emitterGainLinear * distanceGain;
-            if (! std::isfinite (priority) || priority < COARSE_PRIORITY_GATE_LINEAR)
-                continue;
-
-            ++eligibleEmitterCount;
-
-            EmitterCandidate candidate;
-            candidate.slotIdx = slotIdx;
-            candidate.data = emitterData;
-            candidate.distance = distance;
-            candidate.distanceGain = distanceGain;
-            candidate.emitterGainLinear = emitterGainLinear;
-            candidate.priority = priority;
-
-            if (selectedEmitterCount < MAX_RENDER_EMITTERS_PER_BLOCK)
-            {
-                selectedEmitters[static_cast<size_t> (selectedEmitterCount)] = candidate;
-                ++selectedEmitterCount;
-                refreshMinPriority();
-                continue;
-            }
-
-            if (priority <= selectedMinPriority)
-            {
-                ++budgetCulledEmitterCount;
-                continue;
-            }
-
-            if (selectedMinPriorityIndex >= 0)
-            {
-                selectedEmitters[static_cast<size_t> (selectedMinPriorityIndex)] = candidate;
-                ++budgetCulledEmitterCount;
-                refreshMinPriority();
-            }
-        }
-
-        // Preserve deterministic ordering when the guardrail is active.
-        for (int i = 1; i < selectedEmitterCount; ++i)
-        {
-            auto current = selectedEmitters[static_cast<size_t> (i)];
-            int j = i - 1;
-
-            while (j >= 0 && selectedEmitters[static_cast<size_t> (j)].slotIdx > current.slotIdx)
-            {
-                selectedEmitters[static_cast<size_t> (j + 1)] = selectedEmitters[static_cast<size_t> (j)];
-                --j;
-            }
-
-            selectedEmitters[static_cast<size_t> (j + 1)] = current;
-        }
-
-        // Second pass: process only selected emitters.
-        for (int selectedIdx = 0; selectedIdx < selectedEmitterCount; ++selectedIdx)
-        {
-            const auto& candidate = selectedEmitters[static_cast<size_t> (selectedIdx)];
-            const int slotIdx = candidate.slotIdx;
-
-            const auto audioSnapshot = scene.getSlot (slotIdx).readAudioSnapshot();
-            const float* emitterAudio = audioSnapshot.mono;
-            const int emitterSamples = audioSnapshot.numSamples;
-
-            if (emitterAudio == nullptr || emitterSamples <= 0)
-                continue;
-
-            const int samplesToProcess = std::min (emitterSamples, numSamples);
-
-            // Apply emitter gain to pre-downmixed mono audio.
-            float blockPeak = 0.0f;
-            for (int i = 0; i < samplesToProcess; ++i)
-            {
-                const float sample = emitterAudio[i] * candidate.emitterGainLinear;
-                tempMonoBuffer[static_cast<size_t> (i)] = sample;
-                blockPeak = juce::jmax (blockPeak, std::abs (sample));
-            }
-
-            if (blockPeak < ACTIVITY_PEAK_GATE_LINEAR)
-            {
-                ++activityCulledEmitterCount;
-                continue;
-            }
-
-            ++processedEmitterCount;
-
-            // Doppler pitch motion (draft variable-delay implementation)
-            if (slotIdx < MAX_TRACKED_EMITTERS)
-            {
-                emitterDoppler[static_cast<size_t> (slotIdx)].setScale (dopplerScale);
-                emitterDoppler[static_cast<size_t> (slotIdx)].processBlock (
-                    tempMonoBuffer.data(),
-                    samplesToProcess,
-                    candidate.data.position,
-                    candidate.data.velocity,
-                    dopplerEnabled);
-            }
-
-            // Apply air absorption (distance-driven LPF)
-            if (airAbsorptionEnabled && slotIdx < MAX_TRACKED_EMITTERS)
-            {
-                emitterAbsorption[static_cast<size_t> (slotIdx)].updateForDistance (candidate.distance);
-                emitterAbsorption[static_cast<size_t> (slotIdx)].processBlock (tempMonoBuffer.data(), samplesToProcess);
-            }
-
-            // Calculate VBAP gains for this emitter's position
-            const float azimuth = calculateAzimuth (candidate.data.position);
-            const float elevation = calculateElevation (candidate.data.position);
-            auto panGains = vbapPanner.calculateGains (azimuth, elevation);
-            auto speakerGains = panGains.gains;
-
-            // Spread (focused -> diffuse blend)
-            spreadProcessor.apply (speakerGains, candidate.data.spread);
-
-            // Directivity shaping (speaker-dependent pattern from emitter aim)
-            directivityFilter.apply (speakerGains,
-                                     candidate.data.directivity,
-                                     candidate.data.directivityAim,
-                                     candidate.data.position);
-
-            // Update smoothed speaker gains for this emitter
-            if (slotIdx < MAX_TRACKED_EMITTERS)
-            {
-                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
-                {
-                    smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].setTargetValue (
-                        speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain);
-                }
-            }
-
-            // Accumulate into speaker channels with per-sample gain smoothing
-            for (int i = 0; i < samplesToProcess; ++i)
-            {
-                const float sample = tempMonoBuffer[static_cast<size_t> (i)];
-
-                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
-                {
-                    float gain;
-                    if (slotIdx < MAX_TRACKED_EMITTERS)
-                    {
-                        gain = smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].getNextValue();
-                    }
-                    else
-                    {
-                        gain = speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain;
-                    }
-
-                    accumBuffer.addSample (spk, i, sample * gain);
-                }
-            }
-        }
-
-        bool renderedAuditionEmitter = false;
-        if (processedEmitterCount == 0 && auditionEnabled)
-        {
-            renderInternalAuditionEmitter (numSamples);
-            eligibleEmitterCount = juce::jmax (eligibleEmitterCount, 1);
-            processedEmitterCount = juce::jmax (processedEmitterCount, 1);
-            renderedAuditionEmitter = true;
-        }
-        else
-        {
-            resetAuditionReactiveTelemetry();
-        }
+        const auto emitterStage = runEmitterAccumulationStage (scene, numSamples);
+        const bool renderedAuditionEmitter = emitterStage.renderedAuditionEmitter;
         auditionVisualActive.store (renderedAuditionEmitter, std::memory_order_relaxed);
 
-        lastEligibleEmitterCount.store (eligibleEmitterCount, std::memory_order_relaxed);
-        lastProcessedEmitterCount.store (processedEmitterCount, std::memory_order_relaxed);
-        lastBudgetCulledEmitterCount.store (budgetCulledEmitterCount, std::memory_order_relaxed);
-        lastActivityCulledEmitterCount.store (activityCulledEmitterCount, std::memory_order_relaxed);
-        lastGuardrailActive.store (eligibleEmitterCount > MAX_RENDER_EMITTERS_PER_BLOCK, std::memory_order_relaxed);
+        lastEligibleEmitterCount.store (emitterStage.eligibleEmitterCount, std::memory_order_relaxed);
+        lastProcessedEmitterCount.store (emitterStage.processedEmitterCount, std::memory_order_relaxed);
+        lastBudgetCulledEmitterCount.store (emitterStage.budgetCulledEmitterCount, std::memory_order_relaxed);
+        lastActivityCulledEmitterCount.store (emitterStage.activityCulledEmitterCount, std::memory_order_relaxed);
+        lastGuardrailActive.store (emitterStage.eligibleEmitterCount > MAX_RENDER_EMITTERS_PER_BLOCK, std::memory_order_relaxed);
 
-        // Room acoustics chain (Phase 2.5)
-        if (roomEnabled)
-        {
-            earlyReflections.process (accumBuffer);
-            if (! earlyReflectionsOnly)
-                fdnReverb.process (accumBuffer);
-        }
-
-        // Apply per-speaker delay compensation and gain trims
-        for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
-        {
-            auto* channelData = accumBuffer.getWritePointer (spk);
-            const int delay = speakerDelaySamples[static_cast<size_t> (spk)];
-
-            if (delay > 0)
-            {
-                for (int i = 0; i < numSamples; ++i)
-                {
-                    speakerDelayLines[static_cast<size_t> (spk)][static_cast<size_t> (delayWritePos[static_cast<size_t> (spk)])] = channelData[i];
-
-                    int readPos = delayWritePos[static_cast<size_t> (spk)] - delay;
-                    if (readPos < 0)
-                        readPos += MAX_DELAY_SAMPLES;
-
-                    channelData[i] = speakerDelayLines[static_cast<size_t> (spk)][static_cast<size_t> (readPos)];
-                    delayWritePos[static_cast<size_t> (spk)] = (delayWritePos[static_cast<size_t> (spk)] + 1) % MAX_DELAY_SAMPLES;
-                }
-            }
-
-            for (int i = 0; i < numSamples; ++i)
-                channelData[i] *= smoothedSpeakerTrim[static_cast<size_t> (spk)].getNextValue();
-        }
+        applyRoomAndSpeakerPostFx (numSamples);
 
         const auto profileResolution = resolveSpatialProfileForHost (numOutputChannels);
         const auto activeSpatialProfile = profileResolution.profile;
@@ -1890,6 +1643,259 @@ private:
     static constexpr float ACTIVITY_PEAK_GATE_LINEAR = 1.0e-6f;   // ~ -120 dB
     static constexpr int AUDITION_MAX_VOICES = MAX_AUDITION_REACTIVE_SOURCES;
     static constexpr int AUDITION_HISTORY_BUFFER_SAMPLES = 8192;
+
+    struct EmitterStageResult
+    {
+        int eligibleEmitterCount = 0;
+        int budgetCulledEmitterCount = 0;
+        int activityCulledEmitterCount = 0;
+        int processedEmitterCount = 0;
+        bool renderedAuditionEmitter = false;
+    };
+
+    EmitterStageResult runEmitterAccumulationStage (const SceneGraph& scene, int numSamples)
+    {
+        struct EmitterCandidate
+        {
+            int slotIdx = -1;
+            EmitterData data {};
+            float distance = 0.0f;
+            float distanceGain = 0.0f;
+            float emitterGainLinear = 0.0f;
+            float priority = 0.0f;
+        };
+
+        std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
+        int selectedEmitterCount = 0;
+        int selectedMinPriorityIndex = -1;
+        float selectedMinPriority = std::numeric_limits<float>::max();
+
+        EmitterStageResult result {};
+
+        const auto refreshMinPriority = [&]()
+        {
+            selectedMinPriorityIndex = -1;
+            selectedMinPriority = std::numeric_limits<float>::max();
+
+            for (int i = 0; i < selectedEmitterCount; ++i)
+            {
+                if (selectedEmitters[static_cast<size_t> (i)].priority < selectedMinPriority)
+                {
+                    selectedMinPriority = selectedEmitters[static_cast<size_t> (i)].priority;
+                    selectedMinPriorityIndex = i;
+                }
+            }
+        };
+
+        // First pass: collect eligible emitters and enforce a hard per-block budget.
+        for (int slotIdx = 0; slotIdx < SceneGraph::MAX_EMITTERS; ++slotIdx)
+        {
+            if (! scene.isSlotActive (slotIdx))
+                continue;
+
+            const auto emitterData = scene.getSlot (slotIdx).read();
+            if (! emitterData.active || emitterData.muted)
+                continue;
+
+            const float emitterGainLinear = juce::Decibels::decibelsToGain (emitterData.gain, -60.0f);
+            if (! std::isfinite (emitterGainLinear) || emitterGainLinear <= 0.0f)
+                continue;
+
+            const float distance = calculateDistance (emitterData.position);
+            if (! std::isfinite (distance))
+                continue;
+
+            const float distanceGain = distanceAttenuator.calculateGain (distance);
+            if (! std::isfinite (distanceGain) || distanceGain <= 0.0f)
+                continue;
+
+            const float priority = emitterGainLinear * distanceGain;
+            if (! std::isfinite (priority) || priority < COARSE_PRIORITY_GATE_LINEAR)
+                continue;
+
+            ++result.eligibleEmitterCount;
+
+            EmitterCandidate candidate;
+            candidate.slotIdx = slotIdx;
+            candidate.data = emitterData;
+            candidate.distance = distance;
+            candidate.distanceGain = distanceGain;
+            candidate.emitterGainLinear = emitterGainLinear;
+            candidate.priority = priority;
+
+            if (selectedEmitterCount < MAX_RENDER_EMITTERS_PER_BLOCK)
+            {
+                selectedEmitters[static_cast<size_t> (selectedEmitterCount)] = candidate;
+                ++selectedEmitterCount;
+                refreshMinPriority();
+                continue;
+            }
+
+            if (priority <= selectedMinPriority)
+            {
+                ++result.budgetCulledEmitterCount;
+                continue;
+            }
+
+            if (selectedMinPriorityIndex >= 0)
+            {
+                selectedEmitters[static_cast<size_t> (selectedMinPriorityIndex)] = candidate;
+                ++result.budgetCulledEmitterCount;
+                refreshMinPriority();
+            }
+        }
+
+        // Preserve deterministic ordering when the guardrail is active.
+        for (int i = 1; i < selectedEmitterCount; ++i)
+        {
+            auto current = selectedEmitters[static_cast<size_t> (i)];
+            int j = i - 1;
+
+            while (j >= 0 && selectedEmitters[static_cast<size_t> (j)].slotIdx > current.slotIdx)
+            {
+                selectedEmitters[static_cast<size_t> (j + 1)] = selectedEmitters[static_cast<size_t> (j)];
+                --j;
+            }
+
+            selectedEmitters[static_cast<size_t> (j + 1)] = current;
+        }
+
+        // Second pass: process only selected emitters.
+        for (int selectedIdx = 0; selectedIdx < selectedEmitterCount; ++selectedIdx)
+        {
+            const auto& candidate = selectedEmitters[static_cast<size_t> (selectedIdx)];
+            const int slotIdx = candidate.slotIdx;
+
+            const auto audioSnapshot = scene.getSlot (slotIdx).readAudioSnapshot();
+            const float* emitterAudio = audioSnapshot.mono;
+            const int emitterSamples = audioSnapshot.numSamples;
+
+            if (emitterAudio == nullptr || emitterSamples <= 0)
+                continue;
+
+            const int samplesToProcess = std::min (emitterSamples, numSamples);
+
+            float blockPeak = 0.0f;
+            for (int i = 0; i < samplesToProcess; ++i)
+            {
+                const float sample = emitterAudio[i] * candidate.emitterGainLinear;
+                tempMonoBuffer[static_cast<size_t> (i)] = sample;
+                blockPeak = juce::jmax (blockPeak, std::abs (sample));
+            }
+
+            if (blockPeak < ACTIVITY_PEAK_GATE_LINEAR)
+            {
+                ++result.activityCulledEmitterCount;
+                continue;
+            }
+
+            ++result.processedEmitterCount;
+
+            if (slotIdx < MAX_TRACKED_EMITTERS)
+            {
+                emitterDoppler[static_cast<size_t> (slotIdx)].setScale (dopplerScale);
+                emitterDoppler[static_cast<size_t> (slotIdx)].processBlock (
+                    tempMonoBuffer.data(),
+                    samplesToProcess,
+                    candidate.data.position,
+                    candidate.data.velocity,
+                    dopplerEnabled);
+            }
+
+            if (airAbsorptionEnabled && slotIdx < MAX_TRACKED_EMITTERS)
+            {
+                emitterAbsorption[static_cast<size_t> (slotIdx)].updateForDistance (candidate.distance);
+                emitterAbsorption[static_cast<size_t> (slotIdx)].processBlock (tempMonoBuffer.data(), samplesToProcess);
+            }
+
+            const float azimuth = calculateAzimuth (candidate.data.position);
+            const float elevation = calculateElevation (candidate.data.position);
+            auto panGains = vbapPanner.calculateGains (azimuth, elevation);
+            auto speakerGains = panGains.gains;
+            spreadProcessor.apply (speakerGains, candidate.data.spread);
+            directivityFilter.apply (speakerGains,
+                                     candidate.data.directivity,
+                                     candidate.data.directivityAim,
+                                     candidate.data.position);
+
+            if (slotIdx < MAX_TRACKED_EMITTERS)
+            {
+                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+                {
+                    smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].setTargetValue (
+                        speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain);
+                }
+            }
+
+            for (int i = 0; i < samplesToProcess; ++i)
+            {
+                const float sample = tempMonoBuffer[static_cast<size_t> (i)];
+
+                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+                {
+                    float gain;
+                    if (slotIdx < MAX_TRACKED_EMITTERS)
+                    {
+                        gain = smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].getNextValue();
+                    }
+                    else
+                    {
+                        gain = speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain;
+                    }
+
+                    accumBuffer.addSample (spk, i, sample * gain);
+                }
+            }
+        }
+
+        if (result.processedEmitterCount == 0 && auditionEnabled)
+        {
+            renderInternalAuditionEmitter (numSamples);
+            result.eligibleEmitterCount = juce::jmax (result.eligibleEmitterCount, 1);
+            result.processedEmitterCount = juce::jmax (result.processedEmitterCount, 1);
+            result.renderedAuditionEmitter = true;
+        }
+        else
+        {
+            resetAuditionReactiveTelemetry();
+        }
+
+        return result;
+    }
+
+    void applyRoomAndSpeakerPostFx (int numSamples)
+    {
+        if (roomEnabled)
+        {
+            earlyReflections.process (accumBuffer);
+            if (! earlyReflectionsOnly)
+                fdnReverb.process (accumBuffer);
+        }
+
+        for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+        {
+            auto* channelData = accumBuffer.getWritePointer (spk);
+            const int delay = speakerDelaySamples[static_cast<size_t> (spk)];
+
+            if (delay > 0)
+            {
+                for (int i = 0; i < numSamples; ++i)
+                {
+                    speakerDelayLines[static_cast<size_t> (spk)][static_cast<size_t> (delayWritePos[static_cast<size_t> (spk)])] = channelData[i];
+
+                    int readPos = delayWritePos[static_cast<size_t> (spk)] - delay;
+                    if (readPos < 0)
+                        readPos += MAX_DELAY_SAMPLES;
+
+                    channelData[i] = speakerDelayLines[static_cast<size_t> (spk)][static_cast<size_t> (readPos)];
+                    delayWritePos[static_cast<size_t> (spk)] = (delayWritePos[static_cast<size_t> (spk)] + 1) % MAX_DELAY_SAMPLES;
+                }
+            }
+
+            for (int i = 0; i < numSamples; ++i)
+                channelData[i] *= smoothedSpeakerTrim[static_cast<size_t> (spk)].getNextValue();
+        }
+    }
 
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
