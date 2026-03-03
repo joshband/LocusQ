@@ -368,6 +368,8 @@ const BASIC_CONTROL_VALUE_CHANGED_EVENT = "valueChanged";
 const queryParams = new URLSearchParams(window.location.search || "");
 const productionP0SelfTestRequested = queryParams.get("selftest") === "1";
 const productionP0SelfTestScope = String(queryParams.get("selftest_scope") || "").trim().toLowerCase();
+const strictGestureSelfTestRequested = queryParams.get("strict_gesture") === "1"
+    || queryParams.get("selftest_strict_gesture") === "1";
 const SELFTEST_STARTUP_POLL_MS = 120;
 const SELFTEST_STARTUP_TIMEOUT_MS = 8000;
 const SELFTEST_LAYOUT_SETTLE_TIMEOUT_MS = 1400;
@@ -385,6 +387,32 @@ const RESIZE_DIAGNOSTIC_COMPACT_MAX_WIDTH = 960;
 const RESIZE_DIAGNOSTIC_WIDE_MIN_WIDTH = 1440;
 const RESIZE_DIAGNOSTIC_SETTLE_WARN_MS = 250;
 const RESIZE_DIAGNOSTIC_HIT_TARGET_STALE_MS = 250;
+const BRIDGE_DIAGNOSTICS_EVENT_LIMIT = 64;
+const BRIDGE_DEGRADED_CONTROL_IDS = Object.freeze([
+    "timeline-rewind-btn",
+    "timeline-stop-btn",
+    "timeline-play-btn",
+    "preset-save-btn",
+    "preset-load-btn",
+    "preset-rename-btn",
+    "preset-delete-btn",
+    "cal-start-btn",
+    "cal-redetect-btn",
+    "cal-profile-save-btn",
+    "cal-profile-load-btn",
+    "cal-profile-rename-btn",
+    "cal-profile-delete-btn",
+    "set-forward-btn",
+]);
+const criticalStartupNativeLabels = new Set([
+    "locusqGetUiState",
+    "locusqSetUiState",
+    "locusqGetKeyframeTimeline",
+    "locusqSetKeyframeTimeline",
+    "locusqSetTimelineTime",
+    "locusqListEmitterPresets",
+    "locusqListCalibrationProfiles",
+]);
 const resizeDiagnosticsState = {
     viewportWidth: null,
     viewportHeight: null,
@@ -397,6 +425,62 @@ const resizeDiagnosticsState = {
     lastHitTargetRefreshMs: null,
     hitTargetRefreshPending: false,
 };
+const runtimeDiagnosticsState = {
+    nativeBridgeAvailable: hasNativeJuceBridge,
+    strictGestureRequested: strictGestureSelfTestRequested,
+    startupBindingFailures: 0,
+    nativeCallSuccesses: 0,
+    nativeCallFailures: 0,
+    nativeCallTimeouts: 0,
+    gestureFallbacks: 0,
+    strictGestureViolations: 0,
+    degradedMode: false,
+    degradedReason: "",
+    lastNativeError: "",
+    events: [],
+};
+
+function makeRuntimeDiagnosticsSnapshot() {
+    return {
+        nativeBridgeAvailable: runtimeDiagnosticsState.nativeBridgeAvailable,
+        strictGestureRequested: runtimeDiagnosticsState.strictGestureRequested,
+        startupBindingFailures: runtimeDiagnosticsState.startupBindingFailures,
+        nativeCallSuccesses: runtimeDiagnosticsState.nativeCallSuccesses,
+        nativeCallFailures: runtimeDiagnosticsState.nativeCallFailures,
+        nativeCallTimeouts: runtimeDiagnosticsState.nativeCallTimeouts,
+        gestureFallbacks: runtimeDiagnosticsState.gestureFallbacks,
+        strictGestureViolations: runtimeDiagnosticsState.strictGestureViolations,
+        degradedMode: runtimeDiagnosticsState.degradedMode,
+        degradedReason: runtimeDiagnosticsState.degradedReason,
+        lastNativeError: runtimeDiagnosticsState.lastNativeError,
+        events: runtimeDiagnosticsState.events.slice(),
+    };
+}
+
+function publishRuntimeDiagnosticsSnapshot() {
+    window.__LQ_RUNTIME_DIAGNOSTICS__ = makeRuntimeDiagnosticsSnapshot();
+}
+
+function pushRuntimeDiagnosticsEvent(kind, detail = "", extra = null) {
+    runtimeDiagnosticsState.events.push({
+        ts: new Date().toISOString(),
+        kind: String(kind || "event"),
+        detail: String(detail || ""),
+        extra: extra && typeof extra === "object" ? { ...extra } : undefined,
+    });
+    while (runtimeDiagnosticsState.events.length > BRIDGE_DIAGNOSTICS_EVENT_LIMIT) {
+        runtimeDiagnosticsState.events.shift();
+    }
+    publishRuntimeDiagnosticsSnapshot();
+}
+
+function setBridgeDegradedMode(enabled, reason = "") {
+    runtimeDiagnosticsState.degradedMode = !!enabled;
+    runtimeDiagnosticsState.degradedReason = enabled ? String(reason || "unknown_bridge_failure") : "";
+    publishRuntimeDiagnosticsSnapshot();
+}
+
+publishRuntimeDiagnosticsSnapshot();
 
 if (productionP0SelfTestRequested) {
     window.__LQ_SELFTEST_RESULT__ = {
@@ -439,9 +523,38 @@ function withNativeTimeout(promise, label) {
 
 async function callNative(label, fn, ...args) {
     if (typeof fn !== "function") {
+        runtimeDiagnosticsState.nativeCallFailures += 1;
+        runtimeDiagnosticsState.startupBindingFailures += 1;
+        runtimeDiagnosticsState.lastNativeError = `${label} unavailable`;
+        pushRuntimeDiagnosticsEvent("native_call_unavailable", `${label} unavailable`);
+        if (criticalStartupNativeLabels.has(label) && !runtimeState.startupHydrationComplete) {
+            setBridgeDegradedMode(true, `critical_startup_binding_unavailable:${label}`);
+        }
         throw new Error(`${label} unavailable`);
     }
-    return withNativeTimeout(fn(...args), label);
+    try {
+        const result = await withNativeTimeout(fn(...args), label);
+        runtimeDiagnosticsState.nativeCallSuccesses += 1;
+        publishRuntimeDiagnosticsSnapshot();
+        return result;
+    } catch (error) {
+        const message = error && error.message ? String(error.message) : String(error);
+        const timeoutFailure = message.includes("timed out after");
+        runtimeDiagnosticsState.nativeCallFailures += 1;
+        if (timeoutFailure) {
+            runtimeDiagnosticsState.nativeCallTimeouts += 1;
+        }
+        runtimeDiagnosticsState.lastNativeError = `${label}: ${message}`;
+        pushRuntimeDiagnosticsEvent(
+            timeoutFailure ? "native_call_timeout" : "native_call_error",
+            `${label}: ${message}`
+        );
+        if (criticalStartupNativeLabels.has(label) && !runtimeState.startupHydrationComplete) {
+            runtimeDiagnosticsState.startupBindingFailures += 1;
+            setBridgeDegradedMode(true, `critical_startup_call_failure:${label}`);
+        }
+        throw error;
+    }
 }
 
 function waitMs(delayMs) {
@@ -3310,6 +3423,8 @@ const emitterAuthorityStepperIds = [
 const runtimeState = {
     viewportReady: false,
     viewportDegraded: false,
+    bridgeDegraded: false,
+    startupHydrationComplete: false,
 };
 const MAX_PENDING_SCENE_SNAPSHOTS = 6;
 const pendingSceneSnapshots = [];
@@ -5222,10 +5337,14 @@ function updateRendererPanelShell(data = sceneData) {
 
     const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
     if (diagnosticsAvailability) {
-        if (!steamPayloadPresent && !ambiPayloadPresent && !headTrackingPayloadPresent && !hpVerificationPayloadPresent && !authorityPayloadPresent) {
-            diagnosticsAvailability.textContent = "Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults.";
+        const coreSummary = (!steamPayloadPresent && !ambiPayloadPresent && !headTrackingPayloadPresent && !hpVerificationPayloadPresent && !authorityPayloadPresent)
+            ? "Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults."
+            : `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · Authority ${authorityPayloadPresent ? "present" : "missing"} · HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
+        const runtimeSummary = `native ok=${runtimeDiagnosticsState.nativeCallSuccesses} fail=${runtimeDiagnosticsState.nativeCallFailures} timeout=${runtimeDiagnosticsState.nativeCallTimeouts} bindFail=${runtimeDiagnosticsState.startupBindingFailures} gestureFallback=${runtimeDiagnosticsState.gestureFallbacks}`;
+        if (runtimeDiagnosticsState.degradedMode) {
+            diagnosticsAvailability.textContent = `Bridge degraded (${runtimeDiagnosticsState.degradedReason || "unknown"}) · ${runtimeSummary}`;
         } else {
-            diagnosticsAvailability.textContent = `Diagnostics synced · Steam ${steamPayloadPresent ? "present" : "missing"} · Ambisonic ${ambiPayloadPresent ? "present" : "missing"} · HeadTracking ${headTrackingPayloadPresent ? "present" : "missing"} · Authority ${authorityPayloadPresent ? "present" : "missing"} · HpVerify ${hpVerificationPayloadPresent ? "present" : "missing"}.`;
+            diagnosticsAvailability.textContent = `${coreSummary} · ${runtimeSummary}`;
         }
     }
 }
@@ -5645,6 +5764,87 @@ function getCalibrationSpeakerColor(index) {
     return 0xE0E0E0;
 }
 
+function setBridgeImpactedControlsEnabled(enabled) {
+    const controlsEnabled = !!enabled;
+    BRIDGE_DEGRADED_CONTROL_IDS.forEach(controlId => {
+        const control = document.getElementById(controlId);
+        if (!control || typeof control.disabled !== "boolean") {
+            return;
+        }
+
+        if (!controlsEnabled) {
+            if (!Object.prototype.hasOwnProperty.call(control.dataset, "bridgePrevDisabled")) {
+                control.dataset.bridgePrevDisabled = control.disabled ? "1" : "0";
+            }
+            control.disabled = true;
+            control.classList.add("is-bridge-degraded");
+            return;
+        }
+
+        const restoreDisabled = control.dataset.bridgePrevDisabled === "1";
+        control.disabled = restoreDisabled;
+        delete control.dataset.bridgePrevDisabled;
+        control.classList.remove("is-bridge-degraded");
+    });
+}
+
+function applyBridgeDegradedMode(enabled, reason = "") {
+    const degraded = !!enabled;
+    runtimeState.bridgeDegraded = degraded;
+    setBridgeDegradedMode(degraded, reason);
+    setBridgeImpactedControlsEnabled(!degraded);
+
+    const viewportLock = document.getElementById("viewport-lock");
+    if (viewportLock) {
+        viewportLock.textContent = degraded ? "BRIDGE DEGRADED" : "VIEWPORT LOCK";
+    }
+
+    const viewportInfo = document.getElementById("viewport-info");
+    if (viewportInfo && degraded) {
+        viewportInfo.textContent = "Bridge degraded · impacted controls disabled";
+    }
+
+    const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
+    if (diagnosticsAvailability && degraded) {
+        diagnosticsAvailability.textContent = `Bridge degraded (${reason || "unknown"}) · native ok=${runtimeDiagnosticsState.nativeCallSuccesses} fail=${runtimeDiagnosticsState.nativeCallFailures} timeout=${runtimeDiagnosticsState.nativeCallTimeouts} bindFail=${runtimeDiagnosticsState.startupBindingFailures} gestureFallback=${runtimeDiagnosticsState.gestureFallbacks}`;
+    }
+}
+
+function evaluateCriticalStartupBindings() {
+    const missingBindings = [];
+    if (!hasNativeJuceBridge) {
+        missingBindings.push("window.Juce(native bridge)");
+    }
+
+    const criticalBindingMap = [
+        ["locusqGetUiState", nativeFunctions.getUiState],
+        ["locusqSetUiState", nativeFunctions.setUiState],
+        ["locusqGetKeyframeTimeline", nativeFunctions.getKeyframeTimeline],
+        ["locusqSetKeyframeTimeline", nativeFunctions.setKeyframeTimeline],
+        ["locusqSetTimelineTime", nativeFunctions.setTimelineTime],
+        ["locusqListEmitterPresets", nativeFunctions.listEmitterPresets],
+        ["locusqListCalibrationProfiles", nativeFunctions.listCalibrationProfiles],
+    ];
+    criticalBindingMap.forEach(([label, fn]) => {
+        if (typeof fn !== "function") {
+            missingBindings.push(label);
+        }
+    });
+
+    if (missingBindings.length === 0) {
+        return true;
+    }
+
+    runtimeDiagnosticsState.startupBindingFailures += missingBindings.length;
+    pushRuntimeDiagnosticsEvent(
+        "critical_startup_binding_failure",
+        missingBindings.join(", "),
+        { missingBindings }
+    );
+    applyBridgeDegradedMode(true, `missing_critical_bindings:${missingBindings.join(",")}`);
+    return false;
+}
+
 function markViewportDegraded(error) {
     runtimeState.viewportReady = false;
     runtimeState.viewportDegraded = true;
@@ -5666,6 +5866,8 @@ function markViewportDegraded(error) {
 async function initialiseUIRuntime() {
     syncResponsiveLayoutMode();
     window.addEventListener("resize", syncResponsiveLayoutMode);
+    runtimeState.startupHydrationComplete = false;
+    applyBridgeDegradedMode(false);
 
     try {
         initUIBindings();
@@ -5681,6 +5883,7 @@ async function initialiseUIRuntime() {
 
     applyUiStateToControls();
     applyCalibrationStatus();
+    evaluateCriticalStartupBindings();
 
     try {
         initThreeJS();
@@ -5728,6 +5931,7 @@ async function initialiseUIRuntime() {
     ];
 
     await Promise.allSettled(startupHydrationTasks);
+    runtimeState.startupHydrationComplete = true;
     syncAnimationUI();
     updateMotionStatusChips();
     syncMotionSourceUI();
@@ -5738,6 +5942,7 @@ async function initialiseUIRuntime() {
 async function runProductionP0SelfTest() {
     const report = {
         requested: productionP0SelfTestRequested,
+        strictGestureMode: strictGestureSelfTestRequested,
         startedAt: new Date().toISOString(),
         status: "running",
         ok: false,
@@ -6798,6 +7003,23 @@ async function runProductionP0SelfTest() {
         }
         if (getTrackForLane(laneName).length !== 0) {
             failCheck("UI-07", "keyframe delete failed");
+        }
+        if (gestureFallbacks.length > 0) {
+            runtimeDiagnosticsState.gestureFallbacks += gestureFallbacks.length;
+            pushRuntimeDiagnosticsEvent(
+                "gesture_fallback_used",
+                `UI-07 fallback(s): ${gestureFallbacks.join(", ")}`,
+                { gestureFallbacks: [...gestureFallbacks] }
+            );
+            if (strictGestureSelfTestRequested) {
+                runtimeDiagnosticsState.strictGestureViolations += gestureFallbacks.length;
+                pushRuntimeDiagnosticsEvent(
+                    "strict_gesture_violation",
+                    `strict gesture rejected fallback path: ${gestureFallbacks.join(", ")}`,
+                    { gestureFallbacks: [...gestureFallbacks] }
+                );
+                failCheck("UI-07", `strict_gesture rejected fallback path (${gestureFallbacks.join(", ")})`);
+            }
         }
         const fallbackNote = gestureFallbacks.length > 0
             ? ` (fallbacks: ${gestureFallbacks.join(", ")})`
