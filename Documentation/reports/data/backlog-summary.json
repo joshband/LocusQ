@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 85,
-    "open": 29,
-    "done": 56
+    "open": 28,
+    "done": 57
   },
   "items": [
     {
@@ -1397,21 +1397,21 @@
     {
       "id": "BL-073",
       "title": "BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068",
-      "state_bucket": "open",
-      "status": "In Validation (clean verification merged via PR #6; owner closeout sync pending)",
+      "state_bucket": "done",
+      "status": "Done (clean verification merged via PR #6; closeout/archive sync complete)",
       "priority": "P1",
       "track": "G - Release/Governance",
       "depends_on": "\u2014",
-      "blocks": "BL-067, BL-068",
+      "blocks": "\u2014",
       "who": "",
       "what": "",
       "why": "",
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: In Validation (clean verification packet merged via PR #6 on 2026-03-03; contract-only and execute --runs 3 gates passed with zero execute TODO/SCAFFOLD rows). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-073 in plain terms: Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO. Current state: Done (clean verification packet merged via PR #6 on 2026-03-03; closeout/archive sync completed). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Prevent false-green promotions by separating contract-only and execute-mode QA semantics for BL-067/BL-068 and enforcing execute-mode failure when runtime matrix rows remain scaffold/TODO.",
-      "runbook_path": "Documentation/backlog/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md"
+      "runbook_path": "Documentation/backlog/done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md"
     },
     {
       "id": "BL-074",
