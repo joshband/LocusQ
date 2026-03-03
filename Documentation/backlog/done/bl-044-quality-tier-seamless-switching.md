@@ -2,13 +2,13 @@ Title: BL-044 Quality-Tier Seamless Switching
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-044 Quality-Tier Seamless Switching
 
 ## Plain-Language Summary
 
-BL-044 in plain terms: Eliminate audible discontinuities when switching quality tiers and smoothing-sensitive delay parameters, preserving tonal intent across tier changes. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-044 in plain terms: Eliminate audible discontinuities when switching quality tiers and smoothing-sensitive delay parameters, preserving tonal intent across tier changes. Current state: Done (historical planning-state context retained in runbook history). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

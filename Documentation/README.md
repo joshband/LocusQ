@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-03
 
 
 # Documentation Index
@@ -38,6 +38,8 @@ Used for implementation planning and validation flow, but status truth remains T
 - `Documentation/backlog/_template-intake.md` (new backlog intake contract)
 - `Documentation/backlog/_template-runbook.md` (execution/runbook contract)
 - `Documentation/backlog/_template-closeout.md` (done transition contract)
+- `Documentation/reports/data/backlog-summary.json` (machine-readable backlog summary for agents/automation)
+- `Documentation/reports/data/backlog-summary.csv` (tabular backlog export for scripts/reports)
 - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md`
@@ -121,6 +123,9 @@ Escalation path:
 - Root `README.md` and `CHANGELOG.md` are canonical Tier 0 surfaces.
 - Top-level `Documentation/exports/` remains scratch-only and is blocked by closeout guard checks.
 - `Documentation/reports/` is an active non-canonical report surface (archive snapshots remain under `Documentation/archive/`).
+- Backlog machine-readable summary artifacts are freshness-gated via:
+  - `./scripts/export-backlog-summaries.py --check`
+  - `./scripts/validate-docs-freshness.sh`
 - Phase closeout updates are gated by ADR-0005 and validated via `scripts/validate-docs-freshness.sh`.
 - Current acceptance/status claims must resolve through:
   - `Documentation/backlog/index.md`

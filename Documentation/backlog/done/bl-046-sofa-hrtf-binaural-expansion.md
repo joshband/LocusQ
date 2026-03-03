@@ -2,13 +2,13 @@ Title: BL-046 SOFA HRTF and Binaural Expansion
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-046 SOFA HRTF and Binaural Expansion
 
 ## Plain-Language Summary
 
-BL-046 in plain terms: Integrate SOFA HRTF loading and stage per-source binaural rendering expansion to improve headphone spatial accuracy and personalization. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-046 in plain terms: Integrate SOFA HRTF loading and stage per-source binaural rendering expansion to improve headphone spatial accuracy and personalization. Current state: Done (historical planning-state context retained in runbook history). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

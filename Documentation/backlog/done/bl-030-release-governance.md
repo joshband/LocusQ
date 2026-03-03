@@ -2,13 +2,13 @@ Title: BL-030 Release Governance and Device Rerun
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-030: Release Governance and Device Rerun
 
 ## Plain-Language Summary
 
-BL-030 in plain terms: Operationalize a recurring release/device-rerun governance checklist that validates every release candidate across device profiles (quad studio, laptop stereo, headphone) before shipping. Current state: In Validation (RL-09/RL-03/RL-04/RL-06 remain PASS; N13 owner replay reconcile is FAIL 3/3 with deterministic capture abort before rl05_gate_decision (capture exit 143), so RL-05 remains blocked). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-030 in plain terms: Operationalize a recurring release/device-rerun governance checklist that validates every release candidate across device profiles (quad studio, laptop stereo, headphone) before shipping. Current state: Done (historical pre-closeout gate states retained in execution snapshots). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

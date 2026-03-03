@@ -2,7 +2,7 @@ Title: BL-039 Parameter Relay Spec Generation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-039 Parameter Relay Spec Generation
 
@@ -31,13 +31,23 @@ Use visuals only when they materially improve understanding.
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
 | Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
 | Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
+| Spec-to-drift pipeline (mermaid) | Shows how one spec drives generation, hashing, drift checks, and promotion evidence. | `## Delivery Flow Diagram` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Delivery Flow Diagram
 
-Include a runbook-specific diagram only when it clarifies behavior not already obvious from `Status Ledger`, `Implementation Slices`, and `Validation Plan`.
+```mermaid
+flowchart LR
+    A[Canonical parameter relay spec] --> B[Deterministic ordering + ordinal assignment]
+    B --> C[Generated relay artifacts]
+    C --> D[Hash set generation]
+    D --> E{Drift check}
+    E -->|pass| F[Replay evidence bundle]
+    E -->|fail| G[Deterministic contract failure]
+    F --> H[Owner promotion decision]
+```
 
-Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
+Cross-item lifecycle governance remains canonical in `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
 ## Status Ledger
 
@@ -1008,4 +1018,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
