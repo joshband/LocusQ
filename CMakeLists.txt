@@ -25,6 +25,10 @@ if(NOT TARGET juce::juce_core)
     endif()
 endif()
 
+# Feature gates that affect platform format wiring must be declared
+# before PLATFORM-SPECIFIC CONFIGURATION is evaluated.
+option(LOCUSQ_ENABLE_AUV3 "Enable AUv3 format generation on Apple hosts" OFF)
+
 # ============================================
 # PLATFORM-SPECIFIC CONFIGURATION
 # ============================================
@@ -34,7 +38,11 @@ if(WIN32)
     set(NEEDS_WEB_BROWSER FALSE)
     set(WEBVIEW_BACKEND "WebView2")
 elseif(APPLE)
-    set(PLUGIN_FORMATS VST3 AU Standalone)
+    if(LOCUSQ_ENABLE_AUV3)
+        set(PLUGIN_FORMATS VST3 AU AUv3 Standalone)
+    else()
+        set(PLUGIN_FORMATS VST3 AU Standalone)
+    endif()
     set(NEEDS_WEBVIEW2 FALSE)
     set(NEEDS_WEB_BROWSER TRUE)
     set(WEBVIEW_BACKEND "WKWebView")
@@ -51,6 +59,7 @@ endif()
 
 message(STATUS "LocusQ: Building for ${PLUGIN_FORMATS}")
 message(STATUS "LocusQ: WebView backend: ${WEBVIEW_BACKEND}")
+message(STATUS "LocusQ: AUv3 format gate: ${LOCUSQ_ENABLE_AUV3}")
 
 # ============================================
 # UI DEBUG/POC MODE
@@ -336,6 +345,7 @@ target_compile_definitions(LocusQ
         JUCE_VST3_CAN_REPLACE_VST2=0
         _USE_MATH_DEFINES=1
         LOCUSQ_UI_POC_DEFAULT=$<IF:$<BOOL:${LOCUSQ_UI_POC}>,1,0>
+        LOCUSQ_ENABLE_AUV3=$<IF:$<BOOL:${LOCUSQ_ENABLE_AUV3}>,1,0>
         LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
         LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
         LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
