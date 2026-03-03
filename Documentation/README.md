@@ -38,6 +38,7 @@ Used for implementation planning and validation flow, but status truth remains T
 - `Documentation/backlog/_template-intake.md` (new backlog intake contract)
 - `Documentation/backlog/_template-runbook.md` (execution/runbook contract)
 - `Documentation/backlog/_template-closeout.md` (done transition contract)
+- `Documentation/backlog/backlog-summary-schema.md` (machine-readable backlog summary schema contract)
 - `Documentation/reports/data/backlog-summary.json` (machine-readable backlog summary for agents/automation)
 - `Documentation/reports/data/backlog-summary.csv` (tabular backlog export for scripts/reports)
 - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`
@@ -126,6 +127,7 @@ Escalation path:
 - Backlog machine-readable summary artifacts are freshness-gated via:
   - `./scripts/export-backlog-summaries.py --check`
   - `./scripts/validate-docs-freshness.sh`
+- Backlog summary artifacts auto-refresh on staged `Documentation/backlog/**` changes via `.githooks/pre-commit`.
 - Phase closeout updates are gated by ADR-0005 and validated via `scripts/validate-docs-freshness.sh`.
 - Current acceptance/status claims must resolve through:
   - `Documentation/backlog/index.md`

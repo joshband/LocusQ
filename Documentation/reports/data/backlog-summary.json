@@ -1417,7 +1417,7 @@
       "id": "BL-074",
       "title": "BL-074 WebView Runtime Reliability Diagnostics (Strict Gesture and Degraded Mode)",
       "state_bucket": "open",
-      "status": "In Implementation (strict-gesture/degraded diagnostics runtime contracts and QA lane authored)",
+      "status": "In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored)",
       "priority": "P1",
       "track": "B - Scene/UI Runtime",
       "depends_on": "BL-040, BL-067",
@@ -1428,7 +1428,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-074 in plain terms: Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail. Current state: In Implementation (strict-gesture/degraded diagnostics runtime contracts and QA lane authored). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-074 in plain terms: Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail. Current state: In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail.",
       "runbook_path": "Documentation/backlog/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md"
     },

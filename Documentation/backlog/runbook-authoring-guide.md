@@ -63,6 +63,11 @@ For files under `Documentation/backlog/done/`:
    - `./scripts/validate-docs-freshness.sh`
 4. Refresh machine-readable backlog summaries when runbooks/index change:
    - `./scripts/export-backlog-summaries.py`
+5. Install local hook to auto-refresh summaries on staged backlog changes:
+   - `./scripts/install-git-hygiene-hooks.sh`
+   - Hook behavior: `.githooks/pre-commit` runs `./scripts/export-backlog-summaries.py` and stages summary artifacts when `Documentation/backlog/**` is staged.
+6. Use schema contract for automation/parser updates:
+   - `Documentation/backlog/backlog-summary-schema.md`
 
 ## Quick Review Checklist
 
