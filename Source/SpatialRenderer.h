@@ -17,12 +17,12 @@
 #include "spatial_renderer/SpatialHeadphonePoseAndCompensation.h"
 #include "spatial_renderer/SpatialProfileRouter.h"
 #include "spatial_renderer/SpatialRendererTypes.h"
+#include "spatial_renderer/SpatialSteamAudioBackend.h"
 #include <algorithm>
 #include <atomic>
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <cstdlib>
 #include <limits>
 #include <vector>
 
@@ -814,7 +814,7 @@ public:
 
     bool isSteamAudioCompiled() const noexcept
     {
-        return isSteamAudioBackendCompiled();
+        return locusq::spatial_steam_backend::isSteamAudioBackendCompiled();
     }
 
     int getSteamAudioInitStageIndex() const noexcept
@@ -853,25 +853,7 @@ public:
 
     static const char* steamAudioInitStageToString (int stageIndex) noexcept
     {
-        switch (static_cast<SteamInitStage> (stageIndex))
-        {
-            case SteamInitStage::NotCompiled: return "not_compiled";
-            case SteamInitStage::Uninitialized: return "uninitialized";
-            case SteamInitStage::LoadingLibrary: return "loading_library";
-            case SteamInitStage::LibraryOpenFailed: return "library_open_failed";
-            case SteamInitStage::ResolvingSymbols: return "resolving_symbols";
-            case SteamInitStage::SymbolsMissing: return "symbols_missing";
-            case SteamInitStage::CreatingContext: return "creating_context";
-            case SteamInitStage::ContextCreateFailed: return "context_create_failed";
-            case SteamInitStage::CreatingHRTF: return "creating_hrtf";
-            case SteamInitStage::HRTFCreateFailed: return "hrtf_create_failed";
-            case SteamInitStage::CreatingVirtualSurround: return "creating_virtual_surround";
-            case SteamInitStage::VirtualSurroundCreateFailed: return "virtual_surround_create_failed";
-            case SteamInitStage::Ready: return "ready";
-            default: break;
-        }
-
-        return "unknown";
+        return locusq::spatial_steam_backend::steamInitStageToString (stageIndex);
     }
 
     static const char* auditionReactiveHeadphoneFallbackReasonToString (int reasonIndex) noexcept
@@ -3830,43 +3812,42 @@ private:
             activeVoices);
     }
 
-    static bool isSteamAudioBackendCompiled() noexcept
-    {
-#if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
-        return true;
-#else
-        return false;
-#endif
-    }
-
     bool isSteamAudioBackendAvailable() const noexcept
     {
-        return isSteamAudioBackendCompiled() && steamAudioRuntimeReady;
+        return locusq::spatial_steam_backend::isSteamAudioBackendCompiled() && steamAudioRuntimeReady;
     }
 
     void setSteamInitStage (SteamInitStage stage, int errorCode) noexcept
     {
-        steamInitErrorCode.store (errorCode, std::memory_order_relaxed);
-        steamInitStageIndex.store (static_cast<int> (stage), std::memory_order_relaxed);
+        locusq::spatial_steam_backend::setSteamInitStage (
+            steamInitStageIndex,
+            steamInitErrorCode,
+            stage,
+            errorCode);
     }
 
     void clearSteamInitDiagnosticsStrings()
     {
-        const juce::SpinLock::ScopedLockType diagnosticsLock (steamDiagnosticsLock);
-        steamRuntimeLibraryPath.clear();
-        steamMissingSymbolName.clear();
+        locusq::spatial_steam_backend::clearSteamDiagnosticsStrings (
+            steamDiagnosticsLock,
+            steamRuntimeLibraryPath,
+            steamMissingSymbolName);
     }
 
     void setSteamRuntimeLibraryPathForDiagnostics (const juce::String& libraryPath)
     {
-        const juce::SpinLock::ScopedLockType diagnosticsLock (steamDiagnosticsLock);
-        steamRuntimeLibraryPath = libraryPath;
+        locusq::spatial_steam_backend::setSteamRuntimeLibraryPathForDiagnostics (
+            steamDiagnosticsLock,
+            steamRuntimeLibraryPath,
+            libraryPath);
     }
 
     void setSteamMissingSymbolForDiagnostics (const juce::String& symbolName)
     {
-        const juce::SpinLock::ScopedLockType diagnosticsLock (steamDiagnosticsLock);
-        steamMissingSymbolName = symbolName;
+        locusq::spatial_steam_backend::setSteamMissingSymbolForDiagnostics (
+            steamDiagnosticsLock,
+            steamMissingSymbolName,
+            symbolName);
     }
 
     void initialiseSteamAudioRuntimeIfEnabled()
@@ -3879,75 +3860,19 @@ private:
 
         juce::StringArray runtimeCandidates;
 
-        if (const auto* envPath = std::getenv ("LOCUSQ_STEAM_AUDIO_LIB"))
-        {
-            const auto candidate = juce::String (envPath).trim();
-            if (candidate.isNotEmpty())
-                runtimeCandidates.add (candidate);
-        }
-
         // Prefer bundle-local runtime locations first to avoid host permission
         // issues when the repo lives under user-protected directories.
         const auto executableFile = juce::File::getSpecialLocation (juce::File::currentExecutableFile);
         const auto executableDir = executableFile.getParentDirectory();
-       #if JUCE_MAC
-        runtimeCandidates.add (executableDir.getChildFile ("libphonon.dylib").getFullPathName());
-        runtimeCandidates.add (executableDir.getParentDirectory()
-            .getChildFile ("Frameworks")
-            .getChildFile ("libphonon.dylib")
-            .getFullPathName());
-       #elif JUCE_WINDOWS
-        runtimeCandidates.add (executableDir.getChildFile ("phonon.dll").getFullPathName());
-       #else
-        runtimeCandidates.add (executableDir.getChildFile ("libphonon.so").getFullPathName());
-       #endif
+        locusq::spatial_steam_backend::appendSteamRuntimeCandidates (runtimeCandidates, executableDir);
 
-       #if defined (LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH)
-        const auto compiledDefaultPath = juce::String (LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH).trim();
-        if (compiledDefaultPath.isNotEmpty())
-            runtimeCandidates.add (compiledDefaultPath);
-       #endif
-
-        bool libraryOpened = false;
         juce::String loadedLibraryPath;
         juce::String attemptedLibraryPath;
-
-        runtimeCandidates.removeEmptyStrings();
-        runtimeCandidates.removeDuplicates (false);
-        for (const auto& candidatePath : runtimeCandidates)
-        {
-            if (candidatePath.isEmpty())
-                continue;
-
-            attemptedLibraryPath = attemptedLibraryPath.isNotEmpty()
-                ? attemptedLibraryPath + ";" + candidatePath
-                : candidatePath;
-
-            libraryOpened = steamAudioLibrary.open (candidatePath);
-            if (libraryOpened)
-            {
-                loadedLibraryPath = candidatePath;
-                break;
-            }
-        }
-
-        if (! libraryOpened)
-        {
-           #if JUCE_MAC
-            const juce::String fallbackLibraryName { "libphonon.dylib" };
-           #elif JUCE_WINDOWS
-            const juce::String fallbackLibraryName { "phonon.dll" };
-           #else
-            const juce::String fallbackLibraryName { "libphonon.so" };
-           #endif
-
-            attemptedLibraryPath = attemptedLibraryPath.isNotEmpty()
-                                       ? attemptedLibraryPath + ";" + fallbackLibraryName
-                                       : fallbackLibraryName;
-            libraryOpened = steamAudioLibrary.open (fallbackLibraryName);
-            if (libraryOpened)
-                loadedLibraryPath = fallbackLibraryName;
-        }
+        const bool libraryOpened = locusq::spatial_steam_backend::tryOpenSteamRuntimeLibrary (
+            steamAudioLibrary,
+            runtimeCandidates,
+            attemptedLibraryPath,
+            loadedLibraryPath);
 
         if (! libraryOpened || steamAudioLibrary.getNativeHandle() == nullptr)
         {
@@ -3960,77 +3885,25 @@ private:
         setSteamRuntimeLibraryPathForDiagnostics (loadedLibraryPath);
         setSteamInitStage (SteamInitStage::ResolvingSymbols, 0);
 
-        iplContextCreateFn = reinterpret_cast<IplContextCreateFn> (steamAudioLibrary.getFunction ("iplContextCreate"));
-        if (iplContextCreateFn == nullptr)
+        const auto resolveSymbolOrFail = [this] (auto& fnOut, const char* symbolName) -> bool
         {
-            setSteamMissingSymbolForDiagnostics ("iplContextCreate");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
+            if (locusq::spatial_steam_backend::resolveRequiredSymbol (steamAudioLibrary, symbolName, fnOut))
+                return true;
 
-        iplContextReleaseFn = reinterpret_cast<IplContextReleaseFn> (steamAudioLibrary.getFunction ("iplContextRelease"));
-        if (iplContextReleaseFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplContextRelease");
+            setSteamMissingSymbolForDiagnostics (symbolName);
             setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
             teardownSteamAudioRuntime();
-            return;
-        }
+            return false;
+        };
 
-        iplHRTFCreateFn = reinterpret_cast<IplHRTFCreateFn> (steamAudioLibrary.getFunction ("iplHRTFCreate"));
-        if (iplHRTFCreateFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplHRTFCreate");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
-
-        iplHRTFReleaseFn = reinterpret_cast<IplHRTFReleaseFn> (steamAudioLibrary.getFunction ("iplHRTFRelease"));
-        if (iplHRTFReleaseFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplHRTFRelease");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
-
-        iplVirtualSurroundEffectCreateFn = reinterpret_cast<IplVirtualSurroundEffectCreateFn> (steamAudioLibrary.getFunction ("iplVirtualSurroundEffectCreate"));
-        if (iplVirtualSurroundEffectCreateFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplVirtualSurroundEffectCreate");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
-
-        iplVirtualSurroundEffectReleaseFn = reinterpret_cast<IplVirtualSurroundEffectReleaseFn> (steamAudioLibrary.getFunction ("iplVirtualSurroundEffectRelease"));
-        if (iplVirtualSurroundEffectReleaseFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplVirtualSurroundEffectRelease");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
-
-        iplVirtualSurroundEffectResetFn = reinterpret_cast<IplVirtualSurroundEffectResetFn> (steamAudioLibrary.getFunction ("iplVirtualSurroundEffectReset"));
-        if (iplVirtualSurroundEffectResetFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplVirtualSurroundEffectReset");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
-
-        iplVirtualSurroundEffectApplyFn = reinterpret_cast<IplVirtualSurroundEffectApplyFn> (steamAudioLibrary.getFunction ("iplVirtualSurroundEffectApply"));
-        if (iplVirtualSurroundEffectApplyFn == nullptr)
-        {
-            setSteamMissingSymbolForDiagnostics ("iplVirtualSurroundEffectApply");
-            setSteamInitStage (SteamInitStage::SymbolsMissing, 0);
-            teardownSteamAudioRuntime();
-            return;
-        }
+        if (! resolveSymbolOrFail (iplContextCreateFn, "iplContextCreate")) return;
+        if (! resolveSymbolOrFail (iplContextReleaseFn, "iplContextRelease")) return;
+        if (! resolveSymbolOrFail (iplHRTFCreateFn, "iplHRTFCreate")) return;
+        if (! resolveSymbolOrFail (iplHRTFReleaseFn, "iplHRTFRelease")) return;
+        if (! resolveSymbolOrFail (iplVirtualSurroundEffectCreateFn, "iplVirtualSurroundEffectCreate")) return;
+        if (! resolveSymbolOrFail (iplVirtualSurroundEffectReleaseFn, "iplVirtualSurroundEffectRelease")) return;
+        if (! resolveSymbolOrFail (iplVirtualSurroundEffectResetFn, "iplVirtualSurroundEffectReset")) return;
+        if (! resolveSymbolOrFail (iplVirtualSurroundEffectApplyFn, "iplVirtualSurroundEffectApply")) return;
 
         IPLContextSettings contextSettings {};
         contextSettings.version = STEAMAUDIO_VERSION;
