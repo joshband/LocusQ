@@ -2,7 +2,7 @@ Title: BL-057 Device Preset Library (AirPods Pro 1/2/3 + WH-1000XM5)
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-057 Device Preset Library (AirPods Pro 1/2/3 + WH-1000XM5)
 
@@ -66,8 +66,29 @@ Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/tra
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl057-device-preset-library-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl057-device-preset-library-mac.sh` (authored 2026-03-03).
 Evidence schema: `TestEvidence/bl057_*/status.tsv`.
+
+### Preset Inventory (2026-03-03)
+
+| Model | Mode | Preset file | Status |
+|---|---|---|---|
+| AirPods Pro 1 | anc_on | `Resources/eq_presets/airpods_pro_1_anc_on.yaml` | present |
+| AirPods Pro 1 | anc_off | `Resources/eq_presets/airpods_pro_1_anc_off.yaml` | present |
+| AirPods Pro 1 | transparency | `Resources/eq_presets/airpods_pro_1_transparency.yaml` | present |
+| AirPods Pro 2 | anc_on | `Resources/eq_presets/airpods_pro_2_anc_on.yaml` | present |
+| AirPods Pro 2 | anc_off | `Resources/eq_presets/airpods_pro_2_anc_off.yaml` | present |
+| AirPods Pro 2 | transparency | `Resources/eq_presets/airpods_pro_2_transparency.yaml` | present |
+| AirPods Pro 3 | anc_on | `Resources/eq_presets/airpods_pro_3_anc_on.yaml` | present |
+| AirPods Pro 3 | anc_off | `Resources/eq_presets/airpods_pro_3_anc_off.yaml` | present |
+| AirPods Pro 3 | transparency | `Resources/eq_presets/airpods_pro_3_transparency.yaml` | present |
+| Sony WH-1000XM5 | anc_on | `Resources/eq_presets/sony_wh1000xm5_anc_on.yaml` | present |
+| Sony WH-1000XM5 | anc_off | `Resources/eq_presets/sony_wh1000xm5_anc_off.yaml` | present |
+
+### Validation Commands (Batch Contract)
+
+- `./scripts/qa-bl057-device-preset-library-mac.sh --contract-only --runs 3`
+- `./scripts/qa-bl057-device-preset-library-mac.sh --execute --runs 1`
 
 ## Replay Cadence Plan (Required)
 
@@ -100,4 +121,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
