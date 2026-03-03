@@ -2,7 +2,7 @@ Title: BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-073 QA Scaffold Truthfulness Gates for BL-067 and BL-068
 
@@ -75,6 +75,34 @@ Minimum evidence additions:
 - `promotion_gate_policy.md`
 - `bl067_bl068_matrix_reconcile.tsv`
 
+### Mode Semantics Contract
+
+- `--contract-only`: BL-067 and BL-068 are run in contract mode. TODO/SCAFFOLD rows are allowed, but each lane run must exit `0`.
+- `--execute`: BL-067 and BL-068 are run in execute mode. TODO/SCAFFOLD rows are promotion-blocking and lane exit must match that truthfulness contract.
+- `--runs <N>`: deterministic replay count. Every run is independently evaluated and logged in the artifact matrices.
+
+### Exact Execute Failure Criteria
+
+1. For each lane run, scan lane TSV outputs and count rows where any cell is `TODO` or `SCAFFOLD`.
+2. Execute mode is promotion-blocking and must return non-zero if any run contains TODO/SCAFFOLD rows.
+3. Execute mode fails on false-green if `scaffold_rows > 0` and lane exit code is `0`.
+4. Execute mode fails on false-red if `scaffold_rows = 0` and lane exit code is non-zero.
+5. Execute mode passes only when all runs have zero TODO/SCAFFOLD rows and lane exit equals expected exit (`0`).
+
+### Validation Commands
+
+```bash
+./scripts/qa-bl073-scaffold-truthfulness-gates-mac.sh --contract-only --runs 3
+./scripts/qa-bl073-scaffold-truthfulness-gates-mac.sh --execute --runs 3
+```
+
+Expected evidence path pattern:
+
+- `TestEvidence/bl073_truthfulness_<timestamp>/mode_semantics_contract.tsv`
+- `TestEvidence/bl073_truthfulness_<timestamp>/todo_row_enforcement.tsv`
+- `TestEvidence/bl073_truthfulness_<timestamp>/promotion_gate_policy.md`
+- `TestEvidence/bl073_truthfulness_<timestamp>/bl067_bl068_matrix_reconcile.tsv`
+
 ## Replay Cadence Plan (Required)
 
 Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
@@ -105,4 +133,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
