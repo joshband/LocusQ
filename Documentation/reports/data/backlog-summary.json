@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 85,
-    "open": 29,
-    "done": 56
+    "open": 28,
+    "done": 57
   },
   "items": [
     {
@@ -1473,8 +1473,8 @@
     {
       "id": "BL-077",
       "title": "BL-077 Unified Visual Capture and Replay Harness",
-      "state_bucket": "open",
-      "status": "In Validation (T1/T2/T3 + live execute PASS; owner closeout/archive sync pending)",
+      "state_bucket": "done",
+      "status": "**Done** (contract + execute + live execute + T2 + T3 PASS; closeout/archive sync complete)",
       "priority": "P0",
       "track": "D - QA Platform",
       "depends_on": "BL-049 (Done), BL-073",
@@ -1485,9 +1485,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Validation (T1/T2/T3 plus live execute evidence complete; owner closeout/archive transition pending). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: Done (contract/execute/live/T2/T3 cadence evidence complete; closeout sync and archive transition recorded). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions.",
-      "runbook_path": "Documentation/backlog/bl-077-unified-visual-capture-and-replay-harness.md"
+      "runbook_path": "Documentation/backlog/done/bl-077-unified-visual-capture-and-replay-harness.md"
     },
     {
       "id": "HX-01",
