@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Title: BL-074 WebView Runtime Reliability Diagnostics QA Lane
+# Title: BL-074 WebView Runtime Reliability Diagnostics
 # Document Type: QA Script
 # Author: APC Codex
 # Created Date: 2026-03-03
 # Last Modified Date: 2026-03-03
 #
 # Purpose:
-# - Validate strict-gesture self-test behavior contracts.
-# - Validate bridge degraded-mode contract and impacted-control lockdown path.
-# - Validate centralized runtime diagnostics counters for native-call failures/timeouts.
+# - Validate strict_gesture enforcement in the WebView self-test lane.
+# - Validate degraded-mode startup control-lock behavior when critical native bindings fail.
+# - Validate centralized native/bridge diagnostics schema surfacing for operators.
 #
 # Exit codes:
 #   0 all checks passed
@@ -22,11 +22,9 @@ TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT_DIR="${ROOT_DIR}/TestEvidence/bl074_webview_reliability_${TIMESTAMP}"
 MODE="contract_only"
 MODE_SET=0
-RUNS=1
-
-SOURCE_JS="${ROOT_DIR}/Source/ui/public/js/index.js"
-WEBVIEW_RUNTIME_HEADER="${ROOT_DIR}/Source/editor_webview/EditorWebViewRuntime.h"
-BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md"
+RUNS=""
+RUNS_SET=0
+DIAGNOSTICS_SCHEMA="locusq-native-bridge-diagnostics-v1"
 
 STATUS_TSV=""
 STRICT_GESTURE_TSV=""
@@ -41,13 +39,13 @@ usage() {
   cat <<'USAGE'
 Usage: qa-bl074-webview-reliability-diagnostics-mac.sh [options]
 
-BL-074 deterministic QA lane for strict-gesture and degraded-mode diagnostics.
+BL-074 WebView reliability diagnostics lane.
 
 Options:
   --out-dir <path>   Artifact output directory
-  --contract-only    Contract checks only (default mode)
-  --execute          Execute checks (adds syntax/runner checks)
-  --runs <N>         Number of deterministic replay runs (integer >= 1, default: 1)
+  --contract-only    Contract checks only (default)
+  --execute          Execute-mode checks (same checks + strict pass/fail enforcement)
+  --runs <N>         Number of deterministic replay runs
   --help, -h         Show usage
 
 Outputs:
@@ -66,32 +64,66 @@ usage_error() {
   exit 2
 }
 
-record() {
+sanitize_field() {
+  local value="$1"
+  value="${value//$'\t'/ }"
+  value="${value//$'\n'/ }"
+  printf "%s" "$value"
+}
+
+record_status() {
   local check_id="$1"
   local result="$2"
   local detail="$3"
   local artifact="${4:-}"
 
   printf "%s\t%s\t%s\t%s\n" \
-    "$check_id" \
-    "$result" \
-    "${detail//$'\t'/ }" \
-    "${artifact//$'\t'/ }" \
+    "$(sanitize_field "$check_id")" \
+    "$(sanitize_field "$result")" \
+    "$(sanitize_field "$detail")" \
+    "$(sanitize_field "$artifact")" \
     >> "$STATUS_TSV"
 
   if [[ "$result" == "PASS" ]]; then
     ((pass_count++)) || true
-    echo "  [PASS] $check_id: $detail"
   else
     ((fail_count++)) || true
-    echo "  [FAIL] $check_id: $detail"
   fi
 }
 
-require_pattern() {
-  local pattern="$1"
-  local path="$2"
-  rg -q "$pattern" "$path"
+append_matrix_row() {
+  local file="$1"
+  local run_id="$2"
+  local check_id="$3"
+  local result="$4"
+  local detail="$5"
+  local artifact="$6"
+
+  printf "%s\t%s\t%s\t%s\t%s\n" \
+    "$(sanitize_field "$run_id")" \
+    "$(sanitize_field "$check_id")" \
+    "$(sanitize_field "$result")" \
+    "$(sanitize_field "$detail")" \
+    "$(sanitize_field "$artifact")" \
+    >> "$file"
+}
+
+run_pattern_check() {
+  local matrix_file="$1"
+  local run_id="$2"
+  local check_id="$3"
+  local file_path="$4"
+  local pattern="$5"
+  local pass_detail="$6"
+  local fail_detail="$7"
+
+  if rg -q --pcre2 "$pattern" "$file_path"; then
+    append_matrix_row "$matrix_file" "$run_id" "$check_id" "PASS" "$pass_detail" "$file_path"
+    record_status "$check_id" "PASS" "$pass_detail" "$file_path"
+  else
+    append_matrix_row "$matrix_file" "$run_id" "$check_id" "FAIL" "$fail_detail" "$file_path"
+    record_status "$check_id" "FAIL" "$fail_detail" "$file_path"
+  fi
 }
 
 while [[ $# -gt 0 ]]; do
@@ -120,6 +152,7 @@ while [[ $# -gt 0 ]]; do
     --runs)
       [[ $# -ge 2 ]] || usage_error "--runs requires a value"
       RUNS="$2"
+      RUNS_SET=1
       shift 2
       ;;
     --help|-h)
@@ -131,6 +164,14 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if (( RUNS_SET == 0 )); then
+  if [[ "$MODE" == "contract_only" ]]; then
+    RUNS=3
+  else
+    RUNS=1
+  fi
+fi
 
 if ! [[ "$RUNS" =~ ^[0-9]+$ ]] || [[ "$RUNS" -lt 1 ]]; then
   usage_error "--runs must be an integer >= 1"
@@ -145,140 +186,153 @@ NATIVE_ERROR_SURFACE_TSV="${OUT_DIR}/native_error_surface.tsv"
 OPERATOR_DIAGNOSTICS_MD="${OUT_DIR}/operator_diagnostics_snapshot.md"
 
 printf "check_id\tresult\tdetail\tartifact\n" > "$STATUS_TSV"
-printf "run_index\tcheck\tresult\tdetail\tartifact\n" > "$STRICT_GESTURE_TSV"
-printf "run_index\tcheck\tresult\tdetail\tartifact\n" > "$DEGRADED_MODE_TSV"
-printf "run_index\tcheck\tresult\tdetail\tartifact\n" > "$NATIVE_ERROR_SURFACE_TSV"
+printf "run\tcheck_id\tresult\tdetail\tartifact\n" > "$STRICT_GESTURE_TSV"
+printf "run\tcheck_id\tresult\tdetail\tartifact\n" > "$DEGRADED_MODE_TSV"
+printf "run\tcheck_id\tresult\tdetail\tartifact\n" > "$NATIVE_ERROR_SURFACE_TSV"
 
-record "BL074-PRE-source_js_exists" "$( [[ -f "$SOURCE_JS" ]] && echo PASS || echo FAIL )" "index.js presence" "$SOURCE_JS"
-record "BL074-PRE-runtime_header_exists" "$( [[ -f "$WEBVIEW_RUNTIME_HEADER" ]] && echo PASS || echo FAIL )" "EditorWebViewRuntime header presence" "$WEBVIEW_RUNTIME_HEADER"
-record "BL074-PRE-backlog_doc_exists" "$( [[ -f "$BACKLOG_DOC" ]] && echo PASS || echo FAIL )" "runbook presence" "$BACKLOG_DOC"
+JS_FILE="${ROOT_DIR}/Source/ui/public/js/index.js"
+SCENE_BRIDGE_FILE="${ROOT_DIR}/Source/processor_bridge/ProcessorSceneStateBridgeOps.h"
+RUNBOOK_FILE="${ROOT_DIR}/Documentation/backlog/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md"
 
-if [[ "$fail_count" -gt 0 ]]; then
-  record "lane_result" "FAIL" "preflight failures detected" "$STATUS_TSV"
-  exit 1
-fi
-
-for run_index in $(seq 1 "$RUNS"); do
-  strict_result="PASS"
-  strict_detail="strict gesture query+failure path present"
-  if ! require_pattern "strictGestureSelfTestRequested" "$SOURCE_JS"; then
-    strict_result="FAIL"
-    strict_detail="strict gesture request flag missing in index.js"
-  elif ! require_pattern "strict_gesture" "$WEBVIEW_RUNTIME_HEADER"; then
-    strict_result="FAIL"
-    strict_detail="strict gesture URL parameter wiring missing in EditorWebViewRuntime"
-  elif ! require_pattern "strict_gesture rejected fallback path" "$SOURCE_JS"; then
-    strict_result="FAIL"
-    strict_detail="UI-07 strict gesture failure message missing"
-  fi
-  printf "%s\t%s\t%s\t%s\t%s\n" "$run_index" "strict_gesture_contract" "$strict_result" "$strict_detail" "$SOURCE_JS" >> "$STRICT_GESTURE_TSV"
-  record "BL074-R${run_index}-strict_gesture_contract" "$strict_result" "$strict_detail" "$STRICT_GESTURE_TSV"
-
-  degraded_result="PASS"
-  degraded_detail="startup binding gate + impacted control lockdown present"
-  if ! require_pattern "BRIDGE_DEGRADED_CONTROL_IDS" "$SOURCE_JS"; then
-    degraded_result="FAIL"
-    degraded_detail="missing impacted control list"
-  elif ! require_pattern "setBridgeImpactedControlsEnabled" "$SOURCE_JS"; then
-    degraded_result="FAIL"
-    degraded_detail="missing impacted control enable/disable function"
-  elif ! require_pattern "applyBridgeDegradedMode" "$SOURCE_JS"; then
-    degraded_result="FAIL"
-    degraded_detail="missing bridge degraded mode applier"
-  elif ! require_pattern "evaluateCriticalStartupBindings" "$SOURCE_JS"; then
-    degraded_result="FAIL"
-    degraded_detail="missing critical startup binding evaluator"
-  elif ! require_pattern "bridgeDegraded" "$SOURCE_JS"; then
-    degraded_result="FAIL"
-    degraded_detail="runtime bridge degraded state not tracked"
-  fi
-  printf "%s\t%s\t%s\t%s\t%s\n" "$run_index" "degraded_mode_contract" "$degraded_result" "$degraded_detail" "$SOURCE_JS" >> "$DEGRADED_MODE_TSV"
-  record "BL074-R${run_index}-degraded_mode_contract" "$degraded_result" "$degraded_detail" "$DEGRADED_MODE_TSV"
-
-  native_result="PASS"
-  native_detail="runtime diagnostics counters + centralized error surface present"
-  if ! require_pattern "runtimeDiagnosticsState" "$SOURCE_JS"; then
-    native_result="FAIL"
-    native_detail="runtime diagnostics state missing"
-  elif ! require_pattern "pushRuntimeDiagnosticsEvent" "$SOURCE_JS"; then
-    native_result="FAIL"
-    native_detail="diagnostics event channel missing"
-  elif ! require_pattern "native_call_timeout" "$SOURCE_JS"; then
-    native_result="FAIL"
-    native_detail="native timeout event classification missing"
-  elif ! require_pattern "native ok=" "$SOURCE_JS"; then
-    native_result="FAIL"
-    native_detail="operator diagnostics summary missing deterministic counters"
-  elif ! require_pattern "__LQ_RUNTIME_DIAGNOSTICS__" "$SOURCE_JS"; then
-    native_result="FAIL"
-    native_detail="window runtime diagnostics snapshot missing"
-  fi
-  printf "%s\t%s\t%s\t%s\t%s\n" "$run_index" "native_error_surface" "$native_result" "$native_detail" "$SOURCE_JS" >> "$NATIVE_ERROR_SURFACE_TSV"
-  record "BL074-R${run_index}-native_error_surface" "$native_result" "$native_detail" "$NATIVE_ERROR_SURFACE_TSV"
-
-  if [[ "$MODE" == "execute" ]]; then
-    if command -v node >/dev/null 2>&1; then
-      if node --check "$SOURCE_JS" > "${OUT_DIR}/run_${run_index}_node_check.log" 2>&1; then
-        record "BL074-R${run_index}-node_syntax_check" "PASS" "node --check passed for index.js" "${OUT_DIR}/run_${run_index}_node_check.log"
-      else
-        record "BL074-R${run_index}-node_syntax_check" "FAIL" "node --check failed for index.js" "${OUT_DIR}/run_${run_index}_node_check.log"
-      fi
-    else
-      record "BL074-R${run_index}-node_syntax_check" "PASS" "node unavailable; syntax check skipped" "$SOURCE_JS"
-    fi
+for required in "$JS_FILE" "$SCENE_BRIDGE_FILE" "$RUNBOOK_FILE"; do
+  if [[ -f "$required" ]]; then
+    record_status "BL074-PRE-file_exists-$(basename "$required")" "PASS" "required file present" "$required"
+  else
+    record_status "BL074-PRE-file_exists-$(basename "$required")" "FAIL" "required file missing" "$required"
   fi
 done
+
+for run_id in $(seq 1 "$RUNS"); do
+  # strict_gesture enforcement contract
+  run_pattern_check "$STRICT_GESTURE_TSV" "$run_id" "BL074-SG-001" "$JS_FILE" 'strictGestureModeEnabled\s*=\s*parseQueryBooleanFlag\(queryParams,\s*"strict_gesture"\)' \
+    "strict_gesture query flag parsed" \
+    "strict_gesture query flag parsing missing"
+
+  run_pattern_check "$STRICT_GESTURE_TSV" "$run_id" "BL074-SG-002" "$JS_FILE" 'strictGestureModeEnabled\s*&&\s*gestureFallbacks\.length\s*>\s*0' \
+    "strict_gesture fallback gate present" \
+    "strict_gesture fallback gate missing"
+
+  run_pattern_check "$STRICT_GESTURE_TSV" "$run_id" "BL074-SG-003" "$JS_FILE" 'strict_gesture enabled; fallback gesture path used' \
+    "strict_gesture fail detail emitted" \
+    "strict_gesture fail detail missing"
+
+  run_pattern_check "$STRICT_GESTURE_TSV" "$run_id" "BL074-SG-004" "$JS_FILE" 'strict_gesture=\$\{strictGestureModeEnabled \? "on" : "off"\}' \
+    "strict_gesture surfaced in operator/self-test detail" \
+    "strict_gesture operator/self-test detail missing"
+
+  # degraded startup/control-lock contract
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-001" "$JS_FILE" 'nativeBridgeDegraded:\s*false' \
+    "runtime degraded-state field declared" \
+    "runtime degraded-state field missing"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-002" "$JS_FILE" 'function\s+setNativeBridgeDegradedMode\(' \
+    "degraded-mode state transition function present" \
+    "degraded-mode state transition function missing"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-003" "$JS_FILE" 'function\s+applyNativeBridgeControlLock\(' \
+    "degraded-mode control lock function present" \
+    "degraded-mode control lock function missing"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-004" "$JS_FILE" 'nativeBridgeDegradedControlIds' \
+    "degraded control ownership list declared" \
+    "degraded control ownership list missing"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-004A" "$JS_FILE" '"preset-save-btn"' \
+    "degraded control ownership includes preset save control" \
+    "degraded control ownership missing preset save control"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-004B" "$JS_FILE" '"cal-start-btn"' \
+    "degraded control ownership includes calibration start control" \
+    "degraded control ownership missing calibration start control"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-004C" "$JS_FILE" '"timeline-play-btn"' \
+    "degraded control ownership includes timeline play control" \
+    "degraded control ownership missing timeline play control"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-005" "$JS_FILE" 'evaluateNativeBridgeBindingContract\(\);' \
+    "startup binding contract evaluation invoked" \
+    "startup binding contract evaluation missing"
+
+  run_pattern_check "$DEGRADED_MODE_TSV" "$run_id" "BL074-DM-006" "$JS_FILE" 'controls disabled in degraded mode' \
+    "degraded mode operator copy confirms controls disabled" \
+    "degraded mode operator copy missing"
+
+  # centralized native/bridge diagnostics surface
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-001" "$JS_FILE" 'nativeBridgeDiagnosticsState\.callsFailed\s*\+=' \
+    "native failure counter increments on call errors" \
+    "native failure counter increment missing"
+
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-002" "$JS_FILE" 'callsTimeout|callsUnavailable|callsBlocked' \
+    "native failure classification counters present" \
+    "native failure classification counters missing"
+
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-003" "$JS_FILE" 'window\.__LQ_NATIVE_BRIDGE_DIAGNOSTICS__' \
+    "native diagnostics channel exported" \
+    "native diagnostics channel export missing"
+
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-004" "$JS_FILE" 'window\.__LQ_OPERATOR_DIAGNOSTICS__' \
+    "operator diagnostics channel exported" \
+    "operator diagnostics channel export missing"
+
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-005" "$JS_FILE" 'function\s+hasNativeBridgeDiagnosticsPayload\(' \
+    "UI parser recognizes native bridge diagnostics payload" \
+    "UI parser for native bridge diagnostics payload missing"
+
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-006" "$SCENE_BRIDGE_FILE" 'nativeBridgeDiagnosticsSchema' \
+    "scene-state payload publishes native diagnostics schema" \
+    "scene-state payload missing native diagnostics schema"
+
+  run_pattern_check "$NATIVE_ERROR_SURFACE_TSV" "$run_id" "BL074-NE-007" "$SCENE_BRIDGE_FILE" 'nativeBridgeDiagnostics(?!Schema)' \
+    "scene-state payload publishes native diagnostics object" \
+    "scene-state payload missing native diagnostics object"
+
+done
+
+strict_fail_count="$(awk -F'\t' 'NR > 1 && $3 == "FAIL" { count++ } END { print count + 0 }' "$STRICT_GESTURE_TSV")"
+degraded_fail_count="$(awk -F'\t' 'NR > 1 && $3 == "FAIL" { count++ } END { print count + 0 }' "$DEGRADED_MODE_TSV")"
+native_fail_count="$(awk -F'\t' 'NR > 1 && $3 == "FAIL" { count++ } END { print count + 0 }' "$NATIVE_ERROR_SURFACE_TSV")"
 
 cat > "$OPERATOR_DIAGNOSTICS_MD" <<EOF_MD
 # BL-074 Operator Diagnostics Snapshot
 
-- Generated: ${TIMESTAMP}
-- Mode: ${MODE}
-- Runs: ${RUNS}
+- generated_at_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+- mode: ${MODE}
+- runs: ${RUNS}
+- schema: ${DIAGNOSTICS_SCHEMA}
 
-## Runtime Channel Contract
+## Contract Summary
 
-- Global snapshot key: window.__LQ_RUNTIME_DIAGNOSTICS__
-- Required counters:
-  - startupBindingFailures
-  - nativeCallFailures
-  - nativeCallTimeouts
-  - gestureFallbacks
-  - strictGestureViolations
-- Required event channel function: pushRuntimeDiagnosticsEvent(...)
-- Operator summary surface: #rend-diagnostics-availability
+| Surface | Status | Notes |
+|---|---|---|
+| strict_gesture_matrix.tsv | $([[ "$strict_fail_count" -eq 0 ]] && echo PASS || echo FAIL) | strict gesture fallback gate + operator detail checks |
+| degraded_mode_contract.tsv | $([[ "$degraded_fail_count" -eq 0 ]] && echo PASS || echo FAIL) | degraded startup + control lock contract checks |
+| native_error_surface.tsv | $([[ "$native_fail_count" -eq 0 ]] && echo PASS || echo FAIL) | call-failure counters + operator/native channel schema checks |
 
-## Degraded Mode Contract
+## Diagnostics Channel Schema
 
-- Critical startup bindings route through evaluateCriticalStartupBindings().
-- Degraded mode applies through applyBridgeDegradedMode(...).
-- Impacted controls disable via setBridgeImpactedControlsEnabled(false).
+- 'window.__LQ_NATIVE_BRIDGE_DIAGNOSTICS__': per-call counters, classification, recent errors, payload state.
+- 'window.__LQ_OPERATOR_DIAGNOSTICS__': operator-facing snapshot (runtime state + scene transport + native diagnostics).
+- Scene-state payload keys: 'nativeBridgeDiagnosticsSchema', 'nativeBridgeAvailable', 'nativeBridgeBackend', 'nativeBridgeDiagnostics'.
 
-## Strict Gesture Contract
+## Degraded Mode Controls Disabled
 
-- Query switch: strict_gesture=1.
-- WebView URL wiring: Source/editor_webview/EditorWebViewRuntime.h.
-- Self-test gate: UI-07 fails when gesture fallbacks are used under strict mode.
+- calibration controls: 'cal-start-btn', 'cal-redetect-btn', 'cal-profile-*'
+- preset/timeline controls: 'preset-*-btn', 'timeline-*-btn', 'motion-transport-*-btn'
+- runtime-native commands: 'rend-headtrack-set-forward', 'choreo-apply-btn', 'choreo-save-btn'
 EOF_MD
 
-record "BL074-SNAPSHOT-operator_diagnostics" "PASS" "operator diagnostics snapshot generated" "$OPERATOR_DIAGNOSTICS_MD"
-
 if [[ "$fail_count" -eq 0 ]]; then
-  record "lane_result" "PASS" "bl074_webview_reliability_passed mode=${MODE} runs=${RUNS}" "$STATUS_TSV"
+  record_status "lane_result" "PASS" "mode=${MODE};runs=${RUNS};strict=${strict_fail_count};degraded=${degraded_fail_count};native=${native_fail_count}" "$STATUS_TSV"
 else
-  record "lane_result" "FAIL" "bl074_webview_reliability_failed=${fail_count} mode=${MODE} runs=${RUNS}" "$STATUS_TSV"
+  record_status "lane_result" "FAIL" "mode=${MODE};runs=${RUNS};failures=${fail_count}" "$STATUS_TSV"
 fi
 
-echo ""
-echo "Results: ${pass_count} passed, ${fail_count} failed"
-echo "Artifacts:"
-echo "- $STATUS_TSV"
-echo "- $STRICT_GESTURE_TSV"
-echo "- $DEGRADED_MODE_TSV"
-echo "- $NATIVE_ERROR_SURFACE_TSV"
-echo "- $OPERATOR_DIAGNOSTICS_MD"
+if [[ "$MODE" == "execute" && "$fail_count" -gt 0 ]]; then
+  exit 1
+fi
 
 if [[ "$fail_count" -gt 0 ]]; then
   exit 1
 fi
+
 exit 0

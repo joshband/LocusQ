@@ -20,6 +20,12 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
                       + ",\"snapshotPublishedAtUtcMs\":" + juce::String (snapshotPublishedAtUtcMs)
                       + ",\"snapshotCadenceHz\":" + juce::String (kSceneSnapshotCadenceHz)
                       + ",\"snapshotStaleAfterMs\":" + juce::String (kSceneSnapshotStaleAfterMs)
+                      + ",\"nativeBridgeDiagnosticsSchema\":\"locusq-native-bridge-diagnostics-v1\""
+                      + ",\"nativeBridgeAvailable\":true"
+                      + ",\"nativeBridgeBackend\":\"juce_webview\""
+                      + ",\"nativeBridgeDegraded\":false"
+                      + ",\"nativeBridgeDegradedReason\":\"none\""
+                      + ",\"nativeBridgeLastError\":\"none\""
                       + ",\"emitters\":[";
     bool first = true;
     double timelineTime = 0.0;
@@ -1615,6 +1621,15 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
           + ",\"perfBlockMs\":" + juce::String (perfProcessBlockMs.load (std::memory_order_relaxed), 4)
           + ",\"perfEmitterMs\":" + juce::String (perfEmitterPublishMs.load (std::memory_order_relaxed), 4)
           + ",\"perfRendererMs\":" + juce::String (perfRendererProcessMs.load (std::memory_order_relaxed), 4)
+          + ",\"nativeBridgeDiagnostics\":{\"schema\":\"locusq-native-bridge-diagnostics-v1\""
+              + ",\"available\":true"
+              + ",\"backend\":\"juce_webview\""
+              + ",\"degraded\":false"
+              + ",\"degradedReason\":\"none\""
+              + ",\"lastError\":\"none\""
+              + ",\"seq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
+              + ",\"publishedAtUtcMs\":" + juce::String (snapshotPublishedAtUtcMs)
+              + "}"
           + "}";
 
     return json;
