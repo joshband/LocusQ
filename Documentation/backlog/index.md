@@ -153,7 +153,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Implementation (Wave 3 pose/compensation extraction landed; contract+execute replay PASS on 2026-03-03) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
-| 47 | BL-077 | Unified visual capture and replay harness | P0 | In Validation (T1/T2/T3 + live execute evidence PASS; owner closeout/archive sync pending) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](bl-077-unified-visual-capture-and-replay-harness.md) |
+| 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -525,6 +525,7 @@ Any status change must update in the same changeset:
 | BL-048 | Cross-platform shipping hardening | 2026-02-27 | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | BL-049 | Unit test framework and tracker automation | 2026-02-27 | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
 | BL-052 | Steam Audio virtual surround + quad layout | 2026-02-28 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
+| BL-077 | Unified visual capture and replay harness | 2026-03-03 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |
 | HX-03 | REAPER multi-instance stability lane | 2026-02-23 | [hx-03](done/hx-03-reaper-multi-instance.md) |
