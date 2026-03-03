@@ -2,7 +2,7 @@ Title: BL-038 Calibration Threading and Telemetry
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-038 Calibration Threading and Telemetry
 
@@ -30,13 +30,30 @@ Use visuals only when they materially improve understanding.
 |---|---|---|
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
 | Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Calibration ownership + state flow (mermaid) | Clarifies thread ownership and deterministic publish path in one glance. | `## Delivery Flow Diagram` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Delivery Flow Diagram
 
-Include a runbook-specific diagram only when it clarifies behavior not already obvious from `Status Ledger`, `Implementation Slices`, and `Validation Plan`.
+```mermaid
+flowchart TD
+    A[intent_start] --> B[cal_arm_pending]
+    B --> C[cal_capturing]
+    C --> D[cal_analyzing]
+    D --> E[cal_publish_ready]
+    E --> F[atomic telemetry publish]
+    F --> G[cal_complete]
+    C --> H[intent_abort]
+    H --> I[cal_aborting]
+    I --> J[cal_idle]
+    B --> K[timeout/error]
+    C --> K
+    D --> K
+    E --> K
+    K --> L[cal_error]
+```
 
-Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
+Cross-item lifecycle governance remains canonical in `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
 ## Status Ledger
 
@@ -1008,4 +1025,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

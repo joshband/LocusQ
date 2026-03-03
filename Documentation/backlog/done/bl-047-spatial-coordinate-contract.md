@@ -2,13 +2,13 @@ Title: BL-047 Spatial Coordinate Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-047 Spatial Coordinate Contract
 
 ## Plain-Language Summary
 
-BL-047 in plain terms: Document and enforce a single canonical coordinate-system contract across renderer math, head-tracking transforms, and viewport representation to prevent silent axis/sign drift. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-047 in plain terms: Document and enforce a single canonical coordinate-system contract across renderer math, head-tracking transforms, and viewport representation to prevent silent axis/sign drift. Current state: Done (historical planning-state context retained in runbook history). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

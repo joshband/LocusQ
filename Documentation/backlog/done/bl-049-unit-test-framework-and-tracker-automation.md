@@ -2,13 +2,13 @@ Title: BL-049 Unit Test Framework and Tracker Automation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-049 Unit Test Framework and Tracker Automation
 
 ## Plain-Language Summary
 
-BL-049 in plain terms: Add deterministic component-level unit tests (DSP + scene + tracking bridge) and automate head-tracking bridge validation to close current coverage gaps. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-049 in plain terms: Add deterministic component-level unit tests (DSP + scene + tracking bridge) and automate head-tracking bridge validation to close current coverage gaps. Current state: Done (historical planning-state context retained in runbook history). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

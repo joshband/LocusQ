@@ -2,13 +2,13 @@ Title: BL-042 QA CI Regression Gates
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-042 QA CI Regression Gates
 
 ## Plain-Language Summary
 
-BL-042 in plain terms: Promote DSP and runtime regression checks into deterministic CI gates so lock-safety, finite-output, spatial math, and lane stability regressions cannot merge silently. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-042 in plain terms: Promote DSP and runtime regression checks into deterministic CI gates so lock-safety, finite-output, spatial math, and lane stability regressions cannot merge silently. Current state: Done (historical planning-state context retained in runbook history). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

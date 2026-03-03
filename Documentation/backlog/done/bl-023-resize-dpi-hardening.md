@@ -2,13 +2,13 @@ Title: BL-023 Resize/DPI Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-023: Resize/DPI Hardening
 
 ## Plain-Language Summary
 
-BL-023 in plain terms: Define and enforce a deterministic resize and DPI behavior contract for LocusQ WebView UI across standalone and plugin-host windows, with explicit pass/fail taxonomy and reproducible host scenarios. Current state: In Implementation (C3 mode parity revalidation PASS at TestEvidence/bl023_slice_c3_mode_parity_20260228T174901Z; runtime lane preserved deterministic outputs with one bounded exit=143 recovery event). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-023 in plain terms: Define and enforce a deterministic resize and DPI behavior contract for LocusQ WebView UI across standalone and plugin-host windows, with explicit pass/fail taxonomy and reproducible host scenarios. Current state: Done (historical pre-closeout state retained in this runbook timeline and evidence sections). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

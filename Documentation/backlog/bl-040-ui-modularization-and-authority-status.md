@@ -2,7 +2,7 @@ Title: BL-040 UI Modularization and Authority Status UX
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-040 UI Modularization and Authority Status UX
 
@@ -31,13 +31,28 @@ Use visuals only when they materially improve understanding.
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
 | Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
 | Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
+| Authority precedence + status mapping (mermaid) | Makes source-precedence and UI status outcomes easy to understand quickly. | `## Delivery Flow Diagram` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Delivery Flow Diagram
 
-Include a runbook-specific diagram only when it clarifies behavior not already obvious from `Status Ledger`, `Implementation Slices`, and `Validation Plan`.
+```mermaid
+flowchart LR
+    A[daw_automation] --> P[Precedence resolver]
+    B[timeline_engine] --> P
+    C[physics_engine] --> P
+    D[ui_local_edit] --> P
+    E[native_fallback] --> P
+    P --> S[authorityStatusClass]
+    S --> R1[AUTHORITY READY]
+    S --> R2[AUTHORITY STALE]
+    S --> R3[AUTHORITY LOCKED]
+    S --> R4[AUTHORITY FALLBACK]
+    S --> R5[AUTHORITY UNAVAILABLE]
+    S --> U[Authority diagnostics card]
+```
 
-Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
+Cross-item lifecycle governance remains canonical in `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
 ## Status Ledger
 
@@ -959,4 +974,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

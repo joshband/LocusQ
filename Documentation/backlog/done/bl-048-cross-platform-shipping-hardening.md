@@ -2,13 +2,13 @@ Title: BL-048 Cross-Platform Shipping Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-048 Cross-Platform Shipping Hardening
 
 ## Plain-Language Summary
 
-BL-048 in plain terms: Harden shipping readiness via code-sign/notarization, Windows build validation, and installer packaging so release governance includes cross-platform distribution confidence. Current state: In Planning. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-048 in plain terms: Harden shipping readiness via code-sign/notarization, Windows build validation, and installer packaging so release governance includes cross-platform distribution confidence. Current state: Done (historical planning-state context retained in runbook history). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 

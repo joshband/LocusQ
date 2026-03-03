@@ -7,7 +7,7 @@ Title: Documentation Hygiene Expert Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # Documentation Hygiene Expert
 
@@ -110,7 +110,10 @@ Use both skills for high-impact cleanup:
    - Escalate to `skill_docs` if governance metadata/sync contract updates are required.
 9. Validate readability tooling gates.
    - `./scripts/validate-backlog-plain-language.sh`
+   - `./scripts/validate-backlog-redundancy.py`
+   - `./scripts/export-backlog-summaries.py --check`
    - `./scripts/validate-docs-freshness.sh`
+   - refresh summaries after backlog updates: `./scripts/export-backlog-summaries.py`
 
 ## Cross-Skill Routing
 - Pair with `skill_docs` for metadata/traceability/standards enforcement and root-doc sync.

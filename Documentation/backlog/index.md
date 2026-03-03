@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-02 (code-review reprioritization + BL-069..BL-076 intake promotion + wave triage + implementation kickoff + BL-073 gate script + BL-069/BL-070 + BL-058/BL-059 QA harness authoring + BL-071/BL-072/BL-075 execute + T2 + T3 validation passes + done archive sync + BL-050 slice A implementation snapshot + BL-050 owner T1 replay + BL-050 slice B contract annex + BL-069/BL-070 execute owner intake + BL-069/BL-070 T2/T3 owner replay + BL-050 T2/T3 replay intake + BL-055 owner intake blockers + BL-076 global-lock blocker capture + BL-050 T3 final replay PASS + headtracking capture metadata guardrail fix + BL-055 C4/C6 remediation PASS + BL-076 planning packet baseline + BL-077 P0 capture-harness planning intake)
+Last Modified Date: 2026-03-03 (docs redundancy guardrails + backlog summary export contract + BL-038..BL-041 targeted visual clarity pass)
 
 # LocusQ Master Backlog Index
 
@@ -45,6 +45,14 @@ Applies to all remaining open items and all future backlog items.
    - This script pre-fills metadata plus plain-language/6W scaffolding for intake and runbook docs.
 11. Runbook authoring and anti-duplication guidance:
    - `Documentation/backlog/runbook-authoring-guide.md`
+12. Backlog anti-duplication validation:
+   - `./scripts/validate-backlog-redundancy.py`
+13. Machine-readable backlog summary export:
+   - `./scripts/export-backlog-summaries.py` writes:
+     - `Documentation/reports/data/backlog-summary.json`
+     - `Documentation/reports/data/backlog-summary.csv`
+14. Summary artifact freshness gate:
+   - `./scripts/export-backlog-summaries.py --check` (called by `./scripts/validate-docs-freshness.sh`)
 
 ## Layer Model
 

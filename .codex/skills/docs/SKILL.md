@@ -7,7 +7,7 @@ Title: Documentation Governance Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # SKILL: DOCUMENTATION GOVERNANCE
 
@@ -62,7 +62,11 @@ Ensure backlog lifecycle documents are equally readable by non-technical humans 
    - `## Visual Aid Index` (visuals only when they materially improve clarity)
 11. Run readability and freshness gates before closeout:
    - `./scripts/validate-backlog-plain-language.sh`
+   - `./scripts/validate-backlog-redundancy.py`
+   - `./scripts/export-backlog-summaries.py --check`
    - `./scripts/validate-docs-freshness.sh`
+12. Refresh machine-readable backlog summary artifacts when runbooks/index change:
+   - `./scripts/export-backlog-summaries.py`
 
 ## Cross-Skill Routing
 - For heavy documentation cleanup, deduplication, and freshness remediation, pair with `documentation-hygiene-expert`.

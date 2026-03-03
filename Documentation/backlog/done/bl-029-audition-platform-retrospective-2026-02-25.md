@@ -3,14 +3,14 @@ Title: BL-029 Audition Platform Retrospective
 Document Type: Retrospective
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 ---
 
 # BL-029 Audition Platform Retrospective (What, Why, How, When, Where)
 
 ## Plain-Language Summary
 
-BL-029 retrospective in plain terms: this document captures what shipped, what failed, what recovered, and why the audition platform direction was kept. Current state: Done (retrospective archive).
+BL-029 in plain terms: Deliver the scoped behavior with deterministic validation and evidence. Current state: Done (retrospective archive summary). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -30,7 +30,7 @@ Use visuals only when they materially improve understanding.
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
-| Timeline and architecture diagrams | Explains platform evolution and runtime architecture quickly. | `## 4) How The System Works Now (Conceptual)` and `## 5) Timeline: Start To Current State` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
 ## Status Ledger
@@ -266,3 +266,4 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
+

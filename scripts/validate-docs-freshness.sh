@@ -175,6 +175,22 @@ main() {
     warn "Backlog readability validator not found or not executable: ./scripts/validate-backlog-plain-language.sh"
   fi
 
+  if [[ -x "./scripts/validate-backlog-redundancy.py" ]]; then
+    if ! ./scripts/validate-backlog-redundancy.py; then
+      error "Backlog redundancy checks failed"
+    fi
+  else
+    warn "Backlog redundancy validator not found or not executable: ./scripts/validate-backlog-redundancy.py"
+  fi
+
+  if [[ -x "./scripts/export-backlog-summaries.py" ]]; then
+    if ! ./scripts/export-backlog-summaries.py --check; then
+      error "Backlog machine-readable summary artifacts are missing or stale"
+    fi
+  else
+    warn "Backlog summary exporter not found or not executable: ./scripts/export-backlog-summaries.py"
+  fi
+
   local status_date
   status_date="$(extract_status_date || true)"
   if [[ -n "${status_date}" ]]; then

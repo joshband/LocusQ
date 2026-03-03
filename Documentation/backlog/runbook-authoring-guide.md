@@ -2,7 +2,7 @@ Title: Backlog Runbook Authoring Guide
 Document Type: Guide
 Author: APC Codex
 Created Date: 2026-03-02
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # Backlog Runbook Authoring Guide
 
@@ -58,7 +58,11 @@ For files under `Documentation/backlog/done/`:
    - `./scripts/backlog-compact-runbooks.py --mode done-all --apply`
 3. Validate before closeout:
    - `./scripts/validate-backlog-plain-language.sh`
+   - `./scripts/validate-backlog-redundancy.py`
+   - `./scripts/export-backlog-summaries.py --check`
    - `./scripts/validate-docs-freshness.sh`
+4. Refresh machine-readable backlog summaries when runbooks/index change:
+   - `./scripts/export-backlog-summaries.py`
 
 ## Quick Review Checklist
 

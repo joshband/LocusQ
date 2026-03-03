@@ -2,7 +2,7 @@ Title: BL-041 Doppler v2 and VBAP Geometry Validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-041 Doppler v2 and VBAP Geometry Validation
 
@@ -29,7 +29,25 @@ Use visuals only when they materially improve understanding.
 |---|---|---|
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
 | Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Doppler + VBAP validation pipeline (mermaid) | Clarifies the deterministic processing path and fallback branching. | `## Delivery Flow Diagram` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
+
+## Delivery Flow Diagram
+
+```mermaid
+flowchart LR
+    A[Input sequence<br/>velocity + distance + speaker layout] --> B[Finite/bounds validation]
+    B --> C[Doppler ratio + delay computation]
+    C --> D[Smoothing and continuity checks]
+    D --> E[VBAP triplet selection + gain normalization]
+    E --> F{Fallback needed?}
+    F -->|no| G[Replay-stable output traces]
+    F -->|yes| H[Deterministic fallback token + safe output]
+    G --> I[Acceptance + evidence bundle]
+    H --> I
+```
+
+Cross-item lifecycle governance remains canonical in `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
 ## Status Ledger
 
@@ -958,4 +976,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
