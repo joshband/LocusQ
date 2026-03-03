@@ -2,13 +2,13 @@ Title: BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-068 Temporal Effects Core (Delay/Echo/Looper/Frippertronics)
 
 ## Plain-Language Summary
 
-BL-068 in plain terms: Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable. Current state: Open (execute-lane scaffold-only; no promotion while any execute evidence row is TODO; BL-073 gate required). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-068 in plain terms: Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable. Current state: In Implementation (temporal contract module + execute-lane evidence active; BL-073 gate still required for promotion). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-068 in plain terms: Define and integrate a deterministic temporal-effects cor
 | What is changing? | Define and integrate a deterministic temporal-effects core spanning delay/echo, controlled feedback behavior, and looper/frippertronics-style layering that remains realtime-safe and host-automation reliable. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Open (reprioritized from code-review risk packet; no promotion while any execute evidence row is TODO; BL-073 gate required). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Implementation (reprioritized from code-review risk packet; temporal contract slice and execute evidence lane are active; BL-073 gate remains required for promotion). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -45,7 +45,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-068 |
 | Priority | P1 |
-| Status | Open (execute-lane scaffold-only; no promotion while any execute evidence row is `TODO`; BL-073 gate required) |
+| Status | In Implementation (temporal contract slice active; execute lane emits zero-`TODO` evidence for implemented rows; BL-073 gate required for promotion) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-050, BL-055 |
@@ -80,11 +80,20 @@ Define and integrate a deterministic temporal-effects core spanning delay/echo, 
 QA harness script: `scripts/qa-bl068-temporal-effects-mac.sh`.
 Evidence schema: `TestEvidence/bl068_*/status.tsv`.
 
+Recommended deterministic replay commands:
+- `./scripts/qa-bl068-temporal-effects-mac.sh --contract-only --runs 3`
+- `./scripts/qa-bl068-temporal-effects-mac.sh --execute --runs 1`
+
 Minimum evidence additions:
-- `temporal_matrix.tsv` (delay/echo/looper scenario results)
+- `temporal_modes_matrix.tsv` (delay/echo/looper/frippertronics mode contract results)
 - `runaway_guard.tsv` (feedback safety + finite-output checks)
 - `transport_recall.tsv` (timeline/recall determinism checks)
 - `cpu_latency_budget.tsv` (sample-rate and topology budget snapshots)
+
+Current implemented safe-slice contract surfaces:
+- `Source/temporal_effects/TemporalEffectContracts.h`
+- `Source/temporal_effects/TemporalModeMatrix.h`
+- `Source/dsp/TemporalContractWiring.h`
 
 ## Replay Cadence Plan (Required)
 
@@ -116,4 +125,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
