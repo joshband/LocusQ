@@ -3,8 +3,40 @@ name: Docs Freshness
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - "Documentation/**"
+      - "TestEvidence/build-summary.md"
+      - "TestEvidence/validation-trend.md"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "AGENTS.md"
+      - "CODEX.md"
+      - "CLAUDE.md"
+      - "SKILLS.md"
+      - "AGENT_RULE.md"
+      - "status.json"
+      - "scripts/validate-docs-freshness.sh"
+      - "scripts/validate-backlog-plain-language.sh"
+      - "scripts/validate-backlog-redundancy.py"
+      - "scripts/export-backlog-summaries.py"
   push:
     branches: [ main ]
+    paths:
+      - "Documentation/**"
+      - "TestEvidence/build-summary.md"
+      - "TestEvidence/validation-trend.md"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "AGENTS.md"
+      - "CODEX.md"
+      - "CLAUDE.md"
+      - "SKILLS.md"
+      - "AGENT_RULE.md"
+      - "status.json"
+      - "scripts/validate-docs-freshness.sh"
+      - "scripts/validate-backlog-plain-language.sh"
+      - "scripts/validate-backlog-redundancy.py"
+      - "scripts/export-backlog-summaries.py"
 
 jobs:
   docs-freshness:
