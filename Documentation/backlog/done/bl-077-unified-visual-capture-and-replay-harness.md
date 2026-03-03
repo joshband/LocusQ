@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-03
 
 ## Plain-Language Summary
 
-BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Validation (T1/T2/T3 plus live execute evidence complete; owner closeout/archive transition pending). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: Done (contract/execute/live/T2/T3 cadence evidence complete; closeout sync and archive transition recorded). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-077 in plain terms: Provide a robust, easy-to-use capture system that records
 | What is changing? | Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (T1/T2/T3 plus live execute evidence complete). This item is done when required acceptance checks pass and promotion evidence is complete plus lifecycle closeout/archive sync is recorded. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-077-unified-visual-capture-and-replay-harness.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (contract/execute/live/T2/T3 evidence complete and closeout/archive sync recorded on 2026-03-03). |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-077-unified-visual-capture-and-replay-harness.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -63,7 +63,7 @@ flowchart LR
 |---|---|
 | ID | BL-077 |
 | Priority | P0 |
-| Status | In Validation (T1/T2/T3 + live execute PASS; owner closeout/archive sync pending) |
+| Status | **Done** (contract + execute + live execute + T2 + T3 PASS; closeout/archive sync complete) |
 | Track | D - QA Platform |
 | Effort | High / L |
 | Depends On | BL-049 (Done), BL-073 |
