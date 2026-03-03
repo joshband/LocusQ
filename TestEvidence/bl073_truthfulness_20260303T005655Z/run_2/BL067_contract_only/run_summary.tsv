@@ -1,0 +1,2 @@
+run	mode	non_fail_checks	fail_checks	todo_rows	artifact_dir
+1	contract_only	21	0	0	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_2/BL067_contract_only

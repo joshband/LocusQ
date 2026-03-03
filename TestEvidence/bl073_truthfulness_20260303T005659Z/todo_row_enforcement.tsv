@@ -1,0 +1,7 @@
+run_index	lane	mode	scaffold_rows	expected_exit	actual_exit	enforcement_result	detail	artifact_dir
+1	BL067	execute	0	0	0	PASS	execute correctly passed with zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005659Z/run_1/BL067_execute
+1	BL068	execute	0	0	0	PASS	execute correctly passed with zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005659Z/run_1/BL068_execute
+2	BL067	execute	0	0	0	PASS	execute correctly passed with zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005659Z/run_2/BL067_execute
+2	BL068	execute	0	0	0	PASS	execute correctly passed with zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005659Z/run_2/BL068_execute
+3	BL067	execute	0	0	0	PASS	execute correctly passed with zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005659Z/run_3/BL067_execute
+3	BL068	execute	0	0	0	PASS	execute correctly passed with zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005659Z/run_3/BL068_execute

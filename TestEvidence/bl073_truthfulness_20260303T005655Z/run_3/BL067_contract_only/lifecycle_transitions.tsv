@@ -1,0 +1,5 @@
+transition	probe	result	failure_taxonomy	detail
+cold_start	contract_regex	PASS	none	cold_start contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md
+reload	contract_regex	PASS	none	reload contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md
+suspend_resume	contract_regex	PASS	none	suspend_resume contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md
+state_restore	contract_regex	PASS	none	state_restore contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md

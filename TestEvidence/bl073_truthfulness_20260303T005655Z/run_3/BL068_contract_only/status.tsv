@@ -1,0 +1,28 @@
+check_id	result	detail	artifact
+BL068-PRE-file-bl-068-temporal-effects-delay-echo-looper-frippertronics.md	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md
+BL068-PRE-file-bl-068-temporal-effects-core-spec-2026-03-01.md	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md
+BL068-PRE-file-SKILL.md	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/.codex/skills/temporal-effects-engineering/SKILL.md
+BL068-PRE-file-TemporalEffectContracts.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-PRE-file-TemporalModeMatrix.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalModeMatrix.h
+BL068-PRE-file-TemporalContractWiring.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/dsp/TemporalContractWiring.h
+BL068-PRE-runbook-lane-reference	PASS	runbook references this QA lane	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md
+BL068-PRE-runbook-artifact-temporal_modes_matrix.tsv	PASS	runbook references temporal_modes_matrix.tsv	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md
+BL068-PRE-runbook-artifact-runaway_guard.tsv	PASS	runbook references runaway_guard.tsv	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md
+BL068-PRE-runbook-artifact-transport_recall.tsv	PASS	runbook references transport_recall.tsv	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md
+BL068-PRE-runbook-artifact-cpu_latency_budget.tsv	PASS	runbook references cpu_latency_budget.tsv	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md
+BL068-CONSTANT-feedback_soft	PASS	constant parsed (0.925)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-feedback_safety	PASS	constant parsed (0.975)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-feedback_damp	PASS	constant parsed (0.85)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-finite_output_guard_abs	PASS	constant parsed (8.0)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-cpu_budget_44k1	PASS	constant parsed (8.0)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-latency_budget_44k1	PASS	constant parsed (64)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-cpu_budget_192k	PASS	constant parsed (18.0)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-latency_budget_192k	PASS	constant parsed (256)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-feedback-safety-envelope	PASS	feedback constants satisfy safety envelope	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-CONSTANT-finite-output-guard	PASS	finite output clamp bound is within expected envelope	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/Source/temporal_effects/TemporalEffectContracts.h
+BL068-MATRIX-temporal_modes	PASS	all temporal mode rows passed across 1 run(s)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_3/BL068_contract_only/temporal_modes_matrix.tsv
+BL068-MATRIX-runaway_guard	PASS	runaway guard rows passed across 1 run(s)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_3/BL068_contract_only/runaway_guard.tsv
+BL068-MATRIX-transport_recall	PASS	transport recall rows passed across 1 run(s)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_3/BL068_contract_only/transport_recall.tsv
+BL068-MATRIX-cpu_latency_budget	PASS	cpu/latency rows passed across 1 run(s)	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_3/BL068_contract_only/cpu_latency_budget.tsv
+BL068-CONTRACT-zero_todo_rows	PASS	contract-only mode observed TODO rows count=0	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_3/BL068_contract_only/status.tsv
+lane_result	PASS	mode=contract_only;runs=1;all_gates_passed	/Users/artbox/Documents/Repos/LocusQ-bl073-verify/TestEvidence/bl073_truthfulness_20260303T005655Z/run_3/BL068_contract_only/status.tsv
