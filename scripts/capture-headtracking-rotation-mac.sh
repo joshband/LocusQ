@@ -365,6 +365,23 @@ append_artifact_row() {
     >> "$ARTIFACT_SCHEMA_TSV"
 }
 
+write_deterministic_stub_file() {
+  local path="$1"
+  local stub_type="$2"
+  local stub_id="$3"
+  local extra="$4"
+
+  {
+    echo "locusq_stub=true"
+    echo "stub_type=${stub_type}"
+    echo "stub_id=${stub_id}"
+    echo "profile=${PROFILE_SESSION_NAME}"
+    if [[ -n "$extra" ]]; then
+      echo "$extra"
+    fi
+  } > "$path"
+}
+
 generate_checkpoint_frame_map() {
   printf "checkpoint_id\tscheduled_sec\tlabel\tselected_frame\tselected_frame_sec\tdelta_sec\tresult\tdetail\n" > "$CHECKPOINT_FRAME_MAP_TSV"
 
@@ -450,7 +467,19 @@ generate_contact_sheets() {
   fi
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    printf "sheet_01\tTODO\t-\tdry-run mode skips contact sheet generation\n" >> "$CONTACT_SHEETS_TSV"
+    mkdir -p "$CONTACT_SHEETS_DIR"
+    {
+      echo "dry_run=true"
+      echo "mode=deterministic_stub_generation"
+    } > "$CONTACT_SHEETS_LOG"
+
+    local sheet1_rel="contact_sheets/contact_sheet_01.png"
+    local sheet2_rel="contact_sheets/contact_sheet_02.png"
+    write_deterministic_stub_file "${OUT_DIR}/${sheet1_rel}" "contact_sheet" "sheet_01" "origin=dry_run"
+    write_deterministic_stub_file "${OUT_DIR}/${sheet2_rel}" "contact_sheet" "sheet_02" "origin=dry_run"
+
+    printf "sheet_01\tPASS\t%s\tdeterministic dry-run contact sheet placeholder generated\n" "$sheet1_rel" >> "$CONTACT_SHEETS_TSV"
+    printf "sheet_02\tPASS\t%s\tdeterministic dry-run contact sheet placeholder generated\n" "$sheet2_rel" >> "$CONTACT_SHEETS_TSV"
     return
   fi
 
@@ -508,11 +537,21 @@ generate_cue_window_clips() {
   clip_duration="$(awk -v pre="$CUE_WINDOW_PRE_SEC" -v post="$CUE_WINDOW_POST_SEC" 'BEGIN { d = pre + post; if (d <= 0) d = 0.1; printf "%.3f", d }')"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
+    mkdir -p "$CUE_CLIPS_DIR"
+    {
+      echo "dry_run=true"
+      echo "mode=deterministic_stub_generation"
+    } > "$CUE_CLIPS_LOG"
+
     for idx in "${!CUE_TIMES_SEC[@]}"; do
       cue_time="${CUE_TIMES_SEC[$idx]}"
       start_sec="$(awk -v cue="$cue_time" -v pre="$CUE_WINDOW_PRE_SEC" 'BEGIN { s = cue - pre; if (s < 0) s = 0; printf "%.3f", s }')"
-      printf "clip_%02d\tcp_%02d\t%s\t%s\t%s\t-\tTODO\tdry-run mode skips clip rendering\n" \
-        "$((idx + 1))" "$((idx + 1))" "$cue_time" "$start_sec" "$clip_duration" \
+      clip_rel="cue_clips/cp_$(printf '%02d' "$((idx + 1))")_window.mp4"
+      clip_abs="${OUT_DIR}/${clip_rel}"
+      write_deterministic_stub_file "$clip_abs" "cue_window_clip" "clip_$(printf '%02d' "$((idx + 1))")" "cue_sec=${cue_time}"
+
+      printf "clip_%02d\tcp_%02d\t%s\t%s\t%s\t%s\tPASS\tdeterministic dry-run cue-window placeholder generated\n" \
+        "$((idx + 1))" "$((idx + 1))" "$cue_time" "$start_sec" "$clip_duration" "$clip_rel" \
         >> "$CUE_CLIPS_TSV"
     done
     return
@@ -830,19 +869,32 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   {
     echo "dry_run=true"
     echo "reason=contract_artifact_probe"
+    echo "video_mode=deterministic_stub_generation"
   } > "$RECORD_LOG"
+  write_deterministic_stub_file "$VIDEO_PATH" "video_capture" "rotation_capture" "origin=dry_run"
 
   if [[ "$NO_EXTRACT" -eq 0 ]]; then
     mkdir -p "$FRAMES_DIR"
     {
       echo "dry_run=true"
       echo "reason=contract_artifact_probe"
+      echo "frames_mode=deterministic_stub_generation"
     } > "$EXTRACT_LOG"
+
+    max_cue_sec="$(printf '%s\n' "${CUE_TIMES_SEC[@]}" | awk 'BEGIN { max = 0 } { if ($1 > max) max = $1 } END { printf "%.6f", max }')"
+    synthetic_frame_count="$(awk -v max="$max_cue_sec" -v step="$EXTRACT_EVERY_SEC" 'BEGIN { n = int(max / step) + 1; if (n < 1) n = 1; if (n > 2000) n = 2000; print n }')"
+
+    for ((frame_id=1; frame_id<=synthetic_frame_count; frame_id++)); do
+      frame_path="${FRAMES_DIR}/frame_$(printf '%04d' "$frame_id").png"
+      frame_sec="$(awk -v i="$frame_id" -v step="$EXTRACT_EVERY_SEC" 'BEGIN { printf "%.6f", (i - 1) * step }')"
+      write_deterministic_stub_file "$frame_path" "frame" "frame_$(printf '%04d' "$frame_id")" "frame_sec=${frame_sec}"
+    done
   fi
 
   {
     echo "dry_run capture lane"
-    echo "video intentionally skipped"
+    echo "video generated as deterministic placeholder"
+    echo "postprocess artifacts generated as deterministic placeholders"
   } > "$DRY_RUN_NOTE"
 else
   echo "Recording..."

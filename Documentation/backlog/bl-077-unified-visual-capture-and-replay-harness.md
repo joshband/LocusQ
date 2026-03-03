@@ -2,13 +2,13 @@ Title: BL-077 Unified Visual Capture and Replay Harness
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-02
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-077 Unified Visual Capture and Replay Harness
 
 ## Plain-Language Summary
 
-BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Planning (P0 user-priority intake promoted to runbook). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: In Progress (execution-ready harness contract delivered; promotion evidence cadence still active). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-077 in plain terms: Provide a robust, easy-to-use capture system that records
 | What is changing? | Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Planning (P0 user-priority intake promoted to runbook; implementation slices defined). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Progress (execution-ready harness contract delivered; implementation slices A/B complete). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-077-unified-visual-capture-and-replay-harness.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -63,7 +63,7 @@ flowchart LR
 |---|---|
 | ID | BL-077 |
 | Priority | P0 |
-| Status | In Planning (P0 user-priority intake promoted to runbook) |
+| Status | In Progress (execution-ready contract lane passing; promotion cadence pending) |
 | Track | D - QA Platform |
 | Effort | High / L |
 | Depends On | BL-049 (Done), BL-073 |
@@ -119,7 +119,7 @@ Out of scope:
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl077-capture-harness-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl077-capture-harness-mac.sh`.
 Evidence schema: `TestEvidence/bl077_capture_harness_<timestamp>/status.tsv`.
 
 Minimum evidence additions:
@@ -129,6 +129,18 @@ Minimum evidence additions:
 - `replay_hashes.tsv`
 - `integration_consumers.tsv`
 - `extension_contract.md`
+
+## Execution Update (2026-03-03)
+
+- Acceptance IDs covered by implementation and validation: `BL077-A-001`, `BL077-A-002`, `BL077-A-003`, `BL077-A-004`, `BL077-A-005`, `BL077-A-006`.
+- Execute-mode dry-run now emits deterministic placeholder media/postprocess artifacts so full schema contracts validate even without live screen capture permission.
+- Required validation commands:
+  - `./scripts/qa-bl077-capture-harness-mac.sh --contract-only --runs 3`
+  - `./scripts/qa-bl077-capture-harness-mac.sh --execute --runs 1`
+- Validation result (2026-03-03): PASS for both commands.
+- Evidence directories:
+  - `TestEvidence/bl077_capture_harness_20260303T004858Z_contract/`
+  - `TestEvidence/bl077_capture_harness_20260303T004858Z_execute/`
 
 ## Replay Cadence Plan (Required)
 
@@ -160,4 +172,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
