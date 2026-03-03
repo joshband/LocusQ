@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 85,
-    "open": 30,
-    "done": 55
+    "open": 29,
+    "done": 56
   },
   "items": [
     {
@@ -1093,21 +1093,21 @@
     {
       "id": "BL-057",
       "title": "BL-057 Device Preset Library (AirPods Pro 1/2/3 + WH-1000XM5)",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "**Done** (T1/T2/T3 replay PASS; full preset matrix complete; Nyquist resonance gate PASS)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-046",
-      "blocks": "BL-058",
+      "blocks": "\u2014 (resolved; BL-058 unblocked)",
       "who": "",
       "what": "",
       "why": "",
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-057 in plain terms: Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/transparency) and WH-1000XM5 (ANC on/off). Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-057 in plain terms: Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/transparency) and WH-1000XM5 (ANC on/off). Current state: Done. For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Create validated YAML EQ presets for AirPods Pro 1, Pro 2, Pro 3 (ANC on/off/transparency) and WH-1000XM5 (ANC on/off). Source from AutoEq/oratory1990. Add frequency sweep validation check per preset.",
-      "runbook_path": "Documentation/backlog/bl-057-device-preset-library.md"
+      "runbook_path": "Documentation/backlog/done/bl-057-device-preset-library.md"
     },
     {
       "id": "BL-058",

@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-03 (backlog summary schema contract + pre-commit auto-refresh hook for machine-readable summaries)
+Last Modified Date: 2026-03-03 (BL-057 done-transition archived runbook + repo-local T2/T3 closeout evidence)
 
 # LocusQ Master Backlog Index
 
@@ -138,7 +138,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 29 | BL-054 | PEQ cascade RT integration | P1 | Open | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
 | 30 | BL-055 | FIR convolution engine | P1 | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
-| 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | Open | E | BL-046 | BL-058 | [bl-057](bl-057-device-preset-library.md) |
+| 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | **Done** (preset matrix complete; execute T2 `5/5` + T3 `10/10` PASS; Nyquist resonance gate PASS) | E | BL-046 | — (BL-058 unblocked) | [bl-057](done/bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | In Implementation (reprioritized from code-review protocol/gating risk packet; QA harness authored) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
 | 34 | BL-059 | CalibrationProfile integration handoff | P0 | In Implementation (reprioritized from code-review calibration correctness/race risk packet; smoke harness upgraded) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
