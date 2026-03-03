@@ -2,13 +2,13 @@ Title: BL-067 AUv3 App-Extension Lifecycle and Host Validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-067 AUv3 App-Extension Lifecycle and Host Validation
 
 ## Plain-Language Summary
 
-BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: Open (promotion blocked: no promotion while any execute evidence row is TODO; BL-073 execute-mode gate required). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: Open (execute evidence must report zero `TODO` rows; BL-073 truthfulness gate still applies for promotion). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with 
 | What is changing? | Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Open (no promotion while any execute evidence row is TODO; BL-073 gate required). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: Open (execute evidence must report zero `TODO` rows; BL-073 gate required for promotion). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -45,7 +45,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-067 |
 | Priority | P1 |
-| Status | Open (promotion blocked: no promotion while any execute evidence row is `TODO`; BL-073 execute-mode gate required) |
+| Status | Open (execute evidence must report zero `TODO` rows; BL-073 execute-mode gate required for promotion) |
 | Track | A - Runtime Formats |
 | Effort | High / L |
 | Depends On | BL-048 |
@@ -80,11 +80,17 @@ Add production-ready AUv3 format support for LocusQ with deterministic extension
 QA harness script: `scripts/qa-bl067-auv3-lifecycle-mac.sh`.
 Evidence schema: `TestEvidence/bl067_*/status.tsv`.
 
+Lane behavior contract:
+- `--contract-only` validates doc/build contracts and emits deterministic matrices.
+- `--execute` enforces zero-`TODO` rows across `host_matrix.tsv`, `lifecycle_transitions.tsv`, and `parity_regression.tsv`.
+- `--runs <n>` performs deterministic replay and writes per-run artifacts plus `run_summary.tsv`.
+
 Minimum evidence additions:
 - `host_matrix.tsv` (AUv3 host coverage and outcomes)
 - `lifecycle_transitions.tsv` (cold/warm/reload/suspend-resume results)
 - `parity_regression.tsv` (AUv3 vs AU/VST3/CLAP contract outcomes)
 - `packaging_manifest.md` (targets, signing, packaging notes)
+- `run_summary.tsv` (replay run-level pass/fail and `TODO` row counts)
 
 ## Replay Cadence Plan (Required)
 
@@ -116,4 +122,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
