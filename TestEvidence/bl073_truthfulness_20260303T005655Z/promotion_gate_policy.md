@@ -1,3 +1,9 @@
+Title: BL-073 Promotion Gate Policy
+Document Type: Test Evidence
+Author: APC Codex
+Created Date: 2026-03-03
+Last Modified Date: 2026-03-03
+
 # BL-073 Promotion Gate Policy
 
 - Generated: 20260303T005655Z
