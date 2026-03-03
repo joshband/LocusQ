@@ -173,6 +173,14 @@ When documentation bloat or ambiguity appears:
 2. Backlog catalog authority was synchronized in `Documentation/backlog/index.md` in the same change set.
 3. Canonical promotion evidence remains repo-local under `TestEvidence/bl023_slice_a2_t3_promotion_20260228T201500Z/`.
 
+## Closeout Sync Snapshot (2026-03-03)
+
+1. BL-057 done-transition moved runbook authority from `Documentation/backlog/bl-057-device-preset-library.md` to `Documentation/backlog/done/bl-057-device-preset-library.md`.
+2. Backlog catalog authority was synchronized in `Documentation/backlog/index.md` in the same change set.
+3. Canonical promotion evidence is repo-local under:
+   - `TestEvidence/bl057_candidate_t2_closeout/`
+   - `TestEvidence/bl057_promotion_t3_closeout/`.
+
 ## Architecture Consolidation Snapshot (2026-03-01)
 
 1. Cross-system architecture source-of-truth is consolidated in `ARCHITECTURE.md`.

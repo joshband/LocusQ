@@ -1,0 +1,6 @@
+run	mode	result	inventory_fail_rows	sweep_fail_rows	detail
+1	execute	PASS	0	0	all checks passed
+2	execute	PASS	0	0	all checks passed
+3	execute	PASS	0	0	all checks passed
+4	execute	PASS	0	0	all checks passed
+5	execute	PASS	0	0	all checks passed
