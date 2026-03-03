@@ -2,7 +2,7 @@ Title: BL-050 High-Rate Delay and FIR Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-050 High-Rate Delay and FIR Hardening
 
@@ -184,6 +184,16 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
 - Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
 
+## Closeout Checklist (Done Transition)
+
+- [x] T1/T2/T3 owner replay evidence is complete and pass-stable.
+- [x] Promotion packet includes deterministic replay summaries and docs-freshness PASS.
+- [ ] Record final owner closeout decision for `fir_profile=WARN` handling (accepted follow-on vs blocking remediation).
+- [ ] Move runbook to `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md`.
+- [ ] Update `Documentation/backlog/index.md` row to `Done` and switch runbook link to `done/` path.
+- [ ] Add closeout sync entries to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
+- [ ] Run `./scripts/validate-docs-freshness.sh` after done/archive sync.
+
 
 ## Handoff Return Contract
 
@@ -198,4 +208,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
