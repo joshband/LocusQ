@@ -2,7 +2,7 @@ Title: BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-03
 
 # BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 
@@ -158,3 +158,14 @@ This runbook should list only item-specific exceptions or additions.
   - `t3_summary.tsv`: `10/10` runs with `exit_code=0`, `lane_result=PASS`, execute TODO gate `PASS`, `todo_count=0`.
 - Docs freshness:
   - `./scripts/validate-docs-freshness.sh` passes after metadata normalization of promotion packet docs.
+
+## Closeout Checklist (Done Transition)
+
+- [x] T2 candidate (`5/5`) and T3 promotion (`10/10`) execute replays are PASS.
+- [x] Execute-mode TODO gate is PASS (`todo_count=0` across promotion packet runs).
+- [x] Promotion packet docs-freshness validation is PASS.
+- [ ] Resolve `Annex Spec` status (add canonical annex path or mark explicitly `N/A` in `Status Ledger`).
+- [ ] Move runbook to `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`.
+- [ ] Update `Documentation/backlog/index.md` row to `Done` and switch runbook link to `done/` path.
+- [ ] Add closeout sync entries to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
+- [ ] Run `./scripts/validate-docs-freshness.sh` after done/archive sync.
