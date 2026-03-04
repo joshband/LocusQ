@@ -1872,6 +1872,13 @@ private:
         bool steamRenderedThisBlock = false;
     };
 
+    struct OutputRoutingStageContext
+    {
+        locusq::spatial_profile_router::SpatialProfileResolution profileResolution;
+        SpatialOutputProfile activeSpatialProfile;
+        HeadphoneRuntimeState headphoneState;
+    };
+
     void applyRequestedHeadphoneCalibrationSettings()
     {
         headphoneCalibrationChain.setEnabled (
@@ -1952,36 +1959,43 @@ private:
         return state;
     }
 
+    OutputRoutingStageContext prepareOutputRoutingStageContext (int numSamples, int numOutputChannels)
+    {
+        const auto profileResolution = resolveSpatialProfileForHost (numOutputChannels);
+        const auto activeSpatialProfile = profileResolution.profile;
+        activeSpatialProfileIndex.store (static_cast<int> (activeSpatialProfile), std::memory_order_relaxed);
+        activeSpatialStageIndex.store (static_cast<int> (profileResolution.stage), std::memory_order_relaxed);
+
+        return {
+            profileResolution,
+            activeSpatialProfile,
+            configureHeadphoneRuntime (numSamples, numOutputChannels, activeSpatialProfile)
+        };
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
         int numOutputChannels,
         bool renderedAuditionEmitter)
     {
-        const auto profileResolution = resolveSpatialProfileForHost (numOutputChannels);
-        const auto activeSpatialProfile = profileResolution.profile;
-        activeSpatialProfileIndex.store (static_cast<int> (activeSpatialProfile), std::memory_order_relaxed);
-        activeSpatialStageIndex.store (static_cast<int> (profileResolution.stage), std::memory_order_relaxed);
-        const auto headphoneState = configureHeadphoneRuntime (
-            numSamples,
-            numOutputChannels,
-            activeSpatialProfile);
+        const auto outputContext = prepareOutputRoutingStageContext (numSamples, numOutputChannels);
         publishAmbisonicAndCodecTelemetryContracts (
             numSamples,
             numOutputChannels,
-            activeSpatialProfile,
-            profileResolution.stage,
-            headphoneState.profileAllowsHeadphoneRender);
+            outputContext.activeSpatialProfile,
+            outputContext.profileResolution.stage,
+            outputContext.headphoneState.profileAllowsHeadphoneRender);
 
         AuditionHeadphoneParityAccumulator headphoneParity {};
         headphoneParity.fallbackReasonIndex = determineAuditionHeadphoneFallbackReason (
             renderedAuditionEmitter,
-            headphoneState.requestedMode,
+            outputContext.headphoneState.requestedMode,
             numOutputChannels,
-            headphoneState.profileAllowsHeadphoneRender,
-            headphoneState.steamBackendAvailable,
-            headphoneState.steamRenderedThisBlock,
-            headphoneState.activeMode);
+            outputContext.headphoneState.profileAllowsHeadphoneRender,
+            outputContext.headphoneState.steamBackendAvailable,
+            outputContext.headphoneState.steamRenderedThisBlock,
+            outputContext.headphoneState.activeMode);
 
         for (int i = 0; i < numSamples; ++i)
         {
@@ -1991,7 +2005,7 @@ private:
                     outputBuffer,
                     i,
                     numOutputChannels,
-                    activeSpatialProfile,
+                    outputContext.activeSpatialProfile,
                     masterGain))
             {
                 continue;
@@ -2001,9 +2015,9 @@ private:
             {
                 auto stereo = renderStereoOutputSample (
                     i,
-                    activeSpatialProfile,
-                    headphoneState.steamRenderedThisBlock,
-                    headphoneState.activeMode);
+                    outputContext.activeSpatialProfile,
+                    outputContext.headphoneState.steamRenderedThisBlock,
+                    outputContext.headphoneState.activeMode);
 
                 if (renderedAuditionEmitter)
                 {
