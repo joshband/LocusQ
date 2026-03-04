@@ -2,13 +2,13 @@ Title: BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-04
 
 # BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract
 
 ## Plain-Language Summary
 
-BL-070 in plain terms: Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. Current state: Done-candidate (owner T2 + T3 replay PASS; closeout sync pending). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-070 in plain terms: Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. Current state: Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-070 in plain terms: Eliminate torn snapshot and telemetry race risks by intro
 | What is changing? | Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (owner T2 5/5 + T3 10/10 execute replay PASS; closeout sync pending). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete). |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -62,14 +62,18 @@ xychart-beta
 |---|---|
 | ID | BL-070 |
 | Priority | P0 |
-| Status | Done-candidate (owner T2 + T3 replay PASS; closeout sync pending) |
+| Status | Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-050 |
 | Blocks | — |
-| Annex Spec | `(pending annex spec)` |
+| Annex Spec | `(no annex spec — self-contained runbook)` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+| SHARED_FILES_TOUCHED | no |
+| Promotion Decision Packet | `TestEvidence/bl070_owner_t3_promotion_20260302T035658Z/promotion_readiness.md` |
+| Final Evidence Root | `TestEvidence/bl070_owner_t3_promotion_20260302T035658Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md` |
 
 ## Objective
 
@@ -164,8 +168,8 @@ This runbook should list only item-specific exceptions or additions.
 - [x] T2 candidate (`5/5`) and T3 promotion (`10/10`) execute replays are PASS.
 - [x] Execute-mode TODO gate is PASS (`todo_count=0` across promotion packet runs).
 - [x] Promotion packet docs-freshness validation is PASS.
-- [ ] Resolve `Annex Spec` status (add canonical annex path or mark explicitly `N/A` in `Status Ledger`).
-- [ ] Move runbook to `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`.
-- [ ] Update `Documentation/backlog/index.md` row to `Done` and switch runbook link to `done/` path.
-- [ ] Add closeout sync entries to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
-- [ ] Run `./scripts/validate-docs-freshness.sh` after done/archive sync.
+- [x] Resolve `Annex Spec` status (marked self-contained / no annex spec).
+- [x] Move runbook to `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`.
+- [x] Update `Documentation/backlog/index.md` row to `Done` and switch runbook link to `done/` path.
+- [x] Add closeout sync entries to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
+- [x] Run `./scripts/validate-docs-freshness.sh` after done/archive sync.

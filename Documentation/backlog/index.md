@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-03 (BL-057 + BL-073 done-transition archived runbooks and closeout status sync)
+Last Modified Date: 2026-03-04 (BL-050 + BL-069 + BL-070 done-transition archived runbooks and closeout status sync)
 
 # LocusQ Master Backlog Index
 
@@ -126,8 +126,8 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 17 | BL-047 | Spatial coordinate contract | P1 | **Done** (Z16b ownership-safe reconcile PASS; Z17 owner done-promotion PASS) | E | BL-018, BL-045 | — | [bl-047](done/bl-047-spatial-coordinate-contract.md) |
 | 18 | BL-048 | Cross-platform shipping hardening | P1 | **Done** (Z16b e2e promotion reconcile PASS; Z17 owner done-promotion PASS) | G | BL-030, BL-042 | — | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | 19 | BL-049 | Unit test framework and tracker automation | P1 | **Done** (D2 done-promotion parity PASS; Z17 owner done-promotion PASS) | D | BL-042 | — | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
-| 20 | BL-050 | High-rate delay and FIR hardening | P0 | Done-candidate (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; fir_profile WARN tracked) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](bl-050-high-rate-delay-and-fir-hardening.md) |
-| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | Done-candidate (BL-062..BL-066 promoted to Done; parent lane reconciled; BL-050 dependency remains open) | E | BL-046 (Done), BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
+| 20 | BL-050 | High-rate delay and FIR hardening | P0 | **Done** (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; `fir_profile=WARN` accepted as follow-on hardening) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](done/bl-050-high-rate-delay-and-fir-hardening.md) |
+| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | Done-candidate (BL-062..BL-066 promoted to Done; parent lane reconciled; BL-050 dependency now Done) | E | BL-046 (Done), BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
 | 22 | BL-062 | Ambisonics IR interface contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-063 | [bl-062](done/bl-062-ambisonics-ir-interface-contract.md) |
 | 23 | BL-063 | Ambisonics renderer compatibility guardrails | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-062 | BL-066 | [bl-063](done/bl-063-ambisonics-renderer-compatibility-guardrails.md) |
 | 24 | BL-064 | ADM mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-064](done/bl-064-adm-mapping-contract.md) |
@@ -145,8 +145,8 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
 | 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
 | 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Open (reprioritized from code-review risk packet; no promotion while any execute evidence row is `TODO`; BL-073 gate required) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
-| 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | Done-candidate (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync pending) | F | BL-050 | — | [bl-069](bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
-| 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | Done-candidate (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync pending) | F | BL-050 | — | [bl-070](bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
+| 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
+| 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
 | 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-058, BL-059 | BL-060 | [bl-072](done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | **Done** (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; closeout/archive sync complete) | G | — | — | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
@@ -221,6 +221,9 @@ graph TD
         BL-047[BL-047 Coordinate Contract Done]
         BL-048[BL-048 Shipping Hardening Done]
         BL-049[BL-049 Unit Tests + Tracker Automation Done]
+        BL-050[BL-050 High-Rate Delay/FIR Done]
+        BL-069[BL-069 RT-Safe Preset Pipeline Done]
+        BL-070[BL-070 Snapshot + Telemetry Seqlock Done]
         BL-030[BL-030 Release Gov Done]
     end
 
@@ -238,7 +241,6 @@ graph TD
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
         BL-035[BL-035 RT Lock-Free Registration]
-        BL-050[BL-050 High-Rate Delay/FIR]
         BL-051[BL-051 Ambisonics + ADM]
         BL-053[BL-053 Head Tracking Orientation Injection]
         BL-054[BL-054 PEQ Cascade RT Integration]
@@ -251,8 +253,6 @@ graph TD
         BL-061[BL-061 HRTF Interpolation + Crossfade]
         BL-067[BL-067 AUv3 Lifecycle + Host Validation]
         BL-068[BL-068 Temporal Effects Core]
-        BL-069[BL-069 RT-Safe Preset Pipeline]
-        BL-070[BL-070 Snapshot + Telemetry Seqlock]
         BL-071[BL-071 Calibration Generation Guard]
         BL-072[BL-072 Companion Protocol + BL-058 QA]
         BL-073[BL-073 QA Scaffold Truthfulness Gates]
@@ -473,8 +473,8 @@ Any status change must update in the same changeset:
 | BL-061 | `Documentation/plans/2026-02-27-calibration-system-design.md`; `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
 | BL-067 | `Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md` |
 | BL-068 | `Documentation/plans/bl-068-temporal-effects-core-spec-2026-03-01.md` |
-| BL-069 | `(pending annex spec)` |
-| BL-070 | `(pending annex spec)` |
+| BL-069 | `(no annex spec — self-contained runbook)` |
+| BL-070 | `(no annex spec — self-contained runbook)` |
 | BL-071 | `(pending annex spec)` |
 | BL-072 | `(pending annex spec)` |
 | BL-073 | `(pending annex spec)` |
@@ -524,7 +524,10 @@ Any status change must update in the same changeset:
 | BL-047 | Spatial coordinate contract | 2026-02-27 | [bl-047](done/bl-047-spatial-coordinate-contract.md) |
 | BL-048 | Cross-platform shipping hardening | 2026-02-27 | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | BL-049 | Unit test framework and tracker automation | 2026-02-27 | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
+| BL-050 | High-rate delay and FIR hardening | 2026-03-04 | [bl-050](done/bl-050-high-rate-delay-and-fir-hardening.md) |
 | BL-052 | Steam Audio virtual surround + quad layout | 2026-02-28 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
+| BL-069 | RT-safe headphone preset pipeline and failure backoff | 2026-03-04 | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
+| BL-070 | Coherent audio snapshot and telemetry seqlock contract | 2026-03-04 | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | 2026-03-03 | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | BL-077 | Unified visual capture and replay harness | 2026-03-03 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |

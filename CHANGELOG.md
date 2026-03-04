@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-04
 
 # Changelog
 
@@ -56,6 +56,7 @@ Operational snapshot:
 
 ### Recent Done Promotions
 
+- BL-050, BL-069, and BL-070 moved to `Done` with runbook archive/index/status/evidence sync.
 - BL-023, BL-052, BL-042, BL-044, BL-046, BL-047, BL-048, BL-049 moved to `Done` with synchronized backlog/archive/evidence updates.
 - BL-030 release-governance RL-09 closeout captured; RL-05 authoritative closure recorded in owner sync evidence packets.
 - BL-013 and BL-017 done promotions completed with promotion-decision packets.
