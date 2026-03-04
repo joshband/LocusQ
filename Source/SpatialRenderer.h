@@ -18,6 +18,7 @@
 #include "spatial_renderer/SpatialAuditionPrimitives.h"
 #include "spatial_renderer/SpatialEmitterRenderPass.h"
 #include "spatial_renderer/SpatialHeadphonePoseAndCompensation.h"
+#include "spatial_renderer/SpatialPostFxChain.h"
 #include "spatial_renderer/SpatialProfileRouter.h"
 #include "spatial_renderer/SpatialRendererTypes.h"
 #include "spatial_renderer/SpatialSteamAudioBackend.h"
@@ -1431,35 +1432,29 @@ private:
 
     void applyRoomAndSpeakerPostFx (int numSamples)
     {
-        if (roomEnabled)
-        {
-            earlyReflections.process (accumBuffer);
-            if (! earlyReflectionsOnly)
-                fdnReverb.process (accumBuffer);
-        }
+        locusq::spatial_post_fx_chain::applyRoomFxIfEnabled (
+            roomEnabled,
+            earlyReflectionsOnly,
+            earlyReflections,
+            fdnReverb,
+            accumBuffer);
 
         for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
         {
             auto* channelData = accumBuffer.getWritePointer (spk);
             const int delay = speakerDelaySamples[static_cast<size_t> (spk)];
 
-            if (delay > 0)
-            {
-                for (int i = 0; i < numSamples; ++i)
-                {
-                    speakerDelayLines[static_cast<size_t> (spk)][static_cast<size_t> (delayWritePos[static_cast<size_t> (spk)])] = channelData[i];
-
-                    int readPos = delayWritePos[static_cast<size_t> (spk)] - delay;
-                    if (readPos < 0)
-                        readPos += MAX_DELAY_SAMPLES;
-
-                    channelData[i] = speakerDelayLines[static_cast<size_t> (spk)][static_cast<size_t> (readPos)];
-                    delayWritePos[static_cast<size_t> (spk)] = (delayWritePos[static_cast<size_t> (spk)] + 1) % MAX_DELAY_SAMPLES;
-                }
-            }
-
-            for (int i = 0; i < numSamples; ++i)
-                channelData[i] *= smoothedSpeakerTrim[static_cast<size_t> (spk)].getNextValue();
+            locusq::spatial_post_fx_chain::processSpeakerDelayLine (
+                channelData,
+                numSamples,
+                delay,
+                speakerDelayLines[static_cast<size_t> (spk)],
+                delayWritePos[static_cast<size_t> (spk)],
+                MAX_DELAY_SAMPLES);
+            locusq::spatial_post_fx_chain::applySpeakerTrim (
+                channelData,
+                numSamples,
+                smoothedSpeakerTrim[static_cast<size_t> (spk)]);
         }
     }
 
