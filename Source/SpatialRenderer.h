@@ -1884,33 +1884,41 @@ private:
         return sample;
     }
 
-    void runOutputRoutingAndHeadphoneStage (
-        juce::AudioBuffer<float>& outputBuffer,
+    struct HeadphoneRuntimeState
+    {
+        HeadphoneRenderMode requestedMode = HeadphoneRenderMode::StereoDownmix;
+        HeadphoneRenderMode activeMode = HeadphoneRenderMode::StereoDownmix;
+        bool steamBackendAvailable = false;
+        bool profileAllowsHeadphoneRender = false;
+        bool steamRenderedThisBlock = false;
+    };
+
+    HeadphoneRuntimeState configureHeadphoneRuntime (
         int numSamples,
         int numOutputChannels,
-        bool renderedAuditionEmitter)
+        SpatialOutputProfile activeSpatialProfile)
     {
-        const auto profileResolution = resolveSpatialProfileForHost (numOutputChannels);
-        const auto activeSpatialProfile = profileResolution.profile;
-        activeSpatialProfileIndex.store (static_cast<int> (activeSpatialProfile), std::memory_order_relaxed);
-        activeSpatialStageIndex.store (static_cast<int> (profileResolution.stage), std::memory_order_relaxed);
-
-        const auto requestedHeadphoneMode = static_cast<HeadphoneRenderMode> (
+        HeadphoneRuntimeState state {};
+        state.requestedMode = static_cast<HeadphoneRenderMode> (
             requestedHeadphoneModeIndex.load (std::memory_order_relaxed));
         const auto requestedHeadphoneProfile = static_cast<HeadphoneDeviceProfile> (
-            juce::jlimit (0, NUM_HEADPHONE_DEVICE_PROFILES - 1, requestedHeadphoneProfileIndex.load (std::memory_order_relaxed)));
-        const auto steamBackendAvailable = isSteamAudioBackendAvailable();
-        const bool profileAllowsHeadphoneRender = isStereoOrBinauralProfile (activeSpatialProfile)
-                                                  || numOutputChannels <= 2;
-        headPoseInternalBinauralActive = profileAllowsHeadphoneRender
+            juce::jlimit (
+                0,
+                NUM_HEADPHONE_DEVICE_PROFILES - 1,
+                requestedHeadphoneProfileIndex.load (std::memory_order_relaxed)));
+        state.steamBackendAvailable = isSteamAudioBackendAvailable();
+        state.profileAllowsHeadphoneRender = isStereoOrBinauralProfile (activeSpatialProfile)
+                                             || numOutputChannels <= 2;
+        headPoseInternalBinauralActive = state.profileAllowsHeadphoneRender
                                          && numOutputChannels >= 2
                                          && numOutputChannels < NUM_SPEAKERS;
-        auto activeHeadphoneMode = (requestedHeadphoneMode == HeadphoneRenderMode::SteamBinaural
-                                    && profileAllowsHeadphoneRender
-                                    && numOutputChannels >= 2
-                                    && steamBackendAvailable)
-                                       ? HeadphoneRenderMode::SteamBinaural
-                                       : HeadphoneRenderMode::StereoDownmix;
+        state.activeMode = (state.requestedMode == HeadphoneRenderMode::SteamBinaural
+                            && state.profileAllowsHeadphoneRender
+                            && numOutputChannels >= 2
+                            && state.steamBackendAvailable)
+                               ? HeadphoneRenderMode::SteamBinaural
+                               : HeadphoneRenderMode::StereoDownmix;
+
         const auto activeHeadphoneProfile = (numOutputChannels >= 2)
                                                 ? requestedHeadphoneProfile
                                                 : HeadphoneDeviceProfile::Generic;
@@ -1938,33 +1946,49 @@ private:
             headphoneCalibrationChain.getActiveLatencySamples(),
             std::memory_order_relaxed);
 
-        const bool steamRenderedThisBlock = (profileAllowsHeadphoneRender
-                                             && numOutputChannels >= 2
-                                             && activeHeadphoneMode == HeadphoneRenderMode::SteamBinaural
-                                             && renderSteamBinauralBlock (numSamples));
+        state.steamRenderedThisBlock = (state.profileAllowsHeadphoneRender
+                                        && numOutputChannels >= 2
+                                        && state.activeMode == HeadphoneRenderMode::SteamBinaural
+                                        && renderSteamBinauralBlock (numSamples));
+        if (state.activeMode == HeadphoneRenderMode::SteamBinaural && ! state.steamRenderedThisBlock)
+            state.activeMode = HeadphoneRenderMode::StereoDownmix;
 
-        if (activeHeadphoneMode == HeadphoneRenderMode::SteamBinaural && ! steamRenderedThisBlock)
-            activeHeadphoneMode = HeadphoneRenderMode::StereoDownmix;
-
-        activeHeadphoneModeIndex.store (static_cast<int> (activeHeadphoneMode), std::memory_order_relaxed);
+        activeHeadphoneModeIndex.store (static_cast<int> (state.activeMode), std::memory_order_relaxed);
         activeHeadphoneProfileIndex.store (activeHeadphoneProfileIndexValue, std::memory_order_relaxed);
-        steamAudioAvailable.store (steamBackendAvailable, std::memory_order_relaxed);
+        steamAudioAvailable.store (state.steamBackendAvailable, std::memory_order_relaxed);
+        return state;
+    }
+
+    void runOutputRoutingAndHeadphoneStage (
+        juce::AudioBuffer<float>& outputBuffer,
+        int numSamples,
+        int numOutputChannels,
+        bool renderedAuditionEmitter)
+    {
+        const auto profileResolution = resolveSpatialProfileForHost (numOutputChannels);
+        const auto activeSpatialProfile = profileResolution.profile;
+        activeSpatialProfileIndex.store (static_cast<int> (activeSpatialProfile), std::memory_order_relaxed);
+        activeSpatialStageIndex.store (static_cast<int> (profileResolution.stage), std::memory_order_relaxed);
+        const auto headphoneState = configureHeadphoneRuntime (
+            numSamples,
+            numOutputChannels,
+            activeSpatialProfile);
         publishAmbisonicAndCodecTelemetryContracts (
             numSamples,
             numOutputChannels,
             activeSpatialProfile,
             profileResolution.stage,
-            profileAllowsHeadphoneRender);
+            headphoneState.profileAllowsHeadphoneRender);
 
         AuditionHeadphoneParityAccumulator headphoneParity {};
         headphoneParity.fallbackReasonIndex = determineAuditionHeadphoneFallbackReason (
             renderedAuditionEmitter,
-            requestedHeadphoneMode,
+            headphoneState.requestedMode,
             numOutputChannels,
-            profileAllowsHeadphoneRender,
-            steamBackendAvailable,
-            steamRenderedThisBlock,
-            activeHeadphoneMode);
+            headphoneState.profileAllowsHeadphoneRender,
+            headphoneState.steamBackendAvailable,
+            headphoneState.steamRenderedThisBlock,
+            headphoneState.activeMode);
 
         for (int i = 0; i < numSamples; ++i)
         {
@@ -1985,8 +2009,8 @@ private:
                 auto stereo = renderStereoOutputSample (
                     i,
                     activeSpatialProfile,
-                    steamRenderedThisBlock,
-                    activeHeadphoneMode);
+                    headphoneState.steamRenderedThisBlock,
+                    headphoneState.activeMode);
 
                 if (renderedAuditionEmitter)
                 {
