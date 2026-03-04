@@ -676,7 +676,7 @@
       "id": "BL-035",
       "title": "BL-035 RT Lock-Free Registration",
       "state_bucket": "open",
-      "status": "In Validation (Owner D8 recheck on current branch: build/smoke/selftest/RT/docs all pass; `non_allowlisted=0`)",
+      "status": "In Validation (Owner D8 recheck + 2026-03-01 parallel replay pass-stable on build/smoke/selftest/RT/docs; `non_allowlisted=0`)",
       "priority": "P0",
       "track": "F - Hardening",
       "depends_on": "HX-02 (Done), BL-032 (Done-candidate)",
@@ -687,7 +687,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: In Validation (Owner D8 recheck on current branch: build/smoke/selftest/RT/docs all pass; non_allowlisted=0). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: In Validation (Owner D8 recheck plus 2026-03-01 parallel replay are pass-stable on build/smoke/selftest/RT/docs with non_allowlisted=0; T2/T3 cadence packet remains pending). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress.",
       "runbook_path": "Documentation/backlog/bl-035-rt-lock-free-registration.md"
     },

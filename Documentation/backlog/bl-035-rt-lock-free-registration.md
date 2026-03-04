@@ -2,13 +2,13 @@ Title: BL-035 RT Lock-Free Registration
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-04
 
 # BL-035 RT Lock-Free Registration
 
 ## Plain-Language Summary
 
-BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: In Validation (Owner D8 recheck on current branch: build/smoke/selftest/RT/docs all pass; non_allowlisted=0). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: In Validation (Owner D8 recheck plus 2026-03-01 parallel replay are pass-stable on build/smoke/selftest/RT/docs with `non_allowlisted=0`; T2/T3 cadence packet remains pending). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-035 in plain terms: Remove lock acquisition from all audio-thread registratio
 | What is changing? | Remove lock acquisition from all audio-thread registration paths so the realtime audio processing path remains lock-free and invariant-compliant under multi-instance stress. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (D8 owner readiness replay PASS on build/smoke/selftest/RT/docs; non_allowlisted=0; D7 blockers cleared). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (D8 owner readiness replay plus 2026-03-01 parallel replay PASS on build/smoke/selftest/RT/docs; `non_allowlisted=0`). This item is done when T2/T3 cadence replay and owner promotion packet are complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-035-rt-lock-free-registration.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -47,6 +47,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 | D7 owner readiness recheck | FAIL | `TestEvidence/bl035_slice_d7_owner_ready_20260228_115509/status.tsv` |
 | D8 owner readiness recheck | PASS | `TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/status.tsv` |
 | D8 RT audit | PASS (`non_allowlisted=0`) | `TestEvidence/bl035_slice_d8_owner_ready_20260228T203301Z/rt_audit.tsv` |
+| Parallel replay (`2026-03-01`) | PASS (owner-reconciled RT audit `non_allowlisted=0`) | `TestEvidence/bl035_parallel_20260301_182623/status.tsv` |
 
 ```mermaid
 flowchart LR
@@ -62,7 +63,7 @@ PASS]
 |---|---|
 | ID | BL-035 |
 | Priority | P0 |
-| Status | In Validation (Owner D8 recheck on current branch: build/smoke/selftest/RT/docs all pass; `non_allowlisted=0`) |
+| Status | In Validation (Owner D8 recheck + 2026-03-01 parallel replay pass-stable on build/smoke/selftest/RT/docs; `non_allowlisted=0`) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | HX-02 (Done), BL-032 (Done-candidate) |
@@ -78,6 +79,27 @@ PASS]
 - Next work to resume:
   - Run candidate/promotion cadence replay for BL-035 (per Global Replay Cadence Policy) and capture owner packet artifacts.
   - If cadence gates stay green, advance BL-035 to done-candidate through owner promotion decision packet.
+
+## Parallel Replay Snapshot (2026-03-01)
+
+- Evidence packet:
+  - `TestEvidence/bl035_parallel_20260301_182623/status.tsv`
+  - `TestEvidence/bl035_parallel_20260301_182623/summary.md`
+  - `TestEvidence/bl035_parallel_20260301_182623/rt_audit.tsv`
+- Validation:
+  - build/smoke/selftest/docs => `PASS`
+  - RT audit initial worker row => `FAIL` (allowlist line drift)
+  - RT audit owner replay row => `PASS` (`non_allowlisted=0`)
+- Owner implication:
+  - branch posture remains `In Validation` and is pass-stable after owner RT reconcile;
+  - remaining promotion blocker is now cadence completeness (T2/T3 + owner promotion packet), not an active correctness failure.
+
+## Done-Candidate Gap Checklist
+
+- [ ] Run BL-035 candidate cadence replay (`T2`) and publish deterministic run summary.
+- [ ] Run BL-035 promotion cadence replay (`T3` or owner-approved heavy-wrapper equivalent) and publish run summary.
+- [ ] Publish owner promotion decision packet (`promotion_decision.md`) with `SHARED_FILES_TOUCHED` and final disposition.
+- [ ] Synchronize status surfaces (`Documentation/backlog/index.md`, runbook Status Ledger, `status.json`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`) in the same change set when status advances.
 
 ## Objective
 
@@ -571,4 +593,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
