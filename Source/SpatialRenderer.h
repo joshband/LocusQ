@@ -2016,6 +2016,42 @@ private:
         outputBuffer.setSample (1, sampleIndex, stereo.right * masterGain);
     }
 
+    void writeOutputSampleForChannelLayout (
+        juce::AudioBuffer<float>& outputBuffer,
+        int sampleIndex,
+        int numOutputChannels,
+        float masterGain,
+        const OutputRoutingStageContext& outputContext,
+        bool renderedAuditionEmitter,
+        AuditionHeadphoneParityAccumulator& headphoneParity)
+    {
+        if (writeDiscreteOrAmbisonicOutputSample (
+                outputBuffer,
+                sampleIndex,
+                numOutputChannels,
+                outputContext.activeSpatialProfile,
+                masterGain))
+        {
+            return;
+        }
+
+        if (numOutputChannels >= 2)
+        {
+            writeStereoOutputSample (
+                outputBuffer,
+                sampleIndex,
+                masterGain,
+                outputContext.activeSpatialProfile,
+                outputContext.headphoneState,
+                renderedAuditionEmitter,
+                headphoneParity);
+            return;
+        }
+
+        if (numOutputChannels == 1)
+            writeMonoOutputSample (outputBuffer, sampleIndex, masterGain);
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
@@ -2043,32 +2079,14 @@ private:
         for (int i = 0; i < numSamples; ++i)
         {
             const float masterGain = smoothedMasterGain.getNextValue();
-
-            if (writeDiscreteOrAmbisonicOutputSample (
-                    outputBuffer,
-                    i,
-                    numOutputChannels,
-                    outputContext.activeSpatialProfile,
-                    masterGain))
-            {
-                continue;
-            }
-
-            if (numOutputChannels >= 2)
-            {
-                writeStereoOutputSample (
-                    outputBuffer,
-                    i,
-                    masterGain,
-                    outputContext.activeSpatialProfile,
-                    outputContext.headphoneState,
-                    renderedAuditionEmitter,
-                    headphoneParity);
-                continue;
-            }
-
-            if (numOutputChannels == 1)
-                writeMonoOutputSample (outputBuffer, i, masterGain);
+            writeOutputSampleForChannelLayout (
+                outputBuffer,
+                i,
+                numOutputChannels,
+                masterGain,
+                outputContext,
+                renderedAuditionEmitter,
+                headphoneParity);
         }
 
         finalizeAuditionHeadphoneParity (renderedAuditionEmitter, numSamples, headphoneParity);
