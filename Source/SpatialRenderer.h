@@ -1260,18 +1260,107 @@ private:
         bool renderedAuditionEmitter = false;
     };
 
+    struct EmitterCandidate
+    {
+        int slotIdx = -1;
+        EmitterData data {};
+        float distance = 0.0f;
+        float distanceGain = 0.0f;
+        float emitterGainLinear = 0.0f;
+        float priority = 0.0f;
+    };
+
+    void processSelectedEmitterCandidate (
+        const SceneGraph& scene,
+        const EmitterCandidate& candidate,
+        int numSamples,
+        EmitterStageResult& result)
+    {
+        const int slotIdx = candidate.slotIdx;
+        const auto audioSnapshot = scene.getSlot (slotIdx).readAudioSnapshot();
+        const float* emitterAudio = audioSnapshot.mono;
+        const int emitterSamples = audioSnapshot.numSamples;
+
+        if (emitterAudio == nullptr || emitterSamples <= 0)
+            return;
+
+        const int samplesToProcess = std::min (emitterSamples, numSamples);
+
+        float blockPeak = 0.0f;
+        for (int i = 0; i < samplesToProcess; ++i)
+        {
+            const float sample = emitterAudio[i] * candidate.emitterGainLinear;
+            tempMonoBuffer[static_cast<size_t> (i)] = sample;
+            blockPeak = juce::jmax (blockPeak, std::abs (sample));
+        }
+
+        if (blockPeak < ACTIVITY_PEAK_GATE_LINEAR)
+        {
+            ++result.activityCulledEmitterCount;
+            return;
+        }
+
+        ++result.processedEmitterCount;
+
+        if (slotIdx < MAX_TRACKED_EMITTERS)
+        {
+            emitterDoppler[static_cast<size_t> (slotIdx)].setScale (dopplerScale);
+            emitterDoppler[static_cast<size_t> (slotIdx)].processBlock (
+                tempMonoBuffer.data(),
+                samplesToProcess,
+                candidate.data.position,
+                candidate.data.velocity,
+                dopplerEnabled);
+        }
+
+        if (airAbsorptionEnabled && slotIdx < MAX_TRACKED_EMITTERS)
+        {
+            emitterAbsorption[static_cast<size_t> (slotIdx)].updateForDistance (candidate.distance);
+            emitterAbsorption[static_cast<size_t> (slotIdx)].processBlock (tempMonoBuffer.data(), samplesToProcess);
+        }
+
+        const float azimuth = calculateAzimuth (candidate.data.position);
+        const float elevation = calculateElevation (candidate.data.position);
+        auto panGains = vbapPanner.calculateGains (azimuth, elevation);
+        auto speakerGains = panGains.gains;
+        spreadProcessor.apply (speakerGains, candidate.data.spread);
+        directivityFilter.apply (speakerGains,
+                                 candidate.data.directivity,
+                                 candidate.data.directivityAim,
+                                 candidate.data.position);
+
+        if (slotIdx < MAX_TRACKED_EMITTERS)
+        {
+            for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+            {
+                smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].setTargetValue (
+                    speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain);
+            }
+        }
+
+        for (int i = 0; i < samplesToProcess; ++i)
+        {
+            const float sample = tempMonoBuffer[static_cast<size_t> (i)];
+
+            for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+            {
+                float gain;
+                if (slotIdx < MAX_TRACKED_EMITTERS)
+                {
+                    gain = smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].getNextValue();
+                }
+                else
+                {
+                    gain = speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain;
+                }
+
+                accumBuffer.addSample (spk, i, sample * gain);
+            }
+        }
+    }
+
     EmitterStageResult runEmitterAccumulationStage (const SceneGraph& scene, int numSamples)
     {
-        struct EmitterCandidate
-        {
-            int slotIdx = -1;
-            EmitterData data {};
-            float distance = 0.0f;
-            float distanceGain = 0.0f;
-            float emitterGainLinear = 0.0f;
-            float priority = 0.0f;
-        };
-
         std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
         int selectedEmitterCount = 0;
         int selectedMinPriorityIndex = -1;
@@ -1331,88 +1420,7 @@ private:
         for (int selectedIdx = 0; selectedIdx < selectedEmitterCount; ++selectedIdx)
         {
             const auto& candidate = selectedEmitters[static_cast<size_t> (selectedIdx)];
-            const int slotIdx = candidate.slotIdx;
-
-            const auto audioSnapshot = scene.getSlot (slotIdx).readAudioSnapshot();
-            const float* emitterAudio = audioSnapshot.mono;
-            const int emitterSamples = audioSnapshot.numSamples;
-
-            if (emitterAudio == nullptr || emitterSamples <= 0)
-                continue;
-
-            const int samplesToProcess = std::min (emitterSamples, numSamples);
-
-            float blockPeak = 0.0f;
-            for (int i = 0; i < samplesToProcess; ++i)
-            {
-                const float sample = emitterAudio[i] * candidate.emitterGainLinear;
-                tempMonoBuffer[static_cast<size_t> (i)] = sample;
-                blockPeak = juce::jmax (blockPeak, std::abs (sample));
-            }
-
-            if (blockPeak < ACTIVITY_PEAK_GATE_LINEAR)
-            {
-                ++result.activityCulledEmitterCount;
-                continue;
-            }
-
-            ++result.processedEmitterCount;
-
-            if (slotIdx < MAX_TRACKED_EMITTERS)
-            {
-                emitterDoppler[static_cast<size_t> (slotIdx)].setScale (dopplerScale);
-                emitterDoppler[static_cast<size_t> (slotIdx)].processBlock (
-                    tempMonoBuffer.data(),
-                    samplesToProcess,
-                    candidate.data.position,
-                    candidate.data.velocity,
-                    dopplerEnabled);
-            }
-
-            if (airAbsorptionEnabled && slotIdx < MAX_TRACKED_EMITTERS)
-            {
-                emitterAbsorption[static_cast<size_t> (slotIdx)].updateForDistance (candidate.distance);
-                emitterAbsorption[static_cast<size_t> (slotIdx)].processBlock (tempMonoBuffer.data(), samplesToProcess);
-            }
-
-            const float azimuth = calculateAzimuth (candidate.data.position);
-            const float elevation = calculateElevation (candidate.data.position);
-            auto panGains = vbapPanner.calculateGains (azimuth, elevation);
-            auto speakerGains = panGains.gains;
-            spreadProcessor.apply (speakerGains, candidate.data.spread);
-            directivityFilter.apply (speakerGains,
-                                     candidate.data.directivity,
-                                     candidate.data.directivityAim,
-                                     candidate.data.position);
-
-            if (slotIdx < MAX_TRACKED_EMITTERS)
-            {
-                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
-                {
-                    smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].setTargetValue (
-                        speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain);
-                }
-            }
-
-            for (int i = 0; i < samplesToProcess; ++i)
-            {
-                const float sample = tempMonoBuffer[static_cast<size_t> (i)];
-
-                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
-                {
-                    float gain;
-                    if (slotIdx < MAX_TRACKED_EMITTERS)
-                    {
-                        gain = smoothedSpeakerGains[static_cast<size_t> (slotIdx)][static_cast<size_t> (spk)].getNextValue();
-                    }
-                    else
-                    {
-                        gain = speakerGains[static_cast<size_t> (spk)] * candidate.distanceGain;
-                    }
-
-                    accumBuffer.addSample (spk, i, sample * gain);
-                }
-            }
+            processSelectedEmitterCandidate (scene, candidate, numSamples, result);
         }
 
         if (result.processedEmitterCount == 0 && auditionEnabled)
