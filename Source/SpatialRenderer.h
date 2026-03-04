@@ -16,6 +16,7 @@
 #include "headphone_dsp/HeadphonePresetLoader.h"
 #include "spatial_renderer/SpatialAuditionEngine.h"
 #include "spatial_renderer/SpatialAuditionPrimitives.h"
+#include "spatial_renderer/SpatialEmitterRenderPass.h"
 #include "spatial_renderer/SpatialHeadphonePoseAndCompensation.h"
 #include "spatial_renderer/SpatialProfileRouter.h"
 #include "spatial_renderer/SpatialRendererTypes.h"
@@ -1277,21 +1278,6 @@ private:
 
         EmitterStageResult result {};
 
-        const auto refreshMinPriority = [&]()
-        {
-            selectedMinPriorityIndex = -1;
-            selectedMinPriority = std::numeric_limits<float>::max();
-
-            for (int i = 0; i < selectedEmitterCount; ++i)
-            {
-                if (selectedEmitters[static_cast<size_t> (i)].priority < selectedMinPriority)
-                {
-                    selectedMinPriority = selectedEmitters[static_cast<size_t> (i)].priority;
-                    selectedMinPriorityIndex = i;
-                }
-            }
-        };
-
         // First pass: collect eligible emitters and enforce a hard per-block budget.
         for (int slotIdx = 0; slotIdx < SceneGraph::MAX_EMITTERS; ++slotIdx)
         {
@@ -1328,42 +1314,17 @@ private:
             candidate.emitterGainLinear = emitterGainLinear;
             candidate.priority = priority;
 
-            if (selectedEmitterCount < MAX_RENDER_EMITTERS_PER_BLOCK)
-            {
-                selectedEmitters[static_cast<size_t> (selectedEmitterCount)] = candidate;
-                ++selectedEmitterCount;
-                refreshMinPriority();
-                continue;
-            }
-
-            if (priority <= selectedMinPriority)
-            {
-                ++result.budgetCulledEmitterCount;
-                continue;
-            }
-
-            if (selectedMinPriorityIndex >= 0)
-            {
-                selectedEmitters[static_cast<size_t> (selectedMinPriorityIndex)] = candidate;
-                ++result.budgetCulledEmitterCount;
-                refreshMinPriority();
-            }
+            locusq::spatial_emitter_render_pass::insertCandidateWithBudget (
+                selectedEmitters,
+                selectedEmitterCount,
+                selectedMinPriorityIndex,
+                selectedMinPriority,
+                candidate,
+                result.budgetCulledEmitterCount);
         }
 
         // Preserve deterministic ordering when the guardrail is active.
-        for (int i = 1; i < selectedEmitterCount; ++i)
-        {
-            auto current = selectedEmitters[static_cast<size_t> (i)];
-            int j = i - 1;
-
-            while (j >= 0 && selectedEmitters[static_cast<size_t> (j)].slotIdx > current.slotIdx)
-            {
-                selectedEmitters[static_cast<size_t> (j + 1)] = selectedEmitters[static_cast<size_t> (j)];
-                --j;
-            }
-
-            selectedEmitters[static_cast<size_t> (j + 1)] = current;
-        }
+        locusq::spatial_emitter_render_pass::sortSelectedBySlotIndex (selectedEmitters, selectedEmitterCount);
 
         // Second pass: process only selected emitters.
         for (int selectedIdx = 0; selectedIdx < selectedEmitterCount; ++selectedIdx)
