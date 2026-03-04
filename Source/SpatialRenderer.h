@@ -1984,6 +1984,38 @@ private:
         };
     }
 
+    void writeStereoOutputSample (
+        juce::AudioBuffer<float>& outputBuffer,
+        int sampleIndex,
+        float masterGain,
+        SpatialOutputProfile activeSpatialProfile,
+        const HeadphoneRuntimeState& headphoneState,
+        bool renderedAuditionEmitter,
+        AuditionHeadphoneParityAccumulator& headphoneParity)
+    {
+        auto stereo = renderStereoOutputSample (
+            sampleIndex,
+            activeSpatialProfile,
+            headphoneState.steamRenderedThisBlock,
+            headphoneState.activeMode);
+
+        if (renderedAuditionEmitter)
+        {
+            accumulateAuditionHeadphoneParitySample (
+                headphoneParity,
+                stereo.left,
+                stereo.right,
+                stereo.referenceCaptured,
+                stereo.referenceLeft,
+                stereo.referenceRight);
+        }
+
+        applyHeadphoneProfileCompensation (stereo.left, stereo.right);
+        headphoneCalibrationChain.processStereoSample (stereo.left, stereo.right);
+        outputBuffer.setSample (0, sampleIndex, stereo.left * masterGain);
+        outputBuffer.setSample (1, sampleIndex, stereo.right * masterGain);
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
@@ -2024,27 +2056,14 @@ private:
 
             if (numOutputChannels >= 2)
             {
-                auto stereo = renderStereoOutputSample (
+                writeStereoOutputSample (
+                    outputBuffer,
                     i,
+                    masterGain,
                     outputContext.activeSpatialProfile,
-                    outputContext.headphoneState.steamRenderedThisBlock,
-                    outputContext.headphoneState.activeMode);
-
-                if (renderedAuditionEmitter)
-                {
-                    accumulateAuditionHeadphoneParitySample (
-                        headphoneParity,
-                        stereo.left,
-                        stereo.right,
-                        stereo.referenceCaptured,
-                        stereo.referenceLeft,
-                        stereo.referenceRight);
-                }
-
-                applyHeadphoneProfileCompensation (stereo.left, stereo.right);
-                headphoneCalibrationChain.processStereoSample (stereo.left, stereo.right);
-                outputBuffer.setSample (0, i, stereo.left * masterGain);
-                outputBuffer.setSample (1, i, stereo.right * masterGain);
+                    outputContext.headphoneState,
+                    renderedAuditionEmitter,
+                    headphoneParity);
                 continue;
             }
 
