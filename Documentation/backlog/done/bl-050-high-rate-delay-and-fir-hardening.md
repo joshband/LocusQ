@@ -2,13 +2,13 @@ Title: BL-050 High-Rate Delay and FIR Hardening
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-04
 
 # BL-050 High-Rate Delay and FIR Hardening
 
 ## Plain-Language Summary
 
-BL-050 in plain terms: Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. Current state: Done-candidate (owner T1/T2/T3 replay PASS; Slice C promotion packet refreshed after docs-freshness drift remediation). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-050 in plain terms: Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. Current state: Done (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; `fir_profile=WARN` accepted as tracked follow-on hardening). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-050 in plain terms: Harden high-sample-rate behavior by expanding delay headr
 | What is changing? | Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (owner T1/T2/T3 replay PASS; final T3 10/10 lane_result/docs_freshness PASS; fir_profile WARN tracked). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-050-high-rate-delay-and-fir-hardening.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; `fir_profile=WARN` accepted as follow-on tracking). |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -62,13 +62,18 @@ xychart-beta
 |---|---|
 | ID | BL-050 |
 | Priority | P0 |
-| Status | Done-candidate (owner T1/T2/T3 replay PASS; Slice C promotion packet refreshed after docs-freshness drift remediation) |
+| Status | Done (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; `fir_profile=WARN` accepted as follow-on tracking) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-043, BL-046 |
 | Blocks | — |
+| Annex Spec | `Documentation/plans/bl-050-partitioned-fir-migration-contract-2026-03-01.md` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+| SHARED_FILES_TOUCHED | no |
+| Promotion Decision Packet | `TestEvidence/bl050_owner_t3_final_20260302T041920Z/promotion_readiness.md` |
+| Final Evidence Root | `TestEvidence/bl050_owner_t3_final_20260302T041920Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md` |
 
 ## Objective
 
@@ -131,7 +136,7 @@ Out of scope:
     - `TestEvidence/bl070_owner_t3_promotion_20260302T035658Z/promotion_readiness.md`
 - Standalone docs-freshness recheck after metadata normalization:
   - `TestEvidence/bl050_owner_t3_promotion_20260302T035618Z/docs_freshness_recheck_20260302T035829Z.log` -> `PASS`.
-- Promotion readiness remains blocked until BL-050 T3 is rerun with stable docs-freshness throughout all runs.
+- Historical blocker is resolved; final T3 promotion replay is pass-stable (`10/10`) with docs-freshness PASS.
 
 ## Slice C Final Owner Replay Snapshot (2026-03-02)
 
@@ -188,11 +193,11 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 
 - [x] T1/T2/T3 owner replay evidence is complete and pass-stable.
 - [x] Promotion packet includes deterministic replay summaries and docs-freshness PASS.
-- [ ] Record final owner closeout decision for `fir_profile=WARN` handling (accepted follow-on vs blocking remediation).
-- [ ] Move runbook to `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md`.
-- [ ] Update `Documentation/backlog/index.md` row to `Done` and switch runbook link to `done/` path.
-- [ ] Add closeout sync entries to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
-- [ ] Run `./scripts/validate-docs-freshness.sh` after done/archive sync.
+- [x] Final owner closeout decision for `fir_profile=WARN`: accepted as non-blocking follow-on hardening track.
+- [x] Move runbook to `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md`.
+- [x] Update `Documentation/backlog/index.md` row to `Done` and switch runbook link to `done/` path.
+- [x] Add closeout sync entries to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
+- [x] Run `./scripts/validate-docs-freshness.sh` after done/archive sync.
 
 
 ## Handoff Return Contract

@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 85,
-    "open": 27,
-    "done": 58
+    "open": 24,
+    "done": 61
   },
   "items": [
     {
@@ -960,8 +960,8 @@
     {
       "id": "BL-050",
       "title": "BL-050 High-Rate Delay and FIR Hardening",
-      "state_bucket": "open",
-      "status": "Done-candidate (owner T1/T2/T3 replay PASS; Slice C promotion packet refreshed after docs-freshness drift remediation)",
+      "state_bucket": "done",
+      "status": "Done (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; `fir_profile=WARN` accepted as follow-on tracking)",
       "priority": "P0",
       "track": "F - Hardening",
       "depends_on": "BL-043, BL-046",
@@ -972,9 +972,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-050 in plain terms: Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. Current state: Done-candidate (owner T1/T2/T3 replay PASS; Slice C promotion packet refreshed after docs-freshness drift remediation). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-050 in plain terms: Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability. Current state: Done (owner T1/T2/T3 replay PASS; final T3 10/10 lane_result/docs_freshness PASS; fir_profile=WARN accepted as tracked follow-on hardening). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Harden high-sample-rate behavior by expanding delay headroom and defining a path from direct FIR convolution toward partitioned FIR for scalability.",
-      "runbook_path": "Documentation/backlog/bl-050-high-rate-delay-and-fir-hardening.md"
+      "runbook_path": "Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md"
     },
     {
       "id": "BL-051",
@@ -1321,8 +1321,8 @@
     {
       "id": "BL-069",
       "title": "BL-069 RT-Safe Headphone Preset Pipeline and Failure Backoff",
-      "state_bucket": "open",
-      "status": "Done-candidate (owner T2 + T3 replay PASS; closeout sync pending)",
+      "state_bucket": "done",
+      "status": "Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete)",
       "priority": "P0",
       "track": "F - Hardening",
       "depends_on": "BL-050",
@@ -1333,15 +1333,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-069 in plain terms: Remove RT-unsafe file/config loading from the headphone preset path by moving preset hydration and parse work out of processBlock(), introducing atomic runtime handoff for prepared coefficients, and enforcing retry backoff semantics when preset assets are missing or invalid. Current state: Done-candidate (owner T2 + T3 replay PASS; closeout sync pending). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-069 in plain terms: Remove RT-unsafe file/config loading from the headphone preset path by moving preset hydration and parse work out of processBlock(), introducing atomic runtime handoff for prepared coefficients, and enforcing retry backoff semantics when preset assets are missing or invalid. Current state: Done (owner T2 5/5 + T3 10/10 execute replay PASS; closeout sync complete). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Remove RT-unsafe file/config loading from the headphone preset path by moving preset hydration and parse work out of processBlock(), introducing atomic runtime handoff for prepared coefficients, and enforcing retry backoff semantics when preset assets are missing or invalid.",
-      "runbook_path": "Documentation/backlog/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md"
+      "runbook_path": "Documentation/backlog/done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md"
     },
     {
       "id": "BL-070",
       "title": "BL-070 Coherent Audio Snapshot and Telemetry Seqlock Contract",
-      "state_bucket": "open",
-      "status": "Done-candidate (owner T2 + T3 replay PASS; closeout sync pending)",
+      "state_bucket": "done",
+      "status": "Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete)",
       "priority": "P0",
       "track": "F - Hardening",
       "depends_on": "BL-050",
@@ -1352,9 +1352,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-070 in plain terms: Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. Current state: Done-candidate (owner T2 + T3 replay PASS; closeout sync pending). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-070 in plain terms: Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads. Current state: Done (owner T2 5/5 + T3 10/10 execute replay PASS; closeout sync complete). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Eliminate torn snapshot and telemetry race risks by introducing coherent audio snapshot reads (ptr + sample_count from one publication point) and sequence-safe telemetry publication/consumption between audio and bridge/UI threads.",
-      "runbook_path": "Documentation/backlog/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md"
+      "runbook_path": "Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md"
     },
     {
       "id": "BL-071",

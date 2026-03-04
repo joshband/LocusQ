@@ -2,9 +2,31 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-04
 
 # LocusQ Build Summary (Acceptance Closeout)
+
+## BL-050 + BL-069 + BL-070 Done Archive Sync Z1 (UTC 2026-03-04)
+
+1. Runbook archive moves:
+- `Documentation/backlog/bl-050-high-rate-delay-and-fir-hardening.md` -> `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md`
+- `Documentation/backlog/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md` -> `Documentation/backlog/done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md`
+- `Documentation/backlog/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md` -> `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md`
+
+2. Backlog/index reconciliation:
+- Active Queue rows for BL-050/BL-069/BL-070 are now `Done` and point at `done/` runbook paths.
+- Closed Archive rows added for BL-050/BL-069/BL-070.
+- BL-051 dependency note synchronized (`BL-050 dependency now Done`).
+- Material Preservation Map synchronized (`BL-069` and `BL-070` marked self-contained with no annex spec).
+
+3. Status and governance sync:
+- `status.json` runbook paths for BL-069/BL-070 now point to done runbooks.
+- BL-069/BL-070 lifecycle keys updated to done-closeout state.
+- `Documentation/reports/data/backlog-summary.{json,csv}` refreshed from canonical index.
+
+4. Gate verification:
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
 
 ## Backlog Reconciliation + Docs Gate Boundary Update (UTC 2026-03-01)
 
