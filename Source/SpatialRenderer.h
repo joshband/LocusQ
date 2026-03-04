@@ -1664,6 +1664,105 @@ private:
         }
     }
 
+    struct AuditionHeadphoneParityAccumulator
+    {
+        double outputEnergy = 0.0;
+        double referenceEnergy = 0.0;
+        float peak = 0.0f;
+        bool samplesCaptured = false;
+        int fallbackReasonIndex = static_cast<int> (AuditionReactiveHeadphoneFallbackReason::None);
+    };
+
+    int determineAuditionHeadphoneFallbackReason (
+        bool renderedAuditionEmitter,
+        HeadphoneRenderMode requestedHeadphoneMode,
+        int numOutputChannels,
+        bool profileAllowsHeadphoneRender,
+        bool steamBackendAvailable,
+        bool steamRenderedThisBlock,
+        HeadphoneRenderMode activeHeadphoneMode) const noexcept
+    {
+        int reason = static_cast<int> (AuditionReactiveHeadphoneFallbackReason::None);
+        if (renderedAuditionEmitter && requestedHeadphoneMode == HeadphoneRenderMode::SteamBinaural)
+        {
+            if (numOutputChannels < 2 || ! profileAllowsHeadphoneRender)
+            {
+                reason = static_cast<int> (AuditionReactiveHeadphoneFallbackReason::OutputIncompatible);
+            }
+            else if (! steamBackendAvailable)
+            {
+                reason = static_cast<int> (AuditionReactiveHeadphoneFallbackReason::SteamUnavailable);
+            }
+            else if (! steamRenderedThisBlock || activeHeadphoneMode != HeadphoneRenderMode::SteamBinaural)
+            {
+                reason = static_cast<int> (AuditionReactiveHeadphoneFallbackReason::SteamRenderFailed);
+            }
+        }
+
+        return reason;
+    }
+
+    void accumulateAuditionHeadphoneParitySample (
+        AuditionHeadphoneParityAccumulator& parity,
+        float left,
+        float right,
+        bool referenceCaptured,
+        float referenceLeft,
+        float referenceRight) noexcept
+    {
+        const auto mono = 0.5f * (left + right);
+        parity.outputEnergy += static_cast<double> (mono * mono);
+        parity.peak = juce::jmax (parity.peak, juce::jmax (std::abs (left), std::abs (right)));
+
+        if (referenceCaptured)
+        {
+            const auto referenceMono = 0.5f * (referenceLeft + referenceRight);
+            parity.referenceEnergy += static_cast<double> (referenceMono * referenceMono);
+        }
+        else
+        {
+            parity.referenceEnergy += static_cast<double> (mono * mono);
+        }
+
+        parity.samplesCaptured = true;
+    }
+
+    void finalizeAuditionHeadphoneParity (
+        bool renderedAuditionEmitter,
+        int numSamples,
+        const AuditionHeadphoneParityAccumulator& parity) noexcept
+    {
+        if (renderedAuditionEmitter && parity.samplesCaptured && numSamples > 0)
+        {
+            const auto invNumSamples = 1.0f / static_cast<float> (numSamples);
+            const auto headphoneOutputRms = juce::jlimit (
+                0.0f,
+                2.0f,
+                std::sqrt (static_cast<float> (parity.outputEnergy * static_cast<double> (invNumSamples))));
+            const auto headphoneReferenceRms = juce::jlimit (
+                0.0f,
+                2.0f,
+                std::sqrt (static_cast<float> (parity.referenceEnergy * static_cast<double> (invNumSamples))));
+            const auto headphoneParity = headphoneOutputRms > 1.0e-6f
+                ? juce::jlimit (0.5f, 2.0f, headphoneReferenceRms / headphoneOutputRms)
+                : 1.0f;
+
+            applyAuditionReactiveHeadphoneParity (
+                headphoneOutputRms,
+                parity.peak,
+                headphoneParity,
+                parity.fallbackReasonIndex);
+        }
+        else if (renderedAuditionEmitter)
+        {
+            applyAuditionReactiveHeadphoneParity (
+                0.0f,
+                0.0f,
+                1.0f,
+                parity.fallbackReasonIndex);
+        }
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
@@ -1736,30 +1835,15 @@ private:
             profileResolution.stage,
             profileAllowsHeadphoneRender);
 
-        double auditionReactiveHeadphoneEnergy = 0.0;
-        double auditionReactiveHeadphoneReferenceEnergy = 0.0;
-        float auditionReactiveHeadphonePeak = 0.0f;
-        bool auditionReactiveHeadphoneSamplesCaptured = false;
-        int auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
-            AuditionReactiveHeadphoneFallbackReason::None);
-        if (renderedAuditionEmitter && requestedHeadphoneMode == HeadphoneRenderMode::SteamBinaural)
-        {
-            if (numOutputChannels < 2 || ! profileAllowsHeadphoneRender)
-            {
-                auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
-                    AuditionReactiveHeadphoneFallbackReason::OutputIncompatible);
-            }
-            else if (! steamBackendAvailable)
-            {
-                auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
-                    AuditionReactiveHeadphoneFallbackReason::SteamUnavailable);
-            }
-            else if (! steamRenderedThisBlock || activeHeadphoneMode != HeadphoneRenderMode::SteamBinaural)
-            {
-                auditionReactiveHeadphoneFallbackReasonIndex = static_cast<int> (
-                    AuditionReactiveHeadphoneFallbackReason::SteamRenderFailed);
-            }
-        }
+        AuditionHeadphoneParityAccumulator headphoneParity {};
+        headphoneParity.fallbackReasonIndex = determineAuditionHeadphoneFallbackReason (
+            renderedAuditionEmitter,
+            requestedHeadphoneMode,
+            numOutputChannels,
+            profileAllowsHeadphoneRender,
+            steamBackendAvailable,
+            steamRenderedThisBlock,
+            activeHeadphoneMode);
 
         for (int i = 0; i < numSamples; ++i)
         {
@@ -1861,23 +1945,13 @@ private:
 
                 if (renderedAuditionEmitter)
                 {
-                    const auto mono = 0.5f * (left + right);
-                    auditionReactiveHeadphoneEnergy += static_cast<double> (mono * mono);
-                    auditionReactiveHeadphonePeak = juce::jmax (
-                        auditionReactiveHeadphonePeak,
-                        juce::jmax (std::abs (left), std::abs (right)));
-
-                    if (referenceCaptured)
-                    {
-                        const auto referenceMono = 0.5f * (referenceLeft + referenceRight);
-                        auditionReactiveHeadphoneReferenceEnergy += static_cast<double> (referenceMono * referenceMono);
-                    }
-                    else
-                    {
-                        auditionReactiveHeadphoneReferenceEnergy += static_cast<double> (mono * mono);
-                    }
-
-                    auditionReactiveHeadphoneSamplesCaptured = true;
+                    accumulateAuditionHeadphoneParitySample (
+                        headphoneParity,
+                        left,
+                        right,
+                        referenceCaptured,
+                        referenceLeft,
+                        referenceRight);
                 }
 
                 applyHeadphoneProfileCompensation (left, right);
@@ -1896,35 +1970,7 @@ private:
             }
         }
 
-        if (renderedAuditionEmitter && auditionReactiveHeadphoneSamplesCaptured && numSamples > 0)
-        {
-            const auto invNumSamples = 1.0f / static_cast<float> (numSamples);
-            const auto headphoneOutputRms = juce::jlimit (
-                0.0f,
-                2.0f,
-                std::sqrt (static_cast<float> (auditionReactiveHeadphoneEnergy * static_cast<double> (invNumSamples))));
-            const auto headphoneReferenceRms = juce::jlimit (
-                0.0f,
-                2.0f,
-                std::sqrt (static_cast<float> (auditionReactiveHeadphoneReferenceEnergy * static_cast<double> (invNumSamples))));
-            const auto headphoneParity = headphoneOutputRms > 1.0e-6f
-                ? juce::jlimit (0.5f, 2.0f, headphoneReferenceRms / headphoneOutputRms)
-                : 1.0f;
-
-            applyAuditionReactiveHeadphoneParity (
-                headphoneOutputRms,
-                auditionReactiveHeadphonePeak,
-                headphoneParity,
-                auditionReactiveHeadphoneFallbackReasonIndex);
-        }
-        else if (renderedAuditionEmitter)
-        {
-            applyAuditionReactiveHeadphoneParity (
-                0.0f,
-                0.0f,
-                1.0f,
-                auditionReactiveHeadphoneFallbackReasonIndex);
-        }
+        finalizeAuditionHeadphoneParity (renderedAuditionEmitter, numSamples, headphoneParity);
     }
 
     double currentSampleRate = 44100.0;
