@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-04
 
 ## Plain-Language Summary
 
-BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (Wave 6 stereo-output writer helper extraction landed; contract+execute replay PASS on 2026-03-04). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (Wave 6 output-sample dispatch helper extraction landed; contract+execute replay PASS on 2026-03-04). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer
 | What is changing? | Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (Wave 6 stereo-output writer helper extraction landed; contract+execute replay PASS on 2026-03-04). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Implementation (Wave 6 output-sample dispatch helper extraction landed; contract+execute replay PASS on 2026-03-04). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-076 |
 | Priority | P1 |
-| Status | In Implementation (Wave 6 stereo-output writer helper extraction landed; contract+execute replay PASS on 2026-03-04) |
+| Status | In Implementation (Wave 6 output-sample dispatch helper extraction landed; contract+execute replay PASS on 2026-03-04) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | BL-050, BL-069, BL-070 |
@@ -184,13 +184,18 @@ Primary lane commands:
     `writeStereoOutputSample`.
   - Stereo render/parity accumulation/compensation/write behavior was split from
     `runOutputRoutingAndHeadphoneStage` into a dedicated helper with no behavior change.
+- Wave 6 continuation slice landed (output-sample dispatch split):
+  - `Source/SpatialRenderer.h` now routes per-sample channel-layout dispatch through dedicated helper
+    `writeOutputSampleForChannelLayout`.
+  - Discrete/ambisonic, stereo, and mono branch dispatch was split from
+    `runOutputRoutingAndHeadphoneStage` into a dedicated helper with no behavior change.
 - Validation replay:
   - `cmake --build build --config Release --target LocusQ -- -j8` -> PASS
   - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> PASS
   - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> PASS
 - Evidence roots:
-  - `TestEvidence/bl076_spatial_renderer_20260304T022629Z/` (contract-only)
-  - `TestEvidence/bl076_spatial_renderer_20260304T022640Z/` (execute)
+  - `TestEvidence/bl076_spatial_renderer_20260304T170635Z/` (contract-only)
+  - `TestEvidence/bl076_spatial_renderer_20260304T170647Z/` (execute)
 - Required evidence emitted:
   - `spatial_renderer_structure_guardrails.tsv`
   - `spatial_renderer_module_dependency_matrix.tsv`
