@@ -1863,6 +1863,17 @@ private:
         return sample;
     }
 
+    void writeMonoOutputSample (
+        juce::AudioBuffer<float>& outputBuffer,
+        int sampleIndex,
+        float masterGain) const noexcept
+    {
+        float mono = 0.0f;
+        for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
+            mono += accumBuffer.getSample (spk, sampleIndex);
+        outputBuffer.setSample (0, sampleIndex, mono * 0.5f * masterGain);
+    }
+
     struct HeadphoneRuntimeState
     {
         HeadphoneRenderMode requestedMode = HeadphoneRenderMode::StereoDownmix;
@@ -2038,12 +2049,7 @@ private:
             }
 
             if (numOutputChannels == 1)
-            {
-                float mono = 0.0f;
-                for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
-                    mono += accumBuffer.getSample (spk, i);
-                outputBuffer.setSample (0, i, mono * 0.5f * masterGain);
-            }
+                writeMonoOutputSample (outputBuffer, i, masterGain);
         }
 
         finalizeAuditionHeadphoneParity (renderedAuditionEmitter, numSamples, headphoneParity);
