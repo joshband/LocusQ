@@ -1523,6 +1523,147 @@ private:
         }
     }
 
+    void publishAmbisonicAndCodecTelemetryContracts (
+        int numSamples,
+        int numOutputChannels,
+        SpatialOutputProfile activeSpatialProfile,
+        SpatialProfileStage activeSpatialStage,
+        bool profileAllowsHeadphoneRender)
+    {
+        const auto requestedSpatialProfileIndexValue = juce::jlimit (
+            0,
+            11,
+            requestedSpatialProfileIndex.load (std::memory_order_relaxed));
+        const auto requestedSpatialProfile = static_cast<SpatialOutputProfile> (requestedSpatialProfileIndexValue);
+        const int requestedAmbisonicOrder = ambisonicOrderForProfile (requestedSpatialProfile);
+        const int activeAmbisonicOrder = ambisonicOrderForProfile (activeSpatialProfile);
+        const int contractAmbisonicOrder = requestedAmbisonicOrder > 0 ? requestedAmbisonicOrder
+                                                                        : activeAmbisonicOrder;
+        const int contractChannelCount = contractAmbisonicOrder > 0
+                                             ? (contractAmbisonicOrder + 1) * (contractAmbisonicOrder + 1)
+                                             : 0;
+        const bool contractFallbackActive = requestedAmbisonicOrder > 0 && activeAmbisonicOrder == 0;
+        const auto contractTimestampSamples = ambisonicIrSampleCursor.fetch_add (
+            static_cast<std::uint64_t> (juce::jmax (0, numSamples)),
+            std::memory_order_relaxed);
+        ambisonicIrFrameId.fetch_add (1, std::memory_order_relaxed);
+        ambisonicIrTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        ambisonicIrOrder.store (contractAmbisonicOrder, std::memory_order_relaxed);
+        ambisonicIrNormalizationIndex.store (
+            static_cast<int> (AmbisonicNormalization::SN3D),
+            std::memory_order_relaxed);
+        ambisonicIrChannelCount.store (contractChannelCount, std::memory_order_relaxed);
+        ambisonicIrHeadphoneRenderAllowed.store (profileAllowsHeadphoneRender, std::memory_order_relaxed);
+        ambisonicIrFallbackActive.store (contractFallbackActive, std::memory_order_relaxed);
+
+        const bool codecAdmRequested = requestedSpatialProfile == SpatialOutputProfile::CodecADM;
+        const bool codecIamfRequested = requestedSpatialProfile == SpatialOutputProfile::CodecIAMF;
+        const auto codecMode = codecAdmRequested ? CodecMappingMode::ADM
+                                                 : (codecIamfRequested ? CodecMappingMode::IAMF
+                                                                       : CodecMappingMode::None);
+        int codecMappedChannelCount = 0;
+        if (codecMode != CodecMappingMode::None)
+        {
+            if (numOutputChannels >= 13)
+                codecMappedChannelCount = 13;
+            else if (numOutputChannels >= 10)
+                codecMappedChannelCount = 10;
+            else if (numOutputChannels >= 8)
+                codecMappedChannelCount = 8;
+            else if (numOutputChannels >= NUM_SPEAKERS)
+                codecMappedChannelCount = NUM_SPEAKERS;
+            else
+                codecMappedChannelCount = juce::jmax (0, numOutputChannels);
+        }
+
+        const int codecObjectCount = codecMode == CodecMappingMode::ADM
+                                         ? juce::jmax (0, juce::jmin (NUM_SPEAKERS, codecMappedChannelCount))
+                                         : 0;
+        const int codecElementCount = codecMode == CodecMappingMode::IAMF
+                                          ? juce::jmax (0, juce::jmin (2, codecMappedChannelCount))
+                                          : 0;
+        const bool codecMappingAppliedThisBlock =
+            codecMode != CodecMappingMode::None && codecMappedChannelCount > 0;
+        const bool codecMappingFallbackActive =
+            codecMode != CodecMappingMode::None
+            && activeSpatialStage != SpatialProfileStage::CodecLayoutPlaceholder;
+        bool codecMappingFiniteThisBlock = true;
+        if (codecMappingAppliedThisBlock && numSamples > 0)
+        {
+            const int channelsToInspect = juce::jmin (NUM_SPEAKERS, accumBuffer.getNumChannels());
+            for (int channel = 0; channel < channelsToInspect; ++channel)
+            {
+                const auto sample = accumBuffer.getSample (channel, 0);
+                if (! std::isfinite (sample))
+                {
+                    codecMappingFiniteThisBlock = false;
+                    break;
+                }
+            }
+        }
+
+        const auto codecFrameId = codecMappingFrameId.fetch_add (1, std::memory_order_relaxed) + 1u;
+        const auto codecSignature =
+            (codecFrameId * 1315423911ull)
+            ^ (contractTimestampSamples * 2654435761ull)
+            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecMappedChannelCount)) << 32u)
+            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecObjectCount)) << 16u)
+            ^ static_cast<std::uint64_t> (juce::jmax (0, codecElementCount));
+        codecMappingTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecMappingModeIndex.store (static_cast<int> (codecMode), std::memory_order_relaxed);
+        codecMappingMappedChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecMappingObjectCount.store (codecObjectCount, std::memory_order_relaxed);
+        codecMappingElementCount.store (codecElementCount, std::memory_order_relaxed);
+        codecMappingApplied.store (codecMappingAppliedThisBlock, std::memory_order_relaxed);
+        this->codecMappingFallbackActive.store (codecMappingFallbackActive, std::memory_order_relaxed);
+        codecMappingFinite.store (codecMappingFiniteThisBlock, std::memory_order_relaxed);
+        codecMappingSignature.store (codecSignature, std::memory_order_relaxed);
+
+        const bool codecAdmPayloadActiveThisBlock =
+            codecMode == CodecMappingMode::ADM
+            && codecMappingAppliedThisBlock
+            && codecMappingFiniteThisBlock;
+        codecAdmPayloadActive.store (codecAdmPayloadActiveThisBlock, std::memory_order_relaxed);
+        codecAdmPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
+        codecAdmPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecAdmPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecAdmPayloadObjectCount.store (
+            codecAdmPayloadActiveThisBlock ? codecObjectCount : 0,
+            std::memory_order_relaxed);
+        for (int i = 0; i < NUM_SPEAKERS; ++i)
+        {
+            const bool objectActive = codecAdmPayloadActiveThisBlock && i < codecObjectCount;
+            codecAdmPayloadObjectGain[static_cast<size_t> (i)].store (
+                objectActive ? kCodecAdmObjectDefaultGains[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+            codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].store (
+                objectActive ? kCodecAdmObjectAzimuthDeg[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+        }
+
+        const bool codecIamfPayloadActiveThisBlock =
+            codecMode == CodecMappingMode::IAMF
+            && codecMappingAppliedThisBlock
+            && codecMappingFiniteThisBlock;
+        codecIamfPayloadActive.store (codecIamfPayloadActiveThisBlock, std::memory_order_relaxed);
+        codecIamfPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
+        codecIamfPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecIamfPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecIamfPayloadElementCount.store (
+            codecIamfPayloadActiveThisBlock ? codecElementCount : 0,
+            std::memory_order_relaxed);
+        codecIamfPayloadSceneGain.store (
+            codecIamfPayloadActiveThisBlock ? 1.0f : 0.0f,
+            std::memory_order_relaxed);
+        for (int i = 0; i < 2; ++i)
+        {
+            const bool elementActive = codecIamfPayloadActiveThisBlock && i < codecElementCount;
+            codecIamfPayloadElementGain[static_cast<size_t> (i)].store (
+                elementActive ? kCodecIamfDefaultElementGains[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+        }
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
@@ -1588,133 +1729,12 @@ private:
         activeHeadphoneModeIndex.store (static_cast<int> (activeHeadphoneMode), std::memory_order_relaxed);
         activeHeadphoneProfileIndex.store (activeHeadphoneProfileIndexValue, std::memory_order_relaxed);
         steamAudioAvailable.store (steamBackendAvailable, std::memory_order_relaxed);
-        const auto requestedSpatialProfileIndexValue = juce::jlimit (
-            0,
-            11,
-            requestedSpatialProfileIndex.load (std::memory_order_relaxed));
-        const auto requestedSpatialProfile = static_cast<SpatialOutputProfile> (requestedSpatialProfileIndexValue);
-        const int requestedAmbisonicOrder = ambisonicOrderForProfile (requestedSpatialProfile);
-        const int activeAmbisonicOrder = ambisonicOrderForProfile (activeSpatialProfile);
-        const int contractAmbisonicOrder = requestedAmbisonicOrder > 0 ? requestedAmbisonicOrder
-                                                                        : activeAmbisonicOrder;
-        const int contractChannelCount = contractAmbisonicOrder > 0
-                                             ? (contractAmbisonicOrder + 1) * (contractAmbisonicOrder + 1)
-                                             : 0;
-        const bool contractFallbackActive = requestedAmbisonicOrder > 0 && activeAmbisonicOrder == 0;
-        const auto contractTimestampSamples = ambisonicIrSampleCursor.fetch_add (
-            static_cast<std::uint64_t> (juce::jmax (0, numSamples)),
-            std::memory_order_relaxed);
-        ambisonicIrFrameId.fetch_add (1, std::memory_order_relaxed);
-        ambisonicIrTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        ambisonicIrOrder.store (contractAmbisonicOrder, std::memory_order_relaxed);
-        ambisonicIrNormalizationIndex.store (
-            static_cast<int> (AmbisonicNormalization::SN3D),
-            std::memory_order_relaxed);
-        ambisonicIrChannelCount.store (contractChannelCount, std::memory_order_relaxed);
-        ambisonicIrHeadphoneRenderAllowed.store (profileAllowsHeadphoneRender, std::memory_order_relaxed);
-        ambisonicIrFallbackActive.store (contractFallbackActive, std::memory_order_relaxed);
-        const bool codecAdmRequested = requestedSpatialProfile == SpatialOutputProfile::CodecADM;
-        const bool codecIamfRequested = requestedSpatialProfile == SpatialOutputProfile::CodecIAMF;
-        const auto codecMode = codecAdmRequested ? CodecMappingMode::ADM
-                                                 : (codecIamfRequested ? CodecMappingMode::IAMF
-                                                                       : CodecMappingMode::None);
-        int codecMappedChannelCount = 0;
-        if (codecMode != CodecMappingMode::None)
-        {
-            if (numOutputChannels >= 13)
-                codecMappedChannelCount = 13;
-            else if (numOutputChannels >= 10)
-                codecMappedChannelCount = 10;
-            else if (numOutputChannels >= 8)
-                codecMappedChannelCount = 8;
-            else if (numOutputChannels >= NUM_SPEAKERS)
-                codecMappedChannelCount = NUM_SPEAKERS;
-            else
-                codecMappedChannelCount = juce::jmax (0, numOutputChannels);
-        }
-        const int codecObjectCount = codecMode == CodecMappingMode::ADM
-                                         ? juce::jmax (0, juce::jmin (NUM_SPEAKERS, codecMappedChannelCount))
-                                         : 0;
-        const int codecElementCount = codecMode == CodecMappingMode::IAMF
-                                          ? juce::jmax (0, juce::jmin (2, codecMappedChannelCount))
-                                          : 0;
-        const bool codecMappingAppliedThisBlock =
-            codecMode != CodecMappingMode::None && codecMappedChannelCount > 0;
-        const bool codecMappingFallbackActive =
-            codecMode != CodecMappingMode::None
-            && profileResolution.stage != SpatialProfileStage::CodecLayoutPlaceholder;
-        bool codecMappingFiniteThisBlock = true;
-        if (codecMappingAppliedThisBlock && numSamples > 0)
-        {
-            const int channelsToInspect = juce::jmin (NUM_SPEAKERS, accumBuffer.getNumChannels());
-            for (int channel = 0; channel < channelsToInspect; ++channel)
-            {
-                const auto sample = accumBuffer.getSample (channel, 0);
-                if (! std::isfinite (sample))
-                {
-                    codecMappingFiniteThisBlock = false;
-                    break;
-                }
-            }
-        }
-        const auto codecFrameId = codecMappingFrameId.fetch_add (1, std::memory_order_relaxed) + 1u;
-        const auto codecSignature =
-            (codecFrameId * 1315423911ull)
-            ^ (contractTimestampSamples * 2654435761ull)
-            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecMappedChannelCount)) << 32u)
-            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecObjectCount)) << 16u)
-            ^ static_cast<std::uint64_t> (juce::jmax (0, codecElementCount));
-        codecMappingTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        codecMappingModeIndex.store (static_cast<int> (codecMode), std::memory_order_relaxed);
-        codecMappingMappedChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
-        codecMappingObjectCount.store (codecObjectCount, std::memory_order_relaxed);
-        codecMappingElementCount.store (codecElementCount, std::memory_order_relaxed);
-        codecMappingApplied.store (codecMappingAppliedThisBlock, std::memory_order_relaxed);
-        this->codecMappingFallbackActive.store (codecMappingFallbackActive, std::memory_order_relaxed);
-        codecMappingFinite.store (codecMappingFiniteThisBlock, std::memory_order_relaxed);
-        codecMappingSignature.store (codecSignature, std::memory_order_relaxed);
-        const bool codecAdmPayloadActiveThisBlock =
-            codecMode == CodecMappingMode::ADM
-            && codecMappingAppliedThisBlock
-            && codecMappingFiniteThisBlock;
-        codecAdmPayloadActive.store (codecAdmPayloadActiveThisBlock, std::memory_order_relaxed);
-        codecAdmPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
-        codecAdmPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        codecAdmPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
-        codecAdmPayloadObjectCount.store (
-            codecAdmPayloadActiveThisBlock ? codecObjectCount : 0,
-            std::memory_order_relaxed);
-        for (int i = 0; i < NUM_SPEAKERS; ++i)
-        {
-            const bool objectActive = codecAdmPayloadActiveThisBlock && i < codecObjectCount;
-            codecAdmPayloadObjectGain[static_cast<size_t> (i)].store (
-                objectActive ? kCodecAdmObjectDefaultGains[static_cast<size_t> (i)] : 0.0f,
-                std::memory_order_relaxed);
-            codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].store (
-                objectActive ? kCodecAdmObjectAzimuthDeg[static_cast<size_t> (i)] : 0.0f,
-                std::memory_order_relaxed);
-        }
-        const bool codecIamfPayloadActiveThisBlock =
-            codecMode == CodecMappingMode::IAMF
-            && codecMappingAppliedThisBlock
-            && codecMappingFiniteThisBlock;
-        codecIamfPayloadActive.store (codecIamfPayloadActiveThisBlock, std::memory_order_relaxed);
-        codecIamfPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
-        codecIamfPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        codecIamfPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
-        codecIamfPayloadElementCount.store (
-            codecIamfPayloadActiveThisBlock ? codecElementCount : 0,
-            std::memory_order_relaxed);
-        codecIamfPayloadSceneGain.store (
-            codecIamfPayloadActiveThisBlock ? 1.0f : 0.0f,
-            std::memory_order_relaxed);
-        for (int i = 0; i < 2; ++i)
-        {
-            const bool elementActive = codecIamfPayloadActiveThisBlock && i < codecElementCount;
-            codecIamfPayloadElementGain[static_cast<size_t> (i)].store (
-                elementActive ? kCodecIamfDefaultElementGains[static_cast<size_t> (i)] : 0.0f,
-                std::memory_order_relaxed);
-        }
+        publishAmbisonicAndCodecTelemetryContracts (
+            numSamples,
+            numOutputChannels,
+            activeSpatialProfile,
+            profileResolution.stage,
+            profileAllowsHeadphoneRender);
 
         double auditionReactiveHeadphoneEnergy = 0.0;
         double auditionReactiveHeadphoneReferenceEnergy = 0.0;
