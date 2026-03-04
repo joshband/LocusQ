@@ -2052,6 +2052,31 @@ private:
             writeMonoOutputSample (outputBuffer, sampleIndex, masterGain);
     }
 
+    AuditionHeadphoneParityAccumulator prepareAuditionHeadphoneParityAccumulator (
+        bool renderedAuditionEmitter,
+        int numOutputChannels,
+        const HeadphoneRuntimeState& headphoneState) const noexcept
+    {
+        AuditionHeadphoneParityAccumulator parity {};
+        parity.fallbackReasonIndex = determineAuditionHeadphoneFallbackReason (
+            renderedAuditionEmitter,
+            headphoneState.requestedMode,
+            numOutputChannels,
+            headphoneState.profileAllowsHeadphoneRender,
+            headphoneState.steamBackendAvailable,
+            headphoneState.steamRenderedThisBlock,
+            headphoneState.activeMode);
+        return parity;
+    }
+
+    void publishAuditionHeadphoneParityForBlock (
+        bool renderedAuditionEmitter,
+        int numSamples,
+        const AuditionHeadphoneParityAccumulator& parity) noexcept
+    {
+        finalizeAuditionHeadphoneParity (renderedAuditionEmitter, numSamples, parity);
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
@@ -2066,15 +2091,10 @@ private:
             outputContext.profileResolution.stage,
             outputContext.headphoneState.profileAllowsHeadphoneRender);
 
-        AuditionHeadphoneParityAccumulator headphoneParity {};
-        headphoneParity.fallbackReasonIndex = determineAuditionHeadphoneFallbackReason (
+        auto headphoneParity = prepareAuditionHeadphoneParityAccumulator (
             renderedAuditionEmitter,
-            outputContext.headphoneState.requestedMode,
             numOutputChannels,
-            outputContext.headphoneState.profileAllowsHeadphoneRender,
-            outputContext.headphoneState.steamBackendAvailable,
-            outputContext.headphoneState.steamRenderedThisBlock,
-            outputContext.headphoneState.activeMode);
+            outputContext.headphoneState);
 
         for (int i = 0; i < numSamples; ++i)
         {
@@ -2089,7 +2109,7 @@ private:
                 headphoneParity);
         }
 
-        finalizeAuditionHeadphoneParity (renderedAuditionEmitter, numSamples, headphoneParity);
+        publishAuditionHeadphoneParityForBlock (renderedAuditionEmitter, numSamples, headphoneParity);
     }
 
     double currentSampleRate = 44100.0;
