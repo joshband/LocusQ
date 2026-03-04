@@ -1763,6 +1763,127 @@ private:
         }
     }
 
+    bool writeDiscreteOrAmbisonicOutputSample (
+        juce::AudioBuffer<float>& outputBuffer,
+        int sampleIndex,
+        int numOutputChannels,
+        SpatialOutputProfile activeSpatialProfile,
+        float masterGain) const noexcept
+    {
+        if (numOutputChannels >= 13
+            && (activeSpatialProfile == SpatialOutputProfile::Surround742
+                || activeSpatialProfile == SpatialOutputProfile::AtmosBed))
+        {
+            writeSurround742Sample (outputBuffer, sampleIndex, masterGain);
+            return true;
+        }
+
+        if (numOutputChannels >= 10 && activeSpatialProfile == SpatialOutputProfile::Surround721)
+        {
+            writeSurround721Sample (outputBuffer, sampleIndex, masterGain);
+            return true;
+        }
+
+        if (numOutputChannels >= 8 && activeSpatialProfile == SpatialOutputProfile::Surround521)
+        {
+            writeSurround521Sample (outputBuffer, sampleIndex, masterGain);
+            return true;
+        }
+
+        if (numOutputChannels >= 4
+            && (activeSpatialProfile == SpatialOutputProfile::AmbisonicFOA
+                || activeSpatialProfile == SpatialOutputProfile::AmbisonicHOA))
+        {
+            const float fl = accumBuffer.getSample (0, sampleIndex);
+            const float fr = accumBuffer.getSample (1, sampleIndex);
+            const float rr = accumBuffer.getSample (2, sampleIndex);
+            const float rl = accumBuffer.getSample (3, sampleIndex);
+            float w = 0.0f;
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+            encodeAmbisonicFoaProxyFromQuad (fl, fr, rr, rl, w, x, y, z);
+            outputBuffer.setSample (0, sampleIndex, w * masterGain);
+            outputBuffer.setSample (1, sampleIndex, x * masterGain);
+            outputBuffer.setSample (2, sampleIndex, y * masterGain);
+            outputBuffer.setSample (3, sampleIndex, z * masterGain);
+            for (int ch = 4; ch < numOutputChannels; ++ch)
+                outputBuffer.setSample (ch, sampleIndex, 0.0f);
+            return true;
+        }
+
+        if (numOutputChannels >= NUM_SPEAKERS)
+        {
+            for (int outCh = 0; outCh < NUM_SPEAKERS; ++outCh)
+            {
+                const int speakerIdx = kQuadOutputSpeakerOrder[static_cast<size_t> (outCh)];
+                outputBuffer.setSample (
+                    outCh,
+                    sampleIndex,
+                    accumBuffer.getSample (speakerIdx, sampleIndex) * masterGain);
+            }
+
+            for (int outCh = NUM_SPEAKERS; outCh < numOutputChannels; ++outCh)
+                outputBuffer.setSample (outCh, sampleIndex, 0.0f);
+            return true;
+        }
+
+        return false;
+    }
+
+    struct StereoOutputSample
+    {
+        float left = 0.0f;
+        float right = 0.0f;
+        float referenceLeft = 0.0f;
+        float referenceRight = 0.0f;
+        bool referenceCaptured = false;
+    };
+
+    StereoOutputSample renderStereoOutputSample (
+        int sampleIndex,
+        SpatialOutputProfile activeSpatialProfile,
+        bool steamRenderedThisBlock,
+        HeadphoneRenderMode activeHeadphoneMode) const noexcept
+    {
+        StereoOutputSample sample {};
+
+        if (steamRenderedThisBlock && activeHeadphoneMode == HeadphoneRenderMode::SteamBinaural)
+        {
+            sample.left = steamBinauralLeft[static_cast<size_t> (sampleIndex)];
+            sample.right = steamBinauralRight[static_cast<size_t> (sampleIndex)];
+            renderStereoDownmixSample (sampleIndex, sample.referenceLeft, sample.referenceRight);
+            sample.referenceCaptured = true;
+            return sample;
+        }
+
+        if (activeSpatialProfile == SpatialOutputProfile::Virtual3dStereo)
+        {
+            renderVirtual3dStereoSample (sampleIndex, sample.left, sample.right);
+            return sample;
+        }
+
+        if (activeSpatialProfile == SpatialOutputProfile::AmbisonicFOA
+            || activeSpatialProfile == SpatialOutputProfile::AmbisonicHOA)
+        {
+            float fl = 0.0f;
+            float fr = 0.0f;
+            float rr = 0.0f;
+            float rl = 0.0f;
+            getHeadPoseAdjustedQuadSample (sampleIndex, fl, fr, rr, rl);
+            float w = 0.0f;
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+            encodeAmbisonicFoaProxyFromQuad (fl, fr, rr, rl, w, x, y, z);
+            decodeAmbisonicFoaProxyToStereo (w, x, y, z, sample.left, sample.right);
+            return sample;
+        }
+
+        renderStereoDownmixSample (sampleIndex, sample.left, sample.right);
+        return sample;
+    }
+
     void runOutputRoutingAndHeadphoneStage (
         juce::AudioBuffer<float>& outputBuffer,
         int numSamples,
@@ -1849,115 +1970,39 @@ private:
         {
             const float masterGain = smoothedMasterGain.getNextValue();
 
-            if (numOutputChannels >= 13
-                && (activeSpatialProfile == SpatialOutputProfile::Surround742
-                    || activeSpatialProfile == SpatialOutputProfile::AtmosBed))
+            if (writeDiscreteOrAmbisonicOutputSample (
+                    outputBuffer,
+                    i,
+                    numOutputChannels,
+                    activeSpatialProfile,
+                    masterGain))
             {
-                writeSurround742Sample (outputBuffer, i, masterGain);
-                continue;
-            }
-
-            if (numOutputChannels >= 10 && activeSpatialProfile == SpatialOutputProfile::Surround721)
-            {
-                writeSurround721Sample (outputBuffer, i, masterGain);
-                continue;
-            }
-
-            if (numOutputChannels >= 8 && activeSpatialProfile == SpatialOutputProfile::Surround521)
-            {
-                writeSurround521Sample (outputBuffer, i, masterGain);
-                continue;
-            }
-
-            if (numOutputChannels >= 4
-                && (activeSpatialProfile == SpatialOutputProfile::AmbisonicFOA
-                    || activeSpatialProfile == SpatialOutputProfile::AmbisonicHOA))
-            {
-                const float fl = accumBuffer.getSample (0, i);
-                const float fr = accumBuffer.getSample (1, i);
-                const float rr = accumBuffer.getSample (2, i);
-                const float rl = accumBuffer.getSample (3, i);
-                float w = 0.0f;
-                float x = 0.0f;
-                float y = 0.0f;
-                float z = 0.0f;
-                encodeAmbisonicFoaProxyFromQuad (fl, fr, rr, rl, w, x, y, z);
-                outputBuffer.setSample (0, i, w * masterGain);
-                outputBuffer.setSample (1, i, x * masterGain);
-                outputBuffer.setSample (2, i, y * masterGain);
-                outputBuffer.setSample (3, i, z * masterGain);
-                for (int ch = 4; ch < numOutputChannels; ++ch)
-                    outputBuffer.setSample (ch, i, 0.0f);
-                continue;
-            }
-
-            if (numOutputChannels >= NUM_SPEAKERS)
-            {
-                for (int outCh = 0; outCh < NUM_SPEAKERS; ++outCh)
-                {
-                    const int speakerIdx = kQuadOutputSpeakerOrder[static_cast<size_t> (outCh)];
-                    outputBuffer.setSample (outCh, i, accumBuffer.getSample (speakerIdx, i) * masterGain);
-                }
-
-                for (int outCh = NUM_SPEAKERS; outCh < numOutputChannels; ++outCh)
-                    outputBuffer.setSample (outCh, i, 0.0f);
                 continue;
             }
 
             if (numOutputChannels >= 2)
             {
-                float left = 0.0f;
-                float right = 0.0f;
-                float referenceLeft = 0.0f;
-                float referenceRight = 0.0f;
-                bool referenceCaptured = false;
-
-                if (steamRenderedThisBlock && activeHeadphoneMode == HeadphoneRenderMode::SteamBinaural)
-                {
-                    left = steamBinauralLeft[static_cast<size_t> (i)];
-                    right = steamBinauralRight[static_cast<size_t> (i)];
-                    renderStereoDownmixSample (i, referenceLeft, referenceRight);
-                    referenceCaptured = true;
-                }
-                else if (activeSpatialProfile == SpatialOutputProfile::Virtual3dStereo)
-                {
-                    renderVirtual3dStereoSample (i, left, right);
-                }
-                else if (activeSpatialProfile == SpatialOutputProfile::AmbisonicFOA
-                         || activeSpatialProfile == SpatialOutputProfile::AmbisonicHOA)
-                {
-                    float fl = 0.0f;
-                    float fr = 0.0f;
-                    float rr = 0.0f;
-                    float rl = 0.0f;
-                    getHeadPoseAdjustedQuadSample (i, fl, fr, rr, rl);
-                    float w = 0.0f;
-                    float x = 0.0f;
-                    float y = 0.0f;
-                    float z = 0.0f;
-                    encodeAmbisonicFoaProxyFromQuad (fl, fr, rr, rl, w, x, y, z);
-                    decodeAmbisonicFoaProxyToStereo (w, x, y, z, left, right);
-                }
-                else
-                {
-                    renderStereoDownmixSample (i, left, right);
-                }
+                auto stereo = renderStereoOutputSample (
+                    i,
+                    activeSpatialProfile,
+                    steamRenderedThisBlock,
+                    activeHeadphoneMode);
 
                 if (renderedAuditionEmitter)
                 {
                     accumulateAuditionHeadphoneParitySample (
                         headphoneParity,
-                        left,
-                        right,
-                        referenceCaptured,
-                        referenceLeft,
-                        referenceRight);
+                        stereo.left,
+                        stereo.right,
+                        stereo.referenceCaptured,
+                        stereo.referenceLeft,
+                        stereo.referenceRight);
                 }
 
-                applyHeadphoneProfileCompensation (left, right);
-                headphoneCalibrationChain.processStereoSample (left, right);
-                outputBuffer.setSample (0, i, left * masterGain);
-                outputBuffer.setSample (1, i, right * masterGain);
+                applyHeadphoneProfileCompensation (stereo.left, stereo.right);
+                headphoneCalibrationChain.processStereoSample (stereo.left, stereo.right);
+                outputBuffer.setSample (0, i, stereo.left * masterGain);
+                outputBuffer.setSample (1, i, stereo.right * masterGain);
                 continue;
             }
 
