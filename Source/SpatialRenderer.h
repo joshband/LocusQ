@@ -245,21 +245,8 @@ public:
         lastLoadedPeqSampleRate = 0.0;
         updateHeadphoneCompensationForProfile (HeadphoneDeviceProfile::Generic);
         headphoneCalibrationChain.prepare (sampleRate, maxBlockSize);
-        headphoneCalibrationChain.setEnabled (requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed));
-        headphoneCalibrationChain.setRequestedEngineIndex (
-            requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
-        requestedHeadphoneCalibrationEngineIndex.store (
-            headphoneCalibrationChain.getRequestedEngineIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationEngineIndex.store (
-            headphoneCalibrationChain.getActiveEngineIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationFallbackReasonIndex.store (
-            headphoneCalibrationChain.getFallbackReasonIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationLatencySamples.store (
-            headphoneCalibrationChain.getActiveLatencySamples(),
-            std::memory_order_relaxed);
+        applyRequestedHeadphoneCalibrationSettings();
+        publishHeadphoneCalibrationRuntimeState (true);
         initialiseSteamAudioRuntimeIfEnabled();
     }
 
@@ -281,15 +268,7 @@ public:
         resetHeadPoseState();
         resetHeadphoneCompensationState();
         headphoneCalibrationChain.reset();
-        activeHeadphoneCalibrationEngineIndex.store (
-            headphoneCalibrationChain.getActiveEngineIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationFallbackReasonIndex.store (
-            headphoneCalibrationChain.getFallbackReasonIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationLatencySamples.store (
-            headphoneCalibrationChain.getActiveLatencySamples(),
-            std::memory_order_relaxed);
+        publishHeadphoneCalibrationRuntimeState (false);
         for (auto& voiceGains : auditionSmoothedSpeakerGains)
             for (auto& gain : voiceGains)
                 gain.setCurrentAndTargetValue (0.0f);
@@ -1893,6 +1872,34 @@ private:
         bool steamRenderedThisBlock = false;
     };
 
+    void applyRequestedHeadphoneCalibrationSettings()
+    {
+        headphoneCalibrationChain.setEnabled (
+            requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed));
+        headphoneCalibrationChain.setRequestedEngineIndex (
+            requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
+    }
+
+    void publishHeadphoneCalibrationRuntimeState (bool includeRequestedEngineIndex)
+    {
+        if (includeRequestedEngineIndex)
+        {
+            requestedHeadphoneCalibrationEngineIndex.store (
+                headphoneCalibrationChain.getRequestedEngineIndex(),
+                std::memory_order_relaxed);
+        }
+
+        activeHeadphoneCalibrationEngineIndex.store (
+            headphoneCalibrationChain.getActiveEngineIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationFallbackReasonIndex.store (
+            headphoneCalibrationChain.getFallbackReasonIndex(),
+            std::memory_order_relaxed);
+        activeHeadphoneCalibrationLatencySamples.store (
+            headphoneCalibrationChain.getActiveLatencySamples(),
+            std::memory_order_relaxed);
+    }
+
     HeadphoneRuntimeState configureHeadphoneRuntime (
         int numSamples,
         int numOutputChannels,
@@ -1929,22 +1936,8 @@ private:
             lastAppliedHeadphoneProfileIndex = activeHeadphoneProfileIndexValue;
         }
 
-        headphoneCalibrationChain.setEnabled (
-            requestedHeadphoneCalibrationEnabled.load (std::memory_order_relaxed));
-        headphoneCalibrationChain.setRequestedEngineIndex (
-            requestedHeadphoneCalibrationEngineIndex.load (std::memory_order_relaxed));
-        requestedHeadphoneCalibrationEngineIndex.store (
-            headphoneCalibrationChain.getRequestedEngineIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationEngineIndex.store (
-            headphoneCalibrationChain.getActiveEngineIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationFallbackReasonIndex.store (
-            headphoneCalibrationChain.getFallbackReasonIndex(),
-            std::memory_order_relaxed);
-        activeHeadphoneCalibrationLatencySamples.store (
-            headphoneCalibrationChain.getActiveLatencySamples(),
-            std::memory_order_relaxed);
+        applyRequestedHeadphoneCalibrationSettings();
+        publishHeadphoneCalibrationRuntimeState (true);
 
         state.steamRenderedThisBlock = (state.profileAllowsHeadphoneRender
                                         && numOutputChannels >= 2
