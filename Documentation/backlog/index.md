@@ -112,7 +112,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | **Done** (A2 runtime/UI hardening complete; T3 heavy-wrapper equivalent replay PASS; strict usage exits and mode parity confirmed) | C | BL-025 | — | [bl-023](done/bl-023-resize-dpi-hardening.md) |
 | 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (D1 guardrail remediation PASS, D2 RT reconciliation PASS, E1 owner replay PASS, F1 done-promotion PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
-| 6 | BL-035 | RT lock-free registration | P0 | In Validation (D8 + 2026-03-01 parallel owner replay PASS on build/smoke/selftest/RT/docs; `non_allowlisted=0`; cadence packet pending) | F | HX-02, BL-032 | — | [bl-035](bl-035-rt-lock-free-registration.md) |
+| 6 | BL-035 | RT lock-free registration | P0 | Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; owner sync Z1 recorded) | F | HX-02, BL-032 | — | [bl-035](bl-035-rt-lock-free-registration.md) |
 | 7 | BL-036 | DSP finite output guardrails | P0 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-036](bl-036-dsp-finite-output-guardrails.md) |
 | 8 | BL-037 | Emitter snapshot CPU budget | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-037](bl-037-emitter-snapshot-cpu-budget.md) |
 | 9 | BL-038 | Calibration threading and telemetry | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | E | BL-026, BL-034 | — | [bl-038](bl-038-calibration-threading-and-telemetry.md) |
@@ -230,6 +230,7 @@ graph TD
 
     subgraph "In Validation / Done-candidate"
         BL-032[BL-032 Source Modularization]
+        BL-035[BL-035 RT Lock-Free Registration]
         BL-036[BL-036 Finite Guardrails]
         BL-037[BL-037 Snapshot CPU Budget]
         BL-038[BL-038 Calibration Thread/Telemetry]
@@ -241,7 +242,6 @@ graph TD
     subgraph "In Implementation / Open"
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
-        BL-035[BL-035 RT Lock-Free Registration]
         BL-051[BL-051 Ambisonics + ADM]
         BL-053[BL-053 Head Tracking Orientation Injection]
         BL-054[BL-054 PEQ Cascade RT Integration]

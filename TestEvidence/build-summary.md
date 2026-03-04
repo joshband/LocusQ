@@ -6,6 +6,29 @@ Last Modified Date: 2026-03-05
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## BL-035 Done-Candidate Owner Sync Z1 (UTC 2026-03-04)
+
+1. Cadence replay evidence:
+- Candidate cadence (heavy-wrapper equivalent T2): `TestEvidence/bl035_candidate_t2_20260304T015123Z/` (`2/2` PASS).
+- Promotion cadence (heavy-wrapper equivalent T3): `TestEvidence/bl035_promotion_t3_20260304T015319Z/` (`3/3` PASS).
+- Per-run gates were green on build/smoke/selftest/RT/docs with `rt_non_allowlisted=0`.
+
+2. Owner packet:
+- `TestEvidence/bl035_owner_sync_z1_20260304T015434Z/status.tsv`
+- `.../validation_matrix.tsv`
+- `.../owner_decisions.md`
+- `.../handoff_resolution.md`
+- `.../promotion_decision.md`
+
+3. Status synchronization:
+- BL-035 advanced from `In Validation` to `Done-candidate` in `Documentation/backlog/index.md`.
+- Runbook evidence and gap checklist synchronized in `Documentation/backlog/bl-035-rt-lock-free-registration.md`.
+- `status.json` updated with BL-035 cadence and owner-sync artifact pointers.
+
+4. Governance gates:
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
+
 ## BL-050 + BL-069 + BL-070 Done Archive Sync Z1 (UTC 2026-03-04)
 
 1. Runbook archive moves:
