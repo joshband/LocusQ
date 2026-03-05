@@ -1426,6 +1426,20 @@ private:
         resetAuditionReactiveTelemetry();
     }
 
+    void processSelectedEmittersForBlock (
+        const SceneGraph& scene,
+        const std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK>& selectedEmitters,
+        int selectedEmitterCount,
+        int numSamples,
+        EmitterStageResult& result)
+    {
+        for (int selectedIdx = 0; selectedIdx < selectedEmitterCount; ++selectedIdx)
+        {
+            const auto& candidate = selectedEmitters[static_cast<size_t> (selectedIdx)];
+            processSelectedEmitterCandidate (scene, candidate, numSamples, result);
+        }
+    }
+
     EmitterStageResult runEmitterAccumulationStage (const SceneGraph& scene, int numSamples)
     {
         std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
@@ -1448,11 +1462,7 @@ private:
         locusq::spatial_emitter_render_pass::sortSelectedBySlotIndex (selectedEmitters, selectedEmitterCount);
 
         // Second pass: process only selected emitters.
-        for (int selectedIdx = 0; selectedIdx < selectedEmitterCount; ++selectedIdx)
-        {
-            const auto& candidate = selectedEmitters[static_cast<size_t> (selectedIdx)];
-            processSelectedEmitterCandidate (scene, candidate, numSamples, result);
-        }
+        processSelectedEmittersForBlock (scene, selectedEmitters, selectedEmitterCount, numSamples, result);
 
         finalizeEmitterStageWithAuditionFallback (result, numSamples);
 
