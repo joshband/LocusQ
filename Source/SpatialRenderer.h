@@ -1566,6 +1566,31 @@ private:
         return juce::jmax (0, numOutputChannels);
     }
 
+    CodecMappingMode determineCodecModeForProfile (SpatialOutputProfile requestedSpatialProfile) const noexcept
+    {
+        if (requestedSpatialProfile == SpatialOutputProfile::CodecADM)
+            return CodecMappingMode::ADM;
+        if (requestedSpatialProfile == SpatialOutputProfile::CodecIAMF)
+            return CodecMappingMode::IAMF;
+        return CodecMappingMode::None;
+    }
+
+    int determineCodecObjectCount (CodecMappingMode codecMode, int codecMappedChannelCount) const noexcept
+    {
+        if (codecMode != CodecMappingMode::ADM)
+            return 0;
+
+        return juce::jmax (0, juce::jmin (NUM_SPEAKERS, codecMappedChannelCount));
+    }
+
+    int determineCodecElementCount (CodecMappingMode codecMode, int codecMappedChannelCount) const noexcept
+    {
+        if (codecMode != CodecMappingMode::IAMF)
+            return 0;
+
+        return juce::jmax (0, juce::jmin (2, codecMappedChannelCount));
+    }
+
     bool isCodecMappingFiniteForBlock (bool codecMappingAppliedThisBlock, int numSamples) const noexcept
     {
         if (! codecMappingAppliedThisBlock || numSamples <= 0)
@@ -1580,6 +1605,20 @@ private:
         }
 
         return true;
+    }
+
+    std::uint64_t buildCodecMappingSignature (
+        std::uint64_t codecFrameId,
+        std::uint64_t contractTimestampSamples,
+        int codecMappedChannelCount,
+        int codecObjectCount,
+        int codecElementCount) const noexcept
+    {
+        return (codecFrameId * 1315423911ull)
+               ^ (contractTimestampSamples * 2654435761ull)
+               ^ (static_cast<std::uint64_t> (juce::jmax (0, codecMappedChannelCount)) << 32u)
+               ^ (static_cast<std::uint64_t> (juce::jmax (0, codecObjectCount)) << 16u)
+               ^ static_cast<std::uint64_t> (juce::jmax (0, codecElementCount));
     }
 
     void publishCodecMappingContractState (
@@ -1637,19 +1676,11 @@ private:
         ambisonicIrHeadphoneRenderAllowed.store (profileAllowsHeadphoneRender, std::memory_order_relaxed);
         ambisonicIrFallbackActive.store (contractFallbackActive, std::memory_order_relaxed);
 
-        const bool codecAdmRequested = requestedSpatialProfile == SpatialOutputProfile::CodecADM;
-        const bool codecIamfRequested = requestedSpatialProfile == SpatialOutputProfile::CodecIAMF;
-        const auto codecMode = codecAdmRequested ? CodecMappingMode::ADM
-                                                 : (codecIamfRequested ? CodecMappingMode::IAMF
-                                                                       : CodecMappingMode::None);
+        const auto codecMode = determineCodecModeForProfile (requestedSpatialProfile);
         const int codecMappedChannelCount = determineCodecMappedChannelCount (codecMode, numOutputChannels);
 
-        const int codecObjectCount = codecMode == CodecMappingMode::ADM
-                                         ? juce::jmax (0, juce::jmin (NUM_SPEAKERS, codecMappedChannelCount))
-                                         : 0;
-        const int codecElementCount = codecMode == CodecMappingMode::IAMF
-                                          ? juce::jmax (0, juce::jmin (2, codecMappedChannelCount))
-                                          : 0;
+        const int codecObjectCount = determineCodecObjectCount (codecMode, codecMappedChannelCount);
+        const int codecElementCount = determineCodecElementCount (codecMode, codecMappedChannelCount);
         const bool codecMappingAppliedThisBlock =
             codecMode != CodecMappingMode::None && codecMappedChannelCount > 0;
         const bool codecMappingFallbackActive =
@@ -1659,12 +1690,12 @@ private:
             isCodecMappingFiniteForBlock (codecMappingAppliedThisBlock, numSamples);
 
         const auto codecFrameId = codecMappingFrameId.fetch_add (1, std::memory_order_relaxed) + 1u;
-        const auto codecSignature =
-            (codecFrameId * 1315423911ull)
-            ^ (contractTimestampSamples * 2654435761ull)
-            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecMappedChannelCount)) << 32u)
-            ^ (static_cast<std::uint64_t> (juce::jmax (0, codecObjectCount)) << 16u)
-            ^ static_cast<std::uint64_t> (juce::jmax (0, codecElementCount));
+        const auto codecSignature = buildCodecMappingSignature (
+            codecFrameId,
+            contractTimestampSamples,
+            codecMappedChannelCount,
+            codecObjectCount,
+            codecElementCount);
         publishCodecMappingContractState (
             contractTimestampSamples,
             codecMode,
