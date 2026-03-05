@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 85,
-    "open": 24,
-    "done": 61
+    "open": 23,
+    "done": 62
   },
   "items": [
     {
@@ -1416,8 +1416,8 @@
     {
       "id": "BL-074",
       "title": "BL-074 WebView Runtime Reliability Diagnostics (Strict Gesture and Degraded Mode)",
-      "state_bucket": "open",
-      "status": "In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored)",
+      "state_bucket": "done",
+      "status": "**Done** (deterministic execute evidence PASS; shared-control closeout sync complete)",
       "priority": "P1",
       "track": "B - Scene/UI Runtime",
       "depends_on": "BL-040, BL-067",
@@ -1428,9 +1428,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-074 in plain terms: Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail. Current state: In Implementation (strict_gesture gate + degraded startup control lock + native/bridge diagnostics schema lane authored). For technical detail, see ## Objective and ## Validation Plan.",
-      "objective": "Improve WebView runtime trust by making gesture-path failures explicit in self-test CI (strict_gesture mode), surfacing native-call binding failures in an operator-visible diagnostics channel, and introducing a deterministic degraded mode when critical startup bindings fail.",
-      "runbook_path": "Documentation/backlog/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md"
+      "plain_language_summary": "BL-074 hardens WebView startup trust by enforcing strict gesture behavior, forcing degraded mode when critical native bindings are unavailable, and surfacing centralized native/bridge diagnostics to operators. Current state: Done (deterministic contract + execute evidence PASS; shared-control closeout sync complete and runbook archived).",
+      "objective": "Improve WebView runtime trust by:",
+      "runbook_path": "Documentation/backlog/done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md"
     },
     {
       "id": "BL-075",

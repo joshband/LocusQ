@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-04 (BL-050 + BL-069 + BL-070 done-transition archived runbooks and closeout status sync)
+Last Modified Date: 2026-03-05 (BL-074 done-transition archived with owner closeout sync)
 
 # LocusQ Master Backlog Index
 
@@ -150,7 +150,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
 | 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-058, BL-059 | BL-060 | [bl-072](done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | **Done** (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; closeout/archive sync complete) | G | — | — | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
-| 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | Open | B | BL-040, BL-067 | — | [bl-074](bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
+| 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | **Done** (deterministic execute evidence PASS; owner shared-control closeout sync complete) | B | BL-040, BL-067 | — | [bl-074](done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Implementation (Wave 6 codec mode/signature helper extraction landed; contract+execute replay PASS on 2026-03-05) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
@@ -224,6 +224,7 @@ graph TD
         BL-050[BL-050 High-Rate Delay/FIR Done]
         BL-069[BL-069 RT-Safe Preset Pipeline Done]
         BL-070[BL-070 Snapshot + Telemetry Seqlock Done]
+        BL-074[BL-074 WebView Reliability Diagnostics Done]
         BL-030[BL-030 Release Gov Done]
     end
 
@@ -256,7 +257,6 @@ graph TD
         BL-071[BL-071 Calibration Generation Guard]
         BL-072[BL-072 Companion Protocol + BL-058 QA]
         BL-073[BL-073 QA Scaffold Truthfulness Gates]
-        BL-074[BL-074 WebView Reliability Diagnostics]
         BL-075[BL-075 Comment/API Docs Accessibility]
         BL-076[BL-076 SpatialRenderer Decomposition]
         BL-062[BL-062 Ambisonics IR Contract]
@@ -478,7 +478,7 @@ Any status change must update in the same changeset:
 | BL-071 | `(pending annex spec)` |
 | BL-072 | `(pending annex spec)` |
 | BL-073 | `(pending annex spec)` |
-| BL-074 | `(pending annex spec)` |
+| BL-074 | `(no annex spec — self-contained runbook + diagnostics contract tables)` |
 | BL-075 | `(pending annex spec)` |
 | BL-076 | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
 | BL-077 | `(pending annex spec)` |
@@ -529,6 +529,7 @@ Any status change must update in the same changeset:
 | BL-069 | RT-safe headphone preset pipeline and failure backoff | 2026-03-04 | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | 2026-03-04 | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | 2026-03-03 | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
+| BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | 2026-03-05 | [bl-074](done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | BL-077 | Unified visual capture and replay harness | 2026-03-03 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |
