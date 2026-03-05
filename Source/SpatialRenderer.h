@@ -1643,6 +1643,37 @@ private:
         codecMappingSignature.store (codecSignature, std::memory_order_relaxed);
     }
 
+    std::uint64_t publishAmbisonicIrContractState (
+        SpatialOutputProfile requestedSpatialProfile,
+        SpatialOutputProfile activeSpatialProfile,
+        bool profileAllowsHeadphoneRender,
+        int numSamples)
+    {
+        const int requestedAmbisonicOrder = ambisonicOrderForProfile (requestedSpatialProfile);
+        const int activeAmbisonicOrder = ambisonicOrderForProfile (activeSpatialProfile);
+        const int contractAmbisonicOrder = requestedAmbisonicOrder > 0 ? requestedAmbisonicOrder
+                                                                        : activeAmbisonicOrder;
+        const int contractChannelCount = contractAmbisonicOrder > 0
+                                             ? (contractAmbisonicOrder + 1) * (contractAmbisonicOrder + 1)
+                                             : 0;
+        const bool contractFallbackActive = requestedAmbisonicOrder > 0 && activeAmbisonicOrder == 0;
+        const auto contractTimestampSamples = ambisonicIrSampleCursor.fetch_add (
+            static_cast<std::uint64_t> (juce::jmax (0, numSamples)),
+            std::memory_order_relaxed);
+
+        ambisonicIrFrameId.fetch_add (1, std::memory_order_relaxed);
+        ambisonicIrTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        ambisonicIrOrder.store (contractAmbisonicOrder, std::memory_order_relaxed);
+        ambisonicIrNormalizationIndex.store (
+            static_cast<int> (AmbisonicNormalization::SN3D),
+            std::memory_order_relaxed);
+        ambisonicIrChannelCount.store (contractChannelCount, std::memory_order_relaxed);
+        ambisonicIrHeadphoneRenderAllowed.store (profileAllowsHeadphoneRender, std::memory_order_relaxed);
+        ambisonicIrFallbackActive.store (contractFallbackActive, std::memory_order_relaxed);
+
+        return contractTimestampSamples;
+    }
+
     void publishAmbisonicAndCodecTelemetryContracts (
         int numSamples,
         int numOutputChannels,
@@ -1655,26 +1686,11 @@ private:
             11,
             requestedSpatialProfileIndex.load (std::memory_order_relaxed));
         const auto requestedSpatialProfile = static_cast<SpatialOutputProfile> (requestedSpatialProfileIndexValue);
-        const int requestedAmbisonicOrder = ambisonicOrderForProfile (requestedSpatialProfile);
-        const int activeAmbisonicOrder = ambisonicOrderForProfile (activeSpatialProfile);
-        const int contractAmbisonicOrder = requestedAmbisonicOrder > 0 ? requestedAmbisonicOrder
-                                                                        : activeAmbisonicOrder;
-        const int contractChannelCount = contractAmbisonicOrder > 0
-                                             ? (contractAmbisonicOrder + 1) * (contractAmbisonicOrder + 1)
-                                             : 0;
-        const bool contractFallbackActive = requestedAmbisonicOrder > 0 && activeAmbisonicOrder == 0;
-        const auto contractTimestampSamples = ambisonicIrSampleCursor.fetch_add (
-            static_cast<std::uint64_t> (juce::jmax (0, numSamples)),
-            std::memory_order_relaxed);
-        ambisonicIrFrameId.fetch_add (1, std::memory_order_relaxed);
-        ambisonicIrTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        ambisonicIrOrder.store (contractAmbisonicOrder, std::memory_order_relaxed);
-        ambisonicIrNormalizationIndex.store (
-            static_cast<int> (AmbisonicNormalization::SN3D),
-            std::memory_order_relaxed);
-        ambisonicIrChannelCount.store (contractChannelCount, std::memory_order_relaxed);
-        ambisonicIrHeadphoneRenderAllowed.store (profileAllowsHeadphoneRender, std::memory_order_relaxed);
-        ambisonicIrFallbackActive.store (contractFallbackActive, std::memory_order_relaxed);
+        const auto contractTimestampSamples = publishAmbisonicIrContractState (
+            requestedSpatialProfile,
+            activeSpatialProfile,
+            profileAllowsHeadphoneRender,
+            numSamples);
 
         const auto codecMode = determineCodecModeForProfile (requestedSpatialProfile);
         const int codecMappedChannelCount = determineCodecMappedChannelCount (codecMode, numOutputChannels);
