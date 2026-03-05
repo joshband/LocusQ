@@ -1412,6 +1412,20 @@ private:
         }
     }
 
+    void finalizeEmitterStageWithAuditionFallback (EmitterStageResult& result, int numSamples)
+    {
+        if (result.processedEmitterCount == 0 && auditionEnabled)
+        {
+            renderInternalAuditionEmitter (numSamples);
+            result.eligibleEmitterCount = juce::jmax (result.eligibleEmitterCount, 1);
+            result.processedEmitterCount = juce::jmax (result.processedEmitterCount, 1);
+            result.renderedAuditionEmitter = true;
+            return;
+        }
+
+        resetAuditionReactiveTelemetry();
+    }
+
     EmitterStageResult runEmitterAccumulationStage (const SceneGraph& scene, int numSamples)
     {
         std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
@@ -1440,17 +1454,7 @@ private:
             processSelectedEmitterCandidate (scene, candidate, numSamples, result);
         }
 
-        if (result.processedEmitterCount == 0 && auditionEnabled)
-        {
-            renderInternalAuditionEmitter (numSamples);
-            result.eligibleEmitterCount = juce::jmax (result.eligibleEmitterCount, 1);
-            result.processedEmitterCount = juce::jmax (result.processedEmitterCount, 1);
-            result.renderedAuditionEmitter = true;
-        }
-        else
-        {
-            resetAuditionReactiveTelemetry();
-        }
+        finalizeEmitterStageWithAuditionFallback (result, numSamples);
 
         return result;
     }
