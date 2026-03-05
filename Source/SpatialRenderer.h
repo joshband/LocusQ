@@ -1497,6 +1497,58 @@ private:
         }
     }
 
+    void publishCodecAdmPayloadContract (
+        bool codecAdmPayloadActiveThisBlock,
+        std::uint64_t codecFrameId,
+        std::uint64_t contractTimestampSamples,
+        int codecMappedChannelCount,
+        int codecObjectCount)
+    {
+        codecAdmPayloadActive.store (codecAdmPayloadActiveThisBlock, std::memory_order_relaxed);
+        codecAdmPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
+        codecAdmPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecAdmPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecAdmPayloadObjectCount.store (
+            codecAdmPayloadActiveThisBlock ? codecObjectCount : 0,
+            std::memory_order_relaxed);
+        for (int i = 0; i < NUM_SPEAKERS; ++i)
+        {
+            const bool objectActive = codecAdmPayloadActiveThisBlock && i < codecObjectCount;
+            codecAdmPayloadObjectGain[static_cast<size_t> (i)].store (
+                objectActive ? kCodecAdmObjectDefaultGains[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+            codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].store (
+                objectActive ? kCodecAdmObjectAzimuthDeg[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+        }
+    }
+
+    void publishCodecIamfPayloadContract (
+        bool codecIamfPayloadActiveThisBlock,
+        std::uint64_t codecFrameId,
+        std::uint64_t contractTimestampSamples,
+        int codecMappedChannelCount,
+        int codecElementCount)
+    {
+        codecIamfPayloadActive.store (codecIamfPayloadActiveThisBlock, std::memory_order_relaxed);
+        codecIamfPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
+        codecIamfPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecIamfPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecIamfPayloadElementCount.store (
+            codecIamfPayloadActiveThisBlock ? codecElementCount : 0,
+            std::memory_order_relaxed);
+        codecIamfPayloadSceneGain.store (
+            codecIamfPayloadActiveThisBlock ? 1.0f : 0.0f,
+            std::memory_order_relaxed);
+        for (int i = 0; i < 2; ++i)
+        {
+            const bool elementActive = codecIamfPayloadActiveThisBlock && i < codecElementCount;
+            codecIamfPayloadElementGain[static_cast<size_t> (i)].store (
+                elementActive ? kCodecIamfDefaultElementGains[static_cast<size_t> (i)] : 0.0f,
+                std::memory_order_relaxed);
+        }
+    }
+
     void publishAmbisonicAndCodecTelemetryContracts (
         int numSamples,
         int numOutputChannels,
@@ -1597,45 +1649,23 @@ private:
             codecMode == CodecMappingMode::ADM
             && codecMappingAppliedThisBlock
             && codecMappingFiniteThisBlock;
-        codecAdmPayloadActive.store (codecAdmPayloadActiveThisBlock, std::memory_order_relaxed);
-        codecAdmPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
-        codecAdmPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        codecAdmPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
-        codecAdmPayloadObjectCount.store (
-            codecAdmPayloadActiveThisBlock ? codecObjectCount : 0,
-            std::memory_order_relaxed);
-        for (int i = 0; i < NUM_SPEAKERS; ++i)
-        {
-            const bool objectActive = codecAdmPayloadActiveThisBlock && i < codecObjectCount;
-            codecAdmPayloadObjectGain[static_cast<size_t> (i)].store (
-                objectActive ? kCodecAdmObjectDefaultGains[static_cast<size_t> (i)] : 0.0f,
-                std::memory_order_relaxed);
-            codecAdmPayloadObjectAzimuthDeg[static_cast<size_t> (i)].store (
-                objectActive ? kCodecAdmObjectAzimuthDeg[static_cast<size_t> (i)] : 0.0f,
-                std::memory_order_relaxed);
-        }
+        publishCodecAdmPayloadContract (
+            codecAdmPayloadActiveThisBlock,
+            codecFrameId,
+            contractTimestampSamples,
+            codecMappedChannelCount,
+            codecObjectCount);
 
         const bool codecIamfPayloadActiveThisBlock =
             codecMode == CodecMappingMode::IAMF
             && codecMappingAppliedThisBlock
             && codecMappingFiniteThisBlock;
-        codecIamfPayloadActive.store (codecIamfPayloadActiveThisBlock, std::memory_order_relaxed);
-        codecIamfPayloadFrameId.store (codecFrameId, std::memory_order_relaxed);
-        codecIamfPayloadTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        codecIamfPayloadChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
-        codecIamfPayloadElementCount.store (
-            codecIamfPayloadActiveThisBlock ? codecElementCount : 0,
-            std::memory_order_relaxed);
-        codecIamfPayloadSceneGain.store (
-            codecIamfPayloadActiveThisBlock ? 1.0f : 0.0f,
-            std::memory_order_relaxed);
-        for (int i = 0; i < 2; ++i)
-        {
-            const bool elementActive = codecIamfPayloadActiveThisBlock && i < codecElementCount;
-            codecIamfPayloadElementGain[static_cast<size_t> (i)].store (
-                elementActive ? kCodecIamfDefaultElementGains[static_cast<size_t> (i)] : 0.0f,
-                std::memory_order_relaxed);
-        }
+        publishCodecIamfPayloadContract (
+            codecIamfPayloadActiveThisBlock,
+            codecFrameId,
+            contractTimestampSamples,
+            codecMappedChannelCount,
+            codecElementCount);
     }
 
     struct AuditionHeadphoneParityAccumulator
