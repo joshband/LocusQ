@@ -1359,16 +1359,14 @@ private:
         }
     }
 
-    EmitterStageResult runEmitterAccumulationStage (const SceneGraph& scene, int numSamples)
+    void collectEmitterCandidatesForBlock (
+        const SceneGraph& scene,
+        std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK>& selectedEmitters,
+        int& selectedEmitterCount,
+        int& selectedMinPriorityIndex,
+        float& selectedMinPriority,
+        EmitterStageResult& result)
     {
-        std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
-        int selectedEmitterCount = 0;
-        int selectedMinPriorityIndex = -1;
-        float selectedMinPriority = std::numeric_limits<float>::max();
-
-        EmitterStageResult result {};
-
-        // First pass: collect eligible emitters and enforce a hard per-block budget.
         for (int slotIdx = 0; slotIdx < SceneGraph::MAX_EMITTERS; ++slotIdx)
         {
             if (! scene.isSlotActive (slotIdx))
@@ -1412,6 +1410,25 @@ private:
                 candidate,
                 result.budgetCulledEmitterCount);
         }
+    }
+
+    EmitterStageResult runEmitterAccumulationStage (const SceneGraph& scene, int numSamples)
+    {
+        std::array<EmitterCandidate, MAX_RENDER_EMITTERS_PER_BLOCK> selectedEmitters {};
+        int selectedEmitterCount = 0;
+        int selectedMinPriorityIndex = -1;
+        float selectedMinPriority = std::numeric_limits<float>::max();
+
+        EmitterStageResult result {};
+
+        // First pass: collect eligible emitters and enforce a hard per-block budget.
+        collectEmitterCandidatesForBlock (
+            scene,
+            selectedEmitters,
+            selectedEmitterCount,
+            selectedMinPriorityIndex,
+            selectedMinPriority,
+            result);
 
         // Preserve deterministic ordering when the guardrail is active.
         locusq::spatial_emitter_render_pass::sortSelectedBySlotIndex (selectedEmitters, selectedEmitterCount);
