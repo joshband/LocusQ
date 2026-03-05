@@ -67,6 +67,16 @@ check_markdown_metadata_scope() {
 
   local file
   for file in "${md_files[@]}"; do
+    local repo_path
+    repo_path="${file#./}"
+
+    # Ignore markdown files intentionally excluded by .gitignore (for example
+    # timestamped TestEvidence bundles). Canonical tracked docs are still
+    # validated by metadata/header checks.
+    if git check-ignore -q --no-index -- "${repo_path}"; then
+      continue
+    fi
+
     # Skill/workflow/rule runtime files under .codex/.claude are governed by
     # Codex/Claude runtime standards and are exempt from repository metadata headers.
     if [[ "${file}" == "./.codex/skills/"* \
