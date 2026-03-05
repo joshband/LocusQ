@@ -1549,6 +1549,61 @@ private:
         }
     }
 
+    int determineCodecMappedChannelCount (CodecMappingMode codecMode, int numOutputChannels) const noexcept
+    {
+        if (codecMode == CodecMappingMode::None)
+            return 0;
+
+        if (numOutputChannels >= 13)
+            return 13;
+        if (numOutputChannels >= 10)
+            return 10;
+        if (numOutputChannels >= 8)
+            return 8;
+        if (numOutputChannels >= NUM_SPEAKERS)
+            return NUM_SPEAKERS;
+
+        return juce::jmax (0, numOutputChannels);
+    }
+
+    bool isCodecMappingFiniteForBlock (bool codecMappingAppliedThisBlock, int numSamples) const noexcept
+    {
+        if (! codecMappingAppliedThisBlock || numSamples <= 0)
+            return true;
+
+        const int channelsToInspect = juce::jmin (NUM_SPEAKERS, accumBuffer.getNumChannels());
+        for (int channel = 0; channel < channelsToInspect; ++channel)
+        {
+            const auto sample = accumBuffer.getSample (channel, 0);
+            if (! std::isfinite (sample))
+                return false;
+        }
+
+        return true;
+    }
+
+    void publishCodecMappingContractState (
+        std::uint64_t contractTimestampSamples,
+        CodecMappingMode codecMode,
+        int codecMappedChannelCount,
+        int codecObjectCount,
+        int codecElementCount,
+        bool codecMappingAppliedThisBlock,
+        bool codecMappingFallbackActiveThisBlock,
+        bool codecMappingFiniteThisBlock,
+        std::uint64_t codecSignature)
+    {
+        codecMappingTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
+        codecMappingModeIndex.store (static_cast<int> (codecMode), std::memory_order_relaxed);
+        codecMappingMappedChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
+        codecMappingObjectCount.store (codecObjectCount, std::memory_order_relaxed);
+        codecMappingElementCount.store (codecElementCount, std::memory_order_relaxed);
+        codecMappingApplied.store (codecMappingAppliedThisBlock, std::memory_order_relaxed);
+        this->codecMappingFallbackActive.store (codecMappingFallbackActiveThisBlock, std::memory_order_relaxed);
+        codecMappingFinite.store (codecMappingFiniteThisBlock, std::memory_order_relaxed);
+        codecMappingSignature.store (codecSignature, std::memory_order_relaxed);
+    }
+
     void publishAmbisonicAndCodecTelemetryContracts (
         int numSamples,
         int numOutputChannels,
@@ -1587,20 +1642,7 @@ private:
         const auto codecMode = codecAdmRequested ? CodecMappingMode::ADM
                                                  : (codecIamfRequested ? CodecMappingMode::IAMF
                                                                        : CodecMappingMode::None);
-        int codecMappedChannelCount = 0;
-        if (codecMode != CodecMappingMode::None)
-        {
-            if (numOutputChannels >= 13)
-                codecMappedChannelCount = 13;
-            else if (numOutputChannels >= 10)
-                codecMappedChannelCount = 10;
-            else if (numOutputChannels >= 8)
-                codecMappedChannelCount = 8;
-            else if (numOutputChannels >= NUM_SPEAKERS)
-                codecMappedChannelCount = NUM_SPEAKERS;
-            else
-                codecMappedChannelCount = juce::jmax (0, numOutputChannels);
-        }
+        const int codecMappedChannelCount = determineCodecMappedChannelCount (codecMode, numOutputChannels);
 
         const int codecObjectCount = codecMode == CodecMappingMode::ADM
                                          ? juce::jmax (0, juce::jmin (NUM_SPEAKERS, codecMappedChannelCount))
@@ -1613,20 +1655,8 @@ private:
         const bool codecMappingFallbackActive =
             codecMode != CodecMappingMode::None
             && activeSpatialStage != SpatialProfileStage::CodecLayoutPlaceholder;
-        bool codecMappingFiniteThisBlock = true;
-        if (codecMappingAppliedThisBlock && numSamples > 0)
-        {
-            const int channelsToInspect = juce::jmin (NUM_SPEAKERS, accumBuffer.getNumChannels());
-            for (int channel = 0; channel < channelsToInspect; ++channel)
-            {
-                const auto sample = accumBuffer.getSample (channel, 0);
-                if (! std::isfinite (sample))
-                {
-                    codecMappingFiniteThisBlock = false;
-                    break;
-                }
-            }
-        }
+        const bool codecMappingFiniteThisBlock =
+            isCodecMappingFiniteForBlock (codecMappingAppliedThisBlock, numSamples);
 
         const auto codecFrameId = codecMappingFrameId.fetch_add (1, std::memory_order_relaxed) + 1u;
         const auto codecSignature =
@@ -1635,15 +1665,16 @@ private:
             ^ (static_cast<std::uint64_t> (juce::jmax (0, codecMappedChannelCount)) << 32u)
             ^ (static_cast<std::uint64_t> (juce::jmax (0, codecObjectCount)) << 16u)
             ^ static_cast<std::uint64_t> (juce::jmax (0, codecElementCount));
-        codecMappingTimestampSamples.store (contractTimestampSamples, std::memory_order_relaxed);
-        codecMappingModeIndex.store (static_cast<int> (codecMode), std::memory_order_relaxed);
-        codecMappingMappedChannelCount.store (codecMappedChannelCount, std::memory_order_relaxed);
-        codecMappingObjectCount.store (codecObjectCount, std::memory_order_relaxed);
-        codecMappingElementCount.store (codecElementCount, std::memory_order_relaxed);
-        codecMappingApplied.store (codecMappingAppliedThisBlock, std::memory_order_relaxed);
-        this->codecMappingFallbackActive.store (codecMappingFallbackActive, std::memory_order_relaxed);
-        codecMappingFinite.store (codecMappingFiniteThisBlock, std::memory_order_relaxed);
-        codecMappingSignature.store (codecSignature, std::memory_order_relaxed);
+        publishCodecMappingContractState (
+            contractTimestampSamples,
+            codecMode,
+            codecMappedChannelCount,
+            codecObjectCount,
+            codecElementCount,
+            codecMappingAppliedThisBlock,
+            codecMappingFallbackActive,
+            codecMappingFiniteThisBlock,
+            codecSignature);
 
         const bool codecAdmPayloadActiveThisBlock =
             codecMode == CodecMappingMode::ADM
