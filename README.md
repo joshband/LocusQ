@@ -6,41 +6,134 @@ Last Modified Date: 2026-03-05
 
 # LocusQ
 
-LocusQ is a JUCE-based spatial audio plugin and standalone app that empowers audio creators to craft and monitor immersive 3D soundscapes effortlessly. With its intuitive interfaces, users can calibrate their audio setups, manipulate sound emitters within a three-dimensional space, and render spatialized audio with advanced diagnostics.
+LocusQ is a JUCE 8 spatial-audio plugin and standalone runtime for calibrating rooms, authoring emitters, and rendering immersive scenes. The repository combines a C++/WebView product runtime, a head-tracking companion app, and a documentation-plus-validation system that keeps backlog state, architecture decisions, and evidence tied together.
 
----
+## Current Posture
 
-## Features at a Glance:
-- Built with JUCE 8 and C++20, offering cross-platform plugin support across macOS (`VST3`, `AU`, `Standalone`), Windows (`VST3`, `Standalone`), and Linux (`VST3`, `LV2`, `Standalone`). Optional `CLAP` plugin target available.
-- WebView-powered UI runtime (`WKWebView` on macOS, `WebView2` on Windows, `WebKitGTK` on Linux).
-- Comprehensive QA scripted lanes for validation, with deterministic evidence under `TestEvidence/`.
+| Surface | Current value |
+|---|---|
+| Version | `v1.0.0-ga` |
+| Phase | `code` |
+| UI framework | `webview` |
+| Runtime modes | `CALIBRATE`, `EMITTER`, `RENDERER` |
+| Canonical status surface | [status.json](status.json) |
+| Canonical backlog surface | [Documentation/backlog/index.md](Documentation/backlog/index.md) |
+| Canonical evidence surfaces | [TestEvidence/build-summary.md](TestEvidence/build-summary.md), [TestEvidence/validation-trend.md](TestEvidence/validation-trend.md) |
 
----
+Platform and UI posture:
+
+| Platform | Default targets | UI runtime |
+|---|---|---|
+| macOS | `VST3`, `AU`, `Standalone` | `WKWebView` |
+| Windows | `VST3`, `Standalone` | `WebView2` |
+| Linux | `VST3`, `LV2`, `Standalone` | `WebKitGTK` |
+
+Optional feature gates exist for `CLAP`, `AUv3`, `Steam Audio`, `SOFA`, and the head-tracking companion bridge. These are intentionally opt-in so the default build stays lean.
+
+## Mode Model
+
+- `CALIBRATE`: measurement, monitoring-path preparation, and room/profile diagnostics.
+- `EMITTER`: per-source authoring, motion/physics state, and scene publication.
+- `RENDERER`: final spatial output authority, layout/profile mapping, and runtime diagnostics.
+
+This mode model is described in more detail in [ARCHITECTURE.md](ARCHITECTURE.md) and remains constrained by the realtime and scene-state rules in [Documentation/invariants.md](Documentation/invariants.md).
 
 ## Backlog Snapshot
 
-- Canonical backlog authority: `Documentation/backlog/index.md`.
-- Latest done-transition sync (2026-03-04): BL-050, BL-069, and BL-070 are archived under `Documentation/backlog/done/`.
+- Canonical backlog authority lives in [Documentation/backlog/index.md](Documentation/backlog/index.md).
+- Latest done-transition sync on `2026-03-05`: `BL-036`, `BL-037`, and `BL-041` were archived under [Documentation/backlog/done/](Documentation/backlog/done).
+- Current hardening follow-on: `BL-078` is open to carry processor-side finite-output enforcement, additive diagnostics, and runtime fuzz/soak replay that were intentionally split out of `BL-036`.
+- Current promotion blocker: `BL-032` remains `Done-candidate` because `BL032-G-001` still fails on the `2026-03-05` hold recheck (`Source/PluginProcessor.cpp` measured `3653 > 3600` while the RT audit stayed green).
 
----
+For the full decision trail, start with [TestEvidence/build-summary.md](TestEvidence/build-summary.md) and [TestEvidence/validation-trend.md](TestEvidence/validation-trend.md).
 
 ## Quick Start
 
-### Step 1: Installation
-#### macOS:
-To build and install plugin bundles, run:
+### Prerequisites
+
+- CMake `3.22+`
+- A C++20-capable toolchain
+- JUCE available either through `JUCE_DIR`, `$JUCE_DIR`, or the sibling fallback path `../audio-plugin-coder/_tools/JUCE`
+
+### macOS fast path
+
+Use the repository helper when you want a local build plus plugin install into your user Audio Plug-Ins folders:
+
 ```bash
 ./scripts/build-and-install-mac.sh
 ```
-- By default, plugins are installed at:
-  - `~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3`
-  - `~/Library/Audio/Plug-Ins/Components/LocusQ.component`
 
-#### Windows:
-Follow the setup steps in `[Documentation/backlog/windows-setup-guide.md].`
+Useful macOS toggles:
 
-#### Optional:
-To deploy standalone executables:
 ```bash
-LOCUSQ_INSTALL_STANDALONE.
-  ``Final``
+LOCUSQ_INSTALL_STANDALONE=1 ./scripts/build-and-install-mac.sh
+LOCUSQ_ENABLE_CLAP=1 ./scripts/build-and-install-mac.sh
+```
+
+The helper installs:
+
+- `~/Library/Audio/Plug-Ins/VST3/LocusQ.vst3`
+- `~/Library/Audio/Plug-Ins/Components/LocusQ.component`
+- `~/Library/Audio/Plug-Ins/CLAP/LocusQ.clap` when `LOCUSQ_ENABLE_CLAP=1`
+
+### Generic CMake flow
+
+If you want to work directly with CMake:
+
+```bash
+cmake -S . -B build -DJUCE_DIR=/path/to/JUCE
+cmake --build build --config Release --target LocusQ_VST3 LocusQ_Standalone -j 8
+```
+
+Common configure-time feature gates:
+
+```bash
+-DLOCUSQ_ENABLE_CLAP=ON
+-DLOCUSQ_ENABLE_AUV3=ON
+-DLOCUSQ_ENABLE_SOFA=ON
+-DLOCUS_HEAD_TRACKING=ON
+-DLOCUSQ_ENABLE_STEAM_AUDIO=ON
+```
+
+Notes:
+
+- `LOCUSQ_ENABLE_SOFA=ON` uses `FetchContent`, so the first configure may need network access.
+- `LOCUSQ_ENABLE_AUV3=ON` is Apple-only.
+- `LOCUSQ_ENABLE_CLAP=ON` expects either a local `third_party/clap-juce-extensions` checkout or fetch permission through the CMake flow.
+
+## Validation Entry Points
+
+- Docs freshness gate: `./scripts/validate-docs-freshness.sh`
+- macOS production standalone self-test: `./scripts/standalone-ui-selftest-production-p0-mac.sh`
+- Release-governance and host-validation guidance: [Documentation/testing/bl-030-release-governance-qa.md](Documentation/testing/bl-030-release-governance-qa.md)
+- Standalone self-test and REAPER smoke workflow: [Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md](Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md)
+- Pluginval stability guidance: [Documentation/testing/pluginval-stability-contract.md](Documentation/testing/pluginval-stability-contract.md)
+
+Decision-grade validation summaries live under [TestEvidence/](TestEvidence), while active testing references live under [Documentation/testing/](Documentation/testing).
+
+## Repo Map
+
+| Path | Purpose |
+|---|---|
+| [Source/](Source) | JUCE plugin/runtime code, DSP, processor/editor logic, and WebView bridge integration |
+| [Source/ui/public/](Source/ui/public) | Web UI assets shipped inside the plugin/standalone binary |
+| [companion/](companion) | Head-tracking companion runtime and related platform code |
+| [scripts/](scripts) | Build, install, validation, and docs-governance automation |
+| [Documentation/](Documentation) | Tiered documentation, ADRs, backlog authority, plans, and testing guides |
+| [TestEvidence/](TestEvidence) | Canonical build-summary/trend surfaces plus referenced decision artifacts |
+| [third_party/](third_party) | Local dependency payloads and optional SDK integration points |
+
+## Canonical References
+
+Start here when you need the repository's authoritative contracts rather than a high-level overview:
+
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [.ideas/architecture.md](.ideas/architecture.md)
+- [.ideas/parameter-spec.md](.ideas/parameter-spec.md)
+- [Documentation/README.md](Documentation/README.md)
+- [Documentation/standards.md](Documentation/standards.md)
+- [Documentation/invariants.md](Documentation/invariants.md)
+- [Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md](Documentation/adr/ADR-0005-phase-closeout-docs-freshness-gate.md)
+- [Documentation/adr/ADR-0010-repository-artifact-tracking-and-retention-policy.md](Documentation/adr/ADR-0010-repository-artifact-tracking-and-retention-policy.md)
+
+These references are the main anchors for architecture intent, parameter authority, invariant enforcement, closeout sync, and artifact retention policy.
