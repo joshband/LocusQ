@@ -1,0 +1,1019 @@
+#include "../PluginProcessor.h"
+#include "../processor_bridge/ProcessorBridgeUtilities.h"
+#include "ProcessorConstants.h"
+#include "ProcessorParameterReaders.h"
+
+#include <algorithm>
+
+using namespace locusq::constants;
+
+namespace
+{
+constexpr const char* kCalibrationProfileSchemaV1 = "locusq-calibration-profile-v1";
+
+constexpr std::array<const char*, 11> kCalibrationTopologyIds
+{
+    "mono",
+    "stereo",
+    "quad",
+    "surround_51",
+    "surround_71",
+    "surround_712",
+    "surround_742",
+    "binaural",
+    "ambisonic_1st",
+    "ambisonic_3rd",
+    "downmix_stereo"
+};
+
+constexpr std::array<int, 11> kCalibrationTopologyRequiredChannels
+{
+    1, 2, 4, 6, 8, 10, 13, 2, 4, 16, 2
+};
+
+constexpr std::array<const char*, 4> kCalibrationMonitoringPathIds
+{
+    "speakers",
+    "stereo_downmix",
+    "steam_binaural",
+    "virtual_binaural"
+};
+
+constexpr std::array<const char*, 5> kCalibrationDeviceProfileIds
+{
+    "generic",
+    "airpods_pro_2",
+    "airpods_pro_3",
+    "sony_wh1000xm5",
+    "custom_sofa"
+};
+
+constexpr std::array<const char*, 11> kCalibrationProfileParameterIds
+{
+    "cal_spk_config",
+    "cal_topology_profile",
+    "cal_monitoring_path",
+    "cal_device_profile",
+    "cal_mic_channel",
+    "cal_spk1_out",
+    "cal_spk2_out",
+    "cal_spk3_out",
+    "cal_spk4_out",
+    "cal_test_level",
+    "cal_test_type"
+};
+
+template <size_t N>
+int indexOfCaseInsensitive (const std::array<const char*, N>& values, const juce::String& target)
+{
+    const auto normalised = target.trim().toLowerCase();
+    for (size_t i = 0; i < values.size(); ++i)
+    {
+        if (normalised == values[i])
+            return static_cast<int> (i);
+    }
+
+    return -1;
+}
+
+juce::String calibrationTopologyIdForIndex (int index)
+{
+    const auto clamped = juce::jlimit (0, static_cast<int> (kCalibrationTopologyIds.size()) - 1, index);
+    return kCalibrationTopologyIds[static_cast<size_t> (clamped)];
+}
+
+juce::String calibrationMonitoringPathIdForIndex (int index)
+{
+    const auto clamped = juce::jlimit (0, static_cast<int> (kCalibrationMonitoringPathIds.size()) - 1, index);
+    return kCalibrationMonitoringPathIds[static_cast<size_t> (clamped)];
+}
+
+juce::String calibrationDeviceProfileIdForIndex (int index)
+{
+    const auto clamped = juce::jlimit (0, static_cast<int> (kCalibrationDeviceProfileIds.size()) - 1, index);
+    return kCalibrationDeviceProfileIds[static_cast<size_t> (clamped)];
+}
+
+int calibrationRequiredChannelsForTopologyIndex (int index)
+{
+    const auto clamped = juce::jlimit (0, static_cast<int> (kCalibrationTopologyRequiredChannels.size()) - 1, index);
+    return kCalibrationTopologyRequiredChannels[static_cast<size_t> (clamped)];
+}
+
+int legacySpeakerConfigForTopologyIndex (int topologyIndex)
+{
+    const auto requiredChannels = calibrationRequiredChannelsForTopologyIndex (topologyIndex);
+    return requiredChannels <= 2 ? 1 : 0;
+}
+
+int topologyProfileForOutputChannels (int outputChannels)
+{
+    const auto clampedChannels = juce::jlimit (1, 16, outputChannels);
+    if (clampedChannels <= 1)
+        return 0;
+    if (clampedChannels == 2)
+        return 1;
+    if (clampedChannels == 6)
+        return 3;
+    if (clampedChannels == 8)
+        return 4;
+    if (clampedChannels == 10)
+        return 5;
+    if (clampedChannels >= 16)
+        return 9;
+    if (clampedChannels >= 13)
+        return 6;
+
+    return 2;
+}
+
+juce::File resolveCompanionCalibrationProfileFile()
+{
+    const auto userAppDataDir = juce::File::getSpecialLocation (
+        juce::File::SpecialLocationType::userApplicationDataDirectory);
+    const auto userHomeDir = juce::File::getSpecialLocation (
+        juce::File::SpecialLocationType::userHomeDirectory);
+
+    const std::array<juce::File, 4> candidates
+    {
+        userAppDataDir.getChildFile ("LocusQ").getChildFile ("CalibrationProfile.json"),
+        userAppDataDir.getChildFile ("Application Support")
+            .getChildFile ("LocusQ")
+            .getChildFile ("CalibrationProfile.json"),
+        userHomeDir.getChildFile ("Library")
+            .getChildFile ("Application Support")
+            .getChildFile ("LocusQ")
+            .getChildFile ("CalibrationProfile.json"),
+        userHomeDir.getChildFile ("Library")
+            .getChildFile ("LocusQ")
+            .getChildFile ("CalibrationProfile.json")
+    };
+
+    juce::File newestExisting;
+    juce::int64 newestModifiedMs = 0;
+    bool foundExisting = false;
+
+    for (const auto& candidate : candidates)
+    {
+        if (! candidate.existsAsFile())
+            continue;
+
+        const auto modifiedMs = candidate.getLastModificationTime().toMilliseconds();
+        if (! foundExisting || modifiedMs > newestModifiedMs)
+        {
+            newestExisting = candidate;
+            newestModifiedMs = modifiedMs;
+            foundExisting = true;
+        }
+    }
+
+    if (foundExisting)
+        return newestExisting;
+
+    return candidates[0];
+}
+} // namespace
+
+juce::String LocusQAudioProcessor::normaliseCalibrationTopologyId (const juce::String& topologyId)
+{
+    return locusq::processor_bridge::normaliseCalibrationTopologyId (
+        topologyId,
+        kCalibrationTopologyIds,
+        [] (int index) { return calibrationTopologyIdForIndex (index); },
+        [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
+}
+
+juce::String LocusQAudioProcessor::normaliseCalibrationMonitoringPathId (const juce::String& monitoringPathId)
+{
+    return locusq::processor_bridge::normaliseCalibrationMonitoringPathId (
+        monitoringPathId,
+        kCalibrationMonitoringPathIds,
+        [] (int index) { return calibrationMonitoringPathIdForIndex (index); },
+        [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
+}
+
+juce::String LocusQAudioProcessor::normaliseCalibrationDeviceProfileId (const juce::String& deviceProfileId)
+{
+    return locusq::processor_bridge::normaliseCalibrationDeviceProfileId (
+        deviceProfileId,
+        kCalibrationDeviceProfileIds,
+        [] (int index) { return calibrationDeviceProfileIdForIndex (index); },
+        [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
+}
+
+juce::File LocusQAudioProcessor::getCalibrationProfileDirectory() const
+{
+    return locusq::processor_bridge::getUserDataSubdirectory ("CalibrationProfiles");
+}
+
+juce::File LocusQAudioProcessor::resolveCalibrationProfileFileFromOptions (const juce::var& options) const
+{
+    return locusq::processor_bridge::resolveNamedJsonFileFromOptions (
+        options,
+        getCalibrationProfileDirectory(),
+        [] (const juce::String& name) { return locusq::processor_bridge::sanitisePresetName (name); });
+}
+
+std::array<int, SpatialRenderer::NUM_SPEAKERS> LocusQAudioProcessor::getCurrentCalibrationSpeakerRouting() const
+{
+    return locusq::processor_core::readCalibrationSpeakerRouting (apvts);
+}
+
+int LocusQAudioProcessor::getCurrentCalibrationSpeakerConfigIndex() const
+{
+    return locusq::processor_core::readDiscreteParameterIndex (apvts,
+                                                               "cal_spk_config",
+                                                               0,
+                                                               1,
+                                                               0);
+}
+
+int LocusQAudioProcessor::getCurrentCalibrationTopologyProfileIndex() const
+{
+    if (apvts.getRawParameterValue ("cal_topology_profile") != nullptr)
+    {
+        return locusq::processor_core::readDiscreteParameterIndex (
+            apvts,
+            "cal_topology_profile",
+            0,
+            static_cast<int> (kCalibrationTopologyIds.size()) - 1,
+            1);
+    }
+
+    const auto legacyConfig = getCurrentCalibrationSpeakerConfigIndex();
+    return legacyConfig == 1 ? 1 : 2;
+}
+
+int LocusQAudioProcessor::getCurrentCalibrationMonitoringPathIndex() const
+{
+    return locusq::processor_core::readDiscreteParameterIndex (
+        apvts,
+        "cal_monitoring_path",
+        0,
+        static_cast<int> (kCalibrationMonitoringPathIds.size()) - 1,
+        0);
+}
+
+int LocusQAudioProcessor::getCurrentCalibrationDeviceProfileIndex() const
+{
+    return locusq::processor_core::readDiscreteParameterIndex (
+        apvts,
+        "cal_device_profile",
+        0,
+        static_cast<int> (kCalibrationDeviceProfileIds.size()) - 1,
+        0);
+}
+
+int LocusQAudioProcessor::getRequiredCalibrationChannelsForTopologyIndex (int topologyIndex) const
+{
+    return calibrationRequiredChannelsForTopologyIndex (topologyIndex);
+}
+
+int LocusQAudioProcessor::resolveCalibrationWritableChannels (
+    int snapshotOutputChannels,
+    int layoutOutputChannels,
+    int cachedAutoOutputChannels,
+    const std::array<int, SpatialRenderer::NUM_SPEAKERS>& routing) noexcept
+{
+    const auto snapshot = juce::jlimit (1, SpatialRenderer::NUM_SPEAKERS, snapshotOutputChannels);
+    const auto layout = juce::jlimit (0, SpatialRenderer::NUM_SPEAKERS, layoutOutputChannels);
+    const auto cached = juce::jlimit (0, SpatialRenderer::NUM_SPEAKERS, cachedAutoOutputChannels);
+
+    int effective = juce::jmax (snapshot, layout);
+
+    if (effective <= 1)
+    {
+        const bool routingUsesMultipleOutputs = std::any_of (
+            routing.begin(),
+            routing.end(),
+            [] (int channel) { return channel > 1; });
+
+        if (routingUsesMultipleOutputs)
+            effective = juce::jmax (effective, cached);
+    }
+
+    return juce::jlimit (1, SpatialRenderer::NUM_SPEAKERS, effective);
+}
+
+void LocusQAudioProcessor::applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force)
+{
+    const auto clampedOutputChannels = juce::jlimit (1, 16, outputChannels);
+
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> autoRouting { 1, 2, 3, 4 };
+    int autoSpeakerConfig = 0;
+    int autoTopologyProfile = topologyProfileForOutputChannels (clampedOutputChannels);
+
+    if (clampedOutputChannels == 1)
+    {
+        autoSpeakerConfig = 1;
+        autoRouting = { 1, 1, 1, 1 };
+    }
+    else if (clampedOutputChannels == 2)
+    {
+        autoSpeakerConfig = 1;
+        autoRouting = { 1, 2, 1, 2 };
+    }
+    else if (clampedOutputChannels == 3)
+    {
+        autoSpeakerConfig = 0;
+        autoRouting = { 1, 2, 3, 3 };
+    }
+
+    const auto currentRouting = getCurrentCalibrationSpeakerRouting();
+    const auto currentSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
+    const auto currentTopologyProfile = getCurrentCalibrationTopologyProfileIndex();
+    const auto isFactoryMonoRouting = currentSpeakerConfig == 0
+                                      && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 3, 4 };
+    const auto isFactoryStereoRouting = currentSpeakerConfig == 1
+                                        && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 1, 2 };
+    const auto isFactoryMonoByChoice = currentSpeakerConfig == 0
+                                       && currentRouting == std::array<int, SpatialRenderer::NUM_SPEAKERS> { 1, 2, 1, 2 };
+    const auto isFactoryTopologyProfile = currentTopologyProfile == 2 || currentTopologyProfile == 1;
+    const auto followsPreviousAuto = hasAppliedAutoDetectedCalibrationRouting
+                                     && currentTopologyProfile == lastAutoDetectedTopologyProfile
+                                     && currentSpeakerConfig == lastAutoDetectedSpeakerConfig
+                                     && currentRouting == lastAutoDetectedSpeakerRouting;
+
+    if (! force
+        && ! followsPreviousAuto
+        && ! isFactoryMonoRouting
+        && ! isFactoryStereoRouting
+        && ! isFactoryMonoByChoice
+        && ! isFactoryTopologyProfile)
+    {
+        return;
+    }
+
+    if (hasAppliedAutoDetectedCalibrationRouting
+        && clampedOutputChannels == lastAutoDetectedOutputChannels
+        && autoTopologyProfile == lastAutoDetectedTopologyProfile
+        && autoSpeakerConfig == lastAutoDetectedSpeakerConfig
+        && autoRouting == lastAutoDetectedSpeakerRouting)
+    {
+        return;
+    }
+
+    setIntegerParameterValueNotifyingHost ("cal_topology_profile", autoTopologyProfile);
+    setIntegerParameterValueNotifyingHost ("cal_spk_config", autoSpeakerConfig);
+    setIntegerParameterValueNotifyingHost ("cal_spk1_out", autoRouting[0]);
+    setIntegerParameterValueNotifyingHost ("cal_spk2_out", autoRouting[1]);
+    setIntegerParameterValueNotifyingHost ("cal_spk3_out", autoRouting[2]);
+    setIntegerParameterValueNotifyingHost ("cal_spk4_out", autoRouting[3]);
+
+    hasAppliedAutoDetectedCalibrationRouting = true;
+    lastAutoDetectedOutputChannels = clampedOutputChannels;
+    lastAutoDetectedTopologyProfile = autoTopologyProfile;
+    lastAutoDetectedSpeakerConfig = autoSpeakerConfig;
+    lastAutoDetectedSpeakerRouting = autoRouting;
+}
+
+void LocusQAudioProcessor::setIntegerParameterValueNotifyingHost (const char* parameterId, int value)
+{
+    locusq::processor_core::setIntegerParameterValueNotifyingHost (apvts, parameterId, value);
+}
+
+void LocusQAudioProcessor::migrateSnapshotLayoutIfNeeded (const juce::ValueTree& restoredState)
+{
+    int storedOutputChannels = 0;
+    if (restoredState.hasProperty (kSnapshotOutputChannelsProperty))
+    {
+        storedOutputChannels = juce::jlimit (1,
+                                             kMaxSnapshotOutputChannels,
+                                             static_cast<int> (restoredState.getProperty (kSnapshotOutputChannelsProperty)));
+    }
+    else if (restoredState.hasProperty (kSnapshotOutputLayoutProperty))
+    {
+        const auto storedLayout = restoredState.getProperty (kSnapshotOutputLayoutProperty).toString().trim().toLowerCase();
+        if (storedLayout == "mono")
+            storedOutputChannels = 1;
+        else if (storedLayout == "stereo")
+            storedOutputChannels = 2;
+        else if (storedLayout == "quad")
+            storedOutputChannels = SpatialRenderer::NUM_SPEAKERS;
+        else if (storedLayout == "surround_5_1")
+            storedOutputChannels = 6;
+        else if (storedLayout == "surround_5_2_1")
+            storedOutputChannels = 8;
+        else if (storedLayout == "surround_7_1")
+            storedOutputChannels = 8;
+        else if (storedLayout == "surround_7_2_1")
+            storedOutputChannels = 10;
+        else if (storedLayout == "surround_7_1_4")
+            storedOutputChannels = 12;
+        else if (storedLayout == "surround_7_4_2")
+            storedOutputChannels = 13;
+        else if (storedLayout == "multichannel")
+            storedOutputChannels = juce::jmax (SpatialRenderer::NUM_SPEAKERS, storedOutputChannels);
+    }
+
+    const auto currentOutputChannels = juce::jlimit (1,
+                                                     kMaxSnapshotOutputChannels,
+                                                     getSnapshotOutputChannels());
+    const auto isLegacySnapshot = ! restoredState.hasProperty (kSnapshotSchemaProperty);
+    const auto hasLayoutMismatch = (storedOutputChannels > 0 && storedOutputChannels != currentOutputChannels);
+
+    if (! isLegacySnapshot && ! hasLayoutMismatch)
+        return;
+
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> migratedSpeakerMap { 1, 2, 3, 4 };
+    int migratedSpeakerConfig = 0;
+    const int migratedTopologyProfile = topologyProfileForOutputChannels (currentOutputChannels);
+
+    if (currentOutputChannels == 1)
+    {
+        migratedSpeakerMap.fill (1);
+        migratedSpeakerConfig = 1;
+    }
+    else if (currentOutputChannels == 2)
+    {
+        migratedSpeakerMap = { 1, 2, 1, 2 };
+        migratedSpeakerConfig = 1;
+    }
+
+    setIntegerParameterValueNotifyingHost ("cal_topology_profile", migratedTopologyProfile);
+    setIntegerParameterValueNotifyingHost ("cal_spk_config", migratedSpeakerConfig);
+    setIntegerParameterValueNotifyingHost ("cal_spk1_out", migratedSpeakerMap[0]);
+    setIntegerParameterValueNotifyingHost ("cal_spk2_out", migratedSpeakerMap[1]);
+    setIntegerParameterValueNotifyingHost ("cal_spk3_out", migratedSpeakerMap[2]);
+    setIntegerParameterValueNotifyingHost ("cal_spk4_out", migratedSpeakerMap[3]);
+}
+
+juce::var LocusQAudioProcessor::buildCalibrationProfileState (const juce::String& profileName,
+                                                              const juce::var& validationSummary) const
+{
+    juce::var profileVar (new juce::DynamicObject());
+    auto* profile = profileVar.getDynamicObject();
+
+    profile->setProperty ("schema", kCalibrationProfileSchemaV1);
+    profile->setProperty ("name", profileName);
+    profile->setProperty ("savedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
+
+    juce::var contextVar (new juce::DynamicObject());
+    auto* context = contextVar.getDynamicObject();
+    const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
+    const auto monitoringPathIndex = getCurrentCalibrationMonitoringPathIndex();
+    const auto deviceProfileIndex = getCurrentCalibrationDeviceProfileIndex();
+    context->setProperty ("topologyProfileIndex", topologyIndex);
+    context->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyIndex));
+    context->setProperty ("monitoringPathIndex", monitoringPathIndex);
+    context->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPathIndex));
+    context->setProperty ("deviceProfileIndex", deviceProfileIndex);
+    context->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfileIndex));
+    context->setProperty ("requiredChannels", getRequiredCalibrationChannelsForTopologyIndex (topologyIndex));
+    context->setProperty ("writableChannels", resolveCalibrationWritableChannels (
+        getSnapshotOutputChannels(),
+        static_cast<int> (getBusesLayout().getMainOutputChannelSet().size()),
+        lastAutoDetectedOutputChannels,
+        getCurrentCalibrationSpeakerRouting()));
+    profile->setProperty ("context", contextVar);
+
+    juce::var controlsVar (new juce::DynamicObject());
+    auto* controls = controlsVar.getDynamicObject();
+    for (const auto* parameterId : kCalibrationProfileParameterIds)
+    {
+        if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter (parameterId)))
+        {
+            const auto scaledValue = parameter->convertFrom0to1 (parameter->getValue());
+            controls->setProperty (parameterId, scaledValue);
+        }
+    }
+    profile->setProperty ("controls", controlsVar);
+
+    juce::var layoutVar (new juce::DynamicObject());
+    auto* layout = layoutVar.getDynamicObject();
+    layout->setProperty ("outputLayout", getSnapshotOutputLayout());
+    layout->setProperty ("outputChannels", getSnapshotOutputChannels());
+    profile->setProperty ("layout", layoutVar);
+
+    if (! validationSummary.isVoid())
+        profile->setProperty ("validationSummary", validationSummary);
+
+    return profileVar;
+}
+
+bool LocusQAudioProcessor::applyCalibrationProfileState (const juce::var& profileState)
+{
+    auto* profile = profileState.getDynamicObject();
+    if (profile == nullptr)
+        return false;
+
+    if (profile->hasProperty ("schema"))
+    {
+        const auto schema = profile->getProperty ("schema").toString().trim();
+        if (schema.isNotEmpty() && schema != kCalibrationProfileSchemaV1)
+            return false;
+    }
+
+    auto* controls = profile->getProperty ("controls").getDynamicObject();
+    if (controls == nullptr)
+        return false;
+
+    for (const auto& property : controls->getProperties())
+    {
+        const auto parameterId = property.name.toString();
+        if (parameterId.isEmpty())
+            continue;
+
+        if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter (parameterId)))
+        {
+            const auto scaledValue = static_cast<float> (double (property.value));
+            parameter->setValueNotifyingHost (parameter->convertTo0to1 (scaledValue));
+        }
+    }
+
+    const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
+    const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
+    const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
+    setIntegerParameterValueNotifyingHost ("cal_spk_config", legacySpeakerConfigForTopologyIndex (topologyIndex));
+    setIntegerParameterValueNotifyingHost ("rend_headphone_mode", (monitoringPath == 2 || monitoringPath == 3) ? 1 : 0);
+    setIntegerParameterValueNotifyingHost ("rend_headphone_profile", deviceProfile);
+
+    int rendererSpatialProfileIndex = 0;
+    switch (topologyIndex)
+    {
+        case 0: rendererSpatialProfileIndex = 1; break;
+        case 1: rendererSpatialProfileIndex = 1; break;
+        case 2: rendererSpatialProfileIndex = 2; break;
+        case 3: rendererSpatialProfileIndex = 3; break;
+        case 4: rendererSpatialProfileIndex = 4; break;
+        case 5: rendererSpatialProfileIndex = 4; break;
+        case 6: rendererSpatialProfileIndex = 5; break;
+        case 7: rendererSpatialProfileIndex = 9; break;
+        case 8: rendererSpatialProfileIndex = 6; break;
+        case 9: rendererSpatialProfileIndex = 7; break;
+        case 10: rendererSpatialProfileIndex = 9; break;
+        default: break;
+    }
+    setIntegerParameterValueNotifyingHost ("rend_spatial_profile", rendererSpatialProfileIndex);
+
+    return true;
+}
+
+juce::var LocusQAudioProcessor::listCalibrationProfilesFromUI() const
+{
+    juce::Array<juce::var> profiles;
+    const auto profileDir = getCalibrationProfileDirectory();
+    if (! profileDir.exists())
+        return juce::var (profiles);
+
+    juce::Array<juce::File> files;
+    profileDir.findChildFiles (files, juce::File::findFiles, false, "*.json");
+    std::sort (files.begin(), files.end(), [] (const juce::File& lhs, const juce::File& rhs)
+    {
+        return lhs.getLastModificationTime() > rhs.getLastModificationTime();
+    });
+
+    for (const auto& file : files)
+    {
+        juce::var entryVar (new juce::DynamicObject());
+        auto* entry = entryVar.getDynamicObject();
+
+        juce::String displayName = file.getFileNameWithoutExtension();
+        juce::String topologyId = calibrationTopologyIdForIndex (1);
+        juce::String monitoringPathId = calibrationMonitoringPathIdForIndex (0);
+        juce::String deviceProfileId = calibrationDeviceProfileIdForIndex (0);
+        juce::var validationSummary;
+
+        if (const auto payload = readJsonFromFile (file))
+        {
+            if (auto* profile = payload->getDynamicObject())
+            {
+                if (profile->hasProperty ("name"))
+                    displayName = profile->getProperty ("name").toString();
+
+                if (auto* context = profile->getProperty ("context").getDynamicObject())
+                {
+                    if (context->hasProperty ("topologyProfile"))
+                        topologyId = normaliseCalibrationTopologyId (context->getProperty ("topologyProfile").toString());
+                    if (context->hasProperty ("monitoringPath"))
+                        monitoringPathId = normaliseCalibrationMonitoringPathId (context->getProperty ("monitoringPath").toString());
+                    if (context->hasProperty ("deviceProfile"))
+                        deviceProfileId = normaliseCalibrationDeviceProfileId (context->getProperty ("deviceProfile").toString());
+                }
+
+                if (profile->hasProperty ("validationSummary"))
+                    validationSummary = profile->getProperty ("validationSummary");
+            }
+        }
+
+        entry->setProperty ("name", displayName);
+        entry->setProperty ("file", file.getFileName());
+        entry->setProperty ("path", file.getFullPathName());
+        entry->setProperty ("modifiedUtc", file.getLastModificationTime().toISO8601 (true));
+        entry->setProperty ("topologyProfile", topologyId);
+        entry->setProperty ("monitoringPath", monitoringPathId);
+        entry->setProperty ("deviceProfile", deviceProfileId);
+        entry->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
+        if (! validationSummary.isVoid())
+            entry->setProperty ("validationSummary", validationSummary);
+        profiles.add (entryVar);
+    }
+
+    return juce::var (profiles);
+}
+
+juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& options)
+{
+    juce::String requestedName;
+    juce::var validationSummary;
+    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
+    {
+        if (optionsObject->hasProperty ("name"))
+            requestedName = optionsObject->getProperty ("name").toString();
+        if (optionsObject->hasProperty ("validationSummary"))
+            validationSummary = optionsObject->getProperty ("validationSummary");
+    }
+
+    const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
+    const auto monitoringPathIndex = getCurrentCalibrationMonitoringPathIndex();
+    const auto deviceProfileIndex = getCurrentCalibrationDeviceProfileIndex();
+    const auto topologyId = calibrationTopologyIdForIndex (topologyIndex);
+    const auto monitoringPathId = calibrationMonitoringPathIdForIndex (monitoringPathIndex);
+    const auto deviceProfileId = calibrationDeviceProfileIdForIndex (deviceProfileIndex);
+
+    requestedName = requestedName.trim();
+    if (requestedName.isEmpty())
+        requestedName = topologyId + "_" + monitoringPathId + "_" + juce::Time::getCurrentTime().formatted ("%Y%m%d_%H%M%S");
+
+    const auto safeName = sanitisePresetName (requestedName);
+    auto profileDir = getCalibrationProfileDirectory();
+    profileDir.createDirectory();
+    const auto profileFile = profileDir.getChildFile (safeName + ".json");
+    const auto payload = buildCalibrationProfileState (requestedName, validationSummary);
+
+    juce::var response (new juce::DynamicObject());
+    auto* result = response.getDynamicObject();
+
+    if (! writeJsonToFile (profileFile, payload))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Failed to write calibration profile file.");
+        return response;
+    }
+
+    result->setProperty ("ok", true);
+    result->setProperty ("name", requestedName);
+    result->setProperty ("file", profileFile.getFileName());
+    result->setProperty ("path", profileFile.getFullPathName());
+    result->setProperty ("topologyProfile", topologyId);
+    result->setProperty ("monitoringPath", monitoringPathId);
+    result->setProperty ("deviceProfile", deviceProfileId);
+    result->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
+    if (! validationSummary.isVoid())
+        result->setProperty ("validationSummary", validationSummary);
+    return response;
+}
+
+juce::var LocusQAudioProcessor::loadCalibrationProfileFromUI (const juce::var& options)
+{
+    const auto profileFile = resolveCalibrationProfileFileFromOptions (options);
+    bool enforceTupleMatch = false;
+    juce::String expectedTopologyId;
+    juce::String expectedMonitoringPathId;
+    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
+    {
+        if (optionsObject->hasProperty ("enforceTupleMatch"))
+            enforceTupleMatch = static_cast<bool> (optionsObject->getProperty ("enforceTupleMatch"));
+        if (optionsObject->hasProperty ("topologyProfile"))
+            expectedTopologyId = optionsObject->getProperty ("topologyProfile").toString();
+        else if (optionsObject->hasProperty ("topologyProfileIndex"))
+            expectedTopologyId = calibrationTopologyIdForIndex (static_cast<int> (optionsObject->getProperty ("topologyProfileIndex")));
+
+        if (optionsObject->hasProperty ("monitoringPath"))
+            expectedMonitoringPathId = optionsObject->getProperty ("monitoringPath").toString();
+        else if (optionsObject->hasProperty ("monitoringPathIndex"))
+            expectedMonitoringPathId = calibrationMonitoringPathIdForIndex (static_cast<int> (optionsObject->getProperty ("monitoringPathIndex")));
+    }
+
+    juce::var response (new juce::DynamicObject());
+    auto* result = response.getDynamicObject();
+
+    if (! profileFile.existsAsFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file not found.");
+        return response;
+    }
+
+    const auto payload = readJsonFromFile (profileFile);
+    if (! payload.has_value())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file is invalid JSON.");
+        return response;
+    }
+
+    auto loadedTopologyId = calibrationTopologyIdForIndex (getCurrentCalibrationTopologyProfileIndex());
+    auto loadedMonitoringPathId = calibrationMonitoringPathIdForIndex (getCurrentCalibrationMonitoringPathIndex());
+    auto loadedDeviceProfileId = calibrationDeviceProfileIdForIndex (getCurrentCalibrationDeviceProfileIndex());
+    if (auto* profile = payload->getDynamicObject())
+    {
+        if (auto* context = profile->getProperty ("context").getDynamicObject())
+        {
+            if (context->hasProperty ("topologyProfile"))
+                loadedTopologyId = normaliseCalibrationTopologyId (context->getProperty ("topologyProfile").toString());
+            if (context->hasProperty ("monitoringPath"))
+                loadedMonitoringPathId = normaliseCalibrationMonitoringPathId (context->getProperty ("monitoringPath").toString());
+            if (context->hasProperty ("deviceProfile"))
+                loadedDeviceProfileId = normaliseCalibrationDeviceProfileId (context->getProperty ("deviceProfile").toString());
+        }
+    }
+
+    if (expectedTopologyId.isEmpty())
+        expectedTopologyId = calibrationTopologyIdForIndex (getCurrentCalibrationTopologyProfileIndex());
+    if (expectedMonitoringPathId.isEmpty())
+        expectedMonitoringPathId = calibrationMonitoringPathIdForIndex (getCurrentCalibrationMonitoringPathIndex());
+    expectedTopologyId = normaliseCalibrationTopologyId (expectedTopologyId);
+    expectedMonitoringPathId = normaliseCalibrationMonitoringPathId (expectedMonitoringPathId);
+
+    if (enforceTupleMatch
+        && (loadedTopologyId != expectedTopologyId
+            || loadedMonitoringPathId != expectedMonitoringPathId))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message",
+                             "Calibration profile tuple mismatch (profile="
+                                 + loadedTopologyId + "/"
+                                 + loadedMonitoringPathId + ", current="
+                                 + expectedTopologyId + "/"
+                                 + expectedMonitoringPathId + ").");
+        return response;
+    }
+
+    if (! applyCalibrationProfileState (*payload))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile payload is not compatible.");
+        return response;
+    }
+
+    result->setProperty ("ok", true);
+    result->setProperty ("name", profileFile.getFileNameWithoutExtension());
+    result->setProperty ("file", profileFile.getFileName());
+    result->setProperty ("path", profileFile.getFullPathName());
+    result->setProperty ("topologyProfile", loadedTopologyId);
+    result->setProperty ("monitoringPath", loadedMonitoringPathId);
+    result->setProperty ("deviceProfile", loadedDeviceProfileId);
+    result->setProperty ("profileTupleKey", loadedTopologyId + "::" + loadedMonitoringPathId);
+    if (auto* profile = payload->getDynamicObject())
+    {
+        if (profile->hasProperty ("name"))
+            result->setProperty ("name", profile->getProperty ("name").toString());
+
+        if (auto* context = profile->getProperty ("context").getDynamicObject())
+        {
+            if (context->hasProperty ("topologyProfile"))
+                result->setProperty ("topologyProfile", normaliseCalibrationTopologyId (context->getProperty ("topologyProfile").toString()));
+            if (context->hasProperty ("monitoringPath"))
+                result->setProperty ("monitoringPath", normaliseCalibrationMonitoringPathId (context->getProperty ("monitoringPath").toString()));
+            if (context->hasProperty ("deviceProfile"))
+                result->setProperty ("deviceProfile", normaliseCalibrationDeviceProfileId (context->getProperty ("deviceProfile").toString()));
+        }
+
+        if (profile->hasProperty ("validationSummary"))
+            result->setProperty ("validationSummary", profile->getProperty ("validationSummary"));
+    }
+
+    return response;
+}
+
+juce::var LocusQAudioProcessor::renameCalibrationProfileFromUI (const juce::var& options)
+{
+    const auto sourceFile = resolveCalibrationProfileFileFromOptions (options);
+
+    juce::var response (new juce::DynamicObject());
+    auto* result = response.getDynamicObject();
+
+    if (! sourceFile.existsAsFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file not found.");
+        return response;
+    }
+
+    juce::String requestedName;
+    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
+    {
+        if (optionsObject->hasProperty ("newName"))
+            requestedName = optionsObject->getProperty ("newName").toString();
+        else if (optionsObject->hasProperty ("name"))
+            requestedName = optionsObject->getProperty ("name").toString();
+    }
+
+    requestedName = requestedName.trim();
+    if (requestedName.isEmpty())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile name is required.");
+        return response;
+    }
+
+    const auto safeName = sanitisePresetName (requestedName);
+    const auto destinationFile = getCalibrationProfileDirectory().getChildFile (safeName + ".json");
+    const auto samePath = destinationFile.getFullPathName() == sourceFile.getFullPathName();
+
+    if (! samePath && destinationFile.existsAsFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile name already exists.");
+        return response;
+    }
+
+    const auto payload = readJsonFromFile (sourceFile);
+    if (! payload.has_value())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file is invalid JSON.");
+        return response;
+    }
+
+    auto updatedPayload = *payload;
+    if (auto* profile = updatedPayload.getDynamicObject(); profile != nullptr)
+    {
+        profile->setProperty ("name", requestedName);
+        profile->setProperty ("updatedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
+    }
+
+    if (! writeJsonToFile (destinationFile, updatedPayload))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Failed to write calibration profile file.");
+        return response;
+    }
+
+    if (! samePath)
+        sourceFile.deleteFile();
+
+    result->setProperty ("ok", true);
+    result->setProperty ("name", requestedName);
+    result->setProperty ("file", destinationFile.getFileName());
+    result->setProperty ("path", destinationFile.getFullPathName());
+    return response;
+}
+
+juce::var LocusQAudioProcessor::deleteCalibrationProfileFromUI (const juce::var& options)
+{
+    const auto profileFile = resolveCalibrationProfileFileFromOptions (options);
+
+    juce::var response (new juce::DynamicObject());
+    auto* result = response.getDynamicObject();
+
+    if (! profileFile.existsAsFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file not found.");
+        return response;
+    }
+
+    if (! profileFile.deleteFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Failed to delete calibration profile file.");
+        return response;
+    }
+
+    result->setProperty ("ok", true);
+    result->setProperty ("file", profileFile.getFileName());
+    result->setProperty ("path", profileFile.getFullPathName());
+    return response;
+}
+
+void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
+{
+    const auto profileFile = resolveCompanionCalibrationProfileFile();
+
+    if (! profileFile.existsAsFile())
+    {
+        companionCalibrationProfileLastModifiedMs = -1;
+        cachedCalibrationDevice = "unknown";
+        cachedCalibrationEqMode = "off";
+        cachedCalibrationHrtfMode = "default";
+        cachedCalibrationTrackingEnabled = false;
+        cachedCalibrationFirLatency = 0;
+        cachedExternalizationScore = -1.0f;
+        cachedFrontBackConfusionRate = -1.0f;
+        calibrationProfileTrackingEnabled.store (false, std::memory_order_relaxed);
+        calibrationProfileYawOffsetDeg.store (0.0f, std::memory_order_relaxed);
+        return;
+    }
+
+    const auto modifiedMs = profileFile.getLastModificationTime().toMilliseconds();
+    if (modifiedMs == companionCalibrationProfileLastModifiedMs)
+        return;
+
+    const auto payload = juce::JSON::parse (profileFile.loadFileAsString());
+    auto* root = payload.getDynamicObject();
+    if (root == nullptr)
+        return;
+
+    const auto schema = root->getProperty ("schema").toString().trim();
+    if (schema.isEmpty() || schema != kCalibrationProfileSchemaV1)
+        return;
+
+    auto* headphone = root->getProperty ("headphone").getDynamicObject();
+    if (headphone == nullptr)
+        return;
+
+    auto modelId = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
+    if (modelId.isEmpty())
+        modelId = "generic";
+
+    int profileIndex = 0;
+    if (modelId == "airpods_pro_1" || modelId == "airpods_pro_2")
+        profileIndex = 1;
+    else if (modelId == "airpods_pro_3")
+        profileIndex = 2;
+    else if (modelId == "sony_wh1000xm5")
+        profileIndex = 3;
+    else if (modelId == "custom_sofa")
+        profileIndex = 4;
+
+    setIntegerParameterValueNotifyingHost ("cal_device_profile", profileIndex);
+    setIntegerParameterValueNotifyingHost ("rend_headphone_profile", profileIndex);
+
+    const auto eqMode = headphone->getProperty ("hp_eq_mode").toString().trim().toLowerCase();
+    if (eqMode == "peq")
+    {
+        const auto bandsVar = headphone->getProperty ("hp_peq_bands");
+        spatialRenderer.applyJsonPeqBands (bandsVar, 0.0f, currentSampleRate);
+        spatialRenderer.setHeadphoneCalibrationEngine (1);
+        spatialRenderer.setHeadphoneCalibrationEnabled (true);
+    }
+    else if (eqMode == "fir")
+    {
+        spatialRenderer.setHeadphoneCalibrationEngine (2);
+        spatialRenderer.setHeadphoneCalibrationEnabled (true);
+    }
+    else
+    {
+        spatialRenderer.setHeadphoneCalibrationEnabled (false);
+    }
+
+    {
+        const auto hrtfMode = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
+        const auto sofaRef  = headphone->getProperty ("sofa_ref").toString().trim();
+        if (hrtfMode == "sofa" && sofaRef.isNotEmpty())
+        {
+            DBG ("LocusQ: CalibrationProfile requests SOFA HRTF: " + sofaRef
+                 + " (wiring deferred — see TODO(Task 13) in SpatialRenderer.h)");
+        }
+    }
+
+    {
+        const juce::String modelIdForCache = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
+        if (modelIdForCache == "airpods_pro_1")
+            cachedCalibrationDevice = "AirPods Pro (1st gen)";
+        else if (modelIdForCache == "airpods_pro_2")
+            cachedCalibrationDevice = "AirPods Pro (2nd gen)";
+        else if (modelIdForCache == "airpods_pro_3")
+            cachedCalibrationDevice = "AirPods Pro (3rd gen)";
+        else if (modelIdForCache == "sony_wh1000xm5")
+            cachedCalibrationDevice = "Sony WH-1000XM5";
+        else if (modelIdForCache == "generic" || modelIdForCache.isEmpty())
+            cachedCalibrationDevice = "Generic Headphones";
+        else
+            cachedCalibrationDevice = "Unknown Device";
+
+        cachedCalibrationEqMode = eqMode.isEmpty() ? "off" : eqMode;
+
+        const auto hrtfModeForCache = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
+        cachedCalibrationHrtfMode = hrtfModeForCache.isEmpty() ? "default" : hrtfModeForCache;
+
+        cachedCalibrationFirLatency = spatialRenderer.getHeadphoneCalibrationLatencySamples();
+
+        bool trackingEnabled = false;
+        float trackingYawOffsetDeg = 0.0f;
+        auto* tracking = root->getProperty ("tracking").getDynamicObject();
+        if (tracking != nullptr)
+        {
+            const auto trackingVar = tracking->getProperty ("hp_tracking_enabled");
+            trackingEnabled = trackingVar.isBool()
+                ? static_cast<bool> (trackingVar)
+                : trackingVar.toString().trim().toLowerCase() == "true";
+
+            const auto yawOffsetVar = tracking->getProperty ("hp_yaw_offset_deg");
+            if (yawOffsetVar.isDouble() || yawOffsetVar.isInt())
+                trackingYawOffsetDeg = static_cast<float> (static_cast<double> (yawOffsetVar));
+            else
+                trackingYawOffsetDeg = yawOffsetVar.toString().getFloatValue();
+        }
+        trackingYawOffsetDeg = juce::jlimit (-180.0f, 180.0f, trackingYawOffsetDeg);
+        cachedCalibrationTrackingEnabled = trackingEnabled;
+        calibrationProfileTrackingEnabled.store (trackingEnabled, std::memory_order_relaxed);
+        calibrationProfileYawOffsetDeg.store (trackingYawOffsetDeg, std::memory_order_relaxed);
+
+        auto* verification = root->getProperty ("verification").getDynamicObject();
+        if (verification != nullptr)
+        {
+            const auto extScoreVar = verification->getProperty ("externalization_score");
+            if (extScoreVar.isDouble() || extScoreVar.isInt())
+                cachedExternalizationScore = static_cast<float> (static_cast<double> (extScoreVar));
+
+            const auto fbVar = verification->getProperty ("front_back_confusion_rate");
+            if (fbVar.isDouble() || fbVar.isInt())
+                cachedFrontBackConfusionRate = static_cast<float> (static_cast<double> (fbVar));
+        }
+    }
+
+    companionCalibrationProfileLastModifiedMs = modifiedMs;
+}

@@ -328,6 +328,11 @@ private:
     int getCurrentCalibrationMonitoringPathIndex() const;
     int getCurrentCalibrationDeviceProfileIndex() const;
     int getRequiredCalibrationChannelsForTopologyIndex (int topologyIndex) const;
+    static int resolveCalibrationWritableChannels (
+        int snapshotOutputChannels,
+        int layoutOutputChannels,
+        int cachedAutoOutputChannels,
+        const std::array<int, SpatialRenderer::NUM_SPEAKERS>& routing) noexcept;
     void applyAutoDetectedCalibrationRoutingIfAppropriate (int outputChannels, bool force);
     void setIntegerParameterValueNotifyingHost (const char* parameterId, int value);
     juce::var buildEmitterPresetLocked (const juce::String& presetName,

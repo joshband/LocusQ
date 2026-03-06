@@ -435,6 +435,7 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
         resourceSize = BinaryData::check_native_interop_jsSize;
         mimeType = "text/javascript";
     }
+#if LOCUSQ_UI_POC_DEFAULT
     else if (path == "poc/index.html")
     {
         resourceData = BinaryData::index_poc_html;
@@ -591,6 +592,7 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
         resourceSize = BinaryData::poc_ui_jsSize;
         mimeType = "text/javascript";
     }
+#endif
 
 #if JUCE_DEBUG
     if (resourceData != nullptr)
