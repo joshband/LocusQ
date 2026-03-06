@@ -276,55 +276,56 @@ private:
         bool collideY = false;
         bool collideZ = false;
 
+        // Capture pre-collision velocity for normalized energy computation.
+        const Vec3 velocityBefore = state.velocity;
+
         if (state.position.x < -halfWidth)
         {
-            const auto velocityBefore = state.velocity.x;
             state.position.x = -halfWidth;
             state.velocity.x = std::abs (state.velocity.x) * bounce;
             collideX = true;
-            state.collisionEnergy += std::abs (state.velocity.x - velocityBefore);
         }
         else if (state.position.x > halfWidth)
         {
-            const auto velocityBefore = state.velocity.x;
             state.position.x = halfWidth;
             state.velocity.x = -std::abs (state.velocity.x) * bounce;
             collideX = true;
-            state.collisionEnergy += std::abs (state.velocity.x - velocityBefore);
         }
 
         if (state.position.y < minY)
         {
-            const auto velocityBefore = state.velocity.y;
             state.position.y = minY;
             state.velocity.y = std::abs (state.velocity.y) * bounce;
             collideY = true;
-            state.collisionEnergy += std::abs (state.velocity.y - velocityBefore);
         }
         else if (state.position.y > maxY)
         {
-            const auto velocityBefore = state.velocity.y;
             state.position.y = maxY;
             state.velocity.y = -std::abs (state.velocity.y) * bounce;
             collideY = true;
-            state.collisionEnergy += std::abs (state.velocity.y - velocityBefore);
         }
 
         if (state.position.z < -halfDepth)
         {
-            const auto velocityBefore = state.velocity.z;
             state.position.z = -halfDepth;
             state.velocity.z = std::abs (state.velocity.z) * bounce;
             collideZ = true;
-            state.collisionEnergy += std::abs (state.velocity.z - velocityBefore);
         }
         else if (state.position.z > halfDepth)
         {
-            const auto velocityBefore = state.velocity.z;
             state.position.z = halfDepth;
             state.velocity.z = -std::abs (state.velocity.z) * bounce;
             collideZ = true;
-            state.collisionEnergy += std::abs (state.velocity.z - velocityBefore);
+        }
+
+        // Compute collision energy as Euclidean magnitude of velocity delta,
+        // so corner collisions produce consistent energy regardless of axis count.
+        if (collideX || collideY || collideZ)
+        {
+            const float dx = state.velocity.x - velocityBefore.x;
+            const float dy = state.velocity.y - velocityBefore.y;
+            const float dz = state.velocity.z - velocityBefore.z;
+            state.collisionEnergy = std::sqrt (dx * dx + dy * dy + dz * dz);
         }
 
         if (collideX)

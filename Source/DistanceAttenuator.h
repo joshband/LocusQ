@@ -8,7 +8,7 @@
  * DistanceAttenuator - Distance-based gain attenuation with 3 models
  *
  * Models:
- *   InverseSquare: gain = refDist / max(distance, refDist)  (clamped)
+ *   InverseSquare: gain = (refDist / distance)^2  (physically realistic 1/r^2)
  *   Linear:        gain = 1 - (distance - refDist) / (maxDist - refDist)
  *   Logarithmic:   gain = 1 - log(distance / refDist) / log(maxDist / refDist)
  *

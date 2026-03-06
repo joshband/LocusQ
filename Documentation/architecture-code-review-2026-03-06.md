@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-06
+Last Modified Date: 2026-03-06 (Rev 3 — Tier 0 execution)
 
 # LocusQ Architecture & Code Review
 
@@ -286,3 +286,91 @@ Each phase requires the previous phase to be merged before starting. Within each
 | W1-B triple-buffer introduces latency | Low | Medium | Timeline is already 30Hz; one frame of latency is imperceptible |
 | W1-C TypeScript migration breaks self-test harness | Medium | Medium | Keep self-test JS as a separate entry point; migrate incrementally |
 | W2-A lazy EmitterSlot changes SceneGraph memory model | Low | High | Gate behind feature flag; test with max emitter count scenario |
+
+---
+
+## 8. Backlog Alignment
+
+This review was cross-referenced against the full backlog (84 items: BL-001–BL-077, HX-01–HX-06).
+
+### Findings That Overlap Existing Backlog Items
+
+| Review Finding | Backlog Item | BL Status | Alignment |
+|---------------|-------------|-----------|-----------|
+| CF-1: PluginProcessor God Object | **BL-032** Source modularization | Done-candidate | W0-A extends BL-032's extraction with additional units (PresetManager, CalibrationBridge, StateSerializer) |
+| CF-2: SpatialRenderer Mega-Header | **BL-076** SpatialRenderer decomposition | In Implementation | W0-B aligns with BL-076 scope; should coordinate |
+| CF-3: PluginEditor Boilerplate | **BL-040** UI modularization + authority UX | Done-candidate | W1-A extends BL-040 with data-driven ParameterBridge |
+| CF-3: PluginEditor Boilerplate | **BL-039** Parameter relay spec generation | Done-candidate | W1-A builds on BL-039's relay spec contract |
+| TQ-1: SpinLock timeline | **BL-035** RT lock-free registration | Done-candidate | W1-B extends lock-free patterns to timeline |
+| TQ-3: String in diagnostics | **BL-036** DSP finite output guardrails | Done-candidate | W1-B aligns with BL-036 RT-safety scope |
+| DQ-2: VBAP elevation | **BL-041** Doppler v2 + VBAP geometry | Done-candidate | W0-D directly implements BL-041's VBAP geometry validation |
+| FG-5: CLAP/AUv3 CI | **BL-011** CLAP lifecycle (Done), **BL-067** AUv3 lifecycle (Open) | Mixed | W2-C activates CI lanes for both |
+| MQ-3: JSON snapshot | **BL-070** Coherent audio snapshot seqlock | Done | W2-A builds on BL-070's seqlock contract |
+
+### New Items Not Yet in Backlog
+
+| Review Finding | Proposed BL | Priority |
+|---------------|------------|----------|
+| CF-4: Anonymous namespace scope | Fold into BL-032 promotion | P1 |
+| CF-5: Incremental UI in release binary | New BL (P2) | P2 |
+| TQ-2: PhysicsEngine sleep_for timing | New BL (P1) | P1 |
+| UQ-1/UQ-2: JS toolchain + Three.js vendoring | New BL (P2) | P2 |
+| FG-1: Undo/redo for keyframes | New BL (P3) | P3 |
+| FG-2: Calibration profile export | New BL (P2) | P2 |
+| FG-3: APVTS parameter grouping | New BL (P2) | P2 |
+| US-1/US-4: WebView UX polish | New BL (P3) | P3 |
+
+### Backlog Gate Dependencies for Tier 0
+
+- **W0-A** can proceed: BL-032 is done-candidate; this extends and completes it.
+- **W0-B** must coordinate with BL-076 (in implementation): merge BL-076 progress first or align scope.
+- **W0-C** is net-new: no backlog conflict.
+- **W0-D** extends BL-041 (done-candidate): safe to proceed, validates BL-041 promotion.
+
+### Open Backlog Items That May Be Impacted by Tier 0 Changes
+
+| BL ID | Title | Risk from Tier 0 |
+|-------|-------|------------------|
+| BL-020 | Confidence/masking overlay | Low — CF-1 extraction preserves diagnostics API |
+| BL-021 | Room-story overlays | Low — rendering path unchanged |
+| BL-053 | Head tracking orientation injection | Medium — W0-A moves head-tracking helpers; coordinate |
+| BL-058 | Companion profile acquisition | Low — calibration bridge extraction is additive |
+| BL-076 | SpatialRenderer decomposition | High — W0-B directly overlaps; must merge or coordinate |
+
+---
+
+## 9. Execution Log
+
+### Tier 0 Execution Status
+
+| ID | Status | Branch | Agent | Notes |
+|----|--------|--------|-------|-------|
+| W0-A | **PARTIAL** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Extracted 2 of 5 units (ParameterLayout + StateSerializer). Constants header created. Remaining: SceneRegistration, PresetManager, CalibrationBridge |
+| W0-B | **DEFERRED** | — | — | Deferred: BL-076 (SpatialRenderer .h→.cpp split) is already in implementation. Coordinate rather than duplicate. |
+| W0-C | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Gated ~24 incremental/POC UI assets behind `LOCUSQ_UI_POC` CMake flag |
+| W0-D | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Fixed DQ-1 (DistanceAttenuator comment), DQ-2 (VBAPPanner elevation note), DQ-3 (PhysicsEngine collision energy normalization) |
+
+### W0-A Detail: PluginProcessor Decomposition
+
+**Extracted compilation units:**
+
+1. `Source/processor_core/ProcessorParameterLayout.cpp` — all 76 APVTS parameter definitions (~400 lines)
+2. `Source/processor_core/ProcessorStateSerializer.cpp` — `getStateInformation`/`setStateInformation` + `resolveCalibrationWritableChannels` helper (~120 lines)
+3. `Source/processor_core/ProcessorConstants.h` — shared snapshot schema/layout constants extracted from anonymous namespace
+
+**PluginProcessor.cpp reduction:** ~3653 → ~3100 lines (−550 lines, ~15% reduction)
+
+**Remaining extractions** (for future sessions):
+- `ProcessorSceneRegistration.cpp` — `syncSceneGraphRegistrationForMode` + related helpers
+- `ProcessorPresetManager.cpp` — preset/profile file I/O
+- `ProcessorCalibrationBridge.cpp` — calibration profile management
+
+### W0-C Detail: Binary Bloat Gate
+
+Wrapped ~24 incremental/POC UI assets (`poc_*.html`, `visualizer_*.html`, stage JS files) in `if(LOCUSQ_UI_POC)` CMake guard. Production builds include only the 5 core UI files.
+
+### W0-D Detail: DSP Correctness Fixes
+
+1. **DQ-1** (`DistanceAttenuator.h:11`): Corrected misleading comment — code implements `(refDist/distance)²` (1/r²), not clamped linear.
+2. **DQ-2** (`VBAPPanner.h:114-115`): Added documentation note that `calculateGains(az, el)` is a 2D projection only suitable for horizontal quad; proper 3D VBAP needed for height speakers (BL-041).
+3. **DQ-3** (`PhysicsEngine.h` `resolveCollisions`): Fixed corner collision energy accumulation — was per-axis additive (corner = 3× wall energy); now computes Euclidean magnitude of full velocity change vector.
