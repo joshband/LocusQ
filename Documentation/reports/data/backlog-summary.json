@@ -2,9 +2,9 @@
   "schema_version": "locusq-backlog-summary-v1",
   "source": "Documentation/backlog",
   "counts": {
-    "total": 85,
-    "open": 23,
-    "done": 62
+    "total": 86,
+    "open": 18,
+    "done": 68
   },
   "items": [
     {
@@ -675,65 +675,65 @@
     {
       "id": "BL-035",
       "title": "BL-035 RT Lock-Free Registration",
-      "state_bucket": "open",
-      "status": "Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS)",
+      "state_bucket": "done",
+      "status": "Done (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; closeout/archive sync PASS)",
       "priority": "P0",
       "track": "F - Hardening",
       "depends_on": "HX-02 (Done), BL-032 (Done-candidate)",
-      "blocks": "BL-030",
+      "blocks": "\u2014",
       "who": "",
       "what": "",
       "why": "",
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 2/2, T3 3/3; RT/docs/status gates PASS; promotion packet recorded). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: Done (owner heavy-wrapper equivalent cadence replay PASS: T2 2/2, T3 3/3; RT/docs/status gates PASS; closeout/archive sync PASS). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress.",
-      "runbook_path": "Documentation/backlog/bl-035-rt-lock-free-registration.md"
+      "runbook_path": "Documentation/backlog/done/bl-035-rt-lock-free-registration.md"
     },
     {
       "id": "BL-036",
       "title": "BL-036 DSP Finite Output Guardrails",
-      "state_bucket": "open",
-      "status": "Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green)",
+      "state_bucket": "done",
+      "status": "Done (Owner Z10 accepted D2 done-promotion readiness intake for the contract lane; closeout/archive sync PASS, and runtime implementation follow-on moved to BL-078)",
       "priority": "P0",
       "track": "F - Hardening",
-      "depends_on": "BL-035",
-      "blocks": "BL-030",
+      "depends_on": "BL-035 (Done)",
+      "blocks": "\u2014",
       "who": "",
       "what": "",
       "why": "",
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-036 in plain terms: Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green). For technical detail, see ## Objective and ## Validation Plan.",
-      "objective": "Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication.",
-      "runbook_path": "Documentation/backlog/bl-036-dsp-finite-output-guardrails.md"
+      "plain_language_summary": "BL-036 in plain terms: Define the authoritative finite-output guardrail contract, taxonomy, and deterministic replay evidence that downstream runtime enforcement must satisfy before any processor-side promotion claims are made. Current state: Done (contract-lane evidence is complete through D2, docs/status sync is green, and the remaining runtime implementation work was split into BL-078 for honest follow-on ownership). For technical detail, see ## Objective and ## Validation Plan.",
+      "objective": "Define the authoritative finite-output guardrail contract, taxonomy, and deterministic replay evidence that runtime processor enforcement must satisfy before follow-on implementation is promoted.",
+      "runbook_path": "Documentation/backlog/done/bl-036-dsp-finite-output-guardrails.md"
     },
     {
       "id": "BL-037",
       "title": "BL-037 Emitter Snapshot CPU Budget",
-      "state_bucket": "open",
-      "status": "Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green)",
+      "state_bucket": "done",
+      "status": "Done (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green; closeout/archive sync PASS)",
       "priority": "P1",
       "track": "F - Hardening",
       "depends_on": "BL-035",
-      "blocks": "BL-030",
+      "blocks": "\u2014",
       "who": "",
       "what": "",
       "why": "",
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-037 in plain terms: Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-037 in plain terms: Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. Current state: Done (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green; closeout/archive sync PASS). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable.",
-      "runbook_path": "Documentation/backlog/bl-037-emitter-snapshot-cpu-budget.md"
+      "runbook_path": "Documentation/backlog/done/bl-037-emitter-snapshot-cpu-budget.md"
     },
     {
       "id": "BL-038",
       "title": "BL-038 Calibration Threading and Telemetry",
-      "state_bucket": "open",
-      "status": "Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green)",
+      "state_bucket": "done",
+      "status": "Done (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green; closeout/archive sync PASS)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-026 (Done), BL-034 (Done)",
@@ -744,9 +744,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-038 in plain terms: Define deterministic calibration threading boundaries and RT-safe telemetry publication rules so runtime state transitions, timeout/error handling, and evidence output are machine-checkable and replay-stable. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-038 in plain terms: Define deterministic calibration threading boundaries and RT-safe telemetry publication rules so runtime state transitions, timeout/error handling, and evidence output are machine-checkable and replay-stable. Current state: Done (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green; closeout/archive sync PASS). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Define deterministic calibration threading boundaries and RT-safe telemetry publication rules so runtime state transitions, timeout/error handling, and evidence output are machine-checkable and replay-stable.",
-      "runbook_path": "Documentation/backlog/bl-038-calibration-threading-and-telemetry.md"
+      "runbook_path": "Documentation/backlog/done/bl-038-calibration-threading-and-telemetry.md"
     },
     {
       "id": "BL-039",
@@ -789,11 +789,11 @@
     {
       "id": "BL-041",
       "title": "BL-041 Doppler v2 and VBAP Geometry Validation",
-      "state_bucket": "open",
-      "status": "Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green)",
+      "state_bucket": "done",
+      "status": "Done (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync are green)",
       "priority": "P2",
       "track": "E - R&D Expansion",
-      "depends_on": "BL-036",
+      "depends_on": "BL-036 (Done)",
       "blocks": "\u2014",
       "who": "",
       "what": "",
@@ -801,9 +801,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-041 in plain terms: Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-041 in plain terms: Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation. Current state: Done (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync are green). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation.",
-      "runbook_path": "Documentation/backlog/bl-041-doppler-v2-and-vbap-geometry-validation.md"
+      "runbook_path": "Documentation/backlog/done/bl-041-doppler-v2-and-vbap-geometry-validation.md"
     },
     {
       "id": "BL-042",
@@ -979,8 +979,8 @@
     {
       "id": "BL-051",
       "title": "BL-051 Ambisonics and ADM Roadmap",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done (roadmap ADR package, decomposition lanes, BL-050 dependency closure, and closeout/archive sync complete)",
       "priority": "P3",
       "track": "E - R&D Expansion",
       "depends_on": "BL-046, BL-050",
@@ -991,9 +991,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-051 in plain terms: Define v2 roadmap and ADR decisions for Ambisonics intermediate bus adoption and ADM/IAMF delivery/export readiness. Current state: Done-candidate. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-051 in plain terms: Define v2 roadmap and ADR decisions for Ambisonics intermediate bus adoption and ADM/IAMF delivery/export readiness. Current state: Done (roadmap ADR package, decomposition lanes, dependency closure, and closeout/archive sync are complete). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Define v2 roadmap and ADR decisions for Ambisonics intermediate bus adoption and ADM/IAMF delivery/export readiness.",
-      "runbook_path": "Documentation/backlog/bl-051-ambisonics-and-adm-roadmap.md"
+      "runbook_path": "Documentation/backlog/done/bl-051-ambisonics-and-adm-roadmap.md"
     },
     {
       "id": "BL-052",
@@ -1455,7 +1455,7 @@
       "id": "BL-076",
       "title": "BL-076 SpatialRenderer Decomposition and Boundary Guardrails",
       "state_bucket": "open",
-      "status": "In Implementation (Wave 6 ambisonic IR contract helper extraction landed; contract+execute replay PASS on 2026-03-05)",
+      "status": "In Implementation (W0-B out-of-line split plus Wave 4 Steam backend and Wave 5 audition implementation-unit extractions landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06)",
       "priority": "P1",
       "track": "F - Hardening",
       "depends_on": "BL-050, BL-069, BL-070",
@@ -1466,7 +1466,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (Wave 6 ambisonic IR contract helper extraction landed; contract+execute replay PASS on 2026-03-05). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (W0-B out-of-line split, Wave 4 Steam backend extraction, and Wave 5 audition implementation-unit extraction landed; build_local plugin plus console targets and contract+execute guardrails PASS on 2026-03-06). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot.",
       "runbook_path": "Documentation/backlog/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md"
     },
@@ -1488,6 +1488,25 @@
       "plain_language_summary": "BL-077 in plain terms: Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions. Current state: Done (contract/execute/live/T2/T3 cadence evidence complete; closeout sync and archive transition recorded). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Provide a robust, easy-to-use capture system that records plugin + companion behavior, guides operators through checkpoint cues, and emits ready-to-review artifacts (video, dense frames, labeled checkpoints, contact sheets, and short cue clips) suitable for automated QA lanes and owner promotion decisions.",
       "runbook_path": "Documentation/backlog/done/bl-077-unified-visual-capture-and-replay-harness.md"
+    },
+    {
+      "id": "BL-078",
+      "title": "BL-078 Runtime Finite-Output Enforcement and Diagnostics",
+      "state_bucket": "open",
+      "status": "Open (2026-03-05 scope-split follow-on created from BL-036 runtime TODOs)",
+      "priority": "P0",
+      "track": "F - Hardening",
+      "depends_on": "BL-036 (Done)",
+      "blocks": "\u2014",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-078 in plain terms: Carry BL-036's remaining runtime work into actual processor-side finite guardrails, additive diagnostics publication, and execute-mode fuzz/soak replay so finite-output protection is implemented, observable, and owner-verifiable instead of only specified on paper. Current state: Open (created on 2026-03-05 as the explicit follow-on after BL-036 was archived as a contract-and-evidence item). For technical detail, see ## Objective and ## Validation Plan.",
+      "objective": "Implement the runtime finite-output guardrails, additive diagnostics publication, and execute-mode fuzz/soak replay required to satisfy BL-036's contract authority with real processor-side evidence.",
+      "runbook_path": "Documentation/backlog/bl-078-runtime-finite-output-enforcement-and-diagnostics.md"
     },
     {
       "id": "HX-01",

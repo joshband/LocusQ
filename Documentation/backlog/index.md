@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-05 (BL-074 done-transition archived with owner closeout sync)
+Last Modified Date: 2026-03-06 (BL-076 Wave 5 audition extraction landed; build + guardrail evidence refreshed)
 
 # LocusQ Master Backlog Index
 
@@ -152,7 +152,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | **Done** (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; closeout/archive sync complete) | G | — | — | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | **Done** (deterministic execute evidence PASS; owner shared-control closeout sync complete) | B | BL-040, BL-067 | — | [bl-074](done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
-| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Implementation (Wave 6 ambisonic IR contract helper extraction landed; contract+execute replay PASS on 2026-03-05) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
+| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Implementation (W0-B out-of-line split + Wave 4 Steam backend + Wave 5 audition implementation-unit extraction landed; `build_local` LocusQ/locusq_qa/locusq_bl018_profile_probe and contract+execute guardrails PASS on 2026-03-06) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)

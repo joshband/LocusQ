@@ -1,0 +1,10 @@
+run_index	check_id	result	detail	artifact
+1	BL076-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl009-headphone-contract-mac.sh
+1	BL076-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl009-headphone-profile-contract-mac.sh
+1	BL076-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl018-ambisonic-contract-mac.sh
+1	BL076-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl018-profile-matrix-strict-mac.sh
+1	BL076-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl052-steam-audio-virtual-surround-mac.sh
+1	BL076-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl053-head-tracking-orientation-injection-mac.sh
+1	BL076-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/qa-bl069-rt-safe-preset-pipeline-mac.sh
+1	BL076-SM-signature-hash	PASS	baseline signature hash=1be1ab8438462d07bf8fa216d6bcf5637fa7e209859b344670d037a4bd6fc71f	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+1	BL076-SM-module-inventory	PASS	baseline module inventory hash=bdd6f8557c3be65de11cb9a2df764786640f42a3f9e080fc2f59c2783831c485	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer

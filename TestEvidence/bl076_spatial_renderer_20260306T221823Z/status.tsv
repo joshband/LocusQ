@@ -1,0 +1,51 @@
+check_id	result	detail	artifact
+BL076-PRE-SpatialRenderer.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+BL076-PRE-SpatialRendererTypes.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+BL076-PRE-SpatialProfileRouter.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+BL076-PRE-ProcessorSceneStateBridgeOps.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/processor_bridge/ProcessorSceneStateBridgeOps.h
+BL076-PRE-index.js	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/ui/public/js/index.js
+BL076-PRE-rt-safety-audit.sh	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/scripts/rt-safety-audit.sh
+BL076-R1-SG-001	PASS	SpatialRenderer.h lines=982 <= 5000	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-SG-002	PASS	module files=15	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-SG-003	PASS	SpatialRenderer.h includes SpatialRendererTypes.h	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-SG-004	PASS	SpatialRenderer.h includes SpatialProfileRouter.h	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialAuditionEngine.h	PASS	SpatialAuditionEngine.h lines=200 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialAuditionPrimitives.h	PASS	SpatialAuditionPrimitives.h lines=183 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialEmitterRenderPass.h	PASS	SpatialEmitterRenderPass.h lines=88 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialHeadphoneCompensation.h	PASS	SpatialHeadphoneCompensation.h lines=101 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialHeadphonePose.h	PASS	SpatialHeadphonePose.h lines=202 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	PASS	SpatialHeadphonePoseAndCompensation.h lines=4 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialPostFxChain.h	PASS	SpatialPostFxChain.h lines=59 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialProfileRouter.h	PASS	SpatialProfileRouter.h lines=220 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialRendererTypes.h	PASS	SpatialRendererTypes.h lines=194 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialSteamAudioBackend.h	PASS	SpatialSteamAudioBackend.h lines=167 <= 250	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionControl.cpp	PASS	SpatialAuditionControl.cpp lines=270 <= 700	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionRender.cpp	PASS	SpatialAuditionRender.cpp lines=531 <= 700	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionSignalGenerator.cpp	PASS	SpatialAuditionSignalGenerator.cpp lines=424 <= 700	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionSupport.cpp	PASS	SpatialAuditionSupport.cpp lines=293 <= 700	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialSteamAudioBackend.cpp	PASS	SpatialSteamAudioBackend.cpp lines=453 <= 700	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_structure_guardrails.tsv
+BL076-R1-DM-001	PASS	SpatialRendererTypes.h does not include SceneGraph.h	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-002	PASS	SpatialRendererTypes.h does not include phonon.h	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-003	PASS	SpatialRendererTypes.h avoids headphone_dsp includes	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-004	PASS	SpatialProfileRouter.h avoids phonon.h	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-005	PASS	SpatialProfileRouter.h avoids headphone_dsp includes	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-006	PASS	SpatialProfileRouter.h includes SpatialRendererTypes.h	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-007	PASS	Source/spatial_renderer/* avoids SceneGraph include edge	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-RT-001	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/rt_audit.tsv
+BL076-R1-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-signature-hash	PASS	baseline smoke signature hash=1be1ab8438462d07bf8fa216d6bcf5637fa7e209859b344670d037a4bd6fc71f	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-SM-module-inventory	PASS	baseline module inventory hash=0f992520685d9b8a271dab39b5e3c24ff9988db7736ed0de8bd98938e988d44d	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/smoke_parity_matrix.tsv
+BL076-R1-BP-001	PASS	bridge payload emits snapshotSchema	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/bridge_payload_parity.tsv
+BL076-R1-BP-002	PASS	bridge payload emits nativeBridgeDiagnosticsSchema	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/bridge_payload_parity.tsv
+BL076-R1-BP-003	PASS	bridge payload includes nativeBridgeDiagnostics object	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/bridge_payload_parity.tsv
+BL076-R1-BP-004	PASS	UI parser checks native bridge diagnostics schema key	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/bridge_payload_parity.tsv
+BL076-R1-BP-005	PASS	UI parser ingests snapshotSchema contract key	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/bridge_payload_parity.tsv
+BL076-R1-BP-signature-hash	PASS	baseline bridge signature hash=ec11c5b3b29a988a391df000a853ca6eb7dafd490c9056c746307417c7309e4e	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z/bridge_payload_parity.tsv
+BL076-EXEC-scaffold_rows	PASS	execute artifact tables contain zero TODO/SCAFFOLD rows	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z
+BL076-lane_result	PASS	mode=execute;runs=1;pass=49;fail=0	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T221823Z

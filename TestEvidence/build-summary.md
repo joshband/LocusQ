@@ -2,9 +2,60 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-05
+Last Modified Date: 2026-03-06
 
 # LocusQ Build Summary (Acceptance Closeout)
+
+## BL-076 Wave 5 Audition Implementation-Unit Extraction (UTC 2026-03-06T22:18:23Z)
+
+1. Implementation slice
+- added `Source/spatial_renderer/SpatialAuditionControl.cpp`
+- added `Source/spatial_renderer/SpatialAuditionSupport.cpp`
+- added `Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp`
+- added `Source/spatial_renderer/SpatialAuditionRender.cpp`
+- moved audition control, telemetry/support, signal-generation, and render method bodies out of `Source/SpatialRenderer.cpp`
+- reduced `Source/SpatialRenderer.cpp` to `1981` LOC while keeping each new audition `.cpp` under the BL-076 planning-packet `<=700` LOC goal
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> `PASS`
+
+3. BL-076 guardrail evidence
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T221704Z/status.tsv`)
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T221823Z/status.tsv`)
+
+## BL-076 Wave 4 Steam Backend Extraction (UTC 2026-03-06T21:45:21Z)
+
+1. Implementation slice
+- added `Source/spatial_renderer/SpatialSteamAudioBackend.cpp`
+- moved Steam runtime, diagnostics, monitoring, and binaural render method bodies out of `Source/SpatialRenderer.cpp`
+- fixed the Steam monitoring path to call `locusq::spatial_headphone_pose::buildSpeakerMixFromOrientation(...)` explicitly for Steam-enabled builds
+- reduced `Source/SpatialRenderer.cpp` to `3530` LOC and bounded `Source/spatial_renderer/SpatialSteamAudioBackend.cpp` at `453` LOC
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> `PASS`
+
+3. BL-076 guardrail evidence
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T214410Z/status.tsv`)
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T214421Z/status.tsv`)
+
+## BL-076 W0-B Closeout (UTC 2026-03-06T21:12:28Z)
+
+1. SpatialRenderer out-of-line split
+- added `Source/SpatialRenderer.cpp`
+- reduced `Source/SpatialRenderer.h` to `982` LOC (`wc -l Source/SpatialRenderer.h`)
+- retained extracted helper modules under `Source/spatial_renderer/`
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ -- -j8` -> `PASS`
+- `cmake --build build_local --config Release --target locusq_qa locusq_bl018_profile_probe -- -j8` -> `PASS`
+
+3. Target wiring note
+- initial console-target replay exposed that `locusq_qa` and `locusq_bl018_profile_probe` still lacked the extracted `Source/processor_core/*.cpp` units from the earlier W0-A modularization.
+- `CMakeLists.txt` was updated so both console targets now include `Source/SpatialRenderer.cpp` and the extracted processor-core compilation units.
+
+4. BL-076 guardrail evidence
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T211113Z/status.tsv`)
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T211126Z/status.tsv`)
 
 ## BL-035 Done-Candidate Owner Sync Z1 (UTC 2026-03-04)
 
