@@ -150,13 +150,19 @@ endif()
 # ============================================
 # BINARY DATA (Web UI Resources)
 # ============================================
-juce_add_binary_data(LocusQ_WebUI
-    SOURCES
-        Source/ui/public/index.html
-        Source/ui/public/js/index.js
-        Source/ui/public/js/three.min.js
-        Source/ui/public/js/juce/index.js
-        Source/ui/public/js/juce/check_native_interop.js
+# Production UI resources — always included.
+set(LOCUSQ_WEBUI_SOURCES
+    Source/ui/public/index.html
+    Source/ui/public/js/index.js
+    Source/ui/public/js/three.min.js
+    Source/ui/public/js/juce/index.js
+    Source/ui/public/js/juce/check_native_interop.js
+)
+
+# POC and incremental stage assets — only included when LOCUSQ_UI_POC is ON.
+# Keeps release binaries lean by excluding ~24 unused HTML/JS files.
+if(LOCUSQ_UI_POC)
+    list(APPEND LOCUSQ_WEBUI_SOURCES
         Source/ui/public/poc/index_poc.html
         Source/ui/public/poc/js/poc_ui.js
         Source/ui/public/incremental/index_stage2.html
@@ -181,6 +187,11 @@ juce_add_binary_data(LocusQ_WebUI
         Source/ui/public/incremental/js/stage11_ui.js
         Source/ui/public/incremental/index_stage12.html
         Source/ui/public/incremental/js/stage12_ui.js
+    )
+endif()
+
+juce_add_binary_data(LocusQ_WebUI
+    SOURCES ${LOCUSQ_WEBUI_SOURCES}
 )
 
 # ============================================
@@ -219,6 +230,8 @@ juce_add_plugin(LocusQ
 target_sources(LocusQ
     PRIVATE
         Source/PluginProcessor.cpp
+        Source/processor_core/ProcessorParameterLayout.cpp
+        Source/processor_core/ProcessorStateSerializer.cpp
         Source/PluginEditor.cpp
         Source/SceneGraph.h
         Source/VBAPPanner.h

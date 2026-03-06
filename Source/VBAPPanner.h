@@ -107,8 +107,12 @@ public:
     }
 
     //--------------------------------------------------------------------------
-    // Calculate per-speaker gains with elevation (3D → 2D projection)
-    // Elevation reduces overall gain and widens spread slightly
+    // Calculate per-speaker gains with elevation (3D → 2D projection).
+    //
+    // NOTE: This is a simplified 2D-to-3D projection suitable for quad layouts
+    // where all speakers are on the horizontal plane. For immersive formats with
+    // height speakers (7.1.4, 7.4.2), a proper 3D VBAP or VBIP implementation
+    // with height-speaker triangulation is required. See BL-041 / W0-D notes.
     SpeakerGains calculateGains (float azimuthDeg, float elevationDeg) const
     {
         auto result = calculateGains (azimuthDeg);
