@@ -4,43 +4,6 @@
 using namespace locusq::constants;
 
 //==============================================================================
-// STATE SERIALIZATION
-//
-// Extracted from PluginProcessor.cpp (W0-A / BL-032 extension).
-// Single responsibility: DAW preset save/restore (get/setStateInformation).
-//==============================================================================
-
-namespace
-{
-    // Resolve effective writable channel count for calibration routing,
-    // guarding against transient "1 channel" reports during host startup.
-    int resolveCalibrationWritableChannels (int snapshotOutputChannels,
-                                            int layoutOutputChannels,
-                                            int cachedAutoOutputChannels,
-                                            const std::array<int, SpatialRenderer::NUM_SPEAKERS>& routing) noexcept
-    {
-        const auto snapshot = juce::jlimit (1, SpatialRenderer::NUM_SPEAKERS, snapshotOutputChannels);
-        const auto layout = juce::jlimit (0, SpatialRenderer::NUM_SPEAKERS, layoutOutputChannels);
-        const auto cached = juce::jlimit (0, SpatialRenderer::NUM_SPEAKERS, cachedAutoOutputChannels);
-
-        int effective = juce::jmax (snapshot, layout);
-
-        if (effective <= 1)
-        {
-            const bool routingUsesMultipleOutputs = std::any_of (
-                routing.begin(),
-                routing.end(),
-                [] (int channel) { return channel > 1; });
-
-            if (routingUsesMultipleOutputs)
-                effective = juce::jmax (effective, cached);
-        }
-
-        return juce::jlimit (1, SpatialRenderer::NUM_SPEAKERS, effective);
-    }
-} // anonymous namespace
-
-//==============================================================================
 // Schema note: the state version is encoded as the string property
 // kSnapshotSchemaValueV2 ("locusq-state-v2").
 //

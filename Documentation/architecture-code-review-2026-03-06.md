@@ -345,7 +345,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 
 | ID | Status | Branch | Agent | Notes |
 |----|--------|--------|-------|-------|
-| W0-A | **PARTIAL** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Extracted 2 of 5 units (ParameterLayout + StateSerializer). Constants header created. Remaining: SceneRegistration, PresetManager, CalibrationBridge |
+| W0-A | **DONE (local continuation)** | `review/claude-architecture-code-review-CmsoV` | Codex + Opus 4.6 handoff | Completed the remaining three extractions: SceneRegistration, PresetManager, and CalibrationBridge. `resolveCalibrationWritableChannels` is now a shared processor helper instead of a stranded local function. |
 | W0-B | **DEFERRED** | — | — | Deferred: BL-076 (SpatialRenderer .h→.cpp split) is already in implementation. Coordinate rather than duplicate. |
 | W0-C | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Gated ~24 incremental/POC UI assets behind `LOCUSQ_UI_POC` CMake flag |
 | W0-D | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Fixed DQ-1 (DistanceAttenuator comment), DQ-2 (VBAPPanner elevation note), DQ-3 (PhysicsEngine collision energy normalization) |
@@ -355,19 +355,19 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 **Extracted compilation units:**
 
 1. `Source/processor_core/ProcessorParameterLayout.cpp` — all 76 APVTS parameter definitions (~400 lines)
-2. `Source/processor_core/ProcessorStateSerializer.cpp` — `getStateInformation`/`setStateInformation` + `resolveCalibrationWritableChannels` helper (~120 lines)
-3. `Source/processor_core/ProcessorConstants.h` — shared snapshot schema/layout constants extracted from anonymous namespace
+2. `Source/processor_core/ProcessorStateSerializer.cpp` — `getStateInformation`/`setStateInformation` (~90 lines after helper extraction)
+3. `Source/processor_core/ProcessorSceneRegistration.cpp` — mode transition + SceneGraph claim/release orchestration (~270 lines)
+4. `Source/processor_core/ProcessorPresetManager.cpp` — preset persistence, emitter UI state persistence, and preset JSON I/O (~620 lines)
+5. `Source/processor_core/ProcessorCalibrationBridge.cpp` — calibration profile routing/state helpers, calibration profile JSON I/O, and companion profile polling (~1020 lines)
+6. `Source/processor_core/ProcessorConstants.h` — shared snapshot schema/layout constants extracted from anonymous namespace
 
-**PluginProcessor.cpp reduction:** ~3653 → ~3100 lines (−550 lines, ~15% reduction)
+**PluginProcessor.cpp reduction:** ~3653 → ~2621 lines (−1032 lines, ~28% reduction)
 
-**Remaining extractions** (for future sessions):
-- `ProcessorSceneRegistration.cpp` — `syncSceneGraphRegistrationForMode` + related helpers
-- `ProcessorPresetManager.cpp` — preset/profile file I/O
-- `ProcessorCalibrationBridge.cpp` — calibration profile management
+**Follow-up note:** the W0-A extraction exposed one broken cross-file dependency in the branch version (`resolveCalibrationWritableChannels`) and one W0-C resource-provider regression (optional POC assets were still referenced unconditionally). Both are fixed in the local continuation.
 
 ### W0-C Detail: Binary Bloat Gate
 
-Wrapped ~24 incremental/POC UI assets (`poc_*.html`, `visualizer_*.html`, stage JS files) in `if(LOCUSQ_UI_POC)` CMake guard. Production builds include only the 5 core UI files.
+Wrapped ~24 incremental/POC UI assets (`poc_*.html`, `visualizer_*.html`, stage JS files) in `if(LOCUSQ_UI_POC)` CMake guard. Production builds include only the 5 core UI files, and the runtime resource provider now gates those optional BinaryData lookups behind `LOCUSQ_UI_POC_DEFAULT` so default builds still compile.
 
 ### W0-D Detail: DSP Correctness Fixes
 

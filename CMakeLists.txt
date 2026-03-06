@@ -231,6 +231,9 @@ target_sources(LocusQ
     PRIVATE
         Source/PluginProcessor.cpp
         Source/processor_core/ProcessorParameterLayout.cpp
+        Source/processor_core/ProcessorSceneRegistration.cpp
+        Source/processor_core/ProcessorPresetManager.cpp
+        Source/processor_core/ProcessorCalibrationBridge.cpp
         Source/processor_core/ProcessorStateSerializer.cpp
         Source/PluginEditor.cpp
         Source/SceneGraph.h
