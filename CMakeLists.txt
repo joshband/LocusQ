@@ -240,7 +240,13 @@ target_sources(LocusQ
         Source/VBAPPanner.h
         Source/DistanceAttenuator.h
         Source/AirAbsorption.h
+        Source/SpatialRenderer.cpp
         Source/SpatialRenderer.h
+        Source/spatial_renderer/SpatialAuditionControl.cpp
+        Source/spatial_renderer/SpatialAuditionSupport.cpp
+        Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+        Source/spatial_renderer/SpatialAuditionRender.cpp
+        Source/spatial_renderer/SpatialSteamAudioBackend.cpp
         Source/DopplerProcessor.h
         Source/DirectivityFilter.h
         Source/SpreadProcessor.h
@@ -451,11 +457,22 @@ if(BUILD_LOCUSQ_QA)
             qa/main.cpp
             # Include processor sources directly (no plugin client)
             Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
             Source/SceneGraph.h
             Source/VBAPPanner.h
             Source/DistanceAttenuator.h
             Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
             Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
             Source/DopplerProcessor.h
             Source/DirectivityFilter.h
             Source/SpreadProcessor.h
@@ -562,11 +579,22 @@ if(BUILD_LOCUSQ_QA)
         PRIVATE
             qa/bl018_profile_probe_main.cpp
             Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
             Source/SceneGraph.h
             Source/VBAPPanner.h
             Source/DistanceAttenuator.h
             Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
             Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
             Source/DopplerProcessor.h
             Source/DirectivityFilter.h
             Source/SpreadProcessor.h

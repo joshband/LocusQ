@@ -2,13 +2,13 @@ Title: BL-076 SpatialRenderer Decomposition and Boundary Guardrails
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-05
+Last Modified Date: 2026-03-06
 
 # BL-076 SpatialRenderer Decomposition and Boundary Guardrails
 
 ## Plain-Language Summary
 
-BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (Wave 6 ambisonic IR contract helper extraction landed; contract+execute replay PASS on 2026-03-05). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (W0-B out-of-line split, Wave 4 Steam backend extraction, and Wave 5 audition implementation-unit extraction landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer
 | What is changing? | Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (Wave 6 ambisonic IR contract helper extraction landed; contract+execute replay PASS on 2026-03-05). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Implementation (W0-B out-of-line split, Wave 4 Steam backend extraction, and Wave 5 audition implementation-unit extraction landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-076 |
 | Priority | P1 |
-| Status | In Implementation (Wave 6 ambisonic IR contract helper extraction landed; contract+execute replay PASS on 2026-03-05) |
+| Status | In Implementation (W0-B out-of-line split plus Wave 4 Steam backend and Wave 5 audition implementation-unit extractions landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | BL-050, BL-069, BL-070 |
@@ -136,6 +136,13 @@ Primary lane commands:
   - `Source/spatial_renderer/SpatialAuditionEngine.h`
   - `Source/SpatialRenderer.h` rewired to extracted audition engine contracts
     (voice-excitation and physics-reactive timbre paths using explicit state/input structs).
+- Wave 5 implementation-unit slice landed:
+  - `Source/spatial_renderer/SpatialAuditionControl.cpp`
+  - `Source/spatial_renderer/SpatialAuditionSupport.cpp`
+  - `Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp`
+  - `Source/spatial_renderer/SpatialAuditionRender.cpp`
+  - `Source/SpatialRenderer.cpp` rewired to those out-of-line audition units
+    (control state, telemetry/support helpers, signal generation, and audition render path).
 - Wave 6 kickoff slice landed:
   - `Source/SpatialRenderer.h` now uses explicit staged orchestrator helpers:
     `runEmitterAccumulationStage` and `applyRoomAndSpeakerPostFx`.
@@ -264,6 +271,70 @@ Primary lane commands:
   - `bridge_payload_parity.tsv`
 - Execute lane semantics:
   - `BL076-EXEC-scaffold_rows` PASS with zero `TODO`/`SCAFFOLD` rows.
+
+## W0-B Closeout Snapshot (2026-03-06)
+
+- W0-B landed as a real header/body split:
+  - added `Source/SpatialRenderer.cpp`
+  - reduced `Source/SpatialRenderer.h` from `4366` LOC to `982` LOC
+  - preserved the previously extracted `Source/spatial_renderer/*` helper modules
+- Affected non-plugin targets were aligned to the post-W0-A source layout:
+  - `locusq_qa` and `locusq_bl018_profile_probe` now include `Source/SpatialRenderer.cpp`
+  - those same console targets now also include the extracted `Source/processor_core/*.cpp` units so `LocusQAudioProcessor` links cleanly after the earlier modularization work
+- Validation replay:
+  - `cmake --build build_local --config Release --target LocusQ -- -j8` -> PASS
+  - `cmake --build build_local --config Release --target locusq_qa locusq_bl018_profile_probe -- -j8` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> PASS
+- Evidence roots:
+  - `TestEvidence/bl076_spatial_renderer_20260306T211113Z/` (contract-only)
+  - `TestEvidence/bl076_spatial_renderer_20260306T211126Z/` (execute)
+- Follow-up note:
+  - W0-B is complete and the header is now bounded, but BL-076 remains `In Implementation` because `Source/SpatialRenderer.cpp` is still a large implementation unit relative to the planning-packet size goals. Further decomposition can build on this safer out-of-line baseline.
+
+## Wave 4 Steam Backend Implementation-Unit Snapshot (2026-03-06)
+
+- Wave 4 made concrete progress on the next BL-076 slice:
+  - added `Source/spatial_renderer/SpatialSteamAudioBackend.cpp`
+  - moved Steam runtime, diagnostics, monitoring, and binaural render method bodies out of `Source/SpatialRenderer.cpp`
+  - fixed the Steam monitoring path to call `locusq::spatial_headphone_pose::buildSpeakerMixFromOrientation(...)` explicitly, which keeps Steam-enabled builds honest instead of relying on an unqualified lookup
+- Current file-size posture after the slice:
+  - `Source/SpatialRenderer.cpp` reduced from `3998` LOC to `3530` LOC
+  - `Source/spatial_renderer/SpatialSteamAudioBackend.cpp` now owns `453` LOC of Steam-specific implementation
+- Validation replay:
+  - `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> PASS
+- Evidence roots:
+  - `TestEvidence/bl076_spatial_renderer_20260306T214410Z/` (contract-only)
+  - `TestEvidence/bl076_spatial_renderer_20260306T214421Z/` (execute)
+- Follow-up note:
+  - BL-076 remains `In Implementation`; the next highest-yield slice is still the audition engine extraction because `Source/SpatialRenderer.cpp` remains materially above the planning-packet `<=700` LOC target.
+
+## Wave 5 Audition Implementation-Unit Snapshot (2026-03-06)
+
+- Wave 5 made concrete progress on the next BL-076 slice:
+  - added `Source/spatial_renderer/SpatialAuditionControl.cpp`
+  - added `Source/spatial_renderer/SpatialAuditionSupport.cpp`
+  - added `Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp`
+  - added `Source/spatial_renderer/SpatialAuditionRender.cpp`
+  - moved audition control, telemetry/support, signal-generation, and render method bodies out of `Source/SpatialRenderer.cpp`
+  - kept every new audition `.cpp` under the planning-packet `<=700` LOC goal
+- Current file-size posture after the slice:
+  - `Source/SpatialRenderer.cpp` reduced from `3530` LOC to `1981` LOC
+  - `Source/spatial_renderer/SpatialAuditionControl.cpp` now owns `270` LOC
+  - `Source/spatial_renderer/SpatialAuditionSupport.cpp` now owns `293` LOC
+  - `Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp` now owns `424` LOC
+  - `Source/spatial_renderer/SpatialAuditionRender.cpp` now owns `531` LOC
+- Validation replay:
+  - `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> PASS
+- Evidence roots:
+  - `TestEvidence/bl076_spatial_renderer_20260306T221704Z/` (contract-only)
+  - `TestEvidence/bl076_spatial_renderer_20260306T221823Z/` (execute)
+- Follow-up note:
+  - BL-076 remains `In Implementation`; the next highest-yield slice is the remaining Wave 6 staged-orchestrator cleanup because `Source/SpatialRenderer.cpp` still exceeds the planning-packet `<=700` LOC target even after the audition split.
 
 ## Replay Cadence Plan (Required)
 

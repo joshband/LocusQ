@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-06 (Rev 3 — Tier 0 execution)
+Last Modified Date: 2026-03-06 (Rev 6 — BL-076 Wave 5 sync)
 
 # LocusQ Architecture & Code Review
 
@@ -298,7 +298,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 | Review Finding | Backlog Item | BL Status | Alignment |
 |---------------|-------------|-----------|-----------|
 | CF-1: PluginProcessor God Object | **BL-032** Source modularization | Done-candidate | W0-A extends BL-032's extraction with additional units (PresetManager, CalibrationBridge, StateSerializer) |
-| CF-2: SpatialRenderer Mega-Header | **BL-076** SpatialRenderer decomposition | In Implementation | W0-B aligns with BL-076 scope; should coordinate |
+| CF-2: SpatialRenderer Mega-Header | **BL-076** SpatialRenderer decomposition | In Implementation | W0-B landed the out-of-line `SpatialRenderer.cpp` split locally, and the BL-076 follow-on has now moved both the Steam runtime/monitoring code and the audition control/render path into dedicated `Source/spatial_renderer/*.cpp` units; remaining refinement can focus on the staged orchestrator cleanup still left in `Source/SpatialRenderer.cpp` |
 | CF-3: PluginEditor Boilerplate | **BL-040** UI modularization + authority UX | Done-candidate | W1-A extends BL-040 with data-driven ParameterBridge |
 | CF-3: PluginEditor Boilerplate | **BL-039** Parameter relay spec generation | Done-candidate | W1-A builds on BL-039's relay spec contract |
 | TQ-1: SpinLock timeline | **BL-035** RT lock-free registration | Done-candidate | W1-B extends lock-free patterns to timeline |
@@ -346,9 +346,21 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 | ID | Status | Branch | Agent | Notes |
 |----|--------|--------|-------|-------|
 | W0-A | **DONE (local continuation)** | `review/claude-architecture-code-review-CmsoV` | Codex + Opus 4.6 handoff | Completed the remaining three extractions: SceneRegistration, PresetManager, and CalibrationBridge. `resolveCalibrationWritableChannels` is now a shared processor helper instead of a stranded local function. |
-| W0-B | **DEFERRED** | — | — | Deferred: BL-076 (SpatialRenderer .h→.cpp split) is already in implementation. Coordinate rather than duplicate. |
+| W0-B | **DONE (local continuation)** | `main` | Codex | Added `Source/SpatialRenderer.cpp`, reduced `Source/SpatialRenderer.h` to `982` LOC, refreshed BL-076 contract+execute guardrails after wiring affected QA/probe targets to the modularized processor sources, then continued BL-076 with `Source/spatial_renderer/SpatialSteamAudioBackend.cpp` plus the Wave 5 audition implementation units (`SpatialAuditionControl.cpp`, `SpatialAuditionSupport.cpp`, `SpatialAuditionSignalGenerator.cpp`, `SpatialAuditionRender.cpp`), reducing `Source/SpatialRenderer.cpp` to `1981` LOC. |
 | W0-C | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Gated ~24 incremental/POC UI assets behind `LOCUSQ_UI_POC` CMake flag |
 | W0-D | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Fixed DQ-1 (DistanceAttenuator comment), DQ-2 (VBAPPanner elevation note), DQ-3 (PhysicsEngine collision energy normalization) |
+
+### BL-076 Follow-On After W0-B
+
+- The architecture review’s Tier 0 recommendation for W0-B is complete, but BL-076 is still active as the broader follow-on for CF-2.
+- Latest local continuation after the W0-B merge:
+  - added `Source/spatial_renderer/SpatialSteamAudioBackend.cpp`
+  - moved Steam runtime, diagnostics, monitoring, and binaural render method bodies out of `Source/SpatialRenderer.cpp`
+  - added `Source/spatial_renderer/SpatialAuditionControl.cpp`, `SpatialAuditionSupport.cpp`, `SpatialAuditionSignalGenerator.cpp`, and `SpatialAuditionRender.cpp`
+  - moved the audition control/support/signal/render method bodies out of `Source/SpatialRenderer.cpp`
+  - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `1981` LOC across the Wave 4 and Wave 5 follow-on slices
+  - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06
+- Recommended next BL-076 slice: remaining staged-orchestrator cleanup inside `Source/SpatialRenderer.cpp`, while the next formal architecture-roadmap item unlocked by completed Tier 0 work remains **W1-B**.
 
 ### W0-A Detail: PluginProcessor Decomposition
 
