@@ -2,13 +2,13 @@ Title: BL-035 RT Lock-Free Registration
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-04
+Last Modified Date: 2026-03-05
 
 # BL-035 RT Lock-Free Registration
 
 ## Plain-Language Summary
 
-BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; promotion packet recorded). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-035 in plain terms: Remove lock acquisition from all audio-thread registration paths so processBlock() remains lock-free and invariant-compliant under multi-instance stress. Current state: Done (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; closeout/archive sync PASS). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-035 in plain terms: Remove lock acquisition from all audio-thread registratio
 | What is changing? | Remove lock acquisition from all audio-thread registration paths so the realtime audio processing path remains lock-free and invariant-compliant under multi-instance stress. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS). |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-035-rt-lock-free-registration.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; closeout/archive sync PASS). |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-035-rt-lock-free-registration.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -67,16 +67,17 @@ Done-candidate]
 |---|---|
 | ID | BL-035 |
 | Priority | P0 |
-| Status | Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS) |
+| Status | Done (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; closeout/archive sync PASS) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | HX-02 (Done), BL-032 (Done-candidate) |
-| Blocks | BL-030 |
+| Blocks | — |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | SHARED_FILES_TOUCHED | no |
 | Promotion Decision Packet | `TestEvidence/bl035_owner_sync_z1_20260304T015434Z/promotion_decision.md` |
 | Final Evidence Root | `TestEvidence/bl035_owner_sync_z1_20260304T015434Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-035-rt-lock-free-registration.md` |
 
 ## Resume Checkpoint (2026-03-01)
 

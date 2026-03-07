@@ -4,10 +4,8 @@
 
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <cmath>
-#include <thread>
 
 //==============================================================================
 /**
@@ -29,7 +27,7 @@ struct PhysicsBody
  * The worker thread advances position/velocity at a configurable tick rate.
  * Audio thread interaction is lock-free via atomics and double-buffered state.
  */
-class PhysicsEngine
+class PhysicsEngine : private juce::Thread
 {
 public:
     struct PhysicsState
@@ -42,9 +40,12 @@ public:
         bool initialized = false;
     };
 
-    PhysicsEngine() = default;
+    PhysicsEngine()
+        : juce::Thread ("LocusQPhysicsEngine")
+    {
+    }
 
-    ~PhysicsEngine()
+    ~PhysicsEngine() override
     {
         shutdown();
     }
@@ -54,22 +55,24 @@ public:
     {
         currentSampleRate.store (sampleRate, std::memory_order_relaxed);
         startThreadIfNeeded();
+        notify();
     }
 
     void shutdown()
     {
-        if (! running.exchange (false, std::memory_order_acq_rel))
+        if (! isThreadRunning())
             return;
 
-        if (worker.joinable())
-            worker.join();
+        signalThreadShouldExit();
+        notify();
+        stopThread (1000);
     }
 
     //==========================================================================
-    void setPhysicsEnabled (bool enabled)              { bodyEnabled.store (enabled, std::memory_order_release); }
-    void setPaused (bool paused)                       { simulationPaused.store (paused, std::memory_order_release); }
+    void setPhysicsEnabled (bool enabled)              { bodyEnabled.store (enabled, std::memory_order_release); notify(); }
+    void setPaused (bool paused)                       { simulationPaused.store (paused, std::memory_order_release); notify(); }
     void setWallCollisionEnabled (bool enabled)        { wallCollisionEnabled.store (enabled, std::memory_order_release); }
-    void setUpdateRateIndex (int index)                { updateRateIndex.store (juce::jlimit (0, 3, index), std::memory_order_release); }
+    void setUpdateRateIndex (int index)                { updateRateIndex.store (juce::jlimit (0, 3, index), std::memory_order_release); notify(); }
 
     void setMass (float value)                         { mass.store (juce::jmax (0.01f, value), std::memory_order_release); }
     void setDrag (float value)                         { drag.store (juce::jlimit (0.0f, 10.0f, value), std::memory_order_release); }
@@ -103,11 +106,13 @@ public:
         throwVelocityY.store (initialVelocity.y, std::memory_order_release);
         throwVelocityZ.store (initialVelocity.z, std::memory_order_release);
         throwSequence.fetch_add (1, std::memory_order_acq_rel);
+        notify();
     }
 
     void requestReset()
     {
         resetSequence.fetch_add (1, std::memory_order_acq_rel);
+        notify();
     }
 
     PhysicsState getState() const
@@ -120,22 +125,43 @@ private:
     //==========================================================================
     void startThreadIfNeeded()
     {
-        if (running.load (std::memory_order_acquire))
+        if (isThreadRunning())
             return;
 
-        running.store (true, std::memory_order_release);
-        worker = std::thread ([this] { runLoop(); });
+        startThread();
     }
 
-    void runLoop()
+    void run() override
     {
-        while (running.load (std::memory_order_acquire))
-        {
-            const float rateHz = getUpdateRateHz (updateRateIndex.load (std::memory_order_acquire));
-            const float dt = 1.0f / rateHz;
+        auto nextTickMs = juce::Time::getMillisecondCounterHiRes();
+        auto lastRateIndex = updateRateIndex.load (std::memory_order_acquire);
 
-            step (dt);
-            std::this_thread::sleep_for (std::chrono::duration<float> (dt));
+        while (! threadShouldExit())
+        {
+            const auto rateIndex = updateRateIndex.load (std::memory_order_acquire);
+            const auto nowMs = juce::Time::getMillisecondCounterHiRes();
+
+            if (rateIndex != lastRateIndex)
+            {
+                nextTickMs = nowMs;
+                lastRateIndex = rateIndex;
+            }
+
+            const float rateHz = getUpdateRateHz (rateIndex);
+            const double periodMs = 1000.0 / static_cast<double> (rateHz);
+            const auto timeUntilNextTickMs = nextTickMs - nowMs;
+
+            if (timeUntilNextTickMs > 0.25)
+            {
+                wait (juce::jlimit (1, 50, static_cast<int> (std::ceil (timeUntilNextTickMs))));
+                continue;
+            }
+
+            step (static_cast<float> (periodMs * 0.001));
+            nextTickMs += periodMs;
+
+            if (nextTickMs < nowMs)
+                nextTickMs = nowMs + periodMs;
         }
     }
 
@@ -406,9 +432,6 @@ private:
     //==========================================================================
     std::array<PhysicsState, 2> stateBuffers {};
     std::atomic<int> readIndex { 0 };
-
-    std::atomic<bool> running { false };
-    std::thread worker;
 
     std::atomic<double> currentSampleRate { 44100.0 };
     std::atomic<int> updateRateIndex { 1 };

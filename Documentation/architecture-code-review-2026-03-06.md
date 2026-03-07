@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-06 (Rev 6 — BL-076 Wave 5 sync)
+Last Modified Date: 2026-03-07 (Rev 11 — W1-B thread-safety hardening)
 
 # LocusQ Architecture & Code Review
 
@@ -11,6 +11,32 @@ Last Modified Date: 2026-03-06 (Rev 6 — BL-076 Wave 5 sync)
 LocusQ is a sophisticated quadraphonic 3D spatial audio plugin (VST3/AU/LV2/CLAP) built on JUCE 8 with a WebView-based Three.js UI. The codebase demonstrates strong architectural foundations — lock-free inter-instance communication, phase-gated development workflow, and comprehensive QA infrastructure. However, the v1.0.0-ga codebase has accumulated complexity debt in several critical areas that impact maintainability, extensibility, and runtime performance.
 
 This review covers **architecture**, **code quality**, **functionality**, and **usability**, and concludes with a **prioritized, dependency-aware execution plan** for parallel agent sessions.
+
+## Review Status Legend
+
+- `[DONE]` completed and no longer the active focus for this review cycle. Use `~~strikethrough~~` on the item name when the task itself is complete.
+- `[ACTIVE]` in progress right now with meaningful remaining work.
+- `[NEXT]` the next recommended item after the current active slice closes.
+- `[QUEUED]` dependency-cleared or roadmap-approved, but not the current focus.
+- `[DEFERRED]` intentionally postponed into another lane.
+- `[BLOCKED]` waiting on a dependency, owner decision, or failing validation lane.
+- `Actual / Time` should use exact dates or focused-session wording when available. If wall-clock effort was not logged, say `not logged` instead of guessing.
+- `Tokens` should be `n/a` unless a session explicitly recorded token usage. This repo does not auto-log LLM token counts.
+- Portable markdown only: do not rely on HTML/CSS color for state. Use status tags, tables, and `~~strikethrough~~` instead.
+
+## Priority Snapshot
+
+| Item | Status | Priority | Estimate | Actual / Time | Tokens | Updated | Where | Evidence / Remaining |
+|---|---|---|---|---|---|---|---|---|
+| `~~W0-A~~` PluginProcessor decomposition | `[DONE]` | P0 | Large | done; time not logged | `n/a` | 2026-03-06 | `PluginProcessor.cpp/h`, `Source/processor_core/*.cpp` | Tier 0 complete; `W1-B` now unlocked |
+| `~~W0-B~~` SpatialRenderer body split + BL-076 continuation | `[DONE]` | P0 | Medium | multiple same-day continuation slices on 2026-03-06 | `n/a` | 2026-03-06 | `SpatialRenderer.h/.cpp`, `Source/spatial_renderer/*.cpp` | Tier 0 complete; BL-076 closeout complete |
+| `~~W0-C~~` UI POC/incremental gating | `[DONE]` | P0 | Small | done; time not logged | `n/a` | 2026-03-06 | `CMakeLists.txt`, `Source/ui/public/` | Tier 0 complete |
+| `~~W0-D~~` DSP correctness fixes | `[DONE]` | P0 | Medium | done; time not logged | `n/a` | 2026-03-06 | `DistanceAttenuator.h`, `VBAPPanner.h`, `PhysicsEngine.h` | Tier 0 complete |
+| `~~BL-076~~` staged-orchestrator cleanup | `[DONE]` | P1 | Medium | latest cleanup slice landed 2026-03-06 | `n/a` | 2026-03-07 | `Source/SpatialRenderer.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp` | `Source/SpatialRenderer.cpp` now `662` LOC; W1-B is complete locally and W1-A is the next recommended cleanup slice |
+| `~~W1-B~~` thread-safety fixes | `[DONE]` | P1 | Medium | focused hardening slice completed 2026-03-07 | `n/a` | 2026-03-07 | timeline, physics worker, diagnostics ownership | Triple-buffered RT timeline snapshots, `juce::Thread` physics cadence, and fixed-size sequence-safe diagnostics landed; validated by `locusq_qa` spatial scenarios plus `locusq_physics_probe` |
+| W1-A ParameterBridge | `[NEXT]` | P2 | Medium | not started | `n/a` | 2026-03-07 | `PluginEditor.*`, parameter relay/attachment surfaces | Next architecture-roadmap slice after W1-B hardening |
+| W1-C JS/Vite toolchain | `[QUEUED]` | P2 | Medium | not started | `n/a` | 2026-03-06 | WebView build pipeline | Depends on W0-C, but not the current priority |
+| W1-D APVTS parameter grouping | `[QUEUED]` | P2 | Small | not started | `n/a` | 2026-03-06 | parameter layout/grouping surfaces | Useful cleanup, but lower urgency than W1-B |
 
 ---
 
@@ -192,73 +218,73 @@ The file has an enormous anonymous namespace (lines 20–999+) containing helper
 
 ```
 Tier 0 (Foundation — No Dependencies)
-  ├─ W0-A: Extract PluginProcessor into focused compilation units
-  ├─ W0-B: Move SpatialRenderer implementation to .cpp
-  ├─ W0-C: Strip incremental/POC UI from release binary
-  └─ W0-D: Fix DSP correctness issues (DQ-1, DQ-2, DQ-3)
+  ├─ [DONE] ~~W0-A: Extract PluginProcessor into focused compilation units~~
+  ├─ [DONE] ~~W0-B: Move SpatialRenderer implementation to .cpp~~
+  ├─ [DONE] ~~W0-C: Strip incremental/POC UI from release binary~~
+  └─ [DONE] ~~W0-D: Fix DSP correctness issues (DQ-1, DQ-2, DQ-3)~~
 
 Tier 1 (Depends on Tier 0)
-  ├─ W1-A: Data-driven ParameterBridge for PluginEditor (depends W0-A)
-  ├─ W1-B: Fix thread-safety issues TQ-1, TQ-2, TQ-3 (depends W0-A, W0-B)
-  ├─ W1-C: Introduce JS build toolchain (TypeScript/Vite) (depends W0-C)
-  └─ W1-D: APVTS parameter grouping (depends W0-A)
+  ├─ [NEXT] W1-A: Data-driven ParameterBridge for PluginEditor (depends W0-A)
+  ├─ [DONE] ~~W1-B~~: Fix thread-safety issues TQ-1, TQ-2, TQ-3 (depends W0-A, W0-B)
+  ├─ [QUEUED] W1-C: Introduce JS build toolchain (TypeScript/Vite) (depends W0-C)
+  └─ [QUEUED] W1-D: APVTS parameter grouping (depends W0-A)
 
 Tier 2 (Depends on Tier 1)
-  ├─ W2-A: Optimize memory (MQ-1, MQ-2, MQ-3) (depends W1-B)
-  ├─ W2-B: UI loading indicator + error surfaces (depends W1-C)
-  ├─ W2-C: Enable CLAP/AUv3 in CI (depends W0-A)
-  └─ W2-D: Calibration profile export/import (depends W0-A)
+  ├─ [QUEUED] W2-A: Optimize memory (MQ-1, MQ-2, MQ-3) (depends W1-B)
+  ├─ [QUEUED] W2-B: UI loading indicator + error surfaces (depends W1-C)
+  ├─ [QUEUED] W2-C: Enable CLAP/AUv3 in CI (depends W0-A)
+  └─ [QUEUED] W2-D: Calibration profile export/import (depends W0-A)
 
 Tier 3 (Polish — Depends on Tier 2)
-  ├─ W3-A: Undo/redo for keyframe + preset operations (depends W2-A)
-  ├─ W3-B: Mode transition crossfade (depends W2-A)
-  ├─ W3-C: Keyboard/accessibility for WebView (depends W2-B)
-  └─ W3-D: Audition signal documentation/tooltips (depends W2-B)
+  ├─ [QUEUED] W3-A: Undo/redo for keyframe + preset operations (depends W2-A)
+  ├─ [QUEUED] W3-B: Mode transition crossfade (depends W2-A)
+  ├─ [QUEUED] W3-C: Keyboard/accessibility for WebView (depends W2-B)
+  └─ [QUEUED] W3-D: Audition signal documentation/tooltips (depends W2-B)
 ```
 
 ### Work Package Details
 
 #### Tier 0 — Foundation (All Independent, All Parallelizable)
 
-| ID | Task | Agent Type | Est. Scope | Files Affected |
-|----|------|-----------|-----------|----------------|
-| **W0-A** | Extract PluginProcessor into focused compilation units | Claude Opus | Large | `PluginProcessor.cpp/h`, 6 new `.cpp` files, `CMakeLists.txt` |
-| **W0-B** | Move SpatialRenderer body to `.cpp`, keep header lean | Claude Sonnet | Medium | `SpatialRenderer.h` → `SpatialRenderer.h` + `SpatialRenderer.cpp`, `CMakeLists.txt` |
-| **W0-C** | Gate incremental/POC UI assets behind build flag; strip from release | Claude Haiku | Small | `CMakeLists.txt`, possibly `Source/ui/` restructure |
-| **W0-D** | Fix DQ-1 (comment), DQ-2 (3D VBAP for height speakers), DQ-3 (collision energy normalization) | Claude Sonnet | Medium | `DistanceAttenuator.h`, `VBAPPanner.h`, `PhysicsEngine.h` |
+| ID | Status | Task | Agent Type | Est. Scope | Files Affected |
+|----|--------|------|-----------|-----------|----------------|
+| **W0-A** | `[DONE]` | `~~Extract PluginProcessor into focused compilation units~~` | Claude Opus | Large | `PluginProcessor.cpp/h`, 6 new `.cpp` files, `CMakeLists.txt` |
+| **W0-B** | `[DONE]` | `~~Move SpatialRenderer body to .cpp, keep header lean~~` | Claude Sonnet | Medium | `SpatialRenderer.h` → `SpatialRenderer.h` + `SpatialRenderer.cpp`, `CMakeLists.txt` |
+| **W0-C** | `[DONE]` | `~~Gate incremental/POC UI assets behind build flag; strip from release~~` | Claude Haiku | Small | `CMakeLists.txt`, possibly `Source/ui/` restructure |
+| **W0-D** | `[DONE]` | `~~Fix DQ-1 (comment), DQ-2 (3D VBAP for height speakers), DQ-3 (collision energy normalization)~~` | Claude Sonnet | Medium | `DistanceAttenuator.h`, `VBAPPanner.h`, `PhysicsEngine.h` |
 
 **Parallel execution**: All 4 work packages can run simultaneously in separate worktrees.
 
 #### Tier 1 — Structural Improvement (After Tier 0 Merges)
 
-| ID | Task | Agent Type | Est. Scope | Depends On |
-|----|------|-----------|-----------|-----------|
-| **W1-A** | Data-driven ParameterBridge: auto-generate relay+attachment from ID list | Claude Opus | Medium | W0-A |
-| **W1-B** | Thread safety fixes: triple-buffer timeline, JUCE Thread for physics, fixed-size diagnostics | Claude Opus | Medium | W0-A, W0-B |
-| **W1-C** | Add Vite/TypeScript build for WebView UI, vendor Three.js via npm | Claude Sonnet | Medium | W0-C |
-| **W1-D** | APVTS parameter groups (Position, Physics, Renderer, Calibration, Animation, Visualization) | Claude Sonnet | Small | W0-A |
+| ID | Status | Task | Agent Type | Est. Scope | Depends On |
+|----|--------|------|-----------|-----------|-----------|
+| **W1-A** | `[NEXT]` | Data-driven ParameterBridge: auto-generate relay+attachment from ID list | Claude Opus | Medium | W0-A |
+| **W1-B** | `[DONE]` | Thread safety fixes: triple-buffer timeline, JUCE Thread for physics, fixed-size diagnostics | Claude Opus | Medium | W0-A, W0-B |
+| **W1-C** | `[QUEUED]` | Add Vite/TypeScript build for WebView UI, vendor Three.js via npm | Claude Sonnet | Medium | W0-C |
+| **W1-D** | `[QUEUED]` | APVTS parameter groups (Position, Physics, Renderer, Calibration, Animation, Visualization) | Claude Sonnet | Small | W0-A |
 
 **Parallel execution**: W1-A and W1-B can run in parallel. W1-C is independent. W1-D is independent.
 
 #### Tier 2 — Optimization & Feature Completion
 
-| ID | Task | Agent Type | Est. Scope | Depends On |
-|----|------|-----------|-----------|-----------|
-| **W2-A** | Memory optimization: fixed buffers, lazy EmitterSlot allocation, binary snapshot protocol | Claude Opus | Medium | W1-B |
-| **W2-B** | WebView loading skeleton, error toast system, calibration status panel | Claude Sonnet | Medium | W1-C |
-| **W2-C** | Enable CLAP + AUv3 format builds in CI, add validation lanes | Claude Sonnet | Small | W0-A |
-| **W2-D** | Calibration profile export/import (JSON file picker) | Claude Haiku | Small | W0-A |
+| ID | Status | Task | Agent Type | Est. Scope | Depends On |
+|----|--------|------|-----------|-----------|-----------|
+| **W2-A** | `[QUEUED]` | Memory optimization: fixed buffers, lazy EmitterSlot allocation, binary snapshot protocol | Claude Opus | Medium | W1-B |
+| **W2-B** | `[QUEUED]` | WebView loading skeleton, error toast system, calibration status panel | Claude Sonnet | Medium | W1-C |
+| **W2-C** | `[QUEUED]` | Enable CLAP + AUv3 format builds in CI, add validation lanes | Claude Sonnet | Small | W0-A |
+| **W2-D** | `[QUEUED]` | Calibration profile export/import (JSON file picker) | Claude Haiku | Small | W0-A |
 
 **Parallel execution**: All 4 can run simultaneously.
 
 #### Tier 3 — Polish
 
-| ID | Task | Agent Type | Est. Scope | Depends On |
-|----|------|-----------|-----------|-----------|
-| **W3-A** | Undo/redo for keyframe timeline and preset operations | Claude Opus | Large | W2-A |
-| **W3-B** | Sample-accurate mode transition with gain crossfade | Claude Opus | Medium | W2-A |
-| **W3-C** | Keyboard navigation + ARIA attributes for WebView UI | Claude Sonnet | Medium | W2-B |
-| **W3-D** | Audition signal tooltips and documentation in UI | Claude Haiku | Small | W2-B |
+| ID | Status | Task | Agent Type | Est. Scope | Depends On |
+|----|--------|------|-----------|-----------|-----------|
+| **W3-A** | `[QUEUED]` | Undo/redo for keyframe timeline and preset operations | Claude Opus | Large | W2-A |
+| **W3-B** | `[QUEUED]` | Sample-accurate mode transition with gain crossfade | Claude Opus | Medium | W2-A |
+| **W3-C** | `[QUEUED]` | Keyboard navigation + ARIA attributes for WebView UI | Claude Sonnet | Medium | W2-B |
+| **W3-D** | `[QUEUED]` | Audition signal tooltips and documentation in UI | Claude Haiku | Small | W2-B |
 
 **Parallel execution**: W3-A + W3-B can pair. W3-C + W3-D can pair.
 
@@ -298,7 +324,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 | Review Finding | Backlog Item | BL Status | Alignment |
 |---------------|-------------|-----------|-----------|
 | CF-1: PluginProcessor God Object | **BL-032** Source modularization | Done-candidate | W0-A extends BL-032's extraction with additional units (PresetManager, CalibrationBridge, StateSerializer) |
-| CF-2: SpatialRenderer Mega-Header | **BL-076** SpatialRenderer decomposition | In Implementation | W0-B landed the out-of-line `SpatialRenderer.cpp` split locally, and the BL-076 follow-on has now moved both the Steam runtime/monitoring code and the audition control/render path into dedicated `Source/spatial_renderer/*.cpp` units; remaining refinement can focus on the staged orchestrator cleanup still left in `Source/SpatialRenderer.cpp` |
+| CF-2: SpatialRenderer Mega-Header | **BL-076** SpatialRenderer decomposition | Done | W0-B landed the out-of-line `SpatialRenderer.cpp` split locally, and the BL-076 follow-on moved the Steam runtime/monitoring code, audition control/render path, output/headphone/codec stage, and headphone/profile control+support surfaces into dedicated `Source/spatial_renderer/*.cpp` units; `Source/SpatialRenderer.cpp` is now `662` LOC and the closeout cadence is complete |
 | CF-3: PluginEditor Boilerplate | **BL-040** UI modularization + authority UX | Done-candidate | W1-A extends BL-040 with data-driven ParameterBridge |
 | CF-3: PluginEditor Boilerplate | **BL-039** Parameter relay spec generation | Done-candidate | W1-A builds on BL-039's relay spec contract |
 | TQ-1: SpinLock timeline | **BL-035** RT lock-free registration | Done-candidate | W1-B extends lock-free patterns to timeline |
@@ -323,7 +349,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 ### Backlog Gate Dependencies for Tier 0
 
 - **W0-A** can proceed: BL-032 is done-candidate; this extends and completes it.
-- **W0-B** must coordinate with BL-076 (in implementation): merge BL-076 progress first or align scope.
+- **W0-B** coordinated with BL-076 and the closeout is now complete.
 - **W0-C** is net-new: no backlog conflict.
 - **W0-D** extends BL-041 (done-candidate): safe to proceed, validates BL-041 promotion.
 
@@ -346,21 +372,40 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 | ID | Status | Branch | Agent | Notes |
 |----|--------|--------|-------|-------|
 | W0-A | **DONE (local continuation)** | `review/claude-architecture-code-review-CmsoV` | Codex + Opus 4.6 handoff | Completed the remaining three extractions: SceneRegistration, PresetManager, and CalibrationBridge. `resolveCalibrationWritableChannels` is now a shared processor helper instead of a stranded local function. |
-| W0-B | **DONE (local continuation)** | `main` | Codex | Added `Source/SpatialRenderer.cpp`, reduced `Source/SpatialRenderer.h` to `982` LOC, refreshed BL-076 contract+execute guardrails after wiring affected QA/probe targets to the modularized processor sources, then continued BL-076 with `Source/spatial_renderer/SpatialSteamAudioBackend.cpp` plus the Wave 5 audition implementation units (`SpatialAuditionControl.cpp`, `SpatialAuditionSupport.cpp`, `SpatialAuditionSignalGenerator.cpp`, `SpatialAuditionRender.cpp`), reducing `Source/SpatialRenderer.cpp` to `1981` LOC. |
+| W0-B | **DONE (local continuation)** | `main` | Codex | Added `Source/SpatialRenderer.cpp`, reduced `Source/SpatialRenderer.h` to `982` LOC, refreshed BL-076 contract+execute guardrails after wiring affected QA/probe targets to the modularized processor sources, then continued BL-076 with `Source/spatial_renderer/SpatialSteamAudioBackend.cpp`, the Wave 5 audition implementation units (`SpatialAuditionControl.cpp`, `SpatialAuditionSupport.cpp`, `SpatialAuditionSignalGenerator.cpp`, `SpatialAuditionRender.cpp`), the Wave 6 output-stage module `SpatialOutputRoutingStage.cpp`, and the Wave 6 headphone/profile support modules (`SpatialHeadphoneProfileControl.cpp`, `SpatialHeadphoneProfileSupport.cpp`), reducing `Source/SpatialRenderer.cpp` to `662` LOC. |
 | W0-C | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Gated ~24 incremental/POC UI assets behind `LOCUSQ_UI_POC` CMake flag |
 | W0-D | **DONE** | `claude/architecture-code-review-CmsoV` | Opus 4.6 | Fixed DQ-1 (DistanceAttenuator comment), DQ-2 (VBAPPanner elevation note), DQ-3 (PhysicsEngine collision energy normalization) |
 
-### BL-076 Follow-On After W0-B
+### BL-076 Closeout After W0-B
 
-- The architecture review’s Tier 0 recommendation for W0-B is complete, but BL-076 is still active as the broader follow-on for CF-2.
+- The architecture review’s Tier 0 recommendation for W0-B is complete, and BL-076 is now closed as the broader follow-on for CF-2.
 - Latest local continuation after the W0-B merge:
   - added `Source/spatial_renderer/SpatialSteamAudioBackend.cpp`
   - moved Steam runtime, diagnostics, monitoring, and binaural render method bodies out of `Source/SpatialRenderer.cpp`
   - added `Source/spatial_renderer/SpatialAuditionControl.cpp`, `SpatialAuditionSupport.cpp`, `SpatialAuditionSignalGenerator.cpp`, and `SpatialAuditionRender.cpp`
   - moved the audition control/support/signal/render method bodies out of `Source/SpatialRenderer.cpp`
-  - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `1981` LOC across the Wave 4 and Wave 5 follow-on slices
-  - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06
-- Recommended next BL-076 slice: remaining staged-orchestrator cleanup inside `Source/SpatialRenderer.cpp`, while the next formal architecture-roadmap item unlocked by completed Tier 0 work remains **W1-B**.
+  - added `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+  - moved `577` LOC of output routing, codec telemetry/publication, and headphone runtime/calibration helpers out of `Source/SpatialRenderer.cpp`
+  - added `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp` and `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp`
+  - moved `426` LOC of headphone/profile control, snapshot getter, and `*ToString` methods plus `313` LOC of preset/head-pose/profile-routing/output-support helpers out of `Source/SpatialRenderer.cpp`
+  - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `662` LOC across the Wave 4 through Wave 6 follow-on slices, which brings the file below the planning-packet `<=700` LOC target
+  - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06 (UTC evidence roots `2026-03-07T00:23:45Z` and `2026-03-07T00:23:58Z`)
+  - completed owner T2/T3 execute cadence with `TestEvidence/bl076_candidate_t2_closeout/` (`5/5`) and `TestEvidence/bl076_promotion_t3_closeout/` (`10/10`)
+- Recommended next architecture-roadmap item: **W1-A** ParameterBridge cleanup.
+
+### W1-B Detail: Thread-Safety Hardening
+
+- Replaced the shared `keyframeTimeline` spin-lock path with non-RT timeline state plus triple-buffered RT playback snapshots, so the audio thread no longer competes with UI/state serialization for timeline ownership.
+- Swapped `PhysicsEngine` from `std::thread` + `sleep_for` to a `juce::Thread` wait cadence with wakeups on rate/throw/reset changes, which removes the coarse sleep granularity risk called out in TQ-2.
+- Replaced published headphone calibration/verification diagnostics `juce::String` payloads and their shared `SpinLock` with fixed-size sequence-safe snapshots, aligning the telemetry handoff with the repo’s existing seqlock-style contracts.
+- Validation replay for the slice:
+  - `cmake --build build_local --target LocusQ -j4` -> `PASS`
+  - `cmake --build build_local --target locusq_qa locusq_physics_probe -j4` -> `PASS`
+  - `build_local/locusq_physics_probe_artefacts/Release/locusq_physics_probe` -> `PASS` (`5/5`)
+  - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json` -> `PASS`
+  - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_24_physics_spatial_motion.json` -> `PASS`
+  - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_keyframe_loop_playback.json` -> `PASS`
+  - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> `PASS`
 
 ### W0-A Detail: PluginProcessor Decomposition
 

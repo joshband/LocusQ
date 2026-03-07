@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-06 (BL-076 Wave 5 audition extraction landed; build + guardrail evidence refreshed)
+Last Modified Date: 2026-03-06 (BL-076 promotion closeout synced; T2/T3 execute replay PASS)
 
 # LocusQ Master Backlog Index
 
@@ -111,14 +111,14 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Validation (C4 mode parity + exit semantics packets are green; owner promotion review pending) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | **Done** (A2 runtime/UI hardening complete; T3 heavy-wrapper equivalent replay PASS; strict usage exits and mode parity confirmed) | C | BL-025 | — | [bl-023](done/bl-023-resize-dpi-hardening.md) |
-| 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (D1 guardrail remediation PASS, D2 RT reconciliation PASS, E1 owner replay PASS, F1 done-promotion PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
-| 6 | BL-035 | RT lock-free registration | P0 | Done-candidate (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; RT/docs/status gates PASS; owner sync Z1 recorded) | F | HX-02, BL-032 | — | [bl-035](bl-035-rt-lock-free-registration.md) |
-| 7 | BL-036 | DSP finite output guardrails | P0 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-036](bl-036-dsp-finite-output-guardrails.md) |
-| 8 | BL-037 | Emitter snapshot CPU budget | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green) | F | BL-035 | — | [bl-037](bl-037-emitter-snapshot-cpu-budget.md) |
-| 9 | BL-038 | Calibration threading and telemetry | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | E | BL-026, BL-034 | — | [bl-038](bl-038-calibration-threading-and-telemetry.md) |
+| 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (F1 done-promotion PASS, but 2026-03-05 hold recheck still fails `BL032-G-001`: `Source/PluginProcessor.cpp` `3653 > 3600`; RT audit PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
+| 6 | BL-035 | RT lock-free registration | P0 | **Done** (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; closeout/archive sync PASS) | F | HX-02, BL-032 | — | [bl-035](done/bl-035-rt-lock-free-registration.md) |
+| 7 | BL-036 | DSP finite output guardrails | P0 | **Done** (contract-lane D2 evidence archived honestly on 2026-03-05; remaining runtime implementation slices A2/B2/C1 split into BL-078) | F | BL-035 | — | [bl-036](done/bl-036-dsp-finite-output-guardrails.md) |
+| 8 | BL-037 | Emitter snapshot CPU budget | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and closeout/archive sync PASS) | F | BL-035 | — | [bl-037](done/bl-037-emitter-snapshot-cpu-budget.md) |
+| 9 | BL-038 | Calibration threading and telemetry | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity; closeout/archive sync PASS) | E | BL-026, BL-034 | — | [bl-038](done/bl-038-calibration-threading-and-telemetry.md) |
 | 10 | BL-039 | Parameter relay spec generation | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | B | BL-027, BL-032 | — | [bl-039](bl-039-parameter-relay-spec-generation.md) |
 | 11 | BL-040 | UI modularization and authority status UX | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) | B | BL-027, BL-039 | — | [bl-040](bl-040-ui-modularization-and-authority-status.md) |
-| 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | E | BL-036 | — | [bl-041](bl-041-doppler-v2-and-vbap-geometry-validation.md) |
+| 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync PASS) | E | BL-036 | — | [bl-041](done/bl-041-doppler-v2-and-vbap-geometry-validation.md) |
 | 13 | BL-042 | QA CI regression gates | P1 | **Done** (Z16c RT reconcile PASS; Z16P_r2c preflight PASS; Z18 owner done-promotion PASS) | G | BL-035, BL-036, BL-041, HX-06 | BL-030 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
 | 14 | BL-044 | Quality-tier seamless switching | P1 | **Done** (Z17 owner done-promotion PASS; deterministic e2e evidence localized and ownership-safe) | F | BL-043 (Done) | — | [bl-044](done/bl-044-quality-tier-seamless-switching.md) |
 | 15 | BL-045 | Head tracking fidelity v1.1 | P1 | **Done** (all slices + full QA lane 10/10 PASS 2026-02-27; `TestEvidence/bl045_headtracking_fidelity_20260227T034917Z`) | E | BL-017, BL-034 | — | [bl-045](done/bl-045-head-tracking-fidelity-v11.md) |
@@ -127,13 +127,13 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 18 | BL-048 | Cross-platform shipping hardening | P1 | **Done** (Z16b e2e promotion reconcile PASS; Z17 owner done-promotion PASS) | G | BL-030, BL-042 | — | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | 19 | BL-049 | Unit test framework and tracker automation | P1 | **Done** (D2 done-promotion parity PASS; Z17 owner done-promotion PASS) | D | BL-042 | — | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
 | 20 | BL-050 | High-rate delay and FIR hardening | P0 | **Done** (owner T1/T2/T3 replay PASS; final T3 `10/10` lane_result/docs_freshness PASS; `fir_profile=WARN` accepted as follow-on hardening) | F | BL-043 (Done), BL-046 (Done) | — | [bl-050](done/bl-050-high-rate-delay-and-fir-hardening.md) |
-| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | Done-candidate (BL-062..BL-066 promoted to Done; parent lane reconciled; BL-050 dependency now Done) | E | BL-046 (Done), BL-050 | — | [bl-051](bl-051-ambisonics-and-adm-roadmap.md) |
+| 21 | BL-051 | Ambisonics and ADM roadmap | P3 | **Done** (BL-062..BL-066 promoted to Done; BL-050 dependency now Done; closeout/archive sync PASS) | E | BL-046 (Done), BL-050 | — | [bl-051](done/bl-051-ambisonics-and-adm-roadmap.md) |
 | 22 | BL-062 | Ambisonics IR interface contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-063 | [bl-062](done/bl-062-ambisonics-ir-interface-contract.md) |
 | 23 | BL-063 | Ambisonics renderer compatibility guardrails | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-062 | BL-066 | [bl-063](done/bl-063-ambisonics-renderer-compatibility-guardrails.md) |
 | 24 | BL-064 | ADM mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-064](done/bl-064-adm-mapping-contract.md) |
 | 25 | BL-065 | IAMF mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-065](done/bl-065-iamf-mapping-contract.md) |
 | 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-063, BL-064, BL-065 | — | [bl-066](done/bl-066-ambisonics-adm-pilot-execution-intake.md) |
-| 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done-candidate) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
+| 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual operator sync evidence captured; owner promotion packet pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
 | 29 | BL-054 | PEQ cascade RT integration | P1 | Open | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
 | 30 | BL-055 | FIR convolution engine | P1 | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
@@ -152,8 +152,9 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | **Done** (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; closeout/archive sync complete) | G | — | — | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | **Done** (deterministic execute evidence PASS; owner shared-control closeout sync complete) | B | BL-040, BL-067 | — | [bl-074](done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
-| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | In Implementation (W0-B out-of-line split + Wave 4 Steam backend + Wave 5 audition implementation-unit extraction landed; `build_local` LocusQ/locusq_qa/locusq_bl018_profile_probe and contract+execute guardrails PASS on 2026-03-06) | F | BL-050, BL-069, BL-070 | — | [bl-076](bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
+| 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; `Source/SpatialRenderer.cpp` `662` LOC; closeout/archive sync complete) | F | BL-050, BL-069, BL-070 | — | [bl-076](done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
+| 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | Open (2026-03-05 follow-on created from BL-036 runtime slices A2/B2/C1 so processor-side finite-output work remains explicit) | F | BL-036 | — | [bl-078](bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -196,6 +197,11 @@ graph TD
         BL-026[BL-026 Calibrate v2 Done]
         BL-017[BL-017 Head Track Done]
         BL-031[BL-031 Tempo Token Done]
+        BL-035[BL-035 RT Lock-Free Registration Done]
+        BL-036[BL-036 Finite Guardrails Done]
+        BL-037[BL-037 Snapshot CPU Budget Done]
+        BL-038[BL-038 Calibration Thread/Telemetry Done]
+        BL-041[BL-041 Doppler + VBAP Done]
         BL-014[BL-014 Done]
         BL-018[BL-018 Done]
         BL-022[BL-022 Done]
@@ -222,6 +228,7 @@ graph TD
         BL-048[BL-048 Shipping Hardening Done]
         BL-049[BL-049 Unit Tests + Tracker Automation Done]
         BL-050[BL-050 High-Rate Delay/FIR Done]
+        BL-051[BL-051 Ambisonics + ADM Done]
         BL-069[BL-069 RT-Safe Preset Pipeline Done]
         BL-070[BL-070 Snapshot + Telemetry Seqlock Done]
         BL-074[BL-074 WebView Reliability Diagnostics Done]
@@ -230,19 +237,13 @@ graph TD
 
     subgraph "In Validation / Done-candidate"
         BL-032[BL-032 Source Modularization]
-        BL-035[BL-035 RT Lock-Free Registration]
-        BL-036[BL-036 Finite Guardrails]
-        BL-037[BL-037 Snapshot CPU Budget]
-        BL-038[BL-038 Calibration Thread/Telemetry]
         BL-039[BL-039 Parameter Relay Generation]
         BL-040[BL-040 UI Modularization]
-        BL-041[BL-041 Doppler + VBAP]
     end
 
     subgraph "In Implementation / Open"
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
-        BL-051[BL-051 Ambisonics + ADM]
         BL-053[BL-053 Head Tracking Orientation Injection]
         BL-054[BL-054 PEQ Cascade RT Integration]
         BL-055[BL-055 FIR Convolution Engine]
@@ -259,6 +260,7 @@ graph TD
         BL-073[BL-073 QA Scaffold Truthfulness Gates]
         BL-075[BL-075 Comment/API Docs Accessibility]
         BL-076[BL-076 SpatialRenderer Decomposition]
+        BL-078[BL-078 Runtime Finite Output]
         BL-062[BL-062 Ambisonics IR Contract]
         BL-063[BL-063 Renderer Compatibility Guardrails]
         BL-064[BL-064 ADM Mapping Contract]
@@ -297,6 +299,7 @@ graph TD
     BL-032 --> BL-035
     BL-035 --> BL-036
     BL-035 --> BL-037
+    BL-036 --> BL-078
     BL-026 --> BL-038
     BL-034 --> BL-038
     BL-027 --> BL-039
@@ -377,7 +380,7 @@ graph TD
 | C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049, BL-077 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
 | E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068, BL-071, BL-072 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
-| F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
+| F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076, BL-078 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030, BL-042, BL-048, BL-073, BL-075 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship`, `documentation-hygiene-expert` |
 
 ## Intake Process
@@ -482,6 +485,7 @@ Any status change must update in the same changeset:
 | BL-075 | `(pending annex spec)` |
 | BL-076 | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
 | BL-077 | `(pending annex spec)` |
+| BL-078 | `(pending annex spec)` |
 
 ## Closed Archive
 
@@ -516,6 +520,11 @@ Any status change must update in the same changeset:
 | BL-031 | Tempo-locked visual token scheduler | 2026-02-25 | [bl-031](done/bl-031-tempo-token-scheduler.md) |
 | BL-033 | Headphone calibration core path | 2026-02-26 | [bl-033](done/bl-033-headphone-calibration-core.md) |
 | BL-034 | Headphone calibration verification and profile governance | 2026-02-26 | [bl-034](done/bl-034-headphone-calibration-verification.md) |
+| BL-035 | RT lock-free registration | 2026-03-05 | [bl-035](done/bl-035-rt-lock-free-registration.md) |
+| BL-036 | DSP finite output guardrails | 2026-03-05 | [bl-036](done/bl-036-dsp-finite-output-guardrails.md) |
+| BL-037 | Emitter snapshot CPU budget | 2026-03-05 | [bl-037](done/bl-037-emitter-snapshot-cpu-budget.md) |
+| BL-038 | Calibration threading and telemetry | 2026-03-05 | [bl-038](done/bl-038-calibration-threading-and-telemetry.md) |
+| BL-041 | Doppler v2 and VBAP geometry validation | 2026-03-05 | [bl-041](done/bl-041-doppler-v2-and-vbap-geometry-validation.md) |
 | BL-042 | QA CI regression gates | 2026-02-28 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
 | BL-043 | FDN sample-rate integrity | 2026-02-26 | [bl-043](done/bl-043-fdn-sample-rate-integrity.md) |
 | BL-044 | Quality-tier seamless switching | 2026-02-27 | [bl-044](done/bl-044-quality-tier-seamless-switching.md) |
@@ -525,11 +534,13 @@ Any status change must update in the same changeset:
 | BL-048 | Cross-platform shipping hardening | 2026-02-27 | [bl-048](done/bl-048-cross-platform-shipping-hardening.md) |
 | BL-049 | Unit test framework and tracker automation | 2026-02-27 | [bl-049](done/bl-049-unit-test-framework-and-tracker-automation.md) |
 | BL-050 | High-rate delay and FIR hardening | 2026-03-04 | [bl-050](done/bl-050-high-rate-delay-and-fir-hardening.md) |
+| BL-051 | Ambisonics and ADM roadmap | 2026-03-05 | [bl-051](done/bl-051-ambisonics-and-adm-roadmap.md) |
 | BL-052 | Steam Audio virtual surround + quad layout | 2026-02-28 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | BL-069 | RT-safe headphone preset pipeline and failure backoff | 2026-03-04 | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | 2026-03-04 | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | 2026-03-03 | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | 2026-03-05 | [bl-074](done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
+| BL-076 | SpatialRenderer decomposition and boundary guardrails | 2026-03-06 | [bl-076](done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | BL-077 | Unified visual capture and replay harness | 2026-03-03 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 | HX-01 | shared_ptr atomic migration guard | 2026-02-23 | [hx-01](done/hx-01-shared-ptr-atomic.md) |
 | HX-02 | Registration lock / memory-order audit | 2026-02-25 | [hx-02](done/hx-02-registration-lock.md) |

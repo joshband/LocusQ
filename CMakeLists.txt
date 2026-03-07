@@ -246,6 +246,9 @@ target_sources(LocusQ
         Source/spatial_renderer/SpatialAuditionSupport.cpp
         Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
         Source/spatial_renderer/SpatialAuditionRender.cpp
+        Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+        Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+        Source/spatial_renderer/SpatialOutputRoutingStage.cpp
         Source/spatial_renderer/SpatialSteamAudioBackend.cpp
         Source/DopplerProcessor.h
         Source/DirectivityFilter.h
@@ -472,6 +475,9 @@ if(BUILD_LOCUSQ_QA)
             Source/spatial_renderer/SpatialAuditionSupport.cpp
             Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
             Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
             Source/spatial_renderer/SpatialSteamAudioBackend.cpp
             Source/DopplerProcessor.h
             Source/DirectivityFilter.h
@@ -594,6 +600,9 @@ if(BUILD_LOCUSQ_QA)
             Source/spatial_renderer/SpatialAuditionSupport.cpp
             Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
             Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
             Source/spatial_renderer/SpatialSteamAudioBackend.cpp
             Source/DopplerProcessor.h
             Source/DirectivityFilter.h

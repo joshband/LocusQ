@@ -355,7 +355,7 @@ juce::var LocusQAudioProcessor::saveEmitterPresetFromUI (const juce::var& option
 
     juce::var presetPayload;
     {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
         presetPayload = buildEmitterPresetLocked (requestedName, presetType, choreographyPackId, includeParameters, includeTimeline);
     }
 
@@ -401,7 +401,7 @@ juce::var LocusQAudioProcessor::loadEmitterPresetFromUI (const juce::var& option
     }
 
     {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
         if (! applyEmitterPresetLocked (*payload))
         {
             result->setProperty (locusq::shared_contracts::bridge_status::kOk, false);

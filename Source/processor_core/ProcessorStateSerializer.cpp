@@ -14,7 +14,7 @@ void LocusQAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
         state.setProperty ("locusq_timeline_json",
                            juce::JSON::toString (serialiseKeyframeTimelineLocked(), true),
                            nullptr);
@@ -72,15 +72,16 @@ void LocusQAudioProcessor::setStateInformation (const void* data, int sizeInByte
                 const auto timelineState = juce::JSON::parse (state.getProperty ("locusq_timeline_json").toString());
                 if (! timelineState.isVoid())
                 {
-                    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+                    const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
                     applyKeyframeTimelineLocked (timelineState);
                 }
             }
             else
             {
-                const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-                keyframeTimeline.clearTracks();
-                initialiseDefaultKeyframeTimeline();
+                const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+                keyframeTimelineState.clearTracks();
+                initialiseDefaultKeyframeTimeline (keyframeTimelineState);
+                publishKeyframeTimelineStateToRtLocked();
             }
 
             if (state.hasProperty ("locusq_ui_state_json"))

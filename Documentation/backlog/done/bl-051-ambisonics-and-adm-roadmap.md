@@ -2,13 +2,13 @@ Title: BL-051 Ambisonics and ADM Roadmap
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-05
 
 # BL-051 Ambisonics and ADM Roadmap
 
 ## Plain-Language Summary
 
-BL-051 in plain terms: Define v2 roadmap and ADR decisions for Ambisonics intermediate bus adoption and ADM/IAMF delivery/export readiness. Current state: Done-candidate. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-051 in plain terms: Define v2 roadmap and ADR decisions for Ambisonics intermediate bus adoption and ADM/IAMF delivery/export readiness. Current state: Done (roadmap ADR package, decomposition lanes, dependency closure, and closeout/archive sync are complete). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-051 in plain terms: Define v2 roadmap and ADR decisions for Ambisonics interm
 | What is changing? | BL-051 Ambisonics and ADM Roadmap |
 | Why is this important? | Define v2 roadmap and ADR decisions for Ambisonics intermediate bus adoption and ADM/IAMF delivery/export readiness. |
 | How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
-| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
-| Where is the source of truth? | Runbook: `Documentation/backlog/bl-051-ambisonics-and-adm-roadmap.md` plus repo-local evidence under `TestEvidence/...`. |
+| When is it done? | This item is complete when promotion gates, evidence sync, backlog/index status updates, dependency closure, and archive sync are all recorded as done. |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-051-ambisonics-and-adm-roadmap.md` plus repo-local evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index
 
@@ -38,16 +38,17 @@ Use visuals only when they materially improve understanding.
 |---|---|
 | ID | BL-051 |
 | Priority | P3 |
-| Status | Done-candidate |
+| Status | Done (roadmap ADR package, decomposition lanes, BL-050 dependency closure, and closeout/archive sync complete) |
 | Track | E - R&D Expansion |
 | Effort | Very High / XL |
 | Depends On | BL-046, BL-050 |
 | Blocks | — |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
-| Latest Slice | A1b/A2/A3/C1 — Decision + Contract + ADR + Decomposition |
-| Latest Evidence | `TestEvidence/bl051_slice_c1_decomposition_20260228_124747/` |
+| Latest Slice | Parent closeout sync — dependency closure + archive promotion |
+| Latest Evidence | `TestEvidence/bl051_parent_closeout_sync_20260228_153306/` |
 | ADR Authority | `Documentation/adr/ADR-0014-bl051-ambisonics-adm-roadmap-governance.md` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-051-ambisonics-and-adm-roadmap.md` |
 
 ## Objective
 

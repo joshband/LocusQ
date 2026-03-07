@@ -1,0 +1,2 @@
+stage	runs_expected	runs_observed	lane_result	execute_todo_gate	rt_pass_runs	evidence_root
+T3_promotion	10	10	PASS	PASS	10	TestEvidence/bl076_promotion_t3_closeout

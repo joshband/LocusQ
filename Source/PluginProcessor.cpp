@@ -1494,7 +1494,8 @@ LocusQAudioProcessor::LocusQAudioProcessor()
       apvts (*this, nullptr, "PARAMETERS", createParameterLayout()),
       sceneGraph (SceneGraph::getInstance())
 {
-    initialiseDefaultKeyframeTimeline();
+    initialiseDefaultKeyframeTimeline (keyframeTimelineState);
+    publishKeyframeTimelinePlaybackState (keyframeTimelineState);
 
     // Register with scene graph based on initial mode
     // Mode registration happens in prepareToPlay once we know the context
@@ -1519,9 +1520,10 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     currentSampleRate = sampleRate;
     visualTokenScheduler.reset();
     {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-        keyframeTimeline.prepare (sampleRate);
-        initialiseDefaultKeyframeTimeline();
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+        keyframeTimelineState.prepare (sampleRate);
+        initialiseDefaultKeyframeTimeline (keyframeTimelineState);
+        publishKeyframeTimelineStateToRtLocked();
     }
 
     // Prepare physics engine (Phase 2.4)
@@ -1547,8 +1549,10 @@ void LocusQAudioProcessor::releaseResources()
     physicsEngine.shutdown();
     spatialRenderer.shutdown();
     {
-        const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
-        keyframeTimeline.reset();
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+        keyframeTimelineState.reset();
+        publishKeyframeTimelinePlaybackState (keyframeTimelineState);
+        publishKeyframeTimelineStateToRtLocked();
     }
     visualTokenScheduler.reset();
 }
@@ -2111,9 +2115,9 @@ void LocusQAudioProcessor::applyCalibrationMonitoringPath (juce::AudioBuffer<flo
 }
 
 //==============================================================================
-void LocusQAudioProcessor::initialiseDefaultKeyframeTimeline()
+void LocusQAudioProcessor::initialiseDefaultKeyframeTimeline (KeyframeTimeline& timeline) const
 {
-    if (keyframeTimeline.hasAnyTrack())
+    if (timeline.hasAnyTrack())
         return;
 
     KeyframeTrack azimuthTrack { kTrackPosAzimuth };
@@ -2124,7 +2128,7 @@ void LocusQAudioProcessor::initialiseDefaultKeyframeTimeline()
         { 6.0, 10.0f,  KeyframeCurve::easeInOut },
         { 8.0, -60.0f, KeyframeCurve::easeInOut }
     });
-    keyframeTimeline.addOrReplaceTrack (std::move (azimuthTrack));
+    timeline.addOrReplaceTrack (std::move (azimuthTrack));
 
     KeyframeTrack elevationTrack { kTrackPosElevation };
     elevationTrack.setKeyframes ({
@@ -2134,7 +2138,7 @@ void LocusQAudioProcessor::initialiseDefaultKeyframeTimeline()
         { 6.0, -14.0f, KeyframeCurve::easeInOut },
         { 8.0,  0.0f,  KeyframeCurve::easeInOut }
     });
-    keyframeTimeline.addOrReplaceTrack (std::move (elevationTrack));
+    timeline.addOrReplaceTrack (std::move (elevationTrack));
 
     KeyframeTrack distanceTrack { kTrackPosDistance };
     distanceTrack.setKeyframes ({
@@ -2144,7 +2148,7 @@ void LocusQAudioProcessor::initialiseDefaultKeyframeTimeline()
         { 6.0, 1.3f, KeyframeCurve::easeInOut },
         { 8.0, 2.1f, KeyframeCurve::easeInOut }
     });
-    keyframeTimeline.addOrReplaceTrack (std::move (distanceTrack));
+    timeline.addOrReplaceTrack (std::move (distanceTrack));
 
     KeyframeTrack sizeTrack { kTrackSizeUniform };
     sizeTrack.setKeyframes ({
@@ -2154,11 +2158,78 @@ void LocusQAudioProcessor::initialiseDefaultKeyframeTimeline()
         { 6.0, 0.74f, KeyframeCurve::easeInOut },
         { 8.0, 0.45f, KeyframeCurve::easeInOut }
     });
-    keyframeTimeline.addOrReplaceTrack (std::move (sizeTrack));
+    timeline.addOrReplaceTrack (std::move (sizeTrack));
 
-    keyframeTimeline.setDurationSeconds (8.0);
-    keyframeTimeline.setLooping (true);
-    keyframeTimeline.setPlaybackRate (1.0f);
+    timeline.setDurationSeconds (8.0);
+    timeline.setLooping (true);
+    timeline.setPlaybackRate (1.0f);
+}
+
+void LocusQAudioProcessor::publishKeyframeTimelineStateToRtLocked()
+{
+    const auto readIndex = keyframeTimelineRtReadIndex.load (std::memory_order_acquire);
+    const auto pendingIndex = keyframeTimelineRtPendingIndex.load (std::memory_order_acquire);
+
+    int writeIndex = 0;
+    for (int candidate = 0; candidate < static_cast<int> (keyframeTimelineRtBuffers.size()); ++candidate)
+    {
+        if (candidate != readIndex && candidate != pendingIndex)
+        {
+            writeIndex = candidate;
+            break;
+        }
+    }
+
+    keyframeTimelineRtBuffers[static_cast<size_t> (writeIndex)] = keyframeTimelineState;
+    publishKeyframeTimelinePlaybackState (keyframeTimelineState);
+    keyframeTimelineRtPendingIndex.store (writeIndex, std::memory_order_release);
+}
+
+void LocusQAudioProcessor::syncPendingKeyframeTimelineForAudioThread() noexcept
+{
+    const auto pendingIndex = keyframeTimelineRtPendingIndex.exchange (-1, std::memory_order_acq_rel);
+    if (pendingIndex >= 0)
+        keyframeTimelineRtReadIndex.store (pendingIndex, std::memory_order_release);
+}
+
+void LocusQAudioProcessor::publishKeyframeTimelinePlaybackState (const KeyframeTimeline& timeline) noexcept
+{
+    keyframeTimelinePublishedCurrentTimeSeconds.store (timeline.getCurrentTimeSeconds(), std::memory_order_release);
+    keyframeTimelinePublishedDurationSeconds.store (timeline.getDurationSeconds(), std::memory_order_release);
+    keyframeTimelinePublishedLooping.store (timeline.isLooping(), std::memory_order_release);
+    keyframeTimelinePublishedPlaybackRate.store (timeline.getPlaybackRate(), std::memory_order_release);
+}
+
+void LocusQAudioProcessor::publishHeadphoneDiagnosticsSnapshot (
+    const PublishedHeadphoneCalibrationDiagnostics& calibration,
+    const PublishedHeadphoneVerificationDiagnostics& verification) noexcept
+{
+    publishedHeadphoneDiagnostics.seq.fetch_add (1, std::memory_order_acq_rel);
+    publishedHeadphoneDiagnostics.calibration = calibration;
+    publishedHeadphoneDiagnostics.verification = verification;
+    publishedHeadphoneDiagnostics.seq.fetch_add (1, std::memory_order_release);
+}
+
+bool LocusQAudioProcessor::copyPublishedHeadphoneDiagnosticsSnapshot (
+    PublishedHeadphoneCalibrationDiagnostics& calibration,
+    PublishedHeadphoneVerificationDiagnostics& verification) const noexcept
+{
+    constexpr int kMaxReadAttempts = 3;
+    for (int attempt = 0; attempt < kMaxReadAttempts; ++attempt)
+    {
+        const auto seqBefore = publishedHeadphoneDiagnostics.seq.load (std::memory_order_acquire);
+        if ((seqBefore & 1u) != 0u)
+            continue;
+
+        calibration = publishedHeadphoneDiagnostics.calibration;
+        verification = publishedHeadphoneDiagnostics.verification;
+
+        const auto seqAfter = publishedHeadphoneDiagnostics.seq.load (std::memory_order_acquire);
+        if (seqBefore == seqAfter && (seqAfter & 1u) == 0u)
+            return true;
+    }
+
+    return false;
 }
 
 std::optional<double> LocusQAudioProcessor::getTransportTimeSeconds() const
@@ -2213,53 +2284,56 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
     if (internalAnimation)
     {
-        const juce::SpinLock::ScopedTryLockType timelineLock (keyframeTimelineLock);
-        if (timelineLock.isLocked())
+        syncPendingKeyframeTimelineForAudioThread();
+        auto& keyframeTimeline =
+            keyframeTimelineRtBuffers[static_cast<size_t> (keyframeTimelineRtReadIndex.load (std::memory_order_acquire))];
+
+        keyframeTimeline.setLooping (apvts.getRawParameterValue ("anim_loop")->load() > 0.5f);
+        keyframeTimeline.setPlaybackRate (apvts.getRawParameterValue ("anim_speed")->load());
+
+        bool advancedFromTransport = false;
+        if (apvts.getRawParameterValue ("anim_sync")->load() > 0.5f)
         {
-            keyframeTimeline.setLooping (apvts.getRawParameterValue ("anim_loop")->load() > 0.5f);
-            keyframeTimeline.setPlaybackRate (apvts.getRawParameterValue ("anim_speed")->load());
-
-            bool advancedFromTransport = false;
-            if (apvts.getRawParameterValue ("anim_sync")->load() > 0.5f)
+            if (const auto transportTimeSeconds = getTransportTimeSeconds())
             {
-                if (const auto transportTimeSeconds = getTransportTimeSeconds())
-                {
-                    const auto playbackSeconds = (*transportTimeSeconds) * static_cast<double> (keyframeTimeline.getPlaybackRate());
-                    keyframeTimeline.setCurrentTimeSeconds (playbackSeconds);
-                    advancedFromTransport = true;
-                }
+                const auto playbackSeconds =
+                    (*transportTimeSeconds) * static_cast<double> (keyframeTimeline.getPlaybackRate());
+                keyframeTimeline.setCurrentTimeSeconds (playbackSeconds);
+                advancedFromTransport = true;
             }
-
-            if (! advancedFromTransport)
-            {
-                const auto blockDurationSeconds = (currentSampleRate > 0.0)
-                                                ? static_cast<double> (numSamplesInBlock) / currentSampleRate
-                                                : 0.0;
-                keyframeTimeline.advance (blockDurationSeconds);
-            }
-
-            if (coordMode < 0.5f)
-            {
-                if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosAzimuth))
-                    azimuthDeg = *value;
-                if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosElevation))
-                    elevationDeg = *value;
-                if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosDistance))
-                    distance = *value;
-            }
-            else
-            {
-                if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosX))
-                    posX = *value;
-                if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosY))
-                    posY = *value;
-                if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosZ))
-                    posZ = *value;
-            }
-
-            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackSizeUniform))
-                sizeUniform = *value;
         }
+
+        if (! advancedFromTransport)
+        {
+            const auto blockDurationSeconds = (currentSampleRate > 0.0)
+                                            ? static_cast<double> (numSamplesInBlock) / currentSampleRate
+                                            : 0.0;
+            keyframeTimeline.advance (blockDurationSeconds);
+        }
+
+        if (coordMode < 0.5f)
+        {
+            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosAzimuth))
+                azimuthDeg = *value;
+            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosElevation))
+                elevationDeg = *value;
+            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosDistance))
+                distance = *value;
+        }
+        else
+        {
+            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosX))
+                posX = *value;
+            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosY))
+                posY = *value;
+            if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosZ))
+                posZ = *value;
+        }
+
+        if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackSizeUniform))
+            sizeUniform = *value;
+
+        publishKeyframeTimelinePlaybackState (keyframeTimeline);
     }
 
     Vec3 basePosition;

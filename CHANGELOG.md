@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-05
+Last Modified Date: 2026-03-07
 
 # Changelog
 
@@ -15,6 +15,8 @@ Operational snapshot:
 - Canonical runtime/state authority: `status.json`
 
 ### Added
+
+- Architecture review W1-B hardening: triple-buffered RT keyframe timeline snapshots, `juce::Thread` physics cadence, and fixed-size sequence-safe headphone diagnostics publication.
 
 - Specialist execution skills for active lanes:
   - `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`
@@ -32,6 +34,12 @@ Operational snapshot:
 
 ### Changed
 
+- BL-076 advanced through the W0-B header/body split: `Source/SpatialRenderer.cpp` now owns the out-of-line renderer implementation, `Source/SpatialRenderer.h` is reduced to a bounded declaration surface, and refreshed contract/execute guardrail evidence is recorded for 2026-03-06.
+- BL-036 was archived to `Documentation/backlog/done/` after an explicit scope split moved its remaining runtime implementation work into new follow-on BL-078.
+- BL-041 was archived to `Documentation/backlog/done/` after its BL-036 dependency cleared; contract/execute parity evidence and closeout sync remain green.
+- BL-037 remains archived to `Documentation/backlog/done/` from the same mainline promotion sequence.
+- Backlog promotion sync on `main` archived BL-035, BL-038, and BL-051 to `Documentation/backlog/done/`.
+- BL-032 was rechecked for the same promotion pass and retained at done-candidate because `BL032-G-001` is still failing (`Source/PluginProcessor.cpp` `3653 > 3600`) while RT audit remains green.
 - Documentation skill ownership split is explicit and normalized:
   - `documentation-hygiene-expert` owns cleanup, dedupe, simplification, freshness ownership, and stale comment/API-doc hygiene.
   - `skill_docs` owns governance metadata, ADR/invariant traceability, standards/tier enforcement, and routing-contract parity.
@@ -56,6 +64,8 @@ Operational snapshot:
 
 ### Recent Done Promotions
 
+- BL-036, BL-037, and BL-041 moved to `Done` with runbook archive/index/status/evidence sync.
+- BL-035, BL-038, and BL-051 moved to `Done` with runbook archive/index/status/evidence sync.
 - BL-050, BL-069, and BL-070 moved to `Done` with runbook archive/index/status/evidence sync.
 - BL-023, BL-052, BL-042, BL-044, BL-046, BL-047, BL-048, BL-049 moved to `Done` with synchronized backlog/archive/evidence updates.
 - BL-030 release-governance RL-09 closeout captured; RL-05 authoritative closure recorded in owner sync evidence packets.

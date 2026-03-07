@@ -993,57 +993,48 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
         rendererHeadphoneCalibrationFallbackReasonIndex,
         rendererHeadphoneCalibrationLatencySamples);
 
-    {
-        const juce::SpinLock::ScopedLockType publishedCalibrationLock (publishedHeadphoneCalibrationLock);
-        publishedHeadphoneCalibrationDiagnostics.profileSyncSeq = snapshotSeq;
-        publishedHeadphoneCalibrationDiagnostics.requested = rendererHeadphoneCalibration.requested;
-        publishedHeadphoneCalibrationDiagnostics.active = rendererHeadphoneCalibration.active;
-        publishedHeadphoneCalibrationDiagnostics.stage = rendererHeadphoneCalibration.stage;
-        publishedHeadphoneCalibrationDiagnostics.fallbackReady = rendererHeadphoneCalibration.fallbackReady;
-        publishedHeadphoneCalibrationDiagnostics.fallbackReason = rendererHeadphoneCalibration.fallbackReason;
-        publishedHeadphoneCalibrationDiagnostics.valid = true;
+    PublishedHeadphoneCalibrationDiagnostics publishedCalibration;
+    publishedCalibration.profileSyncSeq = snapshotSeq;
+    publishedCalibration.requested.set (rendererHeadphoneCalibration.requested);
+    publishedCalibration.active.set (rendererHeadphoneCalibration.active);
+    publishedCalibration.stage.set (rendererHeadphoneCalibration.stage);
+    publishedCalibration.fallbackReady = rendererHeadphoneCalibration.fallbackReady;
+    publishedCalibration.fallbackReason.set (rendererHeadphoneCalibration.fallbackReason);
+    publishedCalibration.valid = true;
 
-        publishedHeadphoneVerificationDiagnostics.profileSyncSeq = snapshotSeq;
-        publishedHeadphoneVerificationDiagnostics.profileId = rendererHeadphoneVerification.profileId;
-        publishedHeadphoneVerificationDiagnostics.requestedProfileId =
-            rendererHeadphoneVerification.requestedProfileId;
-        publishedHeadphoneVerificationDiagnostics.activeProfileId =
-            rendererHeadphoneVerification.activeProfileId;
-        publishedHeadphoneVerificationDiagnostics.requestedEngineId =
-            rendererHeadphoneVerification.requestedEngineId;
-        publishedHeadphoneVerificationDiagnostics.activeEngineId =
-            rendererHeadphoneVerification.activeEngineId;
-        publishedHeadphoneVerificationDiagnostics.fallbackReasonCode =
-            rendererHeadphoneVerification.fallbackReasonCode;
-        publishedHeadphoneVerificationDiagnostics.fallbackTarget =
-            rendererHeadphoneVerification.fallbackTarget;
-        publishedHeadphoneVerificationDiagnostics.fallbackReasonText =
-            rendererHeadphoneVerification.fallbackReasonText;
-        publishedHeadphoneVerificationDiagnostics.frontBackScore =
-            locusq::shared_contracts::headphone_verification::sanitizeScore (
-                rendererHeadphoneVerification.frontBackScore,
-                0.0f);
-        publishedHeadphoneVerificationDiagnostics.elevationScore =
-            locusq::shared_contracts::headphone_verification::sanitizeScore (
-                rendererHeadphoneVerification.elevationScore,
-                0.0f);
-        publishedHeadphoneVerificationDiagnostics.externalizationScore =
-            locusq::shared_contracts::headphone_verification::sanitizeScore (
-                rendererHeadphoneVerification.externalizationScore,
-                0.0f);
-        publishedHeadphoneVerificationDiagnostics.confidence =
-            locusq::shared_contracts::headphone_verification::sanitizeScore (
-                rendererHeadphoneVerification.confidence,
-                0.0f);
-        publishedHeadphoneVerificationDiagnostics.verificationStage =
-            rendererHeadphoneVerification.verificationStage;
-        publishedHeadphoneVerificationDiagnostics.verificationScoreStatus =
-            rendererHeadphoneVerification.verificationScoreStatus;
-        publishedHeadphoneVerificationDiagnostics.chainLatencySamples =
-            locusq::shared_contracts::headphone_verification::sanitizeLatencySamples (
-                rendererHeadphoneVerification.chainLatencySamples);
-        publishedHeadphoneVerificationDiagnostics.valid = true;
-    }
+    PublishedHeadphoneVerificationDiagnostics publishedVerification;
+    publishedVerification.profileSyncSeq = snapshotSeq;
+    publishedVerification.profileId.set (rendererHeadphoneVerification.profileId);
+    publishedVerification.requestedProfileId.set (rendererHeadphoneVerification.requestedProfileId);
+    publishedVerification.activeProfileId.set (rendererHeadphoneVerification.activeProfileId);
+    publishedVerification.requestedEngineId.set (rendererHeadphoneVerification.requestedEngineId);
+    publishedVerification.activeEngineId.set (rendererHeadphoneVerification.activeEngineId);
+    publishedVerification.fallbackReasonCode.set (rendererHeadphoneVerification.fallbackReasonCode);
+    publishedVerification.fallbackTarget.set (rendererHeadphoneVerification.fallbackTarget);
+    publishedVerification.fallbackReasonText.set (rendererHeadphoneVerification.fallbackReasonText);
+    publishedVerification.frontBackScore =
+        locusq::shared_contracts::headphone_verification::sanitizeScore (
+            rendererHeadphoneVerification.frontBackScore,
+            0.0f);
+    publishedVerification.elevationScore =
+        locusq::shared_contracts::headphone_verification::sanitizeScore (
+            rendererHeadphoneVerification.elevationScore,
+            0.0f);
+    publishedVerification.externalizationScore =
+        locusq::shared_contracts::headphone_verification::sanitizeScore (
+            rendererHeadphoneVerification.externalizationScore,
+            0.0f);
+    publishedVerification.confidence =
+        locusq::shared_contracts::headphone_verification::sanitizeScore (
+            rendererHeadphoneVerification.confidence,
+            0.0f);
+    publishedVerification.verificationStage.set (rendererHeadphoneVerification.verificationStage);
+    publishedVerification.verificationScoreStatus.set (rendererHeadphoneVerification.verificationScoreStatus);
+    publishedVerification.chainLatencySamples =
+        locusq::shared_contracts::headphone_verification::sanitizeLatencySamples (
+            rendererHeadphoneVerification.chainLatencySamples);
+    publishedVerification.valid = true;
+    publishHeadphoneDiagnosticsSnapshot (publishedCalibration, publishedVerification);
 
     Vec3 listenerPosition { 0.0f, 1.2f, 0.0f };
     Vec3 roomDimensions { 6.0f, 4.0f, 3.0f };
@@ -1066,15 +1057,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
         }
     }
 
-    {
-        const juce::SpinLock::ScopedTryLockType timelineLock (keyframeTimelineLock);
-        if (timelineLock.isLocked())
-        {
-            timelineTime = keyframeTimeline.getCurrentTimeSeconds();
-            timelineDuration = keyframeTimeline.getDurationSeconds();
-            timelineLooping = keyframeTimeline.isLooping();
-        }
-    }
+    timelineTime = keyframeTimelinePublishedCurrentTimeSeconds.load (std::memory_order_acquire);
+    timelineDuration = keyframeTimelinePublishedDurationSeconds.load (std::memory_order_acquire);
+    timelineLooping = keyframeTimelinePublishedLooping.load (std::memory_order_acquire);
 
     for (int i = 0; i < SceneGraph::MAX_EMITTERS; ++i)
     {

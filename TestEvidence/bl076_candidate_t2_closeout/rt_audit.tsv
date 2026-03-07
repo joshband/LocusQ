@@ -1,0 +1,6 @@
+run_index	rt_exit	total_hits	allowlisted_hits	non_allowlisted	result	detail	artifact
+1	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/run_1/rt_audit_raw.tsv
+2	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/run_2/rt_audit_raw.tsv
+3	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/run_3/rt_audit_raw.tsv
+4	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/run_4/rt_audit_raw.tsv
+5	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/run_5/rt_audit_raw.tsv
