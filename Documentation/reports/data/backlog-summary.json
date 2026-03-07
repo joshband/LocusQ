@@ -2,8 +2,8 @@
   "schema_version": "locusq-backlog-summary-v1",
   "source": "Documentation/backlog",
   "counts": {
-    "total": 86,
-    "open": 17,
+    "total": 87,
+    "open": 18,
     "done": 69
   },
   "items": [
@@ -1507,6 +1507,25 @@
       "plain_language_summary": "BL-078 in plain terms: Carry BL-036's remaining runtime work into actual processor-side finite guardrails, additive diagnostics publication, and execute-mode fuzz/soak replay so finite-output protection is implemented, observable, and owner-verifiable instead of only specified on paper. Current state: Open (created on 2026-03-05 as the explicit follow-on after BL-036 was archived as a contract-and-evidence item). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Implement the runtime finite-output guardrails, additive diagnostics publication, and execute-mode fuzz/soak replay required to satisfy BL-036's contract authority with real processor-side evidence.",
       "runbook_path": "Documentation/backlog/bl-078-runtime-finite-output-enforcement-and-diagnostics.md"
+    },
+    {
+      "id": "BL-079",
+      "title": "BL-079: APVTS Parameter Grouping and Host Hierarchy",
+      "state_bucket": "open",
+      "status": "In Validation",
+      "priority": "P2",
+      "track": "",
+      "depends_on": "BL-032",
+      "blocks": "\u2014",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally; the remaining work is promotion-grade validation and host verification in a clean checkout.",
+      "objective": "Expose LocusQ's APVTS as a grouped host hierarchy so DAWs that understand parameter groups can present a cleaner tree, while preserving the plugin's compatibility contracts: stable parameter IDs, stable defaults, and unchanged flattened ordering for legacy automation and QA lanes that still depend on raw indices.",
+      "runbook_path": "Documentation/backlog/bl-079-apvts-parameter-grouping-and-host-hierarchy.md"
     },
     {
       "id": "HX-01",

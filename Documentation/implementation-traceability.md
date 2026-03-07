@@ -81,6 +81,19 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - BL-045 Slice C: Re-center UX + drift telemetry — `yawReferenceDeg`/`yawReferenceSet`/`lastHeadTrackYawDeg` atomics; `setYawReference()`; processBlock quaternion pre-rotation; `pushHeadTrackDrift()` telemetry; UI `Set Forward` button + drift display
 - Reference: `.ideas/plan.md`
 
+## Architecture Review W1-D APVTS Grouping
+
+- APVTS layout authority remains `Source/processor_core/ProcessorParameterLayout.cpp`.
+- W1-D reorganized the layout into host-visible groups without changing parameter IDs, defaults, or flattened order:
+  - `Global`
+  - `Calibration`
+  - `Emitter / { Position, Size, Audio, Physics, Animation, Identity }`
+  - `Renderer / { Master, Spatialization, Room, Physics, Visualization }`
+- The grouped tree is intended to improve AU/VST3 host presentation only. Runtime reads, UI relay binding, and existing ID-based bridge paths continue to resolve parameters by the same canonical IDs.
+- Validation basis for the grouping slice:
+  - `cmake --build build_local --config Release --target LocusQ locusq_qa -- -j8` -> PASS
+  - source-parity scripts confirmed `90/90` APVTS IDs still match the pre-W1-D layout and the flattened parameter order is unchanged
+
 ## Stage 14 Drift Ledger (Open)
 
 | Parameter / Contract Surface | Implementation State | Documentation State | Next Action |
@@ -276,6 +289,8 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 |---|---|---|---|
 | WebView runtime configuration contract | `Source/editor_webview/EditorWebViewRuntime.h` | UI self-test env parsing, initial URL/title derivation, backend options, native bridge registration extracted from `PluginEditor.cpp` | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/module_move_map.md` |
 | ParameterBridge relay/attachment contract | `Source/editor_webview/EditorParameterBridge.h` | BL-039-aligned canonical parameter ID list now emits all WebView relays before browser construction and all APVTS attachments after browser construction from one spec-driven runtime path | `TestEvidence/build-summary.md` |
+| SpatialRenderer prepared scratch-buffer contract | `Source/SpatialRenderer.h` + `Source/spatial_renderer/SpatialPostFxChain.h` | W2-A native slice replaces vector-backed renderer temp/Steam scratch ownership with prepare-time fixed-capacity storage while preserving the existing block-size and speaker-delay semantics | `TestEvidence/build-summary.md` |
+| Scene snapshot transport allocation contract | `Source/processor_bridge/ProcessorSceneStateBridgeOps.h` + `Source/editor_shell/EditorShellHelpers.h` | W2-A native slice preallocates the scene snapshot string and the combined scene+calibration JS wrapper so the 30 Hz bridge path reduces repeated heap churn without changing `updateSceneState` / `updateCalibrationStatus` payload semantics | `TestEvidence/build-summary.md` |
 | Resource-provider lifecycle contract | `Source/editor_webview/EditorWebViewRuntime.h` | Embedded BinaryData resource dispatch moved out of `PluginEditor` member methods into module function `getResource` | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/guardrail_report.tsv` |
 | Editor shell orchestration helper contract | `Source/editor_shell/EditorShellHelpers.h` | Deterministic scene/calibration JS push, resize notification, runtime probe/selftest script sources extracted from monolithic editor file | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/module_move_map.md` |
 | PluginEditor facade parity contract | `Source/PluginEditor.cpp` + `Source/PluginEditor.h` | Relay/attachment ownership and order preserved while runtime/resource concerns delegate to module helpers | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/selftest_runs.tsv` |

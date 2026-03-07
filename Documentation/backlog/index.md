@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-06 (BL-076 promotion closeout synced; T2/T3 execute replay PASS)
+Last Modified Date: 2026-03-07 (BL-079 W1-D APVTS grouping lane synced)
 
 # LocusQ Master Backlog Index
 
@@ -155,6 +155,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; `Source/SpatialRenderer.cpp` `662` LOC; closeout/archive sync complete) | F | BL-050, BL-069, BL-070 | — | [bl-076](done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 | 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | Open (2026-03-05 follow-on created from BL-036 runtime slices A2/B2/C1 so processor-side finite-output work remains explicit) | F | BL-036 | — | [bl-078](bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
+| 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | In Validation (W1-D implementation landed locally: `Source/processor_core/ProcessorParameterLayout.cpp` now exposes grouped host hierarchy while preserving all `90` parameter IDs and flattened order; build + parity checks PASS, promotion follow-up pending in a clean checkout) | F | BL-032 | — | [bl-079](bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -380,7 +381,7 @@ graph TD
 | C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049, BL-077 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
 | E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068, BL-071, BL-072 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
-| F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076, BL-078 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
+| F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076, BL-078, BL-079 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
 | G | Release/Governance | BL-030, BL-042, BL-048, BL-073, BL-075 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship`, `documentation-hygiene-expert` |
 
 ## Intake Process
@@ -486,6 +487,7 @@ Any status change must update in the same changeset:
 | BL-076 | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
 | BL-077 | `(pending annex spec)` |
 | BL-078 | `(pending annex spec)` |
+| BL-079 | `(no annex spec — self-contained runbook)` |
 
 ## Closed Archive
 
