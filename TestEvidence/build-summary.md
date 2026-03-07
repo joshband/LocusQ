@@ -6,6 +6,31 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W3-A Authoring Undo/Redo (UTC 2026-03-07T04:25:21Z)
+
+1. Implementation slice
+- added processor-owned authoring history in `Source/processor_core/ProcessorAuthoringHistory.cpp` and `Source/PluginProcessor.h`, covering timeline snapshots, UI-state snapshots, and preset-file before/after restore data
+- routed preset save/load/rename/delete through the shared history engine in `Source/processor_core/ProcessorPresetManager.cpp`
+- added native undo/redo/status bindings in `Source/editor_webview/EditorWebViewRuntime.h`
+- added production WebView undo/redo controls, keyboard shortcuts, and embedded `UI-W3A-01` / `UI-W3A-02` checks in `Source/ui/src/index.ts` and `Source/ui/public/index.html`
+
+2. Build validation
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -- -j8` -> `PASS`
+- `rg -o "UI-W3A-[0-9]+" Source/ui/generated/index.js | sort -u` -> `PASS`
+
+3. Focused verification
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T042521Z.json`)
+- failure reason: rebuilt standalone replay still times out on the CALIBRATE topology/legacy-alias contract (`legacy stereo maps topology stereo`) before the new W3-A checks execute, so the lane is recorded as partially tested rather than promotion-ready
+
+4. Follow-up validation diagnosis (UTC 2026-03-07T04:52:53Z)
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ_Standalone -- -j8` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json`)
+- follow-up diagnosis: `Source/ui/src/index.ts` now hardens the legacy-to-topology helper and select fallback binding; the rebuilt replay still fails earlier in `legacy mono maps topology quad`, but direct invocation of `syncTopologyFromLegacyConfigAlias()` inside the same replay recovers the topology, so the remaining blocker is the `cal-config` replay path rather than the W3-A authoring-history implementation
+
 ## W3-D Audition Signal Documentation + Tooltips (UTC 2026-03-07T04:16:52Z)
 
 1. Implementation slice

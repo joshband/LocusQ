@@ -2,8 +2,8 @@
   "schema_version": "locusq-backlog-summary-v1",
   "source": "Documentation/backlog",
   "counts": {
-    "total": 87,
-    "open": 18,
+    "total": 88,
+    "open": 19,
     "done": 69
   },
   "items": [
@@ -1526,6 +1526,25 @@
       "plain_language_summary": "BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally; the remaining work is promotion-grade validation and host verification in a clean checkout.",
       "objective": "Expose LocusQ's APVTS as a grouped host hierarchy so DAWs that understand parameter groups can present a cleaner tree, while preserving the plugin's compatibility contracts: stable parameter IDs, stable defaults, and unchanged flattened ordering for legacy automation and QA lanes that still depend on raw indices.",
       "runbook_path": "Documentation/backlog/bl-079-apvts-parameter-grouping-and-host-hierarchy.md"
+    },
+    {
+      "id": "BL-080",
+      "title": "BL-080: Authoring Undo/Redo for Timeline and Preset Operations",
+      "state_bucket": "open",
+      "status": "In Validation",
+      "priority": "P3",
+      "track": "",
+      "depends_on": "BL-070, BL-074",
+      "blocks": "\u2014",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: In Validation. The processor-side history engine and WebView controls are implemented locally, and the CALIBRATE reverse-alias helper has been tightened, but the rebuilt standalone production self-test still trips in the cal-config replay path before the new UI-W3A-* checks execute.",
+      "objective": "Add deterministic undo/redo coverage for keyframe timeline edits plus preset lifecycle operations initiated from the WebView UI, while preserving the existing processor authority model, preset-file contract, and native UI-state persistence behavior.",
+      "runbook_path": "Documentation/backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md"
     },
     {
       "id": "HX-01",

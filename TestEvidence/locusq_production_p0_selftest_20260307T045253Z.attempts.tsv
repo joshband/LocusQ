@@ -1,0 +1,2 @@
+attempt	status	terminal_failure_reason	app_pid	app_exit_code	app_signal	app_signal_name	result_wait_seconds	result_json	crash_report_path	error_reason
+1	fail	selftest_payload_not_ok	84749	143	15	TERM	6	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json		legacy mono maps topology quad timed out after 2000ms (elapsed=2024ms, polls=79)

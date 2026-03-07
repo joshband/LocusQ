@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <optional>
+#include <vector>
 #include "VisualTokenScheduler.h"
 #include "SceneGraph.h"
 #include "SpatialRenderer.h"
@@ -142,6 +143,7 @@ public:
     // Timeline and preset API for WebView bridge (Phase 2.6)
     juce::var getKeyframeTimelineForUI() const;
     bool setKeyframeTimelineFromUI (const juce::var& timelineState);
+    juce::var commitKeyframeTimelineFromUI (const juce::var& payload);
     bool setTimelineCurrentTimeFromUI (double timeSeconds);
     juce::var listEmitterPresetsFromUI() const;
     juce::var saveEmitterPresetFromUI (const juce::var& options);
@@ -150,6 +152,9 @@ public:
     juce::var deleteEmitterPresetFromUI (const juce::var& options);
     juce::var getUIStateFromUI() const;
     bool setUIStateFromUI (const juce::var& state);
+    juce::var getAuthoringHistoryStatusFromUI() const;
+    juce::var undoAuthoringActionFromUI();
+    juce::var redoAuthoringActionFromUI();
 
     // BL-045 Slice C: re-center UX + drift telemetry (public — accessed from EditorWebViewRuntime)
     // yawReferenceDeg and yawReferenceSet are transient (not persisted to state XML).
@@ -278,6 +283,31 @@ private:
         std::atomic<std::uint32_t> releaseIncompleteCount { 0 };
     };
 
+    struct AuthoringFileState
+    {
+        juce::String path;
+        bool exists = false;
+        juce::String contents;
+    };
+
+    struct AuthoringHistorySelectionHint
+    {
+        juce::String preferredPresetPath;
+        juce::String preferredPresetType;
+    };
+
+    struct AuthoringHistoryEntry
+    {
+        juce::String actionId;
+        juce::String label;
+        juce::var beforeState;
+        juce::var afterState;
+        std::vector<AuthoringFileState> beforeFiles;
+        std::vector<AuthoringFileState> afterFiles;
+        AuthoringHistorySelectionHint beforeSelection;
+        AuthoringHistorySelectionHint afterSelection;
+    };
+
     ClapRuntimeDiagnostics getClapRuntimeDiagnostics() const;
 
     //==============================================================================
@@ -293,6 +323,17 @@ private:
     RegistrationTransitionDiagnostics registrationTransitionDiagnostics;
     RegistrationClaimReleaseDiagnostics registrationClaimReleaseDiagnostics;
     void syncSceneGraphRegistrationForMode (LocusQMode mode);
+    void captureModeTransitionInputSnapshot (const juce::AudioBuffer<float>& sourceBuffer,
+                                             int totalNumInputChannels,
+                                             int totalNumOutputChannels) noexcept;
+    void copyModeTransitionInputSnapshotToBuffer (juce::AudioBuffer<float>& targetBuffer,
+                                                  int totalNumOutputChannels) noexcept;
+    void prepareRendererRealtimeStateForBlock();
+    void renderRendererScratchForModeTransition (int totalNumOutputChannels, int numSamples);
+    static void applyModeTransitionCrossfade (juce::AudioBuffer<float>& targetBuffer,
+                                              const juce::AudioBuffer<float>& fromBuffer,
+                                              int totalNumOutputChannels,
+                                              int numSamples) noexcept;
 
     // Publish emitter state to scene graph (called in processBlock for Emitter mode)
     void publishEmitterState (int numSamplesInBlock);
@@ -379,6 +420,8 @@ private:
                                         const juce::String& choreographyPackId,
                                         bool includeParameters,
                                         bool includeTimeline) const;
+    juce::var captureEmitterParameterState() const;
+    bool applyEmitterParameterState (const juce::var& parametersState);
     juce::var buildCalibrationProfileState (const juce::String& profileName,
                                             const juce::var& validationSummary) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
@@ -388,6 +431,34 @@ private:
     static juce::String sanitiseEmitterLabel (const juce::String& label);
     static std::optional<juce::var> readJsonFromFile (const juce::File& file);
     static bool writeJsonToFile (const juce::File& file, const juce::var& payload);
+
+    juce::var captureAuthoringStateSnapshotLocked() const;
+    bool applyAuthoringStateSnapshotLocked (const juce::var& snapshot);
+    static juce::var cloneJsonLikeVar (const juce::var& value);
+    static bool jsonLikeVarsEqual (const juce::var& lhs, const juce::var& rhs);
+    static AuthoringFileState captureAuthoringFileState (const juce::File& file);
+    static bool restoreAuthoringFileStates (const std::vector<AuthoringFileState>& fileStates);
+    void pushAuthoringHistoryEntry (AuthoringHistoryEntry entry);
+    static AuthoringHistorySelectionHint makeSelectionHint (const juce::String& preferredPresetPath,
+                                                            const juce::String& preferredPresetType);
+    juce::var buildAuthoringHistoryStatusResponse (bool ok,
+                                                   const juce::String& label,
+                                                   const juce::String& message,
+                                                   const AuthoringHistorySelectionHint& selectionHint) const;
+    juce::var commitAuthoringHistoryEntry (const juce::String& actionId,
+                                           const juce::String& label,
+                                           const juce::var& beforeState,
+                                           const juce::var& afterState,
+                                           std::vector<AuthoringFileState> beforeFiles,
+                                           std::vector<AuthoringFileState> afterFiles,
+                                           const AuthoringHistorySelectionHint& beforeSelection,
+                                           const AuthoringHistorySelectionHint& afterSelection);
+    juce::var applyAuthoringHistoryEntryFromUI (bool redo);
+
+    static constexpr size_t kMaxAuthoringHistoryEntries = 64;
+    mutable juce::CriticalSection authoringHistoryLock;
+    std::vector<AuthoringHistoryEntry> authoringUndoHistory;
+    std::vector<AuthoringHistoryEntry> authoringRedoHistory;
     void applyEmitterLabelToSceneSlotIfAvailable (const juce::String& label);
 
     // Runtime perf telemetry (EMA values in milliseconds)
@@ -401,6 +472,11 @@ private:
         std::atomic<float> { 0.0f },
         std::atomic<float> { 0.0f }
     };
+    static constexpr int kModeTransitionScratchChannels = 16;
+    juce::AudioBuffer<float> modeTransitionInputSnapshotBuffer;
+    juce::AudioBuffer<float> modeTransitionRendererScratchBuffer;
+    LocusQMode lastProcessedMode = LocusQMode::Calibrate;
+    bool hasLastProcessedMode = false;
     std::uint64_t sceneSnapshotSequence = 0;
     mutable PublishedHeadphoneDiagnosticsSnapshot publishedHeadphoneDiagnostics;
     void publishHeadphoneDiagnosticsSnapshot (const PublishedHeadphoneCalibrationDiagnostics& calibration,

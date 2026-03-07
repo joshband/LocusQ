@@ -200,22 +200,49 @@ juce::var LocusQAudioProcessor::buildEmitterPresetLocked (const juce::String& pr
     preset->setProperty (kEmitterPresetLayoutProperty, layoutVar);
 
     if (includeParameters)
-    {
-        juce::var parametersVar (new juce::DynamicObject());
-        auto* parameters = parametersVar.getDynamicObject();
-        for (const auto* parameterId : kEmitterPresetParameterIds)
-        {
-            if (auto* parameter = apvts.getParameter (parameterId))
-                parameters->setProperty (parameterId, parameter->getValue());
-        }
-
-        preset->setProperty ("parameters", parametersVar);
-    }
+        preset->setProperty ("parameters", captureEmitterParameterState());
 
     if (includeTimeline)
         preset->setProperty ("timeline", serialiseKeyframeTimelineLocked());
 
     return presetVar;
+}
+
+juce::var LocusQAudioProcessor::captureEmitterParameterState() const
+{
+    juce::var parametersVar (new juce::DynamicObject());
+    auto* parameters = parametersVar.getDynamicObject();
+
+    for (const auto* parameterId : kEmitterPresetParameterIds)
+    {
+        if (auto* parameter = apvts.getParameter (parameterId))
+            parameters->setProperty (parameterId, parameter->getValue());
+    }
+
+    return parametersVar;
+}
+
+bool LocusQAudioProcessor::applyEmitterParameterState (const juce::var& parametersState)
+{
+    auto* parameters = parametersState.getDynamicObject();
+    if (parameters == nullptr)
+        return false;
+
+    for (const auto* parameterId : kEmitterPresetParameterIds)
+    {
+        if (! parameters->hasProperty (parameterId))
+            continue;
+
+        if (auto* parameter = apvts.getParameter (parameterId))
+        {
+            const auto normalized = juce::jlimit (0.0f,
+                                                  1.0f,
+                                                  static_cast<float> (double (parameters->getProperty (parameterId))));
+            parameter->setValueNotifyingHost (normalized);
+        }
+    }
+
+    return true;
 }
 
 bool LocusQAudioProcessor::applyEmitterPresetLocked (const juce::var& presetState)
@@ -251,19 +278,10 @@ bool LocusQAudioProcessor::applyEmitterPresetLocked (const juce::var& presetStat
         }
     }
 
-    if (auto* parameters = preset->getProperty ("parameters").getDynamicObject())
+    if (preset->hasProperty ("parameters")
+        && ! applyEmitterParameterState (preset->getProperty ("parameters")))
     {
-        for (const auto* parameterId : kEmitterPresetParameterIds)
-        {
-            if (parameters->hasProperty (parameterId))
-            {
-                if (auto* parameter = apvts.getParameter (parameterId))
-                {
-                    const auto normalized = juce::jlimit (0.0f, 1.0f, static_cast<float> (double (parameters->getProperty (parameterId))));
-                    parameter->setValueNotifyingHost (normalized);
-                }
-            }
-        }
+        return false;
     }
 
     if (preset->hasProperty ("timeline"))
@@ -353,14 +371,19 @@ juce::var LocusQAudioProcessor::saveEmitterPresetFromUI (const juce::var& option
     presetDir.createDirectory();
     const auto presetFile = presetDir.getChildFile (safeName + ".json");
 
+    juce::var beforeState;
+    juce::var afterState;
     juce::var presetPayload;
     {
         const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+        beforeState = captureAuthoringStateSnapshotLocked();
         presetPayload = buildEmitterPresetLocked (requestedName, presetType, choreographyPackId, includeParameters, includeTimeline);
+        afterState = cloneJsonLikeVar (beforeState);
     }
 
     juce::var response (new juce::DynamicObject());
     auto* result = response.getDynamicObject();
+    const auto beforeFileState = captureAuthoringFileState (presetFile);
 
     if (! writeJsonToFile (presetFile, presetPayload))
     {
@@ -369,6 +392,15 @@ juce::var LocusQAudioProcessor::saveEmitterPresetFromUI (const juce::var& option
         return response;
     }
 
+    response = commitAuthoringHistoryEntry ("preset_save",
+                                            "Save Preset",
+                                            beforeState,
+                                            afterState,
+                                            { beforeFileState },
+                                            { captureAuthoringFileState (presetFile) },
+                                            {},
+                                            makeSelectionHint (presetFile.getFullPathName(), presetType));
+    result = response.getDynamicObject();
     result->setProperty (locusq::shared_contracts::bridge_status::kOk, true);
     result->setProperty (locusq::shared_contracts::bridge_status::kName, requestedName);
     result->setProperty (locusq::shared_contracts::bridge_status::kFile, presetFile.getFileName());
@@ -400,21 +432,35 @@ juce::var LocusQAudioProcessor::loadEmitterPresetFromUI (const juce::var& option
         return response;
     }
 
+    juce::var beforeState;
+    juce::var afterState;
     {
         const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+        beforeState = captureAuthoringStateSnapshotLocked();
         if (! applyEmitterPresetLocked (*payload))
         {
             result->setProperty (locusq::shared_contracts::bridge_status::kOk, false);
             result->setProperty (locusq::shared_contracts::bridge_status::kMessage, "Preset payload is not compatible.");
             return response;
         }
+        afterState = captureAuthoringStateSnapshotLocked();
     }
 
+    const auto inferredPresetType = inferPresetTypeFromPayload (*payload);
+    response = commitAuthoringHistoryEntry ("preset_load",
+                                            "Load Preset",
+                                            beforeState,
+                                            afterState,
+                                            {},
+                                            {},
+                                            makeSelectionHint (presetFile.getFullPathName(), inferredPresetType),
+                                            makeSelectionHint (presetFile.getFullPathName(), inferredPresetType));
+    result = response.getDynamicObject();
     result->setProperty (locusq::shared_contracts::bridge_status::kOk, true);
     result->setProperty (locusq::shared_contracts::bridge_status::kName, presetFile.getFileNameWithoutExtension());
     result->setProperty (locusq::shared_contracts::bridge_status::kFile, presetFile.getFileName());
     result->setProperty (locusq::shared_contracts::bridge_status::kPath, presetFile.getFullPathName());
-    result->setProperty ("presetType", inferPresetTypeFromPayload (*payload));
+    result->setProperty ("presetType", inferredPresetType);
     if (auto* preset = payload->getDynamicObject(); preset != nullptr
         && preset->hasProperty ("choreographyPackId"))
     {
@@ -485,6 +531,15 @@ juce::var LocusQAudioProcessor::renameEmitterPresetFromUI (const juce::var& opti
         preset->setProperty ("updatedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
     }
 
+    juce::var beforeState;
+    {
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+        beforeState = captureAuthoringStateSnapshotLocked();
+    }
+    const auto afterState = cloneJsonLikeVar (beforeState);
+    const auto beforeSourceFileState = captureAuthoringFileState (sourceFile);
+    const auto beforeDestinationFileState = captureAuthoringFileState (destinationFile);
+
     if (! writeJsonToFile (destinationFile, updatedPayload))
     {
         result->setProperty ("ok", false);
@@ -495,11 +550,21 @@ juce::var LocusQAudioProcessor::renameEmitterPresetFromUI (const juce::var& opti
     if (! samePath)
         sourceFile.deleteFile();
 
+    const auto renamedPresetType = inferPresetTypeFromPayload (updatedPayload);
+    response = commitAuthoringHistoryEntry ("preset_rename",
+                                            "Rename Preset",
+                                            beforeState,
+                                            afterState,
+                                            { beforeSourceFileState, beforeDestinationFileState },
+                                            { captureAuthoringFileState (sourceFile), captureAuthoringFileState (destinationFile) },
+                                            makeSelectionHint (sourceFile.getFullPathName(), renamedPresetType),
+                                            makeSelectionHint (destinationFile.getFullPathName(), renamedPresetType));
+    result = response.getDynamicObject();
     result->setProperty ("ok", true);
     result->setProperty ("name", requestedName);
     result->setProperty ("file", destinationFile.getFileName());
     result->setProperty ("path", destinationFile.getFullPathName());
-    result->setProperty ("presetType", inferPresetTypeFromPayload (updatedPayload));
+    result->setProperty ("presetType", renamedPresetType);
     if (auto* preset = updatedPayload.getDynamicObject(); preset != nullptr
         && preset->hasProperty ("choreographyPackId"))
     {
@@ -527,6 +592,16 @@ juce::var LocusQAudioProcessor::deleteEmitterPresetFromUI (const juce::var& opti
         return response;
     }
 
+    const auto payload = readJsonFromFile (presetFile);
+
+    juce::var beforeState;
+    {
+        const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+        beforeState = captureAuthoringStateSnapshotLocked();
+    }
+    const auto afterState = cloneJsonLikeVar (beforeState);
+    const auto beforeFileState = captureAuthoringFileState (presetFile);
+
     if (! presetFile.deleteFile())
     {
         result->setProperty ("ok", false);
@@ -534,9 +609,22 @@ juce::var LocusQAudioProcessor::deleteEmitterPresetFromUI (const juce::var& opti
         return response;
     }
 
+    const auto deletedPresetType = payload.has_value()
+        ? inferPresetTypeFromPayload (*payload)
+        : juce::String (kEmitterPresetTypeEmitter);
+    response = commitAuthoringHistoryEntry ("preset_delete",
+                                            "Delete Preset",
+                                            beforeState,
+                                            afterState,
+                                            { beforeFileState },
+                                            { captureAuthoringFileState (presetFile) },
+                                            makeSelectionHint (presetFile.getFullPathName(), deletedPresetType),
+                                            {});
+    result = response.getDynamicObject();
     result->setProperty ("ok", true);
     result->setProperty ("file", presetFile.getFileName());
     result->setProperty ("path", presetFile.getFullPathName());
+    result->setProperty ("presetType", deletedPresetType);
     return response;
 }
 
