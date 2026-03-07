@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-07 (Rev 12 — W1-A ParameterBridge closeout synced)
+Last Modified Date: 2026-03-07 (Rev 14 — W1-D APVTS grouping landed)
 
 # LocusQ Architecture & Code Review
 
@@ -36,7 +36,7 @@ This review covers **architecture**, **code quality**, **functionality**, and **
 | `~~W1-B~~` thread-safety fixes | `[DONE]` | P1 | Medium | focused hardening slice completed 2026-03-07 | `n/a` | 2026-03-07 | timeline, physics worker, diagnostics ownership | Triple-buffered RT timeline snapshots, `juce::Thread` physics cadence, and fixed-size sequence-safe diagnostics landed; validated by `locusq_qa` spatial scenarios plus `locusq_physics_probe` |
 | `~~W1-A~~` ParameterBridge | `[DONE]` | P2 | Medium | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `PluginEditor.*`, `Source/editor_webview/EditorParameterBridge.h` | Relay/attachment boilerplate now emits from one canonical spec list; plugin + standalone builds and production P0 self-test passed |
 | W1-C JS/Vite toolchain | `[NEXT]` | P2 | Medium | not started | `n/a` | 2026-03-07 | WebView build pipeline | Next structural cleanup after W1-A/W1-B; depends on W0-C and keeps UI toolchain debt isolated from native runtime work |
-| W1-D APVTS parameter grouping | `[QUEUED]` | P2 | Small | not started | `n/a` | 2026-03-06 | parameter layout/grouping surfaces | Useful cleanup, but lower urgency than W1-B |
+| `~~W1-D~~` APVTS parameter grouping | `[DONE]` | P2 | Small | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorParameterLayout.cpp` | Host-visible Global/Calibration/Emitter/Renderer groups landed while preserving all 90 parameter IDs and the original flattened parameter order; backlog follow-up continues under `BL-079` promotion validation |
 
 ---
 
@@ -192,7 +192,7 @@ The file has an enormous anonymous namespace (lines 20–999+) containing helper
 
 - **FG-2: Calibration profile portability**: Profiles are stored in platform-specific app data directories with 4 fallback paths. No export/import mechanism for users to share calibration data across machines.
 
-- **FG-3: No parameter grouping/hierarchy in APVTS**: All 76 parameters are flat. DAWs that support parameter groups (AU, VST3) would benefit from organized categories (Position, Physics, Renderer, Calibration).
+- **~~FG-3: No parameter grouping/hierarchy in APVTS~~**: Resolved by W1-D on 2026-03-07. Hosts now receive grouped Global/Calibration/Emitter/Renderer parameter trees while preserving the existing flattened order of all 90 parameter IDs.
 
 - **FG-4: Audition signal generative engines (13 types)**: Impressive scope, but no user-facing documentation or tooltips explaining what each signal sounds like or its intended use case.
 
@@ -227,7 +227,7 @@ Tier 1 (Depends on Tier 0)
   ├─ [NEXT] W1-A: Data-driven ParameterBridge for PluginEditor (depends W0-A)
   ├─ [DONE] ~~W1-B~~: Fix thread-safety issues TQ-1, TQ-2, TQ-3 (depends W0-A, W0-B)
   ├─ [QUEUED] W1-C: Introduce JS build toolchain (TypeScript/Vite) (depends W0-C)
-  └─ [QUEUED] W1-D: APVTS parameter grouping (depends W0-A)
+  └─ [DONE] ~~W1-D~~: APVTS parameter grouping (depends W0-A)
 
 Tier 2 (Depends on Tier 1)
   ├─ [QUEUED] W2-A: Optimize memory (MQ-1, MQ-2, MQ-3) (depends W1-B)
@@ -262,7 +262,7 @@ Tier 3 (Polish — Depends on Tier 2)
 | **W1-A** | `[DONE]` | Data-driven ParameterBridge: auto-generate relay+attachment from ID list | Claude Opus | Medium | W0-A |
 | **W1-B** | `[DONE]` | Thread safety fixes: triple-buffer timeline, JUCE Thread for physics, fixed-size diagnostics | Claude Opus | Medium | W0-A, W0-B |
 | **W1-C** | `[NEXT]` | Add Vite/TypeScript build for WebView UI, vendor Three.js via npm | Claude Sonnet | Medium | W0-C |
-| **W1-D** | `[QUEUED]` | APVTS parameter groups (Position, Physics, Renderer, Calibration, Animation, Visualization) | Claude Sonnet | Small | W0-A |
+| **W1-D** | `[DONE]` | APVTS parameter groups (Position, Physics, Renderer, Calibration, Animation, Visualization) | Codex | Small | W0-A |
 
 **Parallel execution**: W1-A and W1-B can run in parallel. W1-C is independent. W1-D is independent.
 
@@ -330,6 +330,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 | TQ-1: SpinLock timeline | **BL-035** RT lock-free registration | Done-candidate | W1-B extends lock-free patterns to timeline |
 | TQ-3: String in diagnostics | **BL-036** DSP finite output guardrails | Done-candidate | W1-B aligns with BL-036 RT-safety scope |
 | DQ-2: VBAP elevation | **BL-041** Doppler v2 + VBAP geometry | Done-candidate | W0-D directly implements BL-041's VBAP geometry validation |
+| FG-3: APVTS parameter grouping | **BL-079** APVTS parameter grouping and host hierarchy | In Validation | W1-D landed the grouped APVTS tree while preserving parameter ID/default/order parity; remaining backlog work is promotion-grade validation and host verification |
 | FG-5: CLAP/AUv3 CI | **BL-011** CLAP lifecycle (Done), **BL-067** AUv3 lifecycle (Open) | Mixed | W2-C activates CI lanes for both |
 | MQ-3: JSON snapshot | **BL-070** Coherent audio snapshot seqlock | Done | W2-A builds on BL-070's seqlock contract |
 
@@ -343,7 +344,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
 | UQ-1/UQ-2: JS toolchain + Three.js vendoring | New BL (P2) | P2 |
 | FG-1: Undo/redo for keyframes | New BL (P3) | P3 |
 | FG-2: Calibration profile export | New BL (P2) | P2 |
-| FG-3: APVTS parameter grouping | New BL (P2) | P2 |
+| FG-3: APVTS parameter grouping | BL-079 | P2 |
 | US-1/US-4: WebView UX polish | New BL (P3) | P3 |
 
 ### Backlog Gate Dependencies for Tier 0
@@ -391,7 +392,7 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
   - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `662` LOC across the Wave 4 through Wave 6 follow-on slices, which brings the file below the planning-packet `<=700` LOC target
   - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06 (UTC evidence roots `2026-03-07T00:23:45Z` and `2026-03-07T00:23:58Z`)
   - completed owner T2/T3 execute cadence with `TestEvidence/bl076_candidate_t2_closeout/` (`5/5`) and `TestEvidence/bl076_promotion_t3_closeout/` (`10/10`)
-- Recommended next architecture-roadmap item: **W1-A** ParameterBridge cleanup.
+- Recommended next architecture-roadmap item: **W1-C** JS/Vite toolchain cleanup, with W1-D now complete.
 
 ### W1-B Detail: Thread-Safety Hardening
 
@@ -407,11 +408,29 @@ This review was cross-referenced against the full backlog (84 items: BL-001–BL
   - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_keyframe_loop_playback.json` -> `PASS`
   - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> `PASS`
 
+### W1-D Detail: APVTS Parameter Grouping
+
+- Rebuilt `Source/processor_core/ProcessorParameterLayout.cpp` from a flat vector layout into a grouped JUCE `AudioProcessorValueTreeState::ParameterLayout` with:
+  - 4 top-level groups: `Global`, `Calibration`, `Emitter`, and `Renderer`
+  - 11 nested subgroups: `Emitter/{Position, Size, Audio, Physics, Animation, Identity}` and `Renderer/{Master, Spatialization, Room, Physics, Visualization}`
+- Preserved all 90 APVTS parameter IDs, defaults, and flattened declaration order so existing ID-bound runtime/UI code and index-based legacy QA automation continue to see the same parameter sequence.
+- Metrics for the slice:
+  - `Source/processor_core/ProcessorParameterLayout.cpp`: `407` -> `454` LOC (`+47`)
+  - parameter IDs changed: `0`
+  - parameter order drift: `0` (source-parity script confirmed the flattened order is unchanged)
+- Focused validation for the slice:
+  - `cmake --build build_local --config Release --target LocusQ locusq_qa -- -j8` -> `PASS`
+  - parameter ID/default inventory parity vs. pre-W1-D source -> `PASS`
+  - flattened parameter order parity vs. pre-W1-D source -> `PASS`
+  - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json` -> exits `1` before final result emission in the current dirty checkout
+  - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> exits `1` before final result emission in the current dirty checkout
+- Backlog posture: implementation is complete for the architecture item, and the remaining follow-up is tracked as BL-079 promotion validation because the current checkout still carries unrelated parallel W1-C UI/toolchain edits.
+
 ### W0-A Detail: PluginProcessor Decomposition
 
 **Extracted compilation units:**
 
-1. `Source/processor_core/ProcessorParameterLayout.cpp` — all 76 APVTS parameter definitions (~400 lines)
+1. `Source/processor_core/ProcessorParameterLayout.cpp` — all 90 APVTS parameter definitions and host-visible grouping tree (~450 lines after W1-D)
 2. `Source/processor_core/ProcessorStateSerializer.cpp` — `getStateInformation`/`setStateInformation` (~90 lines after helper extraction)
 3. `Source/processor_core/ProcessorSceneRegistration.cpp` — mode transition + SceneGraph claim/release orchestration (~270 lines)
 4. `Source/processor_core/ProcessorPresetManager.cpp` — preset persistence, emitter UI state persistence, and preset JSON I/O (~620 lines)

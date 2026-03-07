@@ -6,6 +6,27 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W1-D APVTS Parameter Grouping (UTC 2026-03-07T02:44:10Z)
+
+1. Implementation slice
+- rebuilt `Source/processor_core/ProcessorParameterLayout.cpp` from a flat APVTS vector into a grouped JUCE parameter tree
+- added 4 top-level host-visible groups: `Global`, `Calibration`, `Emitter`, and `Renderer`
+- added 11 nested subgroups: `Emitter/{Position, Size, Audio, Physics, Animation, Identity}` and `Renderer/{Master, Spatialization, Room, Physics, Visualization}`
+- preserved all `90` APVTS parameter IDs, defaults, and flattened declaration order so the W1-A bridge and any legacy index-based automation continue to see the same sequence
+- `Source/processor_core/ProcessorParameterLayout.cpp` changed from `407` LOC to `454` LOC (`+47`)
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ locusq_qa -- -j8` -> `PASS`
+
+3. Parity validation
+- pre/post source parity script for APVTS IDs -> `PASS` (`90/90` IDs unchanged)
+- pre/post source parity script for flattened parameter order -> `PASS`
+
+4. Focused runtime follow-up
+- `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json` -> exits `1` before final result emission in the current dirty checkout
+- `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> exits `1` before final result emission in the current dirty checkout
+- these non-passing reruns were not used as promotion evidence because the worktree still carries unrelated parallel W1-C UI/toolchain edits
+
 ## W1-A ParameterBridge Data-Driven Relay/Attachment Refactor (UTC 2026-03-07T00:56:05Z)
 
 1. Implementation slice
