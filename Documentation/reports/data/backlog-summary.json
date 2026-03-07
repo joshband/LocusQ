@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 86,
-    "open": 18,
-    "done": 68
+    "open": 17,
+    "done": 69
   },
   "items": [
     {
@@ -1454,8 +1454,8 @@
     {
       "id": "BL-076",
       "title": "BL-076 SpatialRenderer Decomposition and Boundary Guardrails",
-      "state_bucket": "open",
-      "status": "In Implementation (W0-B out-of-line split plus Wave 4 Steam backend and Wave 5 audition implementation-unit extractions landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06)",
+      "state_bucket": "done",
+      "status": "Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout/archive sync complete)",
       "priority": "P1",
       "track": "F - Hardening",
       "depends_on": "BL-050, BL-069, BL-070",
@@ -1466,9 +1466,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (W0-B out-of-line split, Wave 4 Steam backend extraction, and Wave 5 audition implementation-unit extraction landed; build_local plugin plus console targets and contract+execute guardrails PASS on 2026-03-06). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: Done (owner T2 5/5 + T3 10/10 execute replay PASS; closeout/archive sync complete). For technical detail, see ## Objective, ## Validation Plan, and the historical execution snapshots below.",
       "objective": "Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot.",
-      "runbook_path": "Documentation/backlog/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md"
+      "runbook_path": "Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md"
     },
     {
       "id": "BL-077",

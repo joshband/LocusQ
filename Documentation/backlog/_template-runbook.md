@@ -27,10 +27,22 @@ Use visuals only when they improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
+| Status legend + progress snapshot | Makes done/active/next work easy to scan without color dependencies. | `## Status Legend`, `## Progress Snapshot` |
 | Status table | Fast state scan for humans and agents | `## Status Ledger` |
 | Dependency/implementation table | Clarifies sequencing and ownership | `## Implementation Slices` |
 | Mermaid diagram (optional) | Clarifies flow/decision logic when text is dense | `## Flow Diagram` |
 | Screenshot/chart (optional) | Clarifies UI/operator outcomes or metrics | `TestEvidence/...` linked in evidence sections |
+
+## Status Legend
+
+- `[DONE]` completed slice or milestone; use `~~strikethrough~~` on the item name when appropriate.
+- `[ACTIVE]` current focus with meaningful remaining work.
+- `[NEXT]` next recommended slice after the active one.
+- `[QUEUED]` planned but not current focus.
+- `[DEFERRED]` intentionally postponed.
+- `[BLOCKED]` waiting on dependency or failing gate.
+- Use portable markdown only: no HTML/CSS color.
+- If exact time or tokens were not logged, use `not logged` or `n/a`.
 
 ## Status Ledger
 
@@ -44,6 +56,14 @@ Use visuals only when they improve understanding.
 | Annex Spec | `[Documentation/plans/bl-XXX-....md]` |
 | Default Replay Tier | [T0/T1/T2/T3/T4 per `Documentation/backlog/index.md`] |
 | Heavy Lane Budget | [Standard / High-cost wrapper] |
+
+## Progress Snapshot
+
+| Item | Status | Priority | Estimate | Actual / Time | Tokens | Updated | Where | Remaining |
+|---|---|---|---|---|---|---|---|---|
+| [Current slice name] | `[ACTIVE]` | [P0/P1/P2] | [Small/Medium/Large] | [exact date or `not logged`] | [`n/a` or explicit token count] | [YYYY-MM-DD] | `Source/...` | [what remains] |
+| [Completed slice] | `[DONE]` | [P0/P1/P2] | [Small/Medium/Large] | [exact date or `not logged`] | [`n/a` or explicit token count] | [YYYY-MM-DD] | `Source/...` | none |
+| [Next slice] | `[NEXT]` | [P0/P1/P2] | [Small/Medium/Large] | not started | `n/a` | [YYYY-MM-DD] | `Source/...` | [why it is next] |
 
 ## Effort Estimate
 
@@ -192,6 +212,7 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - [ ] Evidence bundle captured at designated paths
 - [ ] Plain-language summary + 6W snapshot updated to match final behavior
 - [ ] Visual aid index updated and any diagrams/screenshots linked when they add clarity
+- [ ] Status legend + progress snapshot updated with current done/active/next state
 - [ ] `status.json` updated with current state and evidence notes
 - [ ] `Documentation/backlog/index.md` dashboard row updated
 - [ ] `TestEvidence/build-summary.md` snapshot updated

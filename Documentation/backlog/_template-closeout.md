@@ -27,10 +27,21 @@ Use visuals only when they improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
+| Status legend + completion snapshot | Makes completed work, dates, and evidence easy to scan without color dependencies. | `## Status Legend`, `## Completion Snapshot` |
 | Promotion gate table | Quick closeout confidence scan | `## Promotion Gate Summary` |
 | Evidence references table/list | Fast traceability for humans and agents | `## Evidence References` |
 | Mermaid diagram (optional) | Clarifies complex lifecycle/decision flow | `## Flow Diagram` |
 | Screenshot/chart (optional) | Clarifies user-visible or metric outcomes | `TestEvidence/...` linked path |
+
+## Status Legend
+
+- `[DONE]` completed and no longer active; use `~~strikethrough~~` on the item name when appropriate.
+- `[ACTIVE]` still open or partially closed.
+- `[NEXT]` follow-on work outside this closeout.
+- `[DEFERRED]` intentionally moved into another lane.
+- `[BLOCKED]` closeout could not finish because a gate is still red.
+- Use portable markdown only: no HTML/CSS color.
+- If exact time or tokens were not logged, use `not logged` or `n/a`.
 
 ## Status Ledger
 
@@ -43,6 +54,13 @@ Use visuals only when they improve understanding.
 | Promotion Decision Packet | `TestEvidence/<owner_sync_or_promotion_packet>/promotion_decision.md` |
 | Final Evidence Root | `TestEvidence/<bl_or_hx>_<slice>_<timestamp>/` |
 | Archived Runbook Path | `Documentation/backlog/done/bl-XXX-[slug].md` |
+
+## Completion Snapshot
+
+| Item | Status | Priority | Estimate | Actual / Time | Tokens | Completed | Where | Evidence / Remaining |
+|---|---|---|---|---|---|---|---|---|
+| [Closed scope] | `[DONE]` | [P0/P1/P2] | [Small/Medium/Large] | [exact date or `not logged`] | [`n/a` or explicit token count] | [YYYY-MM-DD] | `Source/...` | `TestEvidence/...` |
+| [Deferred follow-on if any] | `[NEXT]` or `[DEFERRED]` | [P0/P1/P2] | [Small/Medium/Large] | not started | `n/a` | [YYYY-MM-DD] | `Documentation/backlog/...` | [what remains outside this closeout] |
 
 ## Objective
 
@@ -83,6 +101,7 @@ Use visuals only when they improve understanding.
 - [ ] `Documentation/backlog/index.md` row updated to Done with done-path link
 - [ ] Plain-language summary + 6W snapshot reflect final delivered state
 - [ ] Visual aid index updated and linked assets are current/relevant
+- [ ] Status legend + completion snapshot reflect what closed and what remains elsewhere
 - [ ] `status.json` updated
 - [ ] `TestEvidence/build-summary.md` updated
 - [ ] `TestEvidence/validation-trend.md` updated

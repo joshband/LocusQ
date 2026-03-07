@@ -7,7 +7,7 @@ Title: Documentation Hygiene Expert Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-06
 
 # Documentation Hygiene Expert
 
@@ -90,6 +90,13 @@ Use both skills for high-impact cleanup:
    - Use precise language, avoid ambiguous claims, and remove filler.
    - Keep markdown consistent with repository metadata and formatting conventions.
    - Normalize API docs/examples and code-comment narrative where stale prose creates implementation risk.
+   - For architecture reviews, roadmap docs, and backlog runbooks that track live progress, enforce portable status-rich formatting:
+     - no HTML/CSS color dependencies,
+     - `## Status Legend` or `## Review Status Legend`,
+     - `## Priority Snapshot`, `## Progress Snapshot`, or `## Completion Snapshot`,
+     - status tags `[DONE]`, `[ACTIVE]`, `[NEXT]`, `[QUEUED]`, `[DEFERRED]`, `[BLOCKED]`,
+     - `~~strikethrough~~` on completed item names where helpful,
+     - honest effort fields using `not logged` / `n/a` when time or tokens were not captured.
    - Enforce backlog readability contract:
      - `## Plain-Language Summary`
      - `## 6W Snapshot (Who/What/Why/How/When/Where)`

@@ -2,7 +2,7 @@ Title: Backlog Runbook Authoring Guide
 Document Type: Guide
 Author: APC Codex
 Created Date: 2026-03-02
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-06
 
 # Backlog Runbook Authoring Guide
 
@@ -42,6 +42,24 @@ Every runbook must include:
 3. Add screenshots/charts only when they materially improve decision quality.
 4. Link visual evidence to repo-local artifacts under `TestEvidence/...`.
 
+## Portable Status Formatting
+
+1. Do not rely on inline HTML/CSS color for status. Prefer portable markdown that renders consistently across local preview and GitHub-style viewers.
+2. Use status tags for roadmap/progress surfaces:
+   - `[DONE]`, `[ACTIVE]`, `[NEXT]`, `[QUEUED]`, `[DEFERRED]`, `[BLOCKED]`
+3. Use `~~strikethrough~~` on completed item names when the named slice/task is fully done.
+4. For active runbooks and prioritization docs, add a status-rich snapshot table (`## Priority Snapshot`, `## Progress Snapshot`, or `## Completion Snapshot`) that includes:
+   - item,
+   - status,
+   - priority,
+   - estimate,
+   - actual/time,
+   - tokens,
+   - updated/completed date,
+   - where/scope,
+   - remaining work or evidence.
+5. Never invent effort telemetry. If wall-clock time or token counts are unavailable, write `not logged` or `n/a`.
+
 ## Done-Runbook Status Hygiene
 
 For files under `Documentation/backlog/done/`:
@@ -74,6 +92,7 @@ For files under `Documentation/backlog/done/`:
 - [ ] Summary is readable by non-technical stakeholders.
 - [ ] 6W answers are concrete and current.
 - [ ] Visual Aid Index points to real sections/artifacts.
+- [ ] Status legend and progress/completion snapshot are present when the doc is used for prioritization or execution tracking.
 - [ ] Repeated boilerplate is replaced by canonical pointers.
 - [ ] Status semantics match folder semantics (`done/` implies `Done`).
 - [ ] Validation commands and evidence paths are explicit.

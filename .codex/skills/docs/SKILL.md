@@ -7,7 +7,7 @@ Title: Documentation Governance Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-06
 
 # SKILL: DOCUMENTATION GOVERNANCE
 
@@ -29,6 +29,7 @@ Ensure backlog lifecycle documents are equally readable by non-technical humans 
 4. `Documentation/adr/`
 5. `TestEvidence/build-summary.md`
 6. `TestEvidence/validation-trend.md`
+7. `Documentation/backlog/runbook-authoring-guide.md`
 
 ## Execution Checklist
 1. Confirm each human-authored markdown file has:
@@ -60,12 +61,20 @@ Ensure backlog lifecycle documents are equally readable by non-technical humans 
    - `## Plain-Language Summary`
    - `## 6W Snapshot (Who/What/Why/How/When/Where)`
    - `## Visual Aid Index` (visuals only when they materially improve clarity)
-11. Run readability and freshness gates before closeout:
+11. Enforce portable status-rich formatting for roadmap/review/backlog docs whenever priority or progress state changes:
+   - use portable markdown only; do not rely on HTML/CSS color
+   - include `## Status Legend` or `## Review Status Legend`
+   - include `## Priority Snapshot`, `## Progress Snapshot`, or `## Completion Snapshot`
+   - use status tags `[DONE]`, `[ACTIVE]`, `[NEXT]`, `[QUEUED]`, `[DEFERRED]`, `[BLOCKED]`
+   - use `~~strikethrough~~` on completed item names when appropriate
+   - include estimate, actual/time, tokens, updated/completed date, scope/where, and remaining/evidence columns
+   - use `not logged` or `n/a` instead of inventing time/token telemetry
+12. Run readability and freshness gates before closeout:
    - `./scripts/validate-backlog-plain-language.sh`
    - `./scripts/validate-backlog-redundancy.py`
    - `./scripts/export-backlog-summaries.py --check`
    - `./scripts/validate-docs-freshness.sh`
-12. Refresh machine-readable backlog summary artifacts when runbooks/index change:
+13. Refresh machine-readable backlog summary artifacts when runbooks/index change:
    - `./scripts/export-backlog-summaries.py`
 
 ## Cross-Skill Routing
@@ -80,4 +89,5 @@ Ensure backlog lifecycle documents are equally readable by non-technical humans 
 - ADR updates for new/changed architectural decisions.
 - Validation snapshot/trend entries reflecting the latest evidence.
 - Readability report covering plain-language + 6W + visual-aid coverage for touched backlog docs.
+- Status-rich snapshot coverage for touched roadmap/review/backlog docs, including any `not logged` / `n/a` effort fields used honestly.
 - Brief report of what was updated and what remains intentionally deferred.
