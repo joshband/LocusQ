@@ -6,6 +6,22 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W2-B WebView Loading + Error Surfaces (UTC 2026-03-07T03:05:06Z)
+
+1. Implementation slice
+- added a branded startup boot shell plus captured boot-error display in `Source/ui/public/index.html` and `Source/ui/src/index.ts`
+- added deduped toast notifications for native-bridge degradation, viewport safe mode, and preset/calibration restore failures
+- added a compact calibration status dock that summarizes monitor path, routing readiness, profile state, and calibration run progress without requiring the full calibration rail to stay open
+
+2. Build validation
+- `cd Source/ui && npm run build` -> `PASS`
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cmake --build build_local --target LocusQ -j4` -> `PASS`
+
+3. Focused verification
+- `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T030102Z.json`)
+
 ## W2-C CLAP + AUv3 CI Format Lanes (UTC 2026-03-07T03:01:48Z)
 
 1. Implementation slice

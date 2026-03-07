@@ -229,7 +229,7 @@ Tier 1 (Depends on Tier 0)
 
 Tier 2 (Depends on Tier 1)
   ├─ [DONE] ~~W2-A~~: Optimize memory (MQ-1, MQ-2, MQ-3) (depends W1-B)
-  ├─ [NEXT] W2-B: UI loading indicator + error surfaces (depends W1-C)
+  ├─ [DONE] ~~W2-B~~: UI loading indicator + error surfaces (depends W1-C)
   ├─ [DONE] ~~W2-C~~: Enable CLAP/AUv3 in CI (depends W0-A)
   └─ [DONE] ~~W2-D~~: Calibration profile export/import (depends W0-A)
 
@@ -262,18 +262,18 @@ Tier 3 (Polish — Depends on Tier 2)
 | **W1-C** | `[DONE]` | Add Vite/TypeScript build for WebView UI, vendor Three.js via npm | Claude Sonnet | Medium | W0-C |
 | **W1-D** | `[DONE]` | APVTS parameter groups (Position, Physics, Renderer, Calibration, Animation, Visualization) | Codex | Small | W0-A |
 
-**Parallel execution**: W1-A, W1-B, W1-C, W1-D, W2-A, W2-C, and W2-D are complete locally. W2-B is now the active follow-on slice on the UI lane.
+**Parallel execution**: W1-A, W1-B, W1-C, W1-D, W2-A, W2-B, W2-C, and W2-D are complete locally. Tier 3 is now fully unlocked.
 
 #### Tier 2 — Optimization & Feature Completion
 
 | ID | Status | Task | Agent Type | Est. Scope | Depends On |
 |----|--------|------|-----------|-----------|-----------|
 | **W2-A** | `[DONE]` | Memory optimization: fixed buffers, RT-safe pooled `EmitterSlot` audio reservations, preallocated snapshot transport | Claude Opus | Medium | W1-B |
-| **W2-B** | `[NEXT]` | WebView loading skeleton, error toast system, calibration status panel | Claude Sonnet | Medium | W1-C |
+| **W2-B** | `[DONE]` | WebView loading skeleton, error toast system, calibration status panel | Claude Sonnet | Medium | W1-C |
 | **W2-C** | `[DONE]` | Enable CLAP + AUv3 format builds in CI, add validation lanes | Claude Sonnet | Small | W0-A |
 | **W2-D** | `[DONE]` | Calibration profile export/import (JSON file picker) | Claude Haiku | Small | W0-A |
 
-**Parallel execution**: W2-C and W2-D are complete locally. W2-B is the remaining open Tier 2 slice.
+**Parallel execution**: Tier 2 is complete locally; W3-A, W3-B, W3-C, and W3-D are now unblocked.
 
 #### Tier 3 — Polish
 
@@ -293,7 +293,7 @@ Tier 3 (Polish — Depends on Tier 2)
 ```
 Phase 1 (4 agents):  W0-A  |  W0-B  |  W0-C  |  W0-D
 Phase 2 (4 agents):  W1-A  |  W1-B  |  W1-C  |  W1-D
-Phase 3 (4 agents):  ~~W2-A~~  |  W2-B  |  ~~W2-C~~  |  ~~W2-D~~
+Phase 3 (4 agents):  ~~W2-A~~  |  ~~W2-B~~  |  ~~W2-C~~  |  ~~W2-D~~
 Phase 4 (4 agents):  W3-A  |  W3-B  |  W3-C  |  W3-D
 ```
 
@@ -310,6 +310,7 @@ Each phase requires the previous phase to be merged before starting. Within each
 | W1-B triple-buffer introduces latency | Low | Medium | Timeline is already 30Hz; one frame of latency is imperceptible |
 | W1-C embedded bundle migration regresses runtime resource loading | Low | Medium | Mitigated locally by preserving the `/js/index.js` contract and replaying the production P0 self-test after the Vite/TypeScript switch |
 | W2-A SceneGraph audio reservation indirection regresses slot ownership semantics | Low | High | Mitigated locally with compile-time feature flag `LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE` plus native object-build verification; max-emitter stress follow-up is still recommended |
+| W2-B boot shell / toast layer obscures controls or spams degraded-state warnings | Low | Medium | Mitigated locally with staged dismissal rules, deduped toast keys, calibration-dock persistence, and a production P0 self-test replay |
 
 ---
 
@@ -338,9 +339,9 @@ This review was cross-referenced against the full backlog index, including the p
 |---------------|------------|----------|
 | CF-4: Anonymous namespace scope | Fold into BL-032 promotion | P1 |
 | FG-1: Undo/redo for keyframes | New BL (P3) | P3 |
-| US-1/US-4: WebView UX polish | New BL (P3) | P3 |
+| US-4: WebView accessibility | New BL (P3) | P3 |
 
-Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, FG-2 via W2-D, FG-3 via BL-079 / W1-D, and FG-5 via W2-C.
+Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, FG-2 via W2-D, FG-3 via BL-079 / W1-D, and FG-5 via W2-C.
 
 ### Backlog Gate Dependencies for Tier 0
 
@@ -387,7 +388,7 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `662` LOC across the Wave 4 through Wave 6 follow-on slices, which brings the file below the planning-packet `<=700` LOC target
   - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06 (UTC evidence roots `2026-03-07T00:23:45Z` and `2026-03-07T00:23:58Z`)
   - completed owner T2/T3 execute cadence with `TestEvidence/bl076_candidate_t2_closeout/` (`5/5`) and `TestEvidence/bl076_promotion_t3_closeout/` (`10/10`)
-- Recommended next architecture-roadmap item: **W2-B** WebView loading/error-surface polish, with W1-C, W1-D, W2-A, W2-C, and W2-D now complete locally.
+- Recommended next architecture-roadmap items: **W3-A** undo/redo for keyframe + preset operations and **W3-B** mode-transition crossfade, with Tier 2 now complete locally.
 
 ### W1-B Detail: Thread-Safety Hardening
 
@@ -431,6 +432,17 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json` -> exits `1` before final result emission in the current dirty checkout
   - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> exits `1` before final result emission in the current dirty checkout
 - Backlog posture: implementation is complete for the architecture item, and the remaining follow-up is tracked as BL-079 promotion validation after the dirty-checkout reruns that exited before final result emission.
+
+### W2-B Detail: WebView Loading + Error Surfaces
+
+- Added a branded startup boot shell in `Source/ui/public/index.html` and `Source/ui/src/index.ts` with staged progress messaging, degraded-mode fallback messaging, and captured boot-error / unhandled-rejection surfacing during WebView startup.
+- Added a deduped toast-notification system for native-bridge degradation, viewport safe mode, and preset/calibration restore failures so operator-facing errors now surface in the production UI rather than only in logs.
+- Added a compact calibration status dock that summarizes monitor path, routing readiness, profile state, and calibration run progress without requiring the full calibration rail to stay open.
+- Focused validation for the slice:
+  - `cd Source/ui && npm run build` -> `PASS`
+  - `cd Source/ui && npm run typecheck` -> `PASS`
+  - `cmake --build build_local --target LocusQ -j4` -> `PASS`
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T030102Z.json`)
 
 ### W2-C Detail: CLAP + AUv3 CI Format Lanes
 
