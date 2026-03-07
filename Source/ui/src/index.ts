@@ -358,6 +358,9 @@ const nativeFunctions = {
     getKeyframeTimeline: Juce.getNativeFunction("locusqGetKeyframeTimeline"),
     setKeyframeTimeline: Juce.getNativeFunction("locusqSetKeyframeTimeline"),
     setTimelineTime: Juce.getNativeFunction("locusqSetTimelineTime"),
+    getAuthoringHistoryStatus: Juce.getNativeFunction("locusqGetAuthoringHistoryStatus"),
+    undoAuthoringAction: Juce.getNativeFunction("locusqUndoAuthoringAction"),
+    redoAuthoringAction: Juce.getNativeFunction("locusqRedoAuthoringAction"),
     listEmitterPresets: Juce.getNativeFunction("locusqListEmitterPresets"),
     saveEmitterPreset: Juce.getNativeFunction("locusqSaveEmitterPreset"),
     loadEmitterPreset: Juce.getNativeFunction("locusqLoadEmitterPreset"),
@@ -1131,6 +1134,118 @@ function announceAccessibility(message) {
     }, 24);
 }
 
+let activeInlineTooltipButton = null;
+
+function getInlineTooltipText(button) {
+    if (!button) return "";
+
+    const targetId = String(button.dataset.inlineTooltipId || "").trim();
+    if (targetId) {
+        const target = document.getElementById(targetId);
+        const describedText = String(target?.textContent || "").replace(/\s+/g, " ").trim();
+        if (describedText) return describedText;
+    }
+
+    return String(button.dataset.inlineTooltip || "").replace(/\s+/g, " ").trim();
+}
+
+function positionInlineTooltip(button, tooltip) {
+    if (!button || !tooltip) return;
+
+    const margin = 12;
+    const buttonRect = button.getBoundingClientRect();
+    const tooltipWidth = tooltip.offsetWidth || 0;
+    const tooltipHeight = tooltip.offsetHeight || 0;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+
+    let left = buttonRect.left + (buttonRect.width * 0.5) - (tooltipWidth * 0.5);
+    left = clamp(left, margin, Math.max(margin, viewportWidth - tooltipWidth - margin));
+
+    let top = buttonRect.bottom + 8;
+    if ((top + tooltipHeight + margin) > viewportHeight) {
+        top = Math.max(margin, buttonRect.top - tooltipHeight - 8);
+    }
+
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+}
+
+function hideInlineTooltip(button = null) {
+    const tooltip = document.getElementById("inline-tooltip-bubble");
+    if (!tooltip) return;
+
+    const targetButton = button || activeInlineTooltipButton;
+    if (targetButton) {
+        targetButton.setAttribute("aria-expanded", "false");
+    }
+
+    tooltip.classList.remove("visible");
+    tooltip.setAttribute("aria-hidden", "true");
+    tooltip.textContent = "";
+    activeInlineTooltipButton = null;
+}
+
+function showInlineTooltip(button) {
+    const tooltip = document.getElementById("inline-tooltip-bubble");
+    const text = getInlineTooltipText(button);
+    if (!tooltip || !button || !text) return;
+
+    if (activeInlineTooltipButton && activeInlineTooltipButton !== button) {
+        activeInlineTooltipButton.setAttribute("aria-expanded", "false");
+    }
+
+    tooltip.textContent = text;
+    tooltip.classList.add("visible");
+    tooltip.setAttribute("aria-hidden", "false");
+    button.setAttribute("aria-expanded", "true");
+    activeInlineTooltipButton = button;
+    positionInlineTooltip(button, tooltip);
+}
+
+function bindInlineTooltipButtons() {
+    const buttons = Array.from(document.querySelectorAll("[data-inline-tooltip-id], [data-inline-tooltip]"));
+    if (!buttons.length) return;
+
+    buttons.forEach(button => {
+        const element = button;
+        element.addEventListener("mouseenter", () => showInlineTooltip(element));
+        element.addEventListener("mouseleave", () => hideInlineTooltip(element));
+        element.addEventListener("focus", () => showInlineTooltip(element));
+        element.addEventListener("blur", () => hideInlineTooltip(element));
+        element.addEventListener("click", event => {
+            event.preventDefault();
+            if (activeInlineTooltipButton === element) {
+                hideInlineTooltip(element);
+            } else {
+                showInlineTooltip(element);
+            }
+        });
+        element.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                hideInlineTooltip(element);
+            }
+        });
+    });
+
+    document.addEventListener("pointerdown", event => {
+        if (!(event.target instanceof Element)) {
+            hideInlineTooltip();
+            return;
+        }
+        if (event.target.closest("[data-inline-tooltip-id], [data-inline-tooltip]")) {
+            return;
+        }
+        hideInlineTooltip();
+    });
+
+    window.addEventListener("resize", () => {
+        if (activeInlineTooltipButton) {
+            showInlineTooltip(activeInlineTooltipButton);
+        }
+    });
+}
+
 function getOrderedNavigationIndex(key, currentIndex, total, orientation = "horizontal") {
     if (total <= 0 || currentIndex < 0) return null;
 
@@ -1507,6 +1622,57 @@ function bindMotionRuntimeMirrorControls() {
     });
 }
 
+function bindAuthoringHistoryControls() {
+    const undoButton = document.getElementById("timeline-undo-btn");
+    if (undoButton instanceof HTMLButtonElement) {
+        bindElementOnce(undoButton, "timeline-undo", () => {
+            undoButton.addEventListener("click", () => {
+                if (undoButton.disabled) return;
+                performAuthoringHistoryAction("undo");
+            });
+        });
+    }
+
+    const redoButton = document.getElementById("timeline-redo-btn");
+    if (redoButton instanceof HTMLButtonElement) {
+        bindElementOnce(redoButton, "timeline-redo", () => {
+            redoButton.addEventListener("click", () => {
+                if (redoButton.disabled) return;
+                performAuthoringHistoryAction("redo");
+            });
+        });
+    }
+
+    updateAuthoringHistoryButtons();
+}
+
+function bindAuthoringHistoryKeyboardShortcuts() {
+    bindElementOnce(document.body, "authoring-history-shortcuts", () => {
+        document.addEventListener("keydown", event => {
+            const target = event.target;
+            const targetElement = target instanceof HTMLElement ? target : null;
+            if (targetElement instanceof HTMLInputElement
+                || targetElement instanceof HTMLTextAreaElement
+                || targetElement instanceof HTMLSelectElement
+                || (targetElement !== null && targetElement.isContentEditable))
+            {
+                return;
+            }
+
+            const modifierPressed = event.metaKey || event.ctrlKey;
+            if (!modifierPressed || event.altKey) return;
+
+            const key = String(event.key || "").toLowerCase();
+            const wantsUndo = key === "z" && !event.shiftKey;
+            const wantsRedo = (key === "z" && event.shiftKey) || key === "y";
+            if (!wantsUndo && !wantsRedo) return;
+
+            event.preventDefault();
+            performAuthoringHistoryAction(wantsRedo ? "redo" : "undo");
+        });
+    });
+}
+
 function ensureTimelineShellIntegrity() {
     const viewportArea = document.querySelector(".viewport-area");
     if (!viewportArea) return false;
@@ -1533,6 +1699,10 @@ function ensureTimelineShellIntegrity() {
           </div>
           <span class="timeline-time" id="timeline-time">00:00.000</span>
           <div class="header-spacer"></div>
+          <div class="timeline-history" aria-label="Authoring history">
+            <button class="transport-btn" id="timeline-undo-btn" title="Nothing to undo" type="button">&#8630;</button>
+            <button class="transport-btn" id="timeline-redo-btn" title="Nothing to redo" type="button">&#8631;</button>
+          </div>
           <div class="timeline-toggle-label">Loop <div class="toggle" id="toggle-timeline-loop" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
           <div class="timeline-toggle-label">Sync <div class="toggle on" id="toggle-timeline-sync" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
         </div>
@@ -1595,6 +1765,7 @@ function ensureTimelineShellIntegrity() {
     bindTimelineLaneSelectionControls();
     bindTimelineRuntimeControls();
     bindMotionRuntimeMirrorControls();
+    bindAuthoringHistoryControls();
     return rebuilt;
 }
 
@@ -2139,6 +2310,13 @@ let uiState = {
     choreographyPack: "custom",
 };
 
+let authoringHistoryState = {
+    canUndo: false,
+    canRedo: false,
+    undoLabel: "",
+    redoLabel: "",
+};
+
 const physicsPresetTargets = {
     off: {
         enabled: false,
@@ -2208,11 +2386,7 @@ function isPhysicsPresetStateAligned(presetName) {
 
 async function commitUiStateToNative() {
     try {
-        await callNative("locusqSetUiState", nativeFunctions.setUiState, {
-            emitterLabel: sanitizeEmitterLabel(uiState.emitterLabel),
-            physicsPreset: normalizePhysicsPresetName(uiState.physicsPreset),
-            choreographyPack: normalizeChoreographyPackId(uiState.choreographyPack),
-        });
+        await callNative("locusqSetUiState", nativeFunctions.setUiState, serialiseUiStateForNative());
     } catch (error) {
         console.warn("Failed to commit UI state:", error);
     }
@@ -2228,6 +2402,128 @@ function scheduleUiStateCommit(immediate = false) {
         uiStateCommitTimer = null;
         commitUiStateToNative();
     }, immediate ? 0 : 80);
+}
+
+function serialiseUiStateForNative() {
+    return {
+        emitterLabel: sanitizeEmitterLabel(uiState.emitterLabel),
+        physicsPreset: normalizePhysicsPresetName(uiState.physicsPreset),
+        choreographyPack: normalizeChoreographyPackId(uiState.choreographyPack),
+    };
+}
+
+function normalizeAuthoringHistoryStatus(payload) {
+    return {
+        canUndo: !!payload?.canUndo,
+        canRedo: !!payload?.canRedo,
+        undoLabel: String(payload?.undoLabel || "").trim(),
+        redoLabel: String(payload?.redoLabel || "").trim(),
+    };
+}
+
+function updateAuthoringHistoryButtons() {
+    const undoButton = document.getElementById("timeline-undo-btn");
+    const redoButton = document.getElementById("timeline-redo-btn");
+
+    if (undoButton instanceof HTMLButtonElement) {
+        undoButton.disabled = !authoringHistoryState.canUndo;
+        undoButton.setAttribute("aria-disabled", authoringHistoryState.canUndo ? "false" : "true");
+        undoButton.title = authoringHistoryState.canUndo
+            ? `Undo ${authoringHistoryState.undoLabel || "last action"}`
+            : "Nothing to undo";
+        undoButton.setAttribute("aria-label", undoButton.title);
+    }
+
+    if (redoButton instanceof HTMLButtonElement) {
+        redoButton.disabled = !authoringHistoryState.canRedo;
+        redoButton.setAttribute("aria-disabled", authoringHistoryState.canRedo ? "false" : "true");
+        redoButton.title = authoringHistoryState.canRedo
+            ? `Redo ${authoringHistoryState.redoLabel || "last action"}`
+            : "Nothing to redo";
+        redoButton.setAttribute("aria-label", redoButton.title);
+    }
+}
+
+function applyAuthoringHistoryStatus(payload) {
+    authoringHistoryState = normalizeAuthoringHistoryStatus(payload);
+    updateAuthoringHistoryButtons();
+}
+
+async function refreshAuthoringHistoryStatus() {
+    try {
+        const payload = await callNative(
+            "locusqGetAuthoringHistoryStatus",
+            nativeFunctions.getAuthoringHistoryStatus
+        );
+        applyAuthoringHistoryStatus(payload || {});
+        return payload || {};
+    } catch (error) {
+        console.warn("Failed to refresh authoring history status:", error);
+        applyAuthoringHistoryStatus({});
+        return null;
+    }
+}
+
+async function reloadAuthoringUiFromNative(options = {}) {
+    const preferredPresetType = String(options.preferredPresetType || "").trim();
+    const preferredPresetPath = String(options.preferredPresetPath || "").trim();
+    const preserveDirty = options.preserveDirty !== false;
+
+    await loadUiStateFromNative();
+    applyUiStateToControls();
+    await loadTimelineFromNative({ markClean: !preserveDirty });
+    syncAnimationUI();
+
+    if (preferredPresetType) {
+        setPresetTypeSelection(preferredPresetType);
+    }
+
+    await refreshPresetList(preferredPresetPath);
+    syncPresetSelectionContext();
+}
+
+async function performAuthoringHistoryAction(direction) {
+    const normalizedDirection = direction === "redo" ? "redo" : "undo";
+    const nativeFn = normalizedDirection === "redo"
+        ? nativeFunctions.redoAuthoringAction
+        : nativeFunctions.undoAuthoringAction;
+    const nativeLabel = normalizedDirection === "redo"
+        ? "locusqRedoAuthoringAction"
+        : "locusqUndoAuthoringAction";
+
+    try {
+        const result = await callNative(nativeLabel, nativeFn);
+        if (result?.ok) {
+            await reloadAuthoringUiFromNative({
+                preferredPresetType: result?.preferredPresetType || "",
+                preferredPresetPath: result?.preferredPresetPath || "",
+                preserveDirty: true,
+            });
+            applyAuthoringHistoryStatus(result || {});
+            const actionLabel = String(result?.label || `${normalizedDirection} action`).trim();
+            setPresetStatus(
+                normalizedDirection === "redo"
+                    ? `Redid: ${actionLabel}`
+                    : `Undid: ${actionLabel}`,
+                false,
+                false
+            );
+            announceAccessibility(
+                normalizedDirection === "redo"
+                    ? `Redid ${actionLabel}`
+                    : `Undid ${actionLabel}`
+            );
+        } else {
+            applyAuthoringHistoryStatus(result || {});
+            setPresetStatus(
+                String(result?.message || `Unable to ${normalizedDirection}`),
+                true
+            );
+        }
+    } catch (error) {
+        setPresetStatus(`Unable to ${normalizedDirection}`, true);
+        console.error(`Failed to ${normalizedDirection} authoring action:`, error);
+    }
 }
 
 async function loadUiStateFromNative() {
@@ -2871,6 +3167,7 @@ async function saveChoreographyPackPreset(packId) {
 
     uiState.choreographyPack = normalizedPackId;
     scheduleUiStateCommit(true);
+    applyAuthoringHistoryStatus(result || {});
     setPresetTypeSelection("motion");
     await refreshPresetList(result?.path || "");
     setChoreographyStatus(`Saved ${getChoreographyPackLabel(normalizedPackId)} preset`);
@@ -3153,19 +3450,29 @@ function scheduleTimelineCommit(immediate = false, preserveChoreographyPack = fa
 
 async function commitTimelineToNative() {
     try {
-        await callNative("locusqSetKeyframeTimeline", nativeFunctions.setKeyframeTimeline, serialiseTimelineForNative());
+        const result = await callNative(
+            "locusqSetKeyframeTimeline",
+            nativeFunctions.setKeyframeTimeline,
+            {
+                timeline: serialiseTimelineForNative(),
+                uiState: serialiseUiStateForNative(),
+                historyLabel: "Edit Timeline",
+            }
+        );
+        applyAuthoringHistoryStatus(result || {});
     } catch (error) {
         console.warn("Failed to commit keyframe timeline:", error);
     }
 }
 
-async function loadTimelineFromNative() {
+async function loadTimelineFromNative(options = {}) {
+    const markClean = options.markClean !== false;
     try {
         const payload = await callNative("locusqGetKeyframeTimeline", nativeFunctions.getKeyframeTimeline);
         timelineState = normaliseTimelineFromNative(payload || {});
         timelineLoaded = true;
         renderTimelineLanes();
-        setMotionDirty(false);
+        if (markClean) setMotionDirty(false);
     } catch (error) {
         console.warn("Failed to load keyframe timeline from native API:", error);
         showToast("Timeline restore failed; a clean internal timeline is active.", {
@@ -3176,7 +3483,7 @@ async function loadTimelineFromNative() {
         timelineState = normaliseTimelineFromNative({});
         timelineLoaded = true;
         renderTimelineLanes();
-        setMotionDirty(false);
+        if (markClean) setMotionDirty(false);
     }
 }
 
@@ -3530,6 +3837,171 @@ const auditionMotionAliasDictionary = {
     helix_rise: "helix_rise",
     wall_ricochet: "wall_ricochet",
 };
+const auditionSignalGuideCatalog = Object.freeze({
+    sine_440: Object.freeze({
+        label: "Sine 440",
+        family: "Reference",
+        tone: "neutral",
+        summary: "Single-tone anchor for center-image, speaker-balance, and headphone-parity checks.",
+        bestFor: "Center image, speaker trim, and fast A/B checks between speaker and headphone modes.",
+        listenFor: "Image pull, narrow resonances, and externalization drift.",
+    }),
+    dual_tone: Object.freeze({
+        label: "Dual Tone",
+        family: "Reference",
+        tone: "neutral",
+        summary: "Paired tones make beating, asymmetry, and spectral tilt easier to hear than a single sine.",
+        bestFor: "Comparing left/right symmetry and catching combing or crossover imbalance.",
+        listenFor: "Beating, phasey blur, and uneven loudness between speakers.",
+    }),
+    pink_noise: Object.freeze({
+        label: "Pink Noise",
+        family: "Diagnostic",
+        tone: "neutral",
+        summary: "Broadband reference for tonal balance, room coloration, and downmix sanity checks.",
+        bestFor: "Quick room-profile checks, headphone profile comparisons, and width perception.",
+        listenFor: "Harsh bands, missing low end, or unexpected left/right tonal tilt.",
+    }),
+    rain_field: Object.freeze({
+        label: "Rain",
+        family: "Atmospheric",
+        tone: "active",
+        summary: "Diffuse high-density texture that reveals spatial envelopment and cloud coherence.",
+        bestFor: "Checking immersive spread, ambience smoothness, and binaural externalization.",
+        listenFor: "Grainy clustering, collapse to mono, or unstable rear/height cues.",
+    }),
+    snow_drift: Object.freeze({
+        label: "Snow",
+        family: "Atmospheric",
+        tone: "active",
+        summary: "Soft diffuse field with gentler transients for low-fatigue spaciousness checks.",
+        bestFor: "Longer-form headphone listening and subtle room or profile comparisons.",
+        listenFor: "Flat depth, noisy tails, or image collapse during motion.",
+    }),
+    bouncing_balls: Object.freeze({
+        label: "Bouncing Balls",
+        family: "Impact",
+        tone: "warning",
+        summary: "Transient-rich impacts that expose motion tracking, wall cues, and ricochet timing.",
+        bestFor: "Stress-testing fast panning, physics-linked motion, and transient localization.",
+        listenFor: "Smeared attacks, unstable trajectories, and wall reflections that jump unexpectedly.",
+    }),
+    wind_chimes: Object.freeze({
+        label: "Wind Chimes",
+        family: "Organic",
+        tone: "active",
+        summary: "Sparse metallic overtones that make motion arcs and elevation cues easy to follow.",
+        bestFor: "Choreography-style motion, height impression, and shimmer-detail comparisons.",
+        listenFor: "Harsh highs, metallic ringing, and motion paths that feel stepped instead of fluid.",
+    }),
+    crickets: Object.freeze({
+        label: "Crickets",
+        family: "Organic",
+        tone: "active",
+        summary: "Small repeated chirps that test micro-localization and quiet-background placement.",
+        bestFor: "Rear/side placement checks and low-level binaural image stability.",
+        listenFor: "Fluttery image jump, rear collapse, or noisy background masking the chirps.",
+    }),
+    song_birds: Object.freeze({
+        label: "Song Birds",
+        family: "Organic",
+        tone: "active",
+        summary: "Layered melodic calls that reveal how well motion and timbre stay separated.",
+        bestFor: "Checking source separation, depth layering, and naturalistic movement.",
+        listenFor: "Sources smearing together or a front-only image replacing the wider scene.",
+    }),
+    karplus_plucks: Object.freeze({
+        label: "Karplus Plucks",
+        family: "Transient",
+        tone: "warning",
+        summary: "Plucked-string impulses highlight onset clarity and spatial decay behavior.",
+        bestFor: "Testing articulation, stereo image snap, and room-tail behavior.",
+        listenFor: "Dulled attacks, ringing tails, and image wobble on repeated hits.",
+    }),
+    membrane_drops: Object.freeze({
+        label: "Membrane Drops",
+        family: "Transient",
+        tone: "warning",
+        summary: "Percussive drops with short body resonance for punch and localization checks.",
+        bestFor: "Evaluating punch, front/back stability, and ricochet-style movement.",
+        listenFor: "Boomy low-mid build-up, vague impact placement, or unstable bounce arcs.",
+    }),
+    krell_patch: Object.freeze({
+        label: "Krell Patch",
+        family: "Generative",
+        tone: "warning",
+        summary: "Evolving synth texture for slow cinematic movement and long-form room listening.",
+        bestFor: "Judging macro motion, tail continuity, and immersive atmosphere.",
+        listenFor: "Abrupt parameter jumps, harsh resonant swells, or flattened depth.",
+    }),
+    generative_arp: Object.freeze({
+        label: "Generative Arp",
+        family: "Generative",
+        tone: "warning",
+        summary: "Pulsed tonal pattern that makes rhythmic motion and timing drift easy to spot.",
+        bestFor: "Checking tempo-like pacing, orbit feel, and speaker-to-speaker handoff clarity.",
+        listenFor: "Timing smear, uneven stepping, and spatial handoffs that feel late or lopsided.",
+    }),
+});
+const auditionMotionGuideCatalog = Object.freeze({
+    center: Object.freeze({
+        label: "Center",
+        tone: "neutral",
+        summary: "Static front-center anchor keeps timbre and imaging judgments simple.",
+    }),
+    orbit_slow: Object.freeze({
+        label: "Orbit Slow",
+        tone: "active",
+        summary: "Wide slow circle for judging smoothness, rear continuity, and externalization.",
+    }),
+    orbit_fast: Object.freeze({
+        label: "Orbit Fast",
+        tone: "warning",
+        summary: "Faster circle that stresses panning continuity and speaker handoff timing.",
+    }),
+    figure8_flow: Object.freeze({
+        label: "Figure8 Flow",
+        tone: "active",
+        summary: "Crossing path that exposes front/rear swaps and image crossover blur.",
+    }),
+    helix_rise: Object.freeze({
+        label: "Helix Rise",
+        tone: "active",
+        summary: "Ascending spiral for elevation cues, headphone height illusion, and motion layering.",
+    }),
+    wall_ricochet: Object.freeze({
+        label: "Wall Ricochet",
+        tone: "warning",
+        summary: "Impact-style rebounds that reveal wall timing, punch, and abrupt direction changes.",
+    }),
+});
+const auditionLevelGuideCatalog = Object.freeze({
+    "-36": Object.freeze({
+        label: "-36 dBFS",
+        tone: "neutral",
+        summary: "Quietest preset for long listening, sensitive headphones, and low-fatigue comparison passes.",
+    }),
+    "-30": Object.freeze({
+        label: "-30 dBFS",
+        tone: "neutral",
+        summary: "Conservative level for most headphone checks when you want more detail without pushy loudness.",
+    }),
+    "-24": Object.freeze({
+        label: "-24 dBFS",
+        tone: "active",
+        summary: "General-purpose default: enough level for motion and room checks without jumping to stress-test gain.",
+    }),
+    "-18": Object.freeze({
+        label: "-18 dBFS",
+        tone: "warning",
+        summary: "Useful when motion or transient detail needs to read quickly, especially in speakers.",
+    }),
+    "-12": Object.freeze({
+        label: "-12 dBFS",
+        tone: "warning",
+        summary: "Loudest preset; use briefly for impact and room-energy checks, then step back down.",
+    }),
+});
 const auditionAuthorityState = {
     hasNativeMetadata: false,
     source: "ui_fallback",
@@ -3846,6 +4318,7 @@ let calibrationProfileEntries = [];
 let calibrationMappingEditedByUser = false;
 let calibrationLastAutoRouting = [1, 2, 3, 4];
 let calibrationLegacyAliasSyncInFlight = false;
+let calibrationLegacyAliasSyncSource = "";
 const calibrationMappingRowEntries = [];
 let rendererSteamDiagnosticsExpanded = false;
 let rendererAmbiDiagnosticsExpanded = false;
@@ -4406,6 +4879,87 @@ function parseAuditionLevelDb(value, fallbackDb = -24.0) {
     return Number.isFinite(parsed) ? parsed : fallbackDb;
 }
 
+function setElementText(id, text) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = String(text || "");
+    }
+}
+
+function setStatusChipTone(id, tone, text) {
+    const chip = document.getElementById(id);
+    if (!chip) return;
+
+    chip.className = "status-chip";
+    if (tone === "active" || tone === "warning") {
+        chip.classList.add(tone);
+    } else {
+        chip.classList.add("neutral");
+    }
+    chip.textContent = String(text || "");
+}
+
+function resolveAuditionSignalGuide(signalId) {
+    return auditionSignalGuideCatalog[signalId] || {
+        label: formatAuditionTokenLabel(signalId),
+        family: "Audition",
+        tone: "neutral",
+        summary: "Deterministic renderer-owned audition source for standalone checks and showcase playback.",
+        bestFor: "General-purpose spatial audition and manual listening passes.",
+        listenFor: "Unexpected tonal shifts, image collapse, or motion that feels unstable.",
+    };
+}
+
+function resolveAuditionMotionGuide(motionId) {
+    return auditionMotionGuideCatalog[motionId] || {
+        label: formatAuditionTokenLabel(motionId),
+        tone: "neutral",
+        summary: "Deterministic motion preset for repeating spatial checks.",
+    };
+}
+
+function resolveAuditionLevelGuide(levelDb) {
+    const levelChoices = Object.keys(auditionLevelGuideCatalog).map(Number);
+    let bestKey = -24;
+    let bestDelta = Number.POSITIVE_INFINITY;
+
+    levelChoices.forEach(candidate => {
+        const delta = Math.abs(candidate - Number(levelDb));
+        if (delta < bestDelta) {
+            bestDelta = delta;
+            bestKey = candidate;
+        }
+    });
+
+    return auditionLevelGuideCatalog[String(bestKey)] || auditionLevelGuideCatalog["-24"];
+}
+
+function updateAuditionGuideCard() {
+    const signalGuide = resolveAuditionSignalGuide(auditionAuthorityState.signal);
+    const motionGuide = resolveAuditionMotionGuide(auditionAuthorityState.motion);
+    const levelGuide = resolveAuditionLevelGuide(auditionAuthorityState.levelDb);
+    const activeStateText = auditionAuthorityState.enabled
+        ? (auditionAuthorityState.visualActive
+            ? "Audition is active in Renderer mode."
+            : "Audition is armed, but the internal source may stay silent while live emitters are active.")
+        : "Audition is off.";
+    const metadataStateText = auditionAuthorityState.hasNativeMetadata
+        ? "Scene metadata is driving the current renderer-owned audition state."
+        : "UI fallback metadata is active until scene telemetry catches up.";
+    const ownershipText = "The internal audition source only renders when enabled and no live emitters are active for the current audio block.";
+
+    setStatusChipTone("audition-guide-family-chip", signalGuide.tone, signalGuide.family);
+    setStatusChipTone("audition-guide-motion-chip", motionGuide.tone, motionGuide.label);
+    setStatusChipTone("audition-guide-level-chip", levelGuide.tone, levelGuide.label);
+    setElementText("audition-guide-title", `${signalGuide.label} · ${motionGuide.label}`);
+    setElementText("audition-guide-summary", signalGuide.summary);
+    setElementText("audition-guide-best-for", signalGuide.bestFor);
+    setElementText("audition-guide-motion-summary", motionGuide.summary);
+    setElementText("audition-guide-level-summary", levelGuide.summary);
+    setElementText("audition-guide-listen-for", signalGuide.listenFor);
+    setElementText("audition-guide-note", `${activeStateText} ${ownershipText} ${metadataStateText}`);
+}
+
 function getComboChoiceLabel(comboState, fallbackIndex = 0) {
     const choices = Array.isArray(comboState?.properties?.choices)
         ? comboState.properties.choices
@@ -4541,7 +5095,8 @@ function resolveRendererAuditionAuthorityState(sceneSnapshot = null) {
 function updateAuditionAuthorityIndicator() {
     const chip = document.getElementById("audition-authority-chip");
     const note = document.getElementById("audition-authority-note");
-    if (!chip && !note) return;
+    const hasGuide = !!document.getElementById("audition-guide");
+    if (!chip && !note && !hasGuide) return;
 
     const statusText = auditionAuthorityState.enabled ? "On" : "Off";
     const signalLabel = formatAuditionTokenLabel(auditionAuthorityState.signal);
@@ -4561,6 +5116,8 @@ function updateAuditionAuthorityIndicator() {
             : `Renderer metadata unavailable; UI fallback active: ${statusText} · ${signalLabel}/${motionLabel}/${levelLabel}`;
         note.textContent = lastProxy ? `${baseText} · Last proxy ${lastProxy}` : baseText;
     }
+
+    updateAuditionGuideCard();
 }
 
 function applyRendererAuditionProxy(profileId) {
@@ -6396,7 +6953,22 @@ function getTopologyIndexForLegacyConfig(configIndex) {
     return clampedConfig === 1 ? 1 : 2;
 }
 
+function clearCalibrationLegacyAliasSync(source = "") {
+    if (source && calibrationLegacyAliasSyncSource !== source) return;
+    calibrationLegacyAliasSyncInFlight = false;
+    calibrationLegacyAliasSyncSource = "";
+}
+
+function scheduleCalibrationLegacyAliasSyncReset(source) {
+    window.setTimeout(() => {
+        clearCalibrationLegacyAliasSync(source);
+    }, 0);
+}
+
 function syncLegacyConfigAliasFromTopology(topologyId = "") {
+    if (calibrationLegacyAliasSyncInFlight && calibrationLegacyAliasSyncSource === "legacy") {
+        clearCalibrationLegacyAliasSync("legacy");
+    }
     if (calibrationLegacyAliasSyncInFlight) return;
 
     const targetTopology = resolveCalibrationTopologyId(topologyId || getCalibrationViewportTopologyId());
@@ -6405,14 +6977,15 @@ function syncLegacyConfigAliasFromTopology(topologyId = "") {
     if (currentLegacyConfig === desiredLegacyConfig) return;
 
     calibrationLegacyAliasSyncInFlight = true;
-    try {
-        setChoiceIndex(comboStates.cal_spk_config, desiredLegacyConfig, 2);
-    } finally {
-        calibrationLegacyAliasSyncInFlight = false;
-    }
+    calibrationLegacyAliasSyncSource = "topology";
+    setChoiceIndex(comboStates.cal_spk_config, desiredLegacyConfig, 2);
+    scheduleCalibrationLegacyAliasSyncReset("topology");
 }
 
 function syncTopologyFromLegacyConfigAlias(configIndex) {
+    if (calibrationLegacyAliasSyncInFlight && calibrationLegacyAliasSyncSource === "topology") {
+        clearCalibrationLegacyAliasSync("topology");
+    }
     if (calibrationLegacyAliasSyncInFlight) return;
 
     const desiredTopologyIndex = getTopologyIndexForLegacyConfig(configIndex);
@@ -6420,11 +6993,9 @@ function syncTopologyFromLegacyConfigAlias(configIndex) {
     if (currentTopologyIndex === desiredTopologyIndex) return;
 
     calibrationLegacyAliasSyncInFlight = true;
-    try {
-        setChoiceIndex(comboStates.cal_topology_profile, desiredTopologyIndex, calibrationTopologyIds.length);
-    } finally {
-        calibrationLegacyAliasSyncInFlight = false;
-    }
+    calibrationLegacyAliasSyncSource = "legacy";
+    setChoiceIndex(comboStates.cal_topology_profile, desiredTopologyIndex, calibrationTopologyIds.length);
+    scheduleCalibrationLegacyAliasSyncReset("legacy");
 }
 
 function getCalibrationViewportTopologyId() {
@@ -6879,6 +7450,7 @@ async function initialiseUIRuntime() {
         runtimeState.startupHydrationInProgress = false;
     }
 
+    await refreshAuthoringHistoryStatus();
     syncAnimationUI();
     updateMotionStatusChips();
     syncMotionSourceUI();
@@ -7976,6 +8548,19 @@ async function runProductionP0SelfTest() {
             `add/move/delete/dbl-click curve cycle verified${fallbackNote}; strict_gesture=${strictGestureModeEnabled ? "on" : "off"}`
         );
 
+        const authoringUndoButton = document.getElementById("timeline-undo-btn");
+        const authoringRedoButton = document.getElementById("timeline-redo-btn");
+        if (!(authoringUndoButton instanceof HTMLButtonElement) || !(authoringRedoButton instanceof HTMLButtonElement)) {
+            failCheck("UI-W3A-01", "missing authoring undo/redo controls");
+        }
+
+        await waitForCondition("timeline undo availability", () => !authoringUndoButton.disabled, 2500, 25);
+        authoringUndoButton.click();
+        await waitForCondition("timeline undo restore", () => getTrackForLane(laneName).length === 1, 2500, 25);
+        authoringRedoButton.click();
+        await waitForCondition("timeline redo restore", () => getTrackForLane(laneName).length === 0, 2500, 25);
+        recordCheck("UI-W3A-01", true, "timeline undo/redo restored deleted keyframe");
+
         // UI-P1-025A: position-mode visibility/editability contract + emitter scaffold controls.
         const positionMode = document.getElementById("pos-mode");
         const sphericalRow = document.getElementById("val-azimuth")?.closest(".coord-row");
@@ -8986,6 +9571,25 @@ async function runProductionP0SelfTest() {
         delete window.__LQ_SELFTEST_PRESET_RENAME_NAME__;
         recordCheck("UI-P1-025C", true, "typed preset save/rename/delete lifecycle verified");
 
+        if (!(authoringUndoButton instanceof HTMLButtonElement) || !(authoringRedoButton instanceof HTMLButtonElement)) {
+            failCheck("UI-W3A-02", "missing authoring undo/redo controls");
+        }
+
+        await waitForCondition("preset undo availability", () => !authoringUndoButton.disabled, 2500, 25);
+        authoringUndoButton.click();
+        await waitForCondition("preset delete undo", () => {
+            return Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(motionPresetRenamed)
+            );
+        }, 5000, 40);
+        authoringRedoButton.click();
+        await waitForCondition("preset delete redo", () => {
+            return !Array.from(presetSelect.options || []).some(option =>
+                String(option.textContent || "").includes(motionPresetRenamed)
+            );
+        }, 5000, 40);
+        recordCheck("UI-W3A-02", true, "preset delete undo/redo restored and removed renamed motion preset");
+
         report.ok = true;
         report.status = "pass";
     } catch (error) {
@@ -9527,6 +10131,7 @@ function initUIBindings() {
     syncModeTabsAccessibility();
     syncViewButtonAccessibility();
     configureViewportAccessibility();
+    bindAuthoringHistoryKeyboardShortcuts();
 
     // Mode tabs
     document.querySelectorAll(".mode-tab").forEach(tab => {
@@ -9594,7 +10199,11 @@ function initUIBindings() {
     if (calConfigSelect) {
         calConfigSelect.addEventListener("change", () => {
             if (isElementControlLocked(calConfigSelect)) return;
-            syncTopologyFromLegacyConfigAlias(calConfigSelect.selectedIndex);
+            const selectedLegacyConfig = calConfigSelect.selectedIndex;
+            window.setTimeout(() => {
+                syncTopologyFromLegacyConfigAlias(selectedLegacyConfig);
+                applyCalibrationStatus();
+            }, 0);
             applyCalibrationStatus();
         });
     }
@@ -9879,6 +10488,7 @@ function initUIBindings() {
     bindSelectToComboState("rend-audition-motion", comboStates.rend_audition_motion);
     bindSelectToComboState("rend-audition-level", comboStates.rend_audition_level);
     bindAuditionProxyControls();
+    bindInlineTooltipButtons();
     bindSelectToComboState("rend-phys-rate", comboStates.rend_phys_rate);
     bindValueStepper("val-viz-trail-len", sliderStates.rend_viz_trail_len, { step: 0.5, min: 0.5, max: 30.0, roundDigits: 1 });
     bindValueStepper("val-viz-diag-mix", sliderStates.rend_viz_diag_mix, { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2, formatter: value => Math.round(value * 100) });
@@ -10168,6 +10778,7 @@ function initUIBindings() {
                     choreographyPackId: normalizeChoreographyPackId(uiState.choreographyPack),
                 });
                 if (result?.ok) {
+                    applyAuthoringHistoryStatus(result || {});
                     const savedType = normalisePresetType(result?.presetType || presetType);
                     setPresetTypeSelection(savedType);
                     setPresetNameInputValue(result?.name || resolvedName);
@@ -10202,28 +10813,20 @@ function initUIBindings() {
                 const result = await callNative("locusqLoadEmitterPreset", nativeFunctions.loadEmitterPreset, { path: selected.path });
                 if (result?.ok) {
                     const loadedType = normalisePresetType(result?.presetType || selected.presetType);
-                    setPresetTypeSelection(loadedType);
+                    await reloadAuthoringUiFromNative({
+                        preferredPresetType: loadedType,
+                        preferredPresetPath: result?.path || selected.path || "",
+                        preserveDirty: false,
+                    });
+                    applyAuthoringHistoryStatus(result || {});
                     setPresetNameInputValue(selected.name || result?.name || "");
                     setPresetStatus(`Loaded: ${selected.name || "preset"}`);
-
-                    const resolvedPack = normalizeChoreographyPackId(
-                        result?.choreographyPackId
-                        || selected.choreographyPackId
-                        || "custom"
-                    );
-                    uiState.choreographyPack = resolvedPack;
-                    if (choreographySelect) {
-                        choreographySelect.value = resolvedPack;
-                    }
+                    const resolvedPack = normalizeChoreographyPackId(uiState.choreographyPack);
                     setChoreographyStatus(
                         resolvedPack === "custom"
                             ? "Loaded custom timeline preset"
                             : `Loaded ${getChoreographyPackLabel(resolvedPack)} timeline preset`
                     );
-                    scheduleUiStateCommit();
-                    await loadTimelineFromNative();
-                    syncAnimationUI();
-                    setMotionDirty(false);
                 } else {
                     setPresetStatus(result?.message || "Preset load failed", true);
                 }
@@ -10253,6 +10856,7 @@ function initUIBindings() {
                     newName: nextName,
                 });
                 if (result?.ok) {
+                    applyAuthoringHistoryStatus(result || {});
                     const renamedType = normalisePresetType(result?.presetType || selected.presetType);
                     setPresetTypeSelection(renamedType);
                     setPresetNameInputValue(result?.name || nextName);
@@ -10283,6 +10887,10 @@ function initUIBindings() {
                     path: selected.path,
                 });
                 if (result?.ok) {
+                    applyAuthoringHistoryStatus(result || {});
+                    if (result?.preferredPresetType) {
+                        setPresetTypeSelection(normalisePresetType(result.preferredPresetType));
+                    }
                     setPresetStatus(`Deleted: ${selected.name || "preset"}`);
                     await refreshPresetList();
                 } else {
@@ -10588,9 +11196,17 @@ function initParameterListeners() {
 
     comboStates.rend_viz_mode.valueChangedEvent.addListener(updateViewMode);
     comboStates.cal_spk_config.valueChangedEvent.addListener(() => {
+        if (calibrationLegacyAliasSyncSource === "topology") {
+            clearCalibrationLegacyAliasSync("topology");
+        }
         applyCalibrationStatus();
     });
     comboStates.cal_topology_profile.valueChangedEvent.addListener(() => {
+        if (calibrationLegacyAliasSyncSource === "legacy") {
+            clearCalibrationLegacyAliasSync("legacy");
+            applyCalibrationStatus();
+            return;
+        }
         syncLegacyConfigAliasFromTopology(getCalibrationTopologyId(getChoiceIndex(comboStates.cal_topology_profile)));
         applyCalibrationStatus();
     });
@@ -12857,6 +13473,14 @@ function updateCalibrationStatusDock(snapshot = {}) {
 
 function applyCalibrationStatus() {
     const status = calibrationState || {};
+    const topologySelect = document.getElementById("cal-topology");
+    const selectedTopologyIndex = topologySelect instanceof HTMLSelectElement
+        ? topologySelect.selectedIndex
+        : getChoiceIndex(comboStates.cal_topology_profile);
+    const selectedTopologyId = resolveCalibrationTopologyId(
+        getCalibrationTopologyId(selectedTopologyIndex),
+        ""
+    );
     const statusTopologyId = resolveCalibrationTopologyId(
         status.topologyProfile || getCalibrationTopologyId(status.topologyProfileIndex),
         DEFAULT_CALIBRATION_TOPOLOGY_ID
@@ -12865,7 +13489,7 @@ function applyCalibrationStatus() {
         sceneData?.calCurrentTopologyId,
         statusTopologyId
     );
-    const topologyId = sceneTopologyId || statusTopologyId;
+    const topologyId = selectedTopologyId || sceneTopologyId || statusTopologyId;
     const monitoringPathId = String(
         sceneData?.calCurrentMonitoringPathId
         || status.monitoringPath
@@ -12878,9 +13502,11 @@ function applyCalibrationStatus() {
     );
     const requiredChannels = Math.max(
         1,
-        Number(sceneData?.calRequiredChannels)
-            || Number(status.requiredChannels)
-            || getCalibrationRequiredChannels(topologyId)
+        selectedTopologyId
+            ? getCalibrationRequiredChannels(selectedTopologyId)
+            : (Number(sceneData?.calRequiredChannels)
+                || Number(status.requiredChannels)
+                || getCalibrationRequiredChannels(topologyId))
     );
     const writableChannels = clamp(
         Number(sceneData?.calWritableChannels) || Number(status.writableChannels) || CALIBRATION_ROUTABLE_CHANNELS,
