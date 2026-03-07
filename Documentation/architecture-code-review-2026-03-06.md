@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-07 (Rev 11 — W1-B thread-safety hardening)
+Last Modified Date: 2026-03-07 (Rev 12 — W1-A ParameterBridge closeout synced)
 
 # LocusQ Architecture & Code Review
 
@@ -32,10 +32,10 @@ This review covers **architecture**, **code quality**, **functionality**, and **
 | `~~W0-B~~` SpatialRenderer body split + BL-076 continuation | `[DONE]` | P0 | Medium | multiple same-day continuation slices on 2026-03-06 | `n/a` | 2026-03-06 | `SpatialRenderer.h/.cpp`, `Source/spatial_renderer/*.cpp` | Tier 0 complete; BL-076 closeout complete |
 | `~~W0-C~~` UI POC/incremental gating | `[DONE]` | P0 | Small | done; time not logged | `n/a` | 2026-03-06 | `CMakeLists.txt`, `Source/ui/public/` | Tier 0 complete |
 | `~~W0-D~~` DSP correctness fixes | `[DONE]` | P0 | Medium | done; time not logged | `n/a` | 2026-03-06 | `DistanceAttenuator.h`, `VBAPPanner.h`, `PhysicsEngine.h` | Tier 0 complete |
-| `~~BL-076~~` staged-orchestrator cleanup | `[DONE]` | P1 | Medium | latest cleanup slice landed 2026-03-06 | `n/a` | 2026-03-07 | `Source/SpatialRenderer.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp` | `Source/SpatialRenderer.cpp` now `662` LOC; W1-B is complete locally and W1-A is the next recommended cleanup slice |
+| `~~BL-076~~` staged-orchestrator cleanup | `[DONE]` | P1 | Medium | latest cleanup slice landed 2026-03-06 | `n/a` | 2026-03-07 | `Source/SpatialRenderer.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp` | `Source/SpatialRenderer.cpp` now `662` LOC; W1-A and W1-B are complete locally and W1-C is the next recommended cleanup slice |
 | `~~W1-B~~` thread-safety fixes | `[DONE]` | P1 | Medium | focused hardening slice completed 2026-03-07 | `n/a` | 2026-03-07 | timeline, physics worker, diagnostics ownership | Triple-buffered RT timeline snapshots, `juce::Thread` physics cadence, and fixed-size sequence-safe diagnostics landed; validated by `locusq_qa` spatial scenarios plus `locusq_physics_probe` |
-| W1-A ParameterBridge | `[NEXT]` | P2 | Medium | not started | `n/a` | 2026-03-07 | `PluginEditor.*`, parameter relay/attachment surfaces | Next architecture-roadmap slice after W1-B hardening |
-| W1-C JS/Vite toolchain | `[QUEUED]` | P2 | Medium | not started | `n/a` | 2026-03-06 | WebView build pipeline | Depends on W0-C, but not the current priority |
+| `~~W1-A~~` ParameterBridge | `[DONE]` | P2 | Medium | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `PluginEditor.*`, `Source/editor_webview/EditorParameterBridge.h` | Relay/attachment boilerplate now emits from one canonical spec list; plugin + standalone builds and production P0 self-test passed |
+| W1-C JS/Vite toolchain | `[NEXT]` | P2 | Medium | not started | `n/a` | 2026-03-07 | WebView build pipeline | Next structural cleanup after W1-A/W1-B; depends on W0-C and keeps UI toolchain debt isolated from native runtime work |
 | W1-D APVTS parameter grouping | `[QUEUED]` | P2 | Small | not started | `n/a` | 2026-03-06 | parameter layout/grouping surfaces | Useful cleanup, but lower urgency than W1-B |
 
 ---
@@ -259,9 +259,9 @@ Tier 3 (Polish — Depends on Tier 2)
 
 | ID | Status | Task | Agent Type | Est. Scope | Depends On |
 |----|--------|------|-----------|-----------|-----------|
-| **W1-A** | `[NEXT]` | Data-driven ParameterBridge: auto-generate relay+attachment from ID list | Claude Opus | Medium | W0-A |
+| **W1-A** | `[DONE]` | Data-driven ParameterBridge: auto-generate relay+attachment from ID list | Claude Opus | Medium | W0-A |
 | **W1-B** | `[DONE]` | Thread safety fixes: triple-buffer timeline, JUCE Thread for physics, fixed-size diagnostics | Claude Opus | Medium | W0-A, W0-B |
-| **W1-C** | `[QUEUED]` | Add Vite/TypeScript build for WebView UI, vendor Three.js via npm | Claude Sonnet | Medium | W0-C |
+| **W1-C** | `[NEXT]` | Add Vite/TypeScript build for WebView UI, vendor Three.js via npm | Claude Sonnet | Medium | W0-C |
 | **W1-D** | `[QUEUED]` | APVTS parameter groups (Position, Physics, Renderer, Calibration, Animation, Visualization) | Claude Sonnet | Small | W0-A |
 
 **Parallel execution**: W1-A and W1-B can run in parallel. W1-C is independent. W1-D is independent.

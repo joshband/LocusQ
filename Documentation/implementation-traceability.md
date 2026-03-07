@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-03-07
 
 # LocusQ Implementation Traceability
 
@@ -275,6 +275,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | Contract Surface | Source of Truth | Slice C1 Mapping | Evidence Contract |
 |---|---|---|---|
 | WebView runtime configuration contract | `Source/editor_webview/EditorWebViewRuntime.h` | UI self-test env parsing, initial URL/title derivation, backend options, native bridge registration extracted from `PluginEditor.cpp` | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/module_move_map.md` |
+| ParameterBridge relay/attachment contract | `Source/editor_webview/EditorParameterBridge.h` | BL-039-aligned canonical parameter ID list now emits all WebView relays before browser construction and all APVTS attachments after browser construction from one spec-driven runtime path | `TestEvidence/build-summary.md` |
 | Resource-provider lifecycle contract | `Source/editor_webview/EditorWebViewRuntime.h` | Embedded BinaryData resource dispatch moved out of `PluginEditor` member methods into module function `getResource` | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/guardrail_report.tsv` |
 | Editor shell orchestration helper contract | `Source/editor_shell/EditorShellHelpers.h` | Deterministic scene/calibration JS push, resize notification, runtime probe/selftest script sources extracted from monolithic editor file | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/module_move_map.md` |
 | PluginEditor facade parity contract | `Source/PluginEditor.cpp` + `Source/PluginEditor.h` | Relay/attachment ownership and order preserved while runtime/resource concerns delegate to module helpers | `TestEvidence/bl032_slice_c1_editor_extract_<timestamp>/selftest_runs.tsv` |
