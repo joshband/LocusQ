@@ -1,0 +1,104 @@
+{
+  "reasonCode": "failing_check_assertion",
+  "failingCheck": "UI-P1-026A",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "UI-P1-026A: legacy stereo alias did not map back to stereo (before domTopology=0 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterSyncHelper domTopology=1 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterDirectChoice domTopology=1 comboTopology=1 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; error=legacy stereo maps topology stereo timed out after 2000ms (elapsed=2025ms, polls=79))"
+  },
+  "failingCheckDetails": "legacy stereo alias did not map back to stereo (before domTopology=0 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterSyncHelper domTopology=1 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterDirectChoice domTopology=1 comboTopology=1 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; error=legacy stereo maps topology stereo timed out after 2000ms (elapsed=2025ms, polls=79))",
+  "checks": [
+    {
+      "details": "legacy stereo alias did not map back to stereo (before domTopology=0 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterSyncHelper domTopology=1 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterDirectChoice domTopology=1 comboTopology=1 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; error=legacy stereo maps topology stereo timed out after 2000ms (elapsed=2025ms, polls=79))",
+      "pass": false,
+      "id": "UI-P1-026A"
+    },
+    {
+      "id": "failure",
+      "details": "UI-P1-026A: legacy stereo alias did not map back to stereo (before domTopology=0 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterSyncHelper domTopology=1 comboTopology=0 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; afterDirectChoice domTopology=1 comboTopology=1 legacyDom=1 legacyCombo=1 syncInFlight=0 syncSource=none; error=legacy stereo maps topology stereo timed out after 2000ms (elapsed=2025ms, polls=79))",
+      "pass": false
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 40.0,
+      "polls": 1.0,
+      "timeoutMs": 8000.0,
+      "label": "p0 self-test controls ready"
+    },
+    {
+      "result": "pass",
+      "label": "steam diagnostics baseline",
+      "pollMs": 30.0,
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 30.0,
+      "polls": 1.0,
+      "label": "clap diagnostics baseline",
+      "timeoutMs": 3000.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "calibrate topology stereo rows",
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "label": "legacy config follows stereo topology",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "calibrate topology quad rows",
+      "polls": 2.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 25.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy config follows quad topology"
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology mono rows",
+      "elapsedMs": 26.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0,
+      "polls": 2.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "label": "legacy config follows mono topology",
+      "timeoutMs": 2000.0
+    },
+    {
+      "result": "timeout",
+      "label": "legacy stereo maps topology stereo",
+      "elapsedMs": 2025.0,
+      "polls": 79.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0
+    }
+  ]
+}

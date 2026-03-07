@@ -1524,6 +1524,10 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     sceneGraph.ensureAudioReservationCapacity (sceneGraphAudioReservationId, samplesPerBlock);
     sceneGraph.clearAudioReservation (sceneGraphAudioReservationId);
     visualTokenScheduler.reset();
+    modeTransitionInputSnapshotBuffer.setSize (kModeTransitionScratchChannels, samplesPerBlock, false, false, true);
+    modeTransitionRendererScratchBuffer.setSize (kModeTransitionScratchChannels, samplesPerBlock, false, false, true);
+    modeTransitionInputSnapshotBuffer.clear();
+    modeTransitionRendererScratchBuffer.clear();
     {
         const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
         keyframeTimelineState.prepare (sampleRate);
@@ -1545,7 +1549,9 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 
     headTrackingBridge.start();
 
-    syncSceneGraphRegistrationForMode (getCurrentMode());
+    lastProcessedMode = getCurrentMode();
+    hasLastProcessedMode = true;
+    syncSceneGraphRegistrationForMode (lastProcessedMode);
 }
 
 void LocusQAudioProcessor::releaseResources()
@@ -1561,6 +1567,153 @@ void LocusQAudioProcessor::releaseResources()
         publishKeyframeTimelineStateToRtLocked();
     }
     visualTokenScheduler.reset();
+    modeTransitionInputSnapshotBuffer.clear();
+    modeTransitionRendererScratchBuffer.clear();
+    hasLastProcessedMode = false;
+}
+
+void LocusQAudioProcessor::captureModeTransitionInputSnapshot (const juce::AudioBuffer<float>& sourceBuffer,
+                                                               int totalNumInputChannels,
+                                                               int totalNumOutputChannels) noexcept
+{
+    const auto numSamples = juce::jmin (sourceBuffer.getNumSamples(), modeTransitionInputSnapshotBuffer.getNumSamples());
+    const auto channelsToPrepare = juce::jlimit (0,
+                                                 kModeTransitionScratchChannels,
+                                                 juce::jmax (totalNumInputChannels, totalNumOutputChannels));
+
+    for (int channel = 0; channel < channelsToPrepare; ++channel)
+        modeTransitionInputSnapshotBuffer.clear (channel, 0, numSamples);
+
+    const auto channelsToCopy = juce::jlimit (0, channelsToPrepare, totalNumInputChannels);
+    for (int channel = 0; channel < channelsToCopy; ++channel)
+    {
+        modeTransitionInputSnapshotBuffer.copyFrom (channel,
+                                                    0,
+                                                    sourceBuffer,
+                                                    channel,
+                                                    0,
+                                                    numSamples);
+    }
+}
+
+void LocusQAudioProcessor::copyModeTransitionInputSnapshotToBuffer (juce::AudioBuffer<float>& targetBuffer,
+                                                                    int totalNumOutputChannels) noexcept
+{
+    const auto numSamples = juce::jmin (targetBuffer.getNumSamples(), modeTransitionInputSnapshotBuffer.getNumSamples());
+    const auto channelsToCopy = juce::jlimit (0,
+                                              juce::jmin (targetBuffer.getNumChannels(), kModeTransitionScratchChannels),
+                                              totalNumOutputChannels);
+
+    for (int channel = 0; channel < channelsToCopy; ++channel)
+    {
+        targetBuffer.copyFrom (channel,
+                               0,
+                               modeTransitionInputSnapshotBuffer,
+                               channel,
+                               0,
+                               numSamples);
+    }
+}
+
+void LocusQAudioProcessor::prepareRendererRealtimeStateForBlock()
+{
+    sceneGraph.setPhysicsRateIndex (
+        static_cast<int> (apvts.getRawParameterValue ("rend_phys_rate")->load()));
+    sceneGraph.setPhysicsPaused (
+        apvts.getRawParameterValue ("rend_phys_pause")->load() > 0.5f);
+    sceneGraph.setPhysicsWallCollisionEnabled (
+        apvts.getRawParameterValue ("rend_phys_walls")->load() > 0.5f);
+    const bool physicsInteractionEnabled = apvts.getRawParameterValue ("rend_phys_interact")->load() > 0.5f;
+    sceneGraph.setPhysicsInteractionEnabled (physicsInteractionEnabled);
+
+    updateRendererParameters();
+    const auto auditionPhysicsReactiveInput = computeAuditionPhysicsReactiveInput (
+        sceneGraph,
+        physicsInteractionEnabled);
+    spatialRenderer.setAuditionPhysicsReactiveInput (
+        auditionPhysicsReactiveInput.active,
+        auditionPhysicsReactiveInput.velocityNorm,
+        auditionPhysicsReactiveInput.collisionNorm,
+        auditionPhysicsReactiveInput.densityNorm);
+
+    if (const auto* headTrackingPose = headTrackingBridge.currentPose())
+    {
+        const float nowMs = static_cast<float> (juce::Time::getMillisecondCounterHiRes());
+        headPoseInterpolator.ingest (*headTrackingPose, nowMs);
+        const auto interpolated = headPoseInterpolator.interpolatedAt (nowMs);
+
+        {
+            float rawYaw = 0.0f, dummyP = 0.0f, dummyR = 0.0f;
+            computeHeadTrackingEulerDegrees (interpolated, rawYaw, dummyP, dummyR);
+            lastHeadTrackYawDeg.store (rawYaw, std::memory_order_relaxed);
+        }
+
+        SpatialRenderer::PoseSnapshot rendererPose {};
+        rendererPose.qx          = interpolated.qx;
+        rendererPose.qy          = interpolated.qy;
+        rendererPose.qz          = interpolated.qz;
+        rendererPose.qw          = interpolated.qw;
+        rendererPose.timestampMs = interpolated.timestampMs;
+        rendererPose.seq         = interpolated.seq;
+
+        if (yawReferenceSet.load (std::memory_order_relaxed))
+            applyYawOffsetToPose (rendererPose, yawReferenceDeg.load (std::memory_order_relaxed));
+
+        spatialRenderer.applyHeadPose (rendererPose);
+    }
+}
+
+void LocusQAudioProcessor::renderRendererScratchForModeTransition (int totalNumOutputChannels, int numSamples)
+{
+    const auto scratchChannels = juce::jlimit (1, kModeTransitionScratchChannels, totalNumOutputChannels);
+    const auto scratchSamples = juce::jmin (numSamples, modeTransitionRendererScratchBuffer.getNumSamples());
+
+    std::array<float*, kModeTransitionScratchChannels> scratchPointers {};
+    for (int channel = 0; channel < scratchChannels; ++channel)
+    {
+        modeTransitionRendererScratchBuffer.clear (channel, 0, scratchSamples);
+        scratchPointers[static_cast<size_t> (channel)] = modeTransitionRendererScratchBuffer.getWritePointer (channel);
+    }
+
+    juce::AudioBuffer<float> scratchView (scratchPointers.data(), scratchChannels, scratchSamples);
+    prepareRendererRealtimeStateForBlock();
+    spatialRenderer.process (scratchView, sceneGraph);
+}
+
+void LocusQAudioProcessor::applyModeTransitionCrossfade (juce::AudioBuffer<float>& targetBuffer,
+                                                         const juce::AudioBuffer<float>& fromBuffer,
+                                                         int totalNumOutputChannels,
+                                                         int numSamples) noexcept
+{
+    const auto channelsToBlend = juce::jlimit (0,
+                                               juce::jmin (targetBuffer.getNumChannels(), fromBuffer.getNumChannels()),
+                                               totalNumOutputChannels);
+    if (channelsToBlend <= 0 || numSamples <= 0)
+        return;
+
+    if (numSamples == 1)
+    {
+        for (int channel = 0; channel < channelsToBlend; ++channel)
+        {
+            auto* target = targetBuffer.getWritePointer (channel);
+            const auto* from = fromBuffer.getReadPointer (channel);
+            target[0] = 0.5f * (target[0] + from[0]);
+        }
+        return;
+    }
+
+    const auto denom = static_cast<float> (numSamples - 1);
+    for (int channel = 0; channel < channelsToBlend; ++channel)
+    {
+        auto* target = targetBuffer.getWritePointer (channel);
+        const auto* from = fromBuffer.getReadPointer (channel);
+
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            const auto blend = static_cast<float> (sample) / denom;
+            target[sample] = from[sample] + ((target[sample] - from[sample]) * blend);
+        }
+    }
 }
 
 bool LocusQAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -1620,8 +1773,21 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         return;
     }
 
-    auto mode = getCurrentMode();
-    syncSceneGraphRegistrationForMode (mode);
+    const auto requestedMode = getCurrentMode();
+    const auto previousMode = hasLastProcessedMode ? lastProcessedMode : requestedMode;
+    const bool transitioningFromRenderer =
+        previousMode == LocusQMode::Renderer && requestedMode != LocusQMode::Renderer;
+    const bool transitioningToRenderer =
+        previousMode == LocusQMode::Emitter && requestedMode == LocusQMode::Renderer;
+    const auto transitionNumSamples = juce::jmin (buffer.getNumSamples(), modeTransitionInputSnapshotBuffer.getNumSamples());
+
+    if (transitioningToRenderer)
+        captureModeTransitionInputSnapshot (buffer, totalNumInputChannels, totalNumOutputChannels);
+
+    if (transitioningFromRenderer)
+        renderRendererScratchForModeTransition (totalNumOutputChannels, buffer.getNumSamples());
+
+    syncSceneGraphRegistrationForMode (requestedMode);
 
     float confidenceMaskingDistanceConfidence = 0.0f;
     float confidenceMaskingOcclusionProbability = 0.0f;
@@ -1636,7 +1802,7 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     bool confidenceMaskingValid = false;
     bool confidenceMaskingAdjusted = false;
 
-    switch (mode)
+    switch (requestedMode)
     {
         case LocusQMode::Calibrate:
         {
@@ -1694,54 +1860,7 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         case LocusQMode::Renderer:
         {
-            // Publish global physics controls for emitters
-            sceneGraph.setPhysicsRateIndex (
-                static_cast<int> (apvts.getRawParameterValue ("rend_phys_rate")->load()));
-            sceneGraph.setPhysicsPaused (
-                apvts.getRawParameterValue ("rend_phys_pause")->load() > 0.5f);
-            sceneGraph.setPhysicsWallCollisionEnabled (
-                apvts.getRawParameterValue ("rend_phys_walls")->load() > 0.5f);
-            const bool physicsInteractionEnabled = apvts.getRawParameterValue ("rend_phys_interact")->load() > 0.5f;
-            sceneGraph.setPhysicsInteractionEnabled (physicsInteractionEnabled);
-
-            // Update renderer DSP parameters from APVTS
-            updateRendererParameters();
-            const auto auditionPhysicsReactiveInput = computeAuditionPhysicsReactiveInput (
-                sceneGraph,
-                physicsInteractionEnabled);
-            spatialRenderer.setAuditionPhysicsReactiveInput (
-                auditionPhysicsReactiveInput.active,
-                auditionPhysicsReactiveInput.velocityNorm,
-                auditionPhysicsReactiveInput.collisionNorm,
-                auditionPhysicsReactiveInput.densityNorm);
-
-            if (const auto* headTrackingPose = headTrackingBridge.currentPose())
-            {
-                const float nowMs = static_cast<float> (juce::Time::getMillisecondCounterHiRes());
-                headPoseInterpolator.ingest (*headTrackingPose, nowMs);
-                const auto interpolated = headPoseInterpolator.interpolatedAt (nowMs);
-
-                // BL-045-C: store raw yaw for drift telemetry (message-thread readable)
-                {
-                    float rawYaw = 0.0f, dummyP = 0.0f, dummyR = 0.0f;
-                    computeHeadTrackingEulerDegrees (interpolated, rawYaw, dummyP, dummyR);
-                    lastHeadTrackYawDeg.store (rawYaw, std::memory_order_relaxed);
-                }
-
-                SpatialRenderer::PoseSnapshot rendererPose {};
-                rendererPose.qx          = interpolated.qx;
-                rendererPose.qy          = interpolated.qy;
-                rendererPose.qz          = interpolated.qz;
-                rendererPose.qw          = interpolated.qw;
-                rendererPose.timestampMs = interpolated.timestampMs;
-                rendererPose.seq         = interpolated.seq;
-
-                // BL-045-C: apply yaw reference offset (pre-rotate by -yawReferenceDeg about Z)
-                if (yawReferenceSet.load (std::memory_order_relaxed))
-                    applyYawOffsetToPose (rendererPose, yawReferenceDeg.load (std::memory_order_relaxed));
-
-                spatialRenderer.applyHeadPose (rendererPose);
-            }
+            prepareRendererRealtimeStateForBlock();
 
             // Clear output buffer (renderer generates its own audio from emitters)
             buffer.clear();
@@ -1899,6 +2018,24 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             break;
         }
     }
+
+    if (transitioningFromRenderer)
+    {
+        applyModeTransitionCrossfade (buffer,
+                                      modeTransitionRendererScratchBuffer,
+                                      totalNumOutputChannels,
+                                      transitionNumSamples);
+    }
+    else if (transitioningToRenderer)
+    {
+        applyModeTransitionCrossfade (buffer,
+                                      modeTransitionInputSnapshotBuffer,
+                                      totalNumOutputChannels,
+                                      transitionNumSamples);
+    }
+
+    lastProcessedMode = requestedMode;
+    hasLastProcessedMode = true;
 
     publishedConfidenceMaskingDiagnostics.distanceConfidence.store (
         locusq::shared_contracts::confidence_masking::sanitizeUnitScalar (

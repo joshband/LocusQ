@@ -5661,3 +5661,23 @@ LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac
 - worker J2 `app_exited_before_result` signature is retained as historical environment evidence, not owner-authoritative gate state.
 - RL-03 authoritative classification remains unchanged from J1: deterministic BL-009 payload assertion `UI-P1-025E` while BL-029 lane is green.
 - BL-030 overall release disposition remains `NO-GO` (`RL-03`, `RL-04`, `RL-05`, `RL-06` red).
+
+## W3-B Mode Transition Crossfade Addendum (UTC 2026-03-07)
+
+1. Implementation intake
+- files: `Source/PluginProcessor.cpp`, `Source/PluginProcessor.h`
+- scope: processor-local mode-transition crossfade for renderer ownership handoff
+  - prepare-time scratch buffers now hold transition audio without allocating in `processBlock()`
+  - shared renderer state prep is centralized in `prepareRendererRealtimeStateForBlock()`
+  - leaving Renderer now renders one final scratch block before `syncSceneGraphRegistrationForMode(...)`
+  - Emitter -> Renderer now blends the prior pass-through block into the first renderer block sample-by-sample
+
+2. Focused validation
+- `cmake --build build_local --target LocusQ -j4` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL`
+  - artifact: `TestEvidence/locusq_production_p0_selftest_20260307T050125Z.json`
+  - failure: existing CALIBRATE reverse-alias blocker (`legacy mono maps topology quad` timeout)
+
+3. Owner disposition
+- W3-B implementation is complete and recorded as `partially tested`.
+- No new W3-B-specific failure signature was observed in the rebuilt standalone replay; the failure remains aligned with the separate W3-A / BL-080 validation blocker.
