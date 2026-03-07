@@ -1,0 +1,83 @@
+{
+  "reasonCode": "payload_error_without_check",
+  "failingCheck": "none",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "calibrate topology mono rows timed out after 2000ms (elapsed=2006ms, polls=78)"
+  },
+  "failingCheckDetails": "",
+  "checks": [
+    {
+      "pass": false,
+      "details": "calibrate topology mono rows timed out after 2000ms (elapsed=2006ms, polls=78)",
+      "id": "failure"
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "pollMs": 40.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "label": "p0 self-test controls ready",
+      "timeoutMs": 8000.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 30.0,
+      "label": "steam diagnostics baseline",
+      "elapsedMs": 0.0,
+      "timeoutMs": 3000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 30.0,
+      "label": "clap diagnostics baseline",
+      "elapsedMs": 0.0,
+      "timeoutMs": 3000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "calibrate topology stereo rows",
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "legacy config follows stereo topology",
+      "polls": 1.0,
+      "elapsedMs": 0.0,
+      "timeoutMs": 2000.0
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology quad rows",
+      "pollMs": 25.0,
+      "polls": 3.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 50.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "legacy config follows quad topology",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "timeout",
+      "elapsedMs": 2006.0,
+      "label": "calibrate topology mono rows",
+      "polls": 78.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    }
+  ]
+}

@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-07 (Rev 21 — W3-A validation diagnostics synced)
+Last Modified Date: 2026-03-07 (Rev 22 — W3-B mode-transition crossfade synced)
 
 # LocusQ Architecture & Code Review
 
@@ -42,6 +42,7 @@ This review covers **architecture**, **code quality**, **functionality**, and **
 | `~~W1-C~~` JS/Vite toolchain | `[DONE]` | P2 | Medium | focused local slice completed 2026-03-07 | `n/a` | 2026-03-07 | WebView build pipeline | `Source/ui` now builds through npm-backed Vite/TypeScript, `three@0.183.2` is pinned via npm, and the generated embedded bundle plus production P0 self-test both passed locally |
 | `~~W1-D~~` APVTS parameter grouping | `[DONE]` | P2 | Small | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorParameterLayout.cpp` | Host-visible Global/Calibration/Emitter/Renderer groups landed while preserving all 90 parameter IDs and the original flattened parameter order; backlog follow-up continues under `BL-079` promotion validation |
 | `W3-A` authoring undo/redo | `[ACTIVE]` | P3 | Large | focused implementation + validation pass on 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorAuthoringHistory.cpp`, `Source/processor_core/ProcessorPresetManager.cpp`, `Source/editor_webview/EditorWebViewRuntime.h`, `Source/ui/src/index.ts`, `Source/ui/public/index.html` | build/typecheck PASS and generated bundle embeds `UI-W3A-01` / `UI-W3A-02`; latest rebuilt standalone replay still fails in the CALIBRATE `cal-config` reverse-alias lane (`TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json`), so BL-080 remains in validation |
+| `~~W3-B~~` mode transition crossfade | `[DONE]` | P3 | Medium | focused processor slice completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/PluginProcessor.cpp`, `Source/PluginProcessor.h` | Renderer exit now renders one scratch block before registration handoff and blends sample-by-sample into the target mode; native `LocusQ` build PASS and rebuilt standalone self-test still fails only on the existing CALIBRATE reverse-alias blocker (`TestEvidence/locusq_production_p0_selftest_20260307T050125Z.json`), so the slice is recorded as partially tested |
 
 ---
 
@@ -203,7 +204,7 @@ The file has an enormous anonymous namespace (lines 20–999+) containing helper
 
 - **~~US-1~~ (resolved locally by W2-B)**: WebView cold start now shows a branded boot shell with staged progress and degraded-mode fallback messaging while the native bridge and saved session state hydrate.
 
-- **US-2: Mode switching UX**: Switching from Emitter to Renderer re-registers with SceneGraph, potentially causing audio interruption. The transition should be sample-accurate or at least cross-faded.
+- **~~US-2~~ (resolved locally by W3-B)**: Renderer exit now renders one final scratch block before SceneGraph handoff, and the first Emitter -> Renderer block crossfades sample-by-sample from the prior pass-through audio into the renderer-owned block without changing the lock-free registration contract. A dedicated deterministic mode-switch QA lane is still a future follow-up.
 
 - **~~US-3~~ (resolved locally by W2-B)**: Startup restore, native-bridge degradation, and preset/calibration failure paths now surface through deduped toast notifications plus a persistent calibration status dock instead of log-only handling.
 
@@ -236,7 +237,7 @@ Tier 2 (Depends on Tier 1)
 
 Tier 3 (Polish — Depends on Tier 2)
   ├─ [ACTIVE] W3-A: Undo/redo for keyframe + preset operations (depends W2-A)
-  ├─ [QUEUED] W3-B: Mode transition crossfade (depends W2-A)
+  ├─ [DONE] ~~W3-B~~: Mode transition crossfade (depends W2-A)
   ├─ [DONE] ~~W3-C~~: Keyboard/accessibility for WebView (depends W2-B)
   └─ [DONE] ~~W3-D~~: Audition signal documentation/tooltips (depends W2-B)
 ```
@@ -274,18 +275,18 @@ Tier 3 (Polish — Depends on Tier 2)
 | **W2-C** | `[DONE]` | Enable CLAP + AUv3 format builds in CI, add validation lanes | Claude Sonnet | Small | W0-A |
 | **W2-D** | `[DONE]` | Calibration profile export/import (JSON file picker) | Claude Haiku | Small | W0-A |
 
-**Parallel execution**: Tier 2 is complete locally; W3-A remains active, W3-C and W3-D are complete locally, and W3-B remains independently queueable.
+**Parallel execution**: Tier 2 is complete locally; W3-A remains active, and W3-B/W3-C/W3-D are complete locally.
 
 #### Tier 3 — Polish
 
 | ID | Status | Task | Agent Type | Est. Scope | Depends On |
 |----|--------|------|-----------|-----------|-----------|
 | **W3-A** | `[ACTIVE]` | Undo/redo for keyframe timeline and preset operations | Claude Opus | Large | W2-A |
-| **W3-B** | `[QUEUED]` | Sample-accurate mode transition with gain crossfade | Claude Opus | Medium | W2-A |
+| **W3-B** | `[DONE]` | `~~Sample-accurate mode transition with gain crossfade~~` | Claude Opus | Medium | W2-A |
 | **W3-C** | `[DONE]` | `~~Keyboard navigation + ARIA attributes for WebView UI~~` | Claude Sonnet | Medium | W2-B |
 | **W3-D** | `[DONE]` | `~~Audition signal tooltips and documentation in UI~~` | Claude Haiku | Small | W2-B |
 
-**Parallel execution**: W3-A remains active, W3-B can run alongside it, and W3-C/W3-D are now closed locally.
+**Parallel execution**: W3-A remains active; W3-B/W3-C/W3-D are now closed locally.
 
 ---
 
@@ -295,7 +296,7 @@ Tier 3 (Polish — Depends on Tier 2)
 Phase 1 (4 agents):  W0-A  |  W0-B  |  W0-C  |  W0-D
 Phase 2 (4 agents):  W1-A  |  W1-B  |  W1-C  |  W1-D
 Phase 3 (4 agents):  ~~W2-A~~  |  ~~W2-B~~  |  ~~W2-C~~  |  ~~W2-D~~
-Phase 4 (4 agents):  W3-A  |  W3-B  |  ~~W3-C~~  |  ~~W3-D~~
+Phase 4 (4 agents):  W3-A  |  ~~W3-B~~  |  ~~W3-C~~  |  ~~W3-D~~
 ```
 
 Each phase requires the previous phase to be merged before starting. Within each phase, all work packages are independent and can run in parallel across separate worktrees.
@@ -343,7 +344,7 @@ This review was cross-referenced against the full backlog index, including the p
 | FG-1: Undo/redo for keyframes | **BL-080** Authoring undo/redo for timeline and preset operations | P3 |
 | US-4: WebView accessibility | New BL (P3) | P3 |
 
-Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-4 partially via W3-C, FG-1 via BL-080 / W3-A, FG-2 via W2-D, FG-3 via BL-079 / W1-D, FG-4 via W3-D, and FG-5 via W2-C.
+Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-2 via W3-B, US-4 partially via W3-C, FG-1 via BL-080 / W3-A, FG-2 via W2-D, FG-3 via BL-079 / W1-D, FG-4 via W3-D, and FG-5 via W2-C.
 
 ### Backlog Gate Dependencies for Tier 0
 
@@ -390,7 +391,7 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `662` LOC across the Wave 4 through Wave 6 follow-on slices, which brings the file below the planning-packet `<=700` LOC target
   - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06 (UTC evidence roots `2026-03-07T00:23:45Z` and `2026-03-07T00:23:58Z`)
   - completed owner T2/T3 execute cadence with `TestEvidence/bl076_candidate_t2_closeout/` (`5/5`) and `TestEvidence/bl076_promotion_t3_closeout/` (`10/10`)
-- Recommended next architecture-roadmap item: **W3-B** mode-transition crossfade, with **W3-A** still active in parallel.
+- Recommended next architecture-roadmap item: finish **W3-A** validation cleanup under **BL-080** now that W3-B/W3-C/W3-D are closed locally.
 
 ### W1-B Detail: Thread-Safety Hardening
 
@@ -495,6 +496,16 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - `rg -o "UI-W3A-[0-9]+" Source/ui/generated/index.js | sort -u` -> `PASS` (`UI-W3A-01`, `UI-W3A-02`)
   - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json`; the rebuilt standalone app now fails in `legacy mono maps topology quad` after the CALIBRATE reverse-alias helper was hardened, and direct helper invocation inside the same replay shows the topology recovers when the helper is called explicitly)
 - Backlog posture: implementation is complete for the core undo/redo lane, and the remaining follow-up is tracked as BL-080 validation cleanup until the rebuilt standalone replay reaches the new W3-A checks without the adjacent CALIBRATE `cal-config` replay blocker.
+
+### W3-B Detail: Mode Transition Crossfade
+
+- Added processor-owned mode-transition scratch buffers in `Source/PluginProcessor.h` / `Source/PluginProcessor.cpp` and allocate them during `prepareToPlay(...)`, keeping the transition path within the existing realtime contract and outside any heap allocation on the audio thread.
+- Extracted shared renderer block setup into `prepareRendererRealtimeStateForBlock()` so head-pose, physics-interaction, and audition-reactive state prep now lives in one place and can be reused both for the live renderer path and the transition scratch render.
+- Updated `processBlock(...)` so leaving Renderer now renders one final scratch block before `syncSceneGraphRegistrationForMode(...)`, then crossfades that scratch output sample-by-sample into the newly selected mode output. Entering Renderer from Emitter now captures the pass-through input block and blends it into the first renderer-owned output block.
+- Scope choice for the slice: the crossfade explicitly targets the review-risk boundary around renderer ownership without changing `ProcessorSceneRegistration.cpp` or the lock-free SceneGraph claim/release model. CLAP sub-block `sampleOffset` timing remains a separate future enhancement.
+- Focused validation for the slice:
+  - `cmake --build build_local --target LocusQ -j4` -> `PASS`
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T050125Z.json`; same rebuilt-standalone CALIBRATE reverse-alias blocker as W3-A, with no new W3-B-specific failure signature)
 
 ### W3-C Detail: WebView Keyboard + Accessibility
 

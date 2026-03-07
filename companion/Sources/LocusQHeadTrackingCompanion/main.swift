@@ -3290,7 +3290,7 @@ do {
 
     let runSelectedMode: (CompanionArguments) throws -> Void = { arguments in
 #if canImport(AppKit)
-        if arguments.ui && launchedFromAppBundle {
+        if arguments.ui {
             try withMainActorSyncThrowing {
                 try runCompanionWithAppEventLoop(arguments: arguments)
             }

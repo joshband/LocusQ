@@ -1,0 +1,99 @@
+{
+  "reasonCode": "payload_error_without_check",
+  "failingCheck": "none",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "legacy stereo maps topology stereo timed out after 2000ms (elapsed=2026ms, polls=79)"
+  },
+  "failingCheckDetails": "",
+  "checks": [
+    {
+      "pass": false,
+      "id": "failure",
+      "details": "legacy stereo maps topology stereo timed out after 2000ms (elapsed=2026ms, polls=79)"
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "label": "p0 self-test controls ready",
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 8000.0,
+      "pollMs": 40.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 30.0,
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "label": "steam diagnostics baseline"
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 30.0,
+      "label": "clap diagnostics baseline",
+      "timeoutMs": 3000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "label": "calibrate topology stereo rows",
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "label": "legacy config follows stereo topology",
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 25.0,
+      "pollMs": 25.0,
+      "label": "calibrate topology quad rows",
+      "timeoutMs": 2000.0,
+      "polls": 2.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "legacy config follows quad topology",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 25.0,
+      "polls": 2.0,
+      "timeoutMs": 2000.0,
+      "label": "calibrate topology mono rows"
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "legacy config follows mono topology",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "timeout",
+      "elapsedMs": 2026.0,
+      "pollMs": 25.0,
+      "polls": 79.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy stereo maps topology stereo"
+    }
+  ]
+}
