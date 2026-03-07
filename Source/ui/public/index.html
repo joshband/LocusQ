@@ -536,6 +536,8 @@
       display: flex; align-items: center; justify-content: center;
     }
     .transport-btn:hover { color: var(--text-primary); }
+    .transport-btn:disabled { opacity: 0.45; cursor: default; }
+    .timeline-history { display: flex; gap: 4px; align-items: center; }
 
     .timeline-time {
       font-size: 11px; font-weight: 500;
@@ -1322,6 +1324,125 @@
       filter: saturate(0.5);
     }
     .dropdown.wide { min-width: 120px; }
+    .control-label-cluster {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .control-help-button {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(212, 168, 71, 0.28);
+      background: rgba(212, 168, 71, 0.08);
+      color: var(--gold);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      font-family: var(--font);
+      transition: border-color 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+    }
+    .control-help-button:hover,
+    .control-help-button:focus-visible,
+    .control-help-button[aria-expanded="true"] {
+      outline: none;
+      border-color: rgba(232, 196, 100, 0.54);
+      background: rgba(212, 168, 71, 0.16);
+      color: var(--gold-bright);
+      transform: translateY(-1px);
+    }
+    .inline-tooltip-bubble {
+      position: fixed;
+      z-index: 30;
+      max-width: 280px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(212, 168, 71, 0.3);
+      background: rgba(16, 16, 16, 0.96);
+      color: var(--text-primary);
+      font-size: 11px;
+      line-height: 1.45;
+      letter-spacing: 0.1px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(4px);
+      transition: opacity 140ms ease, visibility 140ms ease, transform 140ms ease;
+    }
+    .inline-tooltip-bubble.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .audition-guide {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(212, 168, 71, 0.16);
+      background:
+        linear-gradient(180deg, rgba(27, 23, 16, 0.68), rgba(18, 18, 18, 0.72));
+    }
+    .audition-guide-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .audition-guide-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.2px;
+      margin-bottom: 4px;
+    }
+    .audition-guide-summary {
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .audition-guide-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 8px;
+    }
+    .audition-guide-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .audition-guide-field-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .audition-guide-field-value {
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--text-primary);
+    }
+    .audition-guide-note {
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 10px;
+      line-height: 1.45;
+      color: var(--text-dim);
+    }
+    body.layout-tight .audition-guide-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
 
     .btn-primary {
       background: var(--gold); color: #0A0A0A;
@@ -1684,6 +1805,11 @@
   <div class="toast-host" id="toast-host" aria-live="polite" aria-atomic="false"></div>
   <div class="sr-only" id="accessibility-status" aria-live="polite" aria-atomic="true"></div>
   <div class="sr-only" id="viewport-keyboard-help">Use arrow keys to move the selected emitter on the floor plane. Hold Shift for larger moves. Use Page Up and Page Down to adjust height.</div>
+  <div class="sr-only" id="audition-enable-description">Renderer-owned internal source. It only renders when audition is enabled and no live emitters are active for the current audio block.</div>
+  <div class="sr-only" id="audition-signal-description">Selects the deterministic source family used for standalone render checks, demo playback, and cross-mode proxy audition.</div>
+  <div class="sr-only" id="audition-motion-description">Chooses the repeatable path the internal audition source follows through the scene.</div>
+  <div class="sr-only" id="audition-level-description">Sets a stepped dBFS preset for the internal audition source. Lower values are safer for long-form checks; higher values reveal motion and room detail faster.</div>
+  <div class="inline-tooltip-bubble" id="inline-tooltip-bubble" role="tooltip" aria-hidden="true"></div>
 
   <!-- HEADER -->
   <div class="header">
@@ -1752,6 +1878,10 @@
           </div>
           <span class="timeline-time" id="timeline-time">00:00.000</span>
           <div class="header-spacer"></div>
+          <div class="timeline-history" aria-label="Authoring history">
+            <button class="transport-btn" id="timeline-undo-btn" title="Nothing to undo" type="button">&#8630;</button>
+            <button class="transport-btn" id="timeline-redo-btn" title="Nothing to redo" type="button">&#8631;</button>
+          </div>
           <div class="timeline-toggle-label">Loop <div class="toggle" id="toggle-timeline-loop" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
           <div class="timeline-toggle-label">Sync <div class="toggle on" id="toggle-timeline-sync" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
         </div>
@@ -2162,10 +2292,62 @@
           <div class="renderer-card" data-renderer-group="audition">
             <div class="section">
               <div class="section-header">Audition Source</div>
-              <div class="control-row"><span class="control-label">Enable</span><div class="toggle" id="toggle-audition"><div class="toggle-thumb"></div></div></div>
-              <div class="control-row"><span class="control-label">Signal</span><select class="dropdown" id="rend-audition-signal"><option>Sine 440</option><option>Dual Tone</option><option>Pink Noise</option><option>Rain</option><option>Snow</option><option>Bouncing Balls</option><option>Wind Chimes</option><option>Crickets</option><option>Song Birds</option><option>Karplus Plucks</option><option>Membrane Drops</option><option>Krell Patch</option><option>Generative Arp</option></select></div>
-              <div class="control-row"><span class="control-label">Motion</span><select class="dropdown" id="rend-audition-motion"><option>Center</option><option>Orbit Slow</option><option>Orbit Fast</option><option>Figure8 Flow</option><option>Helix Rise</option><option>Wall Ricochet</option></select></div>
-              <div class="control-row"><span class="control-label">Level</span><select class="dropdown" id="rend-audition-level"><option>-36 dBFS</option><option>-30 dBFS</option><option>-24 dBFS</option><option>-18 dBFS</option><option>-12 dBFS</option></select></div>
+              <div class="control-row">
+                <span class="control-label-cluster">
+                  <span class="control-label">Enable</span>
+                  <button class="control-help-button" id="audition-enable-help" type="button" aria-label="About audition enable" aria-describedby="audition-enable-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-enable-description">?</button>
+                </span>
+                <div class="toggle" id="toggle-audition" aria-describedby="audition-enable-description"><div class="toggle-thumb"></div></div>
+              </div>
+              <div class="control-row">
+                <span class="control-label-cluster">
+                  <span class="control-label">Signal</span>
+                  <button class="control-help-button" id="audition-signal-help" type="button" aria-label="About audition signal choices" aria-describedby="audition-signal-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-signal-description">?</button>
+                </span>
+                <select class="dropdown" id="rend-audition-signal" aria-describedby="audition-signal-description"><option>Sine 440</option><option>Dual Tone</option><option>Pink Noise</option><option>Rain</option><option>Snow</option><option>Bouncing Balls</option><option>Wind Chimes</option><option>Crickets</option><option>Song Birds</option><option>Karplus Plucks</option><option>Membrane Drops</option><option>Krell Patch</option><option>Generative Arp</option></select>
+              </div>
+              <div class="control-row">
+                <span class="control-label-cluster">
+                  <span class="control-label">Motion</span>
+                  <button class="control-help-button" id="audition-motion-help" type="button" aria-label="About audition motion choices" aria-describedby="audition-motion-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-motion-description">?</button>
+                </span>
+                <select class="dropdown" id="rend-audition-motion" aria-describedby="audition-motion-description"><option>Center</option><option>Orbit Slow</option><option>Orbit Fast</option><option>Figure8 Flow</option><option>Helix Rise</option><option>Wall Ricochet</option></select>
+              </div>
+              <div class="control-row">
+                <span class="control-label-cluster">
+                  <span class="control-label">Level</span>
+                  <button class="control-help-button" id="audition-level-help" type="button" aria-label="About audition level presets" aria-describedby="audition-level-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-level-description">?</button>
+                </span>
+                <select class="dropdown" id="rend-audition-level" aria-describedby="audition-level-description"><option>-36 dBFS</option><option>-30 dBFS</option><option>-24 dBFS</option><option>-18 dBFS</option><option>-12 dBFS</option></select>
+              </div>
+              <div class="audition-guide" id="audition-guide" aria-live="polite" aria-atomic="true">
+                <div class="audition-guide-chip-row">
+                  <span class="status-chip neutral" id="audition-guide-family-chip">Reference</span>
+                  <span class="status-chip neutral" id="audition-guide-motion-chip">Center</span>
+                  <span class="status-chip neutral" id="audition-guide-level-chip">-24 dBFS</span>
+                </div>
+                <div class="audition-guide-title" id="audition-guide-title">Sine 440 · Center</div>
+                <div class="audition-guide-summary" id="audition-guide-summary">Single-tone anchor for center-image, speaker-balance, and headphone-parity checks.</div>
+                <div class="audition-guide-grid">
+                  <div class="audition-guide-field">
+                    <span class="audition-guide-field-label">Best For</span>
+                    <span class="audition-guide-field-value" id="audition-guide-best-for">Center image, speaker trim, and fast A/B checks between speaker and headphone modes.</span>
+                  </div>
+                  <div class="audition-guide-field">
+                    <span class="audition-guide-field-label">Motion Cue</span>
+                    <span class="audition-guide-field-value" id="audition-guide-motion-summary">Static front-center anchor keeps timbre and imaging judgments simple.</span>
+                  </div>
+                  <div class="audition-guide-field">
+                    <span class="audition-guide-field-label">Level Cue</span>
+                    <span class="audition-guide-field-value" id="audition-guide-level-summary">-24 dBFS is the general-purpose default: loud enough for motion and room checks without jumping straight to stress-test levels.</span>
+                  </div>
+                  <div class="audition-guide-field">
+                    <span class="audition-guide-field-label">Listen For</span>
+                    <span class="audition-guide-field-value" id="audition-guide-listen-for">Image pull, spectral tilt, binaural externalization stability, and obvious room-coloration artifacts.</span>
+                  </div>
+                </div>
+                <div class="audition-guide-note" id="audition-guide-note">Audition is off. These notes describe the currently selected source and what will happen when the renderer-owned internal audition source is enabled.</div>
+              </div>
             </div>
           </div>
 

@@ -6,6 +6,22 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W3-D Audition Signal Documentation + Tooltips (UTC 2026-03-07T04:16:52Z)
+
+1. Implementation slice
+- added inline audition help buttons, shared tooltip plumbing, and descriptive `aria-describedby` copy for the renderer audition enable/signal/motion/level controls in `Source/ui/public/index.html`
+- added a live audition guide card in `Source/ui/public/index.html` that summarizes the active signal family, motion cue, level cue, and listening focus directly in the renderer rail
+- added signal/motion/level guide catalogs plus authority-aware guide refresh logic in `Source/ui/src/index.ts` so the documentation follows existing renderer-owned audition metadata and UI fallback state
+
+2. Build validation
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake --build build_local --target LocusQ -j4` -> `PASS`
+
+3. Focused verification
+- `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T041548Z.json`; existing `calibrate topology mono rows` timeout in the calibration self-test lane, unrelated to the new audition documentation surfaces)
+
 ## W3-C WebView Keyboard + Accessibility (UTC 2026-03-07T03:40:02Z)
 
 1. Implementation slice

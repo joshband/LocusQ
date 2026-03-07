@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-07 (Rev 18 — W3-C accessibility synced)
+Last Modified Date: 2026-03-07 (Rev 19 — W3-D audition docs synced)
 
 # LocusQ Architecture & Code Review
 
@@ -192,7 +192,7 @@ The file has an enormous anonymous namespace (lines 20–999+) containing helper
 
 - **~~FG-3: No parameter grouping/hierarchy in APVTS~~**: Resolved by W1-D on 2026-03-07. Hosts now receive grouped Global/Calibration/Emitter/Renderer parameter trees while preserving the existing flattened order of all 90 parameter IDs.
 
-- **FG-4: Audition signal generative engines (13 types)**: Impressive scope, but no user-facing documentation or tooltips explaining what each signal sounds like or its intended use case.
+- **~~FG-4: Audition signal generative engines (13 types)~~**: Resolved locally by W3-D on 2026-03-07. The production WebView now exposes inline audition help plus a live guide card that explains signal family, motion cue, level cue, and listening intent for the active renderer-owned audition source.
 
 - **~~FG-5: CLAP and AUv3 are feature-gated OFF by default~~**: Resolved locally by W2-C on 2026-03-07. `qa_harness.yml` now defines dedicated macOS CLAP and AUv3 format lanes, and the clean-build validation path was fixed so the embedded WebView bundle still builds in those CI jobs.
 
@@ -234,10 +234,10 @@ Tier 2 (Depends on Tier 1)
   └─ [DONE] ~~W2-D~~: Calibration profile export/import (depends W0-A)
 
 Tier 3 (Polish — Depends on Tier 2)
-  ├─ [QUEUED] W3-A: Undo/redo for keyframe + preset operations (depends W2-A)
+  ├─ [ACTIVE] W3-A: Undo/redo for keyframe + preset operations (depends W2-A)
   ├─ [QUEUED] W3-B: Mode transition crossfade (depends W2-A)
   ├─ [DONE] ~~W3-C~~: Keyboard/accessibility for WebView (depends W2-B)
-  └─ [QUEUED] W3-D: Audition signal documentation/tooltips (depends W2-B)
+  └─ [DONE] ~~W3-D~~: Audition signal documentation/tooltips (depends W2-B)
 ```
 
 ### Work Package Details
@@ -273,18 +273,18 @@ Tier 3 (Polish — Depends on Tier 2)
 | **W2-C** | `[DONE]` | Enable CLAP + AUv3 format builds in CI, add validation lanes | Claude Sonnet | Small | W0-A |
 | **W2-D** | `[DONE]` | Calibration profile export/import (JSON file picker) | Claude Haiku | Small | W0-A |
 
-**Parallel execution**: Tier 2 is complete locally; W3-C is now complete locally, and W3-A, W3-B, and W3-D remain unblocked.
+**Parallel execution**: Tier 2 is complete locally; W3-A remains active, W3-C and W3-D are complete locally, and W3-B remains independently queueable.
 
 #### Tier 3 — Polish
 
 | ID | Status | Task | Agent Type | Est. Scope | Depends On |
 |----|--------|------|-----------|-----------|-----------|
-| **W3-A** | `[QUEUED]` | Undo/redo for keyframe timeline and preset operations | Claude Opus | Large | W2-A |
+| **W3-A** | `[ACTIVE]` | Undo/redo for keyframe timeline and preset operations | Claude Opus | Large | W2-A |
 | **W3-B** | `[QUEUED]` | Sample-accurate mode transition with gain crossfade | Claude Opus | Medium | W2-A |
 | **W3-C** | `[DONE]` | `~~Keyboard navigation + ARIA attributes for WebView UI~~` | Claude Sonnet | Medium | W2-B |
-| **W3-D** | `[QUEUED]` | Audition signal tooltips and documentation in UI | Claude Haiku | Small | W2-B |
+| **W3-D** | `[DONE]` | `~~Audition signal tooltips and documentation in UI~~` | Claude Haiku | Small | W2-B |
 
-**Parallel execution**: W3-A + W3-B can pair. W3-D remains independently queueable while W3-C is complete locally.
+**Parallel execution**: W3-A remains active, W3-B can run alongside it, and W3-C/W3-D are now closed locally.
 
 ---
 
@@ -294,7 +294,7 @@ Tier 3 (Polish — Depends on Tier 2)
 Phase 1 (4 agents):  W0-A  |  W0-B  |  W0-C  |  W0-D
 Phase 2 (4 agents):  W1-A  |  W1-B  |  W1-C  |  W1-D
 Phase 3 (4 agents):  ~~W2-A~~  |  ~~W2-B~~  |  ~~W2-C~~  |  ~~W2-D~~
-Phase 4 (4 agents):  W3-A  |  W3-B  |  ~~W3-C~~  |  W3-D
+Phase 4 (4 agents):  W3-A  |  W3-B  |  ~~W3-C~~  |  ~~W3-D~~
 ```
 
 Each phase requires the previous phase to be merged before starting. Within each phase, all work packages are independent and can run in parallel across separate worktrees.
@@ -341,7 +341,7 @@ This review was cross-referenced against the full backlog index, including the p
 | FG-1: Undo/redo for keyframes | New BL (P3) | P3 |
 | US-4: WebView accessibility | New BL (P3) | P3 |
 
-Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-4 partially via W3-C, FG-2 via W2-D, FG-3 via BL-079 / W1-D, and FG-5 via W2-C.
+Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-4 partially via W3-C, FG-2 via W2-D, FG-3 via BL-079 / W1-D, FG-4 via W3-D, and FG-5 via W2-C.
 
 ### Backlog Gate Dependencies for Tier 0
 
@@ -388,7 +388,7 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `662` LOC across the Wave 4 through Wave 6 follow-on slices, which brings the file below the planning-packet `<=700` LOC target
   - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06 (UTC evidence roots `2026-03-07T00:23:45Z` and `2026-03-07T00:23:58Z`)
   - completed owner T2/T3 execute cadence with `TestEvidence/bl076_candidate_t2_closeout/` (`5/5`) and `TestEvidence/bl076_promotion_t3_closeout/` (`10/10`)
-- Recommended next architecture-roadmap items: **W3-A** undo/redo for keyframe + preset operations and **W3-B** mode-transition crossfade, with **W3-D** still available as a smaller independent WebView polish lane.
+- Recommended next architecture-roadmap item: **W3-B** mode-transition crossfade, with **W3-A** still active in parallel.
 
 ### W1-B Detail: Thread-Safety Hardening
 
@@ -482,6 +482,18 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - `cmake --build build_local --target LocusQ -j4` -> `PASS`
   - `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
   - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T034002Z.json`)
+
+### W3-D Detail: Audition Signal Documentation + Tooltips
+
+- Added inline help affordances for the renderer audition controls in `Source/ui/public/index.html`, including per-control help triggers, shared tooltip plumbing, and explicit `aria-describedby` copy for enable, signal, motion, and level controls.
+- Added a live audition guide card to the production WebView shell that summarizes the active audition source family, motion cue, level cue, and recommended listening focus without leaving the renderer rail.
+- Added signal, motion, and level guide catalogs in `Source/ui/src/index.ts` and wired the guide/tooltip updates into the existing renderer-owned audition authority flow so the documentation follows both native scene metadata and UI fallback state.
+- Focused validation for the slice:
+  - `cd Source/ui && npm run typecheck` -> `PASS`
+  - `cd Source/ui && npm run build` -> `PASS`
+  - `cmake --build build_local --target LocusQ -j4` -> `PASS`
+  - `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T041548Z.json`; existing calibration mono-row timeout, not a renderer audition documentation failure)
 
 ### W0-A Detail: PluginProcessor Decomposition
 
