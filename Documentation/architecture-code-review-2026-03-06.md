@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-07 (Rev 17 — W2-B UX surfaces synced)
+Last Modified Date: 2026-03-07 (Rev 18 — W3-C accessibility synced)
 
 # LocusQ Architecture & Code Review
 
@@ -206,7 +206,7 @@ The file has an enormous anonymous namespace (lines 20–999+) containing helper
 
 - **~~US-3~~ (resolved locally by W2-B)**: Startup restore, native-bridge degradation, and preset/calibration failure paths now surface through deduped toast notifications plus a persistent calibration status dock instead of log-only handling.
 
-- **US-4: No keyboard shortcuts or accessibility**: WebView UI has no documented keyboard navigation, screen reader support, or high-contrast mode.
+- **US-4 (partially resolved locally by W3-C)**: Major WebView surfaces now expose keyboard navigation, focus-visible states, ARIA tab/toolbar/radiogroup/listbox semantics, and selected-emitter viewport keyboard nudging. Remaining follow-up is a dedicated high-contrast mode plus keyboard parity for mouse-first keyframe dot editing.
 
 ---
 
@@ -236,7 +236,7 @@ Tier 2 (Depends on Tier 1)
 Tier 3 (Polish — Depends on Tier 2)
   ├─ [QUEUED] W3-A: Undo/redo for keyframe + preset operations (depends W2-A)
   ├─ [QUEUED] W3-B: Mode transition crossfade (depends W2-A)
-  ├─ [QUEUED] W3-C: Keyboard/accessibility for WebView (depends W2-B)
+  ├─ [DONE] ~~W3-C~~: Keyboard/accessibility for WebView (depends W2-B)
   └─ [QUEUED] W3-D: Audition signal documentation/tooltips (depends W2-B)
 ```
 
@@ -273,7 +273,7 @@ Tier 3 (Polish — Depends on Tier 2)
 | **W2-C** | `[DONE]` | Enable CLAP + AUv3 format builds in CI, add validation lanes | Claude Sonnet | Small | W0-A |
 | **W2-D** | `[DONE]` | Calibration profile export/import (JSON file picker) | Claude Haiku | Small | W0-A |
 
-**Parallel execution**: Tier 2 is complete locally; W3-A, W3-B, W3-C, and W3-D are now unblocked.
+**Parallel execution**: Tier 2 is complete locally; W3-C is now complete locally, and W3-A, W3-B, and W3-D remain unblocked.
 
 #### Tier 3 — Polish
 
@@ -281,10 +281,10 @@ Tier 3 (Polish — Depends on Tier 2)
 |----|--------|------|-----------|-----------|-----------|
 | **W3-A** | `[QUEUED]` | Undo/redo for keyframe timeline and preset operations | Claude Opus | Large | W2-A |
 | **W3-B** | `[QUEUED]` | Sample-accurate mode transition with gain crossfade | Claude Opus | Medium | W2-A |
-| **W3-C** | `[QUEUED]` | Keyboard navigation + ARIA attributes for WebView UI | Claude Sonnet | Medium | W2-B |
+| **W3-C** | `[DONE]` | `~~Keyboard navigation + ARIA attributes for WebView UI~~` | Claude Sonnet | Medium | W2-B |
 | **W3-D** | `[QUEUED]` | Audition signal tooltips and documentation in UI | Claude Haiku | Small | W2-B |
 
-**Parallel execution**: W3-A + W3-B can pair. W3-C + W3-D can pair.
+**Parallel execution**: W3-A + W3-B can pair. W3-D remains independently queueable while W3-C is complete locally.
 
 ---
 
@@ -294,7 +294,7 @@ Tier 3 (Polish — Depends on Tier 2)
 Phase 1 (4 agents):  W0-A  |  W0-B  |  W0-C  |  W0-D
 Phase 2 (4 agents):  W1-A  |  W1-B  |  W1-C  |  W1-D
 Phase 3 (4 agents):  ~~W2-A~~  |  ~~W2-B~~  |  ~~W2-C~~  |  ~~W2-D~~
-Phase 4 (4 agents):  W3-A  |  W3-B  |  W3-C  |  W3-D
+Phase 4 (4 agents):  W3-A  |  W3-B  |  ~~W3-C~~  |  W3-D
 ```
 
 Each phase requires the previous phase to be merged before starting. Within each phase, all work packages are independent and can run in parallel across separate worktrees.
@@ -341,7 +341,7 @@ This review was cross-referenced against the full backlog index, including the p
 | FG-1: Undo/redo for keyframes | New BL (P3) | P3 |
 | US-4: WebView accessibility | New BL (P3) | P3 |
 
-Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, FG-2 via W2-D, FG-3 via BL-079 / W1-D, and FG-5 via W2-C.
+Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-4 partially via W3-C, FG-2 via W2-D, FG-3 via BL-079 / W1-D, and FG-5 via W2-C.
 
 ### Backlog Gate Dependencies for Tier 0
 
@@ -388,7 +388,7 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - reduced `Source/SpatialRenderer.cpp` from `3998` LOC to `662` LOC across the Wave 4 through Wave 6 follow-on slices, which brings the file below the planning-packet `<=700` LOC target
   - replayed `build_local` (`LocusQ`, `locusq_qa`, `locusq_bl018_profile_probe`) plus BL-076 contract/execute guardrails on 2026-03-06 (UTC evidence roots `2026-03-07T00:23:45Z` and `2026-03-07T00:23:58Z`)
   - completed owner T2/T3 execute cadence with `TestEvidence/bl076_candidate_t2_closeout/` (`5/5`) and `TestEvidence/bl076_promotion_t3_closeout/` (`10/10`)
-- Recommended next architecture-roadmap items: **W3-A** undo/redo for keyframe + preset operations and **W3-B** mode-transition crossfade, with Tier 2 now complete locally.
+- Recommended next architecture-roadmap items: **W3-A** undo/redo for keyframe + preset operations and **W3-B** mode-transition crossfade, with **W3-D** still available as a smaller independent WebView polish lane.
 
 ### W1-B Detail: Thread-Safety Hardening
 
@@ -470,6 +470,18 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - `git diff --check -- Source/ui/src/index.ts Source/ui/public/index.html Source/editor_webview/EditorWebViewRuntime.h CMakeLists.txt .github/workflows/qa_harness.yml Source/processor_core/ProcessorCalibrationBridge.cpp Source/PluginProcessor.h` -> `PASS`
   - `cmake --build /tmp/locusq_w2_validate_clap --config Release --target LocusQ_CLAP -j 4` -> `PASS`
   - `xcodebuild -project /tmp/locusq_w2_validate_auv3/LocusQ.xcodeproj -scheme LocusQ_AUv3 -configuration Release -destination "generic/platform=macOS" CODE_SIGNING_ALLOWED=NO build` -> `PASS`
+
+### W3-C Detail: WebView Keyboard + Accessibility
+
+- Added keyboard-first semantics to the production WebView shell in `Source/ui/public/index.html` and `Source/ui/src/index.ts`, including ARIA tablist/tabpanel handling for mode tabs, toolbar state for viewport view buttons, radiogroup semantics for timeline lanes, and listbox/option semantics for the renderer scene monitor.
+- Added visible focus treatment plus screen-reader support for custom controls: major toggles now publish `role="switch"` + `aria-checked`, numeric steppers now expose `role="spinbutton"` with arrow/page/home/end keyboard support, the physics disclosure now publishes `aria-expanded`, and the quality badge now exposes pressed state.
+- Added a screen-reader live region plus focusable viewport keyboard controls so the selected local emitter can be nudged with arrow keys / `PageUp` / `PageDown` without relying on pointer-only interaction. Remaining accessibility follow-up is a dedicated high-contrast theme and keyboard parity for keyframe-dot editing.
+- Focused validation for the slice:
+  - `cd Source/ui && npm run typecheck` -> `PASS`
+  - `cd Source/ui && npm run build` -> `PASS`
+  - `cmake --build build_local --target LocusQ -j4` -> `PASS`
+  - `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T034002Z.json`)
 
 ### W0-A Detail: PluginProcessor Decomposition
 

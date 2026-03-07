@@ -1054,9 +1054,152 @@ function setChoiceIndex(state, index, fallbackChoiceCount = 0) {
     notifyStateValueChanged(state);
 }
 
+let accessibilityAnnouncementTimer = null;
+
+function isNativeActivatableElement(element) {
+    return element instanceof HTMLButtonElement
+        || element instanceof HTMLInputElement
+        || element instanceof HTMLSelectElement
+        || element instanceof HTMLTextAreaElement
+        || (element instanceof HTMLAnchorElement && element.hasAttribute("href"));
+}
+
+function inferControlLabelText(element) {
+    if (!element) return "";
+
+    const explicit = String(element.getAttribute("data-aria-label")
+        || element.getAttribute("aria-label")
+        || "").trim();
+    if (explicit) return explicit;
+
+    const title = String(element.getAttribute("title") || "").trim();
+    if (title) return title;
+
+    const rowLabel = element.closest(".control-row")?.querySelector(".control-label");
+    if (rowLabel?.textContent) {
+        return rowLabel.textContent.replace(/\s+/g, " ").trim();
+    }
+
+    const timelineLabel = element.closest(".timeline-toggle-label");
+    if (timelineLabel?.textContent) {
+        return timelineLabel.textContent.replace(/\s+/g, " ").trim();
+    }
+
+    const laneLabel = element.querySelector?.(".lane-label");
+    if (laneLabel?.textContent) {
+        return laneLabel.textContent.replace(/\s+/g, " ").trim();
+    }
+
+    const sceneName = element.querySelector?.(".scene-name");
+    if (sceneName?.textContent) {
+        return sceneName.textContent.replace(/\s+/g, " ").trim();
+    }
+
+    const text = String(element.textContent || "").replace(/\s+/g, " ").trim();
+    if (text) return text;
+
+    return String(
+        element.id
+        || element.dataset?.mode
+        || element.dataset?.view
+        || element.dataset?.lane
+        || "control"
+    ).replace(/[-_]+/g, " ").trim();
+}
+
+function ensureAccessibleLabel(element, suffix = "") {
+    if (!element || element.hasAttribute("aria-label")) return;
+    const inferred = inferControlLabelText(element);
+    if (!inferred) return;
+    element.setAttribute("aria-label", suffix ? `${inferred} ${suffix}` : inferred);
+}
+
+function announceAccessibility(message) {
+    const region = document.getElementById("accessibility-status");
+    const text = String(message || "").replace(/\s+/g, " ").trim();
+    if (!region || !text) return;
+
+    if (accessibilityAnnouncementTimer !== null) {
+        window.clearTimeout(accessibilityAnnouncementTimer);
+        accessibilityAnnouncementTimer = null;
+    }
+
+    region.textContent = "";
+    accessibilityAnnouncementTimer = window.setTimeout(() => {
+        region.textContent = text;
+        accessibilityAnnouncementTimer = null;
+    }, 24);
+}
+
+function getOrderedNavigationIndex(key, currentIndex, total, orientation = "horizontal") {
+    if (total <= 0 || currentIndex < 0) return null;
+
+    switch (key) {
+        case "Home":
+            return 0;
+        case "End":
+            return total - 1;
+        case "ArrowLeft":
+            if (orientation === "vertical") return null;
+            return (currentIndex - 1 + total) % total;
+        case "ArrowRight":
+            if (orientation === "vertical") return null;
+            return (currentIndex + 1) % total;
+        case "ArrowUp":
+            if (orientation === "horizontal") return null;
+            return (currentIndex - 1 + total) % total;
+        case "ArrowDown":
+            if (orientation === "horizontal") return null;
+            return (currentIndex + 1) % total;
+        default:
+            return null;
+    }
+}
+
+function syncStepperAccessibilityValue(display, numericValue = Number.NaN) {
+    if (!display || display.dataset.stepper !== "1") return;
+
+    const resolvedValue = Number.isFinite(Number(numericValue))
+        ? Number(numericValue)
+        : Number(display.dataset.stepperValue);
+    if (Number.isFinite(resolvedValue)) {
+        display.dataset.stepperValue = String(resolvedValue);
+        display.setAttribute("aria-valuenow", String(resolvedValue));
+    }
+
+    const min = Number(display.dataset.stepperMin);
+    const max = Number(display.dataset.stepperMax);
+    if (Number.isFinite(min)) display.setAttribute("aria-valuemin", String(min));
+    if (Number.isFinite(max)) display.setAttribute("aria-valuemax", String(max));
+    display.setAttribute("aria-readonly", display.dataset.stepperLock === "1" ? "true" : "false");
+
+    const text = String(display.textContent || "").replace(/\s+/g, " ").trim();
+    if (text) display.setAttribute("aria-valuetext", text);
+
+    if (!display.hasAttribute("tabindex")) display.tabIndex = 0;
+    display.setAttribute("role", "spinbutton");
+    ensureAccessibleLabel(display);
+}
+
 function setToggleClass(id, isOn) {
     const el = document.getElementById(id);
-    if (el) el.classList.toggle("on", !!isOn);
+    if (!el) return;
+
+    const nextState = !!isOn;
+    el.classList.toggle("on", nextState);
+    if (el.classList.contains("toggle")) {
+        if (!el.hasAttribute("role")) el.setAttribute("role", "switch");
+        if (!el.hasAttribute("tabindex")) el.tabIndex = 0;
+    }
+
+    ensureAccessibleLabel(el);
+
+    const role = String(el.getAttribute("role") || "");
+    if (role === "switch" || role === "checkbox") {
+        el.setAttribute("aria-checked", nextState ? "true" : "false");
+    } else if (role === "button") {
+        el.setAttribute("aria-pressed", nextState ? "true" : "false");
+    }
 }
 
 function isElementControlLocked(element) {
@@ -1127,8 +1270,24 @@ function toggleStateAndClass(toggleId, state) {
     return nextValue;
 }
 
-function bindControlActivate(element, handler) {
+function bindControlActivate(element, handler, options = {}) {
     if (!element || typeof handler !== "function") return;
+
+    const nativeControl = isNativeActivatableElement(element);
+    const role = String(options.role
+        || element.getAttribute("role")
+        || (!nativeControl && element.classList?.contains("toggle") ? "switch" : (!nativeControl ? "button" : ""))
+    ).trim();
+
+    if (!nativeControl) {
+        if (!element.hasAttribute("tabindex")) element.tabIndex = 0;
+        if (role && !element.hasAttribute("role")) element.setAttribute("role", role);
+    }
+
+    ensureAccessibleLabel(element, options.labelSuffix || "");
+    if (role === "switch" || role === "checkbox") {
+        element.setAttribute("aria-checked", element.classList.contains("on") ? "true" : "false");
+    }
 
     const trigger = event => {
         if (event && typeof event.preventDefault === "function") {
@@ -1141,11 +1300,13 @@ function bindControlActivate(element, handler) {
     };
 
     element.addEventListener("click", trigger, { passive: false });
-    element.addEventListener("keydown", event => {
-        if (event.key === "Enter" || event.key === " ") {
-            trigger(event);
-        }
-    });
+    if (!nativeControl) {
+        element.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+                trigger(event);
+            }
+        });
+    }
 }
 
 function setAnimationControlsEnabled(enabled) {
@@ -1193,18 +1354,67 @@ function bindElementOnce(element, bindingKey, binder) {
     binder();
 }
 
+function syncTimelineLaneAccessibility(focusLane = "") {
+    const lanesContainer = document.querySelector("#timeline .timeline-lanes");
+    if (lanesContainer) {
+        lanesContainer.setAttribute("role", "radiogroup");
+        lanesContainer.setAttribute("aria-label", "Timeline lane selection");
+    }
+
+    document.querySelectorAll(".timeline-lane").forEach(lane => {
+        const laneId = String(lane.dataset.lane || "lane");
+        const label = inferControlLabelText(lane);
+        const isSelected = laneId === selectedLane;
+        lane.classList.toggle("selected", isSelected);
+        lane.setAttribute("role", "radio");
+        lane.setAttribute("aria-checked", isSelected ? "true" : "false");
+        lane.setAttribute("aria-label", label ? `${label} lane` : "Timeline lane");
+        lane.tabIndex = isSelected ? 0 : -1;
+        if (focusLane && laneId === focusLane) lane.focus();
+    });
+}
+
+function selectTimelineLane(laneId, options = {}) {
+    const laneElements = Array.from(document.querySelectorAll(".timeline-lane"));
+    if (laneElements.length === 0) return;
+
+    const fallbackLane = String(laneElements[0].dataset.lane || "azimuth");
+    const hasMatch = laneElements.some(lane => String(lane.dataset.lane || "") === laneId);
+    selectedLane = hasMatch ? laneId : fallbackLane;
+    setLaneHighlight(selectedLane);
+    syncTimelineLaneAccessibility(options.focus ? selectedLane : "");
+
+    if (options.announce) {
+        announceAccessibility(`${inferControlLabelText(document.querySelector(`.timeline-lane[data-lane="${selectedLane}"]`))} lane selected`);
+    }
+}
+
 function bindTimelineLaneSelectionControls() {
     document.querySelectorAll(".timeline-lane").forEach(lane => {
         const laneId = String(lane.dataset.lane || "lane");
         bindElementOnce(lane, `timeline-lane-${laneId}`, () => {
             lane.addEventListener("click", () => {
-                document.querySelectorAll(".timeline-lane").forEach(l => l.classList.remove("selected"));
-                lane.classList.add("selected");
-                selectedLane = lane.dataset.lane;
-                setLaneHighlight(selectedLane);
+                selectTimelineLane(String(lane.dataset.lane || selectedLane));
+            });
+            lane.addEventListener("keydown", event => {
+                const lanes = Array.from(document.querySelectorAll(".timeline-lane"));
+                const currentIndex = lanes.indexOf(lane);
+                const nextIndex = getOrderedNavigationIndex(event.key, currentIndex, lanes.length, "vertical");
+                if (nextIndex !== null) {
+                    event.preventDefault();
+                    selectTimelineLane(String(lanes[nextIndex].dataset.lane || selectedLane), { focus: true, announce: true });
+                    return;
+                }
+
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    selectTimelineLane(String(lane.dataset.lane || selectedLane), { focus: true, announce: true });
+                }
             });
         });
     });
+
+    syncTimelineLaneAccessibility();
 }
 
 function bindTimelineRuntimeControls() {
@@ -2078,20 +2288,29 @@ function bindValueStepper(displayId, sliderState, options = {}) {
     const min = Number.isFinite(options.min) ? Number(options.min) : Number(sliderState.properties?.start ?? -1.0e9);
     const max = Number.isFinite(options.max) ? Number(options.max) : Number(sliderState.properties?.end ?? 1.0e9);
     const roundDigits = Number.isFinite(options.roundDigits) ? Number(options.roundDigits) : 3;
+    const pageStep = Number(options.pageStep ?? (step * 10.0));
 
-    const applyDelta = (delta) => {
+    const applyValue = (nextValue) => {
         if (display.dataset.stepperLock === "1" || isElementControlLocked(display)) return;
-        const current = Number(sliderState.getScaledValue());
-        const next = clamp(current + delta, Math.min(min, max), Math.max(min, max));
+        const clamped = clamp(Number(nextValue) || 0.0, Math.min(min, max), Math.max(min, max));
         const factor = Math.pow(10, Math.max(0, roundDigits));
-        const rounded = Math.round(next * factor) / factor;
+        const rounded = Math.round(clamped * factor) / factor;
         sliderState.sliderDragStarted();
         setSliderScaledValue(sliderState, rounded);
         sliderState.sliderDragEnded();
+        syncStepperAccessibilityValue(display, rounded);
     };
 
+    const applyDelta = (delta) => {
+        const current = Number(sliderState.getScaledValue());
+        applyValue(current + delta);
+    };
+
+    display.dataset.stepper = "1";
+    display.dataset.stepperMin = String(Math.min(min, max));
+    display.dataset.stepperMax = String(Math.max(min, max));
     display.style.cursor = "ns-resize";
-    display.title = `Click: +${step} · Right-click: -${step} · Wheel adjust`;
+    display.title = `Click: +${step} · Right-click: -${step} · Arrow keys adjust · Page keys jump`;
     display.addEventListener("click", () => applyDelta(step));
     display.addEventListener("contextmenu", event => {
         event.preventDefault();
@@ -2101,6 +2320,44 @@ function bindValueStepper(displayId, sliderState, options = {}) {
         event.preventDefault();
         applyDelta(event.deltaY < 0 ? step : -step);
     }, { passive: false });
+    display.addEventListener("keydown", event => {
+        const fineStep = step * (event.shiftKey ? 10.0 : 1.0);
+        switch (event.key) {
+            case "ArrowUp":
+            case "ArrowRight":
+                event.preventDefault();
+                applyDelta(fineStep);
+                break;
+            case "ArrowDown":
+            case "ArrowLeft":
+                event.preventDefault();
+                applyDelta(-fineStep);
+                break;
+            case "PageUp":
+                event.preventDefault();
+                applyDelta(pageStep);
+                break;
+            case "PageDown":
+                event.preventDefault();
+                applyDelta(-pageStep);
+                break;
+            case "Home":
+                event.preventDefault();
+                applyValue(min);
+                break;
+            case "End":
+                event.preventDefault();
+                applyValue(max);
+                break;
+            default:
+                break;
+        }
+    });
+
+    sliderState.valueChangedEvent.addListener(() => {
+        syncStepperAccessibilityValue(display, sliderState.getScaledValue());
+    });
+    syncStepperAccessibilityValue(display, sliderState.getScaledValue());
 }
 
 function pulseToggleParameter(toggleState) {
@@ -2874,6 +3131,7 @@ function renderTimelineLanes() {
     });
 
     updateTimelinePlayheads();
+    syncTimelineLaneAccessibility();
 }
 
 function scheduleTimelineCommit(immediate = false, preserveChoreographyPack = false) {
@@ -3106,6 +3364,7 @@ function updateEmitterColorSwatch() {
     const idx = getCurrentEmitterColorIndex();
     swatch.style.background = "#" + getEmitterColorHex(idx).toString(16).padStart(6, "0");
     swatch.setAttribute("data-color-index", String(idx));
+    swatch.setAttribute("aria-label", `Emitter color ${idx + 1}`);
 }
 
 // ===== APP STATE =====
@@ -4712,6 +4971,13 @@ function getSelectedEmitter() {
     return getEmitterById(selectedEmitterId);
 }
 
+function getEmitterAccessibleName(emitterId) {
+    const fallbackLabel = Number.isInteger(emitterId) ? `Emitter ${emitterId + 1}` : "Emitter";
+    const emitter = getEmitterById(emitterId);
+    const label = sanitizeEmitterLabel(emitter?.label ?? fallbackLabel);
+    return String(label || fallbackLabel).trim();
+}
+
 function updateSelectionRingFromState() {
     if (!selectionRing) return;
 
@@ -4726,11 +4992,15 @@ function updateSelectionRingFromState() {
     selectionRing.visible = true;
 }
 
-function setSelectedEmitter(emitterId) {
+function setSelectedEmitter(emitterId, options = {}) {
     if (!Number.isInteger(emitterId)) return;
     selectedEmitterId = emitterId;
     updateSelectionRingFromState();
     updateEmitterAuthorityUI();
+    syncSceneListSelectionState(options.focusSceneItem ? emitterId : null);
+    if (options.announce) {
+        announceAccessibility(`${getEmitterAccessibleName(emitterId)} selected`);
+    }
 }
 
 function pickEmitterIntersection(event) {
@@ -4784,6 +5054,25 @@ function endEmitterDrag() {
     sliderStates.pos_z.sliderDragEnded();
 }
 
+function previewEmitterWorldPosition(worldPosition) {
+    const x = Number(worldPosition.x) || 0.0;
+    const y = Number(worldPosition.y) || 0.0;
+    const z = Number(worldPosition.z) || 0.0;
+    const target = emitterVisualTargets.get(selectedEmitterId);
+    if (target) {
+        target.x = x;
+        target.y = y;
+        target.z = z;
+    }
+
+    const selectedMesh = emitterMeshes.get(selectedEmitterId);
+    if (selectedMesh) {
+        selectedMesh.position.set(x, y, z);
+    }
+
+    updateSelectionRingFromState();
+}
+
 function applyEmitterWorldPositionToParameters(worldPosition) {
     const x = Number(worldPosition.x) || 0.0;
     const y = Number(worldPosition.y) || 0.0;
@@ -4804,6 +5093,7 @@ function applyEmitterWorldPositionToParameters(worldPosition) {
     setSliderScaledValue(sliderStates.pos_x, x);
     setSliderScaledValue(sliderStates.pos_y, z);
     setSliderScaledValue(sliderStates.pos_z, y);
+    previewEmitterWorldPosition({ x, y, z });
 }
 
 function updateEmitterDrag(event) {
@@ -4831,6 +5121,84 @@ function updateEmitterDrag(event) {
     }
 
     return true;
+}
+
+function handleViewportKeyboardMove(event) {
+    const movementKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "PageUp", "PageDown"]);
+    if (!movementKeys.has(event.key)) return false;
+
+    event.preventDefault();
+
+    if (currentMode !== "emitter") {
+        announceAccessibility("Viewport movement is available in Emitter mode.");
+        return true;
+    }
+
+    const selected = getSelectedEmitter();
+    if (!selected) {
+        announceAccessibility("Select an emitter before moving it from the viewport.");
+        return true;
+    }
+
+    if (Number.isInteger(localEmitterId) && localEmitterId >= 0 && selected.id !== localEmitterId) {
+        announceAccessibility("Only the local emitter can be moved from the viewport.");
+        return true;
+    }
+
+    const step = event.shiftKey ? 0.25 : 0.05;
+    const nextPosition = {
+        x: Number(selected.x) || 0.0,
+        y: Number(selected.y) || 0.0,
+        z: Number(selected.z) || 0.0,
+    };
+
+    switch (event.key) {
+        case "ArrowLeft":
+            nextPosition.x -= step;
+            break;
+        case "ArrowRight":
+            nextPosition.x += step;
+            break;
+        case "ArrowUp":
+            nextPosition.z -= step;
+            break;
+        case "ArrowDown":
+            nextPosition.z += step;
+            break;
+        case "PageUp":
+            nextPosition.y += step;
+            break;
+        case "PageDown":
+            nextPosition.y -= step;
+            break;
+        default:
+            return false;
+    }
+
+    nextPosition.x = clamp(nextPosition.x, -roomBounds.halfWidth, roomBounds.halfWidth);
+    nextPosition.z = clamp(nextPosition.z, -roomBounds.halfDepth, roomBounds.halfDepth);
+    nextPosition.y = clamp(nextPosition.y, 0.0, 3.0);
+
+    applyEmitterWorldPositionToParameters(nextPosition);
+    announceAccessibility(
+        `${getEmitterAccessibleName(selected.id)} moved to X ${nextPosition.x.toFixed(2)}, Y ${nextPosition.y.toFixed(2)}, Z ${nextPosition.z.toFixed(2)}`
+    );
+    return true;
+}
+
+function configureViewportAccessibility() {
+    const viewportCanvas = document.getElementById("viewport-canvas");
+    if (!viewportCanvas) return;
+
+    viewportCanvas.tabIndex = 0;
+    viewportCanvas.setAttribute("aria-label", "3D emitter viewport");
+    viewportCanvas.setAttribute("aria-describedby", "viewport-keyboard-help");
+
+    bindElementOnce(viewportCanvas, "viewport-a11y", () => {
+        viewportCanvas.addEventListener("keydown", event => {
+            handleViewportKeyboardMove(event);
+        });
+    });
 }
 
 function normalizeRendererProfileId(profileId, fallback = "auto") {
@@ -9031,6 +9399,57 @@ const viewPresetByName = {
 };
 
 const viewOrder = ["perspective", "top", "front", "side"];
+const modeOrder = ["calibrate", "emitter", "renderer"];
+const viewButtonLabels = {
+    perspective: "Perspective view",
+    top: "Top view",
+    front: "Front view",
+    side: "Side view",
+};
+
+function syncModeTabsAccessibility(focusMode = "") {
+    const tabsHost = document.querySelector(".mode-tabs");
+    if (tabsHost) {
+        tabsHost.setAttribute("role", "tablist");
+        tabsHost.setAttribute("aria-label", "Workspace mode");
+    }
+
+    modeOrder.forEach(mode => {
+        const tab = document.querySelector(`.mode-tab[data-mode="${mode}"]`);
+        const panel = document.querySelector(`.rail-panel[data-panel="${mode}"]`);
+        if (tab) {
+            tab.id = `mode-tab-${mode}`;
+            tab.setAttribute("role", "tab");
+            tab.setAttribute("aria-selected", currentMode === mode ? "true" : "false");
+            tab.setAttribute("tabindex", currentMode === mode ? "0" : "-1");
+            if (panel) tab.setAttribute("aria-controls", `mode-panel-${mode}`);
+            if (focusMode === mode) tab.focus();
+        }
+        if (panel) {
+            panel.id = `mode-panel-${mode}`;
+            panel.setAttribute("role", "tabpanel");
+            panel.setAttribute("aria-labelledby", `mode-tab-${mode}`);
+            panel.setAttribute("aria-hidden", currentMode === mode ? "false" : "true");
+        }
+    });
+}
+
+function syncViewButtonAccessibility(focusView = "") {
+    const toolbar = document.querySelector(".view-buttons");
+    if (toolbar) {
+        toolbar.setAttribute("role", "toolbar");
+        toolbar.setAttribute("aria-label", "Viewport view presets");
+    }
+
+    document.querySelectorAll(".view-btn").forEach(button => {
+        const viewId = String(button.dataset.view || "perspective");
+        const isActive = viewId === activeViewportView;
+        button.setAttribute("aria-label", viewButtonLabels[viewId] || inferControlLabelText(button));
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        button.setAttribute("tabindex", isActive ? "0" : "-1");
+        if (focusView && viewId === focusView) button.focus();
+    });
+}
 
 function setActiveView(viewName) {
     const resolved = viewPresetByName[viewName] ? viewName : "perspective";
@@ -9038,6 +9457,7 @@ function setActiveView(viewName) {
     document.querySelectorAll(".view-btn").forEach(button => {
         button.classList.toggle("active", button.dataset.view === resolved);
     });
+    syncViewButtonAccessibility();
 
     Object.assign(spherical, viewPresetByName[resolved]);
     updateCamera();
@@ -9104,14 +9524,31 @@ function applyPhysicsPreset(presetName, persistUiState = true) {
 function initUIBindings() {
     syncResponsiveLayoutMode();
     ensureCalibrationMappingRows();
+    syncModeTabsAccessibility();
+    syncViewButtonAccessibility();
+    configureViewportAccessibility();
 
     // Mode tabs
     document.querySelectorAll(".mode-tab").forEach(tab => {
         tab.addEventListener("click", () => {
-            const mode = tab.dataset.mode;
-            const modeMap = { calibrate: 0, emitter: 1, renderer: 2 };
-            switchMode(modeMap[mode] !== undefined ? mode : currentMode);
-            setChoiceIndex(comboStates.mode, modeMap[mode] ?? 1, 3);
+            const mode = String(tab.dataset.mode || currentMode);
+            const modeIndex = Math.max(0, modeOrder.indexOf(mode));
+            switchMode(modeOrder[modeIndex] || currentMode);
+            setChoiceIndex(comboStates.mode, modeIndex, 3);
+        });
+        tab.addEventListener("keydown", event => {
+            const tabs = Array.from(document.querySelectorAll(".mode-tab"));
+            const currentIndex = tabs.indexOf(tab);
+            const nextIndex = getOrderedNavigationIndex(event.key, currentIndex, tabs.length, "horizontal");
+            if (nextIndex === null) return;
+
+            event.preventDefault();
+            const nextTab = tabs[nextIndex];
+            const nextMode = String(nextTab.dataset.mode || currentMode);
+            const modeIndex = Math.max(0, modeOrder.indexOf(nextMode));
+            switchMode(modeOrder[modeIndex] || currentMode);
+            setChoiceIndex(comboStates.mode, modeIndex, 3);
+            syncModeTabsAccessibility(nextMode);
         });
     });
 
@@ -9122,6 +9559,8 @@ function initUIBindings() {
             const isCurrentlyDraft = this.classList.contains("draft");
             this.className = `quality-badge ${isCurrentlyDraft ? "final" : "draft"}`;
             this.textContent = isCurrentlyDraft ? "FINAL" : "DRAFT";
+            this.setAttribute("aria-pressed", isCurrentlyDraft ? "true" : "false");
+            this.setAttribute("aria-label", `Quality ${isCurrentlyDraft ? "final" : "draft"}`);
             setChoiceIndex(comboStates.rend_quality, isCurrentlyDraft ? 1 : 0, 2);
         });
     }
@@ -9361,10 +9800,24 @@ function initUIBindings() {
     // View buttons
     document.querySelectorAll(".view-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-            const view = btn.dataset.view;
+            const view = String(btn.dataset.view || activeViewportView);
             const viewIndex = Math.max(0, viewOrder.indexOf(view));
             setChoiceIndex(comboStates.rend_viz_mode, viewIndex);
             setActiveView(viewOrder[viewIndex]);
+        });
+        btn.addEventListener("keydown", event => {
+            const buttons = Array.from(document.querySelectorAll(".view-btn"));
+            const currentIndex = buttons.indexOf(btn);
+            const nextIndex = getOrderedNavigationIndex(event.key, currentIndex, buttons.length, "horizontal");
+            if (nextIndex === null) return;
+
+            event.preventDefault();
+            const nextButton = buttons[nextIndex];
+            const nextView = String(nextButton.dataset.view || activeViewportView);
+            const nextViewIndex = Math.max(0, viewOrder.indexOf(nextView));
+            setChoiceIndex(comboStates.rend_viz_mode, nextViewIndex);
+            setActiveView(viewOrder[nextViewIndex]);
+            syncViewButtonAccessibility(nextView);
         });
     });
 
@@ -9398,12 +9851,20 @@ function initUIBindings() {
     // Physics advanced disclosure
     const physicsDisclosure = document.getElementById("physics-disclosure");
     if (physicsDisclosure) {
+        const advanced = document.getElementById("physics-advanced");
+        if (advanced) advanced.setAttribute("aria-hidden", "true");
         physicsDisclosure.addEventListener("click", () => {
             const advanced = document.getElementById("physics-advanced");
             const arrow = document.getElementById("physics-arrow");
-            if (advanced) advanced.classList.toggle("open");
-            if (arrow) arrow.classList.toggle("open");
+            const expanded = !advanced?.classList.contains("open");
+            if (advanced) {
+                advanced.classList.toggle("open", expanded);
+                advanced.setAttribute("aria-hidden", expanded ? "false" : "true");
+            }
+            physicsDisclosure.setAttribute("aria-expanded", expanded ? "true" : "false");
+            if (arrow) arrow.classList.toggle("open", expanded);
         });
+        physicsDisclosure.setAttribute("aria-expanded", "false");
     }
 
     // Timeline controls
@@ -9890,6 +10351,8 @@ function initParameterListeners() {
         const isFinal = getChoiceIndex(comboStates.rend_quality) === 1;
         badge.className = "quality-badge " + (isFinal ? "final" : "draft");
         badge.textContent = isFinal ? "FINAL" : "DRAFT";
+        badge.setAttribute("aria-pressed", isFinal ? "true" : "false");
+        badge.setAttribute("aria-label", `Quality ${isFinal ? "final" : "draft"}`);
     };
 
     const markPhysicsPresetCustom = () => {
@@ -10051,9 +10514,11 @@ function initParameterListeners() {
 
     toggleStates.emit_mute.valueChangedEvent.addListener(() => {
         setToggleClass("toggle-mute", !!toggleStates.emit_mute.getValue());
+        syncSceneListSelectionState();
     });
     toggleStates.emit_solo.valueChangedEvent.addListener(() => {
         setToggleClass("toggle-solo", !!toggleStates.emit_solo.getValue());
+        syncSceneListSelectionState();
     });
     toggleStates.size_link.valueChangedEvent.addListener(() => {
         setToggleClass("toggle-size-link", !!toggleStates.size_link.getValue());
@@ -10229,12 +10694,15 @@ function initParameterListeners() {
     updateRendererPanelShell(sceneData);
     syncAnimationUI();
     syncLegacyConfigAliasFromTopology(getCalibrationViewportTopologyId());
+    syncSceneListSelectionState();
+    syncTimelineLaneAccessibility();
 }
 
 function updateValueDisplay(id, value, unit) {
     const el = document.getElementById(id);
     if (el) {
         el.innerHTML = value + (unit ? '<span class="control-unit">' + unit + '</span>' : '');
+        syncStepperAccessibilityValue(el, Number(value));
     }
 }
 
@@ -11447,6 +11915,7 @@ function applyTimelineModeVisibility(mode) {
         tl.style.visibility = "visible";
         tl.style.opacity = "1";
         tl.style.height = showTimeline ? "var(--timeline-height, 152px)" : "0px";
+        tl.setAttribute("aria-hidden", showTimeline ? "false" : "true");
     }
     if (viewportArea) viewportArea.classList.toggle("timeline-visible", showTimeline);
     if (showTimeline && (shellRebuilt || !wasVisible || !timelineLoaded)) renderTimelineLanes();
@@ -11506,6 +11975,10 @@ function switchMode(mode) {
     applyCalibrationStatus();
     applyModeShell(nextMode);
     applyTimelineModeVisibility(nextMode);
+    syncModeTabsAccessibility();
+    if (nextMode === "renderer") {
+        syncSceneListSelectionState();
+    }
 
     queueModeLayoutResync(nextMode);
 }
@@ -13213,26 +13686,93 @@ function updateEmitterMeshes(emitters) {
     updateSelectionRingFromState();
 }
 
+function syncSceneListSelectionState(focusEmitterId = null) {
+    const list = document.getElementById("scene-list");
+    if (!list) return;
+
+    let activeDescendantId = "";
+    list.querySelectorAll(".scene-item").forEach(item => {
+        const emitterId = Number(item.dataset.emitterId);
+        const emitterLabel = String(item.dataset.emitterLabel || getEmitterAccessibleName(emitterId)).trim();
+        const isSelected = emitterId === selectedEmitterId;
+        item.classList.toggle("selected", isSelected);
+        item.setAttribute("role", "option");
+        item.setAttribute("aria-selected", isSelected ? "true" : "false");
+        item.setAttribute("aria-label", emitterLabel);
+        item.tabIndex = isSelected ? 0 : -1;
+        if (isSelected) {
+            activeDescendantId = item.id;
+        }
+        if (focusEmitterId !== null && emitterId === focusEmitterId) {
+            item.focus();
+        }
+
+        const isLocalEmitter = emitterId === localEmitterId;
+        const actionButtons = item.querySelectorAll(".scene-action-btn");
+        const soloButton = actionButtons[0];
+        const muteButton = actionButtons[1];
+        if (soloButton) {
+            soloButton.disabled = !isLocalEmitter;
+            soloButton.setAttribute("aria-label", `Solo ${emitterLabel}`);
+            soloButton.setAttribute("aria-pressed", isLocalEmitter && getToggleValue(toggleStates.emit_solo) ? "true" : "false");
+            soloButton.title = isLocalEmitter ? `Solo ${emitterLabel}` : `Solo unavailable for ${emitterLabel}`;
+        }
+        if (muteButton) {
+            muteButton.disabled = !isLocalEmitter;
+            muteButton.setAttribute("aria-label", `Mute ${emitterLabel}`);
+            muteButton.setAttribute("aria-pressed", isLocalEmitter && getToggleValue(toggleStates.emit_mute) ? "true" : "false");
+            muteButton.title = isLocalEmitter ? `Mute ${emitterLabel}` : `Mute unavailable for ${emitterLabel}`;
+        }
+    });
+
+    if (activeDescendantId) {
+        list.setAttribute("aria-activedescendant", activeDescendantId);
+    } else {
+        list.removeAttribute("aria-activedescendant");
+    }
+}
+
 function updateSceneList(emitters) {
     if (currentMode !== "renderer") return;
     const list = document.getElementById("scene-list");
     if (!list) return;
 
+    list.setAttribute("role", "listbox");
+    list.setAttribute("aria-label", "Scene monitor emitters");
     list.innerHTML = "";
     emitters.forEach(em => {
+        const emitterLabel = getEmitterAccessibleName(em.id);
         const color = "#" + (emitterPalette[em.color % emitterPalette.length]).toString(16).padStart(6, "0");
         const item = document.createElement("div");
         item.className = "scene-item";
-        if (em.id === selectedEmitterId) {
-            item.classList.add("selected");
-        }
+        item.id = `scene-item-${em.id}`;
+        item.dataset.emitterId = String(em.id);
+        item.dataset.emitterLabel = emitterLabel;
         item.innerHTML = `<span class="scene-dot" style="background:${color};"></span>` +
-            `<span class="scene-name">${em.label}</span>` +
-            `<button class="scene-action-btn">S</button>` +
-            `<button class="scene-action-btn">M</button>`;
+            `<span class="scene-name">${emitterLabel}</span>` +
+            `<button class="scene-action-btn" type="button">S</button>` +
+            `<button class="scene-action-btn" type="button">M</button>`;
         item.addEventListener("click", () => {
             setSelectedEmitter(em.id);
-            updateSceneList(sceneData.emitters || []);
+        });
+        item.addEventListener("keydown", event => {
+            const items = Array.from(list.querySelectorAll(".scene-item"));
+            const currentIndex = items.indexOf(item);
+            const nextIndex = getOrderedNavigationIndex(event.key, currentIndex, items.length, "vertical");
+            if (nextIndex !== null) {
+                event.preventDefault();
+                const nextItem = items[nextIndex];
+                const nextEmitterId = Number(nextItem.dataset.emitterId);
+                if (Number.isInteger(nextEmitterId)) {
+                    setSelectedEmitter(nextEmitterId, { focusSceneItem: true, announce: true });
+                }
+                return;
+            }
+
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setSelectedEmitter(em.id, { focusSceneItem: true, announce: true });
+            }
         });
 
         const actionButtons = item.querySelectorAll(".scene-action-btn");
@@ -13255,6 +13795,8 @@ function updateSceneList(emitters) {
 
         list.appendChild(item);
     });
+
+    syncSceneListSelectionState();
 }
 
 // ===== ANIMATION LOOP =====

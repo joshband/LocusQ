@@ -167,9 +167,22 @@
       letter-spacing: 1px; text-transform: uppercase;
       padding: 4px 10px; border-radius: 3px;
       cursor: pointer; transition: all 150ms;
+      font-family: var(--font);
+      appearance: none; -webkit-appearance: none;
     }
     .quality-badge.draft { border: 1px solid var(--text-dim); color: var(--text-secondary); background: transparent; }
     .quality-badge.final { border: 1px solid var(--gold); color: #0A0A0A; background: var(--gold); }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     /* ===== MAIN ===== */
     .main { display: flex; flex: 1; overflow: hidden; min-width: 0; }
@@ -470,6 +483,24 @@
     }
     .view-btn:hover { color: var(--text-primary); border-color: var(--text-dim); }
     .view-btn.active { color: var(--gold); border-color: var(--gold-dim); }
+    .mode-tab:focus-visible,
+    .quality-badge:focus-visible,
+    .view-btn:focus-visible,
+    .transport-btn:focus-visible,
+    .toggle:focus-visible,
+    .scene-item:focus-visible,
+    .scene-action-btn:focus-visible,
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible,
+    .dropdown:focus-visible,
+    .text-input:focus-visible,
+    .disclosure:focus-visible,
+    .control-value[data-stepper="1"]:focus-visible,
+    #viewport-canvas:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(212, 168, 71, 0.18), 0 0 0 1px var(--gold);
+      border-color: var(--gold);
+    }
 
     .viewport-overlay {
       position: absolute; bottom: 12px; left: 12px;
@@ -1373,6 +1404,11 @@
       cursor: pointer; padding: 8px 0;
       display: flex; align-items: center; gap: 6px;
       transition: color 150ms;
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      font-family: var(--font);
     }
     .disclosure:hover { color: var(--text-secondary); }
     .disclosure-arrow {
@@ -1646,14 +1682,16 @@
   </div>
 
   <div class="toast-host" id="toast-host" aria-live="polite" aria-atomic="false"></div>
+  <div class="sr-only" id="accessibility-status" aria-live="polite" aria-atomic="true"></div>
+  <div class="sr-only" id="viewport-keyboard-help">Use arrow keys to move the selected emitter on the floor plane. Hold Shift for larger moves. Use Page Up and Page Down to adjust height.</div>
 
   <!-- HEADER -->
   <div class="header">
     <div class="logo">LOCUSQ</div>
-    <div class="mode-tabs">
-      <button class="mode-tab" data-mode="calibrate">Calibrate</button>
-      <button class="mode-tab active" data-mode="emitter">Emitter</button>
-      <button class="mode-tab" data-mode="renderer">Renderer</button>
+    <div class="mode-tabs" role="tablist" aria-label="Workspace mode">
+      <button class="mode-tab" data-mode="calibrate" type="button">Calibrate</button>
+      <button class="mode-tab active" data-mode="emitter" type="button">Emitter</button>
+      <button class="mode-tab" data-mode="renderer" type="button">Renderer</button>
     </div>
     <div class="header-spacer"></div>
     <div class="scene-status" id="scene-status">STABLE</div>
@@ -1662,19 +1700,19 @@
       <span class="dot none" id="room-dot"></span>
       <span style="color: var(--text-secondary); font-size: 11px;" id="room-label">No Profile</span>
     </div>
-    <div class="quality-badge draft" id="quality-badge">DRAFT</div>
+    <button class="quality-badge draft" id="quality-badge" type="button">DRAFT</button>
   </div>
 
   <!-- MAIN -->
   <div class="main">
     <div class="viewport-area timeline-visible">
-      <canvas id="viewport-canvas"></canvas>
+      <canvas id="viewport-canvas" tabindex="0" aria-label="3D emitter viewport" aria-describedby="viewport-keyboard-help"></canvas>
 
-      <div class="view-buttons">
-        <button class="view-btn active" data-view="perspective" title="Perspective">P</button>
-        <button class="view-btn" data-view="top" title="Top Down">T</button>
-        <button class="view-btn" data-view="front" title="Front">F</button>
-        <button class="view-btn" data-view="side" title="Side">S</button>
+      <div class="view-buttons" role="toolbar" aria-label="Viewport view presets">
+        <button class="view-btn active" data-view="perspective" title="Perspective" aria-label="Perspective view" type="button">P</button>
+        <button class="view-btn" data-view="top" title="Top Down" aria-label="Top view" type="button">T</button>
+        <button class="view-btn" data-view="front" title="Front" aria-label="Front view" type="button">F</button>
+        <button class="view-btn" data-view="side" title="Side" aria-label="Side view" type="button">S</button>
       </div>
 
       <div class="calibration-status-dock hidden" id="calibration-status-dock" data-state="idle" aria-live="polite">
@@ -1717,7 +1755,7 @@
           <div class="timeline-toggle-label">Loop <div class="toggle" id="toggle-timeline-loop" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
           <div class="timeline-toggle-label">Sync <div class="toggle on" id="toggle-timeline-sync" style="margin-left:4px;"><div class="toggle-thumb"></div></div></div>
         </div>
-        <div class="timeline-lanes">
+        <div class="timeline-lanes" role="radiogroup" aria-label="Timeline lane selection">
           <div class="timeline-lane selected" data-lane="azimuth">
             <span class="lane-label">Azimuth</span>
             <div class="lane-track"></div>
@@ -1970,10 +2008,10 @@
                     <button class="btn-secondary" id="btn-throw">THROW</button>
                     <button class="btn-secondary" id="btn-reset">RESET</button>
                   </div>
-                  <div class="disclosure" id="physics-disclosure">
+                  <button class="disclosure" id="physics-disclosure" type="button" aria-expanded="false" aria-controls="physics-advanced">
                     <span class="disclosure-arrow" id="physics-arrow">&#9654;</span>
                     Advanced
-                  </div>
+                  </button>
                   <div class="disclosure-content" id="physics-advanced">
                     <div class="control-row"><span class="control-label">Mass</span><span class="control-value" id="val-mass">1.0<span class="control-unit">kg</span></span></div>
                     <div class="control-row"><span class="control-label">Drag</span><span class="control-value" id="val-drag">0.5</span></div>
@@ -2419,7 +2457,7 @@
           <div class="renderer-card" data-renderer-group="scene">
             <div class="section">
               <div class="section-header">Scene Monitor</div>
-              <div id="scene-list"></div>
+              <div id="scene-list" role="listbox" aria-label="Scene monitor emitters"></div>
             </div>
           </div>
         </div>

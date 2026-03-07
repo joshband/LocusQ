@@ -20,6 +20,7 @@ Operational snapshot:
 - Architecture review W2-B WebView UX hardening: branded boot shell/loading skeleton, deduped warning/error toasts, and a compact calibration status dock for degraded/native-bridge states.
 - Architecture review W2-C format-lane expansion: dedicated CLAP and AUv3 CI jobs plus clean-bundle npm dev-dependency install coverage for fresh WebView builds.
 - Architecture review W2-D calibration portability: native JSON profile export/import with async file choosers, compatibility checks, and WebView library controls.
+- Architecture review W3-C accessibility hardening: keyboard navigation, ARIA semantics, focus-visible states, and viewport keyboard nudging for the production WebView UI.
 
 - Specialist execution skills for active lanes:
   - `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`
