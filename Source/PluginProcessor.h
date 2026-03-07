@@ -135,6 +135,8 @@ public:
     juce::var loadCalibrationProfileFromUI (const juce::var& options);
     juce::var renameCalibrationProfileFromUI (const juce::var& options);
     juce::var deleteCalibrationProfileFromUI (const juce::var& options);
+    juce::var exportCalibrationProfileFromUI (const juce::var& options) const;
+    juce::var importCalibrationProfileFromUI (const juce::var& options);
     void pollCompanionCalibrationProfileFromDisk();
 
     // Timeline and preset API for WebView bridge (Phase 2.6)
@@ -284,6 +286,8 @@ private:
     //==============================================================================
     // Scene Graph integration
     SceneGraph& sceneGraph;
+    // Claimed before audio starts so emitter registration can stay allocation-free in processBlock.
+    int sceneGraphAudioReservationId = -1;
     int emitterSlotId = -1;
     bool rendererRegistered = false;
     RegistrationTransitionDiagnostics registrationTransitionDiagnostics;

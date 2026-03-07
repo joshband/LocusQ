@@ -4,6 +4,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -138,6 +139,66 @@ inline juce::File getUiSelfTestResultFile()
         .getChildFile ("locusq_incremental_ui_selftest_result.json");
 }
 
+inline juce::String getOptionString (const juce::var& options,
+                                     std::initializer_list<const char*> propertyNames)
+{
+    if (auto* optionsObject = options.getDynamicObject())
+    {
+        for (const auto* propertyName : propertyNames)
+        {
+            if (! optionsObject->hasProperty (propertyName))
+                continue;
+
+            const auto value = optionsObject->getProperty (propertyName).toString().trim();
+            if (value.isNotEmpty())
+                return value;
+        }
+    }
+
+    return {};
+}
+
+inline juce::String ensureJsonExtension (juce::String fileName)
+{
+    fileName = fileName.trim();
+    if (fileName.isNotEmpty() && ! fileName.endsWithIgnoreCase (".json"))
+        fileName << ".json";
+    return fileName;
+}
+
+inline juce::var cloneOptionsWithProperty (const juce::var& options,
+                                           const juce::Identifier& propertyName,
+                                           const juce::var& propertyValue)
+{
+    juce::var result (new juce::DynamicObject());
+
+    if (auto* source = options.getDynamicObject())
+    {
+        if (auto* destination = result.getDynamicObject())
+        {
+            for (const auto& property : source->getProperties())
+                destination->setProperty (property.name, property.value);
+        }
+    }
+
+    if (auto* destination = result.getDynamicObject())
+        destination->setProperty (propertyName, propertyValue);
+
+    return result;
+}
+
+inline juce::var makeCancelledNativeFileDialogResponse (const juce::String& actionLabel)
+{
+    juce::var response (new juce::DynamicObject());
+    if (auto* object = response.getDynamicObject())
+    {
+        object->setProperty ("ok", false);
+        object->setProperty ("cancelled", true);
+        object->setProperty ("message", actionLabel.trim() + " cancelled.");
+    }
+    return response;
+}
+
 inline juce::WebBrowserComponent::Options makeBaseWebViewOptions()
 {
     auto options = juce::WebBrowserComponent::Options{};
@@ -216,6 +277,73 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                              {
                                  const juce::var opt = args.isEmpty() ? juce::var() : args[0];
                                  completion (audioProcessor.deleteCalibrationProfileFromUI (opt));
+                             })
+        .withNativeFunction ("locusqExportCalibrationProfile",
+                             [&audioProcessor] (const juce::Array<juce::var>& args,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const auto optionsFromUi = args.isEmpty() ? juce::var() : args[0];
+                                 auto suggestedFileName = getOptionString (
+                                     optionsFromUi,
+                                     { "suggestedFileName", "exportFileName", "name", "file" });
+                                 suggestedFileName = ensureJsonExtension (suggestedFileName);
+                                 if (suggestedFileName.isEmpty())
+                                     suggestedFileName = "locusq_calibration_profile.json";
+
+                                 auto chooser = std::make_shared<juce::FileChooser> (
+                                     "Export calibration profile",
+                                     juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
+                                         .getChildFile (suggestedFileName),
+                                     "*.json");
+
+                                 chooser->launchAsync (
+                                     juce::FileBrowserComponent::saveMode
+                                         | juce::FileBrowserComponent::canSelectFiles
+                                         | juce::FileBrowserComponent::warnAboutOverwriting,
+                                     [chooser, optionsFromUi, completion, &audioProcessor] (const juce::FileChooser& fileChooser)
+                                     {
+                                         const auto chosenFile = fileChooser.getResult();
+                                         if (chosenFile.getFullPathName().isEmpty())
+                                         {
+                                             completion (makeCancelledNativeFileDialogResponse (
+                                                 "Calibration profile export"));
+                                             return;
+                                         }
+
+                                         completion (audioProcessor.exportCalibrationProfileFromUI (
+                                             cloneOptionsWithProperty (optionsFromUi,
+                                                                       "destinationPath",
+                                                                       chosenFile.getFullPathName())));
+                                     });
+                             })
+        .withNativeFunction ("locusqImportCalibrationProfile",
+                             [&audioProcessor] (const juce::Array<juce::var>& args,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 const auto optionsFromUi = args.isEmpty() ? juce::var() : args[0];
+                                 auto chooser = std::make_shared<juce::FileChooser> (
+                                     "Import calibration profile",
+                                     juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                     "*.json");
+
+                                 chooser->launchAsync (
+                                     juce::FileBrowserComponent::openMode
+                                         | juce::FileBrowserComponent::canSelectFiles,
+                                     [chooser, optionsFromUi, completion, &audioProcessor] (const juce::FileChooser& fileChooser)
+                                     {
+                                         const auto chosenFile = fileChooser.getResult();
+                                         if (chosenFile.getFullPathName().isEmpty())
+                                         {
+                                             completion (makeCancelledNativeFileDialogResponse (
+                                                 "Calibration profile import"));
+                                             return;
+                                         }
+
+                                         completion (audioProcessor.importCalibrationProfileFromUI (
+                                             cloneOptionsWithProperty (optionsFromUi,
+                                                                       "sourcePath",
+                                                                       chosenFile.getFullPathName())));
+                                     });
                              })
         .withNativeFunction ("locusqGetKeyframeTimeline",
                              [&audioProcessor] (const juce::Array<juce::var>&,
@@ -415,12 +543,6 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
     {
         resourceData = BinaryData::index_js;
         resourceSize = BinaryData::index_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "js/three.min.js")
-    {
-        resourceData = BinaryData::three_min_js;
-        resourceSize = BinaryData::three_min_jsSize;
         mimeType = "text/javascript";
     }
     else if (path == "js/juce/index.js")

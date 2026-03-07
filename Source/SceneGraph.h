@@ -7,6 +7,10 @@
 #include <cstring>
 #include "SharedPtrAtomicContract.h"
 
+#ifndef LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+ #define LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE 1
+#endif
+
 //==============================================================================
 // Vec3 - Minimal 3D vector for lock-free scene data
 //==============================================================================
@@ -63,6 +67,79 @@ struct EmitterData
     bool    physicsEnabled = false;
 };
 
+static constexpr int kSceneGraphMaxEmitters = 256;
+
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+struct SceneGraphAudioReservation
+{
+    static constexpr std::uint8_t kStateFree = 0;
+    static constexpr std::uint8_t kStateClaimed = 1;
+
+    struct AudioBufferSnapshot
+    {
+        void ensureCapacity (int requestedSamples)
+        {
+            const auto requested = juce::jmax (0, requestedSamples);
+            if (requested <= capacity)
+                return;
+
+            mono.malloc (static_cast<std::size_t> (requested), true);
+            capacity = requested;
+        }
+
+        void clear() noexcept
+        {
+            numSamples = 0;
+            valid = false;
+        }
+
+        juce::HeapBlock<float> mono;
+        int capacity = 0;
+        int numSamples = 0;
+        bool valid = false;
+    };
+
+    void ensureCapacity (int requestedSamples)
+    {
+        const auto requested = juce::jmax (0, requestedSamples);
+        preparedSamples = juce::jmax (preparedSamples, requested);
+
+        for (auto& buffer : audioBuffers)
+        {
+            buffer.ensureCapacity (preparedSamples);
+            buffer.clear();
+        }
+
+        audioReadIndex.store (0, std::memory_order_release);
+    }
+
+    void clear() noexcept
+    {
+        for (auto& buffer : audioBuffers)
+            buffer.clear();
+
+        audioReadIndex.store (0, std::memory_order_release);
+    }
+
+    void release() noexcept
+    {
+        clear();
+        for (auto& buffer : audioBuffers)
+        {
+            buffer.mono.free();
+            buffer.capacity = 0;
+        }
+
+        preparedSamples = 0;
+    }
+
+    std::array<AudioBufferSnapshot, 2> audioBuffers;
+    std::atomic<int> audioReadIndex { 0 };
+    std::atomic<std::uint8_t> state { kStateFree };
+    int preparedSamples = 0;
+};
+#endif
+
 class EmitterSlot
 {
 public:
@@ -75,6 +152,25 @@ public:
     };
 
     EmitterSlot() = default;
+
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+    void attachAudioReservationPool (SceneGraphAudioReservation* reservations) noexcept
+    {
+        audioReservationPool = reservations;
+    }
+
+    void bindAudioReservation (int reservationId) noexcept
+    {
+        audioReservationId.store (reservationId, std::memory_order_release);
+        clearAudioBuffer();
+    }
+
+    void unbindAudioReservation() noexcept
+    {
+        clearAudioBuffer();
+        audioReservationId.store (-1, std::memory_order_release);
+    }
+#endif
 
     // Writer side (Emitter instance, audio thread)
     void write (const EmitterData& data)
@@ -95,21 +191,39 @@ public:
     // pointers from another plugin instance.
     void setAudioBuffer (const float* const* channels, int numChannels, int numSamples)
     {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        auto* reservation = getAudioReservation();
+        if (reservation == nullptr || reservation->preparedSamples <= 0)
+        {
+            clearAudioBuffer();
+            return;
+        }
+#endif
+
         if (channels == nullptr || numChannels <= 0 || numSamples <= 0)
         {
             clearAudioBuffer();
             return;
         }
 
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        const int samplesToCopy = juce::jlimit (0, reservation->preparedSamples, numSamples);
+#else
         const int samplesToCopy = juce::jlimit (0, MAX_SHARED_AUDIO_SAMPLES, numSamples);
+#endif
         if (samplesToCopy <= 0)
         {
             clearAudioBuffer();
             return;
         }
 
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        const int writeIdx = 1 - reservation->audioReadIndex.load (std::memory_order_acquire);
+        auto& writeBuffer = reservation->audioBuffers[writeIdx];
+#else
         const int writeIdx = 1 - audioReadIndex.load (std::memory_order_acquire);
         auto& writeBuffer = audioBuffers[writeIdx];
+#endif
 
         const float norm = 1.0f / static_cast<float> (numChannels);
         for (int i = 0; i < samplesToCopy; ++i)
@@ -126,29 +240,59 @@ public:
 
         writeBuffer.numSamples = samplesToCopy;
         writeBuffer.valid = true;
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        reservation->audioReadIndex.store (writeIdx, std::memory_order_release);
+#else
         audioReadIndex.store (writeIdx, std::memory_order_release);
+#endif
     }
 
     void clearAudioBuffer()
     {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        auto* reservation = getAudioReservation();
+        if (reservation == nullptr)
+            return;
+
+        const int writeIdx = 1 - reservation->audioReadIndex.load (std::memory_order_acquire);
+        auto& writeBuffer = reservation->audioBuffers[writeIdx];
+#else
         const int writeIdx = 1 - audioReadIndex.load (std::memory_order_acquire);
         auto& writeBuffer = audioBuffers[writeIdx];
+#endif
         writeBuffer.numSamples = 0;
         writeBuffer.valid = false;
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        reservation->audioReadIndex.store (writeIdx, std::memory_order_release);
+#else
         audioReadIndex.store (writeIdx, std::memory_order_release);
+#endif
     }
 
     AudioReadSnapshot readAudioSnapshot() const
     {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        const auto* reservation = getAudioReservation();
+        if (reservation == nullptr)
+            return {};
+
+        const int readIdx = reservation->audioReadIndex.load (std::memory_order_acquire);
+        const auto& readBuffer = reservation->audioBuffers[readIdx];
+#else
         const int readIdx = audioReadIndex.load (std::memory_order_acquire);
         const auto& readBuffer = audioBuffers[readIdx];
+#endif
 
         AudioReadSnapshot snapshot;
         snapshot.valid = readBuffer.valid;
         if (! snapshot.valid)
             return snapshot;
 
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        snapshot.mono = readBuffer.mono.get();
+#else
         snapshot.mono = readBuffer.mono.data();
+#endif
         snapshot.numSamples = readBuffer.numSamples;
         return snapshot;
     }
@@ -164,6 +308,34 @@ public:
     }
 
 private:
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+    SceneGraphAudioReservation* getAudioReservation() noexcept
+    {
+        if (audioReservationPool == nullptr)
+            return nullptr;
+
+        const auto reservationId = audioReservationId.load (std::memory_order_acquire);
+        if (reservationId < 0 || reservationId >= kSceneGraphMaxEmitters)
+            return nullptr;
+
+        return audioReservationPool + reservationId;
+    }
+
+    const SceneGraphAudioReservation* getAudioReservation() const noexcept
+    {
+        if (audioReservationPool == nullptr)
+            return nullptr;
+
+        const auto reservationId = audioReservationId.load (std::memory_order_acquire);
+        if (reservationId < 0 || reservationId >= kSceneGraphMaxEmitters)
+            return nullptr;
+
+        return audioReservationPool + reservationId;
+    }
+
+    SceneGraphAudioReservation* audioReservationPool = nullptr;
+    std::atomic<int> audioReservationId { -1 };
+#else
     struct AudioBufferSnapshot
     {
         std::array<float, MAX_SHARED_AUDIO_SAMPLES> mono {};
@@ -171,11 +343,12 @@ private:
         bool valid = false;
     };
 
-    std::array<EmitterData, 2> buffers;
-    std::atomic<int> readIndex { 0 };
-
     std::array<AudioBufferSnapshot, 2> audioBuffers;
     std::atomic<int> audioReadIndex { 0 };
+#endif
+
+    std::array<EmitterData, 2> buffers;
+    std::atomic<int> readIndex { 0 };
 };
 
 //==============================================================================
@@ -184,7 +357,7 @@ private:
 class SceneGraph
 {
 public:
-    static constexpr int MAX_EMITTERS = 256;
+    static constexpr int MAX_EMITTERS = kSceneGraphMaxEmitters;
     static constexpr uint8_t kSlotStateFree = 0;
     static constexpr uint8_t kSlotStateInitializing = 1;
     static constexpr uint8_t kSlotStateActive = 2;
@@ -199,9 +372,80 @@ public:
     }
 
     //--------------------------------------------------------------------------
-    // Emitter registration
-    int registerEmitter()
+    int claimAudioReservation()
     {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        for (int i = 0; i < MAX_EMITTERS; ++i)
+        {
+            auto& state = audioReservations[static_cast<size_t> (i)].state;
+            std::uint8_t expected = SceneGraphAudioReservation::kStateFree;
+            if (state.compare_exchange_strong (expected,
+                                               SceneGraphAudioReservation::kStateClaimed,
+                                               std::memory_order_acq_rel,
+                                               std::memory_order_acquire))
+            {
+                audioReservations[static_cast<size_t> (i)].clear();
+                return i;
+            }
+        }
+#endif
+        return -1;
+    }
+
+    void ensureAudioReservationCapacity (int reservationId, int requestedSamples)
+    {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        if (reservationId < 0 || reservationId >= MAX_EMITTERS)
+            return;
+
+        audioReservations[static_cast<size_t> (reservationId)].ensureCapacity (requestedSamples);
+#else
+        juce::ignoreUnused (reservationId, requestedSamples);
+#endif
+    }
+
+    void clearAudioReservation (int reservationId)
+    {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        if (reservationId < 0 || reservationId >= MAX_EMITTERS)
+            return;
+
+        audioReservations[static_cast<size_t> (reservationId)].clear();
+#else
+        juce::ignoreUnused (reservationId);
+#endif
+    }
+
+    void releaseAudioReservation (int reservationId)
+    {
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        if (reservationId < 0 || reservationId >= MAX_EMITTERS)
+            return;
+
+        auto& reservation = audioReservations[static_cast<size_t> (reservationId)];
+        clearAudioReservation (reservationId);
+        reservation.release();
+        reservation.state.store (SceneGraphAudioReservation::kStateFree, std::memory_order_release);
+#else
+        juce::ignoreUnused (reservationId);
+#endif
+    }
+
+    //--------------------------------------------------------------------------
+    // Emitter registration
+    int registerEmitter (int audioReservationId)
+    {
+        if (audioReservationId < 0 || audioReservationId >= MAX_EMITTERS)
+            return -1;
+
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        if (audioReservations[static_cast<size_t> (audioReservationId)].state.load (std::memory_order_acquire)
+            != SceneGraphAudioReservation::kStateClaimed)
+            return -1;
+#else
+        juce::ignoreUnused (audioReservationId);
+#endif
+
         for (int i = 0; i < MAX_EMITTERS; ++i)
         {
             auto& state = slotStates[static_cast<size_t> (i)];
@@ -211,6 +455,10 @@ public:
                                                  std::memory_order_acq_rel,
                                                  std::memory_order_acquire))
                 continue;
+
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+            slots[static_cast<size_t> (i)].bindAudioReservation (audioReservationId);
+#endif
 
             EmitterData d;
             d.active = true;
@@ -240,6 +488,9 @@ public:
         d.active = false;
         slots[static_cast<size_t> (slotId)].write (d);
         slots[static_cast<size_t> (slotId)].clearAudioBuffer();
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        slots[static_cast<size_t> (slotId)].unbindAudioReservation();
+#endif
         state.store (kSlotStateFree, std::memory_order_release);
 
         int currentCount = activeEmitterCount.load (std::memory_order_acquire);
@@ -367,6 +618,16 @@ private:
     {
         for (auto& state : slotStates)
             state.store (kSlotStateFree, std::memory_order_relaxed);
+
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+        for (auto& reservation : audioReservations)
+        {
+            reservation.state.store (SceneGraphAudioReservation::kStateFree, std::memory_order_relaxed);
+        }
+
+        for (auto& slot : slots)
+            slot.attachAudioReservationPool (audioReservations.data());
+#endif
     }
     ~SceneGraph() = default;
 
@@ -375,6 +636,9 @@ private:
 
     std::array<EmitterSlot, MAX_EMITTERS> slots;
     std::array<std::atomic<uint8_t>, MAX_EMITTERS> slotStates;
+#if LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE
+    std::array<SceneGraphAudioReservation, MAX_EMITTERS> audioReservations;
+#endif
     std::atomic<int> activeEmitterCount { 0 };
     std::atomic<bool> rendererRegistered { false };
 

@@ -1,3 +1,6 @@
+// @ts-nocheck
+import * as THREE from "three";
+
 (() => {
 const bootstrapSearch = typeof window !== "undefined" && window.location
     ? String(window.location.search || "")
@@ -350,6 +353,8 @@ const nativeFunctions = {
     loadCalibrationProfile: Juce.getNativeFunction("locusqLoadCalibrationProfile"),
     renameCalibrationProfile: Juce.getNativeFunction("locusqRenameCalibrationProfile"),
     deleteCalibrationProfile: Juce.getNativeFunction("locusqDeleteCalibrationProfile"),
+    exportCalibrationProfile: Juce.getNativeFunction("locusqExportCalibrationProfile"),
+    importCalibrationProfile: Juce.getNativeFunction("locusqImportCalibrationProfile"),
     getKeyframeTimeline: Juce.getNativeFunction("locusqGetKeyframeTimeline"),
     setKeyframeTimeline: Juce.getNativeFunction("locusqSetKeyframeTimeline"),
     setTimelineTime: Juce.getNativeFunction("locusqSetTimelineTime"),
@@ -424,6 +429,259 @@ if (productionP0SelfTestRequested) {
         requested: false,
         status: "disabled",
     };
+}
+
+const BOOT_SHELL_DEFAULT_ERROR_TEXT = "Startup issue detected. Review diagnostics below.";
+const BOOT_SHELL_READY_DISMISS_MS = 260;
+const BOOT_SHELL_WARNING_DISMISS_MS = 2600;
+const TOAST_DEDUPE_WINDOW_MS = 3200;
+const TOAST_AUTODISMISS_MS = {
+    info: 2600,
+    success: 2200,
+    warn: 4200,
+    error: 5600,
+};
+
+let bootShellDismissTimer = null;
+const toastState = {
+    nextId: 1,
+    items: [],
+    recentByKey: new Map(),
+};
+
+function normaliseToastTone(value) {
+    const tone = String(value || "info").trim().toLowerCase();
+    if (tone === "success" || tone === "warn" || tone === "error") return tone;
+    return "info";
+}
+
+function pruneToastDedupEntries(nowMs = Date.now()) {
+    const cutoff = nowMs - 30000;
+    for (const [key, timestamp] of toastState.recentByKey.entries()) {
+        if (!Number.isFinite(timestamp) || timestamp < cutoff) {
+            toastState.recentByKey.delete(key);
+        }
+    }
+}
+
+function dismissToast(id) {
+    const numericId = Number(id);
+    toastState.items = toastState.items.filter(item => item.id !== numericId);
+    renderToastHost();
+}
+
+function renderToastHost() {
+    const host = document.getElementById("toast-host");
+    if (!host) return;
+
+    host.innerHTML = "";
+    toastState.items.forEach(item => {
+        const toast = document.createElement("article");
+        toast.className = "toast";
+        toast.dataset.tone = item.tone;
+        toast.setAttribute("role", item.tone === "error" || item.tone === "warn" ? "alert" : "status");
+
+        const accent = document.createElement("span");
+        accent.className = "toast-accent";
+        accent.setAttribute("aria-hidden", "true");
+
+        const body = document.createElement("div");
+        body.className = "toast-body";
+
+        if (item.title) {
+            const title = document.createElement("div");
+            title.className = "toast-title";
+            title.textContent = item.title;
+            body.appendChild(title);
+        }
+
+        const message = document.createElement("div");
+        message.className = "toast-message";
+        message.textContent = item.message;
+        body.appendChild(message);
+
+        const dismissButton = document.createElement("button");
+        dismissButton.className = "toast-dismiss";
+        dismissButton.type = "button";
+        dismissButton.setAttribute("aria-label", "Dismiss notification");
+        dismissButton.textContent = "×";
+        dismissButton.addEventListener("click", () => dismissToast(item.id));
+
+        toast.appendChild(accent);
+        toast.appendChild(body);
+        toast.appendChild(dismissButton);
+        host.appendChild(toast);
+    });
+}
+
+function showToast(message, options = {}) {
+    const text = String(message || "").trim();
+    if (!text) return 0;
+
+    const tone = normaliseToastTone(options.tone);
+    const nowMs = Date.now();
+    pruneToastDedupEntries(nowMs);
+
+    const dedupeKey = String(options.dedupeKey || `${tone}:${text}`);
+    const dedupeWindowMs = Math.max(0, Number(options.dedupeWindowMs) || TOAST_DEDUPE_WINDOW_MS);
+    const duplicate = toastState.items.find(item => item.dedupeKey === dedupeKey);
+    if (duplicate) {
+        return duplicate.id;
+    }
+
+    const previousTimestamp = toastState.recentByKey.get(dedupeKey);
+    if (previousTimestamp && (nowMs - previousTimestamp) < dedupeWindowMs) {
+        return 0;
+    }
+
+    toastState.recentByKey.set(dedupeKey, nowMs);
+
+    const item = {
+        id: toastState.nextId++,
+        tone,
+        title: String(options.title || "").trim(),
+        message: text,
+        dedupeKey,
+    };
+
+    toastState.items = toastState.items.concat(item).slice(-4);
+    renderToastHost();
+
+    const dismissMs = Number.isFinite(Number(options.dismissMs))
+        ? Math.max(0, Number(options.dismissMs))
+        : TOAST_AUTODISMISS_MS[tone];
+    if (dismissMs > 0) {
+        window.setTimeout(() => dismissToast(item.id), dismissMs);
+    }
+
+    return item.id;
+}
+
+function getLatestBootErrorText() {
+    const items = Array.isArray(window.__LQ_BOOT_ERRORS__) ? window.__LQ_BOOT_ERRORS__ : [];
+    const latest = items.length > 0 ? items[items.length - 1] : "";
+    return String(latest || "").trim();
+}
+
+function clearBootShellDismissTimer() {
+    if (bootShellDismissTimer !== null) {
+        window.clearTimeout(bootShellDismissTimer);
+        bootShellDismissTimer = null;
+    }
+}
+
+function setBootShellVisible(visible) {
+    const shell = document.getElementById("boot-shell");
+    if (!shell) return;
+
+    shell.classList.toggle("hidden", !visible);
+    shell.setAttribute("aria-hidden", visible ? "false" : "true");
+}
+
+function setBootShellError(message) {
+    const errorEl = document.getElementById("boot-shell-error");
+    if (!errorEl) return;
+
+    const text = String(message || "").trim();
+    errorEl.textContent = text;
+    errorEl.classList.toggle("visible", text.length > 0);
+}
+
+function presentBootShellStage(stage, detail = "", options = {}) {
+    const shell = document.getElementById("boot-shell");
+    if (!shell) return;
+
+    clearBootShellDismissTimer();
+
+    let tone = normaliseToastTone(options.tone || "info");
+    let stageLabel = "Booting WebView";
+    let title = "Preparing viewport and controls";
+    let description = String(detail || "").trim() || "Loading the shell, native bridge bindings, and saved session state.";
+    let progress = 0.14;
+    let dismissDelayMs = null;
+
+    switch (String(stage || "").trim().toLowerCase()) {
+        case "init":
+            stageLabel = "Initializing Controls";
+            title = "Binding WebView controls";
+            description = String(detail || "").trim() || "Connecting mode tabs, parameter relays, and viewport scaffolding.";
+            progress = 0.32;
+            break;
+        case "hydrating":
+            stageLabel = "Restoring Session";
+            title = "Hydrating saved plugin state";
+            description = String(detail || "").trim() || "Loading UI state, timeline data, presets, and calibration profiles.";
+            progress = 0.72;
+            break;
+        case "ready":
+            stageLabel = "Ready";
+            title = "Viewport and controls are ready";
+            description = String(detail || "").trim() || "The native bridge is connected and the production UI is ready.";
+            progress = 1.0;
+            dismissDelayMs = BOOT_SHELL_READY_DISMISS_MS;
+            break;
+        case "degraded":
+            tone = normaliseToastTone(options.tone || "warn");
+            stageLabel = "Degraded Startup";
+            title = "Native bridge entered degraded mode";
+            description = String(detail || "").trim() || "Startup completed with limited native controls. Diagnostics and read-only paths remain available.";
+            progress = 1.0;
+            dismissDelayMs = BOOT_SHELL_WARNING_DISMISS_MS;
+            break;
+        case "viewport_safe":
+            tone = normaliseToastTone(options.tone || "warn");
+            stageLabel = "Viewport Safe Mode";
+            title = "3D viewport unavailable";
+            description = String(detail || "").trim() || "The 3D viewport failed to initialize, but the rest of the controls remain available.";
+            progress = 1.0;
+            dismissDelayMs = BOOT_SHELL_WARNING_DISMISS_MS;
+            break;
+        case "fatal":
+            tone = normaliseToastTone(options.tone || "error");
+            stageLabel = "Startup Failed";
+            title = "The runtime hit a startup error";
+            description = String(detail || "").trim() || "The WebView shell loaded, but a runtime error prevented normal startup.";
+            progress = 1.0;
+            dismissDelayMs = BOOT_SHELL_WARNING_DISMISS_MS;
+            break;
+        case "booting":
+        default:
+            stageLabel = "Booting WebView";
+            title = "Preparing viewport and controls";
+            description = String(detail || "").trim() || "Loading the shell, native bridge bindings, and saved session state.";
+            progress = 0.14;
+            break;
+    }
+
+    shell.dataset.tone = tone;
+
+    const stageEl = document.getElementById("boot-shell-stage");
+    if (stageEl) stageEl.textContent = stageLabel;
+
+    const titleEl = document.getElementById("boot-shell-title");
+    if (titleEl) titleEl.textContent = title;
+
+    const detailEl = document.getElementById("boot-shell-detail");
+    if (detailEl) detailEl.textContent = description;
+
+    const progressEl = document.getElementById("boot-shell-progress-fill");
+    if (progressEl) {
+        const percent = Math.max(8, Math.min(100, Math.round(progress * 100)));
+        progressEl.style.width = `${percent}%`;
+    }
+
+    const fallbackError = getLatestBootErrorText();
+    const errorText = String(options.error || "").trim()
+        || ((tone === "warn" || tone === "error") ? (fallbackError || BOOT_SHELL_DEFAULT_ERROR_TEXT) : "");
+    setBootShellError(errorText);
+    setBootShellVisible(true);
+
+    if (dismissDelayMs !== null) {
+        bootShellDismissTimer = window.setTimeout(() => {
+            setBootShellVisible(false);
+            clearBootShellDismissTimer();
+        }, dismissDelayMs);
+    }
 }
 
 function withNativeTimeout(promise, label) {
@@ -1771,6 +2029,11 @@ async function loadUiStateFromNative() {
         uiState.choreographyPack = normalizeChoreographyPackId(payload.choreographyPack ?? uiState.choreographyPack);
     } catch (error) {
         console.warn("Failed to load UI state:", error);
+        showToast("Saved UI state could not be restored; continuing with current defaults.", {
+            tone: "warn",
+            title: "Session Restore",
+            dedupeKey: "startup:load-ui-state",
+        });
     }
 }
 
@@ -2647,6 +2910,11 @@ async function loadTimelineFromNative() {
         setMotionDirty(false);
     } catch (error) {
         console.warn("Failed to load keyframe timeline from native API:", error);
+        showToast("Timeline restore failed; a clean internal timeline is active.", {
+            tone: "warn",
+            title: "Timeline Restore",
+            dedupeKey: "startup:load-timeline",
+        });
         timelineState = normaliseTimelineFromNative({});
         timelineLoaded = true;
         renderTimelineLanes();
@@ -2654,11 +2922,19 @@ async function loadTimelineFromNative() {
     }
 }
 
-function setPresetStatus(message, isError = false) {
+function setPresetStatus(message, isError = false, toastOnError = true) {
     const status = document.getElementById("preset-status");
     if (!status) return;
-    status.textContent = message;
+    const text = String(message || "");
+    status.textContent = text;
     status.style.color = isError ? "var(--text-error, #D4736F)" : "var(--text-secondary)";
+    if (isError && toastOnError) {
+        showToast(text, {
+            tone: "error",
+            title: "Preset Library",
+            dedupeKey: `preset:${text}`,
+        });
+    }
 }
 
 function normalisePresetType(type) {
@@ -3420,6 +3696,8 @@ const nativeBridgeDegradedControlIds = [
     "cal-profile-name",
     "cal-profile-save-btn",
     "cal-profile-load-btn",
+    "cal-profile-export-btn",
+    "cal-profile-import-btn",
     "cal-profile-rename-btn",
     "cal-profile-delete-btn",
     "preset-type-select",
@@ -3542,8 +3820,8 @@ function applyNativeBridgeControlLock(locked) {
     }
 
     if (nextLocked) {
-        setPresetStatus("Native bridge degraded: preset controls disabled.", true);
-        setCalibrationProfileStatus("Native bridge degraded: calibration controls disabled.", true);
+        setPresetStatus("Native bridge degraded: preset controls disabled.", true, false);
+        setCalibrationProfileStatus("Native bridge degraded: calibration controls disabled.", true, false);
     }
 
     publishOperatorDiagnosticsSnapshot();
@@ -3552,6 +3830,7 @@ function applyNativeBridgeControlLock(locked) {
 function setNativeBridgeStartupStage(stage) {
     nativeBridgeDiagnosticsState.startupStage = String(stage || "").trim() || "unknown";
     publishOperatorDiagnosticsSnapshot();
+    presentBootShellStage(nativeBridgeDiagnosticsState.startupStage);
 }
 
 function setNativeBridgeDegradedMode(reason, detail = "") {
@@ -3584,6 +3863,19 @@ function setNativeBridgeDegradedMode(reason, detail = "") {
         viewportLock.textContent = "NATIVE DEGRADED";
     }
 
+    const toastDetail = normalizedDetail.length > 0
+        ? `Native bridge degraded: ${normalizedDetail}`
+        : `Native bridge degraded: ${normalizedReason}`;
+    presentBootShellStage("degraded", toastDetail, {
+        tone: "warn",
+        error: toastDetail,
+    });
+    showToast(toastDetail, {
+        tone: "warn",
+        title: "Native Bridge",
+        dedupeKey: `native-bridge-degraded:${normalizedReason}`,
+    });
+    applyCalibrationStatus();
     publishOperatorDiagnosticsSnapshot();
 }
 
@@ -3593,6 +3885,8 @@ function evaluateNativeBridgeBindingContract() {
         { label: "locusqGetKeyframeTimeline", fn: nativeFunctions.getKeyframeTimeline, critical: true },
         { label: "locusqListEmitterPresets", fn: nativeFunctions.listEmitterPresets, critical: true },
         { label: "locusqListCalibrationProfiles", fn: nativeFunctions.listCalibrationProfiles, critical: true },
+        { label: "locusqExportCalibrationProfile", fn: nativeFunctions.exportCalibrationProfile, critical: false },
+        { label: "locusqImportCalibrationProfile", fn: nativeFunctions.importCalibrationProfile, critical: false },
         { label: "locusqSetUiState", fn: nativeFunctions.setUiState, critical: false },
         { label: "locusqSetKeyframeTimeline", fn: nativeFunctions.setKeyframeTimeline, critical: false },
     ];
@@ -5946,11 +6240,19 @@ function setCalibrationValidationState(chipId, state, text, detail) {
     setCalibrationValidationDetail(chipId, detail);
 }
 
-function setCalibrationProfileStatus(message, isError = false) {
+function setCalibrationProfileStatus(message, isError = false, toastOnError = true) {
     const status = document.getElementById("cal-profile-status");
     if (!status) return;
-    status.textContent = String(message || "");
+    const text = String(message || "");
+    status.textContent = text;
     status.classList.toggle("error", !!isError);
+    if (isError && toastOnError) {
+        showToast(text, {
+            tone: "error",
+            title: "Calibration Library",
+            dedupeKey: `calibration:${text}`,
+        });
+    }
 }
 
 function getCalibrationProfileNameInputValue() {
@@ -6005,6 +6307,26 @@ function buildDefaultCalibrationProfileName(tuple, date = new Date()) {
     const topologyToken = sanitiseCalibrationProfileToken(getCalibrationTopologyLabel(resolved.topologyProfile, true), "topology");
     const monitoringToken = sanitiseCalibrationProfileToken(getCalibrationMonitoringPathLabel(resolved.monitoringPath), "monitor");
     return `${topologyToken}_${monitoringToken}_${formatCalibrationProfileTimestamp(date)}`;
+}
+
+function getCalibrationProfileLeafName(path) {
+    const fullPath = String(path || "").trim();
+    if (!fullPath) return "";
+    const parts = fullPath.split(/[\\/]/);
+    return String(parts[parts.length - 1] || "").trim();
+}
+
+function buildCalibrationProfileExportFileName(entry = null) {
+    const resolvedTuple = buildCalibrationProfileTuple(
+        entry?.topologyProfile || getCalibrationTopologyId(),
+        entry?.monitoringPath || getCalibrationMonitoringPathId()
+    );
+    const baseName = String(
+        entry?.name
+        || getCalibrationProfileNameInputValue()
+        || buildDefaultCalibrationProfileName(resolvedTuple)
+    ).trim();
+    return `${sanitiseCalibrationProfileToken(baseName, "calibration_profile")}.json`;
 }
 
 function profileEntryMatchesCalibrationTuple(entry, tuple) {
@@ -6072,6 +6394,7 @@ function markViewportDegraded(error) {
     pendingSceneSnapshots.length = 0;
 
     console.error("LocusQ viewport degraded mode:", error);
+    const detail = error && error.message ? String(error.message) : String(error || "unknown viewport error");
 
     const viewportInfo = document.getElementById("viewport-info");
     if (viewportInfo) {
@@ -6084,6 +6407,22 @@ function markViewportDegraded(error) {
     if (viewportLock) {
         viewportLock.textContent = runtimeState.nativeBridgeDegraded ? "NATIVE DEGRADED" : "VIEWPORT SAFE";
     }
+
+    presentBootShellStage("viewport_safe", detail, {
+        tone: "warn",
+        error: detail,
+    });
+    showToast(
+        runtimeState.nativeBridgeDegraded
+            ? "3D viewport unavailable; native bridge degraded mode is active."
+            : "3D viewport unavailable; controls remain active in safe mode.",
+        {
+            tone: "warn",
+            title: "Viewport Safe Mode",
+            dedupeKey: runtimeState.nativeBridgeDegraded ? "viewport-safe:native-degraded" : "viewport-safe",
+        }
+    );
+    applyCalibrationStatus();
     publishOperatorDiagnosticsSnapshot();
 }
 
@@ -6134,6 +6473,11 @@ async function initialiseUIRuntime() {
                     }
                 } catch (error) {
                     console.error("LocusQ: loadUiStateFromNative failed:", error);
+                    showToast("Saved UI state could not be restored; continuing with current defaults.", {
+                        tone: "warn",
+                        title: "Session Restore",
+                        dedupeKey: "startup:load-ui-state",
+                    });
                 }
             })(),
             (async () => {
@@ -6141,6 +6485,11 @@ async function initialiseUIRuntime() {
                     await loadTimelineFromNative();
                 } catch (error) {
                     console.error("LocusQ: loadTimelineFromNative failed:", error);
+                    showToast("Timeline restore failed; a clean internal timeline is active.", {
+                        tone: "warn",
+                        title: "Timeline Restore",
+                        dedupeKey: "startup:load-timeline",
+                    });
                 }
             })(),
             (async () => {
@@ -6165,8 +6514,12 @@ async function initialiseUIRuntime() {
     syncAnimationUI();
     updateMotionStatusChips();
     syncMotionSourceUI();
-    if (!runtimeState.nativeBridgeDegraded) {
+    if (!runtimeState.nativeBridgeDegraded && !runtimeState.viewportDegraded) {
         setNativeBridgeStartupStage("ready");
+    } else if (runtimeState.viewportDegraded && !runtimeState.nativeBridgeDegraded) {
+        presentBootShellStage("viewport_safe", "3D viewport unavailable; controls remain active.", {
+            tone: "warn",
+        });
     }
     publishOperatorDiagnosticsSnapshot();
 
@@ -6631,6 +6984,8 @@ async function runProductionP0SelfTest() {
                 && !!document.getElementById("cal-start-btn")
                 && !!document.getElementById("cal-profile-save-btn")
                 && !!document.getElementById("cal-profile-load-btn")
+                && !!document.getElementById("cal-profile-export-btn")
+                && !!document.getElementById("cal-profile-import-btn")
                 && !!document.getElementById("cal-profile-rename-btn")
                 && !!document.getElementById("cal-profile-delete-btn")
                 && !!document.getElementById("cal-profile-select")
@@ -6675,6 +7030,8 @@ async function runProductionP0SelfTest() {
         const calStartButton = document.getElementById("cal-start-btn");
         const calProfileSaveButton = document.getElementById("cal-profile-save-btn");
         const calProfileLoadButton = document.getElementById("cal-profile-load-btn");
+        const calProfileExportButton = document.getElementById("cal-profile-export-btn");
+        const calProfileImportButton = document.getElementById("cal-profile-import-btn");
         const calProfileRenameButton = document.getElementById("cal-profile-rename-btn");
         const calProfileDeleteButton = document.getElementById("cal-profile-delete-btn");
         const calProfileSelect = document.getElementById("cal-profile-select");
@@ -6693,6 +7050,8 @@ async function runProductionP0SelfTest() {
             || !calStartButton
             || !calProfileSaveButton
             || !calProfileLoadButton
+            || !calProfileExportButton
+            || !calProfileImportButton
             || !calProfileRenameButton
             || !calProfileDeleteButton
             || !calProfileSelect
@@ -8287,6 +8646,7 @@ function bootstrapUIRuntimeOnce() {
         return;
     }
     uiRuntimeBootstrapStarted = true;
+    presentBootShellStage("booting");
 
     if (productionP0SelfTestRequested) {
         // Watchdog kickoff: ensure self-test eventually runs even if startup hydration stalls.
@@ -8862,6 +9222,22 @@ function initUIBindings() {
         calProfileLoadButton.addEventListener("click", async () => {
             if (isElementControlLocked(calProfileLoadButton)) return;
             await loadCalibrationProfile();
+        });
+    }
+
+    const calProfileExportButton = document.getElementById("cal-profile-export-btn");
+    if (calProfileExportButton) {
+        calProfileExportButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calProfileExportButton)) return;
+            await exportCalibrationProfile();
+        });
+    }
+
+    const calProfileImportButton = document.getElementById("cal-profile-import-btn");
+    if (calProfileImportButton) {
+        calProfileImportButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calProfileImportButton)) return;
+            await importCalibrationProfile();
         });
     }
 
@@ -11658,6 +12034,91 @@ async function deleteCalibrationProfile() {
     }
 }
 
+async function exportCalibrationProfile() {
+    const selected = getSelectedCalibrationProfileEntry();
+    if (!selected || !selected.path) {
+        setCalibrationProfileStatus("Select a calibration profile first.", true);
+        return false;
+    }
+
+    try {
+        const result = await callNative("locusqExportCalibrationProfile", nativeFunctions.exportCalibrationProfile, {
+            path: selected.path,
+            name: selected.name,
+            suggestedFileName: buildCalibrationProfileExportFileName(selected),
+        });
+        if (result?.cancelled) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile export cancelled.");
+            return false;
+        }
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile export failed.", true);
+            return false;
+        }
+
+        const targetFileName = getCalibrationProfileLeafName(result?.exportPath || result?.path);
+        setCalibrationProfileStatus(
+            targetFileName
+                ? `Exported profile: ${result?.name || selected.name || "profile"} -> ${targetFileName}`
+                : `Exported profile: ${result?.name || selected.name || "profile"}`
+        );
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Calibration profile export failed.", true);
+        console.error("Failed to export calibration profile:", error);
+        return false;
+    }
+}
+
+async function importCalibrationProfile() {
+    const activeTuple = buildCalibrationProfileTuple(getCalibrationTopologyId(), getCalibrationMonitoringPathId());
+
+    try {
+        const result = await callNative("locusqImportCalibrationProfile", nativeFunctions.importCalibrationProfile, {});
+        if (result?.cancelled) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile import cancelled.");
+            return false;
+        }
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Calibration profile import failed.", true);
+            return false;
+        }
+
+        const importedTuple = buildCalibrationProfileTuple(result?.topologyProfile, result?.monitoringPath);
+        const importedTupleMatchesActive = buildCalibrationProfileTupleKey(importedTuple) === buildCalibrationProfileTupleKey(activeTuple);
+        const importedName = String(
+            result?.name
+            || getCalibrationProfileLeafName(result?.importedPath || result?.path)
+            || "profile"
+        ).trim();
+
+        if (importedTupleMatchesActive) {
+            await refreshCalibrationProfileList(result?.path || result?.importedPath || "", activeTuple);
+            setCalibrationProfileNameInputValue(importedName);
+            setCalibrationProfileStatus(
+                result?.importedFromLibrary
+                    ? `Library profile already present: ${importedName}`
+                    : `Imported profile: ${importedName}`
+            );
+            return true;
+        }
+
+        await refreshCalibrationProfileList("", activeTuple);
+        const tupleLabel =
+            `${getCalibrationTopologyLabel(importedTuple.topologyProfile, true)} / ${getCalibrationMonitoringPathLabel(importedTuple.monitoringPath)}`;
+        setCalibrationProfileStatus(
+            result?.importedFromLibrary
+                ? `Library profile already present under ${tupleLabel}: ${importedName}`
+                : `Imported profile saved under ${tupleLabel}: ${importedName}`
+        );
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Calibration profile import failed.", true);
+        console.error("Failed to import calibration profile:", error);
+        return false;
+    }
+}
+
 async function runCalibrationRedetect() {
     if (calibrationState.running) {
         setCalibrationProfileStatus("Stop calibration before routing redetect.", true);
@@ -11794,6 +12255,130 @@ async function abortCalibration() {
         await callNative("locusqAbortCalibration", nativeFunctions.abortCalibration);
     } catch (error) {
         console.error("Failed to abort calibration:", error);
+    }
+}
+
+function setDockChipState(element, state, text) {
+    if (!element) return;
+    element.className = "status-chip";
+    if (state === "active") element.classList.add("active");
+    else if (state === "ready") element.classList.add("local");
+    else if (state === "warning") element.classList.add("warning");
+    else if (state === "error") element.classList.add("error");
+    element.textContent = text;
+}
+
+function updateCalibrationStatusDock(snapshot = {}) {
+    const dock = document.getElementById("calibration-status-dock");
+    if (!dock) return;
+
+    const {
+        topologyId = DEFAULT_CALIBRATION_TOPOLOGY_ID,
+        monitoringPathId = "speakers",
+        deviceProfileId = "generic",
+        requiredChannels = 2,
+        writableChannels = CALIBRATION_ROUTABLE_CHANNELS,
+        mappingValid = false,
+        mappingLimited = false,
+        mappingDuplicateChannels = false,
+        running = false,
+        complete = false,
+        currentSpeaker = 1,
+        profileReady = false,
+        statusMessage = "",
+        requestedHeadphoneMode = "stereo_downmix",
+        activeHeadphoneMode = "stereo_downmix",
+        requestedHeadphoneProfile = "generic",
+        activeHeadphoneProfile = "generic",
+    } = snapshot;
+
+    const shouldShow = currentMode !== "calibrate"
+        || running
+        || !profileReady
+        || runtimeState.nativeBridgeDegraded
+        || runtimeState.viewportDegraded
+        || runtimeState.startupHydrationInProgress;
+    dock.classList.toggle("hidden", !shouldShow);
+
+    let dockState = "idle";
+    if (runtimeState.nativeBridgeDegraded || mappingDuplicateChannels || mappingLimited || (!profileReady && !running && !complete)) {
+        dockState = "warning";
+    } else if (running) {
+        dockState = "active";
+    } else if (profileReady || complete) {
+        dockState = "ready";
+    }
+    dock.dataset.state = dockState;
+
+    const chip = document.getElementById("calibration-dock-chip");
+    let chipText = "Idle";
+    if (running) chipText = "Measuring";
+    else if (runtimeState.nativeBridgeDegraded) chipText = "Degraded";
+    else if (mappingDuplicateChannels || mappingLimited || (!profileReady && !complete)) chipText = "Attention";
+    else if (profileReady || complete) chipText = "Ready";
+    setDockChipState(chip, dockState, chipText);
+
+    const summary = document.getElementById("calibration-dock-summary");
+    if (summary) {
+        summary.textContent = `${getCalibrationTopologyLabel(topologyId, true)} · ${getCalibrationMonitoringPathLabel(monitoringPathId)}`;
+    }
+
+    const routing = document.getElementById("calibration-dock-routing");
+    if (routing) {
+        const mapped = Math.min(requiredChannels, writableChannels);
+        if (mappingDuplicateChannels) {
+            routing.textContent = "Duplicate output channels detected in the current routing map.";
+        } else if (mappingLimited) {
+            routing.textContent = `Host exposes ${mapped}/${requiredChannels} writable calibration outputs.`;
+        } else if (mappingValid) {
+            routing.textContent = `Routing validated across ${mapped}/${requiredChannels} required outputs.`;
+        } else {
+            routing.textContent = `Routing is waiting for validation (${mapped}/${requiredChannels} outputs visible).`;
+        }
+    }
+
+    const profile = document.getElementById("calibration-dock-profile");
+    if (profile) {
+        if (runtimeState.nativeBridgeDegraded) {
+            profile.textContent = "Native bridge degraded; library actions and transport commits are locked.";
+        } else if (monitoringPathId === "speakers") {
+            profile.textContent = profileReady
+                ? `Speaker profile ready · ${getCalibrationDeviceProfileLabel(deviceProfileId)}`
+                : "No speaker calibration profile loaded yet.";
+        } else if (activeHeadphoneMode === requestedHeadphoneMode && activeHeadphoneProfile === requestedHeadphoneProfile) {
+            profile.textContent = `Requested ${requestedHeadphoneMode}/${requestedHeadphoneProfile} is active.`;
+        } else {
+            profile.textContent = `Requested ${requestedHeadphoneMode}/${requestedHeadphoneProfile}; active ${activeHeadphoneMode}/${activeHeadphoneProfile}.`;
+        }
+    }
+
+    const progress = document.getElementById("calibration-dock-progress");
+    if (progress) {
+        const message = String(statusMessage || "").trim() || "Idle - press Start to begin calibration";
+        if (running) {
+            let phaseLabel = "Measuring";
+            let phasePercent = 0;
+            if (String(snapshot.state || "").trim().toLowerCase() === "playing") {
+                phaseLabel = "Playing test signal";
+                phasePercent = Number(snapshot.playPercent) || 0;
+            } else if (String(snapshot.state || "").trim().toLowerCase() === "recording") {
+                phaseLabel = "Recording response";
+                phasePercent = Number(snapshot.recordPercent) || 0;
+            } else if (String(snapshot.state || "").trim().toLowerCase() === "analyzing") {
+                phaseLabel = "Analyzing IR";
+                phasePercent = 1;
+            }
+            const percentText = phaseLabel === "Analyzing IR"
+                ? ""
+                : ` · ${Math.max(0, Math.min(100, Math.round(phasePercent * 100)))}%`;
+            progress.textContent = `Speaker ${Math.max(1, currentSpeaker)}/${Math.max(1, requiredChannels)} · ${phaseLabel}${percentText}`;
+        } else if (complete) {
+            progress.textContent = `Complete · ${message}`;
+        } else if (profileReady) {
+            progress.textContent = `Profile ready · ${message}`;
+        } else {
+            progress.textContent = `Idle · ${message}`;
+        }
     }
 }
 
@@ -12197,6 +12782,29 @@ function applyCalibrationStatus() {
             + " \u00B7 "
             + (status.message || "Room Profile Setup");
     }
+
+    updateCalibrationStatusDock({
+        state,
+        topologyId,
+        monitoringPathId,
+        deviceProfileId,
+        requiredChannels,
+        writableChannels,
+        mappingValid,
+        mappingLimited,
+        mappingDuplicateChannels,
+        running,
+        complete,
+        currentSpeaker,
+        profileReady,
+        statusMessage: status.message || "Idle - press Start to begin calibration",
+        playPercent: status.playPercent || 0,
+        recordPercent: status.recordPercent || 0,
+        requestedHeadphoneMode,
+        activeHeadphoneMode,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    });
 
     if (currentMode === "calibrate") {
         updateSpeakerTargetsFromScene(sceneData);

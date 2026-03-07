@@ -1,0 +1,16 @@
+{
+  "name": "locusq-webui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "three": "0.183.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "7.3.1"
+  }
+}

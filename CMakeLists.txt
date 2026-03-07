@@ -151,13 +151,67 @@ endif()
 # BINARY DATA (Web UI Resources)
 # ============================================
 # Production UI resources — always included.
+set(LOCUSQ_WEBUI_WORKSPACE "${CMAKE_CURRENT_SOURCE_DIR}/Source/ui")
+set(LOCUSQ_WEBUI_BUNDLE "${LOCUSQ_WEBUI_WORKSPACE}/generated/index.js")
+set(LOCUSQ_WEBUI_DEPS_STAMP "${CMAKE_CURRENT_BINARY_DIR}/locusq_webui_deps.stamp")
+
 set(LOCUSQ_WEBUI_SOURCES
     Source/ui/public/index.html
-    Source/ui/public/js/index.js
-    Source/ui/public/js/three.min.js
+    ${LOCUSQ_WEBUI_BUNDLE}
     Source/ui/public/js/juce/index.js
     Source/ui/public/js/juce/check_native_interop.js
 )
+
+find_program(LOCUSQ_NPM_EXECUTABLE NAMES npm npm.cmd)
+if(LOCUSQ_NPM_EXECUTABLE)
+    add_custom_command(
+        OUTPUT "${LOCUSQ_WEBUI_DEPS_STAMP}"
+        COMMAND "${CMAKE_COMMAND}" -E env
+                "NODE_ENV=development"
+                "npm_config_production=false"
+                "npm_config_include=dev"
+                "${LOCUSQ_NPM_EXECUTABLE}" ci --include=dev
+        COMMAND "${CMAKE_COMMAND}" -E touch "${LOCUSQ_WEBUI_DEPS_STAMP}"
+        WORKING_DIRECTORY "${LOCUSQ_WEBUI_WORKSPACE}"
+        DEPENDS
+            "${LOCUSQ_WEBUI_WORKSPACE}/package.json"
+            "${LOCUSQ_WEBUI_WORKSPACE}/package-lock.json"
+        COMMENT "Installing LocusQ WebView UI dependencies"
+        VERBATIM
+    )
+
+    add_custom_command(
+        OUTPUT "${LOCUSQ_WEBUI_BUNDLE}"
+        COMMAND "${LOCUSQ_NPM_EXECUTABLE}" run build
+        WORKING_DIRECTORY "${LOCUSQ_WEBUI_WORKSPACE}"
+        DEPENDS
+            "${LOCUSQ_WEBUI_DEPS_STAMP}"
+            "${LOCUSQ_WEBUI_WORKSPACE}/src/index.ts"
+            "${LOCUSQ_WEBUI_WORKSPACE}/tsconfig.json"
+            "${LOCUSQ_WEBUI_WORKSPACE}/vite.config.mts"
+        COMMENT "Building LocusQ WebView UI bundle with Vite"
+        VERBATIM
+    )
+
+    add_custom_target(locusq_webui_bundle
+        DEPENDS "${LOCUSQ_WEBUI_BUNDLE}"
+    )
+
+    add_custom_target(locusq_webui_typecheck
+        COMMAND "${LOCUSQ_NPM_EXECUTABLE}" run typecheck
+        WORKING_DIRECTORY "${LOCUSQ_WEBUI_WORKSPACE}"
+        COMMENT "Type-checking LocusQ WebView UI sources"
+        VERBATIM
+    )
+elseif(NOT EXISTS "${LOCUSQ_WEBUI_BUNDLE}")
+    message(FATAL_ERROR
+        "LocusQ: npm was not found and the generated WebView bundle is missing at "
+        "${LOCUSQ_WEBUI_BUNDLE}. Install npm to build the Web UI bundle.")
+else()
+    message(WARNING
+        "LocusQ: npm not found; using the existing generated WebView bundle at "
+        "${LOCUSQ_WEBUI_BUNDLE}")
+endif()
 
 # POC and incremental stage assets — only included when LOCUSQ_UI_POC is ON.
 # Keeps release binaries lean by excluding ~24 unused HTML/JS files.
@@ -193,6 +247,10 @@ endif()
 juce_add_binary_data(LocusQ_WebUI
     SOURCES ${LOCUSQ_WEBUI_SOURCES}
 )
+
+if(TARGET locusq_webui_bundle)
+    add_dependencies(LocusQ_WebUI locusq_webui_bundle)
+endif()
 
 # ============================================
 # STANDALONE APP ICON (macOS)

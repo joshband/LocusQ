@@ -6,6 +6,59 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W2-C CLAP + AUv3 CI Format Lanes (UTC 2026-03-07T03:01:48Z)
+
+1. Implementation slice
+- added `qa-format-clap` and `qa-format-auv3` macOS jobs to `.github/workflows/qa_harness.yml`
+- updated `CMakeLists.txt` so clean UI bundle builds explicitly install npm dev dependencies (`NODE_ENV=development`, `npm_config_production=false`, `npm ci --include=dev` semantics), fixing the missing-`vite` failure path for fresh format-only builds
+- the CLAP lane now configures/builds `LocusQ_CLAP`, verifies `LocusQ.clap`, and publishes `qa_output/format_clap/status.tsv`
+- the AUv3 lane now configures/builds `LocusQ_AUv3`, verifies `LocusQ.appex`, replays `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only`, and publishes `qa_output/format_auv3/status.tsv`
+
+2. Build validation
+- `cd Source/ui && npm ci --include=dev` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake -S . -B /tmp/locusq_w2_validate_clap -DCMAKE_BUILD_TYPE=Release -DLOCUSQ_ENABLE_CLAP=ON -DLOCUSQ_CLAP_FETCH=ON -DJUCE_DIR="${PWD}/../audio-plugin-coder/_tools/JUCE"` -> `PASS`
+- `cmake --build /tmp/locusq_w2_validate_clap --config Release --target LocusQ_CLAP -j 4` -> `PASS`
+- `cmake -S . -B /tmp/locusq_w2_validate_auv3 -G Xcode -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DLOCUSQ_ENABLE_AUV3=ON -DJUCE_DIR="${PWD}/../audio-plugin-coder/_tools/JUCE"` -> `PASS`
+- `xcodebuild -project /tmp/locusq_w2_validate_auv3/LocusQ.xcodeproj -scheme LocusQ_AUv3 -configuration Release -destination "generic/platform=macOS" CODE_SIGNING_ALLOWED=NO build` -> `PASS`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only --out-dir /tmp/locusq_w2_auv3_contract` -> `PASS`
+
+3. Artifact verification
+- `/tmp/locusq_w2_validate_clap/LocusQ_artefacts/Release/CLAP/LocusQ.clap` exists after the scratch CLAP build
+- `/tmp/locusq_w2_validate_auv3/LocusQ_artefacts/Release/AUv3/LocusQ.appex` exists after the scratch AUv3 build
+- `/tmp/locusq_w2_auv3_contract/status.tsv` records a contract-only `PASS`
+
+## W2-D Calibration Profile Export/Import (UTC 2026-03-07T03:01:48Z)
+
+1. Implementation slice
+- added processor-facing export/import helpers in `Source/PluginProcessor.h` and `Source/processor_core/ProcessorCalibrationBridge.cpp`
+- export now writes pretty JSON for a selected calibration profile, and import now validates schema compatibility plus deconflicts imported names within the calibration library
+- added native async file chooser bridges in `Source/editor_webview/EditorWebViewRuntime.h`
+- added `EXPORT` / `IMPORT` calibration-library controls in `Source/ui/public/index.html` and wired the actions/status handling in `Source/ui/src/index.ts`
+
+2. Validation
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `git diff --check -- Source/ui/src/index.ts Source/ui/public/index.html Source/editor_webview/EditorWebViewRuntime.h CMakeLists.txt .github/workflows/qa_harness.yml Source/processor_core/ProcessorCalibrationBridge.cpp Source/PluginProcessor.h` -> `PASS`
+- `cmake --build /tmp/locusq_w2_validate_clap --config Release --target LocusQ_CLAP -j 4` -> `PASS`
+- `xcodebuild -project /tmp/locusq_w2_validate_auv3/LocusQ.xcodeproj -scheme LocusQ_AUv3 -configuration Release -destination "generic/platform=macOS" CODE_SIGNING_ALLOWED=NO build` -> `PASS`
+
+## W2-A RT-Safe SceneGraph Audio Reservation (UTC 2026-03-07T03:01:50Z)
+
+1. Implementation slice
+- added pooled `SceneGraphAudioReservation` storage in `Source/SceneGraph.h` behind `LOCUSQ_SCENEGRAPH_POOLED_AUDIO_STORAGE`
+- changed `EmitterSlot` to bind a preclaimed reservation instead of embedding `2 x 8192` mono scratch buffers in every singleton slot, preserving the existing double-buffer handoff contract while shrinking the fixed SceneGraph footprint
+- updated `Source/PluginProcessor.h`, `Source/PluginProcessor.cpp`, and `Source/processor_core/ProcessorSceneRegistration.cpp` so each processor instance claims one reservation outside the realtime path, prepares/clears it in `prepareToPlay`, and passes it through lock-free emitter registration
+
+2. Build validation
+- `cmake --build build_local --config Release --target CMakeFiles/LocusQ.dir/Source/PluginProcessor.cpp.o CMakeFiles/LocusQ.dir/Source/processor_core/ProcessorSceneRegistration.cpp.o -- -j1` -> `PASS`
+- `cmake --build build_local --config Release --target CMakeFiles/LocusQ.dir/Source/SpatialRenderer.cpp.o CMakeFiles/LocusQ.dir/Source/processor_core/ProcessorCalibrationBridge.cpp.o -- -j1` -> `PASS`
+- `cmake --build build_local --config Release --target locusq_qa -- -j1` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ -- -j1` -> `FAIL` (`sh: vite: command not found`; this checkout still needs `npm ci` so the local WebView toolchain is available)
+
+3. Focused verification
+- `git diff --check -- Source/SceneGraph.h Source/PluginProcessor.h Source/PluginProcessor.cpp Source/processor_core/ProcessorSceneRegistration.cpp` -> `PASS`
+
 ## W1-D APVTS Parameter Grouping (UTC 2026-03-07T02:44:10Z)
 
 1. Implementation slice
@@ -25,7 +78,22 @@ Last Modified Date: 2026-03-07
 4. Focused runtime follow-up
 - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json` -> exits `1` before final result emission in the current dirty checkout
 - `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> exits `1` before final result emission in the current dirty checkout
-- these non-passing reruns were not used as promotion evidence because the worktree still carries unrelated parallel W1-C UI/toolchain edits
+- these non-passing reruns were not used as promotion evidence because they were taken from a dirty checkout rather than a clean validation lane
+
+## W2-A Native Memory Slice (UTC 2026-03-07T01:16:23Z)
+
+1. Implementation slice
+- replaced `SpatialRenderer`'s vector-backed temp/Steam scratch buffers with prepare-time fixed-capacity storage in `Source/SpatialRenderer.h`, `Source/SpatialRenderer.cpp`, and `Source/spatial_renderer/SpatialPostFxChain.h`
+- preallocated the scene snapshot string plus the combined scene+calibration JS wrapper in `Source/processor_bridge/ProcessorSceneStateBridgeOps.h` and `Source/editor_shell/EditorShellHelpers.h` so the 30 Hz bridge path reduces repeated heap churn without changing the existing UI schema
+- this first W2-A slice explicitly deferred the `EmitterSlot` memory reduction sub-slice until the later RT-safe reservation follow-up captured at `2026-03-07T02:55:29Z`
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ -- -j8` -> `PASS`
+- `cmake --build build_local --config Release --target CMakeFiles/LocusQ.dir/Source/SpatialRenderer.cpp.o CMakeFiles/LocusQ.dir/Source/PluginEditor.cpp.o CMakeFiles/LocusQ.dir/Source/PluginProcessor.cpp.o -- -j1` -> `PASS`
+- `cmake --build build_local --config Release --target CMakeFiles/LocusQ.dir/Source/spatial_renderer/SpatialAuditionRender.cpp.o CMakeFiles/LocusQ.dir/Source/spatial_renderer/SpatialSteamAudioBackend.cpp.o CMakeFiles/LocusQ.dir/Source/spatial_renderer/SpatialOutputRoutingStage.cpp.o -- -j1` -> `PASS`
+
+3. Focused verification
+- `git diff --check -- Source/SpatialRenderer.h Source/SpatialRenderer.cpp Source/spatial_renderer/SpatialPostFxChain.h Source/editor_shell/EditorShellHelpers.h Source/processor_bridge/ProcessorSceneStateBridgeOps.h` -> `PASS`
 
 ## W1-A ParameterBridge Data-Driven Relay/Attachment Refactor (UTC 2026-03-07T00:56:05Z)
 

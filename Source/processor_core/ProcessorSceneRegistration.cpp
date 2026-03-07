@@ -139,7 +139,7 @@ void LocusQAudioProcessor::syncSceneGraphRegistrationForMode (LocusQMode mode)
         if (emitterSlotId >= 0)
             return RegistrationContractOutcome::Noop;
 
-        const int claimedSlot = sceneGraph.registerEmitter();
+        const int claimedSlot = sceneGraph.registerEmitter (sceneGraphAudioReservationId);
         if (claimedSlot < 0)
             return RegistrationContractOutcome::Contention;
 

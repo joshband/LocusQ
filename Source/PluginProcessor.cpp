@@ -1494,6 +1494,7 @@ LocusQAudioProcessor::LocusQAudioProcessor()
       apvts (*this, nullptr, "PARAMETERS", createParameterLayout()),
       sceneGraph (SceneGraph::getInstance())
 {
+    sceneGraphAudioReservationId = sceneGraph.claimAudioReservation();
     initialiseDefaultKeyframeTimeline (keyframeTimelineState);
     publishKeyframeTimelinePlaybackState (keyframeTimelineState);
 
@@ -1511,6 +1512,8 @@ LocusQAudioProcessor::~LocusQAudioProcessor()
 
     if (rendererRegistered)
         sceneGraph.unregisterRenderer();
+
+    sceneGraph.releaseAudioReservation (sceneGraphAudioReservationId);
 }
 
 //==============================================================================
@@ -1518,6 +1521,8 @@ LocusQAudioProcessor::~LocusQAudioProcessor()
 void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
+    sceneGraph.ensureAudioReservationCapacity (sceneGraphAudioReservationId, samplesPerBlock);
+    sceneGraph.clearAudioReservation (sceneGraphAudioReservationId);
     visualTokenScheduler.reset();
     {
         const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
@@ -1545,6 +1550,7 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 
 void LocusQAudioProcessor::releaseResources()
 {
+    sceneGraph.clearAudioReservation (sceneGraphAudioReservationId);
     headTrackingBridge.stop();
     physicsEngine.shutdown();
     spatialRenderer.shutdown();
