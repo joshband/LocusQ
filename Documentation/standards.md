@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-06
 
 # Documentation Standards
 
@@ -102,6 +102,40 @@ Recommended scaffolding helper for new items:
 3. Refresh machine-readable backlog summaries after backlog changes: `./scripts/export-backlog-summaries.py`
 4. Summary schema authority: `Documentation/backlog/backlog-summary-schema.md`
 5. Auto-refresh hook (local): `.githooks/pre-commit` refreshes/stages summary artifacts when `Documentation/backlog/**` changes are staged.
+
+## Portable Status-Rich Roadmap And Review Standard
+
+Applies to any markdown document that serves as a live prioritization, roadmap, review, or execution-tracking surface, including:
+- architecture/code reviews,
+- backlog runbooks,
+- closeout docs,
+- execution summaries with active remaining work.
+
+Status formatting rules:
+1. Use portable markdown only. Do not rely on inline HTML/CSS color for state because renderer support is inconsistent.
+2. Prefer these status tags:
+   - `[DONE]`
+   - `[ACTIVE]`
+   - `[NEXT]`
+   - `[QUEUED]`
+   - `[DEFERRED]`
+   - `[BLOCKED]`
+3. Use `~~strikethrough~~` on completed item names when the named task/slice is fully complete and no longer active.
+4. When a document is used for prioritization or progress tracking, include a scannable status surface such as:
+   - `## Status Legend` or `## Review Status Legend`
+   - `## Priority Snapshot`, `## Progress Snapshot`, or `## Completion Snapshot`
+5. Snapshot tables should include, at minimum:
+   - item/work package,
+   - status,
+   - priority,
+   - estimate,
+   - actual/time,
+   - tokens (or `n/a`),
+   - updated/completed date,
+   - location/files or scope,
+   - remaining work or evidence pointer.
+6. Never invent effort telemetry. If exact wall-clock time or token usage was not logged, use `not logged` or `n/a`.
+7. Prefer tables first. Use Mermaid only when it reduces ambiguity better than prose plus tables.
 
 ## Backlog Validation Cadence Standard
 
