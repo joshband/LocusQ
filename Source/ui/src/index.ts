@@ -2549,7 +2549,7 @@ function bindSelectToComboState(selectId, comboState) {
 
     select.addEventListener("change", () => {
         if (isElementControlLocked(select)) return;
-        setChoiceIndex(comboState, select.selectedIndex);
+        setChoiceIndex(comboState, select.selectedIndex, select.options.length);
     });
 
     comboState.valueChangedEvent.addListener(() => {
@@ -6950,7 +6950,9 @@ function getLegacyConfigIndexForTopology(topologyId) {
 function getTopologyIndexForLegacyConfig(configIndex) {
     const clampedConfig = clamp(Math.round(Number(configIndex) || 0), 0, 1);
     // Legacy 4x Mono maps to v2 quad profile; 2x Stereo maps to v2 stereo profile.
-    return clampedConfig === 1 ? 1 : 2;
+    return clampedConfig === 1
+        ? getCalibrationTopologyIndex("stereo")
+        : getCalibrationTopologyIndex("quad");
 }
 
 function clearCalibrationLegacyAliasSync(source = "") {
@@ -6990,10 +6992,22 @@ function syncTopologyFromLegacyConfigAlias(configIndex) {
 
     const desiredTopologyIndex = getTopologyIndexForLegacyConfig(configIndex);
     const currentTopologyIndex = getChoiceIndex(comboStates.cal_topology_profile);
-    if (currentTopologyIndex === desiredTopologyIndex) return;
+    const topologySelect = document.getElementById("cal-topology");
+    const currentSelectIndex = topologySelect instanceof HTMLSelectElement
+        ? topologySelect.selectedIndex
+        : currentTopologyIndex;
+    if (currentTopologyIndex === desiredTopologyIndex
+        && currentSelectIndex === desiredTopologyIndex) {
+        return;
+    }
 
     calibrationLegacyAliasSyncInFlight = true;
     calibrationLegacyAliasSyncSource = "legacy";
+
+    if (topologySelect instanceof HTMLSelectElement && currentSelectIndex !== desiredTopologyIndex) {
+        topologySelect.selectedIndex = desiredTopologyIndex;
+    }
+
     setChoiceIndex(comboStates.cal_topology_profile, desiredTopologyIndex, calibrationTopologyIds.length);
     scheduleCalibrationLegacyAliasSyncReset("legacy");
 }
@@ -8023,12 +8037,12 @@ async function runProductionP0SelfTest() {
         await waitForCondition("calibrate topology mono rows", () => calibrationMappingRows() === 1, 2000, 25);
         await waitForCondition("legacy config follows mono topology", () => getChoiceIndex(comboStates.cal_spk_config) === 1, 2000, 25);
 
-        calConfigSelect.selectedIndex = 1; // legacy 2x stereo
-        calConfigSelect.dispatchEvent(new Event("change", { bubbles: true }));
-        await waitForCondition("legacy stereo maps topology stereo", () => getChoiceIndex(comboStates.cal_topology_profile) === topologyStereoIndex, 2000, 25);
         calConfigSelect.selectedIndex = 0; // legacy 4x mono (alias for quad in v2)
         calConfigSelect.dispatchEvent(new Event("change", { bubbles: true }));
         await waitForCondition("legacy mono maps topology quad", () => getChoiceIndex(comboStates.cal_topology_profile) === topologyQuadIndex, 2000, 25);
+        calConfigSelect.selectedIndex = 1; // legacy 2x stereo
+        calConfigSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        await waitForCondition("legacy stereo maps topology stereo", () => getChoiceIndex(comboStates.cal_topology_profile) === topologyStereoIndex, 2000, 25);
 
         recordCheck("UI-P1-026A", true, "topology rows mono=1 stereo=2 quad=4 verified; legacy alias sync both directions");
 
@@ -10199,11 +10213,7 @@ function initUIBindings() {
     if (calConfigSelect) {
         calConfigSelect.addEventListener("change", () => {
             if (isElementControlLocked(calConfigSelect)) return;
-            const selectedLegacyConfig = calConfigSelect.selectedIndex;
-            window.setTimeout(() => {
-                syncTopologyFromLegacyConfigAlias(selectedLegacyConfig);
-                applyCalibrationStatus();
-            }, 0);
+            syncTopologyFromLegacyConfigAlias(calConfigSelect.selectedIndex);
             applyCalibrationStatus();
         });
     }

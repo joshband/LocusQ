@@ -2,7 +2,7 @@ Title: Architecture & Code Review — LocusQ v1.0.0-ga
 Document Type: Review
 Author: Claude Code (Opus 4.6)
 Created Date: 2026-03-06
-Last Modified Date: 2026-03-07 (Rev 19 — W3-D audition docs synced)
+Last Modified Date: 2026-03-07 (Rev 21 — W3-A validation diagnostics synced)
 
 # LocusQ Architecture & Code Review
 
@@ -41,6 +41,7 @@ This review covers **architecture**, **code quality**, **functionality**, and **
 | `~~W2-D~~` calibration profile export/import | `[DONE]` | P2 | Small | focused implementation completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorCalibrationBridge.cpp`, `Source/editor_webview/EditorWebViewRuntime.h`, `Source/ui/src/index.ts`, `Source/ui/public/index.html` | Native JSON file-picker export/import landed with compatibility checks and library refresh flow; `npm run typecheck` and `npm run build` passed locally |
 | `~~W1-C~~` JS/Vite toolchain | `[DONE]` | P2 | Medium | focused local slice completed 2026-03-07 | `n/a` | 2026-03-07 | WebView build pipeline | `Source/ui` now builds through npm-backed Vite/TypeScript, `three@0.183.2` is pinned via npm, and the generated embedded bundle plus production P0 self-test both passed locally |
 | `~~W1-D~~` APVTS parameter grouping | `[DONE]` | P2 | Small | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorParameterLayout.cpp` | Host-visible Global/Calibration/Emitter/Renderer groups landed while preserving all 90 parameter IDs and the original flattened parameter order; backlog follow-up continues under `BL-079` promotion validation |
+| `W3-A` authoring undo/redo | `[ACTIVE]` | P3 | Large | focused implementation + validation pass on 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorAuthoringHistory.cpp`, `Source/processor_core/ProcessorPresetManager.cpp`, `Source/editor_webview/EditorWebViewRuntime.h`, `Source/ui/src/index.ts`, `Source/ui/public/index.html` | build/typecheck PASS and generated bundle embeds `UI-W3A-01` / `UI-W3A-02`; latest rebuilt standalone replay still fails in the CALIBRATE `cal-config` reverse-alias lane (`TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json`), so BL-080 remains in validation |
 
 ---
 
@@ -186,7 +187,7 @@ The file has an enormous anonymous namespace (lines 20–999+) containing helper
 
 ### 3.2 Gaps & Enhancements
 
-- **FG-1: No undo/redo for parameter changes** from the WebView UI. DAW undo typically covers APVTS parameters, but manual keyframe edits and preset operations have no undo path.
+- **FG-1 (partially resolved locally by W3-A / BL-080)**: The processor/WebView undo-history path is now implemented for manual keyframe edits and preset operations, but the rebuilt standalone replay still needs the adjacent CALIBRATE `cal-config` reverse-alias blocker cleared before the new end-to-end `UI-W3A-*` checks can serve as promotion evidence.
 
 - **~~FG-2: Calibration profile portability~~**: Resolved locally by W2-D on 2026-03-07. Profiles can now be exported/imported as JSON through native save/open dialogs, with schema compatibility checks and imported-name deconfliction inside the calibration library.
 
@@ -329,19 +330,20 @@ This review was cross-referenced against the full backlog index, including the p
 | TQ-1: SpinLock timeline | **BL-035** RT lock-free registration | Done-candidate | W1-B extends lock-free patterns to timeline |
 | TQ-3: String in diagnostics | **BL-036** DSP finite output guardrails | Done-candidate | W1-B aligns with BL-036 RT-safety scope |
 | DQ-2: VBAP elevation | **BL-041** Doppler v2 + VBAP geometry | Done-candidate | W0-D directly implements BL-041's VBAP geometry validation |
+| FG-1: Undo/redo for keyframes and preset operations | **BL-080** Authoring undo/redo for timeline and preset operations | In Validation | W3-A landed processor-owned authoring history plus WebView controls, but promotion evidence is still blocked by a rebuilt-standalone CALIBRATE alias failure that occurs before the new `UI-W3A-*` checks execute |
 | FG-3: APVTS parameter grouping | **BL-079** APVTS parameter grouping and host hierarchy | In Validation | W1-D landed the grouped APVTS tree while preserving parameter ID/default/order parity; remaining backlog work is promotion-grade validation and host verification |
 | FG-5: CLAP/AUv3 CI | **BL-011** CLAP lifecycle (Done), **BL-067** AUv3 lifecycle (Open) | Mixed | W2-C landed dedicated CI format lanes for both and replays the BL-067 AUv3 contract-only lane |
 | MQ-3: JSON snapshot | **BL-070** Coherent audio snapshot seqlock | Done | W2-A builds on BL-070's seqlock contract |
 
-### New Items Not Yet in Backlog
+### New Items Added or Still Pending After Review
 
-| Review Finding | Proposed BL | Priority |
+| Review Finding | Backlog Lane | Priority |
 |---------------|------------|----------|
 | CF-4: Anonymous namespace scope | Fold into BL-032 promotion | P1 |
-| FG-1: Undo/redo for keyframes | New BL (P3) | P3 |
+| FG-1: Undo/redo for keyframes | **BL-080** Authoring undo/redo for timeline and preset operations | P3 |
 | US-4: WebView accessibility | New BL (P3) | P3 |
 
-Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-4 partially via W3-C, FG-2 via W2-D, FG-3 via BL-079 / W1-D, FG-4 via W3-D, and FG-5 via W2-C.
+Closed locally or promoted into backlog since the initial review snapshot: CF-5 via W0-C, TQ-2 via W1-B, UQ-1/UQ-2 via W1-C, US-1/US-3 via W2-B, US-4 partially via W3-C, FG-1 via BL-080 / W3-A, FG-2 via W2-D, FG-3 via BL-079 / W1-D, FG-4 via W3-D, and FG-5 via W2-C.
 
 ### Backlog Gate Dependencies for Tier 0
 
@@ -470,6 +472,29 @@ Closed locally or promoted into backlog since the initial review snapshot: CF-5 
   - `git diff --check -- Source/ui/src/index.ts Source/ui/public/index.html Source/editor_webview/EditorWebViewRuntime.h CMakeLists.txt .github/workflows/qa_harness.yml Source/processor_core/ProcessorCalibrationBridge.cpp Source/PluginProcessor.h` -> `PASS`
   - `cmake --build /tmp/locusq_w2_validate_clap --config Release --target LocusQ_CLAP -j 4` -> `PASS`
   - `xcodebuild -project /tmp/locusq_w2_validate_auv3/LocusQ.xcodeproj -scheme LocusQ_AUv3 -configuration Release -destination "generic/platform=macOS" CODE_SIGNING_ALLOWED=NO build` -> `PASS`
+
+### W3-A Detail: Authoring Undo/Redo for Timeline + Preset Operations
+
+- Added a dedicated processor history unit `Source/processor_core/ProcessorAuthoringHistory.cpp` that captures/restores authoring snapshots (`parameters`, `timeline`, `uiState`) plus preset-file before/after state for undo/redo replay.
+- Extended `Source/PluginProcessor.h` with authoring-history contracts and storage, and refactored `Source/processor_core/ProcessorPresetManager.cpp` so preset save/load/rename/delete routes through the shared history engine instead of ad-hoc one-way mutations.
+- Updated `Source/editor_webview/EditorWebViewRuntime.h` to expose `locusqGetAuthoringHistoryStatus`, `locusqUndoAuthoringAction`, and `locusqRedoAuthoringAction`, and changed the timeline commit bridge to create history entries instead of writing the timeline state blindly.
+- Updated `Source/ui/src/index.ts` and `Source/ui/public/index.html` so the timeline shell now shows undo/redo controls, keyboard shortcuts (`Cmd/Ctrl+Z`, `Cmd/Ctrl+Shift+Z`, `Cmd/Ctrl+Y`), and embedded self-test checks `UI-W3A-01` / `UI-W3A-02` for timeline delete undo/redo plus preset delete undo/redo.
+- Follow-up validation hardening in `Source/ui/src/index.ts` removed the deferred legacy-to-topology sync, made legacy-to-topology lookup ID-driven, and taught the shared select-to-combo binding to pass fallback choice counts. Direct invocation of `syncTopologyFromLegacyConfigAlias()` now updates both the DOM topology select and the JUCE combo state, but the rebuilt standalone replay still does not drive that helper through the `cal-config` self-test path.
+- Metrics for the slice:
+  - `Source/processor_core/ProcessorAuthoringHistory.cpp`: new file at `340` LOC
+  - `Source/PluginProcessor.h`: `+60 / -0`
+  - `Source/processor_core/ProcessorPresetManager.cpp`: `+115 / -27`
+  - `Source/editor_webview/EditorWebViewRuntime.h`: `+19 / -1`
+  - `Source/ui/src/index.ts`: `+666 / -40`
+  - `Source/ui/public/index.html`: `+186 / -4`
+  - `CMakeLists.txt`: `+3 / -0`
+- Focused validation for the slice:
+  - `cd Source/ui && npm run typecheck` -> `PASS`
+  - `cd Source/ui && npm run build` -> `PASS`
+  - `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -- -j8` -> `PASS`
+  - `rg -o "UI-W3A-[0-9]+" Source/ui/generated/index.js | sort -u` -> `PASS` (`UI-W3A-01`, `UI-W3A-02`)
+  - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `FAIL` (`TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json`; the rebuilt standalone app now fails in `legacy mono maps topology quad` after the CALIBRATE reverse-alias helper was hardened, and direct helper invocation inside the same replay shows the topology recovers when the helper is called explicitly)
+- Backlog posture: implementation is complete for the core undo/redo lane, and the remaining follow-up is tracked as BL-080 validation cleanup until the rebuilt standalone replay reaches the new W3-A checks without the adjacent CALIBRATE `cal-config` replay blocker.
 
 ### W3-C Detail: WebView Keyboard + Accessibility
 

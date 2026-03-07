@@ -290,6 +290,7 @@ target_sources(LocusQ
         Source/PluginProcessor.cpp
         Source/processor_core/ProcessorParameterLayout.cpp
         Source/processor_core/ProcessorSceneRegistration.cpp
+        Source/processor_core/ProcessorAuthoringHistory.cpp
         Source/processor_core/ProcessorPresetManager.cpp
         Source/processor_core/ProcessorCalibrationBridge.cpp
         Source/processor_core/ProcessorStateSerializer.cpp
@@ -518,6 +519,7 @@ if(BUILD_LOCUSQ_QA)
             qa/main.cpp
             # Include processor sources directly (no plugin client)
             Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
             Source/processor_core/ProcessorParameterLayout.cpp
             Source/processor_core/ProcessorSceneRegistration.cpp
             Source/processor_core/ProcessorPresetManager.cpp
@@ -643,6 +645,7 @@ if(BUILD_LOCUSQ_QA)
         PRIVATE
             qa/bl018_profile_probe_main.cpp
             Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
             Source/processor_core/ProcessorParameterLayout.cpp
             Source/processor_core/ProcessorSceneRegistration.cpp
             Source/processor_core/ProcessorPresetManager.cpp

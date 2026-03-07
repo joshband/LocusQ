@@ -361,7 +361,7 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                                      return;
                                  }
 
-                                 completion (audioProcessor.setKeyframeTimelineFromUI (args[0]));
+                                 completion (audioProcessor.commitKeyframeTimelineFromUI (args[0]));
                              })
         .withNativeFunction ("locusqSetTimelineTime",
                              [&audioProcessor] (const juce::Array<juce::var>& args,
@@ -408,6 +408,24 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                              {
                                  const juce::var opt = args.isEmpty() ? juce::var() : args[0];
                                  completion (audioProcessor.deleteEmitterPresetFromUI (opt));
+                             })
+        .withNativeFunction ("locusqGetAuthoringHistoryStatus",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.getAuthoringHistoryStatusFromUI());
+                             })
+        .withNativeFunction ("locusqUndoAuthoringAction",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.undoAuthoringActionFromUI());
+                             })
+        .withNativeFunction ("locusqRedoAuthoringAction",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.redoAuthoringActionFromUI());
                              })
         .withNativeFunction ("locusqSetForwardYaw",
                              [&audioProcessor] (const juce::Array<juce::var>&,

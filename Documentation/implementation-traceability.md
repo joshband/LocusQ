@@ -94,6 +94,25 @@ This document tracks end-to-end parameter wiring for implementation phases compl
   - `cmake --build build_local --config Release --target LocusQ locusq_qa -- -j8` -> PASS
   - source-parity scripts confirmed `90/90` APVTS IDs still match the pre-W1-D layout and the flattened parameter order is unchanged
 
+## Architecture Review W3-A Authoring Undo/Redo
+
+- Processor authoring-history authority now lives in `Source/processor_core/ProcessorAuthoringHistory.cpp`, with contracts and storage declared in `Source/PluginProcessor.h`.
+- Timeline/preset authoring mutations now flow through shared history entry commit/apply helpers instead of one-way UI mutations:
+  - `commitKeyframeTimelineFromUI`
+  - `undoAuthoringActionFromUI`
+  - `redoAuthoringActionFromUI`
+  - `getAuthoringHistoryStatusFromUI`
+- Preset lifecycle operations in `Source/processor_core/ProcessorPresetManager.cpp` now capture emitter-parameter snapshots plus preset-file before/after state so save/load/rename/delete can be undone or redone consistently.
+- Native/WebView bridge coverage:
+
+| Bridge / UI Surface | Native Binding | Processor Entry Point | Persistence / Runtime Target | Notes |
+|---|---|---|---|---|
+| Timeline commit with history | `Source/editor_webview/EditorWebViewRuntime.h` (`locusqSetKeyframeTimeline`) | `Source/processor_core/ProcessorAuthoringHistory.cpp` (`commitKeyframeTimelineFromUI`) | authoring snapshot stack + `locusq_timeline_json` | timeline edits now create undoable history entries instead of blind replacement |
+| Undo status | `Source/editor_webview/EditorWebViewRuntime.h` (`locusqGetAuthoringHistoryStatus`) | `Source/processor_core/ProcessorAuthoringHistory.cpp` (`getAuthoringHistoryStatusFromUI`) | undo/redo button state | UI buttons and labels come from processor history truth |
+| Undo action | `Source/editor_webview/EditorWebViewRuntime.h` (`locusqUndoAuthoringAction`) | `Source/processor_core/ProcessorAuthoringHistory.cpp` (`undoAuthoringActionFromUI`) | prior authoring snapshot + preset-file restore | covers timeline and preset lifecycle entries |
+| Redo action | `Source/editor_webview/EditorWebViewRuntime.h` (`locusqRedoAuthoringAction`) | `Source/processor_core/ProcessorAuthoringHistory.cpp` (`redoAuthoringActionFromUI`) | forward authoring snapshot + preset-file restore | mirrors undo path |
+| Timeline undo/redo controls | `Source/ui/public/index.html` (`timeline-undo-btn`, `timeline-redo-btn`) | `Source/ui/src/index.ts` authoring-history bindings | production WebView shell | keyboard shortcuts: `Cmd/Ctrl+Z`, `Cmd/Ctrl+Shift+Z`, `Cmd/Ctrl+Y` |
+
 ## Stage 14 Drift Ledger (Open)
 
 | Parameter / Contract Surface | Implementation State | Documentation State | Next Action |
