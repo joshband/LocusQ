@@ -2,13 +2,13 @@ Title: BL-037 Emitter Snapshot CPU Budget
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-05
 
 # BL-037 Emitter Snapshot CPU Budget
 
 ## Plain-Language Summary
 
-BL-037 in plain terms: Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-037 in plain terms: Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. Current state: Done (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green; closeout/archive sync PASS). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-037 in plain terms: Define a deterministic CPU-budget contract for emitter sn
 | What is changing? | Define a deterministic CPU-budget contract for emitter snapshot publication so no-renderer and under-budget paths are replay-stable, bounded, and auditable. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-037-emitter-snapshot-cpu-budget.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green; closeout/archive sync PASS). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-037-emitter-snapshot-cpu-budget.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -44,14 +44,16 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-037 |
 | Priority | P1 |
-| Status | Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green) |
+| Status | Done (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green; closeout/archive sync PASS) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-035 |
-| Blocks | BL-030 |
+| Blocks | — |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
+| Final Evidence Root | `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-037-emitter-snapshot-cpu-budget.md` |
 
 ## Objective
 
@@ -878,4 +880,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

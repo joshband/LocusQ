@@ -5,6 +5,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <atomic>
 #include <array>
+#include <cstdio>
 #include <cstdint>
 #include <optional>
 #include "VisualTokenScheduler.h"
@@ -161,36 +162,60 @@ public:
 #endif
 
 private:
+    template <size_t N>
+    struct FixedUtf8Text
+    {
+        void set (const juce::String& value) noexcept
+        {
+            std::snprintf (bytes.data(), bytes.size(), "%s", value.toRawUTF8());
+            bytes.back() = '\0';
+        }
+
+        juce::String toString() const
+        {
+            return juce::String (bytes.data());
+        }
+
+        std::array<char, N> bytes {};
+    };
+
     struct PublishedHeadphoneCalibrationDiagnostics
     {
         std::uint64_t profileSyncSeq = 0;
-        juce::String requested;
-        juce::String active;
-        juce::String stage;
+        FixedUtf8Text<64> requested;
+        FixedUtf8Text<64> active;
+        FixedUtf8Text<64> stage;
         bool fallbackReady = true;
-        juce::String fallbackReason;
+        FixedUtf8Text<128> fallbackReason;
         bool valid = false;
     };
 
     struct PublishedHeadphoneVerificationDiagnostics
     {
         std::uint64_t profileSyncSeq = 0;
-        juce::String profileId;
-        juce::String requestedProfileId;
-        juce::String activeProfileId;
-        juce::String requestedEngineId;
-        juce::String activeEngineId;
-        juce::String fallbackReasonCode;
-        juce::String fallbackTarget;
-        juce::String fallbackReasonText;
+        FixedUtf8Text<64> profileId;
+        FixedUtf8Text<64> requestedProfileId;
+        FixedUtf8Text<64> activeProfileId;
+        FixedUtf8Text<64> requestedEngineId;
+        FixedUtf8Text<64> activeEngineId;
+        FixedUtf8Text<64> fallbackReasonCode;
+        FixedUtf8Text<64> fallbackTarget;
+        FixedUtf8Text<192> fallbackReasonText;
         float frontBackScore = 0.0f;
         float elevationScore = 0.0f;
         float externalizationScore = 0.0f;
         float confidence = 0.0f;
-        juce::String verificationStage;
-        juce::String verificationScoreStatus;
+        FixedUtf8Text<64> verificationStage;
+        FixedUtf8Text<64> verificationScoreStatus;
         int chainLatencySamples = 0;
         bool valid = false;
+    };
+
+    struct PublishedHeadphoneDiagnosticsSnapshot
+    {
+        std::atomic<std::uint32_t> seq { 0 };
+        PublishedHeadphoneCalibrationDiagnostics calibration;
+        PublishedHeadphoneVerificationDiagnostics verification;
     };
 
     struct PublishedConfidenceMaskingDiagnostics
@@ -298,12 +323,22 @@ private:
 
     //==============================================================================
     // Keyframe animation timeline (Phase 2.6)
-    KeyframeTimeline keyframeTimeline;
-    mutable juce::SpinLock keyframeTimelineLock;
-    void initialiseDefaultKeyframeTimeline();
+    KeyframeTimeline keyframeTimelineState;
+    mutable juce::CriticalSection keyframeTimelineStateLock;
+    std::array<KeyframeTimeline, 3> keyframeTimelineRtBuffers {};
+    std::atomic<int> keyframeTimelineRtReadIndex { 0 };
+    std::atomic<int> keyframeTimelineRtPendingIndex { -1 };
+    std::atomic<double> keyframeTimelinePublishedCurrentTimeSeconds { 0.0 };
+    std::atomic<double> keyframeTimelinePublishedDurationSeconds { 0.0 };
+    std::atomic<bool> keyframeTimelinePublishedLooping { false };
+    std::atomic<float> keyframeTimelinePublishedPlaybackRate { 1.0f };
+    void initialiseDefaultKeyframeTimeline (KeyframeTimeline& timeline) const;
     std::optional<double> getTransportTimeSeconds() const;
+    void publishKeyframeTimelineStateToRtLocked();
+    void syncPendingKeyframeTimelineForAudioThread() noexcept;
+    void publishKeyframeTimelinePlaybackState (const KeyframeTimeline& timeline) noexcept;
 
-    // Timeline serialization helpers (call while holding keyframeTimelineLock)
+    // Timeline serialization helpers (call while holding keyframeTimelineStateLock)
     juce::var serialiseKeyframeTimelineLocked() const;
     bool applyKeyframeTimelineLocked (const juce::var& timelineState);
 
@@ -363,9 +398,11 @@ private:
         std::atomic<float> { 0.0f }
     };
     std::uint64_t sceneSnapshotSequence = 0;
-    mutable juce::SpinLock publishedHeadphoneCalibrationLock;
-    mutable PublishedHeadphoneCalibrationDiagnostics publishedHeadphoneCalibrationDiagnostics;
-    mutable PublishedHeadphoneVerificationDiagnostics publishedHeadphoneVerificationDiagnostics;
+    mutable PublishedHeadphoneDiagnosticsSnapshot publishedHeadphoneDiagnostics;
+    void publishHeadphoneDiagnosticsSnapshot (const PublishedHeadphoneCalibrationDiagnostics& calibration,
+                                             const PublishedHeadphoneVerificationDiagnostics& verification) noexcept;
+    bool copyPublishedHeadphoneDiagnosticsSnapshot (PublishedHeadphoneCalibrationDiagnostics& calibration,
+                                                    PublishedHeadphoneVerificationDiagnostics& verification) const noexcept;
     mutable PublishedConfidenceMaskingDiagnostics publishedConfidenceMaskingDiagnostics;
 
     //==============================================================================

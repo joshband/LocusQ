@@ -1,0 +1,221 @@
+run_index	guard_id	category	result	observed	threshold	detail	artifact
+1	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+1	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+1	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+1	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+1	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+1	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+1	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+1	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+1	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+1	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+1	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+1	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+1	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+1	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+1	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+1	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+1	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+1	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+1	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+1	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+1	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+1	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+2	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+2	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+2	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+2	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+2	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+2	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+2	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+2	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+2	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+2	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+2	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+2	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+2	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+2	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+2	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+2	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+2	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+2	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+2	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+2	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+2	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+2	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+3	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+3	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+3	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+3	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+3	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+3	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+3	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+3	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+3	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+3	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+3	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+3	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+3	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+3	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+3	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+3	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+3	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+3	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+3	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+3	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+3	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+3	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+4	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+4	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+4	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+4	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+4	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+4	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+4	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+4	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+4	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+4	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+4	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+4	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+4	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+4	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+4	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+4	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+4	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+4	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+4	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+4	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+4	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+4	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+5	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+5	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+5	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+5	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+5	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+5	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+5	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+5	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+5	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+5	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+5	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+5	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+5	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+5	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+5	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+5	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+5	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+5	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+5	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+5	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+5	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+5	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+6	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+6	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+6	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+6	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+6	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+6	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+6	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+6	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+6	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+6	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+6	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+6	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+6	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+6	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+6	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+6	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+6	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+6	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+6	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+6	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+6	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+6	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+7	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+7	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+7	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+7	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+7	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+7	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+7	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+7	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+7	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+7	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+7	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+7	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+7	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+7	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+7	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+7	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+7	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+7	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+7	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+7	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+7	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+7	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+8	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+8	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+8	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+8	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+8	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+8	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+8	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+8	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+8	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+8	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+8	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+8	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+8	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+8	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+8	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+8	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+8	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+8	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+8	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+8	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+8	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+8	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+9	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+9	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+9	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+9	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+9	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+9	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+9	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+9	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+9	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+9	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+9	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+9	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+9	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+9	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+9	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+9	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+9	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+9	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+9	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+9	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+9	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+9	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+10	BL076-SG-001	line_count_threshold	PASS	982	<=5000	SpatialRenderer.h is within current decomposition cap	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+10	BL076-SG-002	module_file_count	PASS	18	>=2	spatial_renderer module directory has extracted units	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
+10	BL076-SG-003	required_include	PASS	present	SpatialRendererTypes include required	SpatialRenderer.h includes extracted types module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+10	BL076-SG-004	required_include	PASS	present	SpatialProfileRouter include required	SpatialRenderer.h includes extracted routing module	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+10	BL076-SG-H-SpatialAuditionEngine.h	module_header_line_cap	PASS	200	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionEngine.h
+10	BL076-SG-H-SpatialAuditionPrimitives.h	module_header_line_cap	PASS	183	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionPrimitives.h
+10	BL076-SG-H-SpatialEmitterRenderPass.h	module_header_line_cap	PASS	88	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialEmitterRenderPass.h
+10	BL076-SG-H-SpatialHeadphoneCompensation.h	module_header_line_cap	PASS	101	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneCompensation.h
+10	BL076-SG-H-SpatialHeadphonePose.h	module_header_line_cap	PASS	202	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePose.h
+10	BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	module_header_line_cap	PASS	4	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphonePoseAndCompensation.h
+10	BL076-SG-H-SpatialPostFxChain.h	module_header_line_cap	PASS	59	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialPostFxChain.h
+10	BL076-SG-H-SpatialProfileRouter.h	module_header_line_cap	PASS	220	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+10	BL076-SG-H-SpatialRendererTypes.h	module_header_line_cap	PASS	194	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+10	BL076-SG-H-SpatialSteamAudioBackend.h	module_header_line_cap	PASS	167	<=250	module header line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.h
+10	BL076-SG-C-SpatialAuditionControl.cpp	module_cpp_line_cap	PASS	270	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionControl.cpp
+10	BL076-SG-C-SpatialAuditionRender.cpp	module_cpp_line_cap	PASS	531	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionRender.cpp
+10	BL076-SG-C-SpatialAuditionSignalGenerator.cpp	module_cpp_line_cap	PASS	424	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+10	BL076-SG-C-SpatialAuditionSupport.cpp	module_cpp_line_cap	PASS	293	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialAuditionSupport.cpp
+10	BL076-SG-C-SpatialHeadphoneProfileControl.cpp	module_cpp_line_cap	PASS	428	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+10	BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	module_cpp_line_cap	PASS	315	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+10	BL076-SG-C-SpatialOutputRoutingStage.cpp	module_cpp_line_cap	PASS	577	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+10	BL076-SG-C-SpatialSteamAudioBackend.cpp	module_cpp_line_cap	PASS	453	<=700	module implementation line cap satisfied	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialSteamAudioBackend.cpp

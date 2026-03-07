@@ -1,0 +1,234 @@
+check_id	result	detail	artifact
+BL076-PRE-SpatialRenderer.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/SpatialRenderer.h
+BL076-PRE-SpatialRendererTypes.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
+BL076-PRE-SpatialProfileRouter.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
+BL076-PRE-ProcessorSceneStateBridgeOps.h	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/processor_bridge/ProcessorSceneStateBridgeOps.h
+BL076-PRE-index.js	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/Source/ui/public/js/index.js
+BL076-PRE-rt-safety-audit.sh	PASS	required file present	/Users/artbox/Documents/Repos/LocusQ/scripts/rt-safety-audit.sh
+BL076-R1-SG-001	PASS	SpatialRenderer.h lines=982 <= 5000	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-SG-002	PASS	module files=18	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-SG-003	PASS	SpatialRenderer.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-SG-004	PASS	SpatialRenderer.h includes SpatialProfileRouter.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialAuditionEngine.h	PASS	SpatialAuditionEngine.h lines=200 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialAuditionPrimitives.h	PASS	SpatialAuditionPrimitives.h lines=183 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialEmitterRenderPass.h	PASS	SpatialEmitterRenderPass.h lines=88 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialHeadphoneCompensation.h	PASS	SpatialHeadphoneCompensation.h lines=101 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialHeadphonePose.h	PASS	SpatialHeadphonePose.h lines=202 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	PASS	SpatialHeadphonePoseAndCompensation.h lines=4 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialPostFxChain.h	PASS	SpatialPostFxChain.h lines=59 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialProfileRouter.h	PASS	SpatialProfileRouter.h lines=220 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialRendererTypes.h	PASS	SpatialRendererTypes.h lines=194 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-H-SpatialSteamAudioBackend.h	PASS	SpatialSteamAudioBackend.h lines=167 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionControl.cpp	PASS	SpatialAuditionControl.cpp lines=270 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionRender.cpp	PASS	SpatialAuditionRender.cpp lines=531 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionSignalGenerator.cpp	PASS	SpatialAuditionSignalGenerator.cpp lines=424 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialAuditionSupport.cpp	PASS	SpatialAuditionSupport.cpp lines=293 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialHeadphoneProfileControl.cpp	PASS	SpatialHeadphoneProfileControl.cpp lines=428 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	PASS	SpatialHeadphoneProfileSupport.cpp lines=315 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialOutputRoutingStage.cpp	PASS	SpatialOutputRoutingStage.cpp lines=577 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-BL076-SG-C-SpatialSteamAudioBackend.cpp	PASS	SpatialSteamAudioBackend.cpp lines=453 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R1-DM-001	PASS	SpatialRendererTypes.h does not include SceneGraph.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-002	PASS	SpatialRendererTypes.h does not include phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-003	PASS	SpatialRendererTypes.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-004	PASS	SpatialProfileRouter.h avoids phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-005	PASS	SpatialProfileRouter.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-006	PASS	SpatialProfileRouter.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-DM-007	PASS	Source/spatial_renderer/* avoids SceneGraph include edge	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R1-RT-001	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/rt_audit.tsv
+BL076-R1-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-signature-hash	PASS	baseline smoke signature hash=1be1ab8438462d07bf8fa216d6bcf5637fa7e209859b344670d037a4bd6fc71f	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-SM-module-inventory	PASS	baseline module inventory hash=ee298e342448996314290b5e7fd0628bcd20a700a2249c48b4b5eed76a5aaae6	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R1-BP-001	PASS	bridge payload emits snapshotSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R1-BP-002	PASS	bridge payload emits nativeBridgeDiagnosticsSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R1-BP-003	PASS	bridge payload includes nativeBridgeDiagnostics object	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R1-BP-004	PASS	UI parser checks native bridge diagnostics schema key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R1-BP-005	PASS	UI parser ingests snapshotSchema contract key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R1-BP-signature-hash	PASS	baseline bridge signature hash=ec11c5b3b29a988a391df000a853ca6eb7dafd490c9056c746307417c7309e4e	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R2-SG-001	PASS	SpatialRenderer.h lines=982 <= 5000	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-SG-002	PASS	module files=18	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-SG-003	PASS	SpatialRenderer.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-SG-004	PASS	SpatialRenderer.h includes SpatialProfileRouter.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialAuditionEngine.h	PASS	SpatialAuditionEngine.h lines=200 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialAuditionPrimitives.h	PASS	SpatialAuditionPrimitives.h lines=183 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialEmitterRenderPass.h	PASS	SpatialEmitterRenderPass.h lines=88 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialHeadphoneCompensation.h	PASS	SpatialHeadphoneCompensation.h lines=101 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialHeadphonePose.h	PASS	SpatialHeadphonePose.h lines=202 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	PASS	SpatialHeadphonePoseAndCompensation.h lines=4 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialPostFxChain.h	PASS	SpatialPostFxChain.h lines=59 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialProfileRouter.h	PASS	SpatialProfileRouter.h lines=220 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialRendererTypes.h	PASS	SpatialRendererTypes.h lines=194 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-H-SpatialSteamAudioBackend.h	PASS	SpatialSteamAudioBackend.h lines=167 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialAuditionControl.cpp	PASS	SpatialAuditionControl.cpp lines=270 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialAuditionRender.cpp	PASS	SpatialAuditionRender.cpp lines=531 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialAuditionSignalGenerator.cpp	PASS	SpatialAuditionSignalGenerator.cpp lines=424 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialAuditionSupport.cpp	PASS	SpatialAuditionSupport.cpp lines=293 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialHeadphoneProfileControl.cpp	PASS	SpatialHeadphoneProfileControl.cpp lines=428 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	PASS	SpatialHeadphoneProfileSupport.cpp lines=315 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialOutputRoutingStage.cpp	PASS	SpatialOutputRoutingStage.cpp lines=577 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-BL076-SG-C-SpatialSteamAudioBackend.cpp	PASS	SpatialSteamAudioBackend.cpp lines=453 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R2-DM-001	PASS	SpatialRendererTypes.h does not include SceneGraph.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-DM-002	PASS	SpatialRendererTypes.h does not include phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-DM-003	PASS	SpatialRendererTypes.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-DM-004	PASS	SpatialProfileRouter.h avoids phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-DM-005	PASS	SpatialProfileRouter.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-DM-006	PASS	SpatialProfileRouter.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-DM-007	PASS	Source/spatial_renderer/* avoids SceneGraph include edge	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R2-RT-001	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/rt_audit.tsv
+BL076-R2-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-signature-hash	PASS	smoke signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-SM-module-inventory	PASS	module inventory stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R2-BP-001	PASS	bridge payload emits snapshotSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R2-BP-002	PASS	bridge payload emits nativeBridgeDiagnosticsSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R2-BP-003	PASS	bridge payload includes nativeBridgeDiagnostics object	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R2-BP-004	PASS	UI parser checks native bridge diagnostics schema key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R2-BP-005	PASS	UI parser ingests snapshotSchema contract key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R2-BP-signature-hash	PASS	bridge signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R3-SG-001	PASS	SpatialRenderer.h lines=982 <= 5000	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-SG-002	PASS	module files=18	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-SG-003	PASS	SpatialRenderer.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-SG-004	PASS	SpatialRenderer.h includes SpatialProfileRouter.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialAuditionEngine.h	PASS	SpatialAuditionEngine.h lines=200 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialAuditionPrimitives.h	PASS	SpatialAuditionPrimitives.h lines=183 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialEmitterRenderPass.h	PASS	SpatialEmitterRenderPass.h lines=88 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialHeadphoneCompensation.h	PASS	SpatialHeadphoneCompensation.h lines=101 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialHeadphonePose.h	PASS	SpatialHeadphonePose.h lines=202 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	PASS	SpatialHeadphonePoseAndCompensation.h lines=4 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialPostFxChain.h	PASS	SpatialPostFxChain.h lines=59 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialProfileRouter.h	PASS	SpatialProfileRouter.h lines=220 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialRendererTypes.h	PASS	SpatialRendererTypes.h lines=194 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-H-SpatialSteamAudioBackend.h	PASS	SpatialSteamAudioBackend.h lines=167 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialAuditionControl.cpp	PASS	SpatialAuditionControl.cpp lines=270 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialAuditionRender.cpp	PASS	SpatialAuditionRender.cpp lines=531 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialAuditionSignalGenerator.cpp	PASS	SpatialAuditionSignalGenerator.cpp lines=424 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialAuditionSupport.cpp	PASS	SpatialAuditionSupport.cpp lines=293 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialHeadphoneProfileControl.cpp	PASS	SpatialHeadphoneProfileControl.cpp lines=428 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	PASS	SpatialHeadphoneProfileSupport.cpp lines=315 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialOutputRoutingStage.cpp	PASS	SpatialOutputRoutingStage.cpp lines=577 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-BL076-SG-C-SpatialSteamAudioBackend.cpp	PASS	SpatialSteamAudioBackend.cpp lines=453 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R3-DM-001	PASS	SpatialRendererTypes.h does not include SceneGraph.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-DM-002	PASS	SpatialRendererTypes.h does not include phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-DM-003	PASS	SpatialRendererTypes.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-DM-004	PASS	SpatialProfileRouter.h avoids phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-DM-005	PASS	SpatialProfileRouter.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-DM-006	PASS	SpatialProfileRouter.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-DM-007	PASS	Source/spatial_renderer/* avoids SceneGraph include edge	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R3-RT-001	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/rt_audit.tsv
+BL076-R3-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-signature-hash	PASS	smoke signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-SM-module-inventory	PASS	module inventory stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R3-BP-001	PASS	bridge payload emits snapshotSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R3-BP-002	PASS	bridge payload emits nativeBridgeDiagnosticsSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R3-BP-003	PASS	bridge payload includes nativeBridgeDiagnostics object	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R3-BP-004	PASS	UI parser checks native bridge diagnostics schema key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R3-BP-005	PASS	UI parser ingests snapshotSchema contract key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R3-BP-signature-hash	PASS	bridge signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R4-SG-001	PASS	SpatialRenderer.h lines=982 <= 5000	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-SG-002	PASS	module files=18	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-SG-003	PASS	SpatialRenderer.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-SG-004	PASS	SpatialRenderer.h includes SpatialProfileRouter.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialAuditionEngine.h	PASS	SpatialAuditionEngine.h lines=200 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialAuditionPrimitives.h	PASS	SpatialAuditionPrimitives.h lines=183 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialEmitterRenderPass.h	PASS	SpatialEmitterRenderPass.h lines=88 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialHeadphoneCompensation.h	PASS	SpatialHeadphoneCompensation.h lines=101 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialHeadphonePose.h	PASS	SpatialHeadphonePose.h lines=202 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	PASS	SpatialHeadphonePoseAndCompensation.h lines=4 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialPostFxChain.h	PASS	SpatialPostFxChain.h lines=59 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialProfileRouter.h	PASS	SpatialProfileRouter.h lines=220 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialRendererTypes.h	PASS	SpatialRendererTypes.h lines=194 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-H-SpatialSteamAudioBackend.h	PASS	SpatialSteamAudioBackend.h lines=167 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialAuditionControl.cpp	PASS	SpatialAuditionControl.cpp lines=270 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialAuditionRender.cpp	PASS	SpatialAuditionRender.cpp lines=531 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialAuditionSignalGenerator.cpp	PASS	SpatialAuditionSignalGenerator.cpp lines=424 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialAuditionSupport.cpp	PASS	SpatialAuditionSupport.cpp lines=293 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialHeadphoneProfileControl.cpp	PASS	SpatialHeadphoneProfileControl.cpp lines=428 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	PASS	SpatialHeadphoneProfileSupport.cpp lines=315 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialOutputRoutingStage.cpp	PASS	SpatialOutputRoutingStage.cpp lines=577 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-BL076-SG-C-SpatialSteamAudioBackend.cpp	PASS	SpatialSteamAudioBackend.cpp lines=453 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R4-DM-001	PASS	SpatialRendererTypes.h does not include SceneGraph.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-DM-002	PASS	SpatialRendererTypes.h does not include phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-DM-003	PASS	SpatialRendererTypes.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-DM-004	PASS	SpatialProfileRouter.h avoids phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-DM-005	PASS	SpatialProfileRouter.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-DM-006	PASS	SpatialProfileRouter.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-DM-007	PASS	Source/spatial_renderer/* avoids SceneGraph include edge	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R4-RT-001	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/rt_audit.tsv
+BL076-R4-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-signature-hash	PASS	smoke signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-SM-module-inventory	PASS	module inventory stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R4-BP-001	PASS	bridge payload emits snapshotSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R4-BP-002	PASS	bridge payload emits nativeBridgeDiagnosticsSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R4-BP-003	PASS	bridge payload includes nativeBridgeDiagnostics object	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R4-BP-004	PASS	UI parser checks native bridge diagnostics schema key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R4-BP-005	PASS	UI parser ingests snapshotSchema contract key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R4-BP-signature-hash	PASS	bridge signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R5-SG-001	PASS	SpatialRenderer.h lines=982 <= 5000	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-SG-002	PASS	module files=18	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-SG-003	PASS	SpatialRenderer.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-SG-004	PASS	SpatialRenderer.h includes SpatialProfileRouter.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialAuditionEngine.h	PASS	SpatialAuditionEngine.h lines=200 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialAuditionPrimitives.h	PASS	SpatialAuditionPrimitives.h lines=183 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialEmitterRenderPass.h	PASS	SpatialEmitterRenderPass.h lines=88 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialHeadphoneCompensation.h	PASS	SpatialHeadphoneCompensation.h lines=101 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialHeadphonePose.h	PASS	SpatialHeadphonePose.h lines=202 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialHeadphonePoseAndCompensation.h	PASS	SpatialHeadphonePoseAndCompensation.h lines=4 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialPostFxChain.h	PASS	SpatialPostFxChain.h lines=59 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialProfileRouter.h	PASS	SpatialProfileRouter.h lines=220 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialRendererTypes.h	PASS	SpatialRendererTypes.h lines=194 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-H-SpatialSteamAudioBackend.h	PASS	SpatialSteamAudioBackend.h lines=167 <= 250	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialAuditionControl.cpp	PASS	SpatialAuditionControl.cpp lines=270 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialAuditionRender.cpp	PASS	SpatialAuditionRender.cpp lines=531 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialAuditionSignalGenerator.cpp	PASS	SpatialAuditionSignalGenerator.cpp lines=424 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialAuditionSupport.cpp	PASS	SpatialAuditionSupport.cpp lines=293 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialHeadphoneProfileControl.cpp	PASS	SpatialHeadphoneProfileControl.cpp lines=428 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialHeadphoneProfileSupport.cpp	PASS	SpatialHeadphoneProfileSupport.cpp lines=315 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialOutputRoutingStage.cpp	PASS	SpatialOutputRoutingStage.cpp lines=577 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-BL076-SG-C-SpatialSteamAudioBackend.cpp	PASS	SpatialSteamAudioBackend.cpp lines=453 <= 700	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_structure_guardrails.tsv
+BL076-R5-DM-001	PASS	SpatialRendererTypes.h does not include SceneGraph.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-DM-002	PASS	SpatialRendererTypes.h does not include phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-DM-003	PASS	SpatialRendererTypes.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-DM-004	PASS	SpatialProfileRouter.h avoids phonon.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-DM-005	PASS	SpatialProfileRouter.h avoids headphone_dsp includes	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-DM-006	PASS	SpatialProfileRouter.h includes SpatialRendererTypes.h	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-DM-007	PASS	Source/spatial_renderer/* avoids SceneGraph include edge	TestEvidence/bl076_candidate_t2_closeout/spatial_renderer_module_dependency_matrix.tsv
+BL076-R5-RT-001	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	TestEvidence/bl076_candidate_t2_closeout/rt_audit.tsv
+BL076-R5-SM-qa-bl009-headphone-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-qa-bl009-headphone-profile-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-qa-bl018-ambisonic-contract-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-qa-bl018-profile-matrix-strict-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-qa-bl052-steam-audio-virtual-surround-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-qa-bl053-head-tracking-orientation-injection-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-qa-bl069-rt-safe-preset-pipeline-mac.sh	PASS	lane script exists and is executable	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-signature-hash	PASS	smoke signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-SM-module-inventory	PASS	module inventory stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/smoke_parity_matrix.tsv
+BL076-R5-BP-001	PASS	bridge payload emits snapshotSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R5-BP-002	PASS	bridge payload emits nativeBridgeDiagnosticsSchema	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R5-BP-003	PASS	bridge payload includes nativeBridgeDiagnostics object	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R5-BP-004	PASS	UI parser checks native bridge diagnostics schema key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R5-BP-005	PASS	UI parser ingests snapshotSchema contract key	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-R5-BP-signature-hash	PASS	bridge signature stable vs baseline	TestEvidence/bl076_candidate_t2_closeout/bridge_payload_parity.tsv
+BL076-EXEC-scaffold_rows	PASS	execute artifact tables contain zero TODO/SCAFFOLD rows	TestEvidence/bl076_candidate_t2_closeout
+BL076-lane_result	PASS	mode=execute;runs=5;pass=232;fail=0	TestEvidence/bl076_candidate_t2_closeout

@@ -2,13 +2,13 @@ Title: BL-041 Doppler v2 and VBAP Geometry Validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-05
 
 # BL-041 Doppler v2 and VBAP Geometry Validation
 
 ## Plain-Language Summary
 
-BL-041 in plain terms: Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-041 in plain terms: Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation. Current state: Done (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync are green). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-041 in plain terms: Define a deterministic contract for Doppler v2 and VBAP g
 | What is changing? | BL-041 Doppler v2 and VBAP Geometry Validation |
 | Why is this important? | Define a deterministic contract for Doppler v2 and VBAP geometry validity so interpolation behavior, boundary continuity, and failure handling are replay-stable and machine-auditable before runtime implementation. |
 | How will we deliver it? | Use the validation plan and evidence bundle contract in this runbook to prove behavior and safety before promotion. |
-| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
-| Where is the source of truth? | Runbook: `Documentation/backlog/bl-041-doppler-v2-and-vbap-geometry-validation.md` plus repo-local evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync are green). |
+| Where is the source of truth? | Runbook: `Documentation/backlog/done/bl-041-doppler-v2-and-vbap-geometry-validation.md` plus repo-local evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index
 
@@ -55,14 +55,16 @@ Cross-item lifecycle governance remains canonical in `Documentation/backlog/inde
 |---|---|
 | ID | BL-041 |
 | Priority | P2 |
-| Status | Done-candidate (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) |
+| Status | Done (Owner Z10 accepted D2 done-promotion mode-parity intake; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync are green) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
-| Depends On | BL-036 |
+| Depends On | BL-036 (Done) |
 | Blocks | — |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 | Slice A1 Type | Docs only |
+| Final Evidence Root | `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-041-doppler-v2-and-vbap-geometry-validation.md` |
 
 ## Objective
 

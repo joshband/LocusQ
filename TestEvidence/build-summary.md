@@ -2,9 +2,81 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-06
+Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
+
+## W1-B Thread-Safety Hardening (UTC 2026-03-07T00:45:59Z)
+
+1. Implementation slice
+- replaced the shared keyframe timeline lock path with non-RT timeline state plus triple-buffered RT playback snapshots in `Source/PluginProcessor.h`, `Source/PluginProcessor.cpp`, `Source/processor_bridge/ProcessorUiBridgeOps.h`, `Source/processor_bridge/ProcessorSceneStateBridgeOps.h`, `Source/processor_core/ProcessorStateSerializer.cpp`, and `Source/processor_core/ProcessorPresetManager.cpp`
+- moved `PhysicsEngine` off `std::thread` + `sleep_for` onto a `juce::Thread` wait cadence in `Source/PhysicsEngine.h`
+- replaced published headphone diagnostics `juce::String` + `SpinLock` ownership with fixed-size sequence-safe snapshots in `Source/PluginProcessor.h`, `Source/PluginProcessor.cpp`, `Source/processor_bridge/ProcessorUiBridgeOps.h`, and `Source/processor_bridge/ProcessorSceneStateBridgeOps.h`
+
+2. Build validation
+- `cmake --build build_local --target LocusQ -j4` -> `PASS`
+- `cmake --build build_local --target locusq_qa locusq_physics_probe -j4` -> `PASS`
+
+3. Focused runtime validation
+- `build_local/locusq_physics_probe_artefacts/Release/locusq_physics_probe` -> `PASS` (`5/5` checks)
+- `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_26_animation_internal_smoke.json` -> `PASS`
+- `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_24_physics_spatial_motion.json` -> `PASS`
+- `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_keyframe_loop_playback.json` -> `PASS`
+- `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_state_roundtrip_contract.json` -> `PASS`
+
+## BL-076 Promotion Closeout (UTC 2026-03-07T00:38:59Z)
+
+1. Promotion bookkeeping
+- BL-076 moved from active implementation into closeout/archive state
+- archived runbook path is now `Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`
+- added owner promotion packet under `TestEvidence/bl076_promotion_t3_closeout/promotion_decision.md`
+- synced `Documentation/backlog/index.md`, `Documentation/architecture-code-review-2026-03-06.md`, `status.json`, and backlog summary artifacts to the done/archive state
+
+2. Promotion replay evidence
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 5 --out-dir TestEvidence/bl076_candidate_t2_closeout` -> `PASS`
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 10 --out-dir TestEvidence/bl076_promotion_t3_closeout` -> `PASS`
+
+3. Governance closeout
+- `./scripts/export-backlog-summaries.py` -> `PASS`
+- `./scripts/export-backlog-summaries.py --check` -> `PASS`
+- `./scripts/validate-backlog-plain-language.sh` -> `PASS`
+- `./scripts/validate-backlog-redundancy.py` -> `PASS`
+- `jq empty status.json` -> `PASS`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+
+## BL-076 Wave 6 Headphone/Profile Support Extraction (UTC 2026-03-07T00:23:58Z)
+
+1. Implementation slice
+- added `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`
+- added `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp`
+- moved `426` LOC of headphone/profile control, telemetry getter, and `*ToString` helpers out of `Source/SpatialRenderer.cpp`
+- moved `313` LOC of bundled-preset, head-pose, profile-routing, output-support, headphone-compensation, and geometry helpers out of `Source/SpatialRenderer.cpp`
+- reduced `Source/SpatialRenderer.cpp` from `1404` LOC to `662` LOC
+- bounded `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp` at `428` LOC and `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp` at `315` LOC
+- updated `CMakeLists.txt` so `LocusQ`, `locusq_qa`, and `locusq_bl018_profile_probe` all build the new support modules
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> `PASS`
+
+3. BL-076 guardrail evidence
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260307T002345Z/status.tsv`)
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260307T002358Z/status.tsv`)
+
+## BL-076 Wave 6 Output-Stage Module Extraction (UTC 2026-03-06T23:56:06Z)
+
+1. Implementation slice
+- added `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+- moved `577` LOC of output routing, codec telemetry/publication, and headphone runtime/calibration helpers out of `Source/SpatialRenderer.cpp`
+- reduced `Source/SpatialRenderer.cpp` from `1981` LOC to `1404` LOC
+- bounded `Source/spatial_renderer/SpatialOutputRoutingStage.cpp` at `577` LOC
+- updated `CMakeLists.txt` so `LocusQ`, `locusq_qa`, and `locusq_bl018_profile_probe` all build the new output-stage module
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> `PASS`
+
+3. BL-076 guardrail evidence
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T235606Z/status.tsv`)
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T235606Z/status.tsv`)
 
 ## BL-076 Wave 5 Audition Implementation-Unit Extraction (UTC 2026-03-06T22:18:23Z)
 
@@ -56,6 +128,107 @@ Last Modified Date: 2026-03-06
 4. BL-076 guardrail evidence
 - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T211113Z/status.tsv`)
 - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> `PASS` (`TestEvidence/bl076_spatial_renderer_20260306T211126Z/status.tsv`)
+
+## BL-041 Done Archive Sync (UTC 2026-03-05)
+
+1. Runbook archive move:
+- `Documentation/backlog/bl-041-doppler-v2-and-vbap-geometry-validation.md` -> `Documentation/backlog/done/bl-041-doppler-v2-and-vbap-geometry-validation.md`
+
+2. Backlog and status synchronization:
+- BL-041 Active Queue row now reads `Done` and points at the archived runbook path.
+- Closed Archive row added for BL-041.
+- `status.json` now records BL-041 as done and points at the archived runbook path.
+- `Documentation/reports/data/backlog-summary.{json,csv}` refreshed from the canonical index.
+
+3. Promotion basis retained:
+- BL-041 relies on the existing Z10 owner packet and D2 done-promotion mode-parity evidence already captured in the runbook.
+- No new implementation claims were added in this pass; this was a closeout/archive synchronization pass.
+
+4. Governance gates:
+- `./scripts/export-backlog-summaries.py` => PASS
+- `./scripts/validate-backlog-plain-language.sh` => PASS
+- `./scripts/validate-backlog-redundancy.py` => PASS
+- `./scripts/export-backlog-summaries.py --check` => PASS
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
+- `git diff --check` => PASS
+
+## BL-036 Scope Split + Done Archive Sync / BL-078 Runtime Follow-On (UTC 2026-03-05)
+
+1. Runbook lifecycle changes:
+- `Documentation/backlog/bl-036-dsp-finite-output-guardrails.md` -> `Documentation/backlog/done/bl-036-dsp-finite-output-guardrails.md`
+- New follow-on runbook created: `Documentation/backlog/bl-078-runtime-finite-output-enforcement-and-diagnostics.md`
+
+2. Scope split rationale:
+- BL-036 now closes only the contract/taxonomy/deterministic contract-lane evidence it actually proved through D2.
+- BL-078 now owns the runtime finite-output implementation follow-on:
+  `Implement native finite guardrails in runtime DSP paths`,
+  `Publish additive finite-output diagnostics from processor surfaces`,
+  `Execute runtime finite-output fuzz/soak lane and owner replay`.
+
+3. Backlog and status synchronization:
+- BL-036 Active Queue row now reads `Done` and points at the archived runbook path.
+- Closed Archive row added for BL-036.
+- BL-041 dependency hold was cleared because BL-036 is now archived honestly; BL-041 remains `Done-candidate`.
+- `status.json` now records BL-036 as done and BL-078 as the new open follow-on item.
+- `Documentation/reports/data/backlog-summary.{json,csv}` refreshed from the canonical index.
+
+4. Governance gates:
+- `./scripts/validate-backlog-plain-language.sh` => PASS
+- `./scripts/validate-backlog-redundancy.py` => PASS
+- `./scripts/export-backlog-summaries.py --check` => PASS
+- `./scripts/export-backlog-summaries.py` => PASS
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
+- `git diff --check` => PASS
+
+## BL-037 Done Archive Sync + BL-036 / BL-041 Promotion Hold (UTC 2026-03-05)
+
+1. Runbook archive move:
+- `Documentation/backlog/bl-037-emitter-snapshot-cpu-budget.md` -> `Documentation/backlog/done/bl-037-emitter-snapshot-cpu-budget.md`
+
+2. Backlog and status synchronization:
+- BL-037 Active Queue row now reads `Done` and points at the archived runbook path.
+- Closed Archive row added for BL-037.
+- `status.json` now records BL-037 as done and records governance holds for BL-036 and BL-041.
+- `Documentation/reports/data/backlog-summary.{json,csv}` refreshed from the canonical index.
+
+3. Promotion hold rationale:
+- BL-036 was not archived because its runbook still carries unchecked in-scope runtime implementation TODOs:
+  `Implement native finite guardrails in runtime DSP paths`,
+  `Publish additive finite-output diagnostics from processor surfaces`,
+  `Execute runtime finite-output fuzz/soak lane and owner replay`.
+- BL-041 was not archived because its dependency gate still points at BL-036 closeout.
+- Disposition: BL-036 and BL-041 remain `Done-candidate`, but not `Done`.
+
+4. Governance gates:
+- `./scripts/export-backlog-summaries.py` => PASS
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
+
+## BL-035 + BL-038 + BL-051 Done Archive Sync (UTC 2026-03-05)
+
+1. Runbook archive moves:
+- `Documentation/backlog/bl-035-rt-lock-free-registration.md` -> `Documentation/backlog/done/bl-035-rt-lock-free-registration.md`
+- `Documentation/backlog/bl-038-calibration-threading-and-telemetry.md` -> `Documentation/backlog/done/bl-038-calibration-threading-and-telemetry.md`
+- `Documentation/backlog/bl-051-ambisonics-and-adm-roadmap.md` -> `Documentation/backlog/done/bl-051-ambisonics-and-adm-roadmap.md`
+
+2. Backlog and status synchronization:
+- Active Queue rows for BL-035, BL-038, and BL-051 are now `Done` and point at `done/` runbook paths.
+- Closed Archive rows were added for BL-035, BL-038, and BL-051.
+- `status.json` now points BL-035 at its archived runbook path and records the BL-032 hold recheck evidence.
+- `Documentation/reports/data/backlog-summary.{json,csv}` refreshed from the canonical index.
+
+3. BL-032 promotion hold:
+- `TestEvidence/bl032_hold_recheck_20260305T224608Z/status.tsv` => guardrails `FAIL` on `BL032-G-001`.
+- `TestEvidence/bl032_hold_recheck_20260305T224608Z/guardrail_report.tsv` => `Source/PluginProcessor.cpp` is `3653 > 3600`.
+- `TestEvidence/bl032_hold_recheck_20260305T224608Z/rt_audit.tsv` => `PASS` (`non_allowlisted=0`).
+- Disposition: BL-032 remains `Done-candidate`; it was not archived in this sync.
+
+4. Governance gates:
+- `./scripts/export-backlog-summaries.py` => PASS
+- `jq empty status.json` => PASS
+- `./scripts/validate-docs-freshness.sh` => PASS
 
 ## BL-035 Done-Candidate Owner Sync Z1 (UTC 2026-03-04)
 

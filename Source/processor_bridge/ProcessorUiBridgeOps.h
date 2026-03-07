@@ -351,61 +351,61 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
         rendererHeadphoneCalibrationFallbackReasonIndex,
         rendererHeadphoneCalibrationLatencySamples);
     auto profileSyncSeq = static_cast<juce::int64> (sceneSnapshotSequence);
+    PublishedHeadphoneCalibrationDiagnostics publishedCalibration;
+    PublishedHeadphoneVerificationDiagnostics publishedVerification;
+    if (copyPublishedHeadphoneDiagnosticsSnapshot (publishedCalibration, publishedVerification))
     {
-        const juce::SpinLock::ScopedLockType publishedCalibrationLock (publishedHeadphoneCalibrationLock);
-        if (publishedHeadphoneCalibrationDiagnostics.valid)
+        if (publishedCalibration.valid)
         {
-            profileSyncSeq =
-                static_cast<juce::int64> (publishedHeadphoneCalibrationDiagnostics.profileSyncSeq);
-            headphoneCalibration.requested = publishedHeadphoneCalibrationDiagnostics.requested;
-            headphoneCalibration.active = publishedHeadphoneCalibrationDiagnostics.active;
-            headphoneCalibration.stage = publishedHeadphoneCalibrationDiagnostics.stage;
-            headphoneCalibration.fallbackReady = publishedHeadphoneCalibrationDiagnostics.fallbackReady;
-            headphoneCalibration.fallbackReason = publishedHeadphoneCalibrationDiagnostics.fallbackReason;
+            profileSyncSeq = static_cast<juce::int64> (publishedCalibration.profileSyncSeq);
+            headphoneCalibration.requested = publishedCalibration.requested.toString();
+            headphoneCalibration.active = publishedCalibration.active.toString();
+            headphoneCalibration.stage = publishedCalibration.stage.toString();
+            headphoneCalibration.fallbackReady = publishedCalibration.fallbackReady;
+            headphoneCalibration.fallbackReason = publishedCalibration.fallbackReason.toString();
         }
 
-        if (publishedHeadphoneVerificationDiagnostics.valid)
+        if (publishedVerification.valid)
         {
-            profileSyncSeq =
-                static_cast<juce::int64> (publishedHeadphoneVerificationDiagnostics.profileSyncSeq);
-            headphoneVerification.profileId = publishedHeadphoneVerificationDiagnostics.profileId;
+            profileSyncSeq = static_cast<juce::int64> (publishedVerification.profileSyncSeq);
+            headphoneVerification.profileId = publishedVerification.profileId.toString();
             headphoneVerification.requestedProfileId =
-                publishedHeadphoneVerificationDiagnostics.requestedProfileId;
+                publishedVerification.requestedProfileId.toString();
             headphoneVerification.activeProfileId =
-                publishedHeadphoneVerificationDiagnostics.activeProfileId;
+                publishedVerification.activeProfileId.toString();
             headphoneVerification.requestedEngineId =
-                publishedHeadphoneVerificationDiagnostics.requestedEngineId;
+                publishedVerification.requestedEngineId.toString();
             headphoneVerification.activeEngineId =
-                publishedHeadphoneVerificationDiagnostics.activeEngineId;
+                publishedVerification.activeEngineId.toString();
             headphoneVerification.fallbackReasonCode =
-                publishedHeadphoneVerificationDiagnostics.fallbackReasonCode;
+                publishedVerification.fallbackReasonCode.toString();
             headphoneVerification.fallbackTarget =
-                publishedHeadphoneVerificationDiagnostics.fallbackTarget;
+                publishedVerification.fallbackTarget.toString();
             headphoneVerification.fallbackReasonText =
-                publishedHeadphoneVerificationDiagnostics.fallbackReasonText;
+                publishedVerification.fallbackReasonText.toString();
             headphoneVerification.frontBackScore =
                 locusq::shared_contracts::headphone_verification::sanitizeScore (
-                    publishedHeadphoneVerificationDiagnostics.frontBackScore,
+                    publishedVerification.frontBackScore,
                     0.0f);
             headphoneVerification.elevationScore =
                 locusq::shared_contracts::headphone_verification::sanitizeScore (
-                    publishedHeadphoneVerificationDiagnostics.elevationScore,
+                    publishedVerification.elevationScore,
                     0.0f);
             headphoneVerification.externalizationScore =
                 locusq::shared_contracts::headphone_verification::sanitizeScore (
-                    publishedHeadphoneVerificationDiagnostics.externalizationScore,
+                    publishedVerification.externalizationScore,
                     0.0f);
             headphoneVerification.confidence =
                 locusq::shared_contracts::headphone_verification::sanitizeScore (
-                    publishedHeadphoneVerificationDiagnostics.confidence,
+                    publishedVerification.confidence,
                     0.0f);
             headphoneVerification.verificationStage =
-                publishedHeadphoneVerificationDiagnostics.verificationStage;
+                publishedVerification.verificationStage.toString();
             headphoneVerification.verificationScoreStatus =
-                publishedHeadphoneVerificationDiagnostics.verificationScoreStatus;
+                publishedVerification.verificationScoreStatus.toString();
             headphoneVerification.chainLatencySamples =
                 locusq::shared_contracts::headphone_verification::sanitizeLatencySamples (
-                    publishedHeadphoneVerificationDiagnostics.chainLatencySamples);
+                    publishedVerification.chainLatencySamples);
         }
     }
     headphoneVerification.profileId =
@@ -706,14 +706,18 @@ juce::var LocusQAudioProcessor::serialiseKeyframeTimelineLocked() const
     juce::var timelineVar (new juce::DynamicObject());
     auto* timeline = timelineVar.getDynamicObject();
 
-    timeline->setProperty ("durationSeconds", keyframeTimeline.getDurationSeconds());
-    timeline->setProperty ("looping", keyframeTimeline.isLooping());
-    timeline->setProperty ("playbackRate", keyframeTimeline.getPlaybackRate());
-    timeline->setProperty ("currentTimeSeconds", keyframeTimeline.getCurrentTimeSeconds());
+    timeline->setProperty ("durationSeconds",
+                           keyframeTimelinePublishedDurationSeconds.load (std::memory_order_acquire));
+    timeline->setProperty ("looping",
+                           keyframeTimelinePublishedLooping.load (std::memory_order_acquire));
+    timeline->setProperty ("playbackRate",
+                           keyframeTimelinePublishedPlaybackRate.load (std::memory_order_acquire));
+    timeline->setProperty ("currentTimeSeconds",
+                           keyframeTimelinePublishedCurrentTimeSeconds.load (std::memory_order_acquire));
 
     juce::Array<juce::var> tracks;
 
-    for (const auto& track : keyframeTimeline.getTracks())
+    for (const auto& track : keyframeTimelineState.getTracks())
     {
         juce::var trackVar (new juce::DynamicObject());
         auto* trackObject = trackVar.getDynamicObject();
@@ -748,7 +752,7 @@ bool LocusQAudioProcessor::applyKeyframeTimelineLocked (const juce::var& timelin
     if (trackArray == nullptr)
         return false;
 
-    keyframeTimeline.clearTracks();
+    keyframeTimelineState.clearTracks();
 
     for (const auto& trackValue : *trackArray)
     {
@@ -783,37 +787,39 @@ bool LocusQAudioProcessor::applyKeyframeTimelineLocked (const juce::var& timelin
         {
             KeyframeTrack track { parameterId };
             track.setKeyframes (std::move (keyframes));
-            keyframeTimeline.addOrReplaceTrack (std::move (track));
+            keyframeTimelineState.addOrReplaceTrack (std::move (track));
         }
     }
 
     if (timeline->hasProperty ("durationSeconds"))
-        keyframeTimeline.setDurationSeconds (static_cast<double> (timeline->getProperty ("durationSeconds")));
+        keyframeTimelineState.setDurationSeconds (static_cast<double> (timeline->getProperty ("durationSeconds")));
 
     if (timeline->hasProperty ("looping"))
-        keyframeTimeline.setLooping (static_cast<bool> (timeline->getProperty ("looping")));
+        keyframeTimelineState.setLooping (static_cast<bool> (timeline->getProperty ("looping")));
 
     if (timeline->hasProperty ("playbackRate"))
-        keyframeTimeline.setPlaybackRate (static_cast<float> (double (timeline->getProperty ("playbackRate"))));
+        keyframeTimelineState.setPlaybackRate (static_cast<float> (double (timeline->getProperty ("playbackRate"))));
 
     if (timeline->hasProperty ("currentTimeSeconds"))
-        keyframeTimeline.setCurrentTimeSeconds (static_cast<double> (timeline->getProperty ("currentTimeSeconds")));
+        keyframeTimelineState.setCurrentTimeSeconds (static_cast<double> (timeline->getProperty ("currentTimeSeconds")));
 
-    if (! keyframeTimeline.hasAnyTrack())
-        initialiseDefaultKeyframeTimeline();
+    if (! keyframeTimelineState.hasAnyTrack())
+        initialiseDefaultKeyframeTimeline (keyframeTimelineState);
+
+    publishKeyframeTimelineStateToRtLocked();
 
     return true;
 }
 
 juce::var LocusQAudioProcessor::getKeyframeTimelineForUI() const
 {
-    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+    const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
     return serialiseKeyframeTimelineLocked();
 }
 
 bool LocusQAudioProcessor::setKeyframeTimelineFromUI (const juce::var& timelineState)
 {
-    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+    const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
     return applyKeyframeTimelineLocked (timelineState);
 }
 
@@ -822,10 +828,11 @@ bool LocusQAudioProcessor::setTimelineCurrentTimeFromUI (double timeSeconds)
     if (! std::isfinite (timeSeconds))
         return false;
 
-    const juce::SpinLock::ScopedLockType timelineLock (keyframeTimelineLock);
+    const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
     const auto clamped = juce::jlimit (0.0,
-                                       juce::jmax (0.0, keyframeTimeline.getDurationSeconds()),
+                                       juce::jmax (0.0, keyframeTimelineState.getDurationSeconds()),
                                        timeSeconds);
-    keyframeTimeline.setCurrentTimeSeconds (clamped);
+    keyframeTimelineState.setCurrentTimeSeconds (clamped);
+    publishKeyframeTimelineStateToRtLocked();
     return true;
 }

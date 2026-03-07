@@ -1,5 +1,5 @@
 Title: BL-076 SpatialRenderer Decomposition and Boundary Guardrails
-Document Type: Backlog Runbook
+Document Type: Backlog Runbook (Closeout)
 Author: APC Codex
 Created Date: 2026-03-01
 Last Modified Date: 2026-03-06
@@ -8,18 +8,18 @@ Last Modified Date: 2026-03-06
 
 ## Plain-Language Summary
 
-BL-076 in plain terms: Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: In Implementation (W0-B out-of-line split, Wave 4 Steam backend extraction, and Wave 5 audition implementation-unit extraction landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-076 in plain terms: Decompose `Source/SpatialRenderer.h` into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. Current state: Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout/archive sync complete). For technical detail, see `## Objective`, `## Validation Plan`, and the historical execution snapshots below.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
 | Who is this for? | QA owners, release owners, and engineering maintainers who depend on deterministic evidence. |
-| What is changing? | Decompose Source/SpatialRenderer.h into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot. |
-| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
-| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (W0-B out-of-line split, Wave 4 Steam backend extraction, and Wave 5 audition implementation-unit extraction landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| What changed? | `SpatialRenderer` was decomposed into focused implementation units so the runtime is no longer carried by one giant multipurpose header/body pair. |
+| Why is this important? | It reduces merge risk, bounds module size, and keeps related spatial/headphone backlog lanes from depending on a monolithic renderer file. |
+| How was it delivered safely? | The work landed in bounded extraction waves, then passed BL-076 structure/dependency/RT/bridge guardrails at T1, T2, and T3 execute cadence. |
+| When was it considered complete? | 2026-03-06 local date, after T2 `5/5` and T3 `10/10` execute replay PASS plus closeout/archive sync. |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/bl076_*`. |
 
 
 ## Visual Aid Index
@@ -28,7 +28,10 @@ Use visuals only when they materially improve understanding.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
+| Status legend + completion snapshot | Fast scan of closed scope, dates, and follow-on work without color dependencies. | `## Status Legend`, `## Completion Snapshot` |
+| Evidence visual snapshot | Quick PASS scan across T1/T2/T3 replay evidence. | `## Evidence Visual Snapshot` |
 | Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Promotion gate table | Shows final closeout confidence and evidence linkage. | `## Promotion Gate Summary` |
 | Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
 | Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
 
@@ -38,13 +41,33 @@ Include a runbook-specific diagram only when it clarifies behavior not already o
 
 Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
 
+## Status Legend
+
+- `[DONE]` completed slice or milestone. Use `~~strikethrough~~` on the item name when the named slice is fully complete.
+- `[ACTIVE]` current implementation focus with meaningful remaining scope.
+- `[NEXT]` the next recommended slice after the active one finishes.
+- `[QUEUED]` planned but not the current focus.
+- `[DEFERRED]` intentionally moved to another lane or later milestone.
+- `[BLOCKED]` waiting on a dependency, owner decision, or failing validation lane.
+- Portable markdown only: do not use inline HTML/CSS color for status because it is not reliable across renderers.
+- `Actual / Time` should use exact dates or focused-session wording when available. If time was not logged, say `not logged`.
+- `Tokens` should be `n/a` unless a session explicitly recorded them; token counts are not auto-captured in repo docs today.
+
+## Evidence Visual Snapshot
+
+| Replay Stage | Result | Evidence |
+|---|---|---|
+| T1 execute replay | PASS | `TestEvidence/bl076_spatial_renderer_20260307T002358Z/status.tsv` |
+| T2 candidate replay | PASS (`5/5`) | `TestEvidence/bl076_candidate_t2_closeout/t2_summary.tsv` |
+| T3 promotion replay | PASS (`10/10`) | `TestEvidence/bl076_promotion_t3_closeout/t3_summary.tsv` |
+
 ## Status Ledger
 
 | Field | Value |
 |---|---|
 | ID | BL-076 |
 | Priority | P1 |
-| Status | In Implementation (W0-B out-of-line split plus Wave 4 Steam backend and Wave 5 audition implementation-unit extractions landed; `build_local` plugin plus console targets and contract+execute guardrails PASS on 2026-03-06) |
+| Status | Done (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout/archive sync complete) |
 | Track | F - Hardening |
 | Effort | High / L |
 | Depends On | BL-050, BL-069, BL-070 |
@@ -52,10 +75,45 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 | Annex Spec | `Documentation/plans/bl-076-spatial-renderer-decomposition-planning-packet-2026-03-02.md` |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+| SHARED_FILES_TOUCHED | no |
+| Promotion Decision Packet | `TestEvidence/bl076_promotion_t3_closeout/promotion_decision.md` |
+| Final Evidence Root | `TestEvidence/bl076_promotion_t3_closeout/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md` |
+
+## Completion Snapshot
+
+| Item | Status | Priority | Estimate | Actual / Time | Tokens | Completed | Where | Evidence / Remaining |
+|---|---|---|---|---|---|---|---|---|
+| `~~W0-B~~` header/body split | `[DONE]` | P1 | Medium | done; time not logged | `n/a` | 2026-03-06 | `Source/SpatialRenderer.h`, `Source/SpatialRenderer.cpp` | Tier 0 objective complete |
+| `~~Wave 4~~` Steam backend extraction | `[DONE]` | P1 | Medium | done; time not logged | `n/a` | 2026-03-06 | `Source/spatial_renderer/SpatialSteamAudioBackend.cpp` | none |
+| `~~Wave 5~~` audition implementation-unit extraction | `[DONE]` | P1 | Large | done; time not logged | `n/a` | 2026-03-06 | `SpatialAuditionControl.cpp`, `SpatialAuditionSupport.cpp`, `SpatialAuditionSignalGenerator.cpp`, `SpatialAuditionRender.cpp` | none |
+| `~~Wave 6~~` output-stage module extraction | `[DONE]` | P1 | Medium | done; same-day focused continuation | `n/a` | 2026-03-06 | `Source/spatial_renderer/SpatialOutputRoutingStage.cpp` | none |
+| `~~Wave 6~~` headphone/profile control + support extraction | `[DONE]` | P1 | Medium | done; same-day focused continuation | `n/a` | 2026-03-06 | `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`, `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp` | moved `739` LOC total; `Source/SpatialRenderer.cpp` now `662` LOC |
+| `~~BL-076~~` promotion closeout | `[DONE]` | P1 | Medium | owner T2/T3 cadence completed on 2026-03-06; wall-clock not logged | `n/a` | 2026-03-06 | `Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`, `TestEvidence/bl076_promotion_t3_closeout/` | T2 `5/5` + T3 `10/10` execute replay PASS |
+| W1-B thread-safety fixes | `[NEXT]` | P1 | Medium | not started | `n/a` | 2026-03-06 | `Documentation/architecture-code-review-2026-03-06.md` | next formal architecture item after BL-076 closeout |
 
 ## Objective
 
 Decompose `Source/SpatialRenderer.h` into cohesive renderer modules with explicit ownership boundaries so the runtime can evolve without a single giant multipurpose header becoming a merge-risk and defect hotspot.
+
+## What Was Built
+
+- Moved the renderer from a monolithic header/body pair into focused `Source/spatial_renderer/*.cpp` units for Steam runtime, audition, output routing, and headphone/profile control/support.
+- Reduced `Source/SpatialRenderer.cpp` to `662` LOC while keeping each extracted `.cpp` under the BL-076 planning-packet `<=700` LOC target.
+- Closed the item with T1/T2/T3 execute replay evidence that kept structure guardrails, RT audit, smoke parity, and bridge payload parity green.
+
+## Key Files
+
+- `Source/SpatialRenderer.h`
+- `Source/SpatialRenderer.cpp`
+- `Source/spatial_renderer/SpatialSteamAudioBackend.cpp`
+- `Source/spatial_renderer/SpatialAuditionControl.cpp`
+- `Source/spatial_renderer/SpatialAuditionSupport.cpp`
+- `Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp`
+- `Source/spatial_renderer/SpatialAuditionRender.cpp`
+- `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+- `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`
+- `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp`
 
 ## Acceptance IDs
 
@@ -92,6 +150,8 @@ Minimum evidence additions:
 Primary lane commands:
 - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3`
 - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1`
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 5 --out-dir TestEvidence/bl076_candidate_t2_closeout`
+- `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 10 --out-dir TestEvidence/bl076_promotion_t3_closeout`
 
 ## Owner Intake Blocker Snapshot (2026-03-02)
 
@@ -336,6 +396,80 @@ Primary lane commands:
 - Follow-up note:
   - BL-076 remains `In Implementation`; the next highest-yield slice is the remaining Wave 6 staged-orchestrator cleanup because `Source/SpatialRenderer.cpp` still exceeds the planning-packet `<=700` LOC target even after the audition split.
 
+## Wave 6 Output-Stage Module Snapshot (2026-03-06)
+
+- Wave 6 made concrete progress on the next BL-076 slice:
+  - added `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+  - moved codec payload publication, codec mapping/signature, ambisonic IR contract publication, output routing, headphone runtime/calibration sync, and mono/stereo/discrete output writer method bodies out of `Source/SpatialRenderer.cpp`
+  - updated `CMakeLists.txt` so `LocusQ`, `locusq_qa`, and `locusq_bl018_profile_probe` all build the new output-stage module
+- Current file-size posture after the slice:
+  - moved `577` LOC from `Source/SpatialRenderer.cpp` into `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+  - `Source/SpatialRenderer.cpp` reduced from `1981` LOC to `1404` LOC
+  - `Source/spatial_renderer/SpatialOutputRoutingStage.cpp` now owns `577` LOC
+- Validation replay:
+  - `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> PASS
+- Evidence roots:
+  - `TestEvidence/bl076_spatial_renderer_20260306T235606Z/` (shared contract-only + execute status ledger)
+- Follow-up note:
+  - BL-076 remains `In Implementation`; `Source/SpatialRenderer.cpp` is still above the planning-packet `<=700` LOC target, so the next highest-yield slice remains the remaining staged-orchestrator cleanup in the lifecycle/setup and head-pose/preset helper clusters.
+
+## Wave 6 Headphone/Profile Support Snapshot (2026-03-06)
+
+- Wave 6 completed the remaining staged-orchestrator cleanup slice:
+  - added `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`
+  - added `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp`
+  - moved `426` LOC of headphone/profile control, telemetry getter, and `*ToString` method bodies out of `Source/SpatialRenderer.cpp` into `SpatialHeadphoneProfileControl.cpp`
+  - moved `313` LOC of bundled-preset, head-pose, profile-routing, output-support, headphone-compensation, and geometry helper bodies out of `Source/SpatialRenderer.cpp` into `SpatialHeadphoneProfileSupport.cpp`
+  - updated `CMakeLists.txt` so `LocusQ`, `locusq_qa`, and `locusq_bl018_profile_probe` all build the new support modules
+- Current file-size posture after the slice:
+  - moved `739` LOC total from `Source/SpatialRenderer.cpp`
+  - `Source/SpatialRenderer.cpp` reduced from `1404` LOC to `662` LOC
+  - `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp` now owns `428` LOC
+  - `Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp` now owns `315` LOC
+  - the planning-packet `<=700` LOC target is now satisfied for `Source/SpatialRenderer.cpp`
+- Validation replay:
+  - `cmake --build build_local --config Release --target LocusQ locusq_qa locusq_bl018_profile_probe -- -j8` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --contract-only --runs 3` -> PASS
+  - `./scripts/qa-bl076-spatial-renderer-structure-guardrails-mac.sh --execute --runs 1` -> PASS
+- Evidence roots:
+  - `TestEvidence/bl076_spatial_renderer_20260307T002345Z/` (contract-only)
+  - `TestEvidence/bl076_spatial_renderer_20260307T002358Z/` (execute)
+- Follow-up note:
+  - The decomposition target was met here; owner candidate/promotion cadence and closeout sync followed, so the next architecture-roadmap implementation item is `W1-B`.
+
+## Owner T2/T3 Replay Snapshot (2026-03-06)
+
+- T2 candidate replay (5 execute runs): `PASS`
+  - `TestEvidence/bl076_candidate_t2_closeout/`
+  - `t2_summary.tsv`: `5/5` runs with `lane_result=PASS`, execute TODO gate `PASS`, and RT audit `non_allowlisted=0` on every run.
+- T3 promotion replay (10 execute runs): `PASS`
+  - `TestEvidence/bl076_promotion_t3_closeout/`
+  - `t3_summary.tsv`: `10/10` runs with `lane_result=PASS`, execute TODO gate `PASS`, and RT audit `non_allowlisted=0` on every run.
+
+## Evidence References
+
+- `TestEvidence/bl076_spatial_renderer_20260307T002345Z/status.tsv`
+- `TestEvidence/bl076_spatial_renderer_20260307T002358Z/status.tsv`
+- `TestEvidence/bl076_candidate_t2_closeout/t2_summary.tsv`
+- `TestEvidence/bl076_promotion_t3_closeout/t3_summary.tsv`
+- `TestEvidence/bl076_promotion_t3_closeout/promotion_decision.md`
+
+## Promotion Gate Summary
+
+| Gate | Status | Evidence |
+|---|---|---|
+| Build + target wiring | PASS | `TestEvidence/build-summary.md` |
+| T1 execute replay | PASS | `TestEvidence/bl076_spatial_renderer_20260307T002358Z/status.tsv` |
+| T2 candidate replay | PASS | `TestEvidence/bl076_candidate_t2_closeout/t2_summary.tsv` |
+| T3 promotion replay | PASS | `TestEvidence/bl076_promotion_t3_closeout/t3_summary.tsv` |
+| RT safety | PASS | `TestEvidence/bl076_promotion_t3_closeout/rt_audit.tsv` |
+| Bridge payload parity | PASS | `TestEvidence/bl076_promotion_t3_closeout/bridge_payload_parity.tsv` |
+| Docs freshness | PASS | `TestEvidence/bl076_promotion_t3_closeout/docs_freshness.log` |
+| Status schema | PASS | `TestEvidence/bl076_promotion_t3_closeout/status_json_check.log` |
+| Ownership safety (`SHARED_FILES_TOUCHED`) | PASS | `TestEvidence/bl076_promotion_t3_closeout/handoff_resolution.md` |
+
 ## Replay Cadence Plan (Required)
 
 Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
@@ -366,3 +500,19 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
+
+## Closeout Checklist (Done Transition)
+
+- [x] T2 candidate (`5/5`) and T3 promotion (`10/10`) execute replays are PASS.
+- [x] Execute-mode TODO gate is PASS (`BL076-EXEC-scaffold_rows`).
+- [x] RT audit remains PASS (`non_allowlisted=0`) across promotion packet runs.
+- [x] Promotion decision packet is recorded under `TestEvidence/bl076_promotion_t3_closeout/`.
+- [x] Runbook moved to `Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md`.
+- [x] `Documentation/backlog/index.md` row updated to Done and switched to `done/` path.
+- [x] `status.json`, `TestEvidence/build-summary.md`, and `TestEvidence/validation-trend.md` updated in the same change set.
+- [x] `./scripts/validate-docs-freshness.sh` passes after done/archive sync.
+- [x] `jq empty status.json` passes after done/archive sync.
+
+## Completion Date
+
+2026-03-06

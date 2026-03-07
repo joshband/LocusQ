@@ -2,24 +2,24 @@ Title: BL-036 DSP Finite Output Guardrails
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-05
 
 # BL-036 DSP Finite Output Guardrails
 
 ## Plain-Language Summary
 
-BL-036 in plain terms: Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-036 in plain terms: Define the authoritative finite-output guardrail contract, taxonomy, and deterministic replay evidence that downstream runtime enforcement must satisfy before any processor-side promotion claims are made. Current state: Done (contract-lane evidence is complete through D2, docs/status sync is green, and the remaining runtime implementation work was split into BL-078 for honest follow-on ownership). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
 | Who is this for? | QA owners, release owners, and engineering maintainers who depend on deterministic evidence. |
-| What is changing? | Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication. |
+| What is changing? | Define the authoritative finite-output guardrail contract, taxonomy, and deterministic replay evidence that runtime processor enforcement must satisfy. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and docs freshness are green). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-036-dsp-finite-output-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done (contract-lane evidence is complete through D2, docs/status sync is green, and BL-078 now owns the remaining runtime implementation follow-on). |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-036-dsp-finite-output-guardrails.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -63,17 +63,19 @@ xychart-beta
 |---|---|
 | ID | BL-036 |
 | Priority | P0 |
-| Status | Done-candidate (Owner Z10 accepted D2 done-promotion readiness intake; deterministic 100-run replay, strict usage semantics, and docs freshness are green) |
+| Status | Done (Owner Z10 accepted D2 done-promotion readiness intake for the contract lane; closeout/archive sync PASS, and runtime implementation follow-on moved to BL-078) |
 | Track | F - Hardening |
 | Effort | Med / M |
-| Depends On | BL-035 |
-| Blocks | BL-030 |
+| Depends On | BL-035 (Done) |
+| Blocks | — |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+| Final Evidence Root | `TestEvidence/bl036_slice_d2_done_promotion_20260227T201716Z/` |
+| Archived Runbook Path | `Documentation/backlog/done/bl-036-dsp-finite-output-guardrails.md` |
 
 ## Objective
 
-Guarantee finite-only audio and reactive state propagation by enforcing deterministic NaN/Inf/denormal containment at DSP boundaries, with explicit limiter and fallback behavior before host-buffer publication.
+Define the authoritative finite-output guardrail contract, taxonomy, and deterministic replay evidence that runtime processor enforcement must satisfy before follow-on implementation is promoted.
 
 ## Scope
 
@@ -82,11 +84,24 @@ In scope:
 - Limiter and hard-safety fallback behavior contract.
 - Deterministic failure taxonomy and acceptance IDs.
 - Replay-ready QA artifact schema for owner intake.
+- Deterministic contract-lane replay evidence through done-promotion readiness.
 
 Out of scope:
+- Native runtime DSP integration for the finite guardrails (moved to BL-078).
+- Additive processor-surface diagnostics publication (moved to BL-078).
+- Runtime fuzz/soak execute replay and owner closeout for processor enforcement (moved to BL-078).
 - New spatial rendering features.
 - UI redesign or visualization-only work.
 - Release-governance policy changes unrelated to finite-output enforcement.
+
+## Scope Split Note (2026-03-05)
+
+BL-036 is archived as the contract-and-evidence authority for finite-output guardrails. The remaining runtime implementation work was intentionally split into BL-078 so this runbook's `Done` state matches the evidence that actually exists today.
+
+BL-078 now owns:
+- Native finite guardrail integration in runtime DSP paths.
+- Additive finite-output diagnostics publication from processor surfaces.
+- Runtime finite-output fuzz/soak execute replay plus owner closeout.
 
 ## A1 Finite-Output Contract (Authoritative)
 
@@ -159,9 +174,9 @@ A1 defines additive publication requirements for implementation slices:
 | Slice | Description | Exit Criteria |
 |---|---|---|
 | A1 | Contract + taxonomy + QA schema definition | Acceptance IDs `BL036-A1-001..007` documented and freshness green |
-| A2 | Native finite-guardrail integration | No non-finite host-output writes in deterministic lane |
+| A2 | Native finite-guardrail integration | Moved to BL-078 on 2026-03-05 so runtime processor enforcement stays explicit outside BL-036 archive scope |
 | B1 | QA lane harness + scenario contract bootstrap | Lane script + scenario contract pass deterministic `--contract-only --runs 3` replay with machine-readable outputs |
-| B2 | Diagnostics publication + fallback telemetry | Additive finite diagnostics published with stable schema |
+| B2 | Diagnostics publication + fallback telemetry | Moved to BL-078 on 2026-03-05 so processor-surface diagnostics remain follow-on work with their own evidence contract |
 | C2 | Deterministic contract-lane soak evidence | `--contract-only --runs 10` replay remains hash-stable and taxonomy-clean |
 | C3 | Deterministic replay sentinel evidence | `--contract-only --runs 20` replay remains hash-stable, row-stable, and taxonomy-clean |
 | C4 | Deterministic replay sentinel soak evidence | `--contract-only --runs 50` replay remains hash-stable, row-stable, and taxonomy-clean |
@@ -171,7 +186,6 @@ A1 defines additive publication requirements for implementation slices:
 | C6 | Release-sentinel replay + strict exit-semantics evidence | `--contract-only --runs 50` replay remains hash/row stable and usage-error probes return strict exit `2` |
 | D1 | Done-candidate readiness replay + strict exit-semantics evidence | `--contract-only --runs 75` replay remains hash/row stable and usage-error probes return strict exit `2` |
 | D2 | Done-promotion readiness replay + strict exit-semantics evidence | `--contract-only --runs 100` replay remains hash/row stable and usage-error probes return strict exit `2` |
-| C1 | Fuzz/soak replay validation | Deterministic replay shows zero non-contained NaN/Inf leaks |
 
 ## TODOs
 
@@ -188,9 +202,7 @@ A1 defines additive publication requirements for implementation slices:
 - [x] Execute C6 release-sentinel replay (`--contract-only --runs 50`) plus strict usage-exit probes (`--runs 0`, `--unknown-flag`).
 - [x] Execute D1 done-candidate readiness replay (`--contract-only --runs 75`) plus strict usage-exit probes (`--runs 0`, `--unknown-flag`).
 - [x] Execute D2 done-promotion readiness replay (`--contract-only --runs 100`) plus strict usage-exit probes (`--runs 0`, `--unknown-flag`).
-- [ ] Implement native finite guardrails in runtime DSP paths.
-- [ ] Publish additive finite-output diagnostics from processor surfaces.
-- [ ] Execute runtime finite-output fuzz/soak lane and owner replay.
+- [x] Split the remaining runtime implementation follow-on into BL-078 so BL-036 closes honestly against the existing contract-lane evidence.
 
 
 ## Validation Plan
@@ -270,11 +282,8 @@ D2 (done-promotion readiness slice):
 - `./scripts/qa-bl036-finite-output-lane-mac.sh --unknown-flag` (expect exit `2`)
 - `./scripts/validate-docs-freshness.sh`
 
-Runtime implementation slices (A2/B2/C1):
-- `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8`
-- `./build_local/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json`
-- `LOCUSQ_UI_SELFTEST_SCOPE=bl029 ./scripts/standalone-ui-selftest-production-p0-mac.sh`
-- `./scripts/rt-safety-audit.sh --print-summary --output TestEvidence/bl036_<slice>_<timestamp>/rt_audit.tsv`
+Runtime implementation follow-on:
+- Moved to BL-078 (`Documentation/backlog/bl-078-runtime-finite-output-enforcement-and-diagnostics.md`) on 2026-03-05.
 
 ## Evidence Contract
 
@@ -390,12 +399,7 @@ D2 required outputs:
 - `promotion_readiness.md`
 - `docs_freshness.log`
 
-Runtime implementation slice outputs (additive):
-- `build.log`
-- `qa_smoke.log`
-- `finite_fuzz.tsv`
-- `rt_audit.tsv`
-- `validation_matrix.tsv`
+Runtime implementation follow-on outputs are now defined in BL-078.
 
 ## A1 Execution Snapshot (2026-02-27)
 
@@ -736,4 +740,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-
