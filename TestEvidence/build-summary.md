@@ -6,6 +6,22 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W3-C WebView Keyboard + Accessibility (UTC 2026-03-07T03:40:02Z)
+
+1. Implementation slice
+- added keyboard/ARIA semantics for major custom WebView surfaces in `Source/ui/public/index.html` and `Source/ui/src/index.ts`, including mode-tab tablist behavior, viewport view-toolbar state, timeline-lane radiogroup selection, and scene-monitor listbox rows
+- added visible focus treatment, `role="switch"` / `aria-checked` syncing for custom toggles, `role="spinbutton"` keyboard support for numeric steppers, and `aria-expanded` wiring for the physics disclosure
+- added a screen-reader live region plus focusable viewport keyboard nudging so the selected local emitter can be moved with arrow keys and `PageUp` / `PageDown`
+
+2. Build validation
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake --build build_local --target LocusQ -j4` -> `PASS`
+
+3. Focused verification
+- `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T034002Z.json`)
+
 ## W2-B WebView Loading + Error Surfaces (UTC 2026-03-07T03:05:06Z)
 
 1. Implementation slice
