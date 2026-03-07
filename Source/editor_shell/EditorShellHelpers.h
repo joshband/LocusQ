@@ -8,10 +8,15 @@ inline void pushSceneAndCalibrationUpdate (juce::WebBrowserComponent& webView,
                                            const juce::String& sceneJson,
                                            const juce::String& calibrationJson)
 {
-    webView.evaluateJavascript (
-        "(()=>{const __scene=" + sceneJson + ";const __cal=" + calibrationJson
-            + ";if(typeof updateSceneState==='function')updateSceneState(__scene);"
-              "if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(__cal);})();");
+    juce::String script;
+    script.preallocateBytes (
+        sceneJson.getNumBytesAsUTF8()
+        + calibrationJson.getNumBytesAsUTF8()
+        + 160);
+    script = "(()=>{const __scene=" + sceneJson + ";const __cal=" + calibrationJson
+           + ";if(typeof updateSceneState==='function')updateSceneState(__scene);"
+             "if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(__cal);})();";
+    webView.evaluateJavascript (script);
 }
 
 inline void notifyHostResized (juce::WebBrowserComponent& webView,
@@ -96,4 +101,3 @@ inline juce::String getSelfTestPollScript()
     )JS";
 }
 } // namespace locusq::editor_shell
-

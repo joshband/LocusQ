@@ -2,8 +2,6 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 
-#include <vector>
-
 namespace locusq::spatial_post_fx_chain
 {
 
@@ -23,11 +21,12 @@ inline void applyRoomFxIfEnabled (
         fdnReverb.process (accumBuffer);
 }
 
+template <typename DelayBuffer>
 inline void processSpeakerDelayLine (
     float* channelData,
     int numSamples,
     int delaySamples,
-    std::vector<float>& delayLine,
+    DelayBuffer& delayLine,
     int& delayWritePos,
     int maxDelaySamples) noexcept
 {

@@ -28,7 +28,6 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
-#include <vector>
 
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
  #include <phonon.h>
@@ -526,6 +525,51 @@ private:
         int numOutputChannels,
         bool renderedAuditionEmitter);
 
+    struct PreparedScratchBuffer
+    {
+        void prepare (int requestedSamples)
+        {
+            const auto requestedSize = static_cast<std::size_t> (juce::jmax (0, requestedSamples));
+
+            if (requestedSize != size_)
+            {
+                data_.malloc (requestedSize, true);
+                size_ = requestedSize;
+            }
+            else
+            {
+                clear();
+            }
+        }
+
+        void clear() noexcept
+        {
+            if (size_ > 0)
+                std::fill_n (data_.get(), size_, 0.0f);
+        }
+
+        int size() const noexcept
+        {
+            return static_cast<int> (size_);
+        }
+
+        float* data() noexcept { return data_.get(); }
+        const float* data() const noexcept { return data_.get(); }
+
+        float* begin() noexcept { return data_.get(); }
+        const float* begin() const noexcept { return data_.get(); }
+
+        float* end() noexcept { return data_.get() + size_; }
+        const float* end() const noexcept { return data_.get() + size_; }
+
+        float& operator[] (std::size_t index) noexcept { return data_[index]; }
+        const float& operator[] (std::size_t index) const noexcept { return data_[index]; }
+
+    private:
+        juce::HeapBlock<float> data_;
+        std::size_t size_ = 0;
+    };
+
     double currentSampleRate = 44100.0;
     int currentBlockSize = 512;
 
@@ -544,7 +588,7 @@ private:
     std::array<std::array<juce::SmoothedValue<float>, NUM_SPEAKERS>, AUDITION_MAX_VOICES> auditionSmoothedSpeakerGains;
 
     // Speaker delay lines
-    std::array<std::vector<float>, NUM_SPEAKERS> speakerDelayLines;
+    std::array<std::array<float, MAX_DELAY_SAMPLES>, NUM_SPEAKERS> speakerDelayLines {};
     std::array<int, NUM_SPEAKERS> delayWritePos {};
     std::array<int, NUM_SPEAKERS> speakerDelaySamples {};
 
@@ -698,7 +742,7 @@ private:
     juce::AudioBuffer<float> accumBuffer;
 
     // Temp buffer for mono downmix of emitter audio
-    std::vector<float> tempMonoBuffer;
+    PreparedScratchBuffer tempMonoBuffer;
 
     // Per-block guardrail stats (read on non-audio threads for diagnostics/UI).
     std::atomic<int> lastEligibleEmitterCount { 0 };
@@ -764,10 +808,10 @@ private:
     juce::String steamMissingSymbolName;
 
     // Steam Audio scratch/output buffers reused each block.
-    std::vector<float> steamBinauralLeft;
-    std::vector<float> steamBinauralRight;
-    std::array<std::vector<float>, NUM_SPEAKERS> headPoseRotatedQuadScratch;
-    std::array<std::vector<float>, NUM_SPEAKERS> monitoringHeadPoseRotatedQuadScratch_;
+    PreparedScratchBuffer steamBinauralLeft;
+    PreparedScratchBuffer steamBinauralRight;
+    std::array<PreparedScratchBuffer, NUM_SPEAKERS> headPoseRotatedQuadScratch;
+    std::array<PreparedScratchBuffer, NUM_SPEAKERS> monitoringHeadPoseRotatedQuadScratch_;
     std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS> headPoseSpeakerMix {};
     std::array<std::array<float, NUM_SPEAKERS>, NUM_SPEAKERS> monitoringSpeakerMix_ {};
     PoseSnapshot headPoseSnapshot {};

@@ -68,18 +68,10 @@ void SpatialRenderer::prepare (double sampleRate, int maxBlockSize)
             for (auto& g : emitterGains)
                 g.reset (sampleRate, 0.020); // 20ms gain ramp
 
-        auto ensureZeroedBuffer = [] (std::vector<float>& buffer, size_t size)
-        {
-            if (buffer.size() != size)
-                buffer = std::vector<float> (size, 0.0f);
-            else
-                std::fill (buffer.begin(), buffer.end(), 0.0f);
-        };
-
         // Prepare per-speaker delay lines
         for (int spk = 0; spk < NUM_SPEAKERS; ++spk)
         {
-            ensureZeroedBuffer (speakerDelayLines[spk], MAX_DELAY_SAMPLES);
+            std::fill (speakerDelayLines[spk].begin(), speakerDelayLines[spk].end(), 0.0f);
             delayWritePos[spk] = 0;
         }
 
@@ -103,7 +95,7 @@ void SpatialRenderer::prepare (double sampleRate, int maxBlockSize)
             trim.reset (sampleRate, 0.020);
 
         // Temp mono buffer for per-emitter processing
-        ensureZeroedBuffer (tempMonoBuffer, static_cast<size_t> (maxBlockSize));
+        tempMonoBuffer.prepare (maxBlockSize);
 
         // Prepare per-emitter doppler processors
         for (auto& doppler : emitterDoppler)
@@ -122,12 +114,12 @@ void SpatialRenderer::prepare (double sampleRate, int maxBlockSize)
         setRoomDamping (roomDamping);
         setEarlyReflectionsOnly (earlyReflectionsOnly);
 
-        ensureZeroedBuffer (steamBinauralLeft, static_cast<size_t> (maxBlockSize));
-        ensureZeroedBuffer (steamBinauralRight, static_cast<size_t> (maxBlockSize));
+        steamBinauralLeft.prepare (maxBlockSize);
+        steamBinauralRight.prepare (maxBlockSize);
         for (auto& rotated : headPoseRotatedQuadScratch)
-            ensureZeroedBuffer (rotated, static_cast<size_t> (maxBlockSize));
+            rotated.prepare (maxBlockSize);
         for (auto& rotated : monitoringHeadPoseRotatedQuadScratch_)
-            ensureZeroedBuffer (rotated, static_cast<size_t> (maxBlockSize));
+            rotated.prepare (maxBlockSize);
         resetHeadPoseState();
         resetHeadphoneCompensationState();
         for (auto& voiceGains : auditionSmoothedSpeakerGains)
@@ -157,6 +149,13 @@ void SpatialRenderer::reset()
             std::fill (dl.begin(), dl.end(), 0.0f);
 
         accumBuffer.clear();
+        tempMonoBuffer.clear();
+        steamBinauralLeft.clear();
+        steamBinauralRight.clear();
+        for (auto& rotated : headPoseRotatedQuadScratch)
+            rotated.clear();
+        for (auto& rotated : monitoringHeadPoseRotatedQuadScratch_)
+            rotated.clear();
 
         for (auto& doppler : emitterDoppler)
             doppler.reset();

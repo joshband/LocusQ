@@ -172,6 +172,156 @@ juce::File resolveCompanionCalibrationProfileFile()
 
     return candidates[0];
 }
+
+juce::String getOptionString (const juce::var& options,
+                              std::initializer_list<const char*> propertyNames)
+{
+    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
+    {
+        for (const auto* propertyName : propertyNames)
+        {
+            if (! optionsObject->hasProperty (propertyName))
+                continue;
+
+            const auto value = optionsObject->getProperty (propertyName).toString().trim();
+            if (value.isNotEmpty())
+                return value;
+        }
+    }
+
+    return {};
+}
+
+struct CalibrationProfilePayloadMetadata
+{
+    juce::String name;
+    juce::String topologyId { calibrationTopologyIdForIndex (1) };
+    juce::String monitoringPathId { calibrationMonitoringPathIdForIndex (0) };
+    juce::String deviceProfileId { calibrationDeviceProfileIdForIndex (0) };
+    juce::var validationSummary;
+};
+
+CalibrationProfilePayloadMetadata extractCalibrationProfilePayloadMetadata (const juce::var& payload,
+                                                                           const juce::String& fallbackName)
+{
+    CalibrationProfilePayloadMetadata metadata;
+    metadata.name = fallbackName;
+
+    if (auto* profile = payload.getDynamicObject())
+    {
+        if (profile->hasProperty ("name"))
+            metadata.name = profile->getProperty ("name").toString().trim();
+
+        if (auto* context = profile->getProperty ("context").getDynamicObject())
+        {
+            if (context->hasProperty ("topologyProfile"))
+                metadata.topologyId = locusq::processor_bridge::normaliseCalibrationTopologyId (
+                    context->getProperty ("topologyProfile").toString(),
+                    kCalibrationTopologyIds,
+                    [] (int index) { return calibrationTopologyIdForIndex (index); },
+                    [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
+            if (context->hasProperty ("monitoringPath"))
+                metadata.monitoringPathId = locusq::processor_bridge::normaliseCalibrationMonitoringPathId (
+                    context->getProperty ("monitoringPath").toString(),
+                    kCalibrationMonitoringPathIds,
+                    [] (int index) { return calibrationMonitoringPathIdForIndex (index); },
+                    [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
+            if (context->hasProperty ("deviceProfile"))
+                metadata.deviceProfileId = locusq::processor_bridge::normaliseCalibrationDeviceProfileId (
+                    context->getProperty ("deviceProfile").toString(),
+                    kCalibrationDeviceProfileIds,
+                    [] (int index) { return calibrationDeviceProfileIdForIndex (index); },
+                    [] (const auto& ids, const juce::String& value) { return indexOfCaseInsensitive (ids, value); });
+        }
+
+        if (profile->hasProperty ("validationSummary"))
+            metadata.validationSummary = profile->getProperty ("validationSummary");
+    }
+
+    if (metadata.name.isEmpty())
+        metadata.name = fallbackName;
+
+    return metadata;
+}
+
+bool isCalibrationProfilePayloadCompatible (const juce::var& payload)
+{
+    auto* profile = payload.getDynamicObject();
+    if (profile == nullptr)
+        return false;
+
+    if (profile->hasProperty ("schema"))
+    {
+        const auto schema = profile->getProperty ("schema").toString().trim();
+        if (schema.isNotEmpty() && schema != kCalibrationProfileSchemaV1)
+            return false;
+    }
+
+    auto* controls = profile->getProperty ("controls").getDynamicObject();
+    if (controls == nullptr || controls->getProperties().isEmpty())
+        return false;
+
+    for (const auto* parameterId : kCalibrationProfileParameterIds)
+    {
+        if (controls->hasProperty (parameterId))
+            return true;
+    }
+
+    return false;
+}
+
+juce::File makeUniqueImportedCalibrationProfileFile (const juce::File& directory,
+                                                     const juce::File& sourceFile,
+                                                     const juce::String& requestedName,
+                                                     juce::String& resolvedDisplayName)
+{
+    auto baseDisplayName = requestedName.trim();
+    if (baseDisplayName.isEmpty())
+        baseDisplayName = sourceFile.getFileNameWithoutExtension();
+
+    auto candidateDisplayName = baseDisplayName;
+    auto candidateFile = directory.getChildFile (locusq::processor_bridge::sanitisePresetName (candidateDisplayName) + ".json");
+
+    if (candidateFile.getFullPathName() == sourceFile.getFullPathName() || ! candidateFile.existsAsFile())
+    {
+        resolvedDisplayName = candidateDisplayName;
+        return candidateFile;
+    }
+
+    for (int suffix = 2; suffix < 1000; ++suffix)
+    {
+        candidateDisplayName = baseDisplayName + " (Imported " + juce::String (suffix) + ")";
+        candidateFile = directory.getChildFile (locusq::processor_bridge::sanitisePresetName (candidateDisplayName) + ".json");
+        if (candidateFile.getFullPathName() == sourceFile.getFullPathName() || ! candidateFile.existsAsFile())
+        {
+            resolvedDisplayName = candidateDisplayName;
+            return candidateFile;
+        }
+    }
+
+    resolvedDisplayName = baseDisplayName + " (Imported)";
+    return directory.getChildFile (locusq::processor_bridge::sanitisePresetName (resolvedDisplayName)
+                                   + "_" + juce::String (juce::Time::getCurrentTime().toMilliseconds())
+                                   + ".json");
+}
+
+void populateCalibrationProfileResponse (juce::DynamicObject& result,
+                                         const juce::var& payload,
+                                         const juce::File& file,
+                                         const juce::String& fallbackName)
+{
+    const auto metadata = extractCalibrationProfilePayloadMetadata (payload, fallbackName);
+
+    result.setProperty ("name", metadata.name);
+    result.setProperty ("file", file.getFileName());
+    result.setProperty ("path", file.getFullPathName());
+    result.setProperty ("topologyProfile", metadata.topologyId);
+    result.setProperty ("monitoringPath", metadata.monitoringPathId);
+    result.setProperty ("deviceProfile", metadata.deviceProfileId);
+    result.setProperty ("profileTupleKey", metadata.topologyId + "::" + metadata.monitoringPathId);
+    if (! metadata.validationSummary.isVoid())
+        result.setProperty ("validationSummary", metadata.validationSummary);
+}
 } // namespace
 
 juce::String LocusQAudioProcessor::normaliseCalibrationTopologyId (const juce::String& topologyId)
@@ -875,6 +1025,159 @@ juce::var LocusQAudioProcessor::deleteCalibrationProfileFromUI (const juce::var&
     result->setProperty ("ok", true);
     result->setProperty ("file", profileFile.getFileName());
     result->setProperty ("path", profileFile.getFullPathName());
+    return response;
+}
+
+juce::var LocusQAudioProcessor::exportCalibrationProfileFromUI (const juce::var& options) const
+{
+    const auto sourceFile = resolveCalibrationProfileFileFromOptions (options);
+    const auto destinationPath = getOptionString (options, { "destinationPath", "exportPath" });
+
+    juce::var response (new juce::DynamicObject());
+    auto* result = response.getDynamicObject();
+
+    if (! sourceFile.existsAsFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file not found.");
+        return response;
+    }
+
+    if (destinationPath.isEmpty())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile export destination is required.");
+        return response;
+    }
+
+    const auto payload = readJsonFromFile (sourceFile);
+    if (! payload.has_value())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile file is invalid JSON.");
+        return response;
+    }
+
+    if (! isCalibrationProfilePayloadCompatible (*payload))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile payload is not compatible.");
+        return response;
+    }
+
+    auto destinationFile = juce::File (destinationPath);
+    if (! destinationFile.hasFileExtension ("json"))
+        destinationFile = destinationFile.withFileExtension (".json");
+
+    const auto parentDirectory = destinationFile.getParentDirectory();
+    if (parentDirectory != juce::File() && ! parentDirectory.exists() && ! parentDirectory.createDirectory())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Failed to create export directory.");
+        return response;
+    }
+
+    if (destinationFile.getFullPathName() != sourceFile.getFullPathName()
+        && ! writeJsonToFile (destinationFile, *payload))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Failed to write exported calibration profile file.");
+        return response;
+    }
+
+    result->setProperty ("ok", true);
+    populateCalibrationProfileResponse (*result,
+                                        *payload,
+                                        destinationFile,
+                                        sourceFile.getFileNameWithoutExtension());
+    result->setProperty ("sourcePath", sourceFile.getFullPathName());
+    result->setProperty ("exportPath", destinationFile.getFullPathName());
+    return response;
+}
+
+juce::var LocusQAudioProcessor::importCalibrationProfileFromUI (const juce::var& options)
+{
+    const auto sourcePath = getOptionString (options, { "sourcePath", "path", "importPath" });
+    const auto sourceFile = juce::File (sourcePath);
+
+    juce::var response (new juce::DynamicObject());
+    auto* result = response.getDynamicObject();
+
+    if (sourcePath.isEmpty())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile import source is required.");
+        return response;
+    }
+
+    if (! sourceFile.existsAsFile())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile import file not found.");
+        return response;
+    }
+
+    const auto payload = readJsonFromFile (sourceFile);
+    if (! payload.has_value())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile import file is invalid JSON.");
+        return response;
+    }
+
+    if (! isCalibrationProfilePayloadCompatible (*payload))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Calibration profile payload is not compatible.");
+        return response;
+    }
+
+    auto profileDirectory = getCalibrationProfileDirectory();
+    if (! profileDirectory.exists() && ! profileDirectory.createDirectory())
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message", "Failed to create calibration profile directory.");
+        return response;
+    }
+
+    const auto metadata = extractCalibrationProfilePayloadMetadata (*payload,
+                                                                   sourceFile.getFileNameWithoutExtension());
+    juce::String resolvedDisplayName;
+    const auto destinationFile = makeUniqueImportedCalibrationProfileFile (profileDirectory,
+                                                                           sourceFile,
+                                                                           metadata.name,
+                                                                           resolvedDisplayName);
+    const auto samePath = destinationFile.getFullPathName() == sourceFile.getFullPathName();
+
+    auto importedPayload = *payload;
+    if (! samePath)
+    {
+        if (auto* profile = importedPayload.getDynamicObject(); profile != nullptr)
+        {
+            profile->setProperty ("name", resolvedDisplayName);
+            profile->setProperty ("importedAtUtc", juce::Time::getCurrentTime().toISO8601 (true));
+        }
+
+        if (! writeJsonToFile (destinationFile, importedPayload))
+        {
+            result->setProperty ("ok", false);
+            result->setProperty ("message", "Failed to write imported calibration profile file.");
+            return response;
+        }
+    }
+
+    const auto& resolvedPayload = samePath ? *payload : importedPayload;
+    const auto resolvedFile = samePath ? sourceFile : destinationFile;
+    result->setProperty ("ok", true);
+    populateCalibrationProfileResponse (*result,
+                                        resolvedPayload,
+                                        resolvedFile,
+                                        resolvedDisplayName.isNotEmpty()
+                                            ? resolvedDisplayName
+                                            : sourceFile.getFileNameWithoutExtension());
+    result->setProperty ("sourcePath", sourceFile.getFullPathName());
+    result->setProperty ("importedPath", resolvedFile.getFullPathName());
+    result->setProperty ("importedFromLibrary", samePath);
     return response;
 }
 

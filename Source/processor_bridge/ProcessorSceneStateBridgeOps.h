@@ -14,7 +14,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
     const auto snapshotPublishedAtUtcMs = juce::Time::getCurrentTime().toMilliseconds();
 
     // Build JSON scene snapshot for WebView
-    juce::String json = "{\"snapshotSchema\":\"" + juce::String (kSceneSnapshotSchemaProperty) + "\""
+    juce::String json;
+    json.preallocateBytes (32 * 1024);
+    json = "{\"snapshotSchema\":\"" + juce::String (kSceneSnapshotSchemaProperty) + "\""
                       + ",\"snapshotSeq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
                       + ",\"profileSyncSeq\":" + juce::String (static_cast<juce::int64> (snapshotSeq))
                       + ",\"snapshotPublishedAtUtcMs\":" + juce::String (snapshotPublishedAtUtcMs)
@@ -1110,7 +1112,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
     }
 
     juce::String speakerRmsJson { "[" };
+    speakerRmsJson.preallocateBytes (128);
     juce::String speakersJson { "[" };
+    speakersJson.preallocateBytes (1024);
     for (size_t i = 0; i < sceneSpeakerRms.size(); ++i)
     {
         if (i > 0)
