@@ -17,6 +17,9 @@ Operational snapshot:
 ### Added
 
 - Architecture review W1-B hardening: triple-buffered RT keyframe timeline snapshots, `juce::Thread` physics cadence, and fixed-size sequence-safe headphone diagnostics publication.
+- Architecture review W2-B WebView UX hardening: branded boot shell/loading skeleton, deduped warning/error toasts, and a compact calibration status dock for degraded/native-bridge states.
+- Architecture review W2-C format-lane expansion: dedicated CLAP and AUv3 CI jobs plus clean-bundle npm dev-dependency install coverage for fresh WebView builds.
+- Architecture review W2-D calibration portability: native JSON profile export/import with async file choosers, compatibility checks, and WebView library controls.
 
 - Specialist execution skills for active lanes:
   - `steam-audio-capi`, `clap-plugin-lifecycle`, `spatial-audio-engineering`
