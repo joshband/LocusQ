@@ -6,6 +6,19 @@ Last Modified Date: 2026-03-07
 
 # LocusQ Build Summary (Acceptance Closeout)
 
+## W1-A ParameterBridge Data-Driven Relay/Attachment Refactor (UTC 2026-03-07T00:56:05Z)
+
+1. Implementation slice
+- added `Source/editor_webview/EditorParameterBridge.h` as the canonical BL-039-aligned relay spec and runtime bridge helper
+- replaced `PluginEditor`'s 85 individually declared relays and 85 individually declared attachments with a spec-driven relay store plus attachment store in `Source/PluginEditor.h`
+- updated `Source/PluginEditor.cpp` to register WebView relay bindings and create APVTS attachments from the shared bridge inventory while preserving the critical destruction order `relays -> webView -> attachments`
+
+2. Build validation
+- `cmake --build build_local --config Release --target LocusQ LocusQ_Standalone -- -j8` -> `PASS`
+
+3. Focused runtime validation
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T005545Z.json`)
+
 ## W1-B Thread-Safety Hardening (UTC 2026-03-07T00:45:59Z)
 
 1. Implementation slice
