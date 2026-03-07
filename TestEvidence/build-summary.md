@@ -22,6 +22,17 @@ Last Modified Date: 2026-03-07
 - `git diff --check -- Source/ui/public/index.html Source/ui/src/index.ts` -> `PASS`
 - `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS` (`TestEvidence/locusq_production_p0_selftest_20260307T034002Z.json`)
 
+## Companion Live Head-Tracking Orientation Fix (UTC 2026-03-07T04:08:58Z)
+
+1. Implementation slice
+- moved companion quaternion math into `companion/Sources/LocusQHeadTrackerCore/HeadTrackingOrientation.swift` so live CoreMotion attitude mapping is shared and testable
+- updated the live companion path in `companion/Sources/LocusQHeadTrackingCompanion/main.swift` to publish a Steam/LocusQ pose quaternion from the CoreMotion attitude before the calibrate and companion monitors render it
+- added regression coverage in `companion/Tests/LocusQHeadTrackerTests/HeadTrackingOrientationTests.swift` for left-turn and look-down forward-vector behavior, and refreshed `PosePacketTests.swift` to the current v2 packet schema
+
+2. Build validation
+- `cd companion && swift build` -> `PASS`
+- `cd companion && swift test` -> `PASS`
+
 ## W2-B WebView Loading + Error Surfaces (UTC 2026-03-07T03:05:06Z)
 
 1. Implementation slice

@@ -22,7 +22,8 @@ let package = Package(
             path: "Sources/LocusQHeadTrackerCore"
         ),
         .executableTarget(
-            name: "LocusQHeadTrackingCompanion"
+            name: "LocusQHeadTrackingCompanion",
+            dependencies: ["LocusQHeadTrackerCore"]
         ),
         .testTarget(
             name: "LocusQHeadTrackerTests",
