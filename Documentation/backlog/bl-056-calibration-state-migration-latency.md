@@ -2,7 +2,7 @@ Title: BL-056 Calibration State Migration + Latency Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-17
 
 # BL-056 Calibration State Migration + Latency Contract
 
@@ -18,7 +18,7 @@ BL-056 in plain terms: Bump plugin state_version, serialize new headphone calibr
 | What is changing? | Bump plugin state_version, serialize new headphone calibration parameters in getStateInformation/setStateInformation. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Open. This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17). Done when T3 promotion evidence captured and owner packet written. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-056-calibration-state-migration-latency.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-056 |
 | Priority | P1 |
-| Status | Open |
+| Status | In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17; owner promotion packet pending) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-054, BL-055 |
@@ -63,9 +63,20 @@ Bump plugin `state_version`, serialize new headphone calibration parameters in g
 - latency = 0 when calibration is bypassed
 
 
+## Implementation Snapshot (2026-03-17)
+
+- Added `kSnapshotSchemaValueV3 = "locusq-state-v3"` to `Source/processor_core/ProcessorConstants.h`.
+- Updated `getStateInformation` in `Source/processor_core/ProcessorStateSerializer.cpp` to write V3 schema.
+- Added V2→V3 migration comments documenting transparent migration contract.
+- V2→V3 migration is transparent: no new mandatory state fields; PEQ/FIR/SOFA data re-polled from CalibrationProfile.json on startup.
+- Latency-zero-on-disable confirmed: `resolveCalibrationChainState` returns `activeLatencySamples=0` when `!request.enabled`.
+- `setLatencySamples(0)` on bypass confirmed in `PluginProcessor.cpp` bypass path.
+- QA harness authored: `scripts/qa-bl056-calibration-state-migration-mac.sh`.
+- Execute lane PASS (10/10): `TestEvidence/bl056_calibration_state_migration_20260317T045411Z/status.tsv`
+
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl056-calibration-state-migration-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl056-calibration-state-migration-mac.sh`.
 Evidence schema: `TestEvidence/bl056_*/status.tsv`.
 
 ## Replay Cadence Plan (Required)

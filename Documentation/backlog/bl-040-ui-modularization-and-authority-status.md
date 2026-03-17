@@ -2,7 +2,7 @@ Title: BL-040 UI Modularization and Authority Status UX
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-16
 
 # BL-040 UI Modularization and Authority Status UX
 
@@ -309,7 +309,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (B1)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/bl040_slice_b1_ui_<timestamp>/contract_runs`
@@ -317,7 +317,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C2 Replay Sentinel)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 10 --out-dir TestEvidence/bl040_slice_c2_ui_soak_<timestamp>/contract_runs`
@@ -325,7 +325,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C3 Replay Sentinel)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c3_ui_replay_sentinel_<timestamp>/contract_runs`
@@ -333,7 +333,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C4 Replay Sentinel Soak)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 50 --out-dir TestEvidence/bl040_slice_c4_ui_soak_<timestamp>/contract_runs`
@@ -341,7 +341,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C5 Exit-Semantics Guard)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c5_ui_semantics_<timestamp>/contract_runs`
@@ -351,7 +351,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C5b Exit-Semantics Guard Recheck)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c5b_ui_semantics_<timestamp>/contract_runs`
@@ -361,7 +361,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C5c Exit-Semantics Guard Recheck Post-H2)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c5c_ui_semantics_<timestamp>/contract_runs`
@@ -371,7 +371,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (C6 Long-Run Exit-Semantics Sentinel)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 50 --out-dir TestEvidence/bl040_slice_c6_ui_longrun_<timestamp>/contract_runs`
@@ -381,7 +381,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (D1 Done-Candidate Long-Run Sentinel)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl040_slice_d1_done_candidate_<timestamp>/contract_runs`
@@ -391,7 +391,7 @@ Slice B1 introduces UI diagnostics instrumentation and contract-only lane valida
 
 ## Validation Plan (D2 Done Promotion Sentinel)
 
-- `node --check Source/ui/public/js/index.js`
+- `node --check Source/ui/src/index.ts`
 - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help`
 - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl040_slice_d2_done_promotion_<timestamp>/contract_runs`

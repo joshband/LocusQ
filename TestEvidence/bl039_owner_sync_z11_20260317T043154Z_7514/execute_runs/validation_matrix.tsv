@@ -1,0 +1,22 @@
+run_index	gate_id	gate	threshold	measured_value	result	artifact
+run_01	BL039-B1-001	schema_contract	required schema clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_01	BL039-B1-002	ordering_contract	ordering + ordinal clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_01	BL039-B1-003	drift_hash_contract	required deterministic hash clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_01	BL039-B1-004	acceptance_parity	A1/B1 acceptance sets equal and B1 count>=7	backlog=15;qa=15;b1_backlog=7;b1_qa=7;parity=match	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/run_01/acceptance_diff.patch
+run_01	BL039-B1-005	failure_taxonomy_parity	failure taxonomy sets equal and count>=9	backlog=9;qa=9;parity=match	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/run_01/failure_diff.patch
+run_01	BL039-B1-006	artifact_schema_contract	required lane artifacts declared	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/testing/bl-039-parameter-relay-spec-generation-qa.md
+run_01	BL039-B1-007	execution_mode_contract	mode in {contract_only,execute_suite}	execute_suite	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv
+run_02	BL039-B1-001	schema_contract	required schema clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_02	BL039-B1-002	ordering_contract	ordering + ordinal clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_02	BL039-B1-003	drift_hash_contract	required deterministic hash clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_02	BL039-B1-004	acceptance_parity	A1/B1 acceptance sets equal and B1 count>=7	backlog=15;qa=15;b1_backlog=7;b1_qa=7;parity=match	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/run_02/acceptance_diff.patch
+run_02	BL039-B1-005	failure_taxonomy_parity	failure taxonomy sets equal and count>=9	backlog=9;qa=9;parity=match	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/run_02/failure_diff.patch
+run_02	BL039-B1-006	artifact_schema_contract	required lane artifacts declared	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/testing/bl-039-parameter-relay-spec-generation-qa.md
+run_02	BL039-B1-007	execution_mode_contract	mode in {contract_only,execute_suite}	execute_suite	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv
+run_03	BL039-B1-001	schema_contract	required schema clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_03	BL039-B1-002	ordering_contract	ordering + ordinal clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_03	BL039-B1-003	drift_hash_contract	required deterministic hash clauses present	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-039-parameter-relay-spec-generation.md
+run_03	BL039-B1-004	acceptance_parity	A1/B1 acceptance sets equal and B1 count>=7	backlog=15;qa=15;b1_backlog=7;b1_qa=7;parity=match	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/run_03/acceptance_diff.patch
+run_03	BL039-B1-005	failure_taxonomy_parity	failure taxonomy sets equal and count>=9	backlog=9;qa=9;parity=match	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/run_03/failure_diff.patch
+run_03	BL039-B1-006	artifact_schema_contract	required lane artifacts declared	present	PASS	/Users/artbox/Documents/Repos/LocusQ/Documentation/testing/bl-039-parameter-relay-spec-generation-qa.md
+run_03	BL039-B1-007	execution_mode_contract	mode in {contract_only,execute_suite}	execute_suite	PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv

@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 88,
-    "open": 19,
-    "done": 69
+    "open": 18,
+    "done": 70
   },
   "items": [
     {
@@ -751,8 +751,8 @@
     {
       "id": "BL-039",
       "title": "BL-039 Parameter Relay Spec Generation",
-      "state_bucket": "open",
-      "status": "Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract+execute parity, strict usage exits, and docs freshness are green)",
+      "state_bucket": "done",
+      "status": "Done (Z11 promotion packet 2026-03-17; existing deterministic contract/execute evidence reused, docs freshness green, archive/index sync complete)",
       "priority": "P1",
       "track": "B - Scene/UI Runtime",
       "depends_on": "BL-027 (Done), BL-032 (Done-candidate)",
@@ -763,9 +763,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-039 in plain terms: Eliminate manual parameter relay drift by defining one authoritative parameter-relay spec that deterministically drives APVTS IDs, native relay binding, and UI binding contracts. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract+execute parity, strict usage exits, and docs freshness are green). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-039 in plain terms: Eliminate manual parameter relay drift by defining one authoritative parameter-relay spec that deterministically drives APVTS IDs, native relay binding, and UI binding contracts. Current state: Done (Z11 done promotion 2026-03-17; existing deterministic contract/execute evidence remains green, docs freshness is green, and archive/index sync is complete). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Eliminate manual parameter relay drift by defining one authoritative parameter-relay spec that deterministically drives APVTS IDs, native relay binding, and UI binding contracts.",
-      "runbook_path": "Documentation/backlog/bl-039-parameter-relay-spec-generation.md"
+      "runbook_path": "Documentation/backlog/done/bl-039-parameter-relay-spec-generation.md"
     },
     {
       "id": "BL-040",
@@ -1018,7 +1018,7 @@
       "id": "BL-053",
       "title": "BL-053 Head Tracking Orientation Injection",
       "state_bucket": "open",
-      "status": "In Validation (structural replay PASS; manual operator verification synced; owner promotion packet pending)",
+      "status": "**Done-candidate** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; promotion packet at `TestEvidence/bl053_owner_sync_z1_20260316T050000Z/`)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-052, BL-045",
@@ -1056,7 +1056,7 @@
       "id": "BL-055",
       "title": "BL-055 FIR Convolution Engine",
       "state_bucket": "open",
-      "status": "In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh)",
+      "status": "**Done-candidate** (Z1 owner sync 2026-03-16: T3 10/10 contract+execute PASS; 2026-03-07 execute parity PASS; promotion packet at `TestEvidence/bl055_owner_sync_z1_20260316T050100Z/`)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "\u2014",
@@ -1075,7 +1075,7 @@
       "id": "BL-056",
       "title": "BL-056 Calibration State Migration + Latency Contract",
       "state_bucket": "open",
-      "status": "Open",
+      "status": "In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17; owner promotion packet pending)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-054, BL-055",
@@ -1113,7 +1113,7 @@
       "id": "BL-058",
       "title": "BL-058 Companion Profile Acquisition UI + HRTF Matching",
       "state_bucket": "open",
-      "status": "In Implementation (Wave 1 kickoff: QA harness authored with contract/execute semantics)",
+      "status": "Done-candidate (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; promotion packet at `TestEvidence/bl058_owner_sync_z1_20260317T042803Z_5881/`)",
       "priority": "P0",
       "track": "E - R&D Expansion",
       "depends_on": "BL-057",
@@ -1132,7 +1132,7 @@
       "id": "BL-059",
       "title": "BL-059 CalibrationProfile Integration Handoff",
       "state_bucket": "open",
-      "status": "In Validation (fixture-driven contract+execute smoke PASS; profile ingest/unload scenarios and BL-053/BL-055 dependency replays green on 2026-03-07)",
+      "status": "**Done-candidate** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 dependency replays PASS; BL-056 open non-blocking; promotion packet at `TestEvidence/bl059_owner_sync_z1_20260316T050200Z/`)",
       "priority": "P0",
       "track": "E - R&D Expansion",
       "depends_on": "BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058",

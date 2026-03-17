@@ -2,7 +2,7 @@ Title: LocusQ Re-Entry Report — 2026-03-16
 Document Type: Review Report
 Author: APC Codex
 Created Date: 2026-03-16
-Last Modified Date: 2026-03-16
+Last Modified Date: 2026-03-17 (Session 3 BL-056 complete)
 
 # LocusQ Re-Entry Report — 2026-03-16
 
@@ -16,6 +16,23 @@ Serves as the starting-point document for resuming active work as of 2026-03-16.
 - Prior review: [`2026-03-07-comprehensive-code-review.md`](2026-03-07-comprehensive-code-review.md)
 - Backlog authority: [`Documentation/backlog/index.md`](../backlog/index.md)
 - Execution wave plan: [`Documentation/reports/2026-03-01-execution-wave-triage.md`](../reports/2026-03-01-execution-wave-triage.md)
+
+---
+
+## Skills Used For This Re-Entry Pass
+
+| Scope | Skills | Why |
+|---|---|---|
+| Re-entry report refresh | `documentation-hygiene-expert`, `skill_docs` | Re-anchor this review to current docs standards, backlog authority, and validation/governance expectations. |
+| BL-058 / BL-059 resume lane | `apple-spatial-companion-platform`, `headtracking-companion-runtime`, `spatial-audio-engineering`, `hrtf-rendering-validation-lab` | Verify companion runtime behavior, head-pose timing, profile capture flow, and FIR/HRTF evidence before promotion claims. |
+| Promotion packets and failing self-tests | `skill_testing`, `skill_troubleshooting`, `juce-webview-runtime` | Package owner evidence honestly and debug the BL-080 CALIBRATE self-test timeout without widening scope. |
+| Companion packaging/network hardening | `apple-spatial-companion-platform`, `threejs`, `juce-webview-runtime` | Remove CDN fallback, realign bundled assets, and keep the companion offline-safe. |
+| FIR/SOFA integration closeout | `spatial-audio-engineering`, `steam-audio-capi`, `hrtf-rendering-validation-lab` | Connect profile metadata to the real DSP/render path before any calibration ship claim. |
+
+Skill validation snapshot:
+- `.codex/skills/documentation-hygiene-expert/SKILL.md` and `.codex/skills/docs/SKILL.md` are structurally valid for this project.
+- Both skills have valid frontmatter/metadata, and all referenced repo files/scripts used by this pass currently exist.
+- No `SKILL.md` patch is required for this re-entry task as of 2026-03-16.
 
 ---
 
@@ -45,14 +62,38 @@ Serves as the starting-point document for resuming active work as of 2026-03-16.
 
 ---
 
+## Authority Check
+
+- `status.json` remains the runtime/phase authority: `current_phase = code`, `ui_framework = webview`, `last_modified = 2026-03-07`.
+- `Documentation/backlog/index.md` remains the single backlog authority and is also last updated on 2026-03-07.
+- `git status --short` still shows the March 7 carry-forward implementation/docs/evidence delta plus this re-entry report as untracked.
+- This document is a re-entry aid only; it does not override `status.json`, backlog runbooks, or canonical evidence surfaces.
+
+---
+
 ## Priority Snapshot
 
 | Priority | Open / Active Count | IDs |
 |---|---|---|
-| P0 | 2 active | BL-058, BL-059 |
-| P1 | 5 active or queued | BL-053, BL-054, BL-055, BL-056, BL-080 |
-| P2 | 4 open | BL-020, BL-021, BL-032 (done-candidate), BL-079 (in validation) |
-| P3 | 1 open | BL-080 (authoring undo/redo, self-test failing) |
+| P0 | 3 open / active | BL-058, BL-059, BL-078 |
+| P1 | 7 open / active | BL-053, BL-054, BL-055, BL-056, BL-060, BL-067, BL-068 |
+| P2 | 4 open / active | BL-020, BL-021, BL-061, BL-079 |
+| P3 | 1 open / active | BL-080 |
+
+---
+
+## Re-Entry Session Snapshot
+
+| Work Package | Status | Priority | Estimate | Actual / Time | Tokens | Updated Date | Scope / Where | Remaining Work / Evidence |
+|---|---|---|---|---|---|---|---|---|
+| Session 0 — Working tree hygiene | [NEXT] | P0 | `30-60 min` | `not logged` | `n/a` | 2026-03-16 | `Source/`, `companion/`, `scripts/`, `Documentation/reviews/`, `TestEvidence/` | Diff, stage, and commit March 7 carry-forward work before any new BL execution. |
+| Session 1 — Verify clock fix + close BL-058 | [NEXT] | P0 | `0.5 day` | `not logged` | `n/a` | 2026-03-16 | [`bl-058`](../backlog/bl-058-companion-profile-acquisition.md), `Source/HeadPoseInterpolator.h`, companion matcher/runtime | Verify time-base unification and capture manual BL-058 promotion evidence. |
+| Session 2 — Promote BL-053 / BL-055 / BL-059 | [DONE] | P0/P1 | `0.5-1 day` | `not logged` | `n/a` | 2026-03-16 | [`bl-053`](../backlog/bl-053-head-tracking-orientation-injection.md), [`bl-055`](../backlog/bl-055-fir-convolution-engine.md), [`bl-059`](../backlog/bl-059-calibration-profile-integration-handoff.md), `TestEvidence/validation-trend.md` | Done-candidate packets written; Tier 0 surfaces synced; docs freshness PASS. |
+| Session 3 — Implement BL-056 | [DONE] | P1 | `0.5 day` | `not logged` | `n/a` | 2026-03-17 | [`bl-056`](../backlog/bl-056-calibration-state-migration-latency.md), `Source/processor_core/ProcessorConstants.h`, `Source/processor_core/ProcessorStateSerializer.cpp` | Schema V3 added; V2→V3 migration transparent; execute lane 10/10 PASS; runbook updated to In Validation; docs freshness PASS. |
+| Session 4 — BL-060 prep + stale-pose gating | [QUEUED] | P1 | `0.5-1 day` | `not logged` | `n/a` | 2026-03-16 | [`bl-060`](../backlog/bl-060-phase-b-listening-test-harness.md), `Source/PluginProcessor.cpp` | Start listening-harness prep and add freshness clearing on the main render path. |
+| Session 5 — Companion packaging/network hardening | [QUEUED] | P0 | `0.5 day` | `not logged` | `n/a` | 2026-03-16 | `companion/.../main.swift`, `scripts/sync-companion-app-mac.sh`, UI bundle output | Remove CDN fallback and enforce offline-safe companion startup. |
+| Session 6 — FIR/SOFA runtime wiring | [QUEUED] | P0 | `0.5-1 day` | `not logged` | `n/a` | 2026-03-16 | `ProcessorCalibrationBridge.cpp`, `HeadphoneFirHook`, `SpatialSteamAudioBackend.cpp` | Load real FIR taps, fix `sofa_ref` lookup, and close the renderer TODO. |
+| Session 7 — Promote done-candidates | [DEFERRED] | P1/P2 | `0.5 day` | `not logged` | `n/a` | 2026-03-16 | [`bl-032`](../backlog/bl-032-source-modularization.md), [`bl-039`](../backlog/bl-039-parameter-relay-spec-generation.md), [`bl-040`](../backlog/bl-040-ui-modularization-and-authority-status.md), [`bl-079`](../backlog/bl-079-apvts-parameter-grouping-and-host-hierarchy.md) | Trim/sync remaining done-candidate work once the calibration chain is stable. |
 
 ---
 
@@ -63,21 +104,27 @@ Serves as the starting-point document for resuming active work as of 2026-03-16.
 | ID | Title | Status | Runbook | Blocker / Notes |
 |---|---|---|---|---|
 | BL-058 | Companion profile acquisition UI + HRTF matching | [ACTIVE] | [bl-058](../backlog/bl-058-companion-profile-acquisition.md) | Core implementation landed (3-view matcher, CalibrationProfile write path, EarPhotoMatcher tests green). **Manual runtime evidence still pending** before owner promotion. |
-| BL-059 | CalibrationProfile integration handoff | [ACTIVE] | [bl-059](../backlog/bl-059-calibration-profile-integration-handoff.md) | Fixture-driven contract+execute lane PASS. BL-053 and BL-055 dependency replays PASS. **Owner promotion packet pending.** |
+| BL-059 | CalibrationProfile integration handoff | [ACTIVE] | [bl-059](../backlog/bl-059-calibration-profile-integration-handoff.md) | **Done-candidate** (Session 2). Execute smoke 11/11 PASS; BL-053/BL-055 deps PASS. BL-056 open non-blocking. Final Done after Session 3 BL-056 + live AirPods. |
+| BL-078 | Runtime finite-output enforcement and diagnostics | [QUEUED] | [bl-078](../backlog/bl-078-runtime-finite-output-enforcement-and-diagnostics.md) | Follow-on from BL-036 runtime slices A2/B2/C1. No immediate dependency gate, but backlog authority still tags this work P0. |
 
 ### P1 — Critical Feature / Dependency-Blocking
 
 | ID | Title | Status | Runbook | Blocker / Notes |
 |---|---|---|---|---|
-| BL-053 | Head tracking orientation injection | [ACTIVE] | [bl-053](../backlog/bl-053-head-tracking-orientation-injection.md) | Structural lane + T1 PASS; manual operator sync evidence captured. Owner promotion packet pending. Blocks BL-059. |
+| BL-053 | Head tracking orientation injection | [ACTIVE] | [bl-053](../backlog/bl-053-head-tracking-orientation-injection.md) | **Done-candidate** (Session 2). T3 replay 10/10 PASS. A2 operator listen deferred non-blocking. |
 | BL-054 | PEQ cascade RT integration | [ACTIVE] | [bl-054](../backlog/bl-054-peq-cascade-rt-integration.md) | Atomic preset publish path landed; contract+execute lane + native build PASS. Blocks BL-056. |
-| BL-055 | FIR convolution engine | [ACTIVE] | [bl-055](../backlog/bl-055-fir-convolution-engine.md) | C4/C6 remediation landed; execute replay PASS 2026-03-07. Blocks BL-056. |
-| BL-056 | Calibration state migration + latency contract | [BLOCKED] | [bl-056](../backlog/bl-056-calibration-state-migration-latency.md) | Blocked on BL-054 + BL-055 owner promotion. Then unblocks BL-059. |
+| BL-055 | FIR convolution engine | [ACTIVE] | [bl-055](../backlog/bl-055-fir-convolution-engine.md) | **Done-candidate** (Session 2). T3 10/10 PASS; 2026-03-07 parity PASS. Blocks BL-056. |
+| BL-056 | Calibration state migration + latency contract | [ACTIVE] | [bl-056](../backlog/bl-056-calibration-state-migration-latency.md) | **In Validation** (Session 3). Schema V3 landed; execute lane 10/10 PASS 2026-03-17. Owner promotion packet pending. |
 | BL-067 | AUv3 app-extension lifecycle and host validation | [BLOCKED] | [bl-067](../backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md) | BL-073 gate satisfied (Done). No execute evidence `TODO` rows remain. Ready when bandwidth allows. |
 | BL-068 | Temporal effects core (delay/echo/looper) | [BLOCKED] | [bl-068](../backlog/bl-068-temporal-effects-delay-echo-looper-frippertronics.md) | BL-073 gate satisfied. Blocked on BL-050 (Done) + BL-055 promotion. |
-| BL-080 | Authoring undo/redo for timeline and preset operations | [ACTIVE] | [bl-080](../backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) | W3-A landed. **Production standalone self-test fails on CALIBRATE topology/legacy-alias timeout** before `UI-W3A-01`/`UI-W3A-02` execute. Needs targeted debug. |
 
-### P1 — Done-Candidates (Owner Promotion Pending)
+### P3 — Active Debug Surface
+
+| ID | Title | Status | Runbook | Notes |
+|---|---|---|---|---|
+| BL-080 | Authoring undo/redo for timeline and preset operations | [ACTIVE] | [bl-080](../backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) | W3-A landed. **Production standalone self-test fails on CALIBRATE topology/legacy-alias timeout** before `UI-W3A-01`/`UI-W3A-02` execute. Keep this scoped as targeted debug, not a new feature wave. |
+
+### P1/P2 — Done-Candidates (Owner Promotion Pending)
 
 | ID | Title | Status | Runbook | Notes |
 |---|---|---|---|---|
@@ -92,7 +139,6 @@ Serves as the starting-point document for resuming active work as of 2026-03-16.
 | BL-020 | Confidence/masking overlay mapping | [ACTIVE] | [bl-020](../backlog/bl-020-confidence-masking.md) | C4 mode parity + exit semantics green. Owner promotion review pending. |
 | BL-021 | Room-story overlays | [ACTIVE] | [bl-021](../backlog/bl-021-room-story-overlays.md) | C2 soak PASS; N13 owner recheck PASS. |
 | BL-079 | APVTS parameter grouping and host hierarchy | [ACTIVE] | [bl-079](../backlog/bl-079-apvts-parameter-grouping-and-host-hierarchy.md) | W1-D implementation landed; build + parity checks PASS. Promotion follow-up pending clean checkout. |
-| BL-078 | Runtime finite-output enforcement and diagnostics | [QUEUED] | [bl-078](../backlog/bl-078-runtime-finite-output-enforcement-and-diagnostics.md) | Follow-on from BL-036 closeout. BL-036 Done; no immediate blockers. |
 
 ### P1/P2 — Conditional / Downstream
 
@@ -227,6 +273,8 @@ Work items are sequenced by dependency order, P0-first, and grouped into session
 
 ## Validation Status
 
-- `not tested` — This document is a static review and re-entry plan only.
+- `partially tested`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+- Skill validation for this pass was structural/repository-fit validation only; no runtime skill harness exists in-repo.
 - Refer to `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md` for last live evidence.
 - Run `./scripts/validate-docs-freshness.sh` before resuming BL lane work to confirm governance state.

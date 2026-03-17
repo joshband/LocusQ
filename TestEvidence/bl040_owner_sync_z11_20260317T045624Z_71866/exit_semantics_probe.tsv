@@ -1,0 +1,3 @@
+probe	exit_code
+--runs 0	2
+--bad-flag	2

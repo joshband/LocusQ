@@ -1,0 +1,17 @@
+artifact_id	relative_path	required_in_execute	present	size_bytes	sha256	notes
+video_capture	rotation_capture.mp4	yes	yes	108	d873b44a6755afcf4d76b0c5ba4f4935f8416ecf12e01a237cf8a707b72de6ef	primary capture output
+record_log	ffmpeg_record.log	yes	yes	85	95d93d364bd9d286ff1b0ac0a2f6516dd123688c3686dd47140ab1e12ec8e5f8	capture backend log
+extract_log	ffmpeg_extract.log	no	yes	86	d16457a4b5d3b25a5afcba15c0de41df0a96dbc5372fb957ddfd807f49f59022	frame extraction log
+frames_dir	frames	yes	yes	249	-	frame extraction directory
+checkpoints	checkpoints.tsv	yes	yes	464	9cfde20970df617e248f9b443fda74939d80cf75a12aa5b022001c7302d1efeb	scheduled checkpoint contract
+cue_events	cue_events.tsv	yes	yes	608	d74030553e2c91a63f9faf7fe44c593ec0f5d3e2ab7db7048a3cb003df4b0b13	cue emission event stream
+checkpoint_frame_map	checkpoint_frame_map.tsv	yes	yes	1290	41ca60319a4a69af0df24fb53359bf5925cc222936640620997641b48686ca43	checkpoint to frame labeling map
+contact_sheets_index	contact_sheets.tsv	yes	yes	244	30874ccb72fa4a742590eeaf4903daad2eacd95add9af69c724fa0e8e2b117a1	contact sheet generation status index
+contact_sheets_dir	contact_sheets	yes	yes	2	-	contact sheet image bundle
+contact_sheets_log	ffmpeg_contact_sheets.log	yes	yes	48	c36694ad894aed360a0f6aca4a59bed61e21bfa35a509b220897d47df3cca407	contact sheet ffmpeg log
+cue_window_clips_index	cue_window_clips.tsv	yes	yes	1361	d59e0393bec5558e9911cd5d56e663b40dd8f7162c09b4b7be50ed75c7b468e9	cue-window clip status index
+cue_clips_dir	cue_clips	yes	yes	11	-	cue-window clip bundle
+cue_clips_log	ffmpeg_cue_clips.log	yes	yes	48	c36694ad894aed360a0f6aca4a59bed61e21bfa35a509b220897d47df3cca407	cue-window clip ffmpeg log
+summary	capture_summary.md	yes	yes	2352	25de8dceda6d0e0a99dfa4da1766533872eb5f75e6b7386c782760849c4ba923	human-readable summary
+manifest	session_manifest.json	yes	yes	1333	13d6511e3a897dbcf0c4c824a8f30bc25f81b48020972d860c7579984bf7fe10	machine-readable session manifest
+dry_run_note	dry_run_note.txt	no	yes	128	cbb0e29ce0055ffc6d2aa32f9136955a3e776187c3dbea45da70ac4162dfe26e	dry-run-only note

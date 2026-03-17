@@ -1,0 +1,5 @@
+locusq_stub=true
+stub_type=cue_window_clip
+stub_id=clip_02
+profile=headtracking_dense
+cue_sec=8

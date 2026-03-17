@@ -1,0 +1,4 @@
+check	result	detail
+backlog_doc_exists	PASS	found
+qa_doc_exists	PASS	found
+lane_result	PASS	all_contract_gates_passed

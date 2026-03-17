@@ -2,7 +2,7 @@ Title: BL-040 UI Modularization and Authority Status QA
 Document Type: QA Runbook
 Author: APC Codex
 Created Date: 2026-02-27
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-03-16
 
 # BL-040 UI Modularization and Authority Status QA
 
@@ -122,7 +122,7 @@ Required outputs:
 ## B1 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/bl040_slice_b1_ui_<timestamp>/contract_runs
@@ -156,7 +156,7 @@ Sentinel gate rules:
 ## C2 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 10 --out-dir TestEvidence/bl040_slice_c2_ui_soak_<timestamp>/contract_runs
@@ -191,7 +191,7 @@ C3 sentinel gate rules:
 ## C3 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c3_ui_replay_sentinel_<timestamp>/contract_runs
@@ -226,7 +226,7 @@ C4 sentinel gate rules:
 ## C4 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 50 --out-dir TestEvidence/bl040_slice_c4_ui_soak_<timestamp>/contract_runs
@@ -263,7 +263,7 @@ C5 guard gate rules:
 ## C5 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c5_ui_semantics_<timestamp>/contract_runs
@@ -302,7 +302,7 @@ C5b guard gate rules:
 ## C5b Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c5b_ui_semantics_<timestamp>/contract_runs
@@ -341,7 +341,7 @@ C5c guard gate rules:
 ## C5c Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl040_slice_c5c_ui_semantics_<timestamp>/contract_runs
@@ -424,7 +424,7 @@ C6 guard gate rules:
 ## C6 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 50 --out-dir TestEvidence/bl040_slice_c6_ui_longrun_<timestamp>/contract_runs
@@ -494,7 +494,7 @@ D1 guard gate rules:
 ## D1 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 75 --out-dir TestEvidence/bl040_slice_d1_done_candidate_<timestamp>/contract_runs
@@ -564,7 +564,7 @@ D2 guard gate rules:
 ## D2 Validation
 
 ```bash
-node --check Source/ui/public/js/index.js
+node --check Source/ui/src/index.ts
 bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help
 ./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 100 --out-dir TestEvidence/bl040_slice_d2_done_promotion_<timestamp>/contract_runs
