@@ -2,6 +2,7 @@
 
 #include <juce_core/juce_core.h>
 
+#include <atomic>
 #include <array>
 #include <cmath>
 
@@ -23,21 +24,22 @@ public:
         bool active = false;
     };
 
+    struct Preset
+    {
+        float preampLinear = 1.0f;
+        std::array<Coefficients, kMaxStages> stages {};
+    };
+
     void prepare (double sampleRate) noexcept
     {
         ready = std::isfinite (sampleRate) && sampleRate > 0.0;
-        setIdentityCurve();
+        initialiseIdentityBanks();
     }
 
     void reset() noexcept
     {
-        for (auto& stage : stages)
-        {
-            stage.z1Left = 0.0f;
-            stage.z2Left = 0.0f;
-            stage.z1Right = 0.0f;
-            stage.z2Right = 0.0f;
-        }
+        for (auto& bank : coefficientBanks)
+            resetStageStates (bank);
     }
 
     bool isReady() const noexcept
@@ -60,31 +62,36 @@ public:
         return 0;
     }
 
-    void setPreampDb (float db) noexcept
-    {
-        preampLinear = std::pow (10.0f, db / 20.0f);
-    }
-
     void setIdentityCurve() noexcept
     {
-        preampLinear = 1.0f;
-
-        for (auto& stage : stages)
-        {
-            stage.coefficients = Coefficients {};
-            stage.z1Left = 0.0f;
-            stage.z2Left = 0.0f;
-            stage.z1Right = 0.0f;
-            stage.z2Right = 0.0f;
-        }
+        publishPreset (makeIdentityPreset());
     }
 
-    void setStageCoefficients (int stageIndex, const Coefficients& coefficients) noexcept
+    static Preset makeIdentityPreset() noexcept
+    {
+        return {};
+    }
+
+    static void setPresetPreampDb (Preset& preset, float db) noexcept
+    {
+        const auto linear = std::pow (10.0f, db / 20.0f);
+        preset.preampLinear = std::isfinite (linear) ? linear : 1.0f;
+    }
+
+    static void setPresetStage (Preset& preset, int stageIndex, const Coefficients& coefficients) noexcept
     {
         if (stageIndex < 0 || stageIndex >= kMaxStages)
             return;
 
-        stages[static_cast<size_t> (stageIndex)].coefficients = sanitizeCoefficients (coefficients);
+        preset.stages[static_cast<size_t> (stageIndex)] = sanitizeCoefficients (coefficients);
+    }
+
+    void publishPreset (const Preset& preset) noexcept
+    {
+        // BL-054 contract: double-buffered coefficient banks with atomic active-bank swap.
+        const auto inactiveBankIndex = 1 - activeBankIndex.load (std::memory_order_relaxed);
+        coefficientBanks[static_cast<size_t> (inactiveBankIndex)] = makeBankFromPreset (preset);
+        activeBankIndex.store (inactiveBankIndex, std::memory_order_release);
     }
 
     void processStereoSample (float& left, float& right) noexcept
@@ -97,10 +104,12 @@ public:
         if (! ready || bypassed)
             return;
 
-        left  *= preampLinear;
-        right *= preampLinear;
+        auto& activeBank = coefficientBanks[static_cast<size_t> (activeBankIndex.load (std::memory_order_acquire))];
 
-        for (auto& stage : stages)
+        left  *= activeBank.preampLinear;
+        right *= activeBank.preampLinear;
+
+        for (auto& stage : activeBank.stages)
         {
             if (! stage.coefficients.active)
                 continue;
@@ -185,6 +194,12 @@ private:
         float z2Right = 0.0f;
     };
 
+    struct Bank
+    {
+        float preampLinear = 1.0f;
+        std::array<StageState, kMaxStages> stages {};
+    };
+
     static float sanitizeFinite (float value, float fallback = 0.0f) noexcept
     {
         return std::isfinite (value) ? value : fallback;
@@ -200,6 +215,36 @@ private:
         sanitized.a2 = juce::jlimit (-1.9995f, 1.9995f, sanitizeFinite (coefficients.a2));
         sanitized.active = coefficients.active;
         return sanitized;
+    }
+
+    static Bank makeBankFromPreset (const Preset& preset) noexcept
+    {
+        Bank bank {};
+        bank.preampLinear = sanitizeFinite (preset.preampLinear, 1.0f);
+
+        for (size_t i = 0; i < bank.stages.size(); ++i)
+            bank.stages[i].coefficients = sanitizeCoefficients (preset.stages[i]);
+
+        return bank;
+    }
+
+    static void resetStageStates (Bank& bank) noexcept
+    {
+        for (auto& stage : bank.stages)
+        {
+            stage.z1Left = 0.0f;
+            stage.z2Left = 0.0f;
+            stage.z1Right = 0.0f;
+            stage.z2Right = 0.0f;
+        }
+    }
+
+    void initialiseIdentityBanks() noexcept
+    {
+        const auto identityBank = makeBankFromPreset (makeIdentityPreset());
+        coefficientBanks[0] = identityBank;
+        coefficientBanks[1] = identityBank;
+        activeBankIndex.store (0, std::memory_order_relaxed);
     }
 
     static float processBiquadSample (
@@ -226,8 +271,8 @@ private:
 
     bool ready = false;
     bool bypassed = true;
-    float preampLinear = 1.0f;
-    std::array<StageState, kMaxStages> stages {};
+    std::array<Bank, 2> coefficientBanks {};
+    std::atomic<int> activeBankIndex { 0 };
 };
 
 } // namespace locusq::headphone_dsp

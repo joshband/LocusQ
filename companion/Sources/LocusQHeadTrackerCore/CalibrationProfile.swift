@@ -171,6 +171,39 @@ public struct CalibrationProfile: Codable, Sendable, Equatable {
 }
 
 public extension CalibrationProfile {
+    private static var environmentOverrideProfileURL: URL? {
+        let environment = ProcessInfo.processInfo.environment
+
+        if let overrideFile = environment["LOCUSQ_COMPANION_PROFILE_FILE"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !overrideFile.isEmpty {
+            return URL(fileURLWithPath: overrideFile)
+        }
+
+        if let overrideDirectory = environment["LOCUSQ_COMPANION_PROFILE_DIR"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !overrideDirectory.isEmpty {
+            return URL(fileURLWithPath: overrideDirectory, isDirectory: true)
+                .appending(path: "CalibrationProfile.json", directoryHint: .notDirectory)
+        }
+
+        return nil
+    }
+
+    private static var defaultProfileURL: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return appSupport
+            .appending(path: "LocusQ", directoryHint: .isDirectory)
+            .appending(path: "CalibrationProfile.json", directoryHint: .notDirectory)
+    }
+
+    private static var defaultPluginCompatibilityProfileURL: URL {
+        let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+        return library
+            .appending(path: "LocusQ", directoryHint: .isDirectory)
+            .appending(path: "CalibrationProfile.json", directoryHint: .notDirectory)
+    }
+
     static var defaultProfile: CalibrationProfile {
         CalibrationProfile(
             user: .init(
@@ -195,17 +228,11 @@ public extension CalibrationProfile {
     }
 
     static var profileURL: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return appSupport
-            .appending(path: "LocusQ", directoryHint: .isDirectory)
-            .appending(path: "CalibrationProfile.json", directoryHint: .notDirectory)
+        environmentOverrideProfileURL ?? defaultProfileURL
     }
 
     static var pluginCompatibilityProfileURL: URL {
-        let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-        return library
-            .appending(path: "LocusQ", directoryHint: .isDirectory)
-            .appending(path: "CalibrationProfile.json", directoryHint: .notDirectory)
+        environmentOverrideProfileURL ?? defaultPluginCompatibilityProfileURL
     }
 
     func writeToDisk(at url: URL = Self.profileURL) throws {

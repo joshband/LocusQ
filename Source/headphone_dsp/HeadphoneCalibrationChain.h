@@ -37,14 +37,22 @@ public:
         peqHook.setIdentityCurve();
     }
 
-    void setPeqPreampDb (float db) noexcept
+    void applyPeqPreset (const HeadphonePeqHook::Preset& preset) noexcept
     {
-        peqHook.setPreampDb (db);
+        peqHook.publishPreset (preset);
     }
 
-    void setPeqStage (int stageIndex, const HeadphonePeqHook::Coefficients& coefficients) noexcept
+    void clearFirImpulseResponse() noexcept
     {
-        peqHook.setStageCoefficients (stageIndex, coefficients);
+        firHook.setIdentityImpulse();
+        updateResolvedState();
+    }
+
+    bool loadFirImpulseResponse (const float* taps, int tapCount) noexcept
+    {
+        const auto loaded = firHook.loadImpulseResponse (taps, tapCount);
+        updateResolvedState();
+        return loaded;
     }
 
     void setEnabled (bool enabled) noexcept

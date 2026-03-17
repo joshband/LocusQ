@@ -11,7 +11,7 @@
 // Usage (processBlock):
 //   if (const auto* pose = bridge.currentPose())
 //   {
-//       const float nowMs = static_cast<float>(juce::Time::getMillisecondCounterHiRes());
+//       const double nowMs = static_cast<double>(juce::Time::currentTimeMillis());
 //       headPoseInterpolator.ingest(*pose, nowMs);
 //       const auto interpolated = headPoseInterpolator.interpolatedAt(nowMs);
 //       ... apply interpolated to renderer ...
@@ -19,6 +19,7 @@
 
 #include "HeadTrackingBridge.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -27,11 +28,22 @@ class HeadPoseInterpolator
 public:
     HeadPoseInterpolator() = default;
 
+    void reset() noexcept
+    {
+        prevSnapshot = HeadTrackingPoseSnapshot {};
+        currSnapshot = HeadTrackingPoseSnapshot {};
+        blendOutSnapshot = HeadTrackingPoseSnapshot {};
+        hasPrev = false;
+        prevSensorLocation = 0;
+        sensorSwitchBlendRemaining = 0.0;
+        lastInterpolatedMs = 0.0;
+    }
+
     // Ingest a new snapshot. Safe to call on the audio thread.
     // Duplicate snapshots (same seq) are silently ignored.
     // On earbud sensor-location change: captures the current interpolation as the
     // blend-out pose and starts a 50ms crossfade to the new sensor's orientation.
-    void ingest (const HeadTrackingPoseSnapshot& snap, float nowMs) noexcept
+    void ingest (const HeadTrackingPoseSnapshot& snap, double nowMs) noexcept
     {
         // Skip if same snapshot (bridge has not published a new one since last call)
         if (hasPrev && snap.seq == currSnapshot.seq)
@@ -55,24 +67,26 @@ public:
     // Return the best-estimate pose at nowMs.
     // Applies slerp, optional angular-velocity prediction, and crossfade if active.
     // Const + allocation-free; safe on the audio thread.
-    HeadTrackingPoseSnapshot interpolatedAt (float nowMs) const noexcept
+    HeadTrackingPoseSnapshot interpolatedAt (double nowMs) const noexcept
     {
         // Track block dt for blend countdown
-        const float blockDt = (lastInterpolatedMs > 0.0f) ? (nowMs - lastInterpolatedMs) : 0.0f;
+        const double blockDt = (lastInterpolatedMs > 0.0)
+            ? std::max (0.0, nowMs - lastInterpolatedMs)
+            : 0.0;
         lastInterpolatedMs = nowMs;
 
         if (!hasPrev)
             return currSnapshot; // identity quaternion until first snapshot
 
-        const float prevTs = static_cast<float> (prevSnapshot.timestampMs);
-        const float currTs = static_cast<float> (currSnapshot.timestampMs);
+        const double prevTs = static_cast<double> (prevSnapshot.timestampMs);
+        const double currTs = static_cast<double> (currSnapshot.timestampMs);
 
         // ── Slerp interpolation ────────────────────────────────────────────
         HeadTrackingPoseSnapshot result = currSnapshot;
 
         if (currTs > prevTs)
         {
-            const float t = clamp01 ((nowMs - prevTs) / (currTs - prevTs));
+            const float t = static_cast<float> (clamp01 ((nowMs - prevTs) / (currTs - prevTs)));
             result = slerpSnapshots (prevSnapshot, currSnapshot, t);
         }
         // else (currTs <= prevTs): timestamps equal or regressed → use currSnapshot as-is
@@ -89,17 +103,17 @@ public:
             const float angMag = std::sqrt (wx * wx + wy * wy + wz * wz);
 
             // Cap prediction so rotation angle never exceeds π/4 (≈45°)
-            const float maxHorizonSec = std::min (
-                kMaxPredictionMs / 1000.0f,
+            const double maxHorizonSec = std::min (
+                kMaxPredictionMs / 1000.0,
                 kPiOver4 / std::max (angMag, 1.0e-6f));
 
-            const float dt = std::min ((nowMs - currTs) / 1000.0f, maxHorizonSec);
+            const double dt = std::min ((nowMs - currTs) / 1000.0, maxHorizonSec);
 
             // Small-angle quaternion extrapolation: q_pred = q_curr ⊗ q_delta
             // q_delta ≈ normalize(1, wx·dt/2, wy·dt/2, wz·dt/2)
-            const float hx = wx * dt * 0.5f;
-            const float hy = wy * dt * 0.5f;
-            const float hz = wz * dt * 0.5f;
+            const float hx = static_cast<float> (wx * dt * 0.5);
+            const float hy = static_cast<float> (wy * dt * 0.5);
+            const float hz = static_cast<float> (wz * dt * 0.5);
 
             const float qw = result.qw, qx = result.qx, qy = result.qy, qz = result.qz;
 
@@ -123,22 +137,22 @@ public:
         if (sensorSwitchBlendRemaining > 0.0f)
         {
             // alpha: 0 = fully blendOut (old sensor), 1 = fully result (new sensor)
-            const float alpha = 1.0f - (sensorSwitchBlendRemaining / kSensorSwitchBlendMs);
-            result = slerpSnapshots (blendOutSnapshot, result, clamp01 (alpha));
-            sensorSwitchBlendRemaining = std::max (0.0f, sensorSwitchBlendRemaining - blockDt);
+            const float alpha = static_cast<float> (1.0 - (sensorSwitchBlendRemaining / kSensorSwitchBlendMs));
+            result = slerpSnapshots (blendOutSnapshot, result, static_cast<float> (clamp01 (alpha)));
+            sensorSwitchBlendRemaining = std::max (0.0, sensorSwitchBlendRemaining - blockDt);
         }
 
         return result;
     }
 
 private:
-    static constexpr float kMaxPredictionMs    = 50.0f;
-    static constexpr float kSensorSwitchBlendMs = 50.0f;
-    static constexpr float kPiOver4            = 0.78539816339744830f; // π/4
+    static constexpr double kMaxPredictionMs     = 50.0;
+    static constexpr double kSensorSwitchBlendMs = 50.0;
+    static constexpr double kPiOver4             = 0.78539816339744830; // π/4
 
-    static float clamp01 (float v) noexcept
+    static double clamp01 (double v) noexcept
     {
-        return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
+        return v < 0.0 ? 0.0 : (v > 1.0 ? 1.0 : v);
     }
 
     // Shortest-path slerp between two snapshots.
@@ -205,6 +219,6 @@ private:
     bool         hasPrev           = false;
     std::uint8_t prevSensorLocation = 0;
 
-    mutable float sensorSwitchBlendRemaining = 0.0f; // ms remaining in crossfade
-    mutable float lastInterpolatedMs         = 0.0f; // for blockDt computation
+    mutable double sensorSwitchBlendRemaining = 0.0; // ms remaining in crossfade
+    mutable double lastInterpolatedMs         = 0.0; // for blockDt computation
 };
