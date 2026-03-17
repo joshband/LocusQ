@@ -2,13 +2,13 @@ Title: BL-055 FIR Convolution Engine
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-07
 
 # BL-055 FIR Convolution Engine
 
 ## Plain-Language Summary
 
-BL-055 in plain terms: Integrate FirEngineManager (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-055 in plain terms: Integrate FirEngineManager (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-055 in plain terms: Integrate FirEngineManager (DirectFirConvolver ≤256 tap
 | What is changing? | Integrate FirEngineManager (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-055-fir-convolution-engine.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-055 |
 | Priority | P1 |
-| Status | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS) |
+| Status | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | — |
@@ -113,6 +113,14 @@ Evidence fields:
 - Remaining maturity work:
   - pursue runtime/parity hardening before Done promotion, but C3/C4/C6 structural blockers are cleared.
 
+## Replay Refresh Snapshot (2026-03-07)
+
+- Lane path refresh aligned `scripts/qa-bl055-fir-convolution-engine-mac.sh` with the current split implementation files:
+  - calibration latency getter now checked in `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`
+  - engine-state publication markers now checked in `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+- Fresh execute replay:
+  - `TestEvidence/bl055_fir_convolution_engine_20260307T061821Z/status.tsv` -> `lane_result=PASS`
+
 ## Replay Cadence Plan (Required)
 
 Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
@@ -144,4 +152,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

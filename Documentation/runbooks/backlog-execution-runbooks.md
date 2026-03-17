@@ -2,24 +2,24 @@ Title: LocusQ Backlog Execution Runbooks
 Document Type: Runbook
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-07
 
 # LocusQ Backlog Execution Runbooks
 
-> **DEPRECATED (2026-02-24):** This file is superseded by individual runbook docs in `Documentation/backlog/`. Each backlog item now has its own standardized runbook with agent mega-prompts, validation plans, and evidence contracts. This file is retained as Tier 2 reference only. Do not update this file.
+> **DEPRECATED (2026-02-24):** This file is superseded by individual runbook docs in `Documentation/backlog/`. Each backlog item now has its own standardized runbook with agent mega-prompts, validation plans, and evidence contracts. This file is retained as Tier 2 historical reference only. Do not update this file.
 
 ## Purpose
-Provide execution-level runbooks for all open BL/HX items tracked in the master backlog.
+Preserve the pre-runbook-split execution bundle for historical traceability. Active execution now starts from `Documentation/backlog/index.md` and the matching runbook in `Documentation/backlog/`.
 
 ## Preservation Guarantee
 1. No annex plan documents are replaced or discarded by this runbook.
 2. Historical reviews remain in `Documentation/archive/` as reference sources.
 3. Completed work evidence remains in `TestEvidence/` and is not collapsed into summaries only.
-4. The master backlog remains authoritative; this runbook is procedural support.
+4. `Documentation/backlog/index.md` remains authoritative; this runbook bundle is procedural history only.
 
 ## Usage Contract
-1. Select a row from the master backlog queue in `Documentation/backlog-post-v1-agentic-sprints.md`.
-2. Use the matching runbook entry below.
+1. Start from `Documentation/backlog/index.md` to identify the current backlog item and state.
+2. Use the matching runbook in `Documentation/backlog/` for active execution; use the entries below only for historical reference.
 3. Run listed validations and capture listed evidence artifacts.
 4. Synchronize status/evidence surfaces in the same change set.
 
@@ -27,7 +27,7 @@ Provide execution-level runbooks for all open BL/HX items tracked in the master 
 1. `status.json` updated when acceptance or state claims change.
 2. `TestEvidence/build-summary.md` snapshot updated.
 3. `TestEvidence/validation-trend.md` trend row added.
-4. `Documentation/backlog-post-v1-agentic-sprints.md` row state synchronized.
+4. `Documentation/backlog/index.md` and the relevant `Documentation/backlog/` runbook synchronized.
 5. `./scripts/validate-docs-freshness.sh` passes.
 
 ## Runbook Index

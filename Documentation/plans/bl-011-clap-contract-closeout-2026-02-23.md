@@ -2,7 +2,7 @@ Title: BL-011 CLAP Contract and Closeout
 Document Type: Execution Plan
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-07
 
 # BL-011 CLAP Contract and Closeout
 
@@ -47,7 +47,7 @@ Provide one canonical CLAP closeout document for BL-011 while preserving the low
 
 ## Related
 - `Documentation/adr/ADR-0009-clap-closeout-documentation-consolidation.md`
-- `Documentation/backlog-post-v1-agentic-sprints.md`
+- `Documentation/backlog/index.md`
 - `status.json`
 - `TestEvidence/build-summary.md`
 - `TestEvidence/validation-trend.md`

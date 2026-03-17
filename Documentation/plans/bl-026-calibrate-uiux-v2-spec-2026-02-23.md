@@ -2,7 +2,7 @@ Title: BL-026 Calibrate View V2 Multi-Topology UI/UX Spec
 Document Type: Plan
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-07
 
 # BL-026 Calibrate View V2 Multi-Topology UI/UX Spec
 
@@ -11,7 +11,7 @@ Define a CALIBRATE v2 redesign that supports multiple monitoring/output configur
 
 ## Backlog Link
 - Proposed Backlog ID: `BL-026`
-- Canonical backlog file: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Canonical backlog file: `Documentation/backlog/index.md`
 
 ## Companion Specs
 1. Existing paired spec:
@@ -45,7 +45,7 @@ Current CALIBRATE UX is functional for baseline 4-speaker workflows, but it is n
 1. Native bridge lifecycle for start/abort/status is production wired.
 - Reference: `Source/PluginEditor.cpp:122`
 - Reference: `Source/PluginEditor.cpp:572`
-- Reference: `Source/ui/public/js/index.js:5058`
+- Reference: `Source/ui/src/index.ts:5058`
 2. Calibration state machine is explicit and deterministic (`Idle/Playing/Recording/Analyzing/Complete/Error`).
 - Reference: `Source/CalibrationEngine.h:57`
 - Reference: `Source/PluginProcessor.cpp:14`
@@ -70,7 +70,7 @@ Current CALIBRATE UX is functional for baseline 4-speaker workflows, but it is n
 - Reference: `Documentation/scene-state-contract.md:146`
 4. Workflow status is progress-centric but not validation-centric.
 - Lacks explicit pass/fail blocks for channel map, polarity/phase, and profile activation checks.
-- Reference: `Source/ui/public/js/index.js:5917`
+- Reference: `Source/ui/src/index.ts:5917`
 5. No profile library dedicated to storing calibration results per topology+monitoring path.
 6. Downmix and virtualization verification paths are implicit; no guided validation UI.
 
@@ -227,7 +227,7 @@ Routing width contract for this tranche:
 ### Slice A: IA + profile scaffolding
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Rebuild CALIBRATE panel into staged cards (Profile, Mapping, Mic/Stimulus, Run, Validation, Library).
 2. Add status chips and responsive tokens aligned to EMITTER v2 conventions.
@@ -240,7 +240,7 @@ Files:
 - `Source/PluginProcessor.h`
 - `Source/PluginEditor.cpp`
 - `Source/PluginEditor.h`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Add calibration topology profile parameter/state (`cal_topology_profile`, alias table to renderer profiles).
 2. Expose resolved topology in calibration status payload.
@@ -250,7 +250,7 @@ Acceptance:
 ### Slice C: Dynamic mapping matrix + routing safety
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Source/PluginProcessor.cpp`
 Changes:
 1. Replace fixed `SPK1..SPK4` rows with topology-driven map rows.
@@ -261,7 +261,7 @@ Acceptance:
 
 ### Slice D: Headphone/spatial validation integration
 Files:
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Source/PluginProcessor.cpp`
 - `Documentation/scene-state-contract.md`
 Changes:
@@ -273,7 +273,7 @@ Acceptance:
 ### Slice E: Calibration profile library
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Source/PluginProcessor.cpp`
 - `Source/PluginProcessor.h`
 Changes:
@@ -286,7 +286,7 @@ Acceptance:
 
 ### Automated
 1. Syntax/build:
-- `node --check Source/ui/public/js/index.js`
+- `cd Source/ui && npm run typecheck`
 - `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`
 2. Production self-test lane extensions:
 - `UI-P1-026A`: topology profile switch and matrix row-count contract.

@@ -2,7 +2,7 @@ Title: BL-058 Companion Profile Acquisition UI + HRTF Matching
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-07
 
 # BL-058 Companion Profile Acquisition UI + HRTF Matching
 
@@ -107,6 +107,16 @@ Build guided ear-photo capture UI in companion app (left ear + right ear + front
   - sensor-location transition diagnostics,
   - Three.js frame-contract verification (+X right, +Y up, -Z ahead).
 
+## Implementation Snapshot (2026-03-07)
+
+- Companion monitor now exposes a dedicated BL-058 profile-acquisition card with guided `Left Ear`, `Right Ear`, and `Frontal` capture actions, explicit local-only privacy text, match preview, and `CalibrationProfile.json` apply flow.
+- The companion runtime now keeps capture inputs in-memory only as derived embeddings, computes a deterministic 3-view nearest-neighbor match, and applies an explicit fallback subject when similarity stays below the runbook threshold.
+- `CalibrationProfile.json` writes now occur from the actual desktop companion runtime path, not only the unused legacy `TrackerApp` helper, so the monitor UI can persist matched `subject_id`, `sofa_ref`, and `embedding_hash` directly.
+- Focused local validation for this slice:
+  - `cd companion && swift test` -> `PASS`
+  - `./scripts/qa-bl058-companion-profile-acquisition-mac.sh --contract-only` -> `PASS`
+- Remaining gap before promotion:
+  - required manual runtime evidence packet (`status.tsv`, `results.tsv`, `axis_sweeps.md`, `readiness_gate.md`) is still pending.
 
 ## Validation Plan
 
@@ -150,4 +160,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

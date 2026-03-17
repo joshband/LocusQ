@@ -2,7 +2,7 @@ Title: BL-027 Renderer View V2 Multi-Profile UI/UX Spec
 Document Type: Plan
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-07
 
 # BL-027 Renderer View V2 Multi-Profile UI/UX Spec
 
@@ -11,7 +11,7 @@ Define RENDERER v2 as a profile-authoritative monitoring and diagnostics surface
 
 ## Backlog Link
 - Backlog ID: `BL-027`
-- Canonical backlog file: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Canonical backlog file: `Documentation/backlog/index.md`
 
 ## Companion Specs
 1. EMITTER v2 foundation:
@@ -49,13 +49,13 @@ Current RENDERER controls are functional, but the panel is section-flat and does
 - Reference: `Source/PluginProcessor.cpp:1270`
 - Reference: `Documentation/scene-state-contract.md:132`
 3. UI already computes and displays fallback-aware renderer summary text in viewport overlay.
-- Reference: `Source/ui/public/js/index.js:5791`
-- Reference: `Source/ui/public/js/index.js:5813`
-- Reference: `Source/ui/public/js/index.js:5849`
+- Reference: `Source/ui/src/index.ts:5791`
+- Reference: `Source/ui/src/index.ts:5813`
+- Reference: `Source/ui/src/index.ts:5849`
 4. Viewport has established listener/speaker and energy telemetry rendering that can anchor renderer diagnostics.
-- Reference: `Source/ui/public/js/index.js:4193`
-- Reference: `Source/ui/public/js/index.js:4235`
-- Reference: `Source/ui/public/js/index.js:6535`
+- Reference: `Source/ui/src/index.ts:4193`
+- Reference: `Source/ui/src/index.ts:4235`
+- Reference: `Source/ui/src/index.ts:6535`
 5. Spatial profile/headphone enums and string contracts already exist in renderer core for deterministic aliasing.
 - Reference: `Source/SpatialRenderer.h:60`
 - Reference: `Source/SpatialRenderer.h:516`
@@ -65,16 +65,16 @@ Current RENDERER controls are functional, but the panel is section-flat and does
 1. `Spatial Profile` exists in APVTS/runtime contracts but is not exposed as a renderer panel control in current HTML/JS bindings.
 - Reference: `Source/PluginProcessor.cpp:2800`
 - Reference: `Source/ui/public/index.html:1116`
-- Reference: `Source/ui/public/js/index.js:322`
+- Reference: `Source/ui/src/index.ts:322`
 2. Renderer IA is not profile-first; topology authority is split across fields without explicit requested vs active ownership line.
 - Reference: `Source/ui/public/index.html:1098`
 3. Diagnostics are packed into one overlay string instead of structured chips and section-level statuses.
-- Reference: `Source/ui/public/js/index.js:5864`
+- Reference: `Source/ui/src/index.ts:5864`
 4. Speaker section is fixed to four rows and does not reflect active output layout/profile context.
 - Reference: `Source/ui/public/index.html:1109`
 - Reference: `Source/PluginProcessor.cpp:1100`
 5. Scene list actions (`S`/`M`) are terse and do not communicate local/remote authority constraints clearly.
-- Reference: `Source/ui/public/js/index.js:6391`
+- Reference: `Source/ui/src/index.ts:6391`
 6. Compact-window readability can degrade due to dense section stack and lack of renderer-specific responsive grouping.
 - Reference: `Source/ui/public/index.html:1098`
 - Reference: `Source/ui/public/index.html:1140`
@@ -182,7 +182,7 @@ Note:
 ### Slice A: IA and profile-authority shell
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Rebuild renderer panel into staged cards (Profile, Output/Speakers, Spatialization, Room, Diagnostics, Scene).
 2. Add requested/active/stage chips and output summary line.
@@ -192,7 +192,7 @@ Acceptance:
 ### Slice B: Spatial profile control binding and alias table
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Source/SpatialRenderer.h`
 - `Source/PluginProcessor.cpp`
 Changes:
@@ -204,7 +204,7 @@ Acceptance:
 ### Slice C: Dynamic output/speaker presentation
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Source/PluginProcessor.cpp`
 Changes:
 1. Replace fixed static speaker rows with dynamic view tied to active output profile/layout.
@@ -215,7 +215,7 @@ Acceptance:
 ### Slice D: Diagnostics cards and failure-stage visibility
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Documentation/scene-state-contract.md`
 Changes:
 1. Add dedicated Steam and Ambisonic diagnostics rows/cards.
@@ -226,7 +226,7 @@ Acceptance:
 ### Slice E: Scene monitor polish and cross-panel coherence
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 Changes:
 1. Convert scene actions to explicit labels and authority cues.
@@ -238,7 +238,7 @@ Acceptance:
 
 ### Automated
 1. Syntax/build:
-- `node --check Source/ui/public/js/index.js`
+- `cd Source/ui && npm run typecheck`
 - `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`
 2. Production self-test lane extensions:
 - `UI-P2-027A`: renderer spatial profile control binding and requested/active chip contract.

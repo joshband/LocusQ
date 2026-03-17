@@ -2,13 +2,13 @@ Title: BL-054 PEQ Cascade RT Integration
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-07
 
 # BL-054 PEQ Cascade RT Integration
 
 ## Plain-Language Summary
 
-BL-054 in plain terms: Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-054 in plain terms: Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. Current state: In Validation (atomic preset publish path landed; contract/execute lane + native build PASS). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-054 in plain terms: Integrate PeqBiquadCascade (8-band RBJ, already implement
 | What is changing? | Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Open. This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (atomic preset publish path landed; contract/execute lane + native build PASS). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-054-peq-cascade-rt-integration.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-054 |
 | Priority | P1 |
-| Status | Open |
+| Status | In Validation (atomic preset publish path landed; contract/execute lane + native build PASS) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-052 |
@@ -65,8 +65,30 @@ Integrate `PeqBiquadCascade` (8-band RBJ, already implemented) into the monitori
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl054-peq-cascade-rt-integration-mac.sh` (to be authored).
+QA harness script: `scripts/qa-bl054-peq-cascade-rt-integration-mac.sh`.
 Evidence schema: `TestEvidence/bl054_*/status.tsv`.
+
+Minimum evidence additions:
+- `rt_swap_contract.tsv`
+- `bypass_identity_contract.tsv`
+- `monitor_chain_order.tsv`
+
+Script modes and gates:
+- `--contract-only` (default): structural contract checks with evidence capture.
+- `--execute`: execute gate checks with zero-`TODO`-row semantics.
+- Exit semantics: `0` pass, `1` gate fail, `2` usage/config error.
+
+## Implementation Snapshot (2026-03-07)
+
+- Remediation landed in the PEQ runtime path:
+  - `Source/headphone_dsp/HeadphonePeqHook.h` now uses double-buffered coefficient banks plus release/acquire active-bank publication instead of live stage mutation.
+  - `Source/headphone_dsp/HeadphoneCalibrationChain.h` now exposes single-call `applyPeqPreset(...)` rather than piecemeal stage writes.
+  - `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp` now builds bundled/JSON presets off the audio thread and publishes them atomically.
+- QA lane authored: `scripts/qa-bl054-peq-cascade-rt-integration-mac.sh`.
+- Fresh evidence:
+  - Contract: `TestEvidence/bl054_peq_cascade_rt_integration_20260307T061821Z_73138/status.tsv` -> `lane_result=PASS`
+  - Execute: `TestEvidence/bl054_peq_cascade_rt_integration_20260307T061821Z_73139/status.tsv` -> `lane_result=PASS`
+  - Compile safety: `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8` -> `PASS` (warnings only)
 
 ## Replay Cadence Plan (Required)
 
@@ -99,4 +121,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

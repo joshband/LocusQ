@@ -2,7 +2,7 @@ Title: BL-029 DSP Visualization and Tooling Spec + Implementation Plan
 Document Type: Plan
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-07
 
 # BL-029 DSP Visualization and Tooling Spec + Implementation Plan
 
@@ -15,7 +15,7 @@ Define one cohesive, implementation-ready contract for the next LocusQ visualiza
 
 ## Backlog Link
 - Proposed Backlog ID: `BL-029`
-- Canonical backlog file: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Canonical backlog file: `Documentation/backlog/index.md`
 
 ## Normative Inputs
 - `.ideas/architecture.md`
@@ -324,7 +324,7 @@ Acceptance:
 Files:
 1. `Source/PluginProcessor.h`
 2. `Source/PluginProcessor.cpp`
-3. `Source/ui/public/js/index.js`
+3. `Source/ui/src/index.ts`
 4. `Source/ui/public/index.html`
 
 Deliverables:
@@ -337,7 +337,7 @@ Acceptance:
 
 ### Slice D: Constellation View
 Files:
-1. `Source/ui/public/js/index.js`
+1. `Source/ui/src/index.ts`
 2. `Source/ui/public/index.html`
 
 Deliverables:
@@ -350,7 +350,7 @@ Acceptance:
 ### Slice E: Reflection Ghosts + ER Centroid
 Files:
 1. `Source/PluginProcessor.cpp`
-2. `Source/ui/public/js/index.js`
+2. `Source/ui/src/index.ts`
 3. `Documentation/scene-state-contract.md`
 
 Deliverables:
@@ -378,7 +378,7 @@ Files:
 1. `Source/PluginProcessor.h`
 2. `Source/PluginProcessor.cpp`
 3. `Source/PluginEditor.cpp`
-4. `Source/ui/public/js/index.js`
+4. `Source/ui/src/index.ts`
 
 Deliverables:
 1. Session bundle export API.
@@ -407,7 +407,7 @@ Acceptance:
 ## Validation Plan
 
 ### Automated
-1. `node --check Source/ui/public/js/index.js`
+1. `cd Source/ui && npm run typecheck`
 2. `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`
 3. `./scripts/standalone-ui-selftest-production-p0-mac.sh`
 4. `./scripts/reaper-headless-render-smoke-mac.sh --auto-bootstrap`

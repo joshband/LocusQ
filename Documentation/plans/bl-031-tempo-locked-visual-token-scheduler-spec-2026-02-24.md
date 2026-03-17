@@ -2,7 +2,7 @@ Title: BL-031 Tempo-Locked Visual Token Scheduler Spec
 Document Type: Plan
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-07
 
 # BL-031 Tempo-Locked Visual Token Scheduler Spec
 
@@ -11,7 +11,7 @@ Define a realtime-safe, host-tempo-synchronized visual timing contract so LocusQ
 
 ## Backlog Link
 - Backlog ID: `BL-031`
-- Canonical backlog file: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Canonical backlog file: `Documentation/backlog/index.md`
 
 ## Companion Specs
 - `Documentation/plans/bl-016` transport contract lineage is represented in `Documentation/scene-state-contract.md`.
@@ -118,7 +118,7 @@ Deliverables:
 ### Slice C: UI Poll + Sub-frame Interpolation
 Files:
 1. `Source/PluginEditor.cpp`
-2. `Source/ui/public/js/index.js`
+2. `Source/ui/src/index.ts`
 
 Deliverables:
 1. Token polling bridge function(s)
