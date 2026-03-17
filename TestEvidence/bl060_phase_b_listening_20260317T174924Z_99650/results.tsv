@@ -1,0 +1,4 @@
+check	result	detail
+trial_schema_contract	PASS	all required columns present; rows=160
+gate_decision	PASS	ext_improvement=n/a p_value=0.0000
+reproducibility	PASS	run1_gate_hash=1849befd4fda3f44 run2_gate_hash=1849befd4fda3f44

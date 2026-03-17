@@ -241,6 +241,17 @@ private:
         std::atomic<bool> valid { false };
     };
 
+    struct PublishedFiniteGuardrailDiagnostics
+    {
+        std::atomic<std::uint64_t> snapshotSeq { 0 };
+        std::atomic<bool> finiteGuardrailsActive { false };
+        std::atomic<int> finiteGuardrailsFallbackReason { 0 }; // 0=none, 3=denormal-flushed, 5=non-finite/limiter-clamped, 6=hard-clamped
+        std::atomic<std::uint32_t> finiteGuardrailsNonFiniteCount { 0 };
+        std::atomic<std::uint32_t> finiteGuardrailsDenormalCount { 0 };
+        std::atomic<std::uint32_t> finiteGuardrailsLimiterClampCount { 0 };
+        std::atomic<std::uint32_t> finiteGuardrailsHardClampCount { 0 };
+    };
+
     struct ClapRuntimeDiagnostics
     {
         bool buildEnabled = false;
@@ -484,6 +495,7 @@ private:
     bool copyPublishedHeadphoneDiagnosticsSnapshot (PublishedHeadphoneCalibrationDiagnostics& calibration,
                                                     PublishedHeadphoneVerificationDiagnostics& verification) const noexcept;
     mutable PublishedConfidenceMaskingDiagnostics publishedConfidenceMaskingDiagnostics;
+    mutable PublishedFiniteGuardrailDiagnostics publishedFiniteGuardrailDiagnostics;
 
     //==============================================================================
     // Sample rate tracking
