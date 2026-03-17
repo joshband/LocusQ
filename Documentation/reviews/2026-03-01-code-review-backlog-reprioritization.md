@@ -2,7 +2,7 @@ Title: LocusQ Code Review and Backlog Reprioritization
 Document Type: Review Report
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-07
 
 # LocusQ Code Review and Backlog Reprioritization
 
@@ -32,7 +32,7 @@ Provide a code-first, backlog-aligned review that can be used immediately to:
   - `companion/Sources/LocusQHeadTrackerCore/PosePacket.swift`
 - WebView runtime, UI logic, and QA lanes:
   - `Source/editor_webview/EditorWebViewRuntime.h`
-  - `Source/ui/public/js/index.js`
+  - `Source/ui/src/index.ts`
   - `Source/ui/public/index.html`
   - `scripts/qa-bl067-auv3-lifecycle-mac.sh`
   - `scripts/qa-bl068-temporal-effects-mac.sh`
@@ -162,12 +162,12 @@ Provide a code-first, backlog-aligned review that can be used immediately to:
 
 8. **UI self-test fallback mutation paths can mask real gesture-path failures**
    - Evidence:
-     - `Source/ui/public/js/index.js:6689`
-     - `Source/ui/public/js/index.js:6700`
-     - `Source/ui/public/js/index.js:6743`
-     - `Source/ui/public/js/index.js:6770`
-     - `Source/ui/public/js/index.js:6793`
-     - `Source/ui/public/js/index.js:6804`
+     - `Source/ui/src/index.ts:6689`
+     - `Source/ui/src/index.ts:6700`
+     - `Source/ui/src/index.ts:6743`
+     - `Source/ui/src/index.ts:6770`
+     - `Source/ui/src/index.ts:6793`
+     - `Source/ui/src/index.ts:6804`
    - Risk:
      - Interaction regressions can pass CI due to internal state mutation fallback.
    - Backlog alignment:
@@ -253,11 +253,11 @@ Provide a code-first, backlog-aligned review that can be used immediately to:
 
 15. **Timeline native-call failures are swallowed in multiple paths**
    - Evidence:
-     - `Source/ui/public/js/index.js:873`
-     - `Source/ui/public/js/index.js:888`
-     - `Source/ui/public/js/index.js:2200`
-     - `Source/ui/public/js/index.js:2518`
-     - `Source/ui/public/js/index.js:6960`
+     - `Source/ui/src/index.ts:873`
+     - `Source/ui/src/index.ts:888`
+     - `Source/ui/src/index.ts:2200`
+     - `Source/ui/src/index.ts:2518`
+     - `Source/ui/src/index.ts:6960`
    - Risk:
      - UI/native drift can go invisible to operator and CI.
    - Backlog alignment:
@@ -267,9 +267,9 @@ Provide a code-first, backlog-aligned review that can be used immediately to:
 
 16. **Critical startup binding failures only log and continue into partial runtime**
    - Evidence:
-     - `Source/ui/public/js/index.js:5670`
-     - `Source/ui/public/js/index.js:5677`
-     - `Source/ui/public/js/index.js:5681`
+     - `Source/ui/src/index.ts:5670`
+     - `Source/ui/src/index.ts:5677`
+     - `Source/ui/src/index.ts:5681`
    - Risk:
      - Controls appear available but are not correctly bound.
    - Backlog alignment:

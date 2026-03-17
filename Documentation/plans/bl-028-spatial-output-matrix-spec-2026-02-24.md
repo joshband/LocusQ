@@ -2,7 +2,7 @@ Title: BL-028 Spatial Output Matrix v1 Spec
 Document Type: Plan
 Author: APC Codex
 Created Date: 2026-02-24
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-07
 
 # BL-028 Spatial Output Matrix v1 Spec
 
@@ -11,7 +11,7 @@ Define one authoritative spatial-output contract for LocusQ across headphone bin
 
 ## Backlog Link
 - Proposed Backlog ID: `BL-028`
-- Canonical backlog file: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Canonical backlog file: `Documentation/backlog/index.md`
 
 ## Companion Contracts
 - `Documentation/plans/bl-017-head-tracked-monitoring-companion-bridge-plan-2026-02-22.md`

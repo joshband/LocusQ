@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-07 (BL-080 W3-A undo/redo lane synced)
+Last Modified Date: 2026-03-07 (BL-059 calibration handoff lane synced)
 
 # LocusQ Master Backlog Index
 
@@ -135,12 +135,12 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-063, BL-064, BL-065 | — | [bl-066](done/bl-066-ambisonics-adm-pilot-execution-intake.md) |
 | 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual operator sync evidence captured; owner promotion packet pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
-| 29 | BL-054 | PEQ cascade RT integration | P1 | Open | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
-| 30 | BL-055 | FIR convolution engine | P1 | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
+| 29 | BL-054 | PEQ cascade RT integration | P1 | In Validation (atomic preset publish path landed; contract+execute lane and native build PASS) | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
+| 30 | BL-055 | FIR convolution engine | P1 | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | **Done** (preset matrix complete; execute T2 `5/5` + T3 `10/10` PASS; Nyquist resonance gate PASS) | E | BL-046 | — (BL-058 unblocked) | [bl-057](done/bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | In Implementation (reprioritized from code-review protocol/gating risk packet; QA harness authored) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
-| 34 | BL-059 | CalibrationProfile integration handoff | P0 | In Implementation (reprioritized from code-review calibration correctness/race risk packet; smoke harness upgraded) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
+| 34 | BL-059 | CalibrationProfile integration handoff | P0 | In Validation (fixture-driven contract+execute lane PASS; profile ingest/unload smoke green; BL-053/BL-055 dependency replays PASS) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
 | 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
@@ -238,6 +238,10 @@ graph TD
     end
 
     subgraph "In Validation / Done-candidate"
+        BL-053[BL-053 Head Tracking Orientation Injection]
+        BL-054[BL-054 PEQ Cascade RT Integration]
+        BL-055[BL-055 FIR Convolution Engine]
+        BL-059[BL-059 CalibrationProfile Integration Handoff]
         BL-032[BL-032 Source Modularization]
         BL-039[BL-039 Parameter Relay Generation]
         BL-040[BL-040 UI Modularization]
@@ -246,13 +250,9 @@ graph TD
     subgraph "In Implementation / Open"
         BL-020[BL-020 Confidence]
         BL-021[BL-021 Room Story]
-        BL-053[BL-053 Head Tracking Orientation Injection]
-        BL-054[BL-054 PEQ Cascade RT Integration]
-        BL-055[BL-055 FIR Convolution Engine]
         BL-056[BL-056 Calibration State Migration + Latency]
         BL-057[BL-057 Device Preset Library]
         BL-058[BL-058 Companion Profile Acquisition]
-        BL-059[BL-059 CalibrationProfile Integration Handoff]
         BL-060[BL-060 Phase B Listening Test Harness]
         BL-061[BL-061 HRTF Interpolation + Crossfade]
         BL-067[BL-067 AUv3 Lifecycle + Host Validation]

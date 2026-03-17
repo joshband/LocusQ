@@ -2,7 +2,7 @@ Title: BL-025 Emitter View V2 UI/UX Consolidation Spec
 Document Type: Plan
 Author: APC Codex
 Created Date: 2026-02-22
-Last Modified Date: 2026-02-23
+Last Modified Date: 2026-03-07
 
 # BL-025 Emitter View V2 UI/UX Consolidation Spec
 
@@ -11,7 +11,7 @@ Define a comprehensive redesign and implementation plan for the EMITTER workflow
 
 ## Backlog Link
 - Backlog ID: `BL-025`
-- Canonical backlog file: `Documentation/backlog-post-v1-agentic-sprints.md`
+- Canonical backlog file: `Documentation/backlog/index.md`
 
 ## Implementation Status Ledger (2026-02-23)
 
@@ -48,17 +48,17 @@ The current EMITTER surface is functionally rich, but interaction ownership is f
 
 ## Current-State Strengths (Preserve)
 1. Deterministic keyframe timeline editing exists and is production wired.
-- Reference: `Source/ui/public/js/index.js:1660`
+- Reference: `Source/ui/src/index.ts:1660`
 2. Choreography packs generate usable motion motifs and synchronize spherical/cartesian tracks.
-- Reference: `Source/ui/public/js/index.js:1054`
-- Reference: `Source/ui/public/js/index.js:1310`
-- Reference: `Source/ui/public/js/index.js:1347`
+- Reference: `Source/ui/src/index.ts:1054`
+- Reference: `Source/ui/src/index.ts:1310`
+- Reference: `Source/ui/src/index.ts:1347`
 3. Physics visualization is expressive (force, velocity, collision pulse, trajectory).
-- Reference: `Source/ui/public/js/index.js:4937`
-- Reference: `Source/ui/public/js/index.js:5112`
+- Reference: `Source/ui/src/index.ts:4937`
+- Reference: `Source/ui/src/index.ts:5112`
 4. UI/native state persistence for emitter label, physics preset, and choreography pack already exists.
-- Reference: `Source/ui/public/js/index.js:918`
-- Reference: `Source/ui/public/js/index.js:942`
+- Reference: `Source/ui/src/index.ts:918`
+- Reference: `Source/ui/src/index.ts:942`
 
 ## Current-State Gaps (Address)
 1. Position mode mismatch.
@@ -70,19 +70,19 @@ The current EMITTER surface is functionally rich, but interaction ownership is f
 2. Motion control fragmentation and duplicated loop/sync semantics.
 - Reference: `Source/ui/public/index.html:521`
 - Reference: `Source/ui/public/index.html:661`
-- Reference: `Source/ui/public/js/index.js:600`
+- Reference: `Source/ui/src/index.ts:600`
 3. Preset model ambiguity (`SAVE PACK` vs `SAVE/LOAD`), host prompt fragility, weak lifecycle management.
 - Reference: `Source/ui/public/index.html:680`
 - Reference: `Source/ui/public/index.html:694`
-- Reference: `Source/ui/public/js/index.js:1491`
-- Reference: `Source/ui/public/js/index.js:3837`
+- Reference: `Source/ui/src/index.ts:1491`
+- Reference: `Source/ui/src/index.ts:3837`
 4. Multi-emitter authoring scope is implicit.
 - Local-only drag enforcement exists but is not surfaced in EMITTER UX.
-- Reference: `Source/ui/public/js/index.js:2123`
+- Reference: `Source/ui/src/index.ts:2123`
 - Reference: `Source/PluginProcessor.cpp:1256`
 5. Diagnostics controls affecting emitter workflow are separated into Renderer telemetry section.
 - Reference: `Source/ui/public/index.html:746`
-- Reference: `Source/ui/public/js/index.js:4324`
+- Reference: `Source/ui/src/index.ts:4324`
 6. Fixed dimensions and non-responsive layout increase failure risk on resize and compact plugin windows.
 - Reference: `Source/ui/public/index.html:37`
 - Reference: `Source/ui/public/index.html:42`
@@ -146,7 +146,7 @@ Order in rail:
 1. If mode is `Spherical`, spherical fields are editable and cartesian fields are read-only mirrored.
 2. If mode is `Cartesian`, cartesian fields are editable and spherical fields are read-only mirrored.
 3. Viewport drag always writes both forms through existing parameter mapping and does not break timeline tracks.
-- Reference mapping: `Source/ui/public/js/index.js:2172`
+- Reference mapping: `Source/ui/src/index.ts:2172`
 
 ### Motion Contract
 1. Single transport controls playback for timeline/choreography-driven motion.
@@ -175,7 +175,7 @@ Order in rail:
 ### Slice 1: IA + responsive layout foundation
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Rebuild EMITTER panel section order and add semantic wrappers.
 2. Add responsive tokens for rail/timeline heights and compact width behavior.
@@ -187,7 +187,7 @@ Acceptance:
 ### Slice 2: Position mode clarity
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Add cartesian inspector rows (`X`, `Y`, `Z`) with binding to `pos_x/pos_y/pos_z`.
 2. Add mode-aware enable/disable/read-only behavior for dual coordinate groups.
@@ -199,7 +199,7 @@ Acceptance:
 ### Slice 3: Unified motion subsystem
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Add `Motion Source` selection and context panels.
 2. Unify loop/sync/transport control ownership.
@@ -211,7 +211,7 @@ Acceptance:
 ### Slice 4: Preset manager lifecycle
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 - `Source/PluginProcessor.h`
 - `Source/PluginProcessor.cpp`
 Changes:
@@ -225,7 +225,7 @@ Acceptance:
 ### Slice 5: Diagnostics + authority UX polish
 Files:
 - `Source/ui/public/index.html`
-- `Source/ui/public/js/index.js`
+- `Source/ui/src/index.ts`
 Changes:
 1. Add local/remote emitter badge and disable editable controls for remote scope.
 2. Add emitter-level diagnostics quick controls and collapse advanced by default.
@@ -237,7 +237,7 @@ Acceptance:
 
 ### Automated
 1. Syntax/build guard:
-- `node --check Source/ui/public/js/index.js`
+- `cd Source/ui && npm run typecheck`
 - `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8`
 2. Production UI self-test extension lanes:
 - Add `UI-P1-025A` position mode visibility/editability.

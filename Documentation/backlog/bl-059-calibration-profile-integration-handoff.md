@@ -2,13 +2,13 @@ Title: BL-059 CalibrationProfile Integration Handoff
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-07
 
 # BL-059 CalibrationProfile Integration Handoff
 
 ## Plain-Language Summary
 
-BL-059 in plain terms: Wire CalibrationProfile.json from companion to plugin state end-to-end. Current state: In Implementation (Wave 1 kickoff: smoke harness upgraded with contract/execute semantics). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-059 in plain terms: Wire CalibrationProfile.json from companion to plugin state end-to-end. Current state: In Validation (fixture-driven contract+execute smoke PASS with BL-053/BL-055 dependency replays green on 2026-03-07). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-059 in plain terms: Wire CalibrationProfile.json from companion to plugin sta
 | What is changing? | Wire CalibrationProfile.json from companion to plugin state end-to-end. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (reprioritized from code-review calibration correctness/race risk packet; smoke harness upgraded). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (fixture-driven contract+execute smoke PASS with dependency replays green on 2026-03-07). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-059-calibration-profile-integration-handoff.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -43,9 +43,9 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 
 | Evidence Artifact | Purpose | Path |
 |---|---|---|
-| Integration status packet | Single run-level pass/fail and blockers | `TestEvidence/bl059_<slice>_<timestamp>/status.tsv` |
-| Contract matrix | Verify handoff invariants remain deterministic | `TestEvidence/bl059_<slice>_<timestamp>/contract_matrix.tsv` |
-| Replay hashes | Verify run-to-run deterministic shape | `TestEvidence/bl059_<slice>_<timestamp>/replay_hashes.tsv` |
+| Integration status packet | Single run-level pass/fail and blockers | `TestEvidence/bl059_calibration_integration_smoke_<timestamp>_<pid>/status.tsv` |
+| Contract matrix | Verify handoff invariants remain deterministic | `TestEvidence/bl059_calibration_integration_smoke_<timestamp>_<pid>/contract_matrix.tsv` |
+| Replay hashes | Verify run-to-run deterministic shape | `TestEvidence/bl059_calibration_integration_smoke_<timestamp>_<pid>/replay_hashes.tsv` |
 
 ```mermaid
 flowchart LR
@@ -60,7 +60,7 @@ flowchart LR
 |---|---|
 | ID | BL-059 |
 | Priority | P0 |
-| Status | In Implementation (Wave 1 kickoff: smoke harness upgraded with contract/execute semantics) |
+| Status | In Validation (fixture-driven contract+execute smoke PASS; profile ingest/unload scenarios and BL-053/BL-055 dependency replays green on 2026-03-07) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 |
@@ -70,7 +70,7 @@ flowchart LR
 
 ## Objective
 
-Wire `CalibrationProfile.json` from companion to plugin state end-to-end. Primitive fields → APVTS parameters. Blob fields (sofa_ref, hp_fir_taps) → base64 in state. Plugin reloads profile on file change without glitches.
+Wire `CalibrationProfile.json` from companion to plugin state end-to-end. Device-profile fields update APVTS state, and PEQ/FIR/SOFA/tracking fields update renderer/runtime state without glitches. Plugin reloads on file change and clears runtime state cleanly when the profile disappears.
 
 ## Acceptance IDs
 
@@ -92,6 +92,24 @@ Wire `CalibrationProfile.json` from companion to plugin state end-to-end. Primit
 
 QA harness script: `scripts/qa-bl059-calibration-integration-smoke-mac.sh`.
 Evidence schema: `TestEvidence/bl059_*/status.tsv`.
+
+Primary dev-loop commands:
+- `./scripts/qa-bl059-calibration-integration-smoke-mac.sh --contract-only`
+- `./scripts/qa-bl059-calibration-integration-smoke-mac.sh --execute`
+
+Required dependency replays in execute mode:
+- `./scripts/qa-bl053-head-tracking-orientation-injection-mac.sh`
+- `./scripts/qa-bl055-fir-convolution-engine-mac.sh --execute`
+
+## Validation Refresh Snapshot (2026-03-07)
+
+- Contract-only PASS: `TestEvidence/bl059_calibration_integration_smoke_20260307T063151Z_93321/status.tsv`
+- Execute PASS: `TestEvidence/bl059_calibration_integration_smoke_20260307T063250Z_94423/status.tsv`
+- Runtime smoke scenarios green: AirPods PEQ, Sony PEQ, custom SOFA+FIR, and missing-profile unload recovery
+- Dependency replays green inside execute lane: BL-053 orientation injection and BL-055 FIR convolution engine
+- Harness/runtime deltas included in this refresh:
+  - sandbox-safe profile override seam via `LOCUSQ_COMPANION_PROFILE_FILE` / `LOCUSQ_COMPANION_PROFILE_DIR`
+  - contract matrix now checks profile clear path, APVTS sync, SOFA/FIR/tracking ingest, UI status publication, and renderer tracking diagnostics
 
 ## Replay Cadence Plan (Required)
 
@@ -124,4 +142,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

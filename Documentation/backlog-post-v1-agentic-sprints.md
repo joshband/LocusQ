@@ -2,32 +2,31 @@ Title: LocusQ Post-v1 Master Backlog
 Document Type: Backlog and Execution Spec
 Author: APC Codex
 Created Date: 2026-02-20
-Last Modified Date: 2026-02-24
+Last Modified Date: 2026-03-07
 
 # LocusQ Post-v1 Master Backlog
 
-> **DEPRECATED (2026-02-24):** This file is superseded by `Documentation/backlog/index.md` as the single backlog authority. Individual runbook docs in `Documentation/backlog/` now carry execution detail, agent prompts, and validation plans. This file is retained as Tier 2 reference only. Do not update this file for new status changes.
+> **DEPRECATED (2026-02-24):** This file is superseded by `Documentation/backlog/index.md` as the single backlog authority. Individual runbook docs in `Documentation/backlog/` now carry execution detail, agent prompts, and validation plans. This file is retained as Tier 2 historical reference only. Do not update this file for new status changes.
 
 ## Purpose
-Provide one canonical backlog authority for ordering, status, dependencies, and closeout criteria across BL/HX work items.
+Preserve the pre-`Documentation/backlog/index.md` backlog snapshot, ordering rationale, and annex mapping for historical traceability.
 
 ## Scope
-This file is the master backlog only. Deep design and implementation details live in referenced annex plans and runbooks.
+This file is reference-only. Canonical backlog state now lives in `Documentation/backlog/index.md`, and execution detail lives in individual runbook docs under `Documentation/backlog/`.
 
-## Canonical Backlog Contract
-1. This file is the single authority for backlog status, ordering, and priority.
-2. `Documentation/plans/*.md` are specialist annexes; they must not contain authoritative backlog state.
-3. `Documentation/plans/2026-02-20-full-project-review.md` is extraction input only, not execution authority.
-4. Execution steps and command-level procedures live in `Documentation/runbooks/backlog-execution-runbooks.md`.
-5. Every open item in this file must include dependencies, owner track, and required exit artifact.
-6. Any status/priority change must update this file and evidence surfaces in the same change set.
+## Historical Backlog Reference Contract
+1. `Documentation/backlog/index.md` is the sole backlog authority for current status, ordering, and priority.
+2. Individual runbook docs in `Documentation/backlog/` are the active execution surface.
+3. `Documentation/plans/*.md` remain specialist annexes and must not become competing status ledgers.
+4. This file is retained only to preserve historical backlog shape, annex links, and review extraction context.
+5. New status, priority, and closeout updates must not be written here.
 
 ## Master + Annex Model
 | Layer | Role | Authority |
 |---|---|---|
-| Master backlog (this file) | Priority, sequencing, status, dependencies, ownership | Authoritative |
+| Master backlog (this file) | Historical snapshot of priority, sequencing, status, dependencies, ownership | Reference only |
 | Annex plans (`Documentation/plans/*.md`) | Deep architecture/spec details per BL lane | Supporting |
-| Runbooks (`Documentation/runbooks/backlog-execution-runbooks.md`) | Actionable procedures, validation commands, evidence paths | Supporting |
+| Runbooks (`Documentation/backlog/*.md`) | Actionable procedures, validation commands, evidence paths | Authoritative execution detail |
 | Archived reviews (`Documentation/archive/...`) | Historical context and extraction source | Reference only |
 
 ## Material Preservation Map
@@ -65,7 +64,7 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 - `Todo`: BL-020, BL-021, BL-023
 - `HX Open`: HX-02, HX-05, HX-06
 
-## Structured TODO Registry (Canonical Queue)
+## Structured TODO Registry (Historical Snapshot)
 | Order | Priority | ID | State | Depends On | Owner Track | Exit Artifact |
 |---:|---|---|---|---|---|---|
 | 1 | P1 | BL-022 | In Validation | BL-003, BL-004 done | Track C UX Authoring | Choreography lane closeout evidence and BL-025 regression guard |
@@ -110,7 +109,7 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 | Track G Release and Governance | BL-030 closeout synchronization | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship` |
 
 ## Runbook References
-- Primary execution runbook: `Documentation/runbooks/backlog-execution-runbooks.md`
+- Primary execution surface: `Documentation/backlog/index.md` plus the matching runbook in `Documentation/backlog/`
 - Annex specs: see Material Preservation Map above.
 - Historical extraction source: `Documentation/plans/2026-02-20-full-project-review.md`
 
@@ -146,8 +145,8 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 ## Definition of Done
 1. Code/docs changes merged.
 2. Required validation commands pass with recorded artifacts.
-3. `status.json`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, and this backlog are synchronized when claims change.
+3. `status.json`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, and `Documentation/backlog/index.md` are synchronized when claims change.
 4. `./scripts/validate-docs-freshness.sh` passes.
 
 ## Maintenance Rule
-Any backlog decision made in plan, implementation, validation, or ADR updates must be reflected here in the same change set.
+Any backlog decision made in plan, implementation, validation, or ADR updates must be reflected in `Documentation/backlog/index.md` and the relevant `Documentation/backlog/` runbook, not in this historical snapshot.
