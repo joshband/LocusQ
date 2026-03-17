@@ -1,0 +1,41 @@
+{
+  "schema": "locusq-capture-session-v1",
+  "timestamp_utc": "20260317T041625Z",
+  "date_utc": "2026-03-17",
+  "session_name": "headtracking_dense",
+  "profile_source": "profile_file:dense.json",
+  "profile_schema": "locusq-capture-profile-v1",
+  "mode": "dry_run",
+  "config": {
+    "duration_sec": 72,
+    "fps": 30,
+    "extract_every_sec": 0.25,
+    "countdown_sec": 5,
+    "cue_window_pre_sec": 1.0,
+    "cue_window_post_sec": 1.5,
+    "no_extract": false,
+    "no_cues": true,
+    "cue_speech": false,
+    "contact_sheet_enabled": true,
+    "cue_clips_enabled": true
+  },
+  "artifacts": {
+    "summary_md": "capture_summary.md",
+    "checkpoints_tsv": "checkpoints.tsv",
+    "cue_events_tsv": "cue_events.tsv",
+    "checkpoint_frame_map_tsv": "checkpoint_frame_map.tsv",
+    "contact_sheets_tsv": "contact_sheets.tsv",
+    "cue_window_clips_tsv": "cue_window_clips.tsv",
+    "record_log": "ffmpeg_record.log",
+    "extract_log": "ffmpeg_extract.log",
+    "contact_sheet_log": "ffmpeg_contact_sheets.log",
+    "cue_clips_log": "ffmpeg_cue_clips.log",
+    "video": "rotation_capture.mp4",
+    "frames_dir": "frames",
+    "contact_sheets_dir": "contact_sheets",
+    "cue_clips_dir": "cue_clips",
+    "artifact_inventory_tsv": "artifact_schema_inventory.tsv",
+    "replay_hashes_tsv": "replay_hashes.tsv"
+  },
+  "cue_count": 11
+}

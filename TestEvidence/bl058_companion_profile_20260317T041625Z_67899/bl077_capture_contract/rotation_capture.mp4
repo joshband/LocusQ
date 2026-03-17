@@ -1,0 +1,5 @@
+locusq_stub=true
+stub_type=video_capture
+stub_id=rotation_capture
+profile=headtracking_dense
+origin=dry_run
