@@ -1,0 +1,2 @@
+check	result	detail	artifact
+bypass_identity_contract	PASS	bypass_short_circuit;identity_preset_clear_path;rt_safe_no_heap_lock_io;	/Users/artbox/Documents/Repos/LocusQ/Source/headphone_dsp/HeadphonePeqHook.h

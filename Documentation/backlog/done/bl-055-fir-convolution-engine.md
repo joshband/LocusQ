@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-055 |
 | Priority | P1 |
-| Status | **Done-candidate** (Z1 owner sync 2026-03-16: T3 10/10 contract+execute PASS; 2026-03-07 execute parity PASS; promotion packet at `TestEvidence/bl055_owner_sync_z1_20260316T050100Z/`) |
+| Status | **Done** (Z1 owner sync 2026-03-16: T3 10/10 PASS; archive sync complete 2026-03-17; offline parity deferred non-blocking) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | — |

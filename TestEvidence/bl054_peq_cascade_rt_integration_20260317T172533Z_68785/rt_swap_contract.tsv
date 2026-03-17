@@ -1,0 +1,3 @@
+check	result	detail	artifact
+atomic_peq_swap_contract	PASS	atomic_swap_contract_comment;double_buffer_bank_storage;release_acquire_bank_publish;single_call_chain_apply_api;message_thread_preset_build_and_publish;	/Users/artbox/Documents/Repos/LocusQ/Source/headphone_dsp/HeadphonePeqHook.h
+calibration_profile_bridge	PASS	calibration_profile_json_to_peq_engine;	/Users/artbox/Documents/Repos/LocusQ/Source/processor_core/ProcessorCalibrationBridge.cpp
