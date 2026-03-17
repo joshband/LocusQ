@@ -1151,7 +1151,7 @@
       "id": "BL-060",
       "title": "BL-060 Phase B Listening Test Harness + Evaluation",
       "state_bucket": "open",
-      "status": "Open",
+      "status": "In Implementation (harness authored 2026-03-17: `scripts/qa-bl060-phase-b-listening-test-mac.sh` + `scripts/bl060-analyze-results.py`; contract/execute T1 PASS; gate fixture 45.5% ext improvement; evidence `TestEvidence/bl060_phase_b_listening_20260317T174025Z_90778/`)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-059",
