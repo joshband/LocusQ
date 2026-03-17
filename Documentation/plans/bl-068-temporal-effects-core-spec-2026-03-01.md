@@ -2,7 +2,7 @@ Title: BL-068 Temporal Effects Core Spec (Delay/Echo/Looper/Frippertronics)
 Document Type: Annex Spec
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-17
 
 # BL-068 Temporal Effects Core Spec (Delay/Echo/Looper/Frippertronics)
 
@@ -49,12 +49,17 @@ Depends on: BL-050, BL-055.
 Primary lane:
 - `scripts/qa-bl068-temporal-effects-mac.sh`
 
+Execute-mode behavior:
+- `--execute` compiles a dedicated temporal-contract probe inside the lane output directory and validates the owned BL-068 headers without using `build_local`.
+
 Required evidence bundle (`TestEvidence/bl068_*/`):
 - `status.tsv`
-- `temporal_matrix.tsv`
+- `temporal_modes_matrix.tsv`
 - `runaway_guard.tsv`
 - `transport_recall.tsv`
 - `cpu_latency_budget.tsv`
+- `summary.md`
+- `lane_notes.md`
 
 ## Risks and Mitigations
 

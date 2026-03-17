@@ -83,7 +83,7 @@ struct SceneGraphAudioReservation
             if (requested <= capacity)
                 return;
 
-            mono.malloc (static_cast<std::size_t> (requested), true);
+            mono.malloc (static_cast<std::size_t> (requested));
             capacity = requested;
         }
 

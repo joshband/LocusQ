@@ -2,13 +2,13 @@ Title: BL-040 UI Modularization and Authority Status UX
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-16
+Last Modified Date: 2026-03-17
 
 # BL-040 UI Modularization and Authority Status UX
 
 ## Plain-Language Summary
 
-BL-040 in plain terms: Define a deterministic modular-UI and authority-status contract so operators can reliably understand control provenance (who owns state), stale-state conditions, and lock/fallback reasons without ambiguity. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion sentinel intake; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-040 in plain terms: Define a deterministic modular-UI and authority-status contract so operators can reliably understand control provenance (who owns state), stale-state conditions, and lock/fallback reasons without ambiguity. Current state: Done (Owner-verified done-promotion evidence complete; 100-run authority diagnostics PASS, strict usage exits green, docs freshness green). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-040 in plain terms: Define a deterministic modular-UI and authority-status co
 | What is changing? | Define a deterministic modular-UI and authority-status contract so operators can reliably understand control provenance (who owns state), stale-state conditions, and lock/fallback reasons without ambiguity. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: Done (Owner-verified done-promotion evidence complete; 2026-03-17). All required acceptance checks passed and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-040-ui-modularization-and-authority-status.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -60,7 +60,7 @@ Cross-item lifecycle governance remains canonical in `Documentation/backlog/inde
 |---|---|
 | ID | BL-040 |
 | Priority | P1 |
-| Status | Done-candidate (Owner Z10 accepted D2 done-promotion sentinel intake; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) |
+| Status | Done (Owner-verified done-promotion evidence complete; 100-run authority diagnostics PASS, strict usage exits green, docs freshness green) |
 | Track | B - Scene/UI Runtime |
 | Effort | High / L |
 | Depends On | BL-027 (Done), BL-039 |
@@ -966,6 +966,43 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
 
 Only add runbook-specific handoff fields if they differ from the canonical contract.
+
+## Done Promotion Execution Snapshot (2026-03-17)
+
+- Evidence packet:
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/status.tsv`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/contract_runs/validation_matrix.tsv`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/contract_runs/replay_hashes.tsv`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/contract_runs/failure_taxonomy.tsv`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/contract_runs/ui_diagnostics_summary.tsv`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/docs_freshness.log`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/lane_notes.md`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/promotion_decision.md`
+  - `TestEvidence/bl040_done_promotion_20260317T180000Z/handoff_resolution.md`
+- Validation:
+  - `bash -n scripts/qa-bl040-ui-authority-diagnostics-mac.sh` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --help` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --contract-only --runs 3 --out-dir TestEvidence/bl040_done_promotion_20260317T180000Z/contract_runs` => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --runs 0` (expect exit `2`) => `PASS`
+  - `./scripts/qa-bl040-ui-authority-diagnostics-mac.sh --bad-flag` (expect exit `2`) => `PASS`
+  - `./scripts/validate-docs-freshness.sh` => `PASS`
+  - `jq empty status.json` => `PASS`
+- Determinism/taxonomy/semantics summary:
+  - `runs_observed=3`
+  - `signature_drift_count=0`
+  - `row_drift_count=0`
+  - `taxonomy_nonzero_rows=0`
+  - `usage_probe_runs0_exit=2`
+  - `usage_probe_badflag_exit=2`
+- Prior evidence chain:
+  - D2 done-promotion sentinel (100 runs): `TestEvidence/bl040_slice_d2_done_promotion_20260227T201804Z/` => `PASS`
+  - Owner sync Z10 acceptance: `TestEvidence/owner_sync_bl036_bl037_bl038_bl039_bl040_bl041_z10_20260227T203004Z/` => `PASS`
+  - Owner sync Z11 recheck (5 runs): `TestEvidence/bl040_owner_sync_z11_20260317T044955Z_52916/` => `PASS`
+- Result:
+  - BL-040 formally promoted to Done on 2026-03-17.
+  - Runbook archived to `Documentation/backlog/done/bl-040-ui-modularization-and-authority-status.md`.
+  - `backlog-summary.json` updated: `state_bucket=done`, `status=Done`.
+  - `status.json` notes updated to reflect Done.
 
 ## Governance Alignment (2026-02-28)
 
