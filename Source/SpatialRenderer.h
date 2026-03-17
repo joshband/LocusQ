@@ -548,7 +548,7 @@ private:
 
             if (requestedSize != size_)
             {
-                data_.malloc (requestedSize, true);
+                data_.malloc (requestedSize);
                 size_ = requestedSize;
             }
             else

@@ -2,7 +2,7 @@ Title: BL-078 Runtime Finite-Output Enforcement and Diagnostics
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-05
-Last Modified Date: 2026-03-05
+Last Modified Date: 2026-03-17
 
 # BL-078 Runtime Finite-Output Enforcement and Diagnostics
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-078 |
 | Priority | P0 |
-| Status | Open (2026-03-05 scope-split follow-on created from BL-036 runtime TODOs) |
+| Status | In Implementation (A2 native guardrail loop + B2 diagnostics publication landed in Source/ 2026-03-17; finite-output lane 3/3 PASS `TestEvidence/bl078_a2_verify_20260317T182136Z/`; SIGSEGV root-caused and fixed 2026-03-17 — HeapBlock::malloc JUCE8 API break in SceneGraph.h + SpatialRenderer.h; smoke suite 8/8 PASS `TestEvidence/sigsegv_fix_20260317T192604Z/`; C1 fuzz/soak harness and owner replay pending) |
 | Track | F - Hardening |
 | Effort | Med / M |
 | Depends On | BL-036 (Done) |
@@ -100,10 +100,19 @@ Out of scope:
 
 ## TODOs
 
-- [ ] Implement native finite guardrails in runtime DSP paths.
-- [ ] Publish additive finite-output diagnostics from processor surfaces.
+- [x] Implement native finite guardrails in runtime DSP paths. (`Source/PluginProcessor.cpp` — post-renderer guardrail loop; `Source/PluginProcessor.h` — `PublishedFiniteGuardrailDiagnostics` struct)
+- [x] Publish additive finite-output diagnostics from processor surfaces. (6 atomic fields published each Renderer block with seqlock-style release fence)
+- [x] Fix pre-existing SIGSEGV in locusq_qa (HeapBlock::malloc JUCE8 API break — SceneGraph.h:86 + SpatialRenderer.h:551; smoke suite 8/8 PASS `TestEvidence/sigsegv_fix_20260317T192604Z/`).
 - [ ] Execute runtime finite-output fuzz/soak lane and owner replay.
 - [ ] Synchronize backlog/index/status/evidence surfaces when BL-078 advances.
+
+## A2/B2 Implementation Snapshot (2026-03-17)
+
+- Build: `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -j 8` → PASS
+- Finite-output contract lane replay (3/3): `TestEvidence/bl078_a2_verify_20260317T182136Z/status.tsv` → PASS
+- Docs freshness: PASS
+- SIGSEGV root-caused 2026-03-17: HeapBlock::malloc JUCE8 API break in SceneGraph.h:86 + SpatialRenderer.h:551 — fixed; smoke suite 8/8 PASS
+- Remaining: C1 fuzz/soak harness (`scripts/qa-bl078-runtime-finite-output-mac.sh`) and D1 owner closeout
 
 ## Validation Plan
 
