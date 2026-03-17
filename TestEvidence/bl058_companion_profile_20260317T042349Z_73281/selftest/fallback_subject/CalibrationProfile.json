@@ -1,0 +1,27 @@
+{
+  "headphone" : {
+    "hp_eq_mode" : "off",
+    "hp_fir_taps" : [
+
+    ],
+    "hp_hrtf_mode" : "sofa",
+    "hp_mode" : "anc_on",
+    "hp_model_id" : "airpods_pro_1",
+    "hp_peq_bands" : [
+
+    ]
+  },
+  "schema" : "locusq-calibration-profile-v1",
+  "tracking" : {
+    "hp_tracking_enabled" : true,
+    "hp_yaw_offset_deg" : 0
+  },
+  "user" : {
+    "embedding_hash" : "ecbfccb0f21a786674a44863",
+    "sofa_ref" : "sadie2\/H3_HRIR.sofa",
+    "subject_id" : "H3"
+  },
+  "verification" : {
+
+  }
+}

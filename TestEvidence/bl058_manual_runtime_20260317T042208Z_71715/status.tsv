@@ -1,0 +1,10 @@
+check_id	result	detail	artifact
+BL058-R1-matching_latency_lt_50ms	PASS	match_latency_ms=0.2139 (budget=50ms)	selftest_results.tsv
+BL058-R2-nearest_neighbor_match	PASS	subject=H7 sofa=sadie2/H7_HRIR.sofa fallback=false similarity>=0.6	selftest_results.tsv
+BL058-R3-fallback_subject	PASS	subject=H3 sofa=sadie2/H3_HRIR.sofa fallback=true (similarity<0.6 path exercised)	selftest_results.tsv
+BL058-R4-no_images_persisted	PASS	only CalibrationProfile.json on disk; no ear photo files retained	selftest_results.tsv
+BL058-R5-profile_write	PASS	subject_id+sofa_ref+embedding_hash written to CalibrationProfile.json	selftest_results.tsv
+BL058-R6-privacy_no_network	PASS	static: no URL literals in companion/Sources; selftest: no network calls on acquisition path	capture_consumer_bridge.tsv
+BL058-R7-send_gate_closed_until_sync	PASS	require-sync mode: active_ready+send_gate_open=false; packets_sent=0 for full 2s run	readiness_gate.md
+BL058-R8-auto_sync_gate_opens	PASS	auto-sync mode: active_ready+send_gate_open=true; 30/30 packets sent	axis_sweeps.md
+lane_result	PASS	mode=manual_runtime;all_acceptance_criteria_pass	status.tsv
