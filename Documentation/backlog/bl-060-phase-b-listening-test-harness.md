@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-17
 
 ## Plain-Language Summary
 
-BL-060 in plain terms: Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ vs WH-1000XM5 EQ) across >=5 participants x >=10 scenes. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-060 in plain terms: Execute Phase B 2×2 blind listening test (generic vs personalized HRTF × no EQ vs WH-1000XM5 EQ) across >=5 participants x >=10 scenes. Current state: In Validation (harness T1+T2 PASS; fixture gate PASS 45.5% ext improvement p<0.0001). Blocked on ≥5 real participant sessions. For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-060 in plain terms: Execute Phase B 2×2 blind listening test (generic vs per
 | What is changing? | Execute Phase B 2×2 blind listening test (generic vs personalized HrealtimeF × no EQ vs WH-1000XM5 EQ) across >=5 participants x >=10 scenes. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Implementation (harness authored 2026-03-17; contract/execute T1 PASS). Done when ≥5 real participants complete full session and gate evidence is committed to TestEvidence. |
+| When is it done? | Current state: In Validation (harness T1+T2 PASS; fixture gate 45.5% ext improvement, p<0.0001; reproducibility hash stable). Done when ≥5 real participants complete full session and gate evidence is committed to TestEvidence. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-060-phase-b-listening-test-harness.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-060 |
 | Priority | P1 |
-| Status | In Implementation (harness authored 2026-03-17: `scripts/qa-bl060-phase-b-listening-test-mac.sh` + `scripts/bl060-analyze-results.py`; contract/execute T1 PASS; gate fixture 45.5% ext improvement; evidence `TestEvidence/bl060_phase_b_listening_20260317T174025Z_90778/`) |
+| Status | In Validation (harness T1 PASS 2026-03-17: `TestEvidence/bl060_phase_b_listening_20260317T174025Z_90778/`; T2 3/3 PASS 2026-03-17: `TestEvidence/bl060_phase_b_listening_20260317T174918Z_99523/` et al.; fixture gate 45.5% ext improvement, p<0.0001, reproducibility hash stable; blocked on ≥5 real participant sessions) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-059 |
