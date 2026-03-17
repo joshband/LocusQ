@@ -399,6 +399,26 @@ private func consumeSyncRequest() -> Bool {
     return false
 }
 
+// Per-axis flip state — set from the dashboard UI, applied before packet transmission.
+nonisolated(unsafe) private var gAxisFlipYaw = false
+nonisolated(unsafe) private var gAxisFlipPitch = false
+nonisolated(unsafe) private var gAxisFlipRoll = true
+private let gAxisFlipLock = NSLock()
+
+private func setAxisFlips(yaw: Bool, pitch: Bool, roll: Bool) {
+    gAxisFlipLock.lock()
+    gAxisFlipYaw = yaw
+    gAxisFlipPitch = pitch
+    gAxisFlipRoll = roll
+    gAxisFlipLock.unlock()
+}
+
+private func readAxisFlips() -> (yaw: Bool, pitch: Bool, roll: Bool) {
+    gAxisFlipLock.lock()
+    defer { gAxisFlipLock.unlock() }
+    return (gAxisFlipYaw, gAxisFlipPitch, gAxisFlipRoll)
+}
+
 private func handleTerminationSignal(_ signal: Int32) -> Void {
     _ = signal
     markStopRequested()
@@ -1627,7 +1647,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             contentView.addSubview(webView)
         }
 
-        let (threeTag, baseURL) = Self.resolveThreeScriptTag()
+        // Inject Three.js as a user script so window.THREE is set before any inline
+        // scripts run. This bypasses WKWebView's restrictions on ES module file imports
+        // from loadHTMLString pages, which are unreliable with file:// baseURLs.
+        let threeInjected = Self.injectThreeUserScript(into: userContentController)
+        let (threeTag, baseURL) = threeInjected ? ("", nil) : Self.resolveThreeScriptTag()
         webView.loadHTMLString(Self.dashboardHTML(threeScriptTag: threeTag), baseURL: baseURL)
     }
 
@@ -1683,6 +1707,15 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             } catch {
                 profileAcquisitionController.noteError("BL-058 apply error: \(error)")
             }
+            return
+        }
+
+        if type == "axisFlip" {
+            let yaw   = (body["yaw"]   as? Bool) ?? gAxisFlipYaw
+            let pitch = (body["pitch"] as? Bool) ?? gAxisFlipPitch
+            let roll  = (body["roll"]  as? Bool) ?? gAxisFlipRoll
+            setAxisFlips(yaw: yaw, pitch: pitch, roll: roll)
+            return
         }
     }
 
@@ -1837,7 +1870,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                     "fileName": snapshot.profileAcquisition.frontal.fileName,
                     "detail": snapshot.profileAcquisition.frontal.detail
                 ]
-            ]
+            ],
+            "axisFlip": {
+                let flips = readAxisFlips()
+                return ["yaw": flips.yaw, "pitch": flips.pitch, "roll": flips.roll] as [String: Any]
+            }()
         ]
 
         guard JSONSerialization.isValidJSONObject(payload),
@@ -1904,6 +1941,37 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
         return "\(pixelSize), \(fileSize), local-only embedding"
     }
 
+    /// Inject Three.js (UMD build) directly as a WKUserScript so window.THREE is
+    /// guaranteed to be set at document start, with no file-loading or module-import
+    /// restrictions. Returns true on success.
+    private static func injectThreeUserScript(into controller: WKUserContentController) -> Bool {
+        let fileManager = FileManager.default
+
+        // Bundle-first: three.min.js (UMD) bundled with the app.
+        var candidates: [URL] = []
+        if let bundled = Bundle.main.url(forResource: "three.min", withExtension: "js") {
+            candidates.append(bundled)
+        }
+
+        // Disk fallbacks for development / CLI builds.
+        let cwd = URL(fileURLWithPath: fileManager.currentDirectoryPath, isDirectory: true)
+        let executableURL = URL(fileURLWithPath: CommandLine.arguments.first ?? "")
+        var cursor = executableURL.deletingLastPathComponent()
+        for _ in 0..<10 {
+            candidates.append(cursor.appendingPathComponent("companion/Resources/three.min.js"))
+            cursor.deleteLastPathComponent()
+        }
+        candidates.append(cwd.appendingPathComponent("companion/Resources/three.min.js"))
+
+        for url in candidates where fileManager.fileExists(atPath: url.path) {
+            guard let source = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+            controller.addUserScript(script)
+            return true
+        }
+        return false
+    }
+
     private static func resolveThreeScriptTag() -> (String, URL?) {
         let fileManager = FileManager.default
         var moduleCandidates: [URL] = []
@@ -1930,8 +1998,12 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             cursor.deleteLastPathComponent()
         }
 
+        // ES module build — inline the import so window.THREE is set before DOMContentLoaded.
+        // three.module.min.js re-exports from three.core.min.js; both must be present.
         for url in moduleCandidates where fileManager.fileExists(atPath: url.path) {
             let directory = url.deletingLastPathComponent()
+            let coreURL = directory.appendingPathComponent("three.core.min.js")
+            guard fileManager.fileExists(atPath: coreURL.path) else { continue }
             let tag = """
             <script type="module">
               import * as THREE from "./\(url.lastPathComponent)";
@@ -1941,9 +2013,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             return (tag, directory)
         }
 
+        // Legacy UMD build — plain script tag, loaded via loadFileURL.
         for url in legacyCandidates where fileManager.fileExists(atPath: url.path) {
             let directory = url.deletingLastPathComponent()
-            return ("<script src=\"\(url.lastPathComponent)\"></script>", directory)
+            let tag = "<script src=\"\(url.lastPathComponent)\"></script>"
+            return (tag, directory)
         }
 
         return ("", nil)
@@ -2270,6 +2344,15 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               background: rgba(12, 19, 28, 0.82);
               color: #9fb4c9;
             }
+            .syncButton.axisFlipActive {
+              border-color: rgba(220, 90, 90, 0.80);
+              background: rgba(80, 20, 20, 0.72);
+              color: #ffb3b3;
+            }
+            .syncButton.axisFlipActive:hover {
+              border-color: rgba(255, 120, 120, 0.90);
+              background: rgba(110, 28, 28, 0.88);
+            }
             #metrics {
               overflow: auto;
               padding: 6px 8px 8px;
@@ -2447,6 +2530,15 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                   <label for="syncButton">Center / Sync</label>
                   <button id="syncButton" class="syncButton" type="button">Center / Sync</button>
                   <div id="syncHint" class="controlValue">Waiting for readiness…</div>
+                </div>
+                <div class="controlBlock">
+                  <label>Axis Inversion</label>
+                  <div style="display:flex;gap:6px;margin-top:4px;">
+                    <button id="flipYawBtn"   class="syncButton" type="button" data-flipped="false" style="flex:1;">Yaw</button>
+                    <button id="flipPitchBtn" class="syncButton" type="button" data-flipped="false" style="flex:1;">Pitch</button>
+                    <button id="flipRollBtn"  class="syncButton" type="button" data-flipped="true"  style="flex:1;">Roll</button>
+                  </div>
+                  <div id="axisFlipHint" class="controlValue">Tap a button to invert that axis</div>
                 </div>
               </div>
               <div id="metrics">
@@ -2668,6 +2760,51 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 button.addEventListener("click", () => {
                   postNativeMessage({ type: "sync" });
                 });
+              }
+
+              function bindAxisFlipControls() {
+                const axes = ["yaw", "pitch", "roll"];
+                const ids  = { yaw: "flipYawBtn", pitch: "flipPitchBtn", roll: "flipRollBtn" };
+                const labels = { yaw: "Yaw", pitch: "Pitch", roll: "Roll" };
+
+                const syncButtonVisuals = () => {
+                  axes.forEach(axis => {
+                    const btn = get(ids[axis]);
+                    if (!btn) return;
+                    const flipped = btn.dataset.flipped === "true";
+                    btn.classList.toggle("axisFlipActive", flipped);
+                    btn.textContent = labels[axis] + (flipped ? " ✕" : "");
+                  });
+                };
+
+                axes.forEach(axis => {
+                  const btn = get(ids[axis]);
+                  if (!btn) return;
+                  btn.addEventListener("click", () => {
+                    const current = btn.dataset.flipped === "true";
+                    btn.dataset.flipped = current ? "false" : "true";
+                    syncButtonVisuals();
+                    const payload = { type: "axisFlip" };
+                    axes.forEach(a => {
+                      const b = get(ids[a]);
+                      payload[a] = b ? (b.dataset.flipped === "true") : false;
+                    });
+                    postNativeMessage(payload);
+                  });
+                });
+
+                // Sync button visuals from server-side payload on each update.
+                state.syncAxisFlipButtons = (axisFlip) => {
+                  if (!axisFlip) return;
+                  axes.forEach(axis => {
+                    const btn = get(ids[axis]);
+                    if (!btn) return;
+                    btn.dataset.flipped = axisFlip[axis] ? "true" : "false";
+                  });
+                  syncButtonVisuals();
+                };
+
+                syncButtonVisuals();
               }
 
               function bindProfileControls() {
@@ -3052,6 +3189,9 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 if (syncButton) {
                   syncButton.disabled = readiness !== "active_ready";
                 }
+                if (typeof state.syncAxisFlipButtons === "function") {
+                  state.syncAxisFlipButtons(snapshot.axisFlip);
+                }
                 if (syncHint) {
                   if (readiness !== "active_ready") {
                     syncHint.textContent = "Waiting for in-ear ready state";
@@ -3165,9 +3305,16 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
 
               bindSmoothingControls();
               bindSyncControls();
+              bindAxisFlipControls();
               bindProfileControls();
               bindViewControls();
-              initThreeScene();
+
+              // ES modules are deferred — window.THREE may not be set yet when this
+              // classic script runs. Poll briefly so the module has time to resolve.
+              (function tryInitThree(remaining) {
+                if (window.THREE) { initThreeScene(); return; }
+                if (remaining > 0) setTimeout(() => tryInitThree(remaining - 1), 40);
+              })(25); // up to 1 second (25 × 40 ms)
             })();
           </script>
         </body>
@@ -3725,7 +3872,19 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
             filteredQuaternion = smoothedQuaternion
         }
 
-        let eulerDeg = filteredQuaternion.toEulerDegrees()
+        // Apply per-axis flip corrections configured via the dashboard.
+        // Euler round-trip keeps the inversion intuitive and independent per axis.
+        let outputQuaternion: Quaternion = {
+            let flips = readAxisFlips()
+            guard flips.yaw || flips.pitch || flips.roll else { return filteredQuaternion }
+            var e = filteredQuaternion.toEulerDegrees()
+            if flips.yaw   { e.yaw   = -e.yaw }
+            if flips.pitch { e.pitch = -e.pitch }
+            if flips.roll  { e.roll  = -e.roll }
+            return quaternionFromYawPitchRoll(yawDeg: e.yaw, pitchDeg: e.pitch, rollDeg: e.roll)
+        }()
+
+        let eulerDeg = outputQuaternion.toEulerDegrees()
 
         let motionTimestamp = motion.timestamp
         let dtSec: Double
@@ -3796,7 +3955,7 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
 
         if shouldSend && allowPoseSend {
             let packet = PosePacketV1(
-                quaternion: filteredQuaternion,
+                quaternion: outputQuaternion,
                 timestampMs: nowMs,
                 sequence: sequence
             )
@@ -3860,10 +4019,10 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
             snapshot.sequence = sentSeq
             snapshot.timestampMs = packetTimestampMs
             snapshot.ageMs = ageMs
-            snapshot.qx = filteredQuaternion.x
-            snapshot.qy = filteredQuaternion.y
-            snapshot.qz = filteredQuaternion.z
-            snapshot.qw = filteredQuaternion.w
+            snapshot.qx = outputQuaternion.x
+            snapshot.qy = outputQuaternion.y
+            snapshot.qz = outputQuaternion.z
+            snapshot.qw = outputQuaternion.w
             snapshot.yawDeg = eulerDeg.yaw
             snapshot.pitchDeg = eulerDeg.pitch
             snapshot.rollDeg = eulerDeg.roll
@@ -3896,10 +4055,10 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
                     format: "packet seq=%u ts_ms=%llu q=[%.6f,%.6f,%.6f,%.6f] ypr=[%.2f,%.2f,%.2f] ang=%.2f deg/s",
                     sentSeq,
                     packetTimestampMs,
-                    filteredQuaternion.x,
-                    filteredQuaternion.y,
-                    filteredQuaternion.z,
-                    filteredQuaternion.w,
+                    outputQuaternion.x,
+                    outputQuaternion.y,
+                    outputQuaternion.z,
+                    outputQuaternion.w,
                     eulerDeg.yaw,
                     eulerDeg.pitch,
                     eulerDeg.roll,

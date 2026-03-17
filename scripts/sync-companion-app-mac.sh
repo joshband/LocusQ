@@ -66,6 +66,11 @@ if [[ -f "$THREE_JS_MODULE_SRC" ]]; then
   cp -f "$THREE_JS_MODULE_SRC" "$APP_RESOURCES_DIR/three.module.min.js"
 fi
 
+THREE_JS_CORE_SRC="$ROOT_DIR/Source/ui/node_modules/three/build/three.core.min.js"
+if [[ -f "$THREE_JS_CORE_SRC" ]]; then
+  cp -f "$THREE_JS_CORE_SRC" "$APP_RESOURCES_DIR/three.core.min.js"
+fi
+
 ICON_SRC="$ROOT_DIR/Resources/LocusQ.icns"
 if [[ -f "$ICON_SRC" ]]; then
   cp -f "$ICON_SRC" "$APP_RESOURCES_DIR/LocusQHeadtrackCompanion.icns"
