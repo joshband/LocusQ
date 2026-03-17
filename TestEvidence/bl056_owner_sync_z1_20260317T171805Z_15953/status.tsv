@@ -1,0 +1,5 @@
+check_id	result	detail	artifact
+execute_lane_status	PASS	lane_result=PASS;runs=10;all non-SKIP rows PASS	TestEvidence/bl056_calibration_state_migration_20260317T045411Z/status.tsv
+status_schema	PASS	jq empty status.json	status_json_check.log
+docs_freshness	PASS	docs freshness checks passed with 0 warning(s).	docs_freshness_recheck.log
+done_candidate_promotion	PASS	runbook status updated to Done-candidate; index row updated; validation trend appended	promotion_decision.md

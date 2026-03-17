@@ -2,7 +2,7 @@ Title: BL-056 Calibration State Migration + Latency Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-17 (Z1 Done-candidate promotion)
 
 # BL-056 Calibration State Migration + Latency Contract
 
@@ -18,7 +18,7 @@ BL-056 in plain terms: Bump plugin state_version, serialize new headphone calibr
 | What is changing? | Bump plugin state_version, serialize new headphone calibration parameters in getStateInformation/setStateInformation. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17). Done when T3 promotion evidence captured and owner packet written. |
+| When is it done? | Current state: Done-candidate (Z1 owner sync 2026-03-17; T3 10/10 PASS). Formal Done when BL-054 + BL-055 are formally Done. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-056-calibration-state-migration-latency.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-056 |
 | Priority | P1 |
-| Status | In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17; owner promotion packet pending) |
+| Status | **Done-candidate** (Z1 owner sync 2026-03-17: T3 10/10 PASS; all C1–C8 PASS; latency-zero-on-bypass confirmed; packet `TestEvidence/bl056_owner_sync_z1_20260317T171805Z_15953/`; formal Done awaits BL-054 + BL-055 Done promotion) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-054, BL-055 |
