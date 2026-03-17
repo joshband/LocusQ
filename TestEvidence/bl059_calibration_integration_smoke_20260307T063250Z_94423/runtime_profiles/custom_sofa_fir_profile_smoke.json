@@ -1,0 +1,21 @@
+{
+  "schema": "locusq-calibration-profile-v1",
+  "user": {
+    "subject_id": "H3",
+    "sofa_ref": "sadie2/H3_HRIR.sofa",
+    "embedding_hash": "bl059-custom_sofa_fir_profile_smoke"
+  },
+  "headphone": {
+    "hp_model_id": "custom_sofa",
+    "hp_mode": "reference",
+    "hp_eq_mode": "fir",
+    "hp_hrtf_mode": "sofa",
+    "hp_peq_bands": [],
+    "hp_fir_taps": [1.0, 0.0, 0.0, 0.0]
+  },
+  "tracking": {
+    "hp_tracking_enabled": true,
+    "hp_yaw_offset_deg": -18.0
+  },
+  "verification": {}
+}

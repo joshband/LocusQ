@@ -181,6 +181,7 @@ printf "failure_id\tclassification\tmitigation\n" > "$FAILURE_TAXONOMY_TSV"
 
 BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md"
 RENDERER_HDR="${ROOT_DIR}/Source/SpatialRenderer.h"
+RENDERER_IMPL="${ROOT_DIR}/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp"
 
 if [[ -f "$BACKLOG_DOC" ]]; then
   record "BL069-C1-backlog_doc_exists" "PASS" "runbook present" "$BACKLOG_DOC"
@@ -196,22 +197,22 @@ else
   record "BL069-C2-preload_symbol" "FAIL" "preload helper missing" "$RENDERER_HDR"
 fi
 
-if rg -q 'const auto& preset = bundledPeqPresets' "$RENDERER_HDR"; then
+if rg -q 'const auto& preset = bundledPeqPresets' "$RENDERER_IMPL"; then
   printf "cache_only_profile_load\tPASS\tloadPeqPresetForProfile consumes bundled cache\n" >> "$RT_ACCESS_AUDIT_TSV"
-  record "BL069-C3-cache_only_load" "PASS" "cache-only load path present" "$RENDERER_HDR"
+  record "BL069-C3-cache_only_load" "PASS" "cache-only load path present" "$RENDERER_IMPL"
 else
   printf "cache_only_profile_load\tFAIL\tcache-only load path not found\n" >> "$RT_ACCESS_AUDIT_TSV"
-  record "BL069-C3-cache_only_load" "FAIL" "cache-only load path not found" "$RENDERER_HDR"
+  record "BL069-C3-cache_only_load" "FAIL" "cache-only load path not found" "$RENDERER_IMPL"
 fi
 
 if [[ "$MODE" == "execute" ]]; then
   preset_retry_backoff_detail=""
-  if rg -q 'if \(lastLoadedPeqPresetIndex == clampedProfileIndex && lastLoadedPeqSampleRate == sampleRate\)' "$RENDERER_HDR"; then
+  if rg -q 'if \(lastLoadedPeqPresetIndex == clampedProfileIndex && lastLoadedPeqSampleRate == sampleRate\)' "$RENDERER_IMPL"; then
     preset_retry_backoff_detail+="memoized_last_loaded_guard;"
   else
     preset_retry_backoff_detail+="missing_memoized_last_loaded_guard;"
   fi
-  if rg -q 'const auto& preset = bundledPeqPresets\[static_cast<size_t> \(clampedProfileIndex\)\]\.preset;' "$RENDERER_HDR"; then
+  if rg -q 'const auto& preset = bundledPeqPresets\[static_cast<size_t> \(clampedProfileIndex\)\]\.preset;' "$RENDERER_IMPL"; then
     preset_retry_backoff_detail+="cache_only_bundle_lookup;"
   else
     preset_retry_backoff_detail+="missing_cache_only_bundle_lookup;"
@@ -226,17 +227,12 @@ if [[ "$MODE" == "execute" ]]; then
   fi
 
   transient_asset_detail=""
-  if rg -q 'if \(! presetFile\.existsAsFile\(\)\)' "$RENDERER_HDR"; then
-    transient_asset_detail+="file_cached_as_invalid;"
-  else
-    transient_asset_detail+="missing_existsAsFile_guard;"
-  fi
-  if rg -q 'if \(sampleRate <= 0\.0 \|\| ! preset\.valid \|\| preset\.bands\.empty\(\)\)' "$RENDERER_HDR"; then
+  if rg -q 'if \(sampleRate <= 0\.0 \|\| ! preset\.valid \|\| preset\.bands\.empty\(\)\)' "$RENDERER_IMPL"; then
     transient_asset_detail+="invalid_or_empty_preset_short_circuit;"
   else
     transient_asset_detail+="missing_invalid_or_empty_preset_short_circuit;"
   fi
-  if rg -q 'lastLoadedPeqPresetIndex = clampedProfileIndex;' "$RENDERER_HDR" && rg -q 'lastLoadedPeqSampleRate  = sampleRate;' "$RENDERER_HDR"; then
+  if rg -q 'lastLoadedPeqPresetIndex = clampedProfileIndex;' "$RENDERER_IMPL" && rg -q 'lastLoadedPeqSampleRate  = sampleRate;' "$RENDERER_IMPL"; then
     transient_asset_detail+="state_commit_prevents_immediate_retry;"
   else
     transient_asset_detail+="missing_state_commit_prevents_immediate_retry;"
@@ -251,17 +247,17 @@ if [[ "$MODE" == "execute" ]]; then
   fi
 
   profile_switch_detail=""
-  if rg -q 'profile changes are non-RT events on the message thread\.' "$RENDERER_HDR"; then
-    profile_switch_detail+="message_thread_non_rt_contract;"
+  if rg -q 'headphoneCalibrationChain\.applyPeqPreset \(buildBundledPeqPreset \(preset, sampleRate\)\);' "$RENDERER_IMPL"; then
+    profile_switch_detail+="single_call_bundled_preset_publish;"
   else
-    profile_switch_detail+="missing_message_thread_non_rt_contract;"
+    profile_switch_detail+="missing_single_call_bundled_preset_publish;"
   fi
-  if rg -q 'headphoneCalibrationChain\.clearPeqPreset\(\);' "$RENDERER_HDR" && rg -q 'headphoneCalibrationChain\.setPeqPreampDb \(preset\.preampDb\);' "$RENDERER_HDR"; then
-    profile_switch_detail+="ordered_reset_then_preamp;"
+  if rg -q 'headphoneCalibrationChain\.applyPeqPreset \(buildJsonPeqPreset \(bandsArray, preampDb, sampleRate\)\);' "$RENDERER_IMPL"; then
+    profile_switch_detail+="single_call_json_preset_publish;"
   else
-    profile_switch_detail+="missing_ordered_reset_then_preamp;"
+    profile_switch_detail+="missing_single_call_json_preset_publish;"
   fi
-  if rg -q 'for \(int i = 0; i < maxStages; \+\+i\)' "$RENDERER_HDR"; then
+  if rg -q 'for \(int i = 0; i < maxStages; \+\+i\)' "$RENDERER_IMPL"; then
     profile_switch_detail+="bounded_stage_swap_loop;"
   else
     profile_switch_detail+="missing_bounded_stage_swap_loop;"
@@ -276,17 +272,17 @@ if [[ "$MODE" == "execute" ]]; then
   fi
 
   rapid_profile_toggle_detail=""
-  if rg -q 'const auto clamped = juce::jlimit \(0, NUM_HEADPHONE_DEVICE_PROFILES - 1, profileIndex\);' "$RENDERER_HDR"; then
+  if rg -q 'const auto clamped = juce::jlimit \(0, NUM_HEADPHONE_DEVICE_PROFILES - 1, profileIndex\);' "$RENDERER_IMPL"; then
     rapid_profile_toggle_detail+="profile_index_clamped;"
   else
     rapid_profile_toggle_detail+="missing_profile_index_clamped;"
   fi
-  if rg -q 'if \(requestedHeadphoneProfileIndex\.load \(std::memory_order_relaxed\) == clamped\)' "$RENDERER_HDR"; then
+  if rg -q 'if \(requestedHeadphoneProfileIndex\.load \(std::memory_order_relaxed\) == clamped\)' "$RENDERER_IMPL"; then
     rapid_profile_toggle_detail+="duplicate_toggle_elision;"
   else
     rapid_profile_toggle_detail+="missing_duplicate_toggle_elision;"
   fi
-  if rg -q 'locusq::headphone_dsp::HeadphonePeqHook::kMaxStages' "$RENDERER_HDR"; then
+  if rg -q 'locusq::headphone_dsp::HeadphonePeqHook::kMaxStages' "$RENDERER_IMPL"; then
     rapid_profile_toggle_detail+="stage_count_capped;"
   else
     rapid_profile_toggle_detail+="missing_stage_count_capped;"

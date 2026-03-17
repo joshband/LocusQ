@@ -40,6 +40,7 @@ SR_FILE="${REPO_ROOT}/Source/SpatialRenderer.h"
 SVS_FILE="${REPO_ROOT}/Source/SteamAudioVirtualSurround.h"
 PP_H="${REPO_ROOT}/Source/PluginProcessor.h"
 PP_CPP="${REPO_ROOT}/Source/PluginProcessor.cpp"
+CALIBRATION_BRIDGE_CPP="${REPO_ROOT}/Source/processor_core/ProcessorCalibrationBridge.cpp"
 
 # C1: SteamAudioVirtualSurround applyBlock accepts listenerOrientation pointer.
 if grep -q 'const IPLCoordinateSpace3\* listenerOrientation' "${SVS_FILE}" 2>/dev/null; then
@@ -103,12 +104,12 @@ else
     record "C8_yaw_offset_composition" "FAIL" "Yaw offset composition missing in ${PP_CPP}"
 fi
 
-# C9: CalibrationProfile tracking fields are parsed from disk poller.
-if grep -q 'hp_tracking_enabled' "${PP_CPP}" 2>/dev/null \
-    && grep -q 'hp_yaw_offset_deg' "${PP_CPP}" 2>/dev/null; then
-    record "C9_profile_tracking_fields_parsed" "PASS" "CalibrationProfile tracking fields parsed"
+# C9: CalibrationProfile tracking fields are parsed from the disk poller bridge.
+if grep -q 'hp_tracking_enabled' "${CALIBRATION_BRIDGE_CPP}" 2>/dev/null \
+    && grep -q 'hp_yaw_offset_deg' "${CALIBRATION_BRIDGE_CPP}" 2>/dev/null; then
+    record "C9_profile_tracking_fields_parsed" "PASS" "CalibrationProfile tracking fields parsed from disk poller bridge"
 else
-    record "C9_profile_tracking_fields_parsed" "FAIL" "CalibrationProfile tracking fields missing in ${PP_CPP}"
+    record "C9_profile_tracking_fields_parsed" "FAIL" "CalibrationProfile tracking fields missing in ${CALIBRATION_BRIDGE_CPP}"
 fi
 
 # C10: Audio-thread-safe tracking/yaw atomics are declared in PluginProcessor.

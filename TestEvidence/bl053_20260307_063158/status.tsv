@@ -1,0 +1,13 @@
+check_id	result	detail
+C1_apply_block_orientation_param	PASS	SteamAudioVirtualSurround::applyBlock orientation param present
+C2_monitor_render_orientation_param	PASS	renderVirtualSurroundForMonitoring orientation param present
+C3_monitor_orientation_scratch	PASS	Monitoring orientation scratch/mix buffers present
+C4_coordinate_space_helper	PASS	Coordinate-space conversion helper present
+C5_monitoring_orientation_wired	PASS	Calibration monitoring orientation pointer wiring present
+C6_virtual_binaural_tracking_gate	PASS	virtual_binaural tracking gate present
+C7_stale_pose_guard	PASS	Stale/disconnect fallback guard present
+C8_yaw_offset_composition	PASS	Profile and runtime yaw offsets composed/applied
+C9_profile_tracking_fields_parsed	FAIL	CalibrationProfile tracking fields missing in /Users/artbox/Documents/Repos/LocusQ/Source/PluginProcessor.cpp
+C10_tracking_yaw_atomics_declared	PASS	Tracking/yaw atomics declared in PluginProcessor.h
+C11_apply_block_orientation_forwarded	PASS	Orientation pointer forwarded to calMonitorVirtualSurround.applyBlock
+C12_no_rt_allocation	PASS	No dynamic allocation detected in applyCalibrationMonitoringPath

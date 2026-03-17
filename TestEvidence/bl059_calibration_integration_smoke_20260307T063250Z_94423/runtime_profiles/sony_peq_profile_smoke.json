@@ -1,0 +1,21 @@
+{
+  "schema": "locusq-calibration-profile-v1",
+  "user": {
+    "subject_id": "H3",
+    "sofa_ref": "",
+    "embedding_hash": "bl059-sony_peq_profile_smoke"
+  },
+  "headphone": {
+    "hp_model_id": "sony_wh1000xm5",
+    "hp_mode": "anc_on",
+    "hp_eq_mode": "peq",
+    "hp_hrtf_mode": "default",
+    "hp_peq_bands": [],
+    "hp_fir_taps": []
+  },
+  "tracking": {
+    "hp_tracking_enabled": false,
+    "hp_yaw_offset_deg": 0.0
+  },
+  "verification": {}
+}

@@ -146,6 +146,8 @@ printf "scenario\tresult\tdetail\tartifact\n" > "$SWAP_CROSSFADE_CHECK_TSV"
 BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-055-fir-convolution-engine.md"
 PROCESSOR_CPP="${ROOT_DIR}/Source/PluginProcessor.cpp"
 SPATIAL_RENDERER_HDR="${ROOT_DIR}/Source/SpatialRenderer.h"
+SPATIAL_PROFILE_IMPL="${ROOT_DIR}/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp"
+OUTPUT_ROUTING_CPP="${ROOT_DIR}/Source/spatial_renderer/SpatialOutputRoutingStage.cpp"
 CALIBRATION_CHAIN_HDR="${ROOT_DIR}/Source/headphone_dsp/HeadphoneCalibrationChain.h"
 FIR_HOOK_HDR="${ROOT_DIR}/Source/headphone_dsp/HeadphoneFirHook.h"
 HEADPHONE_VERIFICATION_CONTRACT_HDR="${ROOT_DIR}/Source/shared_contracts/HeadphoneVerificationContract.h"
@@ -156,16 +158,16 @@ else
   record "BL055-C0-backlog_doc_exists" "FAIL" "runbook missing" "$BACKLOG_DOC"
 fi
 
-if rg -Fq 'return headphoneCalibrationChain.getActiveLatencySamples();' "$SPATIAL_RENDERER_HDR"; then
-  printf "calibration_latency_surface\tPASS\tSpatialRenderer reports active calibration latency samples\t%s\n" "$SPATIAL_RENDERER_HDR" \
+if rg -Fq 'return headphoneCalibrationChain.getActiveLatencySamples();' "$SPATIAL_PROFILE_IMPL"; then
+  printf "calibration_latency_surface\tPASS\tSpatialRenderer reports active calibration latency samples\t%s\n" "$SPATIAL_PROFILE_IMPL" \
     >> "$LATENCY_CONTRACT_TSV"
   record "BL055-C1-calibration_latency_surface" "PASS" \
-    "SpatialRenderer latency surface present" "$SPATIAL_RENDERER_HDR"
+    "SpatialRenderer latency surface present" "$SPATIAL_PROFILE_IMPL"
 else
-  printf "calibration_latency_surface\tFAIL\tmissing active calibration latency getter path\t%s\n" "$SPATIAL_RENDERER_HDR" \
+  printf "calibration_latency_surface\tFAIL\tmissing active calibration latency getter path\t%s\n" "$SPATIAL_PROFILE_IMPL" \
     >> "$LATENCY_CONTRACT_TSV"
   record "BL055-C1-calibration_latency_surface" "FAIL" \
-    "SpatialRenderer latency surface missing" "$SPATIAL_RENDERER_HDR"
+    "SpatialRenderer latency surface missing" "$SPATIAL_PROFILE_IMPL"
 fi
 
 if rg -Fq 'const int calLatency = spatialRenderer.getCalibrationLatencySamples();' "$PROCESSOR_CPP" \
@@ -209,18 +211,18 @@ else
     "direct/partitioned nextPow2 latency markers missing" "$FIR_HOOK_HDR"
 fi
 
-if rg -Fq 'headphoneCalibrationChain.setRequestedEngineIndex (' "$SPATIAL_RENDERER_HDR" \
-   && rg -Fq 'activeHeadphoneCalibrationEngineIndex.store (' "$SPATIAL_RENDERER_HDR" \
-   && rg -Fq 'activeHeadphoneCalibrationFallbackReasonIndex.store (' "$SPATIAL_RENDERER_HDR"; then
-  printf "engine_state_swap_publication\tPASS\trequested/active/fallback engine state publication markers present\t%s\n" "$SPATIAL_RENDERER_HDR" \
+if rg -Fq 'headphoneCalibrationChain.setRequestedEngineIndex (' "$OUTPUT_ROUTING_CPP" \
+   && rg -Fq 'activeHeadphoneCalibrationEngineIndex.store (' "$OUTPUT_ROUTING_CPP" \
+   && rg -Fq 'activeHeadphoneCalibrationFallbackReasonIndex.store (' "$OUTPUT_ROUTING_CPP"; then
+  printf "engine_state_swap_publication\tPASS\trequested/active/fallback engine state publication markers present\t%s\n" "$OUTPUT_ROUTING_CPP" \
     >> "$SWAP_CROSSFADE_CHECK_TSV"
   record "BL055-C5-engine_state_swap_publication" "PASS" \
-    "engine swap publication markers present" "$SPATIAL_RENDERER_HDR"
+    "engine swap publication markers present" "$OUTPUT_ROUTING_CPP"
 else
-  printf "engine_state_swap_publication\tFAIL\trequested/active/fallback engine state publication markers missing\t%s\n" "$SPATIAL_RENDERER_HDR" \
+  printf "engine_state_swap_publication\tFAIL\trequested/active/fallback engine state publication markers missing\t%s\n" "$OUTPUT_ROUTING_CPP" \
     >> "$SWAP_CROSSFADE_CHECK_TSV"
   record "BL055-C5-engine_state_swap_publication" "FAIL" \
-    "engine swap publication markers missing" "$SPATIAL_RENDERER_HDR"
+    "engine swap publication markers missing" "$OUTPUT_ROUTING_CPP"
 fi
 
 if rg -qi 'crossfade|blend' "$CALIBRATION_CHAIN_HDR" "$FIR_HOOK_HDR"; then

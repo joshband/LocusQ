@@ -9,10 +9,10 @@ BUILD_DIR="${LQ_BL011_BUILD_DIR:-$ROOT_DIR/build_local}"
 NONCLAP_BUILD_DIR="${LQ_BL011_NONCLAP_BUILD_DIR:-$ROOT_DIR/build_no_clap_check}"
 REAPER_BIN="${REAPER_BIN:-/Applications/REAPER.app/Contents/MacOS/REAPER}"
 RUN_REAPER_PROBE="${LQ_BL011_RUN_REAPER_PROBE:-1}"
-REUSE_REAPER_PROBE_PASS="${LQ_BL011_REUSE_REAPER_PROBE_PASS:-1}"
+REUSE_REAPER_PROBE_PASS="${LQ_BL011_REUSE_REAPER_PROBE_PASS:-0}"
 SELFTEST_RETRIES="${LQ_BL011_SELFTEST_RETRIES:-4}"
 SELFTEST_TIMEOUT_SECONDS="${LQ_BL011_SELFTEST_TIMEOUT_SECONDS:-180}"
-REUSE_SELFTEST_PASS="${LQ_BL011_REUSE_SELFTEST_PASS:-1}"
+REUSE_SELFTEST_PASS="${LQ_BL011_REUSE_SELFTEST_PASS:-0}"
 USE_INSTALLED_STANDALONE="${LQ_BL011_USE_INSTALLED_STANDALONE:-1}"
 STANDALONE_INSTALL_DIR="${LQ_BL011_STANDALONE_INSTALL_DIR:-$HOME/Applications}"
 
@@ -102,8 +102,22 @@ run_cmd_logged \
   cmake --build "$BUILD_DIR" --config Release --target LocusQ_Standalone -j 8
 
 require_file_or_dir "clap_artifact" "$CLAP_ARTIFACT"
-require_file_or_dir "clap_install_artifact" "$CLAP_INSTALL_ARTIFACT"
 require_file_or_dir "standalone_artifact" "$STANDALONE_APP_BUILD"
+
+CLAP_INSTALL_DIR="$(dirname "$CLAP_INSTALL_ARTIFACT")"
+mkdir -p "$CLAP_INSTALL_DIR"
+clap_sync_log="$OUT_DIR/clap_install_sync.log"
+set +e
+rsync -a --delete "$CLAP_ARTIFACT/" "$CLAP_INSTALL_ARTIFACT/" >"$clap_sync_log" 2>&1
+clap_sync_exit=$?
+set -e
+if [[ "$clap_sync_exit" -eq 0 ]]; then
+  log_status "clap_install_sync" "pass" "log=$clap_sync_log"
+else
+  log_status "clap_install_sync" "fail" "log=$clap_sync_log"
+  exit 1
+fi
+require_file_or_dir "clap_install_artifact" "$CLAP_INSTALL_ARTIFACT"
 
 if [[ "$USE_INSTALLED_STANDALONE" == "1" ]]; then
   mkdir -p "$STANDALONE_INSTALL_DIR"
