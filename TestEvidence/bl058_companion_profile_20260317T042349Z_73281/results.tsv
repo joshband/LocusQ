@@ -1,0 +1,9 @@
+check	result	detail
+readiness_state_contract	PASS	state-machine identifiers present in runbook
+profile_acquisition_ui_surface	PASS	companion runtime exposes capture/apply bridge controls
+local_match_and_profile_write	PASS	local matcher + profile write path markers present
+privacy_no_network_static	PASS	no network URL literals found in companion sources
+bl077_capture_contract_probe	PASS	BL-058 invokes BL-077 harness in contract mode
+manual_capture_flow	PASS	headless selftest capture/apply roundtrip
+embedding_latency_lt_50ms	PASS	match_latency_ms=0.1050
+privacy_no_network	PASS	no capture files persisted (selftest); static URL scan clean

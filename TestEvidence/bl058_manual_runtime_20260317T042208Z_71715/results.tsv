@@ -1,0 +1,5 @@
+check	result	detail
+manual_capture_flow	PASS	headless selftest: nearest-neighbor 3-view roundtrip PASS (H7); fallback path PASS (H3); CalibrationProfile.json written both paths
+embedding_latency_lt_50ms	PASS	match_latency_ms=0.2139 measured by bl058-profile-selftest harness
+privacy_no_network	PASS	static scan: no URL literals in companion/Sources; acquisition path confirmed no network calls; no ear photo files retained on disk
+readiness_state_machine	PASS	active_ready confirmed in auto-sync (send_gate_open=true); send gate confirmed closed in require-sync mode (send_gate_open=false, packets_sent=0 for 2s run)
