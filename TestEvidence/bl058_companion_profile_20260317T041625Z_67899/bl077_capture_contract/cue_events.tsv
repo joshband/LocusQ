@@ -1,0 +1,12 @@
+checkpoint_id	scheduled_sec	label	event	emitted_unix_sec
+cp_01	0	Center and sync	disabled	-
+cp_02	8	Rotate clockwise to 30 degrees	disabled	-
+cp_03	14	Rotate clockwise to 60 degrees	disabled	-
+cp_04	20	Rotate clockwise to 90 degrees	disabled	-
+cp_05	26	Rotate clockwise to 120 degrees	disabled	-
+cp_06	32	Rotate clockwise to 150 degrees	disabled	-
+cp_07	38	Rotate clockwise to 180 degrees	disabled	-
+cp_08	44	Rotate clockwise to 210 degrees	disabled	-
+cp_09	50	Rotate clockwise to 225 degrees	disabled	-
+cp_10	56	Rotate clockwise to 240 degrees	disabled	-
+cp_11	62	Rotate clockwise to 270 degrees	disabled	-

@@ -1,0 +1,12 @@
+check_id	result	detail	artifact
+BL058-C1-backlog_doc_exists	PASS	runbook present	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-058-companion-profile-acquisition.md
+BL058-C2-companion_runtime_exists	PASS	companion runtime source present	/Users/artbox/Documents/Repos/LocusQ/companion/Sources/LocusQHeadTrackingCompanion/main.swift
+BL058-C2b-profile_core_exists	PASS	matcher and calibration profile core sources present	/Users/artbox/Documents/Repos/LocusQ/companion/Sources/LocusQHeadTrackerCore/EarPhotoMatcher.swift
+BL058-C3-readiness_state_contract	PASS	runbook readiness contract present	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-058-companion-profile-acquisition.md
+BL058-C4-bl077_capture_script_exists	PASS	BL-077 capture harness script is executable	/Users/artbox/Documents/Repos/LocusQ/scripts/capture-headtracking-rotation-mac.sh
+BL058-C4b-profile_acquisition_ui_surface	PASS	capture/apply controls present in companion monitor	/Users/artbox/Documents/Repos/LocusQ/companion/Sources/LocusQHeadTrackingCompanion/main.swift
+BL058-C4c-local_match_and_profile_write	PASS	local matching/profile write path markers present	/Users/artbox/Documents/Repos/LocusQ/companion/Sources/LocusQHeadTrackerCore/EarPhotoMatcher.swift
+BL058-C4d-privacy_no_network_static	PASS	no network URL literals found in companion sources	/Users/artbox/Documents/Repos/LocusQ/companion/Sources
+BL058-C5-bl077_capture_consumer_contract	PASS	BL-058 consumed BL-077 capture harness contract artifacts	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl058_companion_profile_20260317T041625Z_67899/capture_consumer_bridge.tsv
+BL058-C4-contract_mode	PASS	contract-only mode allows TODO execute rows (count=3)	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl058_companion_profile_20260317T041625Z_67899/status.tsv
+lane_result	PASS	mode=contract_only;bl058_contract_pass	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl058_companion_profile_20260317T041625Z_67899/status.tsv

@@ -167,6 +167,20 @@ readiness_check() {
   ' "$artifact"
 }
 
+count_todo_rows() {
+  local file="$1"
+  [[ -f "$file" ]] || { echo 0; return; }
+  awk -F'\t' '
+    NR == 1 { next }
+    {
+      for (i = 1; i <= NF; ++i) {
+        if ($i == "TODO") { count++; break }
+      }
+    }
+    END { print count + 0 }
+  ' "$file"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --out-dir)

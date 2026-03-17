@@ -1,0 +1,12 @@
+clip_id	checkpoint_id	scheduled_sec	start_sec	duration_sec	file	result	detail
+clip_01	cp_01	0	0.000	2.500	cue_clips/cp_01_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_02	cp_02	8	7.000	2.500	cue_clips/cp_02_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_03	cp_03	14	13.000	2.500	cue_clips/cp_03_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_04	cp_04	20	19.000	2.500	cue_clips/cp_04_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_05	cp_05	26	25.000	2.500	cue_clips/cp_05_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_06	cp_06	32	31.000	2.500	cue_clips/cp_06_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_07	cp_07	38	37.000	2.500	cue_clips/cp_07_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_08	cp_08	44	43.000	2.500	cue_clips/cp_08_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_09	cp_09	50	49.000	2.500	cue_clips/cp_09_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_10	cp_10	56	55.000	2.500	cue_clips/cp_10_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
+clip_11	cp_11	62	61.000	2.500	cue_clips/cp_11_window.mp4	PASS	deterministic dry-run cue-window placeholder generated
