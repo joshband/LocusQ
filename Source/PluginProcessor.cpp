@@ -1916,6 +1916,79 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             const auto rendererMs = (static_cast<double> (rendererElapsedTicks) * 1000.0) / ticksPerSecond;
             updatePerfEma (perfRendererProcessMs, rendererMs);
 
+            // Finite-output guardrail pass: applied after spatial renderer writes to buffer,
+            // before the host buffer is returned. Non-finite samples are silenced, denormals
+            // are flushed, and output is clamped within the two-stage protection envelope
+            // (preferred abs ≤ 1.0, hard ceiling abs ≤ 4.0).
+            {
+                std::uint32_t nonFiniteCount     = 0;
+                std::uint32_t denormalCount      = 0;
+                std::uint32_t limiterClampCount  = 0;
+                std::uint32_t hardClampCount     = 0;
+                int           fallbackReason     = 0; // 0=none, 3=denormal, 5=non-finite/limiter, 6=hard-clamp
+
+                const int numGuardChannels = buffer.getNumChannels();
+                const int numGuardSamples  = buffer.getNumSamples();
+
+                for (int ch = 0; ch < numGuardChannels; ++ch)
+                {
+                    auto* data = buffer.getWritePointer (ch);
+                    for (int i = 0; i < numGuardSamples; ++i)
+                    {
+                        float s = data[i];
+
+                        if (! std::isfinite (s))
+                        {
+                            // Non-finite output sample → replace with silence
+                            data[i] = 0.0f;
+                            ++nonFiniteCount;
+                            fallbackReason = 5;
+                            continue;
+                        }
+
+                        const float absS = std::abs (s);
+
+                        if (absS > 0.0f && absS < 1.0e-30f)
+                        {
+                            // Denormal-range value → flush to zero
+                            data[i] = 0.0f;
+                            ++denormalCount;
+                            if (fallbackReason == 0)
+                                fallbackReason = 3;
+                            continue;
+                        }
+
+                        if (absS > 4.0f)
+                        {
+                            // Hard safety clamp: abs > 4.0
+                            data[i] = s > 0.0f ? 4.0f : -4.0f;
+                            ++hardClampCount;
+                            if (fallbackReason == 0)
+                                fallbackReason = 6;
+                        }
+                        else if (absS > 1.0f)
+                        {
+                            // Preferred envelope clamp: abs > 1.0
+                            data[i] = s > 0.0f ? 1.0f : -1.0f;
+                            ++limiterClampCount;
+                            if (fallbackReason == 0)
+                                fallbackReason = 5;
+                        }
+                    }
+                }
+
+                // Publish finite-output diagnostics for observability
+                const bool guardrailsActive = (nonFiniteCount > 0 || denormalCount > 0
+                                               || limiterClampCount > 0 || hardClampCount > 0);
+                publishedFiniteGuardrailDiagnostics.finiteGuardrailsActive.store (guardrailsActive, std::memory_order_relaxed);
+                publishedFiniteGuardrailDiagnostics.finiteGuardrailsFallbackReason.store (fallbackReason, std::memory_order_relaxed);
+                publishedFiniteGuardrailDiagnostics.finiteGuardrailsNonFiniteCount.store (nonFiniteCount, std::memory_order_relaxed);
+                publishedFiniteGuardrailDiagnostics.finiteGuardrailsDenormalCount.store (denormalCount, std::memory_order_relaxed);
+                publishedFiniteGuardrailDiagnostics.finiteGuardrailsLimiterClampCount.store (limiterClampCount, std::memory_order_relaxed);
+                publishedFiniteGuardrailDiagnostics.finiteGuardrailsHardClampCount.store (hardClampCount, std::memory_order_relaxed);
+                publishedFiniteGuardrailDiagnostics.snapshotSeq.fetch_add (1, std::memory_order_release);
+            }
+
             std::array<float, SpatialRenderer::NUM_SPEAKERS> blockSpeakerRms {};
             const auto channelRms = [&buffer] (int channelIndex)
             {

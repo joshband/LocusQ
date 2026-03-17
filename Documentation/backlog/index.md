@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-17 (BL-039/BL-053/BL-054/BL-055/BL-056/BL-058/BL-059 Done)
+Last Modified Date: 2026-03-17 (BL-039/BL-040/BL-053/BL-054/BL-055/BL-056/BL-058/BL-059 Done; BL-068 Done-candidate)
 
 # LocusQ Master Backlog Index
 
@@ -117,7 +117,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 8 | BL-037 | Emitter snapshot CPU budget | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and closeout/archive sync PASS) | F | BL-035 | — | [bl-037](done/bl-037-emitter-snapshot-cpu-budget.md) |
 | 9 | BL-038 | Calibration threading and telemetry | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity; closeout/archive sync PASS) | E | BL-026, BL-034 | — | [bl-038](done/bl-038-calibration-threading-and-telemetry.md) |
 | 10 | BL-039 | Parameter relay spec generation | P1 | **Done** (Z11 done promotion 2026-03-17; reused green owner lane evidence and archive sync complete; artifact `TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/promotion_decision.md`) | B | BL-027, BL-032 | — | [bl-039](done/bl-039-parameter-relay-spec-generation.md) |
-| 11 | BL-040 | UI modularization and authority status UX | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) | B | BL-027, BL-039 | — | [bl-040](bl-040-ui-modularization-and-authority-status.md) |
+| 11 | BL-040 | UI modularization and authority status UX | P1 | **Done** (owner-verified done-promotion evidence complete 2026-03-17; 100-run authority diagnostics PASS, strict usage exits green, docs freshness green; evidence: `TestEvidence/bl040_done_promotion_20260317T180000Z/`) | B | BL-027, BL-039 | — | [bl-040](done/bl-040-ui-modularization-and-authority-status.md) |
 | 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync PASS) | E | BL-036 | — | [bl-041](done/bl-041-doppler-v2-and-vbap-geometry-validation.md) |
 | 13 | BL-042 | QA CI regression gates | P1 | **Done** (Z16c RT reconcile PASS; Z16P_r2c preflight PASS; Z18 owner done-promotion PASS) | G | BL-035, BL-036, BL-041, HX-06 | BL-030 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
 | 14 | BL-044 | Quality-tier seamless switching | P1 | **Done** (Z17 owner done-promotion PASS; deterministic e2e evidence localized and ownership-safe) | F | BL-043 (Done) | — | [bl-044](done/bl-044-quality-tier-seamless-switching.md) |
@@ -141,10 +141,10 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | **Done** (preset matrix complete; execute T2 `5/5` + T3 `10/10` PASS; Nyquist resonance gate PASS) | E | BL-046 | — (BL-058 unblocked) | [bl-057](done/bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | **Done** (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; selftest 7/7 PASS; matching_latency=0.1050ms; send gate closed; privacy contract clean; formal Done 2026-03-17) | E | BL-057 | BL-059 | [bl-058](done/bl-058-companion-profile-acquisition.md) |
 | 34 | BL-059 | CalibrationProfile integration handoff | P0 | **Done** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 deps PASS; BL-056 Done gate met; formal Done 2026-03-17) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](done/bl-059-calibration-profile-integration-handoff.md) |
-| 35 | BL-060 | Phase B listening test harness + evaluation | P1 | In Implementation (harness authored 2026-03-17; contract/execute T1 PASS; awaiting real participant data) | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
+| 35 | BL-060 | Phase B listening test harness + evaluation | P1 | In Validation (T1+T2 3/3 PASS 2026-03-17; fixture gate 45.5% ext improvement p<0.0001; blocked on ≥5 real participant sessions) | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
 | 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
-| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Open (reprioritized from code-review risk packet; no promotion while any execute evidence row is `TODO`; BL-073 gate required) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
+| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Done-candidate (owner sync Z1 2026-03-17: contract-only 10/10 PASS, execute 3/3 PASS, zero TODO rows, compile-backed execute probe clean; packet `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/promotion_decision.md`) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 | 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
@@ -157,6 +157,14 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | Open (2026-03-05 follow-on created from BL-036 runtime slices A2/B2/C1 so processor-side finite-output work remains explicit) | F | BL-036 | — | [bl-078](bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
 | 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | In Validation (W1-D implementation landed locally: `Source/processor_core/ProcessorParameterLayout.cpp` now exposes grouped host hierarchy while preserving all `90` parameter IDs and flattened order; build + parity checks PASS, promotion follow-up pending in a clean checkout) | F | BL-032 | — | [bl-079](bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
 | 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | In Validation (processor snapshot/file history, native undo/redo bridge, and WebView controls landed locally; typecheck/build/bundle-marker checks PASS, but the rebuilt standalone production self-test currently fails earlier on a CALIBRATE topology/legacy-alias timeout before `UI-W3A-01` / `UI-W3A-02` execute) | F | BL-070, BL-074 | — | [bl-080](bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
+| 51 | BL-081 | Perceptual listening harness — upstream extraction to audio-dsp-qa-harness | P2 | Open | G | BL-060 | — | [bl-081](bl-081-perceptual-listening-harness-upstream-extraction.md) |
+| 52 | BL-082 | QA runner app library — upstream extraction to audio-dsp-qa-harness | P0 | Open | G | — | BL-083, BL-084, BL-085 | [bl-082](bl-082-qa-runner-app-library.md) |
+| 53 | BL-083 | Runtime-config contract enforcement — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-083](bl-083-runtime-config-contract.md) |
+| 54 | BL-084 | Profiling contract hardening — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-084](bl-084-profiling-contract-hardening.md) |
+| 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | Open | G | BL-082 | — | [bl-085](bl-085-cmake-integration-module.md) |
+| 56 | BL-086 | CI checkout composite action — audio-dsp-qa-harness | P1 | Open | G | — | — | [bl-086](bl-086-ci-checkout-composite-action.md) |
+| 57 | BL-087 | Recursive scenario discovery — audio-dsp-qa-harness | P2 | Open (deferred) | G | — | — | [bl-087](bl-087-recursive-scenario-discovery.md) |
+| 58 | BL-088 | HostRunner plugin backends (VST3/AU) — audio-dsp-qa-harness | P2 | Open (deferred; after BL-082/083/084) | G | BL-082, BL-083, BL-084 | — | [bl-088](bl-088-hostrunner-plugin-backends.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 

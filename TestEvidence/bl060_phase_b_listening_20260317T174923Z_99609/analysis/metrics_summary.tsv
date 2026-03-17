@@ -1,0 +1,5 @@
+condition	n	mae	mae_std	fb_confusion_rate	externalization_mean	rt_mean
+generic_device_eq	40	24.5505	7.7659	0.0000	2.5430	1020.0
+generic_no_eq	40	25.9750	8.8108	0.0000	2.5720	978.0
+personalized_device_eq	40	14.1270	5.3165	0.0000	3.6833	1034.7
+personalized_no_eq	40	14.2483	5.6459	0.0000	3.7600	1010.4
