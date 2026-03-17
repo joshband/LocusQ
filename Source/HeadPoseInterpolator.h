@@ -49,6 +49,12 @@ public:
         if (hasPrev && snap.seq == currSnapshot.seq)
             return;
 
+        // Reject snapshots with implausible future timestamps (>1 s ahead = clock skew).
+        // Prevents a mis-stamped packet from corrupting the slerp t calculation.
+        constexpr double kMaxFutureSkewMs = 1000.0;
+        if (nowMs > 0.0 && static_cast<double> (snap.timestampMs) > nowMs + kMaxFutureSkewMs)
+            return;
+
         const auto newLoc = static_cast<std::uint8_t> (snap.sensorLocationFlags & 0x3u);
 
         if (hasPrev && newLoc != prevSensorLocation)
