@@ -1,25 +1,25 @@
-Title: BL-054 PEQ Cascade RT Integration
+Title: BL-056 Calibration State Migration + Latency Contract
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-17 (Z1 Done-candidate promotion)
 
-# BL-054 PEQ Cascade RT Integration
+# BL-056 Calibration State Migration + Latency Contract
 
 ## Plain-Language Summary
 
-BL-054 in plain terms: Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. Current state: In Validation (atomic preset publish path landed; contract/execute lane + native build PASS). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-056 in plain terms: Bump plugin state_version, serialize new headphone calibration parameters in getStateInformation/setStateInformation. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
 | Who is this for? | Headphone users, companion-app operators, QA/release owners, and audio-engine maintainers. |
-| What is changing? | Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. |
+| What is changing? | Bump plugin state_version, serialize new headphone calibration parameters in getStateInformation/setStateInformation. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (atomic preset publish path landed; contract/execute lane + native build PASS). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-054-peq-cascade-rt-integration.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Current state: Done-candidate (Z1 owner sync 2026-03-17; T3 10/10 PASS). Formal Done when BL-054 + BL-055 are formally Done. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-056-calibration-state-migration-latency.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -42,53 +42,42 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 
 | Field | Value |
 |---|---|
-| ID | BL-054 |
+| ID | BL-056 |
 | Priority | P1 |
-| Status | In Validation (atomic preset publish path landed; contract/execute lane + native build PASS) |
+| Status | **Done** (Z1 owner sync 2026-03-17: T3 10/10 PASS; BL-054 + BL-055 Done gates met; archive sync complete 2026-03-17) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
-| Depends On | BL-052 |
-| Blocks | BL-056 |
+| Depends On | BL-054, BL-055 |
+| Blocks | BL-059 |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
 ## Objective
 
-Integrate `PeqBiquadCascade` (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. Coefficient updates via off-thread atomic swap. Load preset from `CalibrationProfile.json` on profile change.
+Bump plugin `state_version`, serialize new headphone calibration parameters in getStateInformation/setStateInformation. Regenerate golden state snapshots. Ensure reported latency resets to 0 on bypass.
 
 ## Acceptance IDs
 
-- PEQ applies in processBlock with no allocation
-- coefficients swap atomically on non-RT thread
-- bypass path produces identical output to no-PEQ path
+- state migration is idempotent (old state loads cleanly)
+- golden snapshots regenerated and committed
+- latency = 0 when calibration is bypassed
 
+
+## Implementation Snapshot (2026-03-17)
+
+- Added `kSnapshotSchemaValueV3 = "locusq-state-v3"` to `Source/processor_core/ProcessorConstants.h`.
+- Updated `getStateInformation` in `Source/processor_core/ProcessorStateSerializer.cpp` to write V3 schema.
+- Added V2→V3 migration comments documenting transparent migration contract.
+- V2→V3 migration is transparent: no new mandatory state fields; PEQ/FIR/SOFA data re-polled from CalibrationProfile.json on startup.
+- Latency-zero-on-disable confirmed: `resolveCalibrationChainState` returns `activeLatencySamples=0` when `!request.enabled`.
+- `setLatencySamples(0)` on bypass confirmed in `PluginProcessor.cpp` bypass path.
+- QA harness authored: `scripts/qa-bl056-calibration-state-migration-mac.sh`.
+- Execute lane PASS (10/10): `TestEvidence/bl056_calibration_state_migration_20260317T045411Z/status.tsv`
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl054-peq-cascade-rt-integration-mac.sh`.
-Evidence schema: `TestEvidence/bl054_*/status.tsv`.
-
-Minimum evidence additions:
-- `rt_swap_contract.tsv`
-- `bypass_identity_contract.tsv`
-- `monitor_chain_order.tsv`
-
-Script modes and gates:
-- `--contract-only` (default): structural contract checks with evidence capture.
-- `--execute`: execute gate checks with zero-`TODO`-row semantics.
-- Exit semantics: `0` pass, `1` gate fail, `2` usage/config error.
-
-## Implementation Snapshot (2026-03-07)
-
-- Remediation landed in the PEQ runtime path:
-  - `Source/headphone_dsp/HeadphonePeqHook.h` now uses double-buffered coefficient banks plus release/acquire active-bank publication instead of live stage mutation.
-  - `Source/headphone_dsp/HeadphoneCalibrationChain.h` now exposes single-call `applyPeqPreset(...)` rather than piecemeal stage writes.
-  - `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp` now builds bundled/JSON presets off the audio thread and publishes them atomically.
-- QA lane authored: `scripts/qa-bl054-peq-cascade-rt-integration-mac.sh`.
-- Fresh evidence:
-  - Contract: `TestEvidence/bl054_peq_cascade_rt_integration_20260307T061821Z_73138/status.tsv` -> `lane_result=PASS`
-  - Execute: `TestEvidence/bl054_peq_cascade_rt_integration_20260307T061821Z_73139/status.tsv` -> `lane_result=PASS`
-  - Compile safety: `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8` -> `PASS` (warnings only)
+QA harness script: `scripts/qa-bl056-calibration-state-migration-mac.sh`.
+Evidence schema: `TestEvidence/bl056_*/status.tsv`.
 
 ## Replay Cadence Plan (Required)
 
@@ -121,3 +110,4 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
+

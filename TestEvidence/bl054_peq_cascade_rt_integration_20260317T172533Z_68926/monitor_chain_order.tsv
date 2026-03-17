@@ -1,0 +1,2 @@
+check	result	detail	artifact
+monitor_chain_order	PASS	post_render_profile_comp_then_peq;	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialOutputRoutingStage.cpp

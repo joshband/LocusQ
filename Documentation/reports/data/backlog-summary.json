@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 88,
-    "open": 18,
-    "done": 70
+    "open": 15,
+    "done": 73
   },
   "items": [
     {
@@ -1036,8 +1036,8 @@
     {
       "id": "BL-054",
       "title": "BL-054 PEQ Cascade RT Integration",
-      "state_bucket": "open",
-      "status": "In Validation (atomic preset publish path landed; contract/execute lane + native build PASS)",
+      "state_bucket": "done",
+      "status": "**Done** (Z1 owner sync 2026-03-17: T3 10/10 PASS; archive sync complete 2026-03-17)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-052",
@@ -1050,13 +1050,13 @@
       "where": "",
       "plain_language_summary": "BL-054 in plain terms: Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. Current state: In Validation (atomic preset publish path landed; contract/execute lane + native build PASS). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Integrate PeqBiquadCascade (8-band RBJ, already implemented) into the monitoring chain after Steam Audio binaural output. Coefficient updates via off-thread atomic swap. Load preset from CalibrationProfile.json on profile change.",
-      "runbook_path": "Documentation/backlog/bl-054-peq-cascade-rt-integration.md"
+      "runbook_path": "Documentation/backlog/done/bl-054-peq-cascade-rt-integration.md"
     },
     {
       "id": "BL-055",
       "title": "BL-055 FIR Convolution Engine",
-      "state_bucket": "open",
-      "status": "**Done-candidate** (Z1 owner sync 2026-03-16: T3 10/10 contract+execute PASS; 2026-03-07 execute parity PASS; promotion packet at `TestEvidence/bl055_owner_sync_z1_20260316T050100Z/`)",
+      "state_bucket": "done",
+      "status": "**Done** (Z1 owner sync 2026-03-16: T3 10/10 PASS; archive sync complete 2026-03-17; offline parity deferred non-blocking)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "\u2014",
@@ -1069,13 +1069,13 @@
       "where": "",
       "plain_language_summary": "BL-055 in plain terms: Integrate FirEngineManager (DirectFirConvolver \u2264256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Integrate FirEngineManager (DirectFirConvolver \u2264256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Engine/profile swaps must be atomic and click-safe, with output crossfade when filter topology changes. Report latency via setLatencySamples() and keep offline parity references for truth-render validation.",
-      "runbook_path": "Documentation/backlog/bl-055-fir-convolution-engine.md"
+      "runbook_path": "Documentation/backlog/done/bl-055-fir-convolution-engine.md"
     },
     {
       "id": "BL-056",
       "title": "BL-056 Calibration State Migration + Latency Contract",
-      "state_bucket": "open",
-      "status": "**Done-candidate** (Z1 owner sync 2026-03-17: T3 10/10 PASS; all C1\u2013C8 PASS; latency-zero-on-bypass confirmed; packet `TestEvidence/bl056_owner_sync_z1_20260317T171805Z_15953/`; formal Done awaits BL-054 + BL-055 Done promotion)",
+      "state_bucket": "done",
+      "status": "**Done** (Z1 owner sync 2026-03-17: T3 10/10 PASS; BL-054 + BL-055 Done gates met; archive sync complete 2026-03-17)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-054, BL-055",
@@ -1088,7 +1088,7 @@
       "where": "",
       "plain_language_summary": "BL-056 in plain terms: Bump plugin state_version, serialize new headphone calibration parameters in getStateInformation/setStateInformation. Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Bump plugin state_version, serialize new headphone calibration parameters in getStateInformation/setStateInformation. Regenerate golden state snapshots. Ensure reported latency resets to 0 on bypass.",
-      "runbook_path": "Documentation/backlog/bl-056-calibration-state-migration-latency.md"
+      "runbook_path": "Documentation/backlog/done/bl-056-calibration-state-migration-latency.md"
     },
     {
       "id": "BL-057",
