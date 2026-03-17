@@ -1809,6 +1809,11 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             lastReportedCalibrationLatency = 0;
             setLatencySamples (0);
         }
+        // Clear stale pose state so the renderer does not keep animating with
+        // the last ingested quaternion while the plugin is inactive.
+        headPoseInterpolator.reset();
+        spatialRenderer.clearHeadPose();
+        lastHeadTrackYawDeg.store (0.0f, std::memory_order_relaxed);
         return;
     }
 
