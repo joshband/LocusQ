@@ -48,7 +48,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-059 |
-| Blocks | BL-061 (conditional) |
+| Blocks | BL-061 (conditional), BL-081 (origin implementation) |
 | Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
 | Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
 
