@@ -354,6 +354,14 @@ struct RendererHeadTrackingSnapshot
 
 constexpr double kRendererHeadTrackingStaleMs = 500.0;
 
+bool isHeadTrackingPoseFresh (const HeadTrackingBridge::PoseSnapshot& pose,
+                              std::uint64_t nowEpochMs) noexcept
+{
+    return pose.timestampMs > 0
+           && nowEpochMs >= pose.timestampMs
+           && static_cast<double> (nowEpochMs - pose.timestampMs) <= kRendererHeadTrackingStaleMs;
+}
+
 void computeHeadTrackingEulerDegrees (const HeadTrackingBridge::PoseSnapshot& pose,
                                       float& yawDeg,
                                       float& pitchDeg,
@@ -403,6 +411,43 @@ void applyYawOffsetToPose (SpatialRenderer::PoseSnapshot& pose, float yawOffsetD
     pose.qy = qrz * bx + qrw * by;
     pose.qz = qrw * bz + qrz * bw;
     pose.qw = qrw * bw - qrz * bz;
+}
+
+bool tryBuildFreshInterpolatedHeadPose (const HeadTrackingBridge::PoseSnapshot* pose,
+                                        HeadPoseInterpolator& interpolator,
+                                        SpatialRenderer::PoseSnapshot& rendererPose,
+                                        float* rawYawDeg = nullptr) noexcept
+{
+    if (pose == nullptr)
+        return false;
+
+    const auto nowEpochMs = static_cast<std::uint64_t> (juce::Time::currentTimeMillis());
+    if (! isHeadTrackingPoseFresh (*pose, nowEpochMs))
+        return false;
+
+    const double nowMs = static_cast<double> (nowEpochMs);
+    interpolator.ingest (*pose, nowMs);
+    const auto interpolated = interpolator.interpolatedAt (nowMs);
+
+    if (rawYawDeg != nullptr)
+    {
+        float pitchDeg = 0.0f;
+        float rollDeg = 0.0f;
+        computeHeadTrackingEulerDegrees (interpolated, *rawYawDeg, pitchDeg, rollDeg);
+    }
+
+    rendererPose.qx = interpolated.qx;
+    rendererPose.qy = interpolated.qy;
+    rendererPose.qz = interpolated.qz;
+    rendererPose.qw = interpolated.qw;
+    rendererPose.timestampMs = interpolated.timestampMs;
+    rendererPose.seq = interpolated.seq;
+    rendererPose.angVx = interpolated.angVx;
+    rendererPose.angVy = interpolated.angVy;
+    rendererPose.angVz = interpolated.angVz;
+    rendererPose.sensorLocationFlags = interpolated.sensorLocationFlags;
+    rendererPose.pad = interpolated.pad;
+    return true;
 }
 
 bool poseSnapshotToCoordinateSpace (const SpatialRenderer::PoseSnapshot& pose,
@@ -1636,31 +1681,25 @@ void LocusQAudioProcessor::prepareRendererRealtimeStateForBlock()
         auditionPhysicsReactiveInput.collisionNorm,
         auditionPhysicsReactiveInput.densityNorm);
 
-    if (const auto* headTrackingPose = headTrackingBridge.currentPose())
+    SpatialRenderer::PoseSnapshot rendererPose {};
+    float rawYaw = 0.0f;
+    if (tryBuildFreshInterpolatedHeadPose (headTrackingBridge.currentPose(),
+                                           headPoseInterpolator,
+                                           rendererPose,
+                                           &rawYaw))
     {
-        const float nowMs = static_cast<float> (juce::Time::getMillisecondCounterHiRes());
-        headPoseInterpolator.ingest (*headTrackingPose, nowMs);
-        const auto interpolated = headPoseInterpolator.interpolatedAt (nowMs);
-
-        {
-            float rawYaw = 0.0f, dummyP = 0.0f, dummyR = 0.0f;
-            computeHeadTrackingEulerDegrees (interpolated, rawYaw, dummyP, dummyR);
-            lastHeadTrackYawDeg.store (rawYaw, std::memory_order_relaxed);
-        }
-
-        SpatialRenderer::PoseSnapshot rendererPose {};
-        rendererPose.qx          = interpolated.qx;
-        rendererPose.qy          = interpolated.qy;
-        rendererPose.qz          = interpolated.qz;
-        rendererPose.qw          = interpolated.qw;
-        rendererPose.timestampMs = interpolated.timestampMs;
-        rendererPose.seq         = interpolated.seq;
+        lastHeadTrackYawDeg.store (rawYaw, std::memory_order_relaxed);
 
         if (yawReferenceSet.load (std::memory_order_relaxed))
             applyYawOffsetToPose (rendererPose, yawReferenceDeg.load (std::memory_order_relaxed));
 
         spatialRenderer.applyHeadPose (rendererPose);
+        return;
     }
+
+    headPoseInterpolator.reset();
+    spatialRenderer.clearHeadPose();
+    lastHeadTrackYawDeg.store (0.0f, std::memory_order_relaxed);
 }
 
 void LocusQAudioProcessor::renderRendererScratchForModeTransition (int totalNumOutputChannels, int numSamples)
@@ -2207,37 +2246,23 @@ void LocusQAudioProcessor::applyCalibrationMonitoringPath (juce::AudioBuffer<flo
     if (monPathId == path::kVirtualBinaural
         && calibrationProfileTrackingEnabled.load (std::memory_order_relaxed))
     {
-        if (const auto* headTrackingPose = headTrackingBridge.currentPose())
+        SpatialRenderer::PoseSnapshot listenerPose {};
+        if (tryBuildFreshInterpolatedHeadPose (headTrackingBridge.currentPose(),
+                                               headPoseInterpolator,
+                                               listenerPose))
         {
-            const auto nowEpochMs = static_cast<std::uint64_t> (juce::Time::currentTimeMillis());
-            const bool poseFresh = headTrackingPose->timestampMs > 0
-                                   && nowEpochMs >= headTrackingPose->timestampMs
-                                   && static_cast<double> (nowEpochMs - headTrackingPose->timestampMs)
-                                          <= kRendererHeadTrackingStaleMs;
+            const float profileYawOffsetDeg = calibrationProfileYawOffsetDeg.load (std::memory_order_relaxed);
+            const float runtimeYawOffsetDeg = yawReferenceSet.load (std::memory_order_relaxed)
+                ? yawReferenceDeg.load (std::memory_order_relaxed)
+                : 0.0f;
+            applyYawOffsetToPose (listenerPose, profileYawOffsetDeg + runtimeYawOffsetDeg);
 
-            if (poseFresh)
-            {
-                const float nowInterpMs = static_cast<float> (juce::Time::getMillisecondCounterHiRes());
-                headPoseInterpolator.ingest (*headTrackingPose, nowInterpMs);
-                const auto interpolated = headPoseInterpolator.interpolatedAt (nowInterpMs);
-
-                SpatialRenderer::PoseSnapshot listenerPose {};
-                listenerPose.qx          = interpolated.qx;
-                listenerPose.qy          = interpolated.qy;
-                listenerPose.qz          = interpolated.qz;
-                listenerPose.qw          = interpolated.qw;
-                listenerPose.timestampMs = interpolated.timestampMs;
-                listenerPose.seq         = interpolated.seq;
-
-                const float profileYawOffsetDeg = calibrationProfileYawOffsetDeg.load (std::memory_order_relaxed);
-                const float runtimeYawOffsetDeg = yawReferenceSet.load (std::memory_order_relaxed)
-                    ? yawReferenceDeg.load (std::memory_order_relaxed)
-                    : 0.0f;
-                applyYawOffsetToPose (listenerPose, profileYawOffsetDeg + runtimeYawOffsetDeg);
-
-                if (poseSnapshotToCoordinateSpace (listenerPose, monitoringOrientation))
-                    monitoringOrientationPtr = &monitoringOrientation;
-            }
+            if (poseSnapshotToCoordinateSpace (listenerPose, monitoringOrientation))
+                monitoringOrientationPtr = &monitoringOrientation;
+        }
+        else
+        {
+            headPoseInterpolator.reset();
         }
     }
 

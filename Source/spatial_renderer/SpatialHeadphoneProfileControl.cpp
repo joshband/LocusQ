@@ -1,5 +1,90 @@
 #include "../SpatialRenderer.h"
 
+namespace
+{
+using PeqPreset = locusq::headphone_dsp::HeadphonePeqHook::Preset;
+using PeqCoefficients = locusq::headphone_dsp::HeadphonePeqHook::Coefficients;
+
+PeqPreset buildBundledPeqPreset (const locusq::headphone_dsp::HeadphonePreset& preset,
+                                 double sampleRate)
+{
+        auto peqPreset = locusq::headphone_dsp::HeadphonePeqHook::makeIdentityPreset();
+        if (sampleRate <= 0.0 || ! preset.valid || preset.bands.empty())
+            return peqPreset;
+
+        locusq::headphone_dsp::HeadphonePeqHook::setPresetPreampDb (peqPreset, preset.preampDb);
+
+        const auto sr = static_cast<float> (sampleRate);
+        const int maxStages = juce::jmin (
+            static_cast<int> (preset.bands.size()),
+            locusq::headphone_dsp::HeadphonePeqHook::kMaxStages);
+
+        for (int i = 0; i < maxStages; ++i)
+        {
+            const auto& band = preset.bands[static_cast<size_t> (i)];
+            PeqCoefficients coefficients;
+            switch (band.type)
+            {
+                case locusq::headphone_dsp::PeqBandSpec::Type::LSC:
+                    coefficients = locusq::headphone_dsp::HeadphonePeqHook::makeLowShelf (band.fcHz, band.gainDb, band.q, sr);
+                    break;
+                case locusq::headphone_dsp::PeqBandSpec::Type::HSC:
+                    coefficients = locusq::headphone_dsp::HeadphonePeqHook::makeHighShelf (band.fcHz, band.gainDb, band.q, sr);
+                    break;
+                default:
+                    coefficients = locusq::headphone_dsp::HeadphonePeqHook::makePeakEQ (band.fcHz, band.gainDb, band.q, sr);
+                    break;
+            }
+
+            locusq::headphone_dsp::HeadphonePeqHook::setPresetStage (peqPreset, i, coefficients);
+        }
+
+        return peqPreset;
+}
+
+PeqPreset buildJsonPeqPreset (const juce::var& bandsArray, float preampDb, double sampleRate)
+{
+        auto peqPreset = locusq::headphone_dsp::HeadphonePeqHook::makeIdentityPreset();
+        locusq::headphone_dsp::HeadphonePeqHook::setPresetPreampDb (peqPreset, preampDb);
+
+        if (! bandsArray.isArray() || sampleRate <= 0.0)
+            return peqPreset;
+
+        const auto* bandArray = bandsArray.getArray();
+        if (bandArray == nullptr)
+            return peqPreset;
+
+        const auto sr = static_cast<float> (sampleRate);
+        const int maxStages = juce::jmin (
+            bandArray->size(),
+            locusq::headphone_dsp::HeadphonePeqHook::kMaxStages);
+
+        for (int i = 0; i < maxStages; ++i)
+        {
+            auto* band = (*bandArray)[i].getDynamicObject();
+            if (band == nullptr)
+                continue;
+
+            const auto typeStr = band->getProperty ("type").toString().trim().toUpperCase();
+            const auto fcHz    = static_cast<float> (static_cast<double> (band->getProperty ("fc_hz")));
+            const auto gainDb  = static_cast<float> (static_cast<double> (band->getProperty ("gain_db")));
+            const auto q       = static_cast<float> (static_cast<double> (band->getProperty ("q")));
+
+            PeqCoefficients coefficients;
+            if (typeStr == "LSC")
+                coefficients = locusq::headphone_dsp::HeadphonePeqHook::makeLowShelf (fcHz, gainDb, q, sr);
+            else if (typeStr == "HSC")
+                coefficients = locusq::headphone_dsp::HeadphonePeqHook::makeHighShelf (fcHz, gainDb, q, sr);
+            else
+                coefficients = locusq::headphone_dsp::HeadphonePeqHook::makePeakEQ (fcHz, gainDb, q, sr);
+
+            locusq::headphone_dsp::HeadphonePeqHook::setPresetStage (peqPreset, i, coefficients);
+        }
+
+        return peqPreset;
+}
+} // namespace
+
 void SpatialRenderer::setHeadphoneRenderMode (int modeIndex)
 {
         const auto clamped = juce::jlimit (0, 1, modeIndex);
@@ -36,33 +121,7 @@ void SpatialRenderer::loadPeqPresetForProfile (int profileIndex, double sampleRa
             return;
         }
 
-        headphoneCalibrationChain.clearPeqPreset();
-
-        // NOTE: clearPeqPreset -> setPeqPreampDb -> setPeqStage writes are not atomic with respect
-        // to the audio thread. A brief glitch may occur during a profile switch while audio is
-        // processing. This is acceptable: profile changes are non-RT events on the message thread.
-        headphoneCalibrationChain.setPeqPreampDb (preset.preampDb);
-
-        const auto sr = static_cast<float> (sampleRate);
-        const int maxStages = juce::jmin (
-            static_cast<int> (preset.bands.size()),
-            locusq::headphone_dsp::HeadphonePeqHook::kMaxStages);
-
-        for (int i = 0; i < maxStages; ++i)
-        {
-            const auto& band = preset.bands[static_cast<size_t> (i)];
-            locusq::headphone_dsp::HeadphonePeqHook::Coefficients c;
-            switch (band.type)
-            {
-                case locusq::headphone_dsp::PeqBandSpec::Type::LSC:
-                    c = locusq::headphone_dsp::HeadphonePeqHook::makeLowShelf  (band.fcHz, band.gainDb, band.q, sr); break;
-                case locusq::headphone_dsp::PeqBandSpec::Type::HSC:
-                    c = locusq::headphone_dsp::HeadphonePeqHook::makeHighShelf (band.fcHz, band.gainDb, band.q, sr); break;
-                default:
-                    c = locusq::headphone_dsp::HeadphonePeqHook::makePeakEQ    (band.fcHz, band.gainDb, band.q, sr); break;
-            }
-            headphoneCalibrationChain.setPeqStage (i, c);
-        }
+        headphoneCalibrationChain.applyPeqPreset (buildBundledPeqPreset (preset, sampleRate));
 
         lastLoadedPeqPresetIndex = clampedProfileIndex;
         lastLoadedPeqSampleRate  = sampleRate;
@@ -71,38 +130,56 @@ void SpatialRenderer::loadPeqPresetForProfile (int profileIndex, double sampleRa
 
 void SpatialRenderer::applyJsonPeqBands (const juce::var& bandsArray, float preampDb, double sampleRate)
 {
-        headphoneCalibrationChain.clearPeqPreset();
-        headphoneCalibrationChain.setPeqPreampDb (preampDb);
+        headphoneCalibrationChain.applyPeqPreset (buildJsonPeqPreset (bandsArray, preampDb, sampleRate));
+    }
 
-        if (! bandsArray.isArray())
-            return;
 
-        const auto sr = static_cast<float> (sampleRate);
-        const int maxStages = juce::jmin (
-            bandsArray.getArray()->size(),
-            locusq::headphone_dsp::HeadphonePeqHook::kMaxStages);
+void SpatialRenderer::clearFirImpulseResponse() noexcept
+{
+        headphoneCalibrationChain.clearFirImpulseResponse();
+    }
 
-        for (int i = 0; i < maxStages; ++i)
+
+bool SpatialRenderer::loadFirImpulseResponse (const float* taps, int tapCount) noexcept
+{
+        return headphoneCalibrationChain.loadFirImpulseResponse (taps, tapCount);
+    }
+
+
+bool SpatialRenderer::loadFirTapsFromJson (const juce::var& tapsArray) noexcept
+{
+        headphoneCalibrationChain.clearFirImpulseResponse();
+
+        if (! tapsArray.isArray())
+            return false;
+
+        const auto* taps = tapsArray.getArray();
+        if (taps == nullptr || taps->isEmpty())
+            return false;
+
+        juce::Array<float> coefficients;
+        coefficients.ensureStorageAllocated (taps->size());
+
+        for (const auto& tapVar : *taps)
         {
-            auto* band = (*bandsArray.getArray())[i].getDynamicObject();
-            if (band == nullptr)
-                continue;
-
-            const auto typeStr = band->getProperty ("type").toString().trim().toUpperCase();
-            const auto fcHz    = static_cast<float> (static_cast<double> (band->getProperty ("fc_hz")));
-            const auto gainDb  = static_cast<float> (static_cast<double> (band->getProperty ("gain_db")));
-            const auto q       = static_cast<float> (static_cast<double> (band->getProperty ("q")));
-
-            locusq::headphone_dsp::HeadphonePeqHook::Coefficients c;
-            if (typeStr == "LSC")
-                c = locusq::headphone_dsp::HeadphonePeqHook::makeLowShelf  (fcHz, gainDb, q, sr);
-            else if (typeStr == "HSC")
-                c = locusq::headphone_dsp::HeadphonePeqHook::makeHighShelf (fcHz, gainDb, q, sr);
+            float tap = 0.0f;
+            if (tapVar.isDouble() || tapVar.isInt() || tapVar.isInt64() || tapVar.isBool())
+                tap = static_cast<float> (static_cast<double> (tapVar));
             else
-                c = locusq::headphone_dsp::HeadphonePeqHook::makePeakEQ    (fcHz, gainDb, q, sr);
+                tap = tapVar.toString().getFloatValue();
 
-            headphoneCalibrationChain.setPeqStage (i, c);
+            if (! std::isfinite (tap))
+                return false;
+
+            coefficients.add (tap);
         }
+
+        if (coefficients.isEmpty())
+            return false;
+
+        return headphoneCalibrationChain.loadFirImpulseResponse (
+            coefficients.getRawDataPointer(),
+            coefficients.size());
     }
 
 
@@ -169,6 +246,33 @@ void SpatialRenderer::applyHeadPose (const SpatialRenderer::PoseSnapshot& pose) 
 
         updateHeadPoseOrientationFromSnapshot();
         rebuildHeadPoseSpeakerMix();
+    }
+
+
+void SpatialRenderer::clearHeadPose() noexcept
+{
+        resetHeadPoseState();
+    }
+
+
+void SpatialRenderer::setRequestedSofaHrtf (juce::String sofaRefRelativePath, bool enabled)
+{
+        requestedSofaRefRelativePath = std::move (sofaRefRelativePath);
+        requestedSofaHrtfEnabled = enabled && requestedSofaRefRelativePath.isNotEmpty();
+    }
+
+
+bool SpatialRenderer::reloadSteamAudioRuntime() noexcept
+{
+        teardownSteamAudioRuntime();
+        initialiseSteamAudioRuntimeIfEnabled();
+        return steamAudioUsingSofaHrtf;
+    }
+
+
+bool SpatialRenderer::isUsingSofaHrtf() const noexcept
+{
+        return steamAudioUsingSofaHrtf;
     }
 
 

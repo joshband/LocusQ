@@ -12,6 +12,12 @@ import CoreAudio
 
 #if canImport(AppKit)
 import AppKit
+#if canImport(ImageIO)
+import ImageIO
+#endif
+#if canImport(UniformTypeIdentifiers)
+import UniformTypeIdentifiers
+#endif
 #if canImport(WebKit)
 import WebKit
 #endif
@@ -25,6 +31,7 @@ private enum CompanionError: Error, CustomStringConvertible {
     case sendRetryLimitExceeded(Int32, Int)
     case interrupted(String)
     case liveModeUnavailable(String)
+    case automationFailed(String)
 
     var description: String {
         switch self {
@@ -42,6 +49,8 @@ private enum CompanionError: Error, CustomStringConvertible {
             return "companion interrupted: \(reason)"
         case .liveModeUnavailable(let reason):
             return "live mode unavailable: \(reason)"
+        case .automationFailed(let reason):
+            return "automation failed: \(reason)"
         }
     }
 }
@@ -171,6 +180,8 @@ private struct CompanionArguments {
     var verbose: Bool = false
     var schedulingProfile: SchedulingProfile = .balanced
     var monitorHz: Int = 30
+    var snapshotLogPath: String? = nil
+    var bl058ProfileSelftestDir: String? = nil
 
     // Stabilization and frame controls (live mode)
     var recenterOnStart: Bool = true
@@ -203,6 +214,9 @@ private struct CompanionArguments {
           --verbose                  Print per-packet logs
           --sched-profile <eco|balanced|performance> Scheduler profile (default: balanced)
           --monitor-hz <int>        UI monitor redraw rate [5..120] (default: 30)
+          --snapshot-log <path>     Write per-frame snapshot TSV for QA automation
+          --bl058-profile-selftest <dir>
+                                    Run BL-058 headless profile-acquisition selftest and write artifacts to <dir>
 
         Live Mode Controls:
           --no-recenter             Disable startup recenter transform
@@ -279,6 +293,10 @@ private struct CompanionArguments {
                     throw CompanionError.invalidArgument("\(key) requires integer in [5,120]")
                 }
                 args.monitorHz = parsed
+            case "--snapshot-log":
+                args.snapshotLogPath = try takeValue(raw, index: &index, option: key)
+            case "--bl058-profile-selftest":
+                args.bl058ProfileSelftestDir = try takeValue(raw, index: &index, option: key)
             case "--no-recenter":
                 args.recenterOnStart = false
             case "--require-sync":
@@ -523,6 +541,53 @@ private struct OutputDeviceSnapshot {
     var connected: Bool = false
 }
 
+private enum AcquisitionCaptureSlot: String, CaseIterable {
+    case leftEar = "left_ear"
+    case rightEar = "right_ear"
+    case frontal = "frontal"
+
+    var title: String {
+        switch self {
+        case .leftEar:
+            return "Left Ear"
+        case .rightEar:
+            return "Right Ear"
+        case .frontal:
+            return "Frontal"
+        }
+    }
+
+    var prompt: String {
+        "Select \(title) Image"
+    }
+}
+
+private struct ProfileCaptureSlotSnapshot {
+    var title: String
+    var state: String = "missing"
+    var fileName: String = "Awaiting selection"
+    var detail: String = "No capture loaded"
+}
+
+private struct ProfileAcquisitionSnapshot {
+    var state: String = "idle"
+    var detectedHeadphone: String = "n/a"
+    var subjectId: String = "n/a"
+    var sofaRef: String = "n/a"
+    var similarityScore: Double = 0.0
+    var usedFallback: Bool = false
+    var embeddingHash: String = ""
+    var captureCount: Int = 0
+    var canApply: Bool = false
+    var appliedProfile: Bool = false
+    var lastAction: String = "Awaiting profile captures"
+    var privacy: String = "Local-only processing. Selected images are decoded in memory and are never copied or uploaded."
+    var persistedProfilePath: String = CalibrationProfile.profileURL.path
+    var leftEar = ProfileCaptureSlotSnapshot(title: AcquisitionCaptureSlot.leftEar.title)
+    var rightEar = ProfileCaptureSlotSnapshot(title: AcquisitionCaptureSlot.rightEar.title)
+    var frontal = ProfileCaptureSlotSnapshot(title: AcquisitionCaptureSlot.frontal.title)
+}
+
 private struct RuntimeSnapshot {
     var mode: CompanionMode = .synthetic
     var source: String = "synthetic_generator"
@@ -572,6 +637,7 @@ private struct RuntimeSnapshot {
     var streamHealth = StreamHealthSnapshot()
     var pluginIngest = PluginIngestSnapshot()
     var outputDevice = OutputDeviceSnapshot()
+    var profileAcquisition = ProfileAcquisitionSnapshot()
 }
 
 private final class SnapshotStore: @unchecked Sendable {
@@ -588,6 +654,522 @@ private final class SnapshotStore: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         mutate(&snapshot)
+    }
+}
+
+private final class SnapshotLogWriter: @unchecked Sendable {
+    private let lock = NSLock()
+    private let handle: FileHandle
+
+    init(path: String) throws {
+        let url = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        guard let fileHandle = FileHandle(forWritingAtPath: url.path) else {
+            throw CompanionError.automationFailed("failed to open snapshot log at \(url.path)")
+        }
+
+        self.handle = fileHandle
+        let header = "timestamp_ms\tsequence\tpacket_count\treadiness_state\tsend_gate_open\tqx\tqy\tqz\tqw\tyaw_deg\tpitch_deg\troll_deg\tsensor_location\tmode\tconnection\tmotion_norm\tstability_norm\n"
+        if let data = header.data(using: .utf8) {
+            handle.write(data)
+        }
+    }
+
+    deinit {
+        try? handle.close()
+    }
+
+    func append(snapshot: RuntimeSnapshot) {
+        let row = String(
+            format: "%llu\t%u\t%d\t%@\t%@\t%.6f\t%.6f\t%.6f\t%.6f\t%.4f\t%.4f\t%.4f\t%@\t%@\t%@\t%.6f\t%.6f\n",
+            snapshot.timestampMs,
+            snapshot.sequence,
+            snapshot.packetCount,
+            snapshot.readinessState,
+            snapshot.sendGateOpen ? "true" : "false",
+            snapshot.qx,
+            snapshot.qy,
+            snapshot.qz,
+            snapshot.qw,
+            snapshot.yawDeg,
+            snapshot.pitchDeg,
+            snapshot.rollDeg,
+            snapshot.sensorLocation,
+            snapshot.mode.rawValue,
+            snapshot.connection,
+            snapshot.motionNorm,
+            snapshot.stabilityNorm
+        )
+
+        guard let data = row.data(using: .utf8) else {
+            return
+        }
+
+        lock.lock()
+        defer { lock.unlock() }
+        handle.write(data)
+    }
+}
+
+private enum ProfileAcquisitionError: Error, CustomStringConvertible {
+    case decodeFailed(String)
+    case incompleteCaptureSet(Int)
+    case noPendingMatch
+    case writeFailed(String)
+
+    var description: String {
+        switch self {
+        case .decodeFailed(let detail):
+            return "failed to decode image: \(detail)"
+        case .incompleteCaptureSet(let count):
+            return "all 3 guided captures are required before apply (current=\(count))"
+        case .noPendingMatch:
+            return "no pending profile match is available"
+        case .writeFailed(let detail):
+            return "failed to persist CalibrationProfile.json: \(detail)"
+        }
+    }
+}
+
+private final class ProfileAcquisitionController: @unchecked Sendable {
+    private struct CaptureRecord {
+        var fileName: String
+        var detail: String
+        var embedding: [Float]
+    }
+
+    private let lock = NSLock()
+    private let store: SnapshotStore
+    private let matcher: EarPhotoMatcher
+    private var captures: [AcquisitionCaptureSlot: CaptureRecord] = [:]
+    private var pendingMatch: SubjectMatch?
+    private var persistedMatch: SubjectMatch?
+    private var appliedProfile = false
+    private var lastAction = "Awaiting profile captures"
+    private var detectedHeadphone = HeadphoneDeviceDetector.detect()
+
+    init(store: SnapshotStore, matcher: EarPhotoMatcher = EarPhotoMatcher()) {
+        self.store = store
+        self.matcher = matcher
+    }
+
+    func bootstrap() {
+        lock.lock()
+        defer { lock.unlock() }
+
+        detectedHeadphone = HeadphoneDeviceDetector.detect()
+
+        if let existing = CalibrationProfile.readFromDisk() {
+            persistedMatch = SubjectMatch(subjectId: existing.user.subjectId,
+                                          similarityScore: 0,
+                                          sofaRef: existing.user.sofaRef,
+                                          usedFallback: false,
+                                          embeddingHash: existing.user.embeddingHash,
+                                          captureCount: 0)
+            appliedProfile = true
+            lastAction = "Loaded existing CalibrationProfile.json"
+        } else {
+            do {
+                let seededProfile = try seedProfileFromDetectedDeviceLocked()
+                persistedMatch = SubjectMatch(subjectId: seededProfile.user.subjectId,
+                                              similarityScore: 0,
+                                              sofaRef: seededProfile.user.sofaRef,
+                                              usedFallback: false,
+                                              embeddingHash: seededProfile.user.embeddingHash,
+                                              captureCount: 0)
+                appliedProfile = true
+                lastAction = "Initialized CalibrationProfile.json for detected output device"
+            } catch {
+                persistedMatch = nil
+                appliedProfile = false
+                lastAction = "Failed to initialize CalibrationProfile.json: \(error)"
+            }
+        }
+
+        publishLocked()
+    }
+
+    func ingestImage(_ image: CGImage,
+                     fileName: String,
+                     detail: String,
+                     slot: AcquisitionCaptureSlot) throws {
+        guard let embedding = matcher.makeEmbedding(from: image), !embedding.isEmpty else {
+            throw ProfileAcquisitionError.decodeFailed(fileName)
+        }
+
+        lock.lock()
+        defer { lock.unlock() }
+
+        captures[slot] = CaptureRecord(fileName: fileName, detail: detail, embedding: embedding)
+        appliedProfile = false
+        lastAction = "\(slot.title) capture loaded. \(captures.count)/3 views ready."
+        recomputePendingMatchLocked()
+        publishLocked()
+    }
+
+    func clearCapture(slot: AcquisitionCaptureSlot) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        captures.removeValue(forKey: slot)
+        appliedProfile = false
+        lastAction = "\(slot.title) capture cleared."
+        recomputePendingMatchLocked()
+        publishLocked()
+    }
+
+    func applyPendingMatch() throws {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard captures.count == AcquisitionCaptureSlot.allCases.count else {
+            throw ProfileAcquisitionError.incompleteCaptureSet(captures.count)
+        }
+        guard let pendingMatch else {
+            throw ProfileAcquisitionError.noPendingMatch
+        }
+
+        detectedHeadphone = HeadphoneDeviceDetector.detect()
+        var profile = CalibrationProfile.readFromDisk() ?? CalibrationProfile.defaultProfile
+        let hasExistingProfile = CalibrationProfile.readFromDisk() != nil
+
+        profile.user.subjectId = pendingMatch.subjectId
+        profile.user.sofaRef = pendingMatch.sofaRef
+        profile.user.embeddingHash = pendingMatch.embeddingHash
+        profile.headphone.hpModelId = calibrationModelID(for: detectedHeadphone.modelId)
+        profile.headphone.hpMode = detectedHeadphone.defaultMode
+        profile.headphone.hpHrtfMode = pendingMatch.sofaRef.isEmpty ? .default : .sofa
+        if !hasExistingProfile {
+            profile.tracking.hpTrackingEnabled = profile.headphone.hpModelId == .airpodsPro1
+                || profile.headphone.hpModelId == .airpodsPro2
+                || profile.headphone.hpModelId == .airpodsPro3
+        }
+
+        do {
+            try profile.writeToDisk()
+        } catch {
+            throw ProfileAcquisitionError.writeFailed("\(error)")
+        }
+
+        persistedMatch = pendingMatch
+        appliedProfile = true
+        lastAction = pendingMatch.usedFallback
+            ? "Applied fallback subject \(pendingMatch.subjectId) to CalibrationProfile.json"
+            : "Applied matched subject \(pendingMatch.subjectId) to CalibrationProfile.json"
+        publishLocked()
+    }
+
+    func noteError(_ message: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        lastAction = message
+        publishLocked()
+    }
+
+    private func recomputePendingMatchLocked() {
+        let embeddings = AcquisitionCaptureSlot.allCases.compactMap { captures[$0]?.embedding }
+        pendingMatch = embeddings.isEmpty ? nil : matcher.matchEmbeddings(embeddings)
+    }
+
+    private func seedProfileFromDetectedDeviceLocked() throws -> CalibrationProfile {
+        var profile = CalibrationProfile.defaultProfile
+        profile.headphone.hpModelId = calibrationModelID(for: detectedHeadphone.modelId)
+        profile.headphone.hpMode = detectedHeadphone.defaultMode
+        profile.tracking.hpTrackingEnabled = profile.headphone.hpModelId == .airpodsPro1
+            || profile.headphone.hpModelId == .airpodsPro2
+            || profile.headphone.hpModelId == .airpodsPro3
+        do {
+            try profile.writeToDisk()
+        } catch {
+            throw ProfileAcquisitionError.writeFailed("\(error)")
+        }
+        return profile
+    }
+
+    private func calibrationModelID(for detected: DetectedHeadphone.ModelID) -> CalibrationProfileHeadphone.ModelID {
+        switch detected {
+        case .airpodsPro1:
+            return .airpodsPro1
+        case .airpodsPro2:
+            return .airpodsPro2
+        case .airpodsPro3:
+            return .airpodsPro3
+        case .sonyWH1000XM5:
+            return .sonyWH1000XM5
+        case .generic:
+            return .generic
+        }
+    }
+
+    private func publishLocked() {
+        let displayedMatch = pendingMatch ?? persistedMatch
+        let captureCount = captures.count
+        let canApply = captureCount == AcquisitionCaptureSlot.allCases.count && pendingMatch != nil
+
+        var snapshotValue = ProfileAcquisitionSnapshot()
+        snapshotValue.detectedHeadphone = "\(detectedHeadphone.displayName) [\(detectedHeadphone.modelId.rawValue)]"
+        snapshotValue.captureCount = captureCount
+        snapshotValue.canApply = canApply
+        snapshotValue.appliedProfile = appliedProfile
+        snapshotValue.lastAction = lastAction
+
+        if let displayedMatch {
+            snapshotValue.subjectId = displayedMatch.subjectId
+            snapshotValue.sofaRef = displayedMatch.sofaRef
+            snapshotValue.similarityScore = Double(displayedMatch.similarityScore)
+            snapshotValue.usedFallback = displayedMatch.usedFallback
+            snapshotValue.embeddingHash = displayedMatch.embeddingHash
+        }
+
+        snapshotValue.leftEar = slotSnapshot(for: .leftEar)
+        snapshotValue.rightEar = slotSnapshot(for: .rightEar)
+        snapshotValue.frontal = slotSnapshot(for: .frontal)
+
+        if canApply {
+            snapshotValue.state = appliedProfile ? "applied" : "ready_to_apply"
+        } else if captureCount > 0 {
+            snapshotValue.state = "capturing"
+        } else {
+            snapshotValue.state = appliedProfile ? "idle" : "awaiting_capture"
+        }
+
+        store.update { snapshot in
+            snapshot.profileAcquisition = snapshotValue
+        }
+    }
+
+    private func slotSnapshot(for slot: AcquisitionCaptureSlot) -> ProfileCaptureSlotSnapshot {
+        if let capture = captures[slot] {
+            return ProfileCaptureSlotSnapshot(title: slot.title,
+                                              state: "captured",
+                                              fileName: capture.fileName,
+                                              detail: capture.detail)
+        }
+
+        return ProfileCaptureSlotSnapshot(title: slot.title,
+                                          state: "missing",
+                                          fileName: "Awaiting selection",
+                                          detail: "No capture loaded")
+    }
+}
+
+private func withTemporaryEnvironmentVariable(_ name: String,
+                                              value: String,
+                                              _ body: () throws -> Void) rethrows {
+    let previousValue = getenv(name).map { String(cString: $0) }
+    setenv(name, value, 1)
+    defer {
+        if let previousValue {
+            setenv(name, previousValue, 1)
+        } else {
+            unsetenv(name)
+        }
+    }
+    try body()
+}
+
+private func makeDeterministicTestImage(seed: UInt32,
+                                        width: Int = 32,
+                                        height: Int = 32) throws -> CGImage {
+    var state = seed == 0 ? 1 : seed
+    var pixels = [UInt8](repeating: 0, count: width * height)
+
+    for index in pixels.indices {
+        state = 1664525 &* state &+ 1013904223
+        pixels[index] = UInt8(truncatingIfNeeded: state >> 24)
+    }
+
+    let colorSpace = CGColorSpaceCreateDeviceGray()
+    let bytesPerRow = width
+    guard let provider = CGDataProvider(data: Data(pixels) as CFData) else {
+        throw CompanionError.automationFailed("failed to create synthetic image provider")
+    }
+
+    guard let image = CGImage(width: width,
+                              height: height,
+                              bitsPerComponent: 8,
+                              bitsPerPixel: 8,
+                              bytesPerRow: bytesPerRow,
+                              space: colorSpace,
+                              bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+                              provider: provider,
+                              decode: nil,
+                              shouldInterpolate: true,
+                              intent: .defaultIntent) else {
+        throw CompanionError.automationFailed("failed to create synthetic test image")
+    }
+
+    return image
+}
+
+private func invertedNormalizedEmbedding(_ embedding: [Float]) -> [Float] {
+    var inverse = embedding.map { -$0 }
+    var sum: Float = 0
+    for value in inverse {
+        sum += value * value
+    }
+
+    let norm = sqrt(sum)
+    guard norm > 0 else {
+        return inverse
+    }
+
+    for index in inverse.indices {
+        inverse[index] /= norm
+    }
+    return inverse
+}
+
+private func runBL058ProfileSelftest(outputDirectory: String,
+                                     schedulingProfile: SchedulingProfile,
+                                     monitorHz: Int) throws {
+    let fileManager = FileManager.default
+    let rootURL = URL(fileURLWithPath: outputDirectory, isDirectory: true)
+    try fileManager.createDirectory(at: rootURL, withIntermediateDirectories: true)
+
+    let resultsURL = rootURL.appending(path: "selftest_results.tsv", directoryHint: .notDirectory)
+    let resultsHandle: FileHandle = {
+        fileManager.createFile(atPath: resultsURL.path, contents: nil)
+        guard let handle = FileHandle(forWritingAtPath: resultsURL.path) else {
+            fatalError("failed to create BL-058 selftest results file")
+        }
+        handle.write(Data("check\tresult\tdetail\tartifact\n".utf8))
+        return handle
+    }()
+    defer { try? resultsHandle.close() }
+
+    var failureCount = 0
+    let record: (String, String, String, String) -> Void = { check, result, detail, artifact in
+        if result != "PASS" {
+            failureCount += 1
+        }
+        let row = "\(check)\t\(result)\t\(detail.replacingOccurrences(of: "\t", with: " "))\t\(artifact.replacingOccurrences(of: "\t", with: " "))\n"
+        resultsHandle.write(Data(row.utf8))
+    }
+
+    let bootstrapMatcher = EarPhotoMatcher()
+    let nearestImage = try makeDeterministicTestImage(seed: 17)
+    let fallbackImage = try makeDeterministicTestImage(seed: 91)
+    guard let nearestEmbedding = bootstrapMatcher.makeEmbedding(from: nearestImage), !nearestEmbedding.isEmpty,
+          let fallbackEmbedding = bootstrapMatcher.makeEmbedding(from: fallbackImage), !fallbackEmbedding.isEmpty else {
+        throw CompanionError.automationFailed("failed to create BL-058 selftest embeddings")
+    }
+
+    let measureStart = DispatchTime.now().uptimeNanoseconds
+    _ = EarPhotoMatcher(preloadedEmbeddings: [
+        SubjectEmbeddingEntry(subjectId: "H7", embedding: nearestEmbedding, sofaRef: "sadie2/H7_HRIR.sofa")
+    ]).matchEmbeddings([nearestEmbedding, nearestEmbedding, nearestEmbedding])
+    let matchLatencyMs = Double(DispatchTime.now().uptimeNanoseconds - measureStart) / 1_000_000.0
+    record("matching_latency_lt_50ms",
+           matchLatencyMs < 50.0 ? "PASS" : "FAIL",
+           String(format: "match_latency_ms=%.4f", matchLatencyMs),
+           resultsURL.path)
+
+    let runScenario: (String, EarPhotoMatcher, CGImage, String, String, Bool) throws -> Void = { name, matcher, image, expectedSubject, expectedSofa, expectedFallback in
+        let scenarioDir = rootURL.appending(path: name, directoryHint: .isDirectory)
+        try fileManager.createDirectory(at: scenarioDir, withIntermediateDirectories: true)
+        let profilePath = scenarioDir.appending(path: "CalibrationProfile.json", directoryHint: .notDirectory)
+
+        try withTemporaryEnvironmentVariable("LOCUSQ_COMPANION_PROFILE_FILE", value: profilePath.path) {
+            let store = SnapshotStore()
+            store.update { snapshot in
+                snapshot.schedulingProfile = schedulingProfile.rawValue
+                snapshot.monitorHz = monitorHz
+            }
+
+            let controller = ProfileAcquisitionController(store: store, matcher: matcher)
+            controller.bootstrap()
+
+            try controller.ingestImage(image,
+                                       fileName: "\(name)-left.png",
+                                       detail: "synthetic-left",
+                                       slot: .leftEar)
+            try controller.ingestImage(image,
+                                       fileName: "\(name)-right.png",
+                                       detail: "synthetic-right",
+                                       slot: .rightEar)
+            try controller.ingestImage(image,
+                                       fileName: "\(name)-front.png",
+                                       detail: "synthetic-front",
+                                       slot: .frontal)
+
+            let readySnapshot = store.read().profileAcquisition
+            controller.clearCapture(slot: .frontal)
+            let clearedSnapshot = store.read().profileAcquisition
+            try controller.ingestImage(image,
+                                       fileName: "\(name)-front.png",
+                                       detail: "synthetic-front-reloaded",
+                                       slot: .frontal)
+            try controller.applyPendingMatch()
+            let appliedSnapshot = store.read().profileAcquisition
+
+            let captureFlowPass = readySnapshot.captureCount == 3
+                && readySnapshot.canApply
+                && readySnapshot.state == "ready_to_apply"
+                && clearedSnapshot.captureCount == 2
+                && !clearedSnapshot.canApply
+                && appliedSnapshot.appliedProfile
+                && appliedSnapshot.state == "applied"
+
+            record("\(name)_capture_clear_roundtrip",
+                   captureFlowPass ? "PASS" : "FAIL",
+                   "ready=\(readySnapshot.state) cleared_count=\(clearedSnapshot.captureCount) applied=\(appliedSnapshot.state)",
+                   profilePath.path)
+
+            guard let profile = CalibrationProfile.readFromDisk(at: profilePath) else {
+                record("\(name)_profile_apply", "FAIL", "profile not written", profilePath.path)
+                record("\(name)_no_capture_files_persisted", "FAIL", "profile missing for persistence audit", scenarioDir.path)
+                return
+            }
+
+            let applyPass = profile.user.subjectId == expectedSubject
+                && profile.user.sofaRef == expectedSofa
+                && appliedSnapshot.subjectId == expectedSubject
+                && appliedSnapshot.sofaRef == expectedSofa
+                && appliedSnapshot.usedFallback == expectedFallback
+                && !profile.user.embeddingHash.isEmpty
+
+            record("\(name)_profile_apply",
+                   applyPass ? "PASS" : "FAIL",
+                   "subject=\(profile.user.subjectId) sofa=\(profile.user.sofaRef) fallback=\(appliedSnapshot.usedFallback)",
+                   profilePath.path)
+
+            let persistedFiles = (try? fileManager.contentsOfDirectory(atPath: scenarioDir.path)) ?? []
+            let persistencePass = persistedFiles.count == 1 && persistedFiles.first == "CalibrationProfile.json"
+            record("\(name)_no_capture_files_persisted",
+                   persistencePass ? "PASS" : "FAIL",
+                   "files=\(persistedFiles.joined(separator: ","))",
+                   scenarioDir.path)
+        }
+    }
+
+    try runScenario("nearest_neighbor",
+                    EarPhotoMatcher(preloadedEmbeddings: [
+                        SubjectEmbeddingEntry(subjectId: "H7", embedding: nearestEmbedding, sofaRef: "sadie2/H7_HRIR.sofa")
+                    ]),
+                    nearestImage,
+                    "H7",
+                    "sadie2/H7_HRIR.sofa",
+                    false)
+
+    try runScenario("fallback_subject",
+                    EarPhotoMatcher(preloadedEmbeddings: [
+                        SubjectEmbeddingEntry(subjectId: "Z9",
+                                              embedding: invertedNormalizedEmbedding(fallbackEmbedding),
+                                              sofaRef: "sadie2/Z9_HRIR.sofa")
+                    ]),
+                    fallbackImage,
+                    EarPhotoMatcher.fallbackSubjectId,
+                    EarPhotoMatcher.fallbackSofaRef,
+                    true)
+
+    if failureCount > 0 {
+        throw CompanionError.automationFailed("BL-058 profile selftest failures=\(failureCount) (\(resultsURL.path))")
     }
 }
 
@@ -1013,9 +1595,11 @@ private func readDefaultOutputDeviceSnapshot() -> OutputDeviceSnapshot {
 private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScriptMessageHandler {
     private let window: NSWindow
     private let webView: WKWebView
+    private let profileAcquisitionController: ProfileAcquisitionController
     private var pendingPayloadJSON: String?
 
-    override init() {
+    init(profileAcquisitionController: ProfileAcquisitionController) {
+        self.profileAcquisitionController = profileAcquisitionController
         let frame = NSRect(x: 80, y: 80, width: 1380, height: 900)
         window = NSWindow(
             contentRect: frame,
@@ -1068,6 +1652,37 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
         }
         if type == "sync" {
             requestSyncFromUI()
+            return
+        }
+
+        if type == "captureSelect" {
+            guard let slotValue = body["slot"] as? String,
+                  let slot = AcquisitionCaptureSlot(rawValue: slotValue) else {
+                return
+            }
+            do {
+                try selectCaptureImage(for: slot)
+            } catch {
+                profileAcquisitionController.noteError("BL-058 capture error: \(error)")
+            }
+            return
+        }
+
+        if type == "captureClear" {
+            guard let slotValue = body["slot"] as? String,
+                  let slot = AcquisitionCaptureSlot(rawValue: slotValue) else {
+                return
+            }
+            profileAcquisitionController.clearCapture(slot: slot)
+            return
+        }
+
+        if type == "applyProfile" {
+            do {
+                try profileAcquisitionController.applyPendingMatch()
+            } catch {
+                profileAcquisitionController.noteError("BL-058 apply error: \(error)")
+            }
         }
     }
 
@@ -1189,6 +1804,39 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 "stabilizationAlpha": args.stabilizationAlpha,
                 "deadbandDeg": args.deadbandDeg,
                 "velocityDamping": args.velocityDamping
+            ],
+            "profileAcquisition": [
+                "state": snapshot.profileAcquisition.state,
+                "detectedHeadphone": snapshot.profileAcquisition.detectedHeadphone,
+                "subjectId": snapshot.profileAcquisition.subjectId,
+                "sofaRef": snapshot.profileAcquisition.sofaRef,
+                "similarityScore": snapshot.profileAcquisition.similarityScore,
+                "usedFallback": snapshot.profileAcquisition.usedFallback,
+                "embeddingHash": snapshot.profileAcquisition.embeddingHash,
+                "captureCount": snapshot.profileAcquisition.captureCount,
+                "canApply": snapshot.profileAcquisition.canApply,
+                "appliedProfile": snapshot.profileAcquisition.appliedProfile,
+                "lastAction": snapshot.profileAcquisition.lastAction,
+                "privacy": snapshot.profileAcquisition.privacy,
+                "persistedProfilePath": snapshot.profileAcquisition.persistedProfilePath,
+                "leftEar": [
+                    "title": snapshot.profileAcquisition.leftEar.title,
+                    "state": snapshot.profileAcquisition.leftEar.state,
+                    "fileName": snapshot.profileAcquisition.leftEar.fileName,
+                    "detail": snapshot.profileAcquisition.leftEar.detail
+                ],
+                "rightEar": [
+                    "title": snapshot.profileAcquisition.rightEar.title,
+                    "state": snapshot.profileAcquisition.rightEar.state,
+                    "fileName": snapshot.profileAcquisition.rightEar.fileName,
+                    "detail": snapshot.profileAcquisition.rightEar.detail
+                ],
+                "frontal": [
+                    "title": snapshot.profileAcquisition.frontal.title,
+                    "state": snapshot.profileAcquisition.frontal.state,
+                    "fileName": snapshot.profileAcquisition.frontal.fileName,
+                    "detail": snapshot.profileAcquisition.frontal.detail
+                ]
             ]
         ]
 
@@ -1201,32 +1849,104 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
         return jsonString
     }
 
+    private func selectCaptureImage(for slot: AcquisitionCaptureSlot) throws {
+        let panel = NSOpenPanel()
+        panel.title = slot.prompt
+        panel.prompt = "Use Image"
+        panel.message = "LocusQ processes the selected image locally and keeps only the derived embedding."
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+
+#if canImport(UniformTypeIdentifiers)
+        panel.allowedContentTypes = [.image]
+#endif
+
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+
+        guard let cgImage = loadCGImage(from: url) else {
+            throw ProfileAcquisitionError.decodeFailed(url.lastPathComponent)
+        }
+
+        try profileAcquisitionController.ingestImage(
+            cgImage,
+            fileName: url.lastPathComponent,
+            detail: describeSelection(url: url, image: cgImage),
+            slot: slot
+        )
+    }
+
+    private func loadCGImage(from url: URL) -> CGImage? {
+#if canImport(ImageIO)
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+            return nil
+        }
+        let options: CFDictionary = [kCGImageSourceShouldCache: false] as CFDictionary
+        return CGImageSourceCreateImageAtIndex(source, 0, options)
+#else
+        _ = url
+        return nil
+#endif
+    }
+
+    private func describeSelection(url: URL, image: CGImage) -> String {
+        let pixelSize = "\(image.width)x\(image.height)"
+        let fileSize: String
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let sizeValue = attributes[.size] as? NSNumber {
+            fileSize = ByteCountFormatter.string(fromByteCount: sizeValue.int64Value, countStyle: .file)
+        } else {
+            fileSize = "size n/a"
+        }
+
+        return "\(pixelSize), \(fileSize), local-only embedding"
+    }
+
     private static func resolveThreeScriptTag() -> (String, URL?) {
         let fileManager = FileManager.default
-        var candidates: [URL] = []
+        var moduleCandidates: [URL] = []
+        var legacyCandidates: [URL] = []
 
-        if let bundled = Bundle.main.url(forResource: "three.min", withExtension: "js") {
-            candidates.append(bundled)
+        if let bundledModule = Bundle.main.url(forResource: "three.module.min", withExtension: "js") {
+            moduleCandidates.append(bundledModule)
+        }
+        if let bundledLegacy = Bundle.main.url(forResource: "three.min", withExtension: "js") {
+            legacyCandidates.append(bundledLegacy)
         }
 
         let cwd = URL(fileURLWithPath: fileManager.currentDirectoryPath, isDirectory: true)
-        candidates.append(cwd.appendingPathComponent("Source/ui/public/js/three.min.js"))
-        candidates.append(cwd.appendingPathComponent("companion/Resources/three.min.js"))
+        moduleCandidates.append(cwd.appendingPathComponent("Source/ui/node_modules/three/build/three.module.min.js"))
+        moduleCandidates.append(cwd.appendingPathComponent("companion/Resources/three.module.min.js"))
+        legacyCandidates.append(cwd.appendingPathComponent("companion/Resources/three.min.js"))
 
         let executableURL = URL(fileURLWithPath: CommandLine.arguments.first ?? "")
         var cursor = executableURL.deletingLastPathComponent()
         for _ in 0..<10 {
-            candidates.append(cursor.appendingPathComponent("Source/ui/public/js/three.min.js"))
-            candidates.append(cursor.appendingPathComponent("companion/Resources/three.min.js"))
+            moduleCandidates.append(cursor.appendingPathComponent("Source/ui/node_modules/three/build/three.module.min.js"))
+            moduleCandidates.append(cursor.appendingPathComponent("companion/Resources/three.module.min.js"))
+            legacyCandidates.append(cursor.appendingPathComponent("companion/Resources/three.min.js"))
             cursor.deleteLastPathComponent()
         }
 
-        for url in candidates where fileManager.fileExists(atPath: url.path) {
+        for url in moduleCandidates where fileManager.fileExists(atPath: url.path) {
+            let directory = url.deletingLastPathComponent()
+            let tag = """
+            <script type="module">
+              import * as THREE from "./\(url.lastPathComponent)";
+              window.THREE = THREE;
+            </script>
+            """
+            return (tag, directory)
+        }
+
+        for url in legacyCandidates where fileManager.fileExists(atPath: url.path) {
             let directory = url.deletingLastPathComponent()
             return ("<script src=\"\(url.lastPathComponent)\"></script>", directory)
         }
 
-        return ("<script src=\"https://unpkg.com/three@0.161.0/build/three.min.js\"></script>", nil)
+        return ("", nil)
     }
 
     private static func dashboardHTML(threeScriptTag: String) -> String {
@@ -1551,13 +2271,13 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               color: #9fb4c9;
             }
             #metrics {
-              overflow: hidden;
+              overflow: auto;
               padding: 6px 8px 8px;
               display: grid;
               grid-template-columns: repeat(2, minmax(0, 1fr));
-              grid-template-rows: repeat(2, minmax(0, 1fr));
+              grid-auto-rows: minmax(0, 1fr);
               gap: 6px;
-              align-content: stretch;
+              align-content: start;
               min-height: 0;
             }
             .section {
@@ -1601,6 +2321,51 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             }
             .rowValue.raw {
               color: #ffdca2;
+            }
+            .rowValueButtons {
+              text-align: left;
+              display: flex;
+              justify-content: flex-end;
+              align-items: center;
+            }
+            .captureButtons {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 6px;
+              justify-content: flex-end;
+            }
+            .captureButton {
+              appearance: none;
+              border: 1px solid rgba(87, 153, 211, 0.44);
+              border-radius: 8px;
+              padding: 6px 9px;
+              font-size: var(--font-xs);
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: #dbeeff;
+              background: rgba(13, 26, 40, 0.9);
+              cursor: pointer;
+              transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+            }
+            .captureButton:hover:not(:disabled) {
+              border-color: rgba(112, 195, 255, 0.82);
+              background: rgba(23, 45, 68, 0.94);
+              transform: translateY(-1px);
+            }
+            .captureButton:disabled {
+              opacity: 0.5;
+              cursor: default;
+              transform: none;
+            }
+            .captureButton.secondary {
+              color: #a8bfd7;
+              border-color: rgba(90, 112, 137, 0.38);
+              background: rgba(10, 16, 24, 0.9);
+            }
+            .captureButton.apply {
+              color: #dbffef;
+              border-color: rgba(88, 208, 146, 0.42);
+              background: rgba(11, 34, 26, 0.95);
             }
             #threeNotice {
               position: absolute;
@@ -1759,6 +2524,53 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                     <div class="rowLabel">Velocity Damping</div><div id="velocityDamping" class="rowValue">n/a</div>
                   </div>
                 </div>
+                <div class="section">
+                  <h3>Profile Acquisition</h3>
+                  <div class="rows">
+                    <div class="rowLabel">State</div><div id="profileState" class="rowValue">idle</div>
+                    <div class="rowLabel">Detected Headphone</div><div id="profileDetectedHeadphone" class="rowValue">n/a</div>
+                    <div class="rowLabel">Capture Count</div><div id="profileCaptureCount" class="rowValue">0 / 3</div>
+                    <div class="rowLabel">Matched Subject</div><div id="profileSubjectId" class="rowValue">n/a</div>
+                    <div class="rowLabel">Matched SOFA</div><div id="profileSofaRef" class="rowValue">n/a</div>
+                    <div class="rowLabel">Similarity</div><div id="profileSimilarity" class="rowValue">n/a</div>
+                    <div class="rowLabel">Fallback Mode</div><div id="profileFallback" class="rowValue">n/a</div>
+                    <div class="rowLabel">Embedding Hash</div><div id="profileEmbeddingHash" class="rowValue">n/a</div>
+                    <div class="rowLabel">Left Ear Capture</div><div id="profileLeftSummary" class="rowValue">Awaiting selection</div>
+                    <div class="rowLabel">Left Ear Actions</div>
+                    <div class="rowValue rowValueButtons">
+                      <div class="captureButtons">
+                        <button id="profileLeftSelect" class="captureButton" type="button">Select</button>
+                        <button id="profileLeftClear" class="captureButton secondary" type="button">Clear</button>
+                      </div>
+                    </div>
+                    <div class="rowLabel">Right Ear Capture</div><div id="profileRightSummary" class="rowValue">Awaiting selection</div>
+                    <div class="rowLabel">Right Ear Actions</div>
+                    <div class="rowValue rowValueButtons">
+                      <div class="captureButtons">
+                        <button id="profileRightSelect" class="captureButton" type="button">Select</button>
+                        <button id="profileRightClear" class="captureButton secondary" type="button">Clear</button>
+                      </div>
+                    </div>
+                    <div class="rowLabel">Frontal Capture</div><div id="profileFrontSummary" class="rowValue">Awaiting selection</div>
+                    <div class="rowLabel">Frontal Actions</div>
+                    <div class="rowValue rowValueButtons">
+                      <div class="captureButtons">
+                        <button id="profileFrontSelect" class="captureButton" type="button">Select</button>
+                        <button id="profileFrontClear" class="captureButton secondary" type="button">Clear</button>
+                      </div>
+                    </div>
+                    <div class="rowLabel">Apply Match</div>
+                    <div class="rowValue rowValueButtons">
+                      <div class="captureButtons">
+                        <button id="profileApply" class="captureButton apply" type="button">Write Profile</button>
+                      </div>
+                    </div>
+                    <div class="rowLabel">Apply Hint</div><div id="profileApplyHint" class="rowValue">Load all three views to enable apply.</div>
+                    <div class="rowLabel">Profile Path</div><div id="profilePath" class="rowValue">n/a</div>
+                    <div class="rowLabel">Privacy</div><div id="profilePrivacy" class="rowValue">Local-only processing.</div>
+                    <div class="rowLabel">Last Action</div><div id="profileLastAction" class="rowValue">Awaiting profile captures</div>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -1792,6 +2604,14 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               const num = (value, fallback = 0) => (typeof value === "number" && Number.isFinite(value)) ? value : fallback;
               const get = (id) => document.getElementById(id);
               const setText = (id, text) => { const el = get(id); if (el) el.textContent = text; };
+              const postNativeMessage = (payload) => {
+                if (window.webkit
+                    && window.webkit.messageHandlers
+                    && window.webkit.messageHandlers.locusqControl
+                    && typeof window.webkit.messageHandlers.locusqControl.postMessage === "function") {
+                  window.webkit.messageHandlers.locusqControl.postMessage(payload);
+                }
+              };
               const readinessLabel = (value) => {
                 if (value === "active_ready") return "active_ready";
                 if (value === "active_not_ready") return "active_not_ready";
@@ -1846,13 +2666,36 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 const button = get("syncButton");
                 if (!button) return;
                 button.addEventListener("click", () => {
-                  if (window.webkit
-                      && window.webkit.messageHandlers
-                      && window.webkit.messageHandlers.locusqControl
-                      && typeof window.webkit.messageHandlers.locusqControl.postMessage === "function") {
-                    window.webkit.messageHandlers.locusqControl.postMessage({ type: "sync" });
-                  }
+                  postNativeMessage({ type: "sync" });
                 });
+              }
+
+              function bindProfileControls() {
+                const bindCaptureButtons = (selectId, clearId, slot) => {
+                  const selectButton = get(selectId);
+                  const clearButton = get(clearId);
+                  if (selectButton) {
+                    selectButton.addEventListener("click", () => {
+                      postNativeMessage({ type: "captureSelect", slot });
+                    });
+                  }
+                  if (clearButton) {
+                    clearButton.addEventListener("click", () => {
+                      postNativeMessage({ type: "captureClear", slot });
+                    });
+                  }
+                };
+
+                bindCaptureButtons("profileLeftSelect", "profileLeftClear", "left_ear");
+                bindCaptureButtons("profileRightSelect", "profileRightClear", "right_ear");
+                bindCaptureButtons("profileFrontSelect", "profileFrontClear", "frontal");
+
+                const applyButton = get("profileApply");
+                if (applyButton) {
+                  applyButton.addEventListener("click", () => {
+                    postNativeMessage({ type: "applyProfile" });
+                  });
+                }
               }
 
               function initThreeScene() {
@@ -2146,11 +2989,15 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 const plugin = snapshot.pluginIngest || {};
                 const outputDevice = snapshot.outputDevice || {};
                 const controls = snapshot.controls || {};
+                const profile = snapshot.profileAcquisition || {};
                 const readiness = readinessLabel(snapshot.readinessState);
                 const sendGateOpen = !!snapshot.sendGateOpen;
                 const syncRequired = !!snapshot.syncRequired;
                 const syncButton = get("syncButton");
                 const syncHint = get("syncHint");
+                const profileLeft = profile.leftEar || {};
+                const profileRight = profile.rightEar || {};
+                const profileFront = profile.frontal || {};
 
                 setText("quatRaw", "[" + f(num(q.x), 4) + ", " + f(num(q.y), 4) + ", " + f(num(q.z), 4) + ", " + f(num(q.w, 1), 4) + "]");
                 setText("yprRaw", f(num(ypr.yaw), 2) + " / " + f(num(ypr.pitch), 2) + " / " + f(num(ypr.roll), 2) + " deg");
@@ -2187,6 +3034,20 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 setText("stabilizationAlpha", f(num(controls.stabilizationAlpha), 3));
                 setText("deadbandDeg", f(num(controls.deadbandDeg), 3));
                 setText("velocityDamping", f(num(controls.velocityDamping), 3));
+                setText("profileState", profile.state || "idle");
+                setText("profileDetectedHeadphone", profile.detectedHeadphone || "n/a");
+                setText("profileCaptureCount", String(profile.captureCount ?? 0) + " / 3");
+                setText("profileSubjectId", profile.subjectId || "n/a");
+                setText("profileSofaRef", profile.sofaRef || "n/a");
+                setText("profileSimilarity", f(num(profile.similarityScore), 3));
+                setText("profileFallback", profile.usedFallback ? "fallback_subject" : "nearest_neighbor");
+                setText("profileEmbeddingHash", (profile.embeddingHash && String(profile.embeddingHash).length > 0) ? profile.embeddingHash : "n/a");
+                setText("profileLeftSummary", (profileLeft.fileName || "Awaiting selection") + " | " + (profileLeft.detail || "No capture loaded"));
+                setText("profileRightSummary", (profileRight.fileName || "Awaiting selection") + " | " + (profileRight.detail || "No capture loaded"));
+                setText("profileFrontSummary", (profileFront.fileName || "Awaiting selection") + " | " + (profileFront.detail || "No capture loaded"));
+                setText("profilePath", profile.persistedProfilePath || "n/a");
+                setText("profilePrivacy", profile.privacy || "Local-only processing.");
+                setText("profileLastAction", profile.lastAction || "Awaiting profile captures");
 
                 if (syncButton) {
                   syncButton.disabled = readiness !== "active_ready";
@@ -2200,6 +3061,31 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                     syncHint.textContent = "Synced. Streaming pose to plugin";
                   } else {
                     syncHint.textContent = "Ready";
+                  }
+                }
+
+                const profileApply = get("profileApply");
+                if (profileApply) {
+                  profileApply.disabled = !profile.canApply;
+                }
+
+                const leftClear = get("profileLeftClear");
+                if (leftClear) leftClear.disabled = profileLeft.state !== "captured";
+                const rightClear = get("profileRightClear");
+                if (rightClear) rightClear.disabled = profileRight.state !== "captured";
+                const frontClear = get("profileFrontClear");
+                if (frontClear) frontClear.disabled = profileFront.state !== "captured";
+
+                const profileApplyHint = get("profileApplyHint");
+                if (profileApplyHint) {
+                  if (!profile.canApply) {
+                    profileApplyHint.textContent = "Load left, right, and frontal captures to enable profile apply.";
+                  } else if (profile.appliedProfile) {
+                    profileApplyHint.textContent = "Profile written. Plugin polling can now ingest the updated CalibrationProfile.json.";
+                  } else if (profile.usedFallback) {
+                    profileApplyHint.textContent = "Ready to write fallback subject because similarity stayed below threshold.";
+                  } else {
+                    profileApplyHint.textContent = "Ready to write nearest-neighbor subject to CalibrationProfile.json.";
                   }
                 }
               }
@@ -2279,6 +3165,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
 
               bindSmoothingControls();
               bindSyncControls();
+              bindProfileControls();
               bindViewControls();
               initThreeScene();
             })();
@@ -2294,7 +3181,8 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
     private let window: NSWindow
     private let textView: NSTextView
 
-    init() {
+    init(profileAcquisitionController: ProfileAcquisitionController) {
+        _ = profileAcquisitionController
         let frame = NSRect(x: 100, y: 100, width: 640, height: 780)
         window = NSWindow(
             contentRect: frame,
@@ -2364,6 +3252,13 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
             stream=[rate=%.1fHz interval=%.2fms jitter=%.2fms gap=%d]
             plugin_ingest=[state=%@ sources=%d consumers=%d endpoint=%@ seq=%u pose_age=%.1fms ack_age=%.1fms invalid=%u decode=%d]
             output_device=[name=%@ model=%@ transport=%@ sample_rate=%.1fHz channels=%d connected=%@]
+            profile_acquisition=[state=%@ captures=%d/3 subject=%@ sofa=%@ fallback=%@ hash=%@ can_apply=%@ applied=%@]
+            profile_detected_headphone=%@
+            profile_last_action=%@
+            profile_left=%@ | %@
+            profile_right=%@ | %@
+            profile_front=%@ | %@
+            profile_privacy=%@
             """,
             snapshot.mode.rawValue,
             snapshot.source,
@@ -2419,14 +3314,33 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate {
             snapshot.outputDevice.transport,
             snapshot.outputDevice.sampleRateHz,
             snapshot.outputDevice.channels,
-            snapshot.outputDevice.connected ? "true" : "false"
+            snapshot.outputDevice.connected ? "true" : "false",
+            snapshot.profileAcquisition.state,
+            snapshot.profileAcquisition.captureCount,
+            snapshot.profileAcquisition.subjectId,
+            snapshot.profileAcquisition.sofaRef,
+            snapshot.profileAcquisition.usedFallback ? "true" : "false",
+            snapshot.profileAcquisition.embeddingHash,
+            snapshot.profileAcquisition.canApply ? "true" : "false",
+            snapshot.profileAcquisition.appliedProfile ? "true" : "false",
+            snapshot.profileAcquisition.detectedHeadphone,
+            snapshot.profileAcquisition.lastAction,
+            snapshot.profileAcquisition.leftEar.fileName,
+            snapshot.profileAcquisition.leftEar.detail,
+            snapshot.profileAcquisition.rightEar.fileName,
+            snapshot.profileAcquisition.rightEar.detail,
+            snapshot.profileAcquisition.frontal.fileName,
+            snapshot.profileAcquisition.frontal.detail,
+            snapshot.profileAcquisition.privacy
         )
     }
 }
 #endif
 #else
 private final class CompanionMonitorWindow {
-    init() {}
+    init(profileAcquisitionController: ProfileAcquisitionController) {
+        _ = profileAcquisitionController
+    }
     func show() {}
     func render(snapshot: RuntimeSnapshot, args: CompanionArguments) {
         _ = snapshot
@@ -2470,12 +3384,12 @@ private func withMainActorSyncThrowing<T: Sendable>(_ body: @MainActor () throws
     return try result!.get()
 }
 
-private func createMonitorWindowOnMain() -> CompanionMonitorWindow {
+private func createMonitorWindowOnMain(profileAcquisitionController: ProfileAcquisitionController) -> CompanionMonitorWindow {
     if Thread.isMainThread {
-        return MainActor.assumeIsolated { CompanionMonitorWindow() }
+        return MainActor.assumeIsolated { CompanionMonitorWindow(profileAcquisitionController: profileAcquisitionController) }
     }
     return DispatchQueue.main.sync {
-        MainActor.assumeIsolated { CompanionMonitorWindow() }
+        MainActor.assumeIsolated { CompanionMonitorWindow(profileAcquisitionController: profileAcquisitionController) }
     }
 }
 
@@ -2518,7 +3432,8 @@ private func runSynthetic(arguments: CompanionArguments,
                           sender: UDPSender,
                           store: SnapshotStore,
                           monitor: CompanionMonitorWindow?,
-                          pluginAckReceiver: PluginAckReceiver?) throws {
+                          pluginAckReceiver: PluginAckReceiver?,
+                          snapshotLogWriter: SnapshotLogWriter?) throws {
     let packetCount = (arguments.seconds == 0)
         ? Int.max
         : max(1, arguments.hz * arguments.seconds)
@@ -2531,6 +3446,7 @@ private func runSynthetic(arguments: CompanionArguments,
 
     var seq: UInt32 = seededSequenceStart()
     var sentPackets = 0
+    var sendGateOpen = !arguments.requireSyncToStart
     var stopReason = "duration_complete"
     var cachedOutputDevice = readDefaultOutputDeviceSnapshot()
     var nextOutputDevicePollAtMs = nowEpochMilliseconds()
@@ -2548,16 +3464,31 @@ private func runSynthetic(arguments: CompanionArguments,
         let quat = quaternionFromYawPitchRoll(yawDeg: yaw, pitchDeg: pitch, rollDeg: roll)
         let timestampMs = nowEpochMilliseconds()
 
-        let packet = PosePacketV1(
-            quaternion: quat,
-            timestampMs: timestampMs,
-            sequence: seq
-        )
+        if consumeSyncRequest() {
+            sendGateOpen = true
+            if arguments.requireSyncToStart {
+                print("companion_sync synthetic gate opened")
+            }
+        } else if !arguments.requireSyncToStart {
+            sendGateOpen = true
+        }
 
-        let payload = packet.encodedData()
-        precondition(payload.count == 40, "Pose packet v1 must be 40 bytes")
-        try sender.send(payload)
-        sentPackets += 1
+        let allowPoseSend = sendGateOpen
+        var reportedSequence = sentPackets == 0 ? 0 : seq - 1
+        if allowPoseSend {
+            let packet = PosePacketV1(
+                quaternion: quat,
+                timestampMs: timestampMs,
+                sequence: seq
+            )
+
+            let payload = packet.encodedData()
+            precondition(payload.count == 40, "Pose packet v1 must be 40 bytes")
+            try sender.send(payload)
+            sentPackets += 1
+            reportedSequence = seq
+            seq &+= 1
+        }
 
         let motionNorm = clamp01(Double(abs(yaw)) / 90.0)
         let stability = clamp01(1.0 - motionNorm * 0.35)
@@ -2569,9 +3500,9 @@ private func runSynthetic(arguments: CompanionArguments,
             snapshot.frameMapping = "synthetic_steam_basis_identity"
             snapshot.baselineState = arguments.recenterOnStart ? "synthetic_not_applicable" : "disabled"
             snapshot.readinessState = "active_ready"
-            snapshot.sendGateOpen = true
+            snapshot.sendGateOpen = allowPoseSend
             snapshot.syncRequired = arguments.requireSyncToStart
-            snapshot.sequence = seq
+            snapshot.sequence = reportedSequence
             snapshot.timestampMs = timestampMs
             snapshot.ageMs = 0.0
             snapshot.qx = quat.x
@@ -2611,11 +3542,14 @@ private func runSynthetic(arguments: CompanionArguments,
             nextOutputDevicePollAtMs: &nextOutputDevicePollAtMs
         )
 
-        if arguments.verbose {
+        let currentSnapshot = store.read()
+        snapshotLogWriter?.append(snapshot: currentSnapshot)
+
+        if arguments.verbose && allowPoseSend {
             print(
                 String(
                     format: "packet seq=%u ts_ms=%llu q=[%.6f,%.6f,%.6f,%.6f] ypr=[%.2f,%.2f,%.2f] bytes=%d",
-                    seq,
+                    reportedSequence,
                     timestampMs,
                     quat.x,
                     quat.y,
@@ -2624,17 +3558,14 @@ private func runSynthetic(arguments: CompanionArguments,
                     yaw,
                     pitch,
                     roll,
-                    payload.count
+                    40
                 )
             )
         }
 
-        seq &+= 1
-
         if let monitor {
-            let snapshot = store.read()
             withMainActorSync {
-                monitor.render(snapshot: snapshot, args: arguments)
+                monitor.render(snapshot: currentSnapshot, args: arguments)
             }
         }
 
@@ -3011,7 +3942,8 @@ private func runLive(arguments: CompanionArguments,
                      sender: UDPSender,
                      store: SnapshotStore,
                      monitor: CompanionMonitorWindow?,
-                     pluginAckReceiver: PluginAckReceiver?) throws {
+                     pluginAckReceiver: PluginAckReceiver?,
+                     snapshotLogWriter: SnapshotLogWriter?) throws {
     let authorization = CMHeadphoneMotionManager.authorizationStatus()
     guard authorization == .authorized || authorization == .notDetermined else {
         throw CompanionError.liveModeUnavailable("authorization denied/restricted")
@@ -3080,8 +4012,10 @@ private func runLive(arguments: CompanionArguments,
             nextOutputDevicePollAtMs: &nextOutputDevicePollAtMs
         )
 
+        let snapshot = store.read()
+        snapshotLogWriter?.append(snapshot: snapshot)
+
         if let monitor {
-            let snapshot = store.read()
             withMainActorSync {
                 monitor.render(snapshot: snapshot, args: arguments)
             }
@@ -3110,17 +4044,28 @@ private func runCompanion(arguments: CompanionArguments) throws {
         clearStopRequested()
     }
 
+    if let selftestDir = arguments.bl058ProfileSelftestDir {
+        try runBL058ProfileSelftest(outputDirectory: selftestDir,
+                                    schedulingProfile: arguments.schedulingProfile,
+                                    monitorHz: arguments.monitorHz)
+        return
+    }
+
     let sender = try UDPSender(host: arguments.host, port: arguments.port)
     defer {
         sender.close()
     }
+
+    let snapshotLogWriter = try arguments.snapshotLogPath.map { try SnapshotLogWriter(path: $0) }
 
     let store = SnapshotStore()
     store.update { snapshot in
         snapshot.schedulingProfile = arguments.schedulingProfile.rawValue
         snapshot.monitorHz = arguments.monitorHz
     }
-    let monitor = arguments.ui ? createMonitorWindowOnMain() : nil
+    let profileAcquisitionController = ProfileAcquisitionController(store: store)
+    profileAcquisitionController.bootstrap()
+    let monitor = arguments.ui ? createMonitorWindowOnMain(profileAcquisitionController: profileAcquisitionController) : nil
     let pluginAckReceiver = PluginAckReceiver(
         listenPort: arguments.pluginAckPort,
         workerQoS: arguments.schedulingProfile.ackThreadQoS
@@ -3142,7 +4087,8 @@ private func runCompanion(arguments: CompanionArguments) throws {
             sender: sender,
             store: store,
             monitor: monitor,
-            pluginAckReceiver: pluginAckReceiver
+            pluginAckReceiver: pluginAckReceiver,
+            snapshotLogWriter: snapshotLogWriter
         )
     case .live:
 #if canImport(CoreMotion)
@@ -3151,7 +4097,8 @@ private func runCompanion(arguments: CompanionArguments) throws {
             sender: sender,
             store: store,
             monitor: monitor,
-            pluginAckReceiver: pluginAckReceiver
+            pluginAckReceiver: pluginAckReceiver,
+            snapshotLogWriter: snapshotLogWriter
         )
 #else
         throw CompanionError.liveModeUnavailable("CoreMotion unavailable on this platform")
@@ -3255,6 +4202,8 @@ private func sanitizeLaunchArguments(_ rawArguments: [String], launchedFromAppBu
         "--verbose",
         "--sched-profile",
         "--monitor-hz",
+        "--snapshot-log",
+        "--bl058-profile-selftest",
         "--no-recenter",
         "--stabilize-alpha",
         "--deadband-deg",

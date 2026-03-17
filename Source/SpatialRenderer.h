@@ -153,12 +153,17 @@ public:
 
     void setHeadphoneDeviceProfile (int profileIndex);
 
+    // Message-thread preset build + atomic publish into the PEQ monitoring chain.
     void loadPeqPresetForProfile (int profileIndex, double sampleRate);
 
     // Apply PEQ bands from a JSON-parsed var array (companion IPC path).
     // preampDb = 0.0 if the JSON schema has no preamp field.
-    // Called on message thread; not RT-safe (see loadPeqPresetForProfile note).
+    // Called on the message thread; coefficients are atomically published to the audio thread.
     void applyJsonPeqBands (const juce::var& bandsArray, float preampDb, double sampleRate);
+
+    void clearFirImpulseResponse() noexcept;
+
+    bool loadFirImpulseResponse (const float* taps, int tapCount) noexcept;
 
     void setHeadphoneCalibrationEnabled (bool enabled) noexcept;
 
@@ -169,6 +174,16 @@ public:
     void setSpatialOutputProfile (int profileIndex);
 
     void applyHeadPose (const PoseSnapshot& pose) noexcept;
+
+    void clearHeadPose() noexcept;
+
+    void setRequestedSofaHrtf (juce::String sofaRefRelativePath, bool enabled);
+
+    bool reloadSteamAudioRuntime() noexcept;
+
+    bool isUsingSofaHrtf() const noexcept;
+
+    bool loadFirTapsFromJson (const juce::var& tapsArray) noexcept;
 
     void setAuditionEnabled (bool enabled) noexcept;
 
@@ -832,6 +847,8 @@ private:
     int    lastAppliedHeadphoneProfileIndex = -1;
     int    lastLoadedPeqPresetIndex         = -1;
     double lastLoadedPeqSampleRate          = 0.0;
+    juce::String requestedSofaRefRelativePath;
+    bool requestedSofaHrtfEnabled = false;
     locusq::headphone_dsp::HeadphoneCalibrationChain headphoneCalibrationChain;
 
 #if defined (LOCUSQ_ENABLE_STEAM_AUDIO) && LOCUSQ_ENABLE_STEAM_AUDIO
@@ -867,6 +884,7 @@ private:
 #endif
 
     bool steamAudioRuntimeReady = false;
+    bool steamAudioUsingSofaHrtf = false;
 
     static constexpr std::array<float, NUM_SPEAKERS> kCodecAdmObjectDefaultGains
     {

@@ -129,6 +129,18 @@ int topologyProfileForOutputChannels (int outputChannels)
 
 juce::File resolveCompanionCalibrationProfileFile()
 {
+    const auto overrideProfileFile = juce::SystemStats::getEnvironmentVariable (
+        "LOCUSQ_COMPANION_PROFILE_FILE",
+        {}).trim();
+    if (overrideProfileFile.isNotEmpty())
+        return juce::File (overrideProfileFile);
+
+    const auto overrideProfileDir = juce::SystemStats::getEnvironmentVariable (
+        "LOCUSQ_COMPANION_PROFILE_DIR",
+        {}).trim();
+    if (overrideProfileDir.isNotEmpty())
+        return juce::File (overrideProfileDir).getChildFile ("CalibrationProfile.json");
+
     const auto userAppDataDir = juce::File::getSpecialLocation (
         juce::File::SpecialLocationType::userApplicationDataDirectory);
     const auto userHomeDir = juce::File::getSpecialLocation (
@@ -1187,10 +1199,21 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
 
     if (! profileFile.existsAsFile())
     {
+        if (companionCalibrationProfileLastModifiedMs != -1)
+        {
+            spatialRenderer.clearFirImpulseResponse();
+            spatialRenderer.setHeadphoneCalibrationEnabled (false);
+            spatialRenderer.setRequestedSofaHrtf ({}, false);
+            const juce::ScopedLock callbackLock (getCallbackLock());
+            spatialRenderer.reloadSteamAudioRuntime();
+        }
+
         companionCalibrationProfileLastModifiedMs = -1;
         cachedCalibrationDevice = "unknown";
         cachedCalibrationEqMode = "off";
         cachedCalibrationHrtfMode = "default";
+        cachedCalibrationSofaRef.clear();
+        cachedCalibrationRequestedSofa = false;
         cachedCalibrationTrackingEnabled = false;
         cachedCalibrationFirLatency = 0;
         cachedExternalizationScore = -1.0f;
@@ -1204,18 +1227,34 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     if (modifiedMs == companionCalibrationProfileLastModifiedMs)
         return;
 
+    const auto cacheFailedRead = [&]() noexcept
+    {
+        companionCalibrationProfileLastModifiedMs = modifiedMs;
+    };
+
     const auto payload = juce::JSON::parse (profileFile.loadFileAsString());
     auto* root = payload.getDynamicObject();
     if (root == nullptr)
+    {
+        cacheFailedRead();
         return;
+    }
 
     const auto schema = root->getProperty ("schema").toString().trim();
     if (schema.isEmpty() || schema != kCalibrationProfileSchemaV1)
+    {
+        cacheFailedRead();
         return;
+    }
 
     auto* headphone = root->getProperty ("headphone").getDynamicObject();
     if (headphone == nullptr)
+    {
+        cacheFailedRead();
         return;
+    }
+
+    auto* user = root->getProperty ("user").getDynamicObject();
 
     auto modelId = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
     if (modelId.isEmpty())
@@ -1237,6 +1276,7 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     const auto eqMode = headphone->getProperty ("hp_eq_mode").toString().trim().toLowerCase();
     if (eqMode == "peq")
     {
+        spatialRenderer.clearFirImpulseResponse();
         const auto bandsVar = headphone->getProperty ("hp_peq_bands");
         spatialRenderer.applyJsonPeqBands (bandsVar, 0.0f, currentSampleRate);
         spatialRenderer.setHeadphoneCalibrationEngine (1);
@@ -1244,22 +1284,32 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     }
     else if (eqMode == "fir")
     {
+        const auto firTapsVar = headphone->getProperty ("hp_fir_taps");
+        const bool firLoaded = spatialRenderer.loadFirTapsFromJson (firTapsVar);
         spatialRenderer.setHeadphoneCalibrationEngine (2);
-        spatialRenderer.setHeadphoneCalibrationEnabled (true);
+        spatialRenderer.setHeadphoneCalibrationEnabled (firLoaded);
+        if (! firLoaded)
+            DBG ("LocusQ: CalibrationProfile requested FIR EQ, but hp_fir_taps was empty or invalid.");
     }
     else
     {
+        spatialRenderer.clearFirImpulseResponse();
         spatialRenderer.setHeadphoneCalibrationEnabled (false);
     }
 
+    const auto hrtfMode = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
+    const auto sofaRef = user != nullptr ? user->getProperty ("sofa_ref").toString().trim() : juce::String {};
+    const bool requestedSofaHrtf = hrtfMode == "sofa" && sofaRef.isNotEmpty();
+    const bool sofaRequestChanged = requestedSofaHrtf != cachedCalibrationRequestedSofa
+                                    || sofaRef != cachedCalibrationSofaRef;
+
+    if (sofaRequestChanged)
     {
-        const auto hrtfMode = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
-        const auto sofaRef  = headphone->getProperty ("sofa_ref").toString().trim();
-        if (hrtfMode == "sofa" && sofaRef.isNotEmpty())
-        {
-            DBG ("LocusQ: CalibrationProfile requests SOFA HRTF: " + sofaRef
-                 + " (wiring deferred — see TODO(Task 13) in SpatialRenderer.h)");
-        }
+        spatialRenderer.setRequestedSofaHrtf (sofaRef, requestedSofaHrtf);
+        const juce::ScopedLock callbackLock (getCallbackLock());
+        spatialRenderer.reloadSteamAudioRuntime();
+        cachedCalibrationRequestedSofa = requestedSofaHrtf;
+        cachedCalibrationSofaRef = sofaRef;
     }
 
     {
@@ -1278,9 +1328,7 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
             cachedCalibrationDevice = "Unknown Device";
 
         cachedCalibrationEqMode = eqMode.isEmpty() ? "off" : eqMode;
-
-        const auto hrtfModeForCache = headphone->getProperty ("hp_hrtf_mode").toString().trim().toLowerCase();
-        cachedCalibrationHrtfMode = hrtfModeForCache.isEmpty() ? "default" : hrtfModeForCache;
+        cachedCalibrationHrtfMode = spatialRenderer.isUsingSofaHrtf() ? "sofa" : "default";
 
         cachedCalibrationFirLatency = spatialRenderer.getHeadphoneCalibrationLatencySamples();
 

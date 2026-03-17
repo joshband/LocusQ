@@ -513,6 +513,8 @@ private:
     juce::String cachedCalibrationDevice         = "unknown";
     juce::String cachedCalibrationEqMode         = "off";
     juce::String cachedCalibrationHrtfMode       = "default";
+    juce::String cachedCalibrationSofaRef;
+    bool         cachedCalibrationRequestedSofa  = false;
     bool         cachedCalibrationTrackingEnabled = false;
     int          cachedCalibrationFirLatency      = 0;
     float        cachedExternalizationScore       = -1.0f;  // -1 = not yet available
