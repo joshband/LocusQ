@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 88,
-    "open": 15,
-    "done": 73
+    "open": 12,
+    "done": 76
   },
   "items": [
     {
@@ -1017,8 +1017,8 @@
     {
       "id": "BL-053",
       "title": "BL-053 Head Tracking Orientation Injection",
-      "state_bucket": "open",
-      "status": "**Done-candidate** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; promotion packet at `TestEvidence/bl053_owner_sync_z1_20260316T050000Z/`)",
+      "state_bucket": "done",
+      "status": "**Done** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; formal Done 2026-03-17; promotion packet at `TestEvidence/bl053_owner_sync_z1_20260316T050000Z/`)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-052, BL-045",
@@ -1031,7 +1031,7 @@
       "where": "",
       "plain_language_summary": "BL-053 in plain terms: Inject head pose quaternion from the companion bridge into SteamAudioVirtualSurround as an IPLCoordinateSpace3. Current state: In Validation (structural replay PASS; manual operator verification synced; owner promotion packet pending). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Inject head pose quaternion from the companion bridge into SteamAudioVirtualSurround as an IPLCoordinateSpace3. Apply yaw offset from CalibrationProfile.json. Fallback to identity when companion is disconnected.",
-      "runbook_path": "Documentation/backlog/bl-053-head-tracking-orientation-injection.md"
+      "runbook_path": "Documentation/backlog/done/bl-053-head-tracking-orientation-injection.md"
     },
     {
       "id": "BL-054",
@@ -1112,8 +1112,8 @@
     {
       "id": "BL-058",
       "title": "BL-058 Companion Profile Acquisition UI + HRTF Matching",
-      "state_bucket": "open",
-      "status": "Done-candidate (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; promotion packet at `TestEvidence/bl058_owner_sync_z1_20260317T042803Z_5881/`)",
+      "state_bucket": "done",
+      "status": "**Done** (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; selftest 7/7 PASS; matching_latency=0.1050ms; send gate closed; privacy contract clean; formal Done 2026-03-17; promotion packet at `TestEvidence/bl058_owner_sync_z1_20260317T042803Z_5881/`)",
       "priority": "P0",
       "track": "E - R&D Expansion",
       "depends_on": "BL-057",
@@ -1126,13 +1126,13 @@
       "where": "",
       "plain_language_summary": "BL-058 in plain terms: Build guided ear-photo capture UI in companion app (left ear + right ear + frontal), then ship a deterministic nearest-neighbor subject selection baseline for SADIE II mapping. Current state: In Implementation (Wave 1 kickoff: QA harness authored with contract/execute semantics). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Build guided ear-photo capture UI in companion app (left ear + right ear + frontal), then ship a deterministic nearest-neighbor subject selection baseline for SADIE II mapping. Write selected subject_id and sofa_ref to CalibrationProfile.json, discard images after embedding, and enforce readiness/sync gating so pose streaming only starts from a known-good state.",
-      "runbook_path": "Documentation/backlog/bl-058-companion-profile-acquisition.md"
+      "runbook_path": "Documentation/backlog/done/bl-058-companion-profile-acquisition.md"
     },
     {
       "id": "BL-059",
       "title": "BL-059 CalibrationProfile Integration Handoff",
-      "state_bucket": "open",
-      "status": "**Done-candidate** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 dependency replays PASS; BL-056 open non-blocking; promotion packet at `TestEvidence/bl059_owner_sync_z1_20260316T050200Z/`)",
+      "state_bucket": "done",
+      "status": "**Done** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 dependency replays PASS; BL-056 Done gate met; formal Done 2026-03-17; promotion packet at `TestEvidence/bl059_owner_sync_z1_20260316T050200Z/`)",
       "priority": "P0",
       "track": "E - R&D Expansion",
       "depends_on": "BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058",
@@ -1145,7 +1145,7 @@
       "where": "",
       "plain_language_summary": "BL-059 in plain terms: Wire CalibrationProfile.json from companion to plugin state end-to-end. Current state: In Validation (fixture-driven contract+execute smoke PASS with BL-053/BL-055 dependency replays green on 2026-03-07). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Wire CalibrationProfile.json from companion to plugin state end-to-end. Device-profile fields update APVTS state, and PEQ/FIR/SOFA/tracking fields update renderer/runtime state without glitches. Plugin reloads on file change and clears runtime state cleanly when the profile disappears.",
-      "runbook_path": "Documentation/backlog/bl-059-calibration-profile-integration-handoff.md"
+      "runbook_path": "Documentation/backlog/done/bl-059-calibration-profile-integration-handoff.md"
     },
     {
       "id": "BL-060",
