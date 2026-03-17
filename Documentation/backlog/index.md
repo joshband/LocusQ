@@ -158,6 +158,13 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | In Validation (W1-D implementation landed locally: `Source/processor_core/ProcessorParameterLayout.cpp` now exposes grouped host hierarchy while preserving all `90` parameter IDs and flattened order; build + parity checks PASS, promotion follow-up pending in a clean checkout) | F | BL-032 | — | [bl-079](bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
 | 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | In Validation (processor snapshot/file history, native undo/redo bridge, and WebView controls landed locally; typecheck/build/bundle-marker checks PASS, but the rebuilt standalone production self-test currently fails earlier on a CALIBRATE topology/legacy-alias timeout before `UI-W3A-01` / `UI-W3A-02` execute) | F | BL-070, BL-074 | — | [bl-080](bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
 | 51 | BL-081 | Perceptual listening harness — upstream extraction to audio-dsp-qa-harness | P2 | Open | G | BL-060 | — | [bl-081](bl-081-perceptual-listening-harness-upstream-extraction.md) |
+| 52 | BL-082 | QA runner app library — upstream extraction to audio-dsp-qa-harness | P0 | Open | G | — | BL-083, BL-084, BL-085 | [bl-082](bl-082-qa-runner-app-library.md) |
+| 53 | BL-083 | Runtime-config contract enforcement — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-083](bl-083-runtime-config-contract.md) |
+| 54 | BL-084 | Profiling contract hardening — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-084](bl-084-profiling-contract-hardening.md) |
+| 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | Open | G | BL-082 | — | [bl-085](bl-085-cmake-integration-module.md) |
+| 56 | BL-086 | CI checkout composite action — audio-dsp-qa-harness | P1 | Open | G | — | — | [bl-086](bl-086-ci-checkout-composite-action.md) |
+| 57 | BL-087 | Recursive scenario discovery — audio-dsp-qa-harness | P2 | Open (deferred) | G | — | — | [bl-087](bl-087-recursive-scenario-discovery.md) |
+| 58 | BL-088 | HostRunner plugin backends (VST3/AU) — audio-dsp-qa-harness | P2 | Open (deferred; after BL-082/083/084) | G | BL-082, BL-083, BL-084 | — | [bl-088](bl-088-hostrunner-plugin-backends.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
