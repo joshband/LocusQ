@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-17 (BL-039 moved to Done; BL-056 moved to In Validation)
+Last Modified Date: 2026-03-17 (BL-039 moved to Done; BL-056 moved to Done-candidate)
 
 # LocusQ Master Backlog Index
 
@@ -137,7 +137,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 28 | BL-053 | Head tracking orientation injection | P1 | **Done-candidate** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; packet `TestEvidence/bl053_owner_sync_z1_20260316T050000Z/`) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
 | 29 | BL-054 | PEQ cascade RT integration | P1 | In Validation (atomic preset publish path landed; contract+execute lane and native build PASS) | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
 | 30 | BL-055 | FIR convolution engine | P1 | **Done-candidate** (Z1 owner sync 2026-03-16: T3 10/10 contract+execute PASS; 2026-03-07 parity PASS; packet `TestEvidence/bl055_owner_sync_z1_20260316T050100Z/`) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
-| 31 | BL-056 | Calibration state migration + latency contract | P1 | In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17; owner packet pending) | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
+| 31 | BL-056 | Calibration state migration + latency contract | P1 | **Done-candidate** (Z1 owner sync 2026-03-17: T3 10/10 PASS; packet `TestEvidence/bl056_owner_sync_z1_20260317T171805Z_15953/`; formal Done awaits BL-054 + BL-055) | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | **Done** (preset matrix complete; execute T2 `5/5` + T3 `10/10` PASS; Nyquist resonance gate PASS) | E | BL-046 | — (BL-058 unblocked) | [bl-057](done/bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | **Done-candidate** (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; selftest 7/7 PASS; matching_latency=0.1050ms; promotion packet at `TestEvidence/bl058_owner_sync_z1_20260317T042803Z_5881/`) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
 | 34 | BL-059 | CalibrationProfile integration handoff | P0 | **Done-candidate** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 deps PASS; BL-056 open non-blocking; packet `TestEvidence/bl059_owner_sync_z1_20260316T050200Z/`) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |

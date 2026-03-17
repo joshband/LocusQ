@@ -1075,7 +1075,7 @@
       "id": "BL-056",
       "title": "BL-056 Calibration State Migration + Latency Contract",
       "state_bucket": "open",
-      "status": "In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17; owner promotion packet pending)",
+      "status": "**Done-candidate** (Z1 owner sync 2026-03-17: T3 10/10 PASS; all C1\u2013C8 PASS; latency-zero-on-bypass confirmed; packet `TestEvidence/bl056_owner_sync_z1_20260317T171805Z_15953/`; formal Done awaits BL-054 + BL-055 Done promotion)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-054, BL-055",
