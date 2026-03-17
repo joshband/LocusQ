@@ -1,0 +1,6 @@
+check	result	detail	artifact
+contract_lane_status	PASS	lane_result=PASS;runs=3;all non-SKIP rows PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/contract_runs/status.tsv
+execute_lane_status	PASS	lane_result=PASS;runs=3;all non-SKIP rows PASS	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv
+status_schema	PASS	jq empty status.json	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/status_json_check.log
+docs_freshness	PASS	docs freshness recheck green	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/docs_freshness_recheck.log
+done_promotion	PASS	runbook archived to done path; index row updated; validation trend appended	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/promotion_decision.md

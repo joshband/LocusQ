@@ -1,0 +1,10 @@
+step	result	exit_code	detail	artifact
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Source/ui/public/index.html
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Source/ui/src/index.ts
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Documentation/testing/bl-040-ui-modularization-and-authority-status-qa.md
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-040-ui-modularization-and-authority-status.md
+mode	PASS	0	contract_only	TestEvidence/bl040_owner_sync_z11_20260317T045624Z_71866/contract_runs/status.tsv
+replay_signature	PASS	0	stable	TestEvidence/bl040_owner_sync_z11_20260317T045624Z_71866/contract_runs/replay_hashes.tsv
+replay_rows	PASS	0	stable	TestEvidence/bl040_owner_sync_z11_20260317T045624Z_71866/contract_runs/replay_hashes.tsv
+diagnostics_summary	PASS	0	emitted	TestEvidence/bl040_owner_sync_z11_20260317T045624Z_71866/contract_runs/ui_diagnostics_summary.tsv
+lane_result	PASS	0	all_contract_checks_passed	TestEvidence/bl040_owner_sync_z11_20260317T045624Z_71866/contract_runs/status.tsv

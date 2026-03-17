@@ -1,0 +1,10 @@
+metric	value	threshold	result	detail
+signature_divergence_count	0	0	PASS	combined signatures match baseline across all runs
+row_drift_count	0	0	PASS	row signatures match baseline across all runs
+c3_sentinel_run_count	3	>=20	SKIP	replay sentinel threshold not requested for this invocation
+c4_soak_run_count	3	>=50	SKIP	soak sentinel threshold not requested for this invocation
+c5_mode_parity_min_run_count	3	>=20	SKIP	mode parity minimum run-count not requested for this invocation
+run_failure_count	0	0	PASS	all run-level gates passed
+deterministic_contract_failure_count	0	0	PASS	no contract gate failures
+deterministic_replay_divergence_count	0	0	PASS	no replay hash divergence
+deterministic_replay_row_drift_count	0	0	PASS	no replay row drift

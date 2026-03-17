@@ -1,0 +1,6 @@
+step	result	exit_code	detail	artifact
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Source/ui/public/index.html
+file_exists	FAIL	1	missing	/Users/artbox/Documents/Repos/LocusQ/Source/ui/public/js/index.js
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Documentation/testing/bl-040-ui-modularization-and-authority-status-qa.md
+file_exists	PASS	0	found	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-040-ui-modularization-and-authority-status.md
+mode	PASS	0	runtime_not_enabled_in_this_lane;running_contract_checks	TestEvidence/bl040_owner_sync_z11_20260317T044955Z_52916/default_runs/status.tsv

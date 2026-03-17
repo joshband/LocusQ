@@ -141,13 +141,13 @@ hash_text() {
 }
 
 ROOT_HTML="${ROOT_DIR}/Source/ui/public/index.html"
-ROOT_JS="${ROOT_DIR}/Source/ui/public/js/index.js"
+ROOT_UI_ENTRY="${ROOT_DIR}/Source/ui/src/index.ts"
 ROOT_QA_DOC="${ROOT_DIR}/Documentation/testing/bl-040-ui-modularization-and-authority-status-qa.md"
 ROOT_BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-040-ui-modularization-and-authority-status.md"
 
 OVERALL_FAIL=0
 
-for req in "$ROOT_HTML" "$ROOT_JS" "$ROOT_QA_DOC" "$ROOT_BACKLOG_DOC"; do
+for req in "$ROOT_HTML" "$ROOT_UI_ENTRY" "$ROOT_QA_DOC" "$ROOT_BACKLOG_DOC"; do
   if [[ -f "$req" ]]; then
     log_status "file_exists" "PASS" "0" "found" "$req"
   else
@@ -222,9 +222,9 @@ for run in $(seq 1 "$RUNS"); do
     "rend-auth-snapshot-age" \
     "rend-auth-fallback-reason" \
     "rend-auth-replay-seq"
-  run_check "BL040-B1-004" "hasRendererAuthorityDiagnosticsPayload" "$ROOT_JS"
-  run_check "BL040-B1-005" "setRendererAuthorityDiagnosticsExpanded" "$ROOT_JS"
-  run_check_all_patterns "BL040-B1-006" "$ROOT_JS" \
+  run_check "BL040-B1-004" "hasRendererAuthorityDiagnosticsPayload" "$ROOT_UI_ENTRY"
+  run_check "BL040-B1-005" "setRendererAuthorityDiagnosticsExpanded" "$ROOT_UI_ENTRY"
+  run_check_all_patterns "BL040-B1-006" "$ROOT_UI_ENTRY" \
     "authoritySource" \
     "authorityStatusClass" \
     "authorityLockReason" \
@@ -235,11 +235,11 @@ for run in $(seq 1 "$RUNS"); do
   run_check "BL040-B1-008" "BL040-B1-001" "$ROOT_BACKLOG_DOC"
 
   html_sig="$(rg -n 'rend-auth-(card|toggle|chip|detail|content|source|status-class|lock-reason|snapshot-age|fallback-reason|replay-seq)' "$ROOT_HTML" | shasum -a 256 | awk '{print $1}')"
-  js_sig="$(rg -n 'hasRendererAuthorityDiagnosticsPayload|setRendererAuthorityDiagnosticsExpanded|authoritySource|authorityStatusClass|authorityLockReason|authoritySnapshotAgeMs|authorityFallbackReason|authorityReplaySeq' "$ROOT_JS" | shasum -a 256 | awk '{print $1}')"
+  ui_sig="$(rg -n 'hasRendererAuthorityDiagnosticsPayload|setRendererAuthorityDiagnosticsExpanded|authoritySource|authorityStatusClass|authorityLockReason|authoritySnapshotAgeMs|authorityFallbackReason|authorityReplaySeq' "$ROOT_UI_ENTRY" | shasum -a 256 | awk '{print $1}')"
   qa_sig="$(rg -n 'BL040-B1-' "$ROOT_QA_DOC" | shasum -a 256 | awk '{print $1}')"
   backlog_sig="$(rg -n 'BL040-B1-' "$ROOT_BACKLOG_DOC" | shasum -a 256 | awk '{print $1}')"
 
-  signature="$(hash_text "${html_sig}|${js_sig}|${qa_sig}|${backlog_sig}")"
+  signature="$(hash_text "${html_sig}|${ui_sig}|${qa_sig}|${backlog_sig}")"
   row_signature="$(hash_text "${run_fail_count}")"
 
   signature_match=1

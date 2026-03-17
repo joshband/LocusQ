@@ -5,10 +5,14 @@ using namespace locusq::constants;
 
 //==============================================================================
 // Schema note: the state version is encoded as the string property
-// kSnapshotSchemaValueV2 ("locusq-state-v2").
+// kSnapshotSchemaValueV3 ("locusq-state-v3") as of BL-056.
+//
+// V2 ("locusq-state-v2") — prior schema; loaded cleanly by hasProperty guards.
+// V3 ("locusq-state-v3") — BL-056: companion calibration profile handoff present.
+//   Migration V2→V3 is transparent: no new mandatory state fields.
+//   PEQ/FIR/SOFA data is re-polled from CalibrationProfile.json on startup.
 //
 // hp_calibration_enabled is persisted manually (not an APVTS parameter).
-// See BL-038 for full calibration persistence roadmap.
 
 void LocusQAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
@@ -30,7 +34,7 @@ void LocusQAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
                        nullptr);
 
     state.setProperty (kSnapshotSchemaProperty,
-                       kSnapshotSchemaValueV2,
+                       kSnapshotSchemaValueV3,
                        nullptr);
     state.setProperty (kSnapshotOutputLayoutProperty,
                        getSnapshotOutputLayout(),
@@ -52,6 +56,9 @@ void LocusQAudioProcessor::setStateInformation (const void* data, int sizeInByte
             apvts.replaceState (juce::ValueTree::fromXml (*xmlState));
 
             const auto state = apvts.copyState();
+            // Accept V2 ("locusq-state-v2") and V3 ("locusq-state-v3") states.
+            // V2→V3 migration is transparent: hasProperty guards below handle
+            // all optional fields; missing fields default cleanly.
             hasRestoredSnapshotState = state.hasProperty (kSnapshotSchemaProperty);
 
             // Restore manually-persisted headphone calibration enable flag (no APVTS backing).

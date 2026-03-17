@@ -2,7 +2,7 @@ Title: BL-053 Head Tracking Orientation Injection
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-16
 
 # BL-053 Head Tracking Orientation Injection
 
@@ -18,7 +18,7 @@ BL-053 in plain terms: Inject head pose quaternion from the companion bridge int
 | What is changing? | Inject head pose quaternion from the companion bridge into SteamAudioVirtualSurround as an IPLCoordinateSpace3. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (structural lane + T1 replay PASS; manual operator sync evidence captured; owner promotion packet pending). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: **Done-candidate** (2026-03-16 Z1 owner sync PASS; T3 replay 10/10; A2 operator listen deferred non-blocking). Final Done requires A2 real operator listening pass at release gate. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-053-head-tracking-orientation-injection.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-053 |
 | Priority | P1 |
-| Status | In Validation (structural replay PASS; manual operator verification synced; owner promotion packet pending) |
+| Status | **Done-candidate** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; promotion packet at `TestEvidence/bl053_owner_sync_z1_20260316T050000Z/`) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-052, BL-045 |

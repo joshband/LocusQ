@@ -1,0 +1,6 @@
+failure_class	count	detail
+deterministic_contract_failure	0	contract gate failure
+deterministic_replay_divergence	0	combined replay hash mismatch
+deterministic_replay_row_drift	0	row-signature drift
+runtime_execution_failure	0	tool/runtime execution failure
+missing_result_artifact	0	required artifact missing

@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-07 (BL-059 calibration handoff lane synced)
+Last Modified Date: 2026-03-17 (BL-039 moved to Done; BL-056 moved to In Validation)
 
 # LocusQ Master Backlog Index
 
@@ -116,7 +116,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 7 | BL-036 | DSP finite output guardrails | P0 | **Done** (contract-lane D2 evidence archived honestly on 2026-03-05; remaining runtime implementation slices A2/B2/C1 split into BL-078) | F | BL-035 | — | [bl-036](done/bl-036-dsp-finite-output-guardrails.md) |
 | 8 | BL-037 | Emitter snapshot CPU budget | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and closeout/archive sync PASS) | F | BL-035 | — | [bl-037](done/bl-037-emitter-snapshot-cpu-budget.md) |
 | 9 | BL-038 | Calibration threading and telemetry | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity; closeout/archive sync PASS) | E | BL-026, BL-034 | — | [bl-038](done/bl-038-calibration-threading-and-telemetry.md) |
-| 10 | BL-039 | Parameter relay spec generation | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green) | B | BL-027, BL-032 | — | [bl-039](bl-039-parameter-relay-spec-generation.md) |
+| 10 | BL-039 | Parameter relay spec generation | P1 | **Done** (Z11 done promotion 2026-03-17; reused green owner lane evidence and archive sync complete; artifact `TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/promotion_decision.md`) | B | BL-027, BL-032 | — | [bl-039](done/bl-039-parameter-relay-spec-generation.md) |
 | 11 | BL-040 | UI modularization and authority status UX | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) | B | BL-027, BL-039 | — | [bl-040](bl-040-ui-modularization-and-authority-status.md) |
 | 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync PASS) | E | BL-036 | — | [bl-041](done/bl-041-doppler-v2-and-vbap-geometry-validation.md) |
 | 13 | BL-042 | QA CI regression gates | P1 | **Done** (Z16c RT reconcile PASS; Z16P_r2c preflight PASS; Z18 owner done-promotion PASS) | G | BL-035, BL-036, BL-041, HX-06 | BL-030 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
@@ -134,13 +134,13 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 25 | BL-065 | IAMF mapping contract | P2 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-051 | BL-066 | [bl-065](done/bl-065-iamf-mapping-contract.md) |
 | 26 | BL-066 | Ambisonics + ADM pilot execution intake | P1 | **Done** (Done promotion complete; bundle bl062_bl066_done_promotion_20260228_153040) | E | BL-063, BL-064, BL-065 | — | [bl-066](done/bl-066-ambisonics-adm-pilot-execution-intake.md) |
 | 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
-| 28 | BL-053 | Head tracking orientation injection | P1 | In Validation (structural lane + T1 replay PASS; manual operator sync evidence captured; owner promotion packet pending) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
+| 28 | BL-053 | Head tracking orientation injection | P1 | **Done-candidate** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; packet `TestEvidence/bl053_owner_sync_z1_20260316T050000Z/`) | E | BL-052, BL-045 | BL-059 | [bl-053](bl-053-head-tracking-orientation-injection.md) |
 | 29 | BL-054 | PEQ cascade RT integration | P1 | In Validation (atomic preset publish path landed; contract+execute lane and native build PASS) | E | BL-052 | BL-056 | [bl-054](bl-054-peq-cascade-rt-integration.md) |
-| 30 | BL-055 | FIR convolution engine | P1 | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
-| 31 | BL-056 | Calibration state migration + latency contract | P1 | Open | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
+| 30 | BL-055 | FIR convolution engine | P1 | **Done-candidate** (Z1 owner sync 2026-03-16: T3 10/10 contract+execute PASS; 2026-03-07 parity PASS; packet `TestEvidence/bl055_owner_sync_z1_20260316T050100Z/`) | E | — | BL-056 | [bl-055](bl-055-fir-convolution-engine.md) |
+| 31 | BL-056 | Calibration state migration + latency contract | P1 | In Validation (schema V3 landed; execute lane 10/10 PASS 2026-03-17; owner packet pending) | E | BL-054, BL-055 | BL-059 | [bl-056](bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | **Done** (preset matrix complete; execute T2 `5/5` + T3 `10/10` PASS; Nyquist resonance gate PASS) | E | BL-046 | — (BL-058 unblocked) | [bl-057](done/bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | **Done-candidate** (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; selftest 7/7 PASS; matching_latency=0.1050ms; promotion packet at `TestEvidence/bl058_owner_sync_z1_20260317T042803Z_5881/`) | E | BL-057 | BL-059 | [bl-058](bl-058-companion-profile-acquisition.md) |
-| 34 | BL-059 | CalibrationProfile integration handoff | P0 | In Validation (fixture-driven contract+execute lane PASS; profile ingest/unload smoke green; BL-053/BL-055 dependency replays PASS) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
+| 34 | BL-059 | CalibrationProfile integration handoff | P0 | **Done-candidate** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 deps PASS; BL-056 open non-blocking; packet `TestEvidence/bl059_owner_sync_z1_20260316T050200Z/`) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | Open | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
 | 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |

@@ -2,13 +2,13 @@ Title: BL-039 Parameter Relay Spec Generation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-17
 
 # BL-039 Parameter Relay Spec Generation
 
 ## Plain-Language Summary
 
-BL-039 in plain terms: Eliminate manual parameter relay drift by defining one authoritative parameter-relay spec that deterministically drives APVTS IDs, native relay binding, and UI binding contracts. Current state: Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract+execute parity, strict usage exits, and docs freshness are green). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-039 in plain terms: Eliminate manual parameter relay drift by defining one authoritative parameter-relay spec that deterministically drives APVTS IDs, native relay binding, and UI binding contracts. Current state: Done (Z11 done promotion 2026-03-17; existing deterministic contract/execute evidence remains green, docs freshness is green, and archive/index sync is complete). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,8 +18,8 @@ BL-039 in plain terms: Eliminate manual parameter relay drift by defining one au
 | What is changing? | Eliminate manual parameter relay drift by defining one authoritative parameter-relay spec that deterministically drives the parameter state IDs, native relay binding, and UI binding contracts. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Done-candidate (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, and docs freshness are green). This item is done when required acceptance checks pass and promotion evidence is complete. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-039-parameter-relay-spec-generation.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| When is it done? | Completed 2026-03-17. Existing Z11 owner evidence remained green, the archived runbook and index were synchronized, and docs freshness stayed green. |
+| Where is the source of truth? | Runbook `Documentation/backlog/done/bl-039-parameter-relay-spec-generation.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
 ## Visual Aid Index
@@ -55,7 +55,7 @@ Cross-item lifecycle governance remains canonical in `Documentation/backlog/inde
 |---|---|
 | ID | BL-039 |
 | Priority | P1 |
-| Status | Done-candidate (Owner Z10 accepted D2 done-promotion parity intake; deterministic 100/100 contract+execute parity, strict usage exits, and docs freshness are green) |
+| Status | Done (Z11 promotion packet 2026-03-17; existing deterministic contract/execute evidence reused, docs freshness green, archive/index sync complete) |
 | Track | B - Scene/UI Runtime |
 | Effort | High / L |
 | Depends On | BL-027 (Done), BL-032 (Done-candidate) |

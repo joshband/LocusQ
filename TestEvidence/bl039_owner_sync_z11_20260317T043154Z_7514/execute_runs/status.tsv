@@ -1,0 +1,12 @@
+check	result	detail	artifact
+tool_rg	PASS	/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/path/rg	
+tool_shasum	PASS	/usr/bin/shasum	
+BL039-B1-004_replay_hash_stability	PASS	signature_divergence=0 threshold=0	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/replay_hashes.tsv
+BL039-B1-005_replay_row_stability	PASS	row_drift=0 threshold=0	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/replay_hashes.tsv
+BL039-B1-006_artifact_schema_complete	PASS	required_outputs_present	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs
+BL039-B1-007_execution_mode_contract	PASS	mode=execute_suite	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv
+BL039-C5-002_execute_mode_alias_contract	PASS	requested_mode=execute_suite;effective_behavior=contract_checks_only	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv
+BL039-C3-001_replay_sentinel	SKIP	runs=3;requires>=20 for C3 sentinel packet	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/drift_summary.tsv
+BL039-C5-001_mode_guard_threshold	SKIP	mode=execute_suite;runs=3;requires>=20 for C5 parity guard	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/drift_summary.tsv
+BL039-C4-001_replay_sentinel_soak	SKIP	runs=3;requires>=50 for C4 soak packet	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/drift_summary.tsv
+lane_result	PASS	mode=execute_suite;runs=3	TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/execute_runs/status.tsv

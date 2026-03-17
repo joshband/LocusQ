@@ -2,7 +2,7 @@ Title: BL-055 FIR Convolution Engine
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-16
 
 # BL-055 FIR Convolution Engine
 
@@ -18,7 +18,7 @@ BL-055 in plain terms: Integrate FirEngineManager (DirectFirConvolver ≤256 tap
 | What is changing? | Integrate FirEngineManager (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: **Done-candidate** (2026-03-16 Z1 owner sync PASS; T3 10/10 contract+execute PASS; 2026-03-07 parity PASS). Final Done requires offline parity reference render confirmation before release gate. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-055-fir-convolution-engine.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-055 |
 | Priority | P1 |
-| Status | In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh) |
+| Status | **Done-candidate** (Z1 owner sync 2026-03-16: T3 10/10 contract+execute PASS; 2026-03-07 execute parity PASS; promotion packet at `TestEvidence/bl055_owner_sync_z1_20260316T050100Z/`) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | — |

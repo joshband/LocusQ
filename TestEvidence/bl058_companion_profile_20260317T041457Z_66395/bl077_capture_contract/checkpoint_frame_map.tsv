@@ -1,0 +1,12 @@
+checkpoint_id	scheduled_sec	label	selected_frame	selected_frame_sec	delta_sec	result	detail
+cp_01	0	Center and sync	frames/frame_0001.png	0.000000	0.000000	PASS	nearest extracted frame
+cp_02	8	Rotate clockwise to 30 degrees	frames/frame_0033.png	8.000000	0.000000	PASS	nearest extracted frame
+cp_03	14	Rotate clockwise to 60 degrees	frames/frame_0057.png	14.000000	0.000000	PASS	nearest extracted frame
+cp_04	20	Rotate clockwise to 90 degrees	frames/frame_0081.png	20.000000	0.000000	PASS	nearest extracted frame
+cp_05	26	Rotate clockwise to 120 degrees	frames/frame_0105.png	26.000000	0.000000	PASS	nearest extracted frame
+cp_06	32	Rotate clockwise to 150 degrees	frames/frame_0129.png	32.000000	0.000000	PASS	nearest extracted frame
+cp_07	38	Rotate clockwise to 180 degrees	frames/frame_0153.png	38.000000	0.000000	PASS	nearest extracted frame
+cp_08	44	Rotate clockwise to 210 degrees	frames/frame_0177.png	44.000000	0.000000	PASS	nearest extracted frame
+cp_09	50	Rotate clockwise to 225 degrees	frames/frame_0201.png	50.000000	0.000000	PASS	nearest extracted frame
+cp_10	56	Rotate clockwise to 240 degrees	frames/frame_0225.png	56.000000	0.000000	PASS	nearest extracted frame
+cp_11	62	Rotate clockwise to 270 degrees	frames/frame_0249.png	62.000000	0.000000	PASS	nearest extracted frame

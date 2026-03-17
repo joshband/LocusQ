@@ -2,7 +2,7 @@ Title: BL-059 CalibrationProfile Integration Handoff
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-16
 
 # BL-059 CalibrationProfile Integration Handoff
 
@@ -18,7 +18,7 @@ BL-059 in plain terms: Wire CalibrationProfile.json from companion to plugin sta
 | What is changing? | Wire CalibrationProfile.json from companion to plugin state end-to-end. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (fixture-driven contract+execute smoke PASS with dependency replays green on 2026-03-07). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: **Done-candidate** (2026-03-16 Z1 owner sync PASS; execute smoke 11/11; BL-053/BL-055 deps green). Final Done requires BL-056 done and BL-058 live-hardware AirPods run at release gate. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-059-calibration-profile-integration-handoff.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -60,7 +60,7 @@ flowchart LR
 |---|---|
 | ID | BL-059 |
 | Priority | P0 |
-| Status | In Validation (fixture-driven contract+execute smoke PASS; profile ingest/unload scenarios and BL-053/BL-055 dependency replays green on 2026-03-07) |
+| Status | **Done-candidate** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 dependency replays PASS; BL-056 open non-blocking; promotion packet at `TestEvidence/bl059_owner_sync_z1_20260316T050200Z/`) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 |
