@@ -1,0 +1,12 @@
+check_id	result	detail	artifact
+BL060-C1-backlog_doc_exists	PASS	runbook present	/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/bl-060-phase-b-listening-test-harness.md
+BL060-C2-analysis_script_exists	PASS	bl060-analyze-results.py present	/Users/artbox/Documents/Repos/LocusQ/scripts/bl060-analyze-results.py
+BL060-C3-poc_tools_exist	PASS	listening_test.py and analyze_results.py present	/Users/artbox/Documents/Repos/LocusQ/Documentation/Calibration POC/locusq_spatial_prototype/tools
+BL060-C4-python3_stdlib	PASS	csv/statistics/hashlib available	
+BL060-C5-fixture_schema	PASS	fixture generated; rows=160	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/trial_log.csv
+BL060-E1-analysis_runs	PASS	bl060-analyze-results.py exit=0	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/analysis
+BL060-E2-required_artifacts	PASS	all 5 required artifacts present	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/analysis
+BL060-E3-gate_decision	PASS	gate=PASS ext=n/a p=0.0000	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/analysis/gate_decision.md
+BL060-E4-reproducibility	PASS	run1_gate_hash=1849befd4fda3f44 run2_gate_hash=1849befd4fda3f44	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/analysis/reproducibility_check.tsv
+BL060-E5-execute_no_todo	PASS	execute mode: zero TODO rows	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/results.tsv
+lane_result	PASS	mode=execute;bl060_contract_pass	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl060_phase_b_listening_20260317T174924Z_99650/status.tsv
