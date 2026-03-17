@@ -1,0 +1,2 @@
+check	result	detail	artifact
+companion_profile_handoff_contract	FAIL	test_override_profile_path;companion_profile_poller;profile_missing_clear_path;apvts_device_sync;peq_fir_sofa_tracking_ingest;ui_status_contract_publication;head_tracking_seq_age_visibility;	/Users/artbox/Documents/Repos/LocusQ/Source/processor_core/ProcessorCalibrationBridge.cpp

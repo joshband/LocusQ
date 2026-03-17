@@ -61,9 +61,9 @@ mkdir -p "$APP_MACOS_DIR" "$APP_RESOURCES_DIR"
 cp -f "$COMPANION_BIN" "$APP_BACKEND_BIN"
 chmod +x "$APP_BACKEND_BIN"
 
-THREE_JS_SRC="$ROOT_DIR/Source/ui/public/js/three.min.js"
-if [[ -f "$THREE_JS_SRC" ]]; then
-  cp -f "$THREE_JS_SRC" "$APP_RESOURCES_DIR/three.min.js"
+THREE_JS_MODULE_SRC="$ROOT_DIR/Source/ui/node_modules/three/build/three.module.min.js"
+if [[ -f "$THREE_JS_MODULE_SRC" ]]; then
+  cp -f "$THREE_JS_MODULE_SRC" "$APP_RESOURCES_DIR/three.module.min.js"
 fi
 
 ICON_SRC="$ROOT_DIR/Resources/LocusQ.icns"

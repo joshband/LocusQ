@@ -3,7 +3,7 @@
 # Document Type: QA Script
 # Author: APC Codex
 # Created Date: 2026-03-01
-# Last Modified Date: 2026-03-01
+# Last Modified Date: 2026-03-07
 #
 # Exit codes:
 #   0 all checks passed
@@ -14,7 +14,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT_DIR="${ROOT_DIR}/TestEvidence/bl058_companion_profile_${TIMESTAMP}"
+OUT_DIR="${ROOT_DIR}/TestEvidence/bl058_companion_profile_${TIMESTAMP}_$$"
 MODE="contract_only"
 MODE_SET=0
 
@@ -36,7 +36,7 @@ BL-058 companion profile acquisition lane.
 Options:
   --out-dir <path>   Artifact output directory
   --contract-only    Contract checks only (default)
-  --execute          Execute-mode gate checks (fails while runtime TODO rows exist)
+  --execute          Execute-mode gate checks with companion selftest + synthetic sweep probes
   --help, -h         Show usage
 
 Outputs:
@@ -74,27 +74,97 @@ record() {
   fi
 }
 
-count_todo_rows() {
-  local file="$1"
-  [[ -f "$file" ]] || {
-    echo 0
-    return
-  }
+append_result_row() {
+  local check_id="$1"
+  local result="$2"
+  local detail="$3"
+  printf "%s\t%s\t%s\n" \
+    "$check_id" \
+    "$result" \
+    "${detail//$'\t'/ }" \
+    >> "$RESULTS_TSV"
+}
 
-  awk -F'\t' '
+axis_summary_line() {
+  local label="$1"
+  local artifact="$2"
+  awk -F'\t' -v label="$label" -v artifact="$artifact" '
+    function abs(v) { return v < 0 ? -v : v }
     NR == 1 { next }
     {
-      for (i = 1; i <= NF; ++i)
-      {
-        if ($i == "TODO")
-        {
-          count++
-          break
-        }
-      }
+      yaw = abs($10) + 0
+      pitch = abs($11) + 0
+      roll = abs($12) + 0
+      if (yaw > maxYaw) maxYaw = yaw
+      if (pitch > maxPitch) maxPitch = pitch
+      if (roll > maxRoll) maxRoll = roll
+      rows++
     }
-    END { print count + 0 }
-  ' "$file"
+    END {
+      printf "- %s: rows=%d max|yaw|=%.3f max|pitch|=%.3f max|roll|=%.3f (%s)\n",
+        label, rows + 0, maxYaw + 0, maxPitch + 0, maxRoll + 0, artifact
+    }
+  ' "$artifact"
+}
+
+axis_check() {
+  local artifact="$1"
+  local primary_field="$2"
+  local secondary_a_field="$3"
+  local secondary_b_field="$4"
+  local min_primary="$5"
+  local max_secondary="$6"
+
+  awk -F'\t' \
+    -v primary_field="$primary_field" \
+    -v secondary_a_field="$secondary_a_field" \
+    -v secondary_b_field="$secondary_b_field" \
+    -v min_primary="$min_primary" \
+    -v max_secondary="$max_secondary" '
+    function abs(v) { return v < 0 ? -v : v }
+    NR == 1 { next }
+    {
+      primary = abs($(primary_field)) + 0
+      secondaryA = abs($(secondary_a_field)) + 0
+      secondaryB = abs($(secondary_b_field)) + 0
+      if (primary > maxPrimary) maxPrimary = primary
+      if (secondaryA > maxSecondaryA) maxSecondaryA = secondaryA
+      if (secondaryB > maxSecondaryB) maxSecondaryB = secondaryB
+      rows++
+    }
+    END {
+      pass = rows > 0 && maxPrimary >= min_primary && maxSecondaryA <= max_secondary && maxSecondaryB <= max_secondary
+      printf "rows=%d max_primary=%.3f max_secondary_a=%.3f max_secondary_b=%.3f",
+        rows + 0, maxPrimary + 0, maxSecondaryA + 0, maxSecondaryB + 0
+      exit(pass ? 0 : 1)
+    }
+  ' "$artifact"
+}
+
+readiness_check() {
+  local artifact="$1"
+  local expected_gate="$2"
+  local expected_packets_relation="$3"
+
+  awk -F'\t' \
+    -v expected_gate="$expected_gate" \
+    -v expected_packets_relation="$expected_packets_relation" '
+    NR == 1 { next }
+    {
+      readiness = $4
+      gate = $5
+      packets = $3 + 0
+    }
+    END {
+      pass = readiness == "active_ready" && gate == expected_gate
+      if (expected_packets_relation == "zero")
+        pass = pass && packets == 0
+      else if (expected_packets_relation == "positive")
+        pass = pass && packets > 0
+      printf "readiness=%s gate=%s packets=%d", readiness, gate, packets
+      exit(pass ? 0 : 1)
+    }
+  ' "$artifact"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -130,6 +200,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+command -v rg >/dev/null 2>&1 || usage_error "ripgrep (rg) is required"
+command -v swift >/dev/null 2>&1 || usage_error "swift is required"
+command -v awk >/dev/null 2>&1 || usage_error "awk is required"
+
 mkdir -p "$OUT_DIR"
 STATUS_TSV="${OUT_DIR}/status.tsv"
 RESULTS_TSV="${OUT_DIR}/results.tsv"
@@ -143,7 +217,10 @@ printf "check\tresult\tdetail\tartifact\n" > "$CAPTURE_CONSUMER_BRIDGE_TSV"
 
 BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-058-companion-profile-acquisition.md"
 COMPANION_MAIN="${ROOT_DIR}/companion/Sources/LocusQHeadTrackingCompanion/main.swift"
+MATCHER_CORE="${ROOT_DIR}/companion/Sources/LocusQHeadTrackerCore/EarPhotoMatcher.swift"
+PROFILE_CORE="${ROOT_DIR}/companion/Sources/LocusQHeadTrackerCore/CalibrationProfile.swift"
 BL077_CAPTURE_SCRIPT="${ROOT_DIR}/scripts/capture-headtracking-rotation-mac.sh"
+COMPANION_DIR="${ROOT_DIR}/companion"
 
 if [[ -f "$BACKLOG_DOC" ]]; then
   record "BL058-C1-backlog_doc_exists" "PASS" "runbook present" "$BACKLOG_DOC"
@@ -155,6 +232,12 @@ if [[ -f "$COMPANION_MAIN" ]]; then
   record "BL058-C2-companion_runtime_exists" "PASS" "companion runtime source present" "$COMPANION_MAIN"
 else
   record "BL058-C2-companion_runtime_exists" "FAIL" "companion runtime source missing" "$COMPANION_MAIN"
+fi
+
+if [[ -f "$MATCHER_CORE" && -f "$PROFILE_CORE" ]]; then
+  record "BL058-C2b-profile_core_exists" "PASS" "matcher and calibration profile core sources present" "$MATCHER_CORE"
+else
+  record "BL058-C2b-profile_core_exists" "FAIL" "matcher/profile core sources missing" "$MATCHER_CORE"
 fi
 
 if rg -q 'active_not_ready|active_ready|disabled_disconnected' "$BACKLOG_DOC"; then
@@ -169,6 +252,30 @@ if [[ -x "$BL077_CAPTURE_SCRIPT" ]]; then
   record "BL058-C4-bl077_capture_script_exists" "PASS" "BL-077 capture harness script is executable" "$BL077_CAPTURE_SCRIPT"
 else
   record "BL058-C4-bl077_capture_script_exists" "FAIL" "BL-077 capture harness script missing or not executable" "$BL077_CAPTURE_SCRIPT"
+fi
+
+if rg -q 'captureSelect|captureClear|applyProfile|profileAcquisition' "$COMPANION_MAIN"; then
+  printf "profile_acquisition_ui_surface\tPASS\tcompanion runtime exposes capture/apply bridge controls\n" >> "$RESULTS_TSV"
+  record "BL058-C4b-profile_acquisition_ui_surface" "PASS" "capture/apply controls present in companion monitor" "$COMPANION_MAIN"
+else
+  printf "profile_acquisition_ui_surface\tFAIL\tcapture/apply bridge controls missing from companion runtime\n" >> "$RESULTS_TSV"
+  record "BL058-C4b-profile_acquisition_ui_surface" "FAIL" "capture/apply controls missing from companion monitor" "$COMPANION_MAIN"
+fi
+
+if rg -q 'matchEmbeddings|makeEmbedding|writeToDisk' "$MATCHER_CORE" "$PROFILE_CORE" "$COMPANION_MAIN"; then
+  printf "local_match_and_profile_write\tPASS\tlocal matcher + profile write path markers present\n" >> "$RESULTS_TSV"
+  record "BL058-C4c-local_match_and_profile_write" "PASS" "local matching/profile write path markers present" "$MATCHER_CORE"
+else
+  printf "local_match_and_profile_write\tFAIL\tlocal matcher/profile write path markers missing\n" >> "$RESULTS_TSV"
+  record "BL058-C4c-local_match_and_profile_write" "FAIL" "local matching/profile write path markers missing" "$MATCHER_CORE"
+fi
+
+if rg -q 'https?://' "$ROOT_DIR/companion/Sources"; then
+  printf "privacy_no_network_static\tFAIL\tunexpected network URL literal found in companion sources\n" >> "$RESULTS_TSV"
+  record "BL058-C4d-privacy_no_network_static" "FAIL" "unexpected network URL literal found in companion sources" "$ROOT_DIR/companion/Sources"
+else
+  printf "privacy_no_network_static\tPASS\tno network URL literals found in companion sources\n" >> "$RESULTS_TSV"
+  record "BL058-C4d-privacy_no_network_static" "PASS" "no network URL literals found in companion sources" "$ROOT_DIR/companion/Sources"
 fi
 
 BL077_CONSUMER_DIR="${OUT_DIR}/bl077_capture_contract"

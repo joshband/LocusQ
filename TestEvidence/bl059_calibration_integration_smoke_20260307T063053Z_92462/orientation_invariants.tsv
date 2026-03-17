@@ -1,0 +1,2 @@
+scenario	result	detail	artifact
+orientation_profile_handoff_invariants	PASS	stale_fallback_reset_path;yaw_offset_composition;renderer_head_tracking_diagnostics;	/Users/artbox/Documents/Repos/LocusQ/Source/PluginProcessor.cpp
