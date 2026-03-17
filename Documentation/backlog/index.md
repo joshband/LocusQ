@@ -157,6 +157,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | Open (2026-03-05 follow-on created from BL-036 runtime slices A2/B2/C1 so processor-side finite-output work remains explicit) | F | BL-036 | — | [bl-078](bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
 | 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | In Validation (W1-D implementation landed locally: `Source/processor_core/ProcessorParameterLayout.cpp` now exposes grouped host hierarchy while preserving all `90` parameter IDs and flattened order; build + parity checks PASS, promotion follow-up pending in a clean checkout) | F | BL-032 | — | [bl-079](bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
 | 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | In Validation (processor snapshot/file history, native undo/redo bridge, and WebView controls landed locally; typecheck/build/bundle-marker checks PASS, but the rebuilt standalone production self-test currently fails earlier on a CALIBRATE topology/legacy-alias timeout before `UI-W3A-01` / `UI-W3A-02` execute) | F | BL-070, BL-074 | — | [bl-080](bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
+| 51 | BL-081 | Perceptual listening harness — upstream extraction to audio-dsp-qa-harness | P2 | Open | G | BL-060 | — | [bl-081](bl-081-perceptual-listening-harness-upstream-extraction.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
