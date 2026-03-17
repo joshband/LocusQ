@@ -2,7 +2,7 @@ Title: BL-058 Companion Profile Acquisition UI + HRTF Matching
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-17
 
 # BL-058 Companion Profile Acquisition UI + HRTF Matching
 
@@ -65,7 +65,7 @@ sequenceDiagram
 |---|---|
 | ID | BL-058 |
 | Priority | P0 |
-| Status | In Implementation (Wave 1 kickoff: QA harness authored with contract/execute semantics) |
+| Status | Done-candidate (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; promotion packet at `TestEvidence/bl058_owner_sync_z1_20260317T042803Z_5881/`) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-057 |
