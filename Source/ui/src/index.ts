@@ -297,6 +297,96 @@ const sliderStates = {
     rend_master_gain: Juce.getSliderState("rend_master_gain"),
     rend_viz_trail_len: Juce.getSliderState("rend_viz_trail_len"),
     rend_viz_diag_mix: Juce.getSliderState("rend_viz_diag_mix"),
+    // P3 — Spring oscillator
+    phys_spring_k:            Juce.getSliderState("phys_spring_k"),
+    phys_spring_damp:         Juce.getSliderState("phys_spring_damp"),
+    phys_spring_anchor_x:     Juce.getSliderState("phys_spring_anchor_x"),
+    phys_spring_anchor_y:     Juce.getSliderState("phys_spring_anchor_y"),
+    phys_spring_anchor_z:     Juce.getSliderState("phys_spring_anchor_z"),
+    // P3 — Turbulence
+    phys_turbulence:          Juce.getSliderState("phys_turbulence"),
+    phys_turbulence_rate:     Juce.getSliderState("phys_turbulence_rate"),
+    // P4 — Angular physics
+    phys_ang_drag:            Juce.getSliderState("phys_ang_drag"),
+    phys_ang_impulse_x:       Juce.getSliderState("phys_ang_impulse_x"),
+    phys_ang_impulse_y:       Juce.getSliderState("phys_ang_impulse_y"),
+    phys_ang_impulse_z:       Juce.getSliderState("phys_ang_impulse_z"),
+    phys_ang_attractor_torque: Juce.getSliderState("phys_ang_attractor_torque"),
+    // P6 — emitter
+    phys_collision_radius:    Juce.getSliderState("phys_collision_radius"),
+    phys_mass_override:       Juce.getSliderState("phys_mass_override"),
+    // P2 — boundary
+    phys_soft_boundary_depth: Juce.getSliderState("phys_soft_boundary_depth"),
+    // P6 — renderer
+    phys_collision_gain_scale: Juce.getSliderState("phys_collision_gain_scale"),
+    phys_collision_decay_ms:   Juce.getSliderState("phys_collision_decay_ms"),
+    // P2 — Attractors ×4
+    attractor_0_pos_x:  Juce.getSliderState("attractor_0_pos_x"),
+    attractor_0_pos_y:  Juce.getSliderState("attractor_0_pos_y"),
+    attractor_0_pos_z:  Juce.getSliderState("attractor_0_pos_z"),
+    attractor_0_strength: Juce.getSliderState("attractor_0_strength"),
+    attractor_0_radius: Juce.getSliderState("attractor_0_radius"),
+    attractor_1_pos_x:  Juce.getSliderState("attractor_1_pos_x"),
+    attractor_1_pos_y:  Juce.getSliderState("attractor_1_pos_y"),
+    attractor_1_pos_z:  Juce.getSliderState("attractor_1_pos_z"),
+    attractor_1_strength: Juce.getSliderState("attractor_1_strength"),
+    attractor_1_radius: Juce.getSliderState("attractor_1_radius"),
+    attractor_2_pos_x:  Juce.getSliderState("attractor_2_pos_x"),
+    attractor_2_pos_y:  Juce.getSliderState("attractor_2_pos_y"),
+    attractor_2_pos_z:  Juce.getSliderState("attractor_2_pos_z"),
+    attractor_2_strength: Juce.getSliderState("attractor_2_strength"),
+    attractor_2_radius: Juce.getSliderState("attractor_2_radius"),
+    attractor_3_pos_x:  Juce.getSliderState("attractor_3_pos_x"),
+    attractor_3_pos_y:  Juce.getSliderState("attractor_3_pos_y"),
+    attractor_3_pos_z:  Juce.getSliderState("attractor_3_pos_z"),
+    attractor_3_strength: Juce.getSliderState("attractor_3_strength"),
+    attractor_3_radius: Juce.getSliderState("attractor_3_radius"),
+    // P5 — Boids groups ×4
+    phys_flock_0_sep_weight:   Juce.getSliderState("phys_flock_0_sep_weight"),
+    phys_flock_0_align_weight: Juce.getSliderState("phys_flock_0_align_weight"),
+    phys_flock_0_coh_weight:   Juce.getSliderState("phys_flock_0_coh_weight"),
+    phys_flock_0_sep_radius:   Juce.getSliderState("phys_flock_0_sep_radius"),
+    phys_flock_0_align_radius: Juce.getSliderState("phys_flock_0_align_radius"),
+    phys_flock_0_coh_radius:   Juce.getSliderState("phys_flock_0_coh_radius"),
+    phys_flock_0_max_speed:    Juce.getSliderState("phys_flock_0_max_speed"),
+    phys_flock_1_sep_weight:   Juce.getSliderState("phys_flock_1_sep_weight"),
+    phys_flock_1_align_weight: Juce.getSliderState("phys_flock_1_align_weight"),
+    phys_flock_1_coh_weight:   Juce.getSliderState("phys_flock_1_coh_weight"),
+    phys_flock_1_sep_radius:   Juce.getSliderState("phys_flock_1_sep_radius"),
+    phys_flock_1_align_radius: Juce.getSliderState("phys_flock_1_align_radius"),
+    phys_flock_1_coh_radius:   Juce.getSliderState("phys_flock_1_coh_radius"),
+    phys_flock_1_max_speed:    Juce.getSliderState("phys_flock_1_max_speed"),
+    phys_flock_2_sep_weight:   Juce.getSliderState("phys_flock_2_sep_weight"),
+    phys_flock_2_align_weight: Juce.getSliderState("phys_flock_2_align_weight"),
+    phys_flock_2_coh_weight:   Juce.getSliderState("phys_flock_2_coh_weight"),
+    phys_flock_2_sep_radius:   Juce.getSliderState("phys_flock_2_sep_radius"),
+    phys_flock_2_align_radius: Juce.getSliderState("phys_flock_2_align_radius"),
+    phys_flock_2_coh_radius:   Juce.getSliderState("phys_flock_2_coh_radius"),
+    phys_flock_2_max_speed:    Juce.getSliderState("phys_flock_2_max_speed"),
+    phys_flock_3_sep_weight:   Juce.getSliderState("phys_flock_3_sep_weight"),
+    phys_flock_3_align_weight: Juce.getSliderState("phys_flock_3_align_weight"),
+    phys_flock_3_coh_weight:   Juce.getSliderState("phys_flock_3_coh_weight"),
+    phys_flock_3_sep_radius:   Juce.getSliderState("phys_flock_3_sep_radius"),
+    phys_flock_3_align_radius: Juce.getSliderState("phys_flock_3_align_radius"),
+    phys_flock_3_coh_radius:   Juce.getSliderState("phys_flock_3_coh_radius"),
+    phys_flock_3_max_speed:    Juce.getSliderState("phys_flock_3_max_speed"),
+    // Physics DAW output mirrors (read-only display / atmosphere hook)
+    phys_out_spread_mod_0: Juce.getSliderState("phys_out_spread_mod_0"),
+    phys_out_spread_mod_1: Juce.getSliderState("phys_out_spread_mod_1"),
+    phys_out_spread_mod_2: Juce.getSliderState("phys_out_spread_mod_2"),
+    phys_out_spread_mod_3: Juce.getSliderState("phys_out_spread_mod_3"),
+    phys_out_spread_mod_4: Juce.getSliderState("phys_out_spread_mod_4"),
+    phys_out_spread_mod_5: Juce.getSliderState("phys_out_spread_mod_5"),
+    phys_out_spread_mod_6: Juce.getSliderState("phys_out_spread_mod_6"),
+    phys_out_spread_mod_7: Juce.getSliderState("phys_out_spread_mod_7"),
+    phys_out_gain_mod_0:   Juce.getSliderState("phys_out_gain_mod_0"),
+    phys_out_gain_mod_1:   Juce.getSliderState("phys_out_gain_mod_1"),
+    phys_out_gain_mod_2:   Juce.getSliderState("phys_out_gain_mod_2"),
+    phys_out_gain_mod_3:   Juce.getSliderState("phys_out_gain_mod_3"),
+    phys_out_gain_mod_4:   Juce.getSliderState("phys_out_gain_mod_4"),
+    phys_out_gain_mod_5:   Juce.getSliderState("phys_out_gain_mod_5"),
+    phys_out_gain_mod_6:   Juce.getSliderState("phys_out_gain_mod_6"),
+    phys_out_gain_mod_7:   Juce.getSliderState("phys_out_gain_mod_7"),
 };
 
 const toggleStates = {
@@ -321,6 +411,37 @@ const toggleStates = {
     rend_viz_vectors: Juce.getToggleState("rend_viz_vectors"),
     rend_viz_physics_lens: Juce.getToggleState("rend_viz_physics_lens"),
     rend_audition_enable: Juce.getToggleState("rend_audition_enable"),
+    // P3 — Spring
+    phys_spring_enable:  Juce.getToggleState("phys_spring_enable"),
+    // P4 — Angular physics
+    phys_ang_enable:     Juce.getToggleState("phys_ang_enable"),
+    phys_ang_throw:      Juce.getToggleState("phys_ang_throw"),
+    phys_ang_reset:      Juce.getToggleState("phys_ang_reset"),
+    // P6 — Collision global
+    phys_collide_emitters: Juce.getToggleState("phys_collide_emitters"),
+    // P2 — Attractors ×4
+    attractor_0_active:          Juce.getToggleState("attractor_0_active"),
+    attractor_0_orbit_stabilize: Juce.getToggleState("attractor_0_orbit_stabilize"),
+    attractor_1_active:          Juce.getToggleState("attractor_1_active"),
+    attractor_1_orbit_stabilize: Juce.getToggleState("attractor_1_orbit_stabilize"),
+    attractor_2_active:          Juce.getToggleState("attractor_2_active"),
+    attractor_2_orbit_stabilize: Juce.getToggleState("attractor_2_orbit_stabilize"),
+    attractor_3_active:          Juce.getToggleState("attractor_3_active"),
+    attractor_3_orbit_stabilize: Juce.getToggleState("attractor_3_orbit_stabilize"),
+    // P5 — Boids groups ×4
+    phys_flock_0_enable: Juce.getToggleState("phys_flock_0_enable"),
+    phys_flock_1_enable: Juce.getToggleState("phys_flock_1_enable"),
+    phys_flock_2_enable: Juce.getToggleState("phys_flock_2_enable"),
+    phys_flock_3_enable: Juce.getToggleState("phys_flock_3_enable"),
+    // Physics freeze toggles — per emitter slot
+    phys_frozen_0: Juce.getToggleState("phys_frozen_0"),
+    phys_frozen_1: Juce.getToggleState("phys_frozen_1"),
+    phys_frozen_2: Juce.getToggleState("phys_frozen_2"),
+    phys_frozen_3: Juce.getToggleState("phys_frozen_3"),
+    phys_frozen_4: Juce.getToggleState("phys_frozen_4"),
+    phys_frozen_5: Juce.getToggleState("phys_frozen_5"),
+    phys_frozen_6: Juce.getToggleState("phys_frozen_6"),
+    phys_frozen_7: Juce.getToggleState("phys_frozen_7"),
 };
 
 const comboStates = {
@@ -342,6 +463,17 @@ const comboStates = {
     rend_audition_level: Juce.getComboBoxState("rend_audition_level"),
     rend_phys_rate: Juce.getComboBoxState("rend_phys_rate"),
     rend_viz_mode: Juce.getComboBoxState("rend_viz_mode"),
+    // P3 — Spring anchor mode
+    phys_spring_anchor_mode: Juce.getComboBoxState("phys_spring_anchor_mode"),
+    // P5 — Boids group assignment (emitter)
+    phys_flock_group:        Juce.getComboBoxState("phys_flock_group"),
+    // P2 — Boundary mode
+    phys_boundary_mode:      Juce.getComboBoxState("phys_boundary_mode"),
+    // P2 — Attractor falloff ×4
+    attractor_0_falloff:     Juce.getComboBoxState("attractor_0_falloff"),
+    attractor_1_falloff:     Juce.getComboBoxState("attractor_1_falloff"),
+    attractor_2_falloff:     Juce.getComboBoxState("attractor_2_falloff"),
+    attractor_3_falloff:     Juce.getComboBoxState("attractor_3_falloff"),
 };
 
 const nativeFunctions = {
@@ -4184,6 +4316,9 @@ const auditionAuthorityState = {
 };
 let selectedEmitterId = -1;
 let localEmitterId = -1;
+// Callback registered by the freeze-toggle wiring block to refresh the
+// LIVE/FROZEN button whenever the selected emitter slot changes.
+let onEmitterSelectionChangedForFreeze = null;
 let sceneEmitterLookup = new Map();
 let emitterAuthoringLocked = false;
 const railScrollByMode = { calibrate: 0, emitter: 0, renderer: 0 };
@@ -4408,6 +4543,7 @@ const calibrationDeviceProfileLabels = {
     sony_wh1000xm5: "Sony WH-1000XM5",
     custom_sofa: "Custom SOFA",
 };
+let calibrationLastHeadphoneMonitoringPath = "steam_binaural";
 const rendererSpatialProfileAliasDictionary = {
     auto: { label: "Auto", aliases: ["auto", "default"] },
     stereo_2_0: { label: "Stereo 2.0", aliases: ["stereo_2_0", "stereo"] },
@@ -4487,6 +4623,14 @@ let calibrationState = {
 let calibrationProfileEntries = [];
 let calibrationMappingEditedByUser = false;
 let calibrationLastAutoRouting = [1, 2, 3, 4];
+let calibrationAutomationSources = {
+    topology: "runtime_state",
+    monitoringPath: "runtime_state",
+    deviceProfile: "runtime_state",
+    routing: "runtime_state",
+    lastLoadedProfileName: "",
+    lastLoadedProfilePath: "",
+};
 let calibrationLegacyAliasSyncInFlight = false;
 let calibrationLegacyAliasSyncSource = "";
 const calibrationMappingRowEntries = [];
@@ -4495,6 +4639,16 @@ let rendererAmbiDiagnosticsExpanded = false;
 let rendererHeadphoneVerificationDiagnosticsExpanded = false;
 let rendererAuthorityDiagnosticsExpanded = false;
 let rendererResizeDiagnosticsExpanded = false;
+
+const calibrationAutomationSourceMeta = {
+    host_auto: { label: "Host-Detected", chipClass: "remote" },
+    loaded_profile: { label: "Profile-Loaded", chipClass: "local" },
+    manual_override: { label: "Manual Override", chipClass: "warning" },
+    companion_profile: { label: "Companion-Detected", chipClass: "remote" },
+    runtime_active: { label: "Runtime Active", chipClass: "active" },
+    runtime_state: { label: "Runtime", chipClass: "inactive" },
+    unknown: { label: "Unknown", chipClass: "inactive" },
+};
 
 const laneTrackMap = {
     azimuth: "pos_azimuth",
@@ -4888,6 +5042,9 @@ let listenerGroup, listenerHeadRig, listenerEnergyRing, listenerAimArrow, listen
 let auditionEmitterMesh, auditionEmitterRing;
 let auditionCloudPoints, auditionCloudLines;
 let azArc, elArc, distRing;
+// P7 overlay objects (read-only, no DSP/scene state mutation)
+const attractorRingMeshes = [];   // 4 rings — one per attractor slot
+const flockCentroidSpheres = [];  // 4 spheres — one per boids group
 let spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
 let activeViewportView = "perspective";
 let orbitTarget;
@@ -5885,6 +6042,7 @@ function setSelectedEmitter(emitterId, options = {}) {
     updateSelectionRingFromState();
     updateEmitterAuthorityUI();
     syncSceneListSelectionState(options.focusSceneItem ? emitterId : null);
+    if (onEmitterSelectionChangedForFreeze) onEmitterSelectionChangedForFreeze();
     if (options.announce) {
         announceAccessibility(`${getEmitterAccessibleName(emitterId)} selected`);
     }
@@ -7757,6 +7915,334 @@ function getCalibrationTopologyLabel(topologyId, shortLabel = false) {
 function getCalibrationMonitoringPathLabel(pathId) {
     const id = String(pathId || "").trim().toLowerCase();
     return calibrationMonitoringPathLabels[id] || calibrationMonitoringPathLabels.speakers;
+}
+
+function getCalibrationTargetId(monitoringPathId = "") {
+    const resolvedMonitoringPath = String(
+        monitoringPathId || getCalibrationMonitoringPathId()
+    ).trim().toLowerCase();
+    return resolvedMonitoringPath === "speakers" ? "speaker_room" : "headphones";
+}
+
+function setCalibrationAutomationSource(field, sourceId) {
+    if (!Object.prototype.hasOwnProperty.call(calibrationAutomationSources, field)) return;
+    calibrationAutomationSources[field] = calibrationAutomationSourceMeta[sourceId]
+        ? sourceId
+        : "unknown";
+}
+
+function getCalibrationAutomationSource(field, fallback = "unknown") {
+    const sourceId = String(calibrationAutomationSources[field] || "").trim().toLowerCase();
+    return calibrationAutomationSourceMeta[sourceId] ? sourceId : fallback;
+}
+
+function setCalibrationAutomationProfileContext(name = "", path = "") {
+    calibrationAutomationSources.lastLoadedProfileName = String(name || "").trim();
+    calibrationAutomationSources.lastLoadedProfilePath = String(path || "").trim();
+}
+
+function getCalibrationAutomationSourceDescriptor(sourceId = "unknown") {
+    const resolvedSourceId = calibrationAutomationSourceMeta[sourceId] ? sourceId : "unknown";
+    return calibrationAutomationSourceMeta[resolvedSourceId];
+}
+
+function setCalibrationTargetUi(targetId) {
+    const resolvedTarget = targetId === "headphones" ? "headphones" : "speaker_room";
+    const speakerTargetButton = document.getElementById("cal-target-speaker");
+    const headphoneTargetButton = document.getElementById("cal-target-headphone");
+    const targetNote = document.getElementById("cal-target-note");
+    const setupTitle = document.getElementById("cal-setup-title");
+    const runTitle = document.getElementById("cal-run-title");
+    const deviceProfileLabel = document.getElementById("cal-device-profile-label");
+    const automationCard = document.getElementById("cal-card-automation");
+    const mappingCard = document.getElementById("cal-card-mapping");
+    const headphoneStatusCard = document.getElementById("cal-card-headphone-status");
+    const runCard = document.getElementById("cal-card-run");
+    const libraryCard = document.getElementById("cal-card-library");
+    const topologyRow = document.getElementById("cal-topology-row");
+    const micRow = document.getElementById("cal-mic-row");
+    const statusRows = document.getElementById("cal-status");
+    const topologyChip = document.getElementById("cal-chip-topology");
+    const mappingChip = document.getElementById("cal-chip-mapping");
+    const mapCard = document.getElementById("cal-diagnostic-map-card");
+    const phaseCard = document.getElementById("cal-diagnostic-phase-card");
+    const delayCard = document.getElementById("cal-diagnostic-delay-card");
+
+    [
+        [speakerTargetButton, resolvedTarget === "speaker_room"],
+        [headphoneTargetButton, resolvedTarget === "headphones"],
+    ].forEach(([button, active]) => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        button.classList.toggle("active", !!active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+        button.tabIndex = active ? 0 : -1;
+    });
+
+    if (targetNote) {
+        targetNote.textContent = resolvedTarget === "headphones"
+            ? "Review detected device, confirm the active profile, and verify headphone playback."
+            : "Measure speakers, verify routing, and save a room profile.";
+    }
+    if (setupTitle) {
+        setupTitle.textContent = resolvedTarget === "headphones"
+            ? "Headphone Personalization"
+            : "Speaker Setup";
+    }
+    if (runTitle) {
+        runTitle.textContent = resolvedTarget === "headphones"
+            ? "Headphone Verify"
+            : "Measure and Verify";
+    }
+    if (deviceProfileLabel) {
+        deviceProfileLabel.textContent = resolvedTarget === "headphones"
+            ? "Headphone Profile"
+            : "Device Profile";
+    }
+    if (automationCard) {
+        automationCard.style.order = "2";
+    }
+    if (mappingCard) {
+        mappingCard.classList.toggle("hidden-card", resolvedTarget !== "speaker_room");
+        mappingCard.style.order = "3";
+    }
+    if (headphoneStatusCard) {
+        headphoneStatusCard.classList.toggle("hidden-card", resolvedTarget !== "headphones");
+        headphoneStatusCard.style.order = resolvedTarget === "headphones" ? "3" : "5";
+    }
+    if (runCard) {
+        runCard.style.order = "4";
+    }
+    if (libraryCard) {
+        libraryCard.style.order = "5";
+    }
+    if (topologyRow) {
+        topologyRow.style.display = resolvedTarget === "speaker_room" ? "flex" : "none";
+    }
+    if (micRow) {
+        micRow.style.display = resolvedTarget === "speaker_room" ? "flex" : "none";
+    }
+    if (statusRows) {
+        statusRows.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+    if (topologyChip) {
+        topologyChip.style.display = resolvedTarget === "speaker_room" ? "inline-flex" : "none";
+    }
+    if (mappingChip) {
+        mappingChip.style.display = resolvedTarget === "speaker_room" ? "inline-flex" : "none";
+    }
+    if (mapCard) {
+        mapCard.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+    if (phaseCard) {
+        phaseCard.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+    if (delayCard) {
+        delayCard.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+}
+
+function setCalibrationAutomationSummaryChip(chipId, sourceId) {
+    const chip = document.getElementById(chipId);
+    if (!chip) return;
+    const descriptor = getCalibrationAutomationSourceDescriptor(sourceId);
+    chip.className = "status-chip";
+    if (descriptor.chipClass) chip.classList.add(descriptor.chipClass);
+    chip.textContent = String(descriptor.label || "Unknown").toUpperCase();
+}
+
+function setCalibrationAutomationSummaryRow(slot, { label = "", value = "", sourceId = "unknown", note = "" }) {
+    const labelEl = document.getElementById(`cal-auto-row${slot}-label`);
+    const valueEl = document.getElementById(`cal-auto-row${slot}-value`);
+    const noteEl = document.getElementById(`cal-auto-row${slot}-note`);
+    if (labelEl) labelEl.textContent = label;
+    if (valueEl) valueEl.textContent = value;
+    if (noteEl) noteEl.textContent = note;
+    setCalibrationAutomationSummaryChip(`cal-auto-row${slot}-source`, sourceId);
+}
+
+function updateCalibrationAutomationSummary(snapshot = calibrationState) {
+    const status = snapshot || {};
+    const topologyId = String(
+        status.topologyProfile
+        || getCalibrationTopologyId(status.topologyProfileIndex)
+    ).trim().toLowerCase() || DEFAULT_CALIBRATION_TOPOLOGY_ID;
+    const monitoringPathId = String(
+        status.monitoringPath
+        || getCalibrationMonitoringPathId(status.monitoringPathIndex)
+    ).trim().toLowerCase() || "speakers";
+    const deviceProfileId = String(
+        status.deviceProfile
+        || getCalibrationDeviceProfileId(status.deviceProfileIndex)
+    ).trim().toLowerCase() || "generic";
+    const targetId = getCalibrationTargetId(monitoringPathId);
+    const requiredChannels = Math.max(1, Number(status.requiredChannels) || getCalibrationRequiredChannels(topologyId));
+    const writableChannels = Math.max(1, Number(status.writableChannels) || CALIBRATION_ROUTABLE_CHANNELS);
+    const activeRouting = getCalibrationActiveRouting();
+    const expectedAutoRouting = getCalibrationExpectedAutoRouting();
+    const routeIsCustom = calibrationMappingEditedByUser
+        || !compareCalibrationRouting(activeRouting, expectedAutoRouting, CALIBRATION_ROUTABLE_CHANNELS);
+    const runtimeContext = getRuntimeSurfaceContext(sceneData);
+    const hpPayloadPresent = hasRendererHeadphoneVerificationPayload(sceneData);
+    const inferredRequestedHeadphoneMode = (monitoringPathId === "steam_binaural" || monitoringPathId === "virtual_binaural")
+        ? "steam_binaural"
+        : "stereo_downmix";
+    const requestedHeadphoneMode = normalizeAuditionToken(
+        status.headphoneCalibrationRequested
+        || sceneData.rendererHeadphoneCalibrationRequested
+        || inferredRequestedHeadphoneMode
+    ) || inferredRequestedHeadphoneMode;
+    const activeHeadphoneMode = normalizeAuditionToken(
+        status.headphoneCalibrationActive
+        || sceneData.rendererHeadphoneCalibrationActive
+        || sceneData.rendererHeadphoneModeActive
+        || requestedHeadphoneMode
+    ) || requestedHeadphoneMode;
+    const requestedHeadphoneProfile = normalizeAuditionToken(
+        status.headphoneVerificationRequestedProfileId
+        || sceneData.rendererHeadphoneVerificationRequestedProfileId
+        || deviceProfileId
+    ) || deviceProfileId;
+    const activeHeadphoneProfile = normalizeAuditionToken(
+        status.headphoneVerificationActiveProfileId
+        || sceneData.rendererHeadphoneVerificationActiveProfileId
+        || sceneData.rendererHeadphoneProfileActive
+        || requestedHeadphoneProfile
+    ) || requestedHeadphoneProfile;
+    const headphoneCalibrationStage = normalizeAuditionToken(
+        status.headphoneCalibrationStage
+        || sceneData.rendererHeadphoneCalibrationStage
+        || ""
+    ) || "unknown";
+    const profileReady = !!status.profileValid || !!status.complete;
+    const hpDeviceStatus = status.hpDeviceStatus && typeof status.hpDeviceStatus === "object"
+        ? status.hpDeviceStatus
+        : {};
+    const hpDeviceName = String(hpDeviceStatus.device || "").trim();
+    const hpEqMode = String(hpDeviceStatus.eq_mode || "off").trim() || "off";
+    const hpHrtfMode = String(hpDeviceStatus.hrtf_mode || "default").trim() || "default";
+    const hpTracking = hpDeviceStatus.tracking_enabled === true ? "ON" : "OFF";
+    const hpCompanionReady = hpDeviceName !== ""
+        && hpDeviceName.toLowerCase() !== "unknown"
+        && hpDeviceName.toLowerCase() !== "not connected";
+
+    const selectionSourceId = targetId === "headphones"
+        ? getCalibrationAutomationSource("deviceProfile", "manual_override")
+        : getCalibrationAutomationSource("topology", "runtime_state");
+    setCalibrationAutomationSummaryRow(1, {
+        label: "Selection",
+        value: targetId === "headphones"
+            ? `${getCalibrationMonitoringPathLabel(monitoringPathId)} · ${getCalibrationDeviceProfileLabel(deviceProfileId)}`
+            : `${getCalibrationTopologyLabel(topologyId, true)} · ${getCalibrationMonitoringPathLabel(monitoringPathId)}`,
+        sourceId: selectionSourceId,
+        note: targetId === "headphones"
+            ? "Current requested headphone path and profile from the panel controls."
+            : "Current speaker-room target and monitoring path from the panel controls.",
+    });
+
+    if (targetId === "headphones") {
+        setCalibrationAutomationSummaryRow(2, {
+            label: "Detected Device",
+            value: hpCompanionReady ? hpDeviceName : "No companion device detected",
+            sourceId: hpCompanionReady ? "companion_profile" : "unknown",
+            note: hpCompanionReady
+                ? `Companion handoff reports EQ ${formatAuditionTokenLabel(hpEqMode)} · HRTF ${formatAuditionTokenLabel(hpHrtfMode)} · Tracking ${hpTracking}.`
+                : "Waiting for a companion CalibrationProfile.json handoff or a detected headphone device.",
+        });
+
+        setCalibrationAutomationSummaryRow(3, {
+            label: "Profile Handoff",
+            value: `${getCalibrationDeviceProfileLabel(requestedHeadphoneProfile)} requested`,
+            sourceId: hpCompanionReady ? "companion_profile" : getCalibrationAutomationSource("deviceProfile", "unknown"),
+            note: hpCompanionReady
+                ? "The companion calibration profile has seeded the plugin headphone profile selection."
+                : "No companion-backed headphone profile has been handed to the plugin yet.",
+        });
+    } else {
+        const mappedChannels = Math.min(requiredChannels, writableChannels);
+        let routingSourceId = getCalibrationAutomationSource("routing", "runtime_state");
+        let routingNote = "Derived from the current host output layout.";
+        if (status.mappingDuplicateChannels) {
+            routingSourceId = "manual_override";
+            routingNote = "Custom routing contains duplicate output channels and must be corrected.";
+        } else if (routeIsCustom) {
+            routingSourceId = "manual_override";
+            routingNote = `Custom routing overrides the host auto-map (${expectedAutoRouting.join(" / ")}).`;
+        } else if (requiredChannels > writableChannels || status.mappingLimitedToFirst4) {
+            routingSourceId = "host_auto";
+            routingNote = `Host output layout exposes ${mappedChannels}/${requiredChannels} writable calibration outputs.`;
+        }
+
+        setCalibrationAutomationSummaryRow(2, {
+            label: "Output Routing",
+            value: activeRouting.join(" / "),
+            sourceId: routingSourceId,
+            note: routingNote,
+        });
+
+        const profileSourceId = profileReady
+            ? (calibrationAutomationSources.lastLoadedProfileName ? "loaded_profile" : "runtime_active")
+            : "unknown";
+        setCalibrationAutomationSummaryRow(3, {
+            label: "Room Profile",
+            value: profileReady ? "Room profile ready" : "No room profile loaded",
+            sourceId: profileSourceId,
+            note: profileReady
+                ? "Room correction is available from the current measurement or a loaded library profile."
+                : "Run a measurement or load a saved room profile to activate speaker correction.",
+        });
+    }
+
+    let runtimeSourceId = "runtime_state";
+    let runtimeValue = "Idle";
+    let runtimeNote = "Runtime activation state is waiting for the next calibration action.";
+    if (runtimeState.nativeBridgeDegraded) {
+        runtimeValue = "Bridge degraded";
+        runtimeSourceId = "runtime_active";
+        runtimeNote = "Native bridge degradation can leave automation values stale until the runtime recovers.";
+    } else if (runtimeState.startupHydrationInProgress) {
+        runtimeValue = "Startup hydration";
+        runtimeSourceId = "runtime_state";
+        runtimeNote = "Bridge-backed calibration state is still hydrating.";
+    } else if (runtimeContext.isBrowserPreview) {
+        runtimeValue = "Browser preview shell";
+        runtimeSourceId = "runtime_state";
+        runtimeNote = "Automation is shown from preview state rather than a live plugin session.";
+    } else if (!runtimeContext.liveSession) {
+        runtimeValue = `Waiting for ${runtimeContext.label}`;
+        runtimeSourceId = "runtime_state";
+        runtimeNote = "A live plugin runtime session has not published calibration telemetry yet.";
+    } else if (targetId === "headphones") {
+        const activeLabel = `${formatAuditionTokenLabel(activeHeadphoneMode)} · ${getCalibrationDeviceProfileLabel(activeHeadphoneProfile)}`;
+        runtimeSourceId = "runtime_active";
+        if (requestedHeadphoneMode === activeHeadphoneMode && requestedHeadphoneProfile === activeHeadphoneProfile) {
+            runtimeValue = activeLabel;
+            runtimeNote = hpPayloadPresent
+                ? "Requested headphone path and profile are active in the runtime."
+                : "Requested path appears active, but headphone verification telemetry has not fully arrived yet.";
+        } else {
+            runtimeValue = activeLabel;
+            runtimeNote = `Runtime is using ${activeLabel} while the panel requests ${formatAuditionTokenLabel(requestedHeadphoneMode)} · ${getCalibrationDeviceProfileLabel(requestedHeadphoneProfile)} (${formatAuditionTokenLabel(headphoneCalibrationStage)}).`;
+        }
+    } else if (status.running) {
+        runtimeValue = `Speaker ${Math.max(1, Number(status.currentSpeaker) || 1)}/${Math.max(1, requiredChannels)} in progress`;
+        runtimeSourceId = "runtime_active";
+        runtimeNote = "Calibration is actively measuring the current speaker response.";
+    } else if (profileReady) {
+        runtimeValue = "Speaker correction ready";
+        runtimeSourceId = "runtime_active";
+        runtimeNote = "A room profile is active and available for speaker monitoring.";
+    } else if (routeIsCustom) {
+        runtimeValue = "Manual map preserved";
+        runtimeSourceId = "manual_override";
+        runtimeNote = "Custom routing remains active until you redetect or rewrite the map.";
+    }
+
+    setCalibrationAutomationSummaryRow(4, {
+        label: "Runtime Activation",
+        value: runtimeValue,
+        sourceId: runtimeSourceId,
+        note: runtimeNote,
+    });
 }
 
 function getCalibrationDeviceProfileLabel(profileId) {
@@ -10731,6 +11217,42 @@ function initThreeJS() {
     selectionRing.visible = false;
     threeScene.add(selectionRing);
 
+    // P7 — Attractor field radius rings (read-only overlay — no DSP mutation)
+    // Colors: warm attract = gold, cool repel = cyan; updated each frame from relay values
+    const attractorRingColors = [0xD4A847, 0x7AAFC9, 0xA85CC2, 0x4DCC70];
+    for (let n = 0; n < 4; ++n) {
+        const ringOuterR = 0.06;
+        const ringGeoA = new THREE.RingGeometry(1.0 - ringOuterR, 1.0, 48);
+        const ringMatA = new THREE.MeshBasicMaterial({
+            color: attractorRingColors[n],
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.28,
+        });
+        const attractorRing = new THREE.Mesh(ringGeoA, ringMatA);
+        attractorRing.rotation.x = -Math.PI / 2;
+        attractorRing.visible = false;
+        threeScene.add(attractorRing);
+        attractorRingMeshes[n] = attractorRing;
+    }
+
+    // P7 — Flock centroid spheres (read-only overlay — computed from scene snapshot emitter positions)
+    const flockCentroidColors = [0xD4A847, 0x7AAFC9, 0xA85CC2, 0x4DCC70];
+    for (let n = 0; n < 4; ++n) {
+        const centroidSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 10, 7),
+            new THREE.MeshBasicMaterial({
+                color: flockCentroidColors[n],
+                transparent: true,
+                opacity: 0.55,
+                wireframe: true,
+            })
+        );
+        centroidSphere.visible = false;
+        threeScene.add(centroidSphere);
+        flockCentroidSpheres[n] = centroidSphere;
+    }
+
     // Lane highlight geometry
     const azArcPts = [];
     for (let i = 0; i <= 64; i++) {
@@ -11065,6 +11587,7 @@ function initUIBindings() {
         select.addEventListener("change", () => {
             if (isElementControlLocked(select)) return;
             calibrationMappingEditedByUser = true;
+            setCalibrationAutomationSource("routing", "manual_override");
             applyCalibrationStatus();
         });
     });
@@ -11097,6 +11620,44 @@ function initUIBindings() {
                 refreshCalibrationProfileList("", buildCalibrationProfileTuple(getCalibrationTopologyId(), getCalibrationMonitoringPathId()))
                     .catch(error => console.error("LocusQ: refreshCalibrationProfileList failed:", error));
             }
+        });
+    });
+
+    document.querySelectorAll("[data-cal-target]").forEach(button => {
+        button.addEventListener("click", () => {
+            if (isElementControlLocked(button)) return;
+            const requestedTarget = String(button.getAttribute("data-cal-target") || "speaker_room");
+            const currentPath = getCalibrationMonitoringPathId();
+            const monitoringSelect = document.getElementById("cal-monitoring-path");
+            if (!(monitoringSelect instanceof HTMLSelectElement)) {
+                applyCalibrationStatus();
+                return;
+            }
+
+            if (requestedTarget === "headphones") {
+                if (currentPath !== "speakers") {
+                    calibrationLastHeadphoneMonitoringPath = currentPath;
+                    applyCalibrationStatus();
+                    return;
+                }
+                const desiredPath = calibrationMonitoringPathIds.includes(calibrationLastHeadphoneMonitoringPath)
+                    && calibrationLastHeadphoneMonitoringPath !== "speakers"
+                    ? calibrationLastHeadphoneMonitoringPath
+                    : "steam_binaural";
+                const desiredIndex = calibrationMonitoringPathIds.indexOf(desiredPath);
+                monitoringSelect.selectedIndex = Math.max(0, desiredIndex);
+                monitoringSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                return;
+            }
+
+            if (currentPath !== "speakers") {
+                calibrationLastHeadphoneMonitoringPath = currentPath;
+                monitoringSelect.selectedIndex = 0;
+                monitoringSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                return;
+            }
+
+            applyCalibrationStatus();
         });
     });
 
@@ -11325,6 +11886,167 @@ function initUIBindings() {
             if (isElementControlLocked(resetButton)) return;
             pulseToggleParameter(toggleStates.phys_reset);
         });
+    }
+
+    // ===== P3 — Spring oscillator bindings =====
+    const springEnableToggle = document.getElementById("toggle-spring-enable");
+    if (springEnableToggle) {
+        bindControlActivate(springEnableToggle, () => {
+            toggleStateAndClass("toggle-spring-enable", toggleStates.phys_spring_enable);
+        });
+    }
+    bindValueStepper("val-spring-k",       sliderStates.phys_spring_k,        { step: 1.0, min: 0.5, max: 500.0, roundDigits: 1 });
+    bindValueStepper("val-spring-damp",    sliderStates.phys_spring_damp,      { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindSelectToComboState("sel-spring-anchor", comboStates.phys_spring_anchor_mode);
+    bindValueStepper("val-spring-anc-x",   sliderStates.phys_spring_anchor_x,  { step: 0.1, min: -25.0, max: 25.0, roundDigits: 2 });
+    bindValueStepper("val-spring-anc-y",   sliderStates.phys_spring_anchor_y,  { step: 0.1, min: 0.0, max: 10.0, roundDigits: 2 });
+    bindValueStepper("val-spring-anc-z",   sliderStates.phys_spring_anchor_z,  { step: 0.1, min: -25.0, max: 25.0, roundDigits: 2 });
+    bindValueStepper("val-turbulence",     sliderStates.phys_turbulence,       { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindValueStepper("val-turbulence-rate",sliderStates.phys_turbulence_rate,  { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+
+    // ===== P4 — Angular physics bindings =====
+    const angEnableToggle = document.getElementById("toggle-ang-enable");
+    if (angEnableToggle) {
+        bindControlActivate(angEnableToggle, () => {
+            toggleStateAndClass("toggle-ang-enable", toggleStates.phys_ang_enable);
+        });
+    }
+    bindValueStepper("val-ang-drag",       sliderStates.phys_ang_drag,          { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindValueStepper("val-ang-imp-x",      sliderStates.phys_ang_impulse_x,     { step: 1.0, min: -20.0, max: 20.0, roundDigits: 1 });
+    bindValueStepper("val-ang-imp-y",      sliderStates.phys_ang_impulse_y,     { step: 1.0, min: -20.0, max: 20.0, roundDigits: 1 });
+    bindValueStepper("val-ang-imp-z",      sliderStates.phys_ang_impulse_z,     { step: 1.0, min: -20.0, max: 20.0, roundDigits: 1 });
+    bindValueStepper("val-ang-torque",     sliderStates.phys_ang_attractor_torque, { step: 1.0, min: 0.0, max: 50.0, roundDigits: 1 });
+    const angThrowButton = document.getElementById("btn-ang-throw");
+    if (angThrowButton) {
+        angThrowButton.addEventListener("click", () => {
+            if (isElementControlLocked(angThrowButton)) return;
+            pulseToggleParameter(toggleStates.phys_ang_throw);
+        });
+    }
+    const angResetButton = document.getElementById("btn-ang-reset");
+    if (angResetButton) {
+        angResetButton.addEventListener("click", () => {
+            if (isElementControlLocked(angResetButton)) return;
+            pulseToggleParameter(toggleStates.phys_ang_reset);
+        });
+    }
+
+    // ===== P5/P6 — Flock group, collision radius, mass override (emitter) =====
+    bindSelectToComboState("sel-flock-group", comboStates.phys_flock_group);
+    bindValueStepper("val-collision-radius", sliderStates.phys_collision_radius, { step: 0.05, min: 0.05, max: 5.0, roundDigits: 2 });
+    bindValueStepper("val-mass-override",    sliderStates.phys_mass_override,    { step: 0.1, min: 0.0, max: 10.0, roundDigits: 2 });
+
+    // ===== P2 — Boundary mode (renderer) =====
+    bindSelectToComboState("rend-boundary-mode", comboStates.phys_boundary_mode);
+    bindValueStepper("val-soft-boundary-depth", sliderStates.phys_soft_boundary_depth, { step: 0.1, min: 0.1, max: 5.0, roundDigits: 2 });
+
+    // ===== P6 — Collision globals (renderer) =====
+    const collideToggle = document.getElementById("toggle-collide-emitters");
+    if (collideToggle) {
+        bindControlActivate(collideToggle, () => {
+            toggleStateAndClass("toggle-collide-emitters", toggleStates.phys_collide_emitters);
+        });
+    }
+    bindValueStepper("val-collision-gain-scale", sliderStates.phys_collision_gain_scale, { step: 0.1, min: 0.0, max: 10.0, roundDigits: 2 });
+    bindValueStepper("val-collision-decay-ms",   sliderStates.phys_collision_decay_ms,   { step: 5.0, min: 1.0, max: 500.0, roundDigits: 0 });
+
+    // ===== P2 — Attractor strip bindings (renderer) =====
+    for (let n = 0; n < 4; ++n) {
+        const ns = String(n);
+        const activeToggle = document.getElementById(`toggle-attr-${ns}-active`);
+        if (activeToggle) {
+            bindControlActivate(activeToggle, () => {
+                toggleStateAndClass(`toggle-attr-${ns}-active`, toggleStates[`attractor_${ns}_active`]);
+            });
+        }
+        const orbitToggle = document.getElementById(`toggle-attr-${ns}-orbit`);
+        if (orbitToggle) {
+            bindControlActivate(orbitToggle, () => {
+                toggleStateAndClass(`toggle-attr-${ns}-orbit`, toggleStates[`attractor_${ns}_orbit_stabilize`]);
+            });
+        }
+        bindSelectToComboState(`sel-attr-${ns}-falloff`, comboStates[`attractor_${ns}_falloff`]);
+        bindValueStepper(`val-attr-${ns}-pos-x`,   sliderStates[`attractor_${ns}_pos_x`],  { step: 0.5, min: -25.0, max: 25.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-pos-y`,   sliderStates[`attractor_${ns}_pos_y`],  { step: 0.1, min: 0.0, max: 10.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-pos-z`,   sliderStates[`attractor_${ns}_pos_z`],  { step: 0.5, min: -25.0, max: 25.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-strength`,sliderStates[`attractor_${ns}_strength`],{ step: 5.0, min: -100.0, max: 100.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-radius`,  sliderStates[`attractor_${ns}_radius`], { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+    }
+
+    // ===== P5 — Boids group strip bindings (renderer) =====
+    for (let n = 0; n < 4; ++n) {
+        const ns = String(n);
+        const enableToggle = document.getElementById(`toggle-flock-${ns}-enable`);
+        if (enableToggle) {
+            bindControlActivate(enableToggle, () => {
+                toggleStateAndClass(`toggle-flock-${ns}-enable`, toggleStates[`phys_flock_${ns}_enable`]);
+            });
+        }
+        bindValueStepper(`val-flock-${ns}-sep-w`,   sliderStates[`phys_flock_${ns}_sep_weight`],   { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+        bindValueStepper(`val-flock-${ns}-align-w`, sliderStates[`phys_flock_${ns}_align_weight`], { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+        bindValueStepper(`val-flock-${ns}-coh-w`,   sliderStates[`phys_flock_${ns}_coh_weight`],   { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+        bindValueStepper(`val-flock-${ns}-sep-r`,   sliderStates[`phys_flock_${ns}_sep_radius`],   { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+        bindValueStepper(`val-flock-${ns}-align-r`, sliderStates[`phys_flock_${ns}_align_radius`], { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+        bindValueStepper(`val-flock-${ns}-coh-r`,   sliderStates[`phys_flock_${ns}_coh_radius`],   { step: 0.5, min: 0.1, max: 50.0, roundDigits: 1 });
+        bindValueStepper(`val-flock-${ns}-speed`,   sliderStates[`phys_flock_${ns}_max_speed`],    { step: 1.0, min: 0.1, max: 50.0, roundDigits: 1 });
+    }
+
+    // ===== Physics freeze toggles — LIVE/FROZEN per emitter slot =====
+    // Single-panel architecture: one button reflects the currently selected emitter slot.
+    // All 8 host-side value-changed events update the button when the active slot changes.
+    const physFreezeBtn = document.getElementById("phys-freeze-btn");
+    function syncFreezeButton() {
+        if (!physFreezeBtn) return;
+        const slotIndex = Number.isInteger(selectedEmitterId) && selectedEmitterId >= 0 ? selectedEmitterId : 0;
+        const stateKey = `phys_frozen_${slotIndex}`;
+        const state = toggleStates[stateKey];
+        if (!state) return;
+        const frozen = state.value > 0.5;
+        physFreezeBtn.textContent = frozen ? 'FROZEN' : 'LIVE';
+        physFreezeBtn.classList.toggle('physics-frozen', frozen);
+        physFreezeBtn.classList.toggle('physics-live', !frozen);
+    }
+    // Wire host automation callbacks for all 8 slots
+    for (let n = 0; n < 8; n++) {
+        const state = toggleStates[`phys_frozen_${n}`];
+        if (state && state.valueChangedEvent) {
+            state.valueChangedEvent.addListener(() => {
+                // Only refresh the button if this is the currently selected slot
+                const activeSlot = Number.isInteger(selectedEmitterId) && selectedEmitterId >= 0 ? selectedEmitterId : 0;
+                if (activeSlot === n) syncFreezeButton();
+            });
+        }
+    }
+    // Register callback so setSelectedEmitter can refresh the button on slot change
+    onEmitterSelectionChangedForFreeze = syncFreezeButton;
+    // Send to host on click
+    if (physFreezeBtn) {
+        physFreezeBtn.addEventListener('click', () => {
+            const slotIndex = Number.isInteger(selectedEmitterId) && selectedEmitterId >= 0 ? selectedEmitterId : 0;
+            const state = toggleStates[`phys_frozen_${slotIndex}`];
+            if (!state) return;
+            const currentlyFrozen = state.value > 0.5;
+            setToggleValue(state, currentlyFrozen ? 0.0 : 1.0);
+            syncFreezeButton();
+        });
+        syncFreezeButton();
+    }
+
+    // ===== DAW output panel — per-slot freeze toggles (toggle-phys-frozen-N) =====
+    for (let n = 0; n < 8; ++n) {
+        const ns = String(n);
+        const frozenToggle = document.getElementById(`toggle-phys-frozen-${ns}`);
+        if (frozenToggle) {
+            bindControlActivate(frozenToggle, () => {
+                toggleStateAndClass(`toggle-phys-frozen-${ns}`, toggleStates[`phys_frozen_${ns}`]);
+                const label = document.getElementById(`val-phys-freeze-label-${ns}`);
+                if (label) {
+                    const frozen = !!getToggleValue(toggleStates[`phys_frozen_${ns}`]);
+                    label.textContent = frozen ? "FROZEN" : "LIVE";
+                    label.style.color = frozen ? "var(--signal-warn)" : "var(--text-dim)";
+                }
+            });
+        }
     }
 
     // Physics advanced disclosure
@@ -12064,6 +12786,26 @@ function initParameterListeners() {
         setToggleClass("emitter-quick-physics-lens", !!toggleStates.rend_viz_physics_lens.getValue());
     });
 
+    // ===== DAW output panel — freeze toggle + gain/spread read-only display listeners =====
+    for (let n = 0; n < 8; ++n) {
+        const ns = String(n);
+        toggleStates[`phys_frozen_${ns}`].valueChangedEvent.addListener(() => {
+            const frozen = !!toggleStates[`phys_frozen_${ns}`].getValue();
+            setToggleClass(`toggle-phys-frozen-${ns}`, frozen);
+            const label = document.getElementById(`val-phys-freeze-label-${ns}`);
+            if (label) {
+                label.textContent = frozen ? "FROZEN" : "LIVE";
+                label.style.color = frozen ? "var(--signal-warn)" : "var(--text-dim)";
+            }
+        });
+        sliderStates[`phys_out_gain_mod_${ns}`].valueChangedEvent.addListener(() => {
+            updateValueDisplay(`val-phys-out-gain-${ns}`, sliderStates[`phys_out_gain_mod_${ns}`].getScaledValue().toFixed(2), "");
+        });
+        sliderStates[`phys_out_spread_mod_${ns}`].valueChangedEvent.addListener(() => {
+            updateValueDisplay(`val-phys-out-spread-${ns}`, sliderStates[`phys_out_spread_mod_${ns}`].getScaledValue().toFixed(2), "");
+        });
+    }
+
     comboStates.rend_viz_mode.valueChangedEvent.addListener(updateViewMode);
     comboStates.cal_spk_config.valueChangedEvent.addListener(() => {
         if (calibrationLegacyAliasSyncSource === "topology") {
@@ -12077,13 +12819,20 @@ function initParameterListeners() {
             applyCalibrationStatus();
             return;
         }
+        setCalibrationAutomationSource("topology", "manual_override");
         syncLegacyConfigAliasFromTopology(getCalibrationTopologyId(getChoiceIndex(comboStates.cal_topology_profile)));
         applyCalibrationStatus();
     });
     comboStates.cal_monitoring_path.valueChangedEvent.addListener(() => {
+        const pathId = getCalibrationMonitoringPathId();
+        if (pathId !== "speakers") {
+            calibrationLastHeadphoneMonitoringPath = pathId;
+        }
+        setCalibrationAutomationSource("monitoringPath", "manual_override");
         applyCalibrationStatus();
     });
     comboStates.cal_device_profile.valueChangedEvent.addListener(() => {
+        setCalibrationAutomationSource("deviceProfile", "manual_override");
         applyCalibrationStatus();
     });
     comboStates.cal_test_type.valueChangedEvent.addListener(() => {
@@ -13842,8 +14591,21 @@ window.updateCalibrationStatus = function(status) {
         ...status,
     };
 
+    if (status.topologyProfile !== undefined && getCalibrationAutomationSource("topology") === "runtime_state") {
+        setCalibrationAutomationSource("topology", "runtime_state");
+    }
+    if (status.monitoringPath !== undefined && getCalibrationAutomationSource("monitoringPath") === "runtime_state") {
+        setCalibrationAutomationSource("monitoringPath", "runtime_state");
+    }
+    if (status.deviceProfile !== undefined && getCalibrationAutomationSource("deviceProfile") === "runtime_state") {
+        setCalibrationAutomationSource("deviceProfile", "runtime_state");
+    }
+
     if (Array.isArray(status.routing)) {
         calibrationLastAutoRouting = normaliseCalibrationRouting(status.routing, CALIBRATION_ROUTABLE_CHANNELS);
+        if (getCalibrationAutomationSource("routing") === "runtime_state") {
+            setCalibrationAutomationSource("routing", "runtime_state");
+        }
     }
 
     applyCalibrationStatus();
@@ -14004,6 +14766,11 @@ async function loadCalibrationProfile() {
 
         setCalibrationProfileNameInputValue(result?.name || selected.name || "");
         setCalibrationProfileStatus(`Loaded profile: ${result?.name || selected.name || "profile"}`);
+        setCalibrationAutomationProfileContext(result?.name || selected.name || "", result?.path || selected.path || "");
+        setCalibrationAutomationSource("topology", "loaded_profile");
+        setCalibrationAutomationSource("monitoringPath", "loaded_profile");
+        setCalibrationAutomationSource("deviceProfile", "loaded_profile");
+        setCalibrationAutomationSource("routing", "loaded_profile");
         const resolvedTuple = buildCalibrationProfileTuple(result?.topologyProfile || activeTuple.topologyProfile, result?.monitoringPath || activeTuple.monitoringPath);
         await refreshCalibrationProfileList(result?.path || selected.path, resolvedTuple);
         applyCalibrationStatus();
@@ -14208,6 +14975,8 @@ async function runCalibrationRedetect() {
         };
         calibrationLastAutoRouting = routing.slice(0, CALIBRATION_ROUTABLE_CHANNELS);
         calibrationMappingEditedByUser = false;
+        setCalibrationAutomationSource("topology", "host_auto");
+        setCalibrationAutomationSource("routing", "host_auto");
         if (ackRedetect) ackRedetect.checked = false;
         const changed = result.changed !== undefined
             ? !!result.changed
@@ -14314,6 +15083,7 @@ function updateCalibrationStatusDock(snapshot = {}) {
 
     const {
         topologyId = DEFAULT_CALIBRATION_TOPOLOGY_ID,
+        targetId = "speaker_room",
         monitoringPathId = "speakers",
         deviceProfileId = "generic",
         requiredChannels = 2,
@@ -14411,7 +15181,9 @@ function updateCalibrationStatusDock(snapshot = {}) {
             const percentText = phaseLabel === "Analyzing IR"
                 ? ""
                 : ` · ${Math.max(0, Math.min(100, Math.round(phasePercent * 100)))}%`;
-            progress.textContent = `Speaker ${Math.max(1, currentSpeaker)}/${Math.max(1, requiredChannels)} · ${phaseLabel}${percentText}`;
+            progress.textContent = targetId === "headphones"
+                ? `Headphone verify · ${phaseLabel}${percentText}`
+                : `Speaker ${Math.max(1, currentSpeaker)}/${Math.max(1, requiredChannels)} · ${phaseLabel}${percentText}`;
         } else if (complete) {
             progress.textContent = `Complete · ${message}`;
         } else if (profileReady) {
@@ -14446,6 +15218,7 @@ function applyCalibrationStatus() {
         || status.monitoringPath
         || getCalibrationMonitoringPathId(status.monitoringPathIndex)
     );
+    const targetId = getCalibrationTargetId(monitoringPathId);
     const deviceProfileId = String(
         sceneData?.calCurrentDeviceProfileId
         || status.deviceProfile
@@ -14476,9 +15249,13 @@ function applyCalibrationStatus() {
     const startButton = document.getElementById("cal-start-btn");
     if (startButton) {
         if (running) startButton.textContent = "ABORT";
+        else if (targetId === "headphones" && complete) startButton.textContent = "VERIFY AGAIN";
+        else if (targetId === "headphones") startButton.textContent = "RUN VERIFY";
         else if (complete) startButton.textContent = "MEASURE AGAIN";
         else startButton.textContent = "START MEASURE";
     }
+
+    setCalibrationTargetUi(targetId);
 
     const stateChip = document.getElementById("cal-state-chip");
     if (stateChip) {
@@ -14826,7 +15603,7 @@ function applyCalibrationStatus() {
     const viewportInfo = document.getElementById("viewport-info");
     if (viewportInfo && currentMode === "calibrate") {
         viewportInfo.textContent = "Calibrate Mode \u00B7 "
-            + getCalibrationTopologyLabel(topologyId, true)
+            + (targetId === "headphones" ? "Headphones" : getCalibrationTopologyLabel(topologyId, true))
             + " \u00B7 "
             + getCalibrationMonitoringPathLabel(monitoringPathId)
             + " \u00B7 "
@@ -14835,6 +15612,7 @@ function applyCalibrationStatus() {
 
     updateCalibrationStatusDock({
         state,
+        targetId,
         topologyId,
         monitoringPathId,
         deviceProfileId,
@@ -14908,6 +15686,25 @@ function applyCalibrationStatus() {
         const lat = hp ? Number(hp.fir_latency_samples || 0) : 0;
         hpFirLatEl.textContent = lat > 0 ? `${lat} smp` : "0 smp";
     }
+
+    updateCalibrationAutomationSummary({
+        targetId,
+        topologyId,
+        monitoringPathId,
+        deviceProfileId,
+        routing,
+        requiredChannels,
+        writableChannels,
+        mappingValid,
+        mappingLimited,
+        mappingDuplicateChannels,
+        profileReady,
+        requestedHeadphoneMode,
+        activeHeadphoneMode,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+        hpDeviceStatus: hp,
+    });
 
     applyHeaderTrustBadge();
 }
@@ -15767,6 +16564,74 @@ function animate() {
     if (azArc) azArc.material.opacity = highlightCurrent.azimuth;
     if (distRing) distRing.material.opacity = highlightCurrent.distance;
     if (elArc) elArc.material.opacity = highlightCurrent.elevation;
+
+    // P7 — Attractor field radius rings (read-only, no DSP mutation)
+    // Driven by APVTS relay values already in sliderStates/toggleStates.
+    const inRendererMode = currentMode === "renderer";
+    const physicsLensOn = physicsLensEnabled;
+    const attractorSlots = [
+        { active: toggleStates.attractor_0_active, px: sliderStates.attractor_0_pos_x, py: sliderStates.attractor_0_pos_y, pz: sliderStates.attractor_0_pos_z, strength: sliderStates.attractor_0_strength, radius: sliderStates.attractor_0_radius },
+        { active: toggleStates.attractor_1_active, px: sliderStates.attractor_1_pos_x, py: sliderStates.attractor_1_pos_y, pz: sliderStates.attractor_1_pos_z, strength: sliderStates.attractor_1_strength, radius: sliderStates.attractor_1_radius },
+        { active: toggleStates.attractor_2_active, px: sliderStates.attractor_2_pos_x, py: sliderStates.attractor_2_pos_y, pz: sliderStates.attractor_2_pos_z, strength: sliderStates.attractor_2_strength, radius: sliderStates.attractor_2_radius },
+        { active: toggleStates.attractor_3_active, px: sliderStates.attractor_3_pos_x, py: sliderStates.attractor_3_pos_y, pz: sliderStates.attractor_3_pos_z, strength: sliderStates.attractor_3_strength, radius: sliderStates.attractor_3_radius },
+    ];
+    for (let n = 0; n < 4; ++n) {
+        const ring = attractorRingMeshes[n];
+        if (!ring) continue;
+        const slot = attractorSlots[n];
+        const isActive = inRendererMode && physicsLensOn && !!getToggleValue(slot.active);
+        ring.visible = isActive;
+        if (isActive) {
+            const px = slot.px ? slot.px.getScaledValue() : 0.0;
+            const py = slot.py ? slot.py.getScaledValue() : 1.2;
+            const pz = slot.pz ? slot.pz.getScaledValue() : 0.0;
+            const radius = Math.max(0.1, slot.radius ? slot.radius.getScaledValue() : 1.0);
+            const strength = slot.strength ? slot.strength.getScaledValue() : 0.0;
+            ring.position.set(px, Math.max(0.02, py - 0.05), pz);
+            ring.scale.set(radius, radius, 1.0);
+            // Color: warm (gold) for attract, cool (cyan) for repel
+            const isRepulsor = strength < 0;
+            if (ring.material) {
+                ring.material.color.setHex(isRepulsor ? 0x35D9FF : 0xD4A847);
+                ring.material.opacity = 0.28 + 0.12 * Math.sin(animTime * 2.5 + n);
+            }
+        }
+    }
+
+    // P7 — Flock centroid spheres (read-only, computed from scene snapshot emitter positions)
+    const flockEnables = [toggleStates.phys_flock_0_enable, toggleStates.phys_flock_1_enable, toggleStates.phys_flock_2_enable, toggleStates.phys_flock_3_enable];
+    if (inRendererMode && physicsLensOn && sceneEmitterLookup.size > 0) {
+        for (let n = 0; n < 4; ++n) {
+            const sphere = flockCentroidSpheres[n];
+            if (!sphere) continue;
+            const flockEnabled = !!getToggleValue(flockEnables[n]);
+            if (!flockEnabled) { sphere.visible = false; continue; }
+            // Compute centroid from emitters whose flock_group matches this slot (group index n+1 in choices)
+            let cx = 0, cy = 0, cz = 0, count = 0;
+            for (const [, em] of sceneEmitterLookup) {
+                // flockGroup field in scene snapshot: 0 = None, 1..4 = groups
+                const emFlockGroup = Number(em.flockGroup ?? em.flock_group) || 0;
+                if (emFlockGroup === n + 1) {
+                    const t = emitterVisualTargets.get(em.id);
+                    if (t) { cx += t.x; cy += t.y; cz += t.z; count++; }
+                }
+            }
+            if (count > 0) {
+                sphere.position.set(cx / count, cy / count, cz / count);
+                sphere.visible = true;
+                if (sphere.material) {
+                    sphere.material.opacity = 0.45 + 0.15 * Math.sin(animTime * 3.0 + n);
+                }
+            } else {
+                sphere.visible = false;
+            }
+        }
+    } else {
+        for (let n = 0; n < 4; ++n) {
+            const sphere = flockCentroidSpheres[n];
+            if (sphere) sphere.visible = false;
+        }
+    }
 
     if (rendererGL && threeScene && camera) {
         rendererGL.render(threeScene, camera);
