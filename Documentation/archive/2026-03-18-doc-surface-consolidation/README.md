@@ -74,6 +74,15 @@ Reduce active documentation surface area by moving superseded planning packets, 
 - `Documentation/plans/bl-032-modularization-boundary-map-2026-02-25.md` deep legacy modularization boundary map preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/bl-032-modularization-boundary-map-2026-02-25-legacy.md`
 
+### Backlog
+
+- `Documentation/backlog/bl-020-confidence-masking.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-020-confidence-masking-legacy.md`
+- `Documentation/backlog/bl-021-room-story-overlays.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-021-room-story-overlays-legacy.md`
+- `Documentation/backlog/bl-032-source-modularization.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-032-source-modularization-legacy.md`
+
 ### Testing
 
 - `Documentation/testing/bl-025-emitter-resize-manual-qa-2026-02-23.md`
@@ -115,6 +124,8 @@ Reduce active documentation surface area by moving superseded planning packets, 
 - Current machine-readable backlog authority remains:
   - `Documentation/reports/data/backlog-summary.json`
   - `Documentation/reports/data/backlog-summary.csv`
+- Current active backlog runbooks remain at their original paths while deep historical replay detail lives under:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/`
 - Current UI/UX trust-wave execution authority remains:
   - `Documentation/plans/2026-03-17-ui-ux-trust-wave-execution-packet.md`
 - Current BL-028 spatial output matrix spec remains:
