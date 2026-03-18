@@ -70,6 +70,8 @@ Named geometric arrangements that define a multi-emitter collective rest pose. T
 
 **Formation animation:** formations animate as a unit — rotate, scale, or morph between two formation shapes over time. Morph uses per-slot linear interpolation. Parameters: `choro_formation_morph_rate`, `choro_formation_morph_loop: bool`, `choro_formation_morph_pingpong: bool`. All **[new — pending parameter-spec.md]**.
 
+**Relationship to Timeline formation track:** `choro_formation_morph_*` controls *continuous* animation rate/loop without explicit keyframes — this is the Choreography Lab model. When a Choreography formation session is baked to the Timeline, the result becomes formation-type keyframes whose morph interpolation is governed by the Timeline's standard curve enum (not morph rate). See `timeline-spec.md §Type 3 — Formation Track`.
+
 **DSP hook — spread:** formation spread (average inter-emitter distance / max distance) contributes an **additive offset** to each emitter's `spread` field — it does not override the APVTS `emit_spread` base value. This contribution is summed with all active physics spread contributions, then the total is clamped to [0..1] before being written to `EmitterSlot.spread` by the ChoreographyWorker. Tighter formation = smaller positive offset (more focused). Wider formation = larger positive offset (more diffuse). Write arbitration is identical to the physics spread contract (see physics-simulation-spec.md §DSP Mapping Contract).
 
 ---
