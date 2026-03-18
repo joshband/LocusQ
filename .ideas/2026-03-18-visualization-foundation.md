@@ -16,7 +16,7 @@ Last Modified Date: 2026-03-18
 
 **Tech Stack:** Vanilla JS, Canvas 2D API, SVG, CSS animation, Three.js (existing — for 3D→2D projection only), JUCE WebView bridge (existing)
 
-**Spec:** `docs/superpowers/specs/2026-03-18-visualization-design.md`
+**Spec:** `.ideas/2026-03-18-visualization-design.md`
 
 **Plan series:** This is Plan 1 of 3. Plan 2 (physics-reactive atmosphere, state ring physics/beat segments) requires `PhysicsWorker` wired. Plan 3 (choreography-reactive atmosphere, state ring choreography/timeline segments) requires `ChoreographyWorker` wired.
 
@@ -367,6 +367,7 @@ class AtmoOverlay {
   }
 
   setLayerVisible(layer, visible) {
+
     this._layers[layer] = visible;
   }
 
@@ -405,7 +406,8 @@ class AtmoOverlay {
     this._canvas.height = Math.round(h * dpr);
     this._canvas.style.width = w + "px";
     this._canvas.style.height = h + "px";
-    this._ctx.scale(dpr, dpr);
+    // Use setTransform (absolute) not scale() (additive) — prevents scale drift on repeated resizes
+    this._ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._w = w;
     this._h = h;
     this._dpr = dpr;
@@ -842,32 +844,35 @@ class SelectionManager {
   }
 
   _createSelectionRing(pos) {
-    // SVG fragment — single arc that bounce-animates in
+    // SVG fragment — ring bounce-animates in via scale() on the <g> wrapper.
+    // Animating `r` on <circle> is NOT used — it is not supported as a CSS property
+    // in WKWebView (the plugin runtime). scale() on <g> has universal support.
     const svg = document.createElementNS(SVG_NS, "svg");
     svg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;overflow:visible;";
 
     const g = document.createElementNS(SVG_NS, "g");
     g.setAttribute("transform", `translate(${pos.x},${pos.y})`);
+    // Bounce-in via scale on the group — overshoot then settle
+    g.style.cssText = "animation: selRingIn 0.35s cubic-bezier(0.22,1,0.36,1) both; transform-origin: 0 0;";
 
     const ring = document.createElementNS(SVG_NS, "circle");
     ring.setAttribute("r", "48");
     ring.setAttribute("fill", "none");
     ring.setAttribute("stroke", "rgba(255,255,255,0.35)");
     ring.setAttribute("stroke-width", "1");
-    ring.style.cssText = "animation: selRingIn 0.35s cubic-bezier(0.22,1,0.36,1) both;";
     g.appendChild(ring);
     svg.appendChild(g);
 
-    // Inject keyframe if not already present
+    // Inject keyframes if not already present
     if (!document.getElementById("sel-ring-kf")) {
       const style = document.createElement("style");
       style.id = "sel-ring-kf";
       style.textContent = `
         @keyframes selRingIn {
-          0%   { opacity:0; r:30px; }
-          60%  { opacity:1; r:52px; }
-          80%  { r:46px; }
-          100% { opacity:1; r:48px; }
+          0%   { opacity:0; transform:scale(0.6); }
+          60%  { opacity:1; transform:scale(1.08); }
+          80%  { transform:scale(0.96); }
+          100% { opacity:1; transform:scale(1.0); }
         }
         @keyframes hudIn {
           0%   { opacity:0; transform:translateY(4px); }
@@ -949,6 +954,49 @@ _drawEmitterAtmo(ctx, em, pos, w, h, dimmed = false) {
 }
 ```
 
+- [ ] **Step 5.2b: Write SelectionManager self-test**
+
+Add at end of `selection-manager.js`:
+```js
+if (new URLSearchParams(location.search).has("selftest")) {
+  function assert(cond, msg) { if (!cond) throw new Error("FAIL: " + msg); }
+
+  const container = document.createElement("div");
+  container.style.cssText = "position:relative;width:400px;height:300px;";
+  document.body.appendChild(container);
+
+  const positions = new Map([[1, { x: 100, y: 100 }], [2, { x: 300, y: 200 }]]);
+  const emitters = [
+    { id: 1, spread: 0.5, gain: 0.8 },
+    { id: 2, spread: 0.3, gain: 0.6 },
+  ];
+  const mgr = new SelectionManager(container, () => positions, () => emitters);
+
+  // Simulate click on emitter 1 (within HIT_RADIUS_PX)
+  const rect = { left: 0, top: 0 };
+  container.getBoundingClientRect = () => rect;
+  container.dispatchEvent(Object.assign(new MouseEvent("click"), { clientX: 102, clientY: 101 }));
+  assert(mgr.getSelectedId() === 1, "click within hit radius selects emitter");
+  assert(container.dataset.selectedEmitter === "1", "dataset.selectedEmitter set");
+
+  // Simulate click on emitter 2
+  container.dispatchEvent(Object.assign(new MouseEvent("click"), { clientX: 300, clientY: 200 }));
+  assert(mgr.getSelectedId() === 2, "clicking another emitter switches selection");
+
+  // Simulate click on background (far from any emitter)
+  container.dispatchEvent(Object.assign(new MouseEvent("click"), { clientX: 10, clientY: 10 }));
+  assert(mgr.getSelectedId() === null, "click on background deselects");
+  assert(!container.dataset.selectedEmitter, "dataset.selectedEmitter cleared on deselect");
+
+  mgr.dispose();
+  console.log("[selection-manager] self-test PASS");
+}
+```
+
+- [ ] **Step 5.2c: Run self-test**
+
+Load `index_stage13.html?selftest` — confirm `[selection-manager] self-test PASS`.
+
 - [ ] **Step 5.3: Run visual integration test**
 
 Load `index_stage13.html` in browser.
@@ -992,6 +1040,12 @@ Stage 13 is a thin wrapper that copies stage12's IIFE, adds script imports for t
     setTimeout(initViz, 0);
   });
 
+  // IMPORTANT: stage12's IIFE also registers a DOMContentLoaded listener.
+  // With `defer`, both listeners are registered before the event fires and
+  // both run synchronously in script order. The setTimeout(initViz, 0) defers
+  // initViz to the next macrotask — after stage12's DOMContentLoaded handler
+  // completes — so window.__locusq_sceneApp is guaranteed to be set when initViz
+  // runs. Do NOT remove this setTimeout.
   function initViz() {
     const atmoCanvas = document.getElementById("atmo-canvas");
     const threeCanvas = document.getElementById("viewport-canvas");
@@ -1095,23 +1149,38 @@ Stage 13 is a thin wrapper that copies stage12's IIFE, adds script imports for t
 
 - [ ] **Step 6.2: Patch stage12 to expose required globals**
 
-In `stage12_ui.js`, find `init()` at the end of `createSceneApp` and add after `start()`:
+**Patch 1 — expose `getCamera` on the returned sceneApp object.**
+
+Find the `return {` block at the end of `createSceneApp` (after `init()` is called) and add `getCamera` to the returned object literal:
 ```js
-sceneApp.getCamera = () => state.camera;
+return {
+  resize,
+  dispose,
+  setPendingScene(payload) { state.pendingScene = payload; },
+  setLane(lane, visible) { setLaneHighlight(lane, visible); },
+  setViewPreset(preset) { applyViewPreset(preset); },
+  getViewPreset() { return state.viewPreset; },
+  getOrbitState() { return { theta: state.orbit.theta, phi: state.orbit.phi, radius: state.orbit.radius }; },
+  getCamera() { return state.camera; },   // ← ADD THIS
+};
 ```
 
-Then after `const sceneApp = createSceneApp(...)`:
+**Patch 2 — expose sceneApp on window** (add after `const sceneApp = createSceneApp(...)`):
 ```js
 window.__locusq_sceneApp = sceneApp;
 ```
 
-In the `heartbeat` function (find `function heartbeat`), add at the end:
+**Patch 3 — fire onset/scene update hook from `updateSceneState`, not `heartbeat`.**
+
+Find `function updateSceneState` (the function that receives new scene data from the C++ bridge, called at line ~4526 with `runtime.latestScene = data`). Add at the end of that function:
 ```js
 window.__locusq_latestScene = runtime.latestScene;
 if (window.__locusq_onSceneUpdate && runtime.latestScene) {
   window.__locusq_onSceneUpdate(runtime.latestScene);
 }
 ```
+
+> **Why `updateSceneState` and not `heartbeat`:** `heartbeat` is a 350ms liveness ping — it does not receive new scene payloads. `updateSceneState` is the handler that receives each new scene message from the C++ bridge. Hooking `heartbeat` would delay onset events by up to 350ms and miss events received between ticks.
 
 - [ ] **Step 6.3: Load order — add stage13 script tags to index_stage13.html**
 
