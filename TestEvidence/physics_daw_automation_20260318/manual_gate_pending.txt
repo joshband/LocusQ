@@ -1,0 +1,6 @@
+Manual DAW testing required (Logic + Reaper):
+- Enable physics on emitter 1
+- Arm automation recording on "Emitter 1 Physics Spread" lane
+- Play — confirm automation lane fills
+- Click FROZEN — confirm DSP uses recorded curve
+- Document result here before ship
