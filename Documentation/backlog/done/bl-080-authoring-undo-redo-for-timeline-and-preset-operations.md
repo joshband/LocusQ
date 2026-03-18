@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-18
 
 ## Plain-Language Summary
 
-BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: Done-candidate. The processor-side history engine, WebView controls, and standalone validation lane are now green, with the rebuilt standalone production self-test explicitly passing `UI-W3A-01` and `UI-W3A-02`; the remaining step is owner promotion and closeout sync.
+BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: Done. The processor-side history engine, WebView controls, and standalone validation lane are green, the rebuilt standalone production self-test passed `UI-W3A-01` and `UI-W3A-02`, and the closeout sync is now complete.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-080 adds a real undo/redo history for the authoring flows the DAW host does n
 | What is changing? | The processor now stores undo/redo history snapshots for timeline and preset operations, and the WebView exposes undo/redo buttons, status, and keyboard shortcuts. |
 | Why is this important? | DAW undo covers APVTS automation well, but custom keyframe/preset workflows had no authoring recovery path before this lane. |
 | How will we deliver it? | Add a processor-owned snapshot/file history engine, route native preset/timeline mutations through it, then expose undo/redo controls and validation hooks in the WebView. |
-| When is it done? | When the rebuilt standalone app replays the production self-test with both embedded `UI-W3A-01` / `UI-W3A-02` checks passing, and the owner promotion note records that evidence. |
+| When is it done? | Done on 2026-03-18 after the rebuilt standalone app replayed the production self-test with both embedded `UI-W3A-01` / `UI-W3A-02` checks passing and the closeout sync was recorded. |
 | Where is the source of truth? | This runbook, `Documentation/architecture-code-review-2026-03-06.md`, `Documentation/backlog/index.md`, and evidence under `TestEvidence/`. |
 
 ## Visual Aid Index
@@ -45,7 +45,7 @@ BL-080 adds a real undo/redo history for the authoring flows the DAW host does n
 |---|---|
 | ID | BL-080 |
 | Priority | P3 |
-| Status | Done-candidate |
+| Status | Done |
 | Owner Track | F - Hardening |
 | Depends On | BL-070, BL-074 |
 | Blocks | — |
@@ -60,7 +60,7 @@ BL-080 adds a real undo/redo history for the authoring flows the DAW host does n
 | `~~Slice A~~` processor-owned authoring history core | `[DONE]` | P3 | Medium | focused local slice completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/PluginProcessor.h`, `Source/processor_core/ProcessorAuthoringHistory.cpp`, `Source/processor_core/ProcessorPresetManager.cpp` | none |
 | `~~Slice B~~` native bridge + WebView undo/redo controls | `[DONE]` | P3 | Medium | focused local slice completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/editor_webview/EditorWebViewRuntime.h`, `Source/ui/src/index.ts`, `Source/ui/public/index.html` | none |
 | `~~Slice C~~` production validation + CALIBRATE replay cleanup | `[DONE]` | P3 | Small | focused validation completed 2026-03-18 | `n/a` | 2026-03-18 | `build_local`, `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json` | none |
-| Slice D owner promotion and archive sync | `[NEXT]` | P3 | Small | not started | `n/a` | 2026-03-18 | backlog/status/evidence sync surfaces | record promotion decision and archive/closeout sync |
+| `~~Slice D~~` owner promotion and archive sync | `[DONE]` | P3 | Small | completed 2026-03-18 | `n/a` | 2026-03-18 | backlog/status/evidence sync surfaces | none |
 
 ## Objective
 
@@ -158,4 +158,7 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - [x] Build/typecheck evidence recorded
 - [x] Rebuilt standalone self-test reaches and records `UI-W3A-01`
 - [x] Rebuilt standalone self-test reaches and records `UI-W3A-02`
-- [ ] Promotion decision recorded
+- [x] Promotion decision recorded
+- [x] Runbook archived under `Documentation/backlog/done/`
+- [x] Master backlog index synchronized to Done
+- [x] Build summary and validation trend synchronized
