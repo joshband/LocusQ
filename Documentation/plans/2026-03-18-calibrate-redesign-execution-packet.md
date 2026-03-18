@@ -6,16 +6,12 @@ Last Modified Date: 2026-03-18
 
 # CALIBRATE Redesign Execution Packet
 
-## Purpose
+## Status
 
-Lock the first implementation wave for the `CALIBRATE` redesign.
-Convert the 2026-03-18 review findings into a buildable plan.
+Active.
+This is the short execution contract for the first CALIBRATE redesign wave.
 
-Primary goals:
-- separate speaker calibration from headphone personalization,
-- make automation legible,
-- make layout support more truthful,
-- and reduce legacy control clutter.
+Validation status: `not tested`
 
 Primary inputs:
 - `Documentation/reports/2026-03-18-calibrate-review-and-redesign-spec.md`
@@ -23,210 +19,179 @@ Primary inputs:
 - `Documentation/plans/2026-02-27-calibration-system-design.md`
 - `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md`
 
-Validation status: `not tested`
+Legacy deep packet:
+- `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-03-18-calibrate-redesign-execution-packet-legacy.md`
 
-This is a planning packet.
-It does not claim runtime or build validation.
+## Goal
 
-## Scope Baseline
+Make CALIBRATE easier to trust.
 
-- `CALIBRATE` currently mixes speaker topology, headphone monitoring, device profile, and mic/input into one top card.
-- Output routing is still limited to four routable rows.
-- Wide layouts are listed in the UI but not fully operable end to end from the current panel.
-- Headphone profile logic is real in the companion and plugin, but the panel still reads like a speaker-first workflow.
-- `Legacy Config` still appears as a primary control even though it mostly serves compatibility.
+First-wave outcomes:
+- separate speaker calibration from headphone personalization
+- show where automation values came from
+- demote legacy controls
+- stop overstating wide-layout support
 
-## Review Status Legend
+## Scope
 
-- `[NEXT]` first-wave item
-- `[LATER]` important, but not wave one
-- `[DEFERRED]` explicitly out of this packet
+Current product mismatch:
+- one top card still mixes speaker topology, headphone personalization, device/profile state, and mic/input
+- output routing is still limited to four routable rows
+- wide layouts appear more complete than the live panel can honestly support
+- headphone profile logic is real, but the panel still reads like a speaker-first workflow
+- `Legacy Config` still looks more primary than it should
 
-## Execution Principles
+Out of scope:
+- no routing expansion beyond four calibration channels
+- no new standalone input-device discovery contract
+- no companion capture pipeline rewrite
+- no new personalization DSP
+- no privacy or retention policy change
+
+## Core Contracts
+
+### Execution Principles
 
 1. Keep one `CALIBRATE` mode.
 2. Split operator jobs inside the mode.
 3. Make automation visible and attributable.
-4. Do not claim full wide-layout calibration if the UI cannot execute it honestly.
-5. Preserve current backend/profile contracts unless a slice explicitly changes them.
+4. Do not claim wide-layout calibration that the UI cannot execute honestly.
+5. Preserve current backend and profile contracts unless a slice explicitly changes them.
 
-## Entry Conditions
+### Entry Conditions
 
-| Item | Can Start Now? | Notes |
+| Item | Start Now | Notes |
 |---|---|---|
-| UI hierarchy split | Yes | front-end only if labels and visibility are staged carefully |
-| automation summary | Yes | uses existing data already exposed by host and companion |
-| legacy-control demotion | Yes | should remain compatibility-safe |
-| requested/active trust pass | Yes | depends on existing validation payloads |
-| wide-layout capability expansion | No | treat as separate follow-on after truthfulness pass |
-| standalone input-device auto-identification | No | needs feasibility work before UX promises |
+| UI hierarchy split | yes | front-end first |
+| automation summary | yes | built on existing payloads |
+| legacy-control demotion | yes | compatibility-safe cleanup |
+| requested vs active trust pass | yes | wording and provenance work |
+| wide-layout capability expansion | no | separate follow-on |
+| standalone input auto-identification | no | needs feasibility proof |
 
-## Ownership and Write Sets
+### Ownership
 
-| Pod | Focus | Primary Files | Ownership Rule |
-|---|---|---|---|
-| CAL Shell Pod | hierarchy, cards, labels, status sequencing | `Source/ui/public/index.html`, `Source/ui/src/index.ts` | own card order, section labels, visibility logic, and trust-summary placement |
-| Calibration Bridge Pod | explicit source-of-truth payloads for automation and status | `Source/processor_bridge/ProcessorUiBridgeOps.h`, `Source/processor_core/ProcessorCalibrationBridge.cpp` | add or clarify status payload fields without changing DSP graph shape |
-| Companion Truth Pod | headphone/device/profile provenance and readiness wording | `companion/Sources/LocusQHeadTrackingCompanion/main.swift`, `companion/Sources/LocusQHeadTrackerCore/TrackerApp.swift` | expose clearer source/state distinctions; do not widen privacy scope |
-| Docs/Governance Pod | update design authority and closeout wording | `Documentation/plans/*.md`, `Documentation/reports/*.md`, `status.json` | keep planning/review artifacts synchronized and concise |
+| Pod | Focus | Primary Files |
+|---|---|---|
+| CAL Shell | hierarchy, cards, labels, visibility | `Source/ui/public/index.html`, `Source/ui/src/index.ts` |
+| Calibration Bridge | source-of-truth payloads | `Source/processor_bridge/ProcessorUiBridgeOps.h`, `Source/processor_core/ProcessorCalibrationBridge.cpp` |
+| Companion Truth | device/profile provenance wording | `companion/Sources/LocusQHeadTrackingCompanion/main.swift`, `companion/Sources/LocusQHeadTrackerCore/TrackerApp.swift` |
+| Docs/Governance | plan/report/status sync | `Documentation/plans/*.md`, `Documentation/reports/*.md`, `status.json` |
 
 Shared-surface rule:
-- UI hierarchy work can start before payload enrichment.
-- Payload enrichment should land before final copy polish.
-- Capability expansion for layouts wider than quad is not part of this packet.
+- UI hierarchy can land before payload enrichment.
+- payload enrichment should land before final copy polish
+- wider-than-quad capability work stays out of this packet
 
-## Wave Plan
+## Delivery Order
 
-### Wave 1A: Split The Operator Jobs
+### Wave A: Split The Operator Jobs
 
-Objective:
-Make `CALIBRATE` answer one clear question at a time.
+Goal:
+- make the panel answer one job at a time
 
-| Slice ID | Description | Touch Zones | Exit Criteria |
-|---|---|---|---|
-| `CAL-A1` | Add explicit `Calibration Target` choice: `Speaker Room` vs `Headphones` | `index.html`, `index.ts` | top of panel selects target flow without adding a new global plugin mode |
-| `CAL-A2` | Re-sequence cards by target flow | `index.html`, `index.ts` | speaker flow shows topology/routing/mic first; headphone flow shows device/profile/HRTF/tracking first |
-| `CAL-A3` | Remove speaker-shaped run copy from headphone flow | `index.ts` | no `SPK1..SPK4` progress/status copy when headphone flow is active |
+Required slices:
+- `CAL-A1`: add `Calibration Target` with `Speaker Room` vs `Headphones`
+- `CAL-A2`: re-sequence cards by target flow
+- `CAL-A3`: remove speaker-shaped progress copy from the headphone path
 
-Why first:
-- this resolves the biggest product mismatch without requiring new DSP behavior.
+Exit:
+- users can tell which flow they are in without reading implementation detail
 
-### Wave 1B: Make Automation Legible
+### Wave B: Make Automation Legible
 
-Objective:
-Show where key values came from and what is still manual.
+Goal:
+- show where values came from and what is still manual
 
-| Slice ID | Description | Touch Zones | Exit Criteria |
-|---|---|---|---|
-| `CAL-B1` | Add automation summary card | `index.html`, `index.ts` | panel shows output source, headphone source, profile source, and input state |
-| `CAL-B2` | Enrich payload/source-of-truth semantics | `ProcessorUiBridgeOps.h`, `ProcessorCalibrationBridge.cpp`, `main.swift` if needed | UI can distinguish host-derived, companion-derived, persisted, and manual values |
-| `CAL-B3` | Clarify requested vs active wording and stale/override states | `index.ts`, optional companion wording | users can read what was requested, what is active, and why they differ |
+Required slices:
+- `CAL-B1`: add automation summary card
+- `CAL-B2`: enrich payload semantics for host, companion, persisted, and manual values
+- `CAL-B3`: clarify requested vs active wording, including stale and override states
 
-Why second:
-- the underlying system already has most of this information.
-- the main gap is trust messaging.
+Exit:
+- users can read output source, headphone source, profile source, and active-state differences quickly
 
-### Wave 1C: Demote Compatibility Controls
+### Wave C: Demote Compatibility Controls
 
-Objective:
-Reduce confusion from legacy controls and narrow labels to what the UI really does.
+Goal:
+- reduce false primary actions
 
-| Slice ID | Description | Touch Zones | Exit Criteria |
-|---|---|---|---|
-| `CAL-C1` | Rename `REDETECT` to `AUTO-MAP OUTPUTS` or equivalent | `index.html`, `index.ts` | button label and status copy match actual host-output bootstrap behavior |
-| `CAL-C2` | Move `Legacy Config` behind `Advanced` | `index.html`, `index.ts` | legacy alias is not a default-visible primary control |
-| `CAL-C3` | Keep overwrite and limited-mapping acknowledgements explicit | `index.ts` | current routing safety contracts remain intact after hierarchy cleanup |
+Required slices:
+- `CAL-C1`: rename `REDETECT` to a truthful host-output bootstrap label
+- `CAL-C2`: move `Legacy Config` behind `Advanced`
+- `CAL-C3`: keep overwrite and limited-mapping safety wording explicit
 
-Why third:
-- this is high-value UX cleanup with low backend risk.
+Exit:
+- legacy and compatibility controls stop competing with the main calibration path
 
-### Wave 1D: Truthfulness Pass For Layout Support
+### Wave D: Truthfulness Pass
 
-Objective:
-Make capability claims honest before any wider-layout implementation work.
+Goal:
+- fix capability claims before any larger layout expansion
 
-| Slice ID | Description | Touch Zones | Exit Criteria |
-|---|---|---|---|
-| `CAL-D1` | Mark wide layouts as `limited` where appropriate | `index.ts`, `index.html` | 5.1/7.1/7.4.2/ambisonic flows are not presented as fully calibratable if only partially routable |
-| `CAL-D2` | Align monitoring-path copy with actual matrix behavior | `index.ts`, docs | binaural/headphone choices do not imply unsupported multichannel legality |
-| `CAL-D3` | Update planning/report docs to match live truth | `Documentation/plans/*.md`, `Documentation/reports/*.md` | docs stop overstating current wide-layout calibration capability |
+Required slices:
+- `CAL-D1`: mark wide layouts as limited where needed
+- `CAL-D2`: align monitoring-path copy with real matrix behavior
+- `CAL-D3`: update docs and reports to match the live truth
 
-Why fourth:
-- operator trust improves immediately.
-- deeper layout support can come later on a truthful baseline.
-
-## Recommended Sequencing
-
-1. Start `CAL-A1` and `CAL-A2`.
-2. Land `CAL-B1` in parallel if the UI can consume current payloads cleanly.
-3. Add `CAL-B2` once the new summary card is ready to show source distinctions.
-4. Land `CAL-C1` and `CAL-C2` after the new hierarchy settles.
-5. Close with `CAL-D1..D3` as the truthfulness and docs pass.
-
-## First-Wave Non-Goals
-
-- No expansion beyond four routable calibration channels in this packet.
-- No new standalone input-device discovery contract yet.
-- No rewrite of the companion capture/matching pipeline.
-- No new headphone personalization DSP beyond current profile-driven behavior.
-- No change to privacy/retention rules for capture assets.
-
-## Follow-On Work
-
-| Candidate | Status | Why deferred |
-|---|---|---|
-| wider-than-quad calibration routing expansion | `[LATER]` | needs real backend and QA lane expansion, not just UI work |
-| richer headtracking readiness states in `CALIBRATE` | `[LATER]` | useful, but secondary to target-flow split |
-| standalone input-device auto-identification | `[LATER]` | needs host/runtime feasibility proof |
-| parity/lab surfacing for HRTF validation evidence | `[LATER]` | operator UI should not overfit lab detail in wave one |
+Exit:
+- the panel and docs no longer imply full wide-layout calibration support
 
 ## Promotion Gates
 
 | Gate | Requirement |
 |---|---|
-| `G1` | `CALIBRATE` clearly separates `Speaker Room` and `Headphones` flows |
+| `G1` | `CALIBRATE` clearly separates `Speaker Room` and `Headphones` |
 | `G2` | automation summary exposes source-of-truth for outputs, headphones, and profile handoff |
-| `G3` | `Legacy Config` is no longer default-visible as a peer to topology and routing |
-| `G4` | button/copy language matches actual host-output bootstrap and requested-vs-active behavior |
+| `G3` | `Legacy Config` is no longer default-visible as a peer control |
+| `G4` | button and status copy match requested-vs-active behavior |
 | `G5` | wide-layout and binaural wording is more truthful than the current surface |
 
-## File Touch Forecast
+## Validation Plan
 
-### Likely Wave-One Code Files
-
-- `Source/ui/public/index.html`
-- `Source/ui/src/index.ts`
-- `Source/processor_bridge/ProcessorUiBridgeOps.h`
-- `Source/processor_core/ProcessorCalibrationBridge.cpp`
-
-### Likely Wave-One Companion Files
-
-- `companion/Sources/LocusQHeadTrackingCompanion/main.swift`
-- `companion/Sources/LocusQHeadTrackerCore/TrackerApp.swift`
-
-### Likely Wave-One Docs
-
-- `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
-- `Documentation/reports/2026-03-18-calibrate-review-and-redesign-spec.md`
-- `status.json`
-
-## Validation Lanes
-
-### Core UI/Runtime
-
+Core UI/runtime:
 - `cd Source/ui && npm run typecheck`
 - `cd Source/ui && npm run build`
 - `cmake --build build_local --config Release --target LocusQ_Standalone -j 8`
 
-### Calibration/Rendering Confidence
-
+Calibration confidence:
 - `scripts/standalone-ui-selftest-production-p0-mac.sh`
 - `./scripts/qa-bl009-headphone-contract-mac.sh`
 
-### Companion Confidence
-
+Companion confidence:
 - `cd companion && swift build`
 - `cd companion && swift test`
 
-## Success Definition
+## Touch Forecast
 
-The first wave succeeds if:
-- users can tell whether they are calibrating speakers or personalizing headphones,
-- automation is visible and understandable,
-- compatibility controls are demoted,
-- and the UI stops implying more wide-layout calibration support than it can actually deliver today.
-
-## Source Inputs
-
-- `Documentation/reports/2026-03-18-calibrate-review-and-redesign-spec.md`
-- `Documentation/reports/2026-03-17-locusq-ui-ux-design-review.md`
-- `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
-- `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md`
-- `Documentation/plans/2026-02-27-calibration-system-design.md`
-- `Documentation/plans/calibration-profile-schema-v1.md`
+Likely code files:
 - `Source/ui/public/index.html`
 - `Source/ui/src/index.ts`
 - `Source/processor_bridge/ProcessorUiBridgeOps.h`
 - `Source/processor_core/ProcessorCalibrationBridge.cpp`
-- `companion/Sources/LocusQHeadTrackingCompanion/main.swift`
 
+Likely companion files:
+- `companion/Sources/LocusQHeadTrackingCompanion/main.swift`
+- `companion/Sources/LocusQHeadTrackerCore/TrackerApp.swift`
+
+Likely docs:
+- `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
+- `Documentation/reports/2026-03-18-calibrate-review-and-redesign-spec.md`
+- `status.json`
+
+## Visual Aid Index
+
+| Artifact | Role |
+|---|---|
+| redesign review | redesign rationale and UI findings |
+| calibration system design | active design authority |
+| BL-026 spec | CALIBRATE UI baseline |
+| archive copy | original long execution packet |
+
+## Archive Note
+
+The long-form execution packet was preserved at:
+- `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-03-18-calibrate-redesign-execution-packet-legacy.md`
+
+Use the archive copy for the original staging narrative.
+Use this file as the active execution surface.

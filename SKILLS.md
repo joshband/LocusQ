@@ -55,11 +55,6 @@ For any phase execution:
 | `hrtf-rendering-validation-lab` | `.codex/skills/hrtf-rendering-validation-lab/SKILL.md` | Offline SOFA truth-render validation, realtime FIR/partitioned-convolver parity, interpolation/crossfade safety, and BL-055/BL-061 evidence gates |
 | `perceptual-listening-harness` | `.codex/skills/perceptual-listening-harness/SKILL.md` | Blinded listening protocol design, trial schema/stats outputs, reproducibility checks, and BL-060/BL-061 gate decision evidence |
 
-## Backlog Automation Ownership
-| Task Pattern | Primary Skill | Secondary Skill(s) |
-|---|---|---|
-| Draft-only T1/T2/T3 backlog automation, packet drafting, and proposed status diffs | `documentation-hygiene-expert` | `skill_docs` |
-
 ## Three.js Skill Bundle
 The `threejs` skill is organized as one triggerable skill plus focused references:
 
@@ -105,24 +100,13 @@ When specialist intent is present, auto-load the matching specialist skill(s):
 - Blind listening protocol, stats gating, and reproducibility work -> `perceptual-listening-harness`
 - Broad unresolved failures -> `skill_troubleshooting`
 
-If multiple specialist intents apply, compose skills in this order:
-1. `juce-webview-runtime`
-2. `reactive-av`
-3. `realtime-dimensional-visualization`
-4. `simulation-behavior-audio-visual`
-5. `physics-reactive-audio`
-6. `temporal-effects-engineering`
-7. `auv3-plugin-lifecycle`
-8. `clap-plugin-lifecycle`
-9. `steam-audio-capi`
-10. `spatial-audio-engineering`
-11. `documentation-hygiene-expert`
-12. `headtracking-companion-runtime`
-13. `apple-spatial-companion-platform`
-14. `hrtf-rendering-validation-lab`
-15. `perceptual-listening-harness`
-16. `threejs`
-17. `skill_troubleshooting`
+If multiple specialist intents apply, use this bundle order:
+1. UI/runtime: `juce-webview-runtime`, `threejs`, `reactive-av`, `realtime-dimensional-visualization`
+2. DSP/simulation: `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
+3. format/spatial: `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
+4. docs/governance: `documentation-hygiene-expert`, then `skill_docs`
+5. companion/calibration: `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
+6. fallback: `skill_troubleshooting`
 
 When both documentation skills are required, run:
 1. `documentation-hygiene-expert` (cleanup/consolidation and freshness remediation)
@@ -133,6 +117,7 @@ Canonical matrix and examples: `Documentation/skill-selection-matrix.md`.
 ## Documentation Skill Ownership Map
 | Task Pattern | Primary Skill | Secondary Skill(s) |
 |---|---|---|
+| Draft-only T1/T2/T3 backlog automation, packet drafting, and proposed status diffs | `documentation-hygiene-expert` | `skill_docs` |
 | Backlog index/runbook cleanup and stale authority claims (`Documentation/backlog/index.md`, `Documentation/backlog/done/*`) | `documentation-hygiene-expert` | `skill_docs` |
 | `ARCHITECTURE.md` and behavior-doc drift cleanup | `documentation-hygiene-expert` | `skill_docs`, optionally `skill_plan` |
 | Root docs content freshness (`README.md`, `CHANGELOG.md`) | `documentation-hygiene-expert` | `skill_docs` |

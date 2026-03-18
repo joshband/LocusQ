@@ -32,41 +32,20 @@ Use APC workflows to implement and validate LocusQ while preserving phase discip
 - Apply this routing order:
   1. Phase workflow skill (dream/plan/design/impl/test/ship).
   2. Specialist skill(s), minimal set only.
-- Specialist routing defaults:
-  - WebView host/runtime/interop defects -> `juce-webview-runtime`.
-  - Audio-reactive or physics-reactive visuals -> `reactive-av`.
-  - Realtime 2D/3D/4D information visualization and beautiful operator-facing UI direction -> `realtime-dimensional-visualization`.
-  - Complex simulation-driven audio+visual behavior (fluid/crowd/flocking/herd) -> `simulation-behavior-audio-visual`.
-  - Physics/simulation-driven DSP behavior -> `physics-reactive-audio`.
-  - Delay/echo/looper/frippertronics-style temporal DSP work -> `temporal-effects-engineering`.
-  - AUv3 format lifecycle, app-extension boundaries, and AUv3 host lanes -> `auv3-plugin-lifecycle`.
-  - CLAP format integration/lifecycle/host lanes -> `clap-plugin-lifecycle`.
-  - Steam Audio C API runtime/lifecycle/fallback behavior -> `steam-audio-capi`.
-  - Spatial layout/ambisonic/binaural architecture and QA -> `spatial-audio-engineering`.
-  - SDLC documentation cleanup/de-bloat/freshness remediation with ADR alignment -> `documentation-hygiene-expert` (pair `skill_docs` for governance sync).
-  - Git artifact hygiene (tracked ignored paths, stale archives, history-bloat audits, pre-commit/CI guards) -> `documentation-hygiene-expert`.
-  - Documentation governance metadata, ADR/invariant traceability, and root routing-contract parity -> `skill_docs`.
-  - API documentation cleanup or stale code-comment hygiene -> `documentation-hygiene-expert` (pair `skill_impl` when behavior-level edits are required).
-  - Companion readiness/sync/axis runtime diagnostics -> `headtracking-companion-runtime`.
-  - AirPods companion Apple API/capture/privacy contract work (BL-057/BL-058) -> `apple-spatial-companion-platform`.
-  - HRTF/FIR/interpolation parity and crossfade validation -> `hrtf-rendering-validation-lab`.
-  - Blind listening protocol and statistical gate decisions -> `perceptual-listening-harness`.
-  - Core 3D scene/render integration -> `threejs`.
-  - Unknown/failing behavior -> `skill_troubleshooting`.
+- Specialist routing defaults are canonical in `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
+- Short routing guide:
+  - UI/runtime -> `juce-webview-runtime`, `threejs`, `reactive-av`, `realtime-dimensional-visualization`
+  - DSP/simulation -> `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
+  - format/spatial -> `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
+  - docs/governance -> `documentation-hygiene-expert`, `skill_docs`
+  - companion/calibration -> `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
+  - fallback -> `skill_troubleshooting`
 - For overlapping intents, compose skills in that order and announce selected skills.
 - Reference matrix: `Documentation/skill-selection-matrix.md`.
 
 ## Skill Catalog Scope
-Codex must consider the full repo skill catalog (not only specialist skills):
-- `skill_dream`, `skill_plan`, `skill_design`, `skill_impl`, `skill_test`, `skill_ship`
-- `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
-- `documentation-hygiene-expert`
-- `juce-webview-windows`, `juce-webview-runtime`
-- `threejs`, `reactive-av`, `realtime-dimensional-visualization`, `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
-- `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
-- `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
-
-Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
+Codex must consider the full repo skill catalog, not only the short list above.
+Canonical paths and triggers: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 
 ## Build/Test Policy
 - Prefer project scripts and validators over ad-hoc command chains.

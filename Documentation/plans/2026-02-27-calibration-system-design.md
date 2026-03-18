@@ -9,9 +9,9 @@ Last Modified Date: 2026-03-18
 ## Status
 
 Approved.
-This remains the canonical calibration architecture reference.
+This is the canonical calibration design authority.
 
-It supersedes earlier calibration-only design fragments and anchors:
+It anchors:
 - BL-052
 - BL-053
 - BL-054
@@ -28,28 +28,28 @@ Legacy deep design:
 
 ## Objective
 
-Integrate robust headphone calibration and binaural monitoring into LocusQ with:
-- personalized HRTF selection,
-- model-based headphone EQ,
-- head-tracked monitoring,
-- deterministic profile handoff,
-- and a listening-test gate that can prove value.
+Build the calibration system as one measurable pipeline:
+- personalized HRTF selection
+- model-based headphone EQ
+- head-tracked monitoring
+- deterministic profile handoff
+- perceptual proof before expansion
 
-Primary constraints:
+Hard constraints:
 - no allocations or locks in `processBlock()`
 - deterministic state and QA compatibility
-- perceptual improvement must be measurable before Phase C expansion
+- measurable improvement before Phase C expansion
 
 ## Core Architecture
 
-### The Two-Profile Model
+### Two-Profile Model
 
-Every device and user flow must stay split into two profiles:
+Keep the profiles separate.
 
 | Profile | Meaning | Example |
 |---|---|---|
 | user profile | HRTF or HRTF-proxy personalization | SADIE II subject match |
-| headphone profile | model-specific EQ / headphone transfer compensation | AirPods Pro or WH-1000XM5 preset |
+| headphone profile | model-specific EQ / transfer compensation | AirPods Pro or WH-1000XM5 preset |
 
 Rule:
 - do not collapse user and headphone concerns into one blob.
@@ -70,12 +70,12 @@ Rule:
 | `steam_binaural` | quad bed -> Steam Audio virtual surround -> PEQ -> FIR -> stereo |
 | `virtual_binaural` | bypass Steam Audio; optional PEQ path |
 
-## Realtime Safety Invariants
+## Key Invariants
 
 1. No heap allocation in `processBlock()`.
 2. No mutex lock/unlock in `processBlock()`.
 3. No file I/O in `processBlock()`.
-4. Coefficient and engine updates must happen through non-RT publication and atomic swap.
+4. Coefficient and engine updates must publish off the RT thread and swap atomically.
 5. FIR latency changes must update host latency reporting.
 6. Non-finite output must be classified and surfaced through the validation contract.
 
@@ -91,66 +91,28 @@ Rule:
 | Sony WH-1000XM5 | no | baseline/personalized path only | yes |
 | generic/custom | no | baseline/custom path | optional |
 
-### Future, Not v1
+### Not v1
 
 - AirPods 1/2/3/4 EQ-only expansions
 - larger device-library growth
 - richer interpolation and morphing datasets
 
-## Contract Surfaces
-
-### Headphone Preset Contract
-
-Each model/mode pair uses a preset file.
-The active preset contract belongs in the profile and preset surfaces, not in prose duplication here.
-
-### User Profile Contract
-
-The user profile must identify:
-- matched subject,
-- SOFA reference,
-- reproducibility hash,
-- and creation metadata.
-
-### `CalibrationProfile.json`
-
-This is the plugin handoff contract.
-
-It must carry:
-- user profile fields,
-- headphone profile fields,
-- tracking flags and offsets,
-- verification fields for listening-test outcomes.
-
-Schema authority:
-- `Documentation/plans/calibration-profile-schema-v1.md`
-
-## Delivery Tracks
-
-| Track | Main Focus |
-|---|---|
-| Plugin DSP track | virtual surround, PEQ, FIR, latency, state migration |
-| Companion/profile track | renderer baseline, preset library, device detection, capture, matching, profile write |
-| Integration track | plugin read path, SOFA loading, CALIBRATE UI, end-to-end smoke |
-| Listening gate | randomized listening harness and decision gate |
-
-## Program Gates
+## Phase Gate
 
 ### Phase B Gate
 
 Required before Phase C:
-- at least 5 participants,
-- at least 10 scenes each,
-- measurable improvement in externalization or localization.
+- at least 5 participants
+- at least 10 scenes each
+- measurable improvement in externalization or localization
 
 Hard gate:
-- `>=20%` mean externalization improvement
-  or
+- `>=20%` mean externalization improvement, or
 - `p < 0.05` localization gain
 
 If this fails:
-- improve feature extraction, capture quality, or dataset strategy first.
-- do not move on to interpolation or ML-heavy expansion.
+- improve feature extraction, capture quality, or dataset strategy first
+- do not move on to interpolation or ML-heavy expansion
 
 ### Phase C
 
@@ -174,26 +136,6 @@ Only after Phase B passes:
 | BL-060 | Phase B listening harness |
 | BL-061 | interpolation and crossfade follow-on |
 
-## Key Acceptance Themes
-
-| Theme | Expected Truth |
-|---|---|
-| virtual surround | quad-to-binaural path works without RT regressions |
-| FIR | latency reporting matches active engine behavior |
-| state migration | profile/state upgrades stay deterministic |
-| handoff | profile load/unload is stable and glitch-safe |
-| listening gate | Phase B outcome decides whether deeper expansion is justified |
-
-## Privacy Rule
-
-Ear and face imagery is biometric-adjacent.
-
-Keep these rules:
-- processing stays on-device,
-- source images are not retained after embedding unless explicitly required and consented,
-- reproducibility uses hashes and profile metadata,
-- any sync path must be explicit and consented.
-
 ## Supporting Inputs
 
 - `Documentation/plans/2026-02-27-calibration-implementation-plan.md`
@@ -202,18 +144,28 @@ Keep these rules:
 - `Documentation/Calibration POC/README.md`
 - `Documentation/Calibration POC/locusq_spatial_prototype/`
 
+## Milestone Snapshot
+
+| Area | Status | Why it matters | Evidence |
+|---|---|---|---|
+| design authority | approved | current canonical calibration reference | this file |
+| implementation plan | active | short execution surface for BL-054..BL-061 | `Documentation/plans/2026-02-27-calibration-implementation-plan.md` |
+| schema contract | active | plugin/companion handoff boundary | `Documentation/plans/calibration-profile-schema-v1.md` |
+| methodology | supporting | research and evaluation baseline | `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md` |
+| POC | supporting | prototype truth source, not status authority | `Documentation/Calibration POC/README.md` |
+
 ## Visual Aid Index
 
 | Artifact | Role |
 |---|---|
-| legacy calibration design doc | deep architecture detail and original diagrams |
-| `Documentation/plans/2026-02-27-calibration-implementation-plan.md` | active implementation contract |
-| `Documentation/plans/calibration-profile-schema-v1.md` | schema reference |
+| archive copy | deep history and original staging tables |
+| implementation plan | active execution contract |
+| schema reference | handoff boundary reference |
 
 ## Archive Note
 
-The original long-form calibration architecture design was preserved at:
+The long-form calibration architecture design was preserved at:
 - `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-02-27-calibration-system-design-legacy.md`
 
-Use the archive copy when you need the full original staging tables, schema examples, and narrative detail.
+Use the archive copy when you need the original staging tables or narrative detail.
 Use this file as the active design authority.
