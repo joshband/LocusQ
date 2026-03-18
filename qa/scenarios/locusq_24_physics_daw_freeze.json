@@ -1,0 +1,108 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_24_physics_daw_freeze",
+  "name": "LocusQ 2.4 Physics DAW Freeze",
+  "category": "spatial",
+  "description": "Phase 2.4 acceptance proxy: when phys_frozen_0=1.0, phys_out_gain_mod_0 must hold its snapshot value and must not track live physics changes. When phys_frozen_0=0.0 (LIVE), phys_out_gain_mod_0 must follow the attractor-driven gain modulation. Verifies the LIVE/FROZEN gate and APVTS parameter mirror contract defined in parameter-spec.md.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 440.0,
+      "end_hz": 440.0,
+      "amplitude": 0.35,
+      "duration_seconds": 3.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.25,
+    "emit_gain": 0.5,
+    "emit_spread": 0.0,
+    "emit_directivity": 0.0,
+    "phys_enable": 1.0,
+    "phys_drag": 0.05,
+    "phys_gravity": 0.0,
+    "phys_throw": 0.0,
+    "rend_phys_rate": 1,
+    "attractor_0_active": 1.0,
+    "attractor_0_strength": 0.6,
+    "attractor_0_radius": 2.0,
+    "attractor_0_pos_x": 1.5,
+    "attractor_0_pos_y": 1.2,
+    "attractor_0_pos_z": 0.0,
+    "rend_master_gain": 0.5,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "scene_setup": {
+    "description": "Single physics-enabled emitter near an active attractor. Attractor proximity drives non-zero phys_out_gain_mod_0. At t=1s phys_frozen_0 is set to 1.0 (FROZEN); phys_out_gain_mod_0 must hold the snapshot value for the remainder of the window.",
+    "emitter_count": 1,
+    "emitter_overrides": [
+      { "index": 0, "pos_x": 0.5, "pos_y": 1.2, "pos_z": 0.0, "phys_enable": 1.0 }
+    ],
+    "parameter_timeline": [
+      { "time_seconds": 0.0,  "parameter": "phys_frozen_0", "value": 0.0 },
+      { "time_seconds": 1.0,  "parameter": "phys_frozen_0", "value": 1.0 }
+    ]
+  },
+
+  "analysis_windows": {
+    "live_window": {
+      "type": "time_range",
+      "start_seconds": 0.0,
+      "end_seconds": 0.9,
+      "description": "LIVE phase — attractor drives gain modulation"
+    },
+    "frozen_window": {
+      "type": "time_range",
+      "start_seconds": 1.1,
+      "end_seconds": 3.0,
+      "description": "FROZEN phase — gain mod must be constant (snapshot held)"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "live_window",
+      "threshold": { "min": -85.0 },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "frozen_window",
+      "threshold": { "max_count": 0 },
+      "severity": "hard_fail"
+    },
+    "gain_mod_live_nonzero": {
+      "metric": "parameter_range",
+      "parameter": "phys_out_gain_mod_0",
+      "window": "live_window",
+      "threshold": { "min_variance": 0.001 },
+      "severity": "warn",
+      "description": "In LIVE phase, attractor proximity should drive nonzero gain mod variance"
+    },
+    "gain_mod_frozen_constant": {
+      "metric": "parameter_range",
+      "parameter": "phys_out_gain_mod_0",
+      "window": "frozen_window",
+      "threshold": { "max_variance": 0.0001 },
+      "severity": "hard_fail",
+      "description": "In FROZEN phase, gain mod must not change — snapshot must be held"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass. gain_mod_live_nonzero is warn-only (depends on attractor convergence timing)."
+}
