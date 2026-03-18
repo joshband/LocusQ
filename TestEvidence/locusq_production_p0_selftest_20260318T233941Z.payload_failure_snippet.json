@@ -1,0 +1,48 @@
+{
+  "reasonCode": "failing_check_assertion",
+  "failingCheck": "UI-P1-101A",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "UI-P1-101A: unexpected profile handoff source chip (UNKNOWN)"
+  },
+  "failingCheckDetails": "unexpected profile handoff source chip (UNKNOWN)",
+  "checks": [
+    {
+      "details": "unexpected profile handoff source chip (UNKNOWN)",
+      "pass": false,
+      "id": "UI-P1-101A"
+    },
+    {
+      "pass": false,
+      "id": "failure",
+      "details": "UI-P1-101A: unexpected profile handoff source chip (UNKNOWN)"
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "pollMs": 40.0,
+      "elapsedMs": 0.0,
+      "label": "p0 self-test controls ready",
+      "timeoutMs": 8000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 30.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "label": "steam diagnostics baseline"
+    },
+    {
+      "result": "pass",
+      "label": "clap diagnostics baseline",
+      "pollMs": 30.0,
+      "elapsedMs": 0.0,
+      "timeoutMs": 3000.0,
+      "polls": 1.0
+    }
+  ]
+}
