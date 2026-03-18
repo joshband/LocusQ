@@ -1,0 +1,101 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_24_physics_boids_density",
+  "name": "LocusQ 2.4 Physics Boids Density",
+  "category": "spatial",
+  "description": "Phase 2.4 acceptance proxy: Boids flock density must produce measurable spread DSP modulation when emitters form a cohesive group. emit_spread base is 0 so all spread change is physics-driven. Verifies the Boids density -> spread additive offset hook defined in the DSP Mapping Contract. Requires a multi-emitter scene; four emitters are assigned to flock group 1 with high cohesion weight.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 392.0,
+      "end_hz": 392.0,
+      "amplitude": 0.35,
+      "duration_seconds": 4.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.25,
+    "emit_gain": 0.5,
+    "emit_spread": 0.0,
+    "emit_directivity": 0.0,
+    "phys_enable": 1.0,
+    "phys_drag": 0.20,
+    "phys_gravity": 0.0,
+    "phys_throw": 0.0,
+    "phys_flock_group": 1,
+    "phys_flock_0_enable": 1.0,
+    "phys_flock_0_sep_weight": 0.2,
+    "phys_flock_0_align_weight": 0.5,
+    "phys_flock_0_coh_weight": 1.0,
+    "phys_flock_0_sep_radius": 1.5,
+    "phys_flock_0_align_radius": 3.0,
+    "phys_flock_0_coh_radius": 8.0,
+    "phys_flock_0_max_speed": 5.0,
+    "rend_phys_rate": 1,
+    "rend_master_gain": 0.5,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "scene_setup": {
+    "description": "Four physics-enabled emitters assigned to flock group 1. Emitters start dispersed; high cohesion weight drives them into a tight flock within the 4-second window.",
+    "emitter_count": 4,
+    "emitter_overrides": [
+      { "index": 0, "pos_x": -2.0, "pos_y": 1.2, "pos_z": -2.0, "phys_enable": 1.0, "phys_flock_group": 1 },
+      { "index": 1, "pos_x":  2.0, "pos_y": 1.2, "pos_z": -2.0, "phys_enable": 1.0, "phys_flock_group": 1 },
+      { "index": 2, "pos_x": -2.0, "pos_y": 1.2, "pos_z":  2.0, "phys_enable": 1.0, "phys_flock_group": 1 },
+      { "index": 3, "pos_x":  2.0, "pos_y": 1.2, "pos_z":  2.0, "phys_enable": 1.0, "phys_flock_group": 1 }
+    ]
+  },
+
+  "analysis_windows": {
+    "flock_window": {
+      "type": "time_range",
+      "start_seconds": 0.50,
+      "end_seconds": 4.0,
+      "description": "Flock formation window — cohesion should have pulled emitters together by 0.5s; density-driven spread modulation active"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "flock_window",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "flock_window",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "spatial_modulation_active": {
+      "metric": "flux_rate",
+      "window": "flock_window",
+      "threshold": {
+        "min": 0.000005,
+        "max": 10.0
+      },
+      "severity": "hard_fail"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}
