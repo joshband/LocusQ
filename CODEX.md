@@ -2,7 +2,7 @@ Title: LocusQ Codex Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # CODEX.md
 
@@ -25,6 +25,7 @@ Use APC workflows to implement and validate LocusQ while preserving phase discip
 4. Read `status.json` before edits.
 5. Honor `ui_framework` gate (`visage`/`webview`) and do not mix UI paradigms.
 6. Do not auto-advance to the next phase after finishing one command.
+7. Backlog automation is draft-only by default: runners may execute T1/T2/T3 lanes and draft packets, summaries, and proposed status updates, but owner confirmation is required before any promotion or archive transition is applied.
 
 ## Automatic Skill Selection
 - Auto-select skills whenever user names a skill token or intent clearly matches a skill.
