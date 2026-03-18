@@ -7,7 +7,7 @@ Title: Documentation Hygiene Expert Skill
 Document Type: Skill
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-06
+Last Modified Date: 2026-03-18
 
 # Documentation Hygiene Expert
 
@@ -16,6 +16,7 @@ Use this skill when docs have become stale, duplicated, scattered, or hard to tr
 ## Goal
 Produce a lean, current, ADR-aligned documentation set that is easy to navigate and safe to operate during active SDLC work.
 Every backlog/runbook lifecycle document must also be understandable to non-technical readers while remaining machine-parseable for scripts and coding agents.
+Use Smart Brevity by default: concise, specific, scannable writing with short sentences, compact sections, and visuals only when they improve clarity.
 
 ## When To Use
 - Documentation is bloated or duplicated across root folders, `Documentation/`, and feature/runbook surfaces.
@@ -61,6 +62,7 @@ Use both skills for high-impact cleanup:
 4. `references/markdown-accessibility-and-focus.md`
 5. `references/root-docs-maintenance-loop.md`
 6. `references/git-artifact-hygiene-automation.md`
+7. `Documentation/adr/ADR-0021-smart-brevity-documentation-contract.md`
 
 ## Workflow
 1. Run artifact hygiene baseline (when repo clutter is in scope).
@@ -88,6 +90,12 @@ Use both skills for high-impact cleanup:
 6. Raise readability and accessibility.
    - Improve structure, headings, and scannability.
    - Use precise language, avoid ambiguous claims, and remove filler.
+   - Apply Smart Brevity:
+     - lead with the point,
+     - prefer short sentences,
+     - keep paragraphs short,
+     - prefer bullets/tables over long narrative blocks,
+     - use visuals only when they clarify faster than prose.
    - Keep markdown consistent with repository metadata and formatting conventions.
    - Normalize API docs/examples and code-comment narrative where stale prose creates implementation risk.
    - For architecture reviews, roadmap docs, and backlog runbooks that track live progress, enforce portable status-rich formatting:
@@ -121,6 +129,9 @@ Use both skills for high-impact cleanup:
    - `./scripts/export-backlog-summaries.py --check`
    - `./scripts/validate-docs-freshness.sh`
    - refresh summaries after backlog updates: `./scripts/export-backlog-summaries.py`
+10. When backlog automation is in scope, keep the repo on the draft-only default from `ADR-0023`.
+   - Automation may run T1/T2/T3 lanes and draft packets.
+   - Automation must not finalize promotion, archive moves, or authoritative status transitions unless the item is explicitly approved for owner-gated automation.
 
 ## Cross-Skill Routing
 - Pair with `skill_docs` for metadata/traceability/standards enforcement and root-doc sync.
@@ -133,6 +144,10 @@ Use both skills for high-impact cleanup:
   - canonical docs retained/created,
   - merged/archived/delete-candidate docs,
   - unresolved follow-ups with owners.
+- Smart Brevity summary:
+  - where long narrative was compacted,
+  - where visuals/tables replaced prose,
+  - where detail was intentionally deferred to archive or evidence.
 - ADR alignment summary for changed canonical docs.
 - Freshness contract summary (owner, cadence, trigger condition).
 - Backlog readability summary:
@@ -144,4 +159,9 @@ Use both skills for high-impact cleanup:
   - archive/history-bloat findings,
   - staged/local/CI guardrail status,
   - cleanup plan (`index-only` vs `history rewrite`).
+- Backlog automation summary when applicable:
+  - eligible items,
+  - draft packet locations,
+  - owner-confirmed next actions,
+  - any manual-only exclusions.
 - Validation status: `tested`, `partially tested`, or `not tested`.

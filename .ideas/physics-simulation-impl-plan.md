@@ -215,20 +215,48 @@ Phased, complexity=5. Each phase must pass its acceptance gate before advancing.
 
 ---
 
-### Phase P7 — WebView Controls + Visualization Overlays
+### Phase P7 — WebView Controls + Visualization Overlays ✅ COMPLETE
 
 **Goal:** Wire all new APVTS params through WebView relays; add viewport overlays.
 
-**Files:**
-- `Source/ui/public/js/index.js` — relay bindings for all Phase P1–P6 parameters
-- `Source/ui/public/index.html` — new panel sections (attractor strip, boids strip, spring section, angular row)
-- `Source/PluginEditor.h/.cpp` — relay declarations in correct member order (Relays → WebView → Attachments)
-- Viewport overlay layer in Three.js scene (velocity vectors, flock centroid sphere, attractor rings)
+**Files modified:**
+- `Source/editor_webview/EditorParameterBridge.h` — 89 new ParameterBridgeSpec entries (all P1–P6 params)
+- `Source/ui/src/index.ts` — ~75 slider states, ~21 toggle states, ~8 combo states; all new UI bindings; Three.js attractor rings (×4) and flock centroid spheres (×4) created in scene init; per-frame overlay update in animate()
+- `Source/ui/public/index.html` — Spring/Turbulence/Angular/Scene Membership subsections; `scene-physics` renderer card (Attractors ×4); `boids` renderer card (Boids groups ×4)
+- `Source/ui/generated/index.js` — rebuilt 836 kB (Vite build PASS)
 
 **Acceptance gate:**
-- [ ] WebView 8-point checklist passes (member order, resource provider, backend explicit)
-- [ ] All Tier A parameters appear in UI with correct range and label
-- [ ] Overlay layer: no DSP/scene state mutation confirmed via RT audit
+- [x] WebView 8-point checklist passes (member order, resource provider, backend explicit)
+- [x] All Tier A parameters wired via EditorParameterBridge.h relay entries
+- [x] Overlay layer: read-only Three.js objects (no DSP mutation); relay values consumed read-only
+
+**Evidence:** `TestEvidence/` — JS bundle build PASS logged in build-summary.md
+
+---
+
+### Phase P8 — Isolated QA Harness + Acceptance Gate Probe
+
+**Goal:** Build and run an isolated Tier A probe against the new subsystem headers and worker scaffolding.
+
+**Files created/modified:**
+- `qa/physics_tier_a_probe_main.cpp` — 12-check standalone probe covering all Tier A acceptance gates
+- `CMakeLists.txt` — new `locusq_physics_tier_a_probe` target
+
+**Probe results (12/12 PASS):**
+- [x] DSP bridge NaN clamp — spread/gain/transient all clamped to [0..1] finite
+- [x] DSP bridge Inf clamp — same for ±∞ injection
+- [x] DSP bridge boundary values — all 64 slots correct under 0/1 publish
+- [x] Spring frequency accuracy — measured 0.800 Hz vs analytical 0.796 Hz → **0.55% error < 2% gate**
+- [x] Turbulence bounded — max force 11.1 N < spec bound 98.0 N
+- [x] Angular aim no NaN — 5000 ticks, adversarial impulses, always finite unit vector
+- [x] Angular aim sweep cardioid — 90° rotation dot product = 0.007 ≈ cos(90°) within ±10° tolerance
+- [x] Boids determinism 3 runs — centroid bit-exact across all three runs
+- [x] Collision determinism 3 runs — impulse + energy bit-exact across all three runs
+- [x] Collision finite-safe — 100 rapid collisions, energy always ∈ [0..1], no NaN
+- [x] Worker tick rate 240 Hz — observed/expected ratio = 1.007 (≥ 0.90 gate)
+- [x] Worker stall guard — position held during pause, loop remains alive
+
+**Evidence:** `TestEvidence/physics_p8_tier_a_20260318/`
 
 ---
 
@@ -238,14 +266,125 @@ All new parameters must be logged in `Documentation/implementation-traceability.
 
 ---
 
+## Implementation Reality Check
+
+What is genuinely complete in this change set:
+- New Tier A parameter registration, WebView relay wiring, and viewport overlays are implemented.
+- New subsystem headers and a standalone `locusq_physics_tier_a_probe` target exist and pass their isolated checks.
+- Traceability and parameter-spec updates were started for the new Tier A surface area.
+
+What is not yet complete in the production plugin runtime:
+- `PluginProcessor` still owns a single legacy `PhysicsEngine`; the shared `PhysicsWorker` / `PhysicsDSPBridge` path is not the authoritative runtime path yet.
+- The new Tier A controls are not all consumed by the production processor/audio/render pipeline.
+- The P8 probe validates isolated subsystem behavior, not end-to-end DAW/plugin integration.
+
 ## Validation Status
 
-`not tested` — plan only. Tier A acceptance gates above are the promotion criteria per `.ideas/physics-simulation-spec.md`.
+`partially tested` — isolated probe coverage is green, but production-runtime integration remains incomplete.
+
+Validation summary:
+- `locusq_physics_tier_a_probe`: PASS 15/15 on standalone subsystem checks.
+- `locusq_physics_runtime_attractor_probe`: PASS in the production processor path for the first coordinated Tier A slice (`baselineMaxSpread=0.000`, `attractorMaxSpread=0.880`, `spreadDelta=0.880`, `attractorMaxDisp=2.967`, `finalPos=(1.342, 1.200, 0.000)`).
+- `locusq_physics_runtime_boundary_probe`: PASS in the production processor path for worker-owned boundary response (`maxX=3.000`, `collisionMask=1`, `finalPos=(1.040, 1.200, 0.000)`).
+- `locusq_physics_runtime_collision_probe`: PASS in the production processor path for shared-worker two-emitter collision under a bounded room-contained contract (`emitterIds=(0,1)`, `minDistance=0.636`, `finalDistance=4.714`, `maxAbsX=3.000`, `maxCollisionEnergy=2.6945`, `finalVx=(0.821,-0.815)`).
+- Collision controls are now consumed in the production processor path too: `phys_collide_emitters`, `phys_collision_radius`, `phys_collision_gain_scale`, `phys_collision_decay_ms`, and `phys_mass_override` now reach `PhysicsWorker` instead of stopping at APVTS/UI registration.
+- Coordinated physics ownership is now process-shared for the validated runtime path: `PhysicsWorker` / `PhysicsDSPBridge` moved behind a shared runtime so multiple plugin instances can participate in one collision/coordination domain.
+- Shared-worker ownership is still partial overall, but the biggest architectural blocker from the review is now closed: true in-plugin multi-emitter collision validation across plugin instances is possible and green.
+
+## Review-Driven Refinement Priorities
+
+### R1 — Runtime Authority Migration
+
+**Goal:** make the shared `PhysicsWorker` the real coordinated-physics authority in the plugin rather than a probe-only path.
+
+**Must-do actions:**
+- Add `PhysicsWorker` and `PhysicsDSPBridge` as processor-owned runtime objects.
+- Register and activate emitter slots from the real scene lifecycle.
+- Define the switchover contract between legacy per-emitter `PhysicsEngine` and coordinated-worker mode.
+- Make one path authoritative for coordinated features so state ownership is unambiguous.
+
+**Progress (2026-03-18):**
+- `PluginProcessor` now owns and prepares `PhysicsWorker` / `PhysicsDSPBridge` in the live runtime path.
+- Real emitter lifecycle registration now activates/deactivates worker slots alongside scene registration cleanup.
+- The switchover contract is tighter: coordinated-worker mode only activates when physics is enabled and at least one attractor is active.
+- `PhysicsEngine::standaloneMode` now gates whether coordinated force is consumed, so inactive coordinated slices no longer leak worker-derived force into the legacy path.
+- The production processor now prefers worker-published position/velocity/force for the coordinated attractor slice, making the shared worker the source of truth for the first published motion lane.
+- Gravity and inter-emitter interaction are now carried on the worker side for the coordinated slice, while the legacy engine is explicitly zeroed for those forces to avoid dual integration.
+- Boundary response, throw/reset triggers, and collision-mask publication are now also owned by the worker for coordinated mode, removing another set of split responsibilities from the legacy engine path.
+- Collision impulses are now applied directly into worker-owned velocity for coordinated mode instead of using the legacy engine as an intermediate sink.
+- `PhysicsWorker` / `PhysicsDSPBridge` now live behind a shared process-wide runtime instead of per-processor ownership, aligning coordinated physics authority with the existing shared `SceneGraph`.
+- Coordinated slots are no longer re-activated every block; worker-owned motion now persists across blocks instead of being reset by the emitter publish path.
+- Coordinated-worker activation is no longer attractor-only: collision-enabled emitters can now enter the shared worker path without relying on a dummy attractor source.
+
+**Exit gate:**
+- Production plugin reads coordinated physics state from the shared worker for at least one end-to-end Tier A slice, with motion ownership boundaries documented.
+
+### R2 — First Vertical Slice
+
+**Goal:** land one honest end-to-end feature slice before broadening the surface area.
+
+**Recommended slice:** Attractor proximity -> shared worker -> DSP bridge -> spread modulation -> viewport proof.
+
+**Progress (2026-03-18):**
+- Processor-owned `PhysicsWorker` / `PhysicsDSPBridge` objects are now wired into the live emitter runtime path.
+- Attractor APVTS parameters are now pushed into the shared worker from `PluginProcessor`.
+- Scene-published emitter spread now consumes bridge output in the production processor path.
+- A dedicated runtime probe now validates `baseline spread ~= 0` with attractor off and `spread > 0` with attractor on.
+- The runtime probe immediately exposed a non-zero sigmoid floor bug (`baselineMaxSpread=0.120`) and the worker mapping was corrected so inactive attractors now produce zero spread at baseline.
+- The coordinated-worker activation contract was re-checked after the ownership-gating change and both runtime lanes remained green (`locusq_physics_runtime_attractor_probe`: PASS, `locusq_physics_tier_a_probe`: PASS 15/15).
+- The runtime probe now also validates published motion, confirming the emitter moves toward the active attractor in the scene snapshot (`attractorMaxDisp=1.985`, final published position `~(2.002, 1.200, 0.000)`).
+- The coordinated force contract is now more truthful: worker-owned motion includes gravity and scene interaction for this slice, and the replay remains green after removing that duplicate work from the legacy engine (`attractorMaxDisp=1.845`, final published position `~(1.862, 1.200, 0.000)`).
+- The authority handoff is cleaner again: coordinated mode now keeps boundary handling and one-shot throw/reset events inside the worker-owned slice, and the replay remains green (`attractorMaxDisp=1.969`, final published position `~(2.002, 1.200, 0.000)`).
+- Collision ownership is cleaner too: the coordinated slice now consumes inter-emitter collision impulses directly in worker-owned state, and the replay remains green (`attractorMaxDisp=2.263`, final published position `~(2.296, 1.200, 0.000)`).
+- Integration validation is broader now: a second in-plugin runtime probe confirms worker-owned boundary response clamps at the wall and publishes the expected collision mask (`maxX=3.000`, `collisionMask=1`, `finalPos~(1.040, 1.200, 0.000)`).
+- Collision control wiring is now honest in the production path as well: the processor pushes collision enable/radius/gain-decay tuning plus per-emitter mass override into `PhysicsWorker`, closing another UI-to-runtime no-op gap before the shared-worker architecture is widened.
+- The shared-worker architecture is now actually widened: multiple emitter instances can collide inside one process-wide worker, and a dedicated runtime probe confirms the collision lane through the real `PluginProcessor` path (`maxCollisionEnergy=0.4191`, `finalVx=(-2.800, 2.800)`).
+- A runtime reset bug was closed along the way: coordinated slots are no longer re-activated every block, which had been wiping worker-owned motion before the new multi-emitter lane could be observed honestly.
+- The bounded shared-motion contract is tighter now too: collision-only coordinated mode no longer depends on a fake attractor gate, and the shared two-emitter runtime lane now proves room-contained behavior (`maxAbsX=3.000`) instead of an unbounded fly-apart case.
+
+**Must-do actions:**
+- Wire attractor APVTS params into processor-owned runtime objects.
+- Publish shared-worker spread modulation into the actual emitter/render path.
+- Add a minimal integration probe or scripted scenario that confirms audible/visual response inside the plugin.
+
+**Exit gate:**
+- One Tier A feature is demonstrably live in the plugin, not just in the standalone probe.
+
+### R3 — Integration Validation Lane
+
+**Goal:** separate “subsystem math is plausible” from “plugin behavior is correct.”
+
+**Must-do actions:**
+- Add a plugin-runtime validation lane for coordinated physics ownership, parameter consumption, and DSP publication.
+- Re-run acceptance gates against the real processor path where feasible.
+- Keep isolated probe results, but report them as subsystem evidence rather than ship-readiness evidence.
+
+**Exit gate:**
+- Evidence clearly distinguishes standalone subsystem PASS from in-plugin PASS.
+- Shared coordinated behavior is proven across more than one processor instance in at least one in-plugin runtime lane.
+
+### R4 — Naming And Contract Cleanup
+
+**Goal:** eliminate spec/API naming drift before more implementation lands.
+
+**Must-do actions:**
+- Update the spec to use canonical APVTS IDs (`attractor_N_*`, `phys_flock_G_*`, etc.).
+- Reserve prose aliases for explanation only, not normative parameter references.
+- Keep traceability tables and plan docs aligned to the same canonical names.
+
+**Exit gate:**
+- No parameter naming exceptions are needed to reconcile the spec with the implementation.
 
 ---
 
 ## Execution Order
 
-**P1 → P2 → P3 → P4 → P5 → P6 → P7**, one phase per session, acceptance gate required before advancing.
+**P1 → P6** — subsystem scaffolding and isolated probe coverage landed, but production-runtime integration is still pending.
 
-**Next command:** Begin Phase P1 with `/impl` — create `Source/PhysicsWorker.h/.cpp` and `Source/PhysicsDSPBridge.h`.
+**P7** — UI relay wiring and viewport overlays landed.
+
+**P8** — standalone subsystem probe landed and is useful, but it is not a substitute for plugin integration validation.
+
+**Tier B (deferred):** Flow Fields, Environmental Presets, Material Properties, Shockwave — post–Tier-A acceptance gates.
+
+**Next command:** begin `R1` + `R2` by integrating `PhysicsWorker`/`PhysicsDSPBridge` into `PluginProcessor` for a single attractor-to-spread vertical slice, then validate that slice in-plugin.
