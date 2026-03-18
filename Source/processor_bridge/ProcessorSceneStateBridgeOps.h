@@ -833,6 +833,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
             << "}";
     }
     rendererIamfPayloadElementsJson << "]";
+    const juce::String pluginWrapperType {
+        escapeJsonString (juce::AudioProcessor::getWrapperTypeDescription (wrapperType))
+    };
     const auto clapDiagnostics = getClapRuntimeDiagnostics();
     const juce::String clapWrapperType {
         escapeJsonString (clapDiagnostics.wrapperType)
@@ -1195,6 +1198,7 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
           + ",\"rendererGuardrailActive\":" + juce::String (spatialRenderer.wasGuardrailActiveLastBlock() ? "true" : "false")
           + ",\"outputChannels\":" + juce::String (outputChannels)
           + ",\"outputLayout\":\"" + outputLayout + "\""
+          + ",\"pluginWrapperType\":\"" + pluginWrapperType + "\""
           + ",\"rendererOutputMode\":\"" + rendererOutputMode + "\""
           + ",\"rendererSpatialProfileRequested\":\"" + rendererSpatialProfileRequested + "\""
           + ",\"rendererSpatialProfileActive\":\"" + rendererSpatialProfileActive + "\""

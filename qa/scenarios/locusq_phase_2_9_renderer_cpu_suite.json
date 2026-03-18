@@ -6,6 +6,9 @@
     "locusq_26_full_system_cpu_draft",
     "locusq_29_renderer_guardrail_high_emitters"
   ],
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "stop_on_first_failure": false,
   "shared_config": {
     "mode": "phase_2_9_renderer_cpu"

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LocusQ UI/UX Review Prototype Board</title>
+  <style>
+    :root {
+      --bg: #090b10;
+      --panel: #11151c;
+      --panel-soft: #171d26;
+      --panel-ink: #0c1016;
+      --line: #283241;
+      --line-soft: #1d2531;
+      --gold: #d4a847;
+      --gold-soft: rgba(212, 168, 71, 0.18);
+      --cyan: #58d8ff;
+      --cyan-soft: rgba(88, 216, 255, 0.16);
+      --green: #62e3a0;
+      --green-soft: rgba(98, 227, 160, 0.15);
+      --warn: #ffcb72;
+      --warn-soft: rgba(255, 203, 114, 0.14);
+      --text: #eef4fb;
+      --muted: #9aabbe;
+      --dim: #657488;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(47, 74, 108, 0.22), transparent 28%),
+        radial-gradient(circle at 82% 86%, rgba(20, 61, 73, 0.20), transparent 30%),
+        linear-gradient(180deg, #06080c 0%, #090b10 100%);
+      color: var(--text);
+      font-family: "SF Pro Text", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .page {
+      width: 1600px;
+      margin: 0 auto;
+      padding: 28px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .hero-card,
+    .board,
+    .strip {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(19, 24, 31, 0.98), rgba(12, 16, 22, 0.98)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 24px 26px;
+      min-height: 210px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .lede {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 60ch;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .score {
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      display: grid;
+      gap: 4px;
+    }
+
+    .score .label {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .score .value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .score .note {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .board {
+      overflow: hidden;
+    }
+
+    .board-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+    }
+
+    .board-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .board-title h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -0.03em;
+    }
+
+    .board-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tag.gold { border-color: rgba(212, 168, 71, 0.36); background: var(--gold-soft); color: #f8e6b0; }
+    .tag.cyan { border-color: rgba(88, 216, 255, 0.36); background: var(--cyan-soft); color: #bcefff; }
+    .tag.green { border-color: rgba(98, 227, 160, 0.36); background: var(--green-soft); color: #cbf8dd; }
+    .tag.warn { border-color: rgba(255, 203, 114, 0.36); background: var(--warn-soft); color: #ffe2a8; }
+
+    .boards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .window {
+      margin: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      background: #0b0f14;
+    }
+
+    .window-top {
+      height: 42px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+    }
+
+    .window-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .window-body {
+      display: grid;
+      min-height: 520px;
+    }
+
+    .plugin-body {
+      grid-template-columns: 1.18fr 0.82fr;
+    }
+
+    .companion-body {
+      grid-template-columns: 0.94fr 1.06fr;
+    }
+
+    .viewport {
+      position: relative;
+      min-height: 520px;
+      border-right: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 50% 54%, rgba(212, 168, 71, 0.06), transparent 30%),
+        linear-gradient(180deg, rgba(11, 15, 20, 0.86), rgba(8, 11, 16, 0.98));
+      overflow: hidden;
+    }
+
+    .viewport::before {
+      content: "";
+      position: absolute;
+      inset: 34px 40px 48px 40px;
+      border: 1px solid rgba(120, 132, 148, 0.14);
+      transform: perspective(900px) rotateX(58deg);
+      transform-origin: center center;
+    }
+
+    .viewport::after {
+      content: "";
+      position: absolute;
+      inset: 34px 40px 48px 40px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.35;
+      transform: perspective(900px) rotateX(58deg);
+      transform-origin: center center;
+    }
+
+    .viewport-status {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      color: var(--muted);
+    }
+
+    .chip.primary {
+      border-color: rgba(212,168,71,0.34);
+      background: rgba(212,168,71,0.14);
+      color: #f2de9d;
+    }
+
+    .chip.ok {
+      border-color: rgba(98,227,160,0.34);
+      background: rgba(98,227,160,0.12);
+      color: #caf8da;
+    }
+
+    .chip.info {
+      border-color: rgba(88,216,255,0.34);
+      background: rgba(88,216,255,0.12);
+      color: #bdefff;
+    }
+
+    .chip.warn {
+      border-color: rgba(255,203,114,0.34);
+      background: rgba(255,203,114,0.12);
+      color: #ffe3af;
+    }
+
+    .orb {
+      position: absolute;
+      left: 50%;
+      top: 57%;
+      width: 122px;
+      height: 122px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 2px solid rgba(212, 168, 71, 0.55);
+      background:
+        radial-gradient(circle at 40% 35%, rgba(255,255,255,0.15), transparent 30%),
+        radial-gradient(circle at 50% 50%, rgba(212,168,71,0.14), transparent 58%);
+      box-shadow:
+        0 0 0 18px rgba(212,168,71,0.05),
+        0 0 40px rgba(212,168,71,0.10);
+    }
+
+    .arrow {
+      position: absolute;
+      left: 50%;
+      top: calc(57% + 46px);
+      width: 112px;
+      height: 18px;
+      transform: translateX(-14px) rotate(28deg);
+      background: linear-gradient(90deg, rgba(212,168,71,0.96), rgba(212,168,71,0.18));
+      clip-path: polygon(0 40%, 78% 40%, 78% 0, 100% 50%, 78% 100%, 78% 60%, 0 60%);
+      filter: drop-shadow(0 0 12px rgba(212,168,71,0.28));
+      opacity: 0.95;
+    }
+
+    .rail {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(16, 21, 29, 0.96), rgba(12, 16, 23, 0.98));
+    }
+
+    .mode-summary {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+      display: grid;
+      gap: 8px;
+    }
+
+    .mode-summary .kicker {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .mode-summary .headline {
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    .mode-summary .support {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .card-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.018);
+      padding: 12px 13px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .mini-card .title {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--dim);
+      font-weight: 700;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .row strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .row .right {
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .drawer {
+      margin-top: auto;
+      padding: 12px 13px;
+      border: 1px dashed rgba(88,216,255,0.34);
+      border-radius: 14px;
+      color: #bbeeff;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(88,216,255,0.06);
+    }
+
+    .session-ladder {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(10, 15, 21, 0.98), rgba(7, 10, 15, 0.98));
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .step .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .step .name {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--dim);
+      font-weight: 700;
+    }
+
+    .step .body {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .step .help {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .focus-panel {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .capture-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .capture {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      background: rgba(255,255,255,0.02);
+      min-height: 160px;
+    }
+
+    .capture .slot {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--dim);
+      font-weight: 700;
+    }
+
+    .capture .shot {
+      flex: 1;
+      min-height: 78px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      background:
+        radial-gradient(circle at 50% 30%, rgba(88,216,255,0.12), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    }
+
+    .capture .cta {
+      padding: 10px 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(88,216,255,0.36);
+      background: rgba(88,216,255,0.10);
+      color: #bfefff;
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .match-card {
+      border: 1px solid rgba(98,227,160,0.26);
+      border-radius: 18px;
+      background: rgba(98,227,160,0.08);
+      padding: 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .match-card .title {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #bff4d3;
+      font-weight: 700;
+    }
+
+    .match-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .match-grid div {
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.14);
+    }
+
+    .match-grid strong {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8ecba9;
+      margin-bottom: 6px;
+    }
+
+    .strip {
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .rules {
+      display: grid;
+      gap: 8px;
+    }
+
+    .rules h3,
+    .strip-card h3 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .rules p,
+    .strip-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .bullets {
+      display: grid;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .bullet {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .bullet span:first-child {
+      color: var(--gold);
+      font-weight: 800;
+    }
+
+    .strip-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.02);
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-card">
+        <div class="eyebrow">Design Review Prototype Board</div>
+        <h1>Make the product feel deeper by showing less at once.</h1>
+        <div class="lede">
+          The recommended direction is not a bigger interface. It is a clearer one:
+          one dominant question per mode, one trust story per session, and a hard split
+          between primary workflow and lab telemetry.
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="score-grid">
+          <div class="score">
+            <div class="label">LocusQ Strength</div>
+            <div class="value">4.3 / 5</div>
+            <div class="note">Distinctive shell, strong world anchor, clear product tone.</div>
+          </div>
+          <div class="score">
+            <div class="label">Main Risk</div>
+            <div class="value">Hierarchy</div>
+            <div class="note">Too many equally-loud truths, especially in renderer diagnostics.</div>
+          </div>
+          <div class="score">
+            <div class="label">Companion Strength</div>
+            <div class="value">Trustability</div>
+            <div class="note">Excellent diagnostic depth and real operator transparency.</div>
+          </div>
+          <div class="score">
+            <div class="label">Companion Risk</div>
+            <div class="value">Front Load</div>
+            <div class="note">Launches like a lab console before it behaves like a companion.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="boards">
+      <section class="board">
+        <div class="board-header">
+          <div class="board-title">
+            <h2>LocusQ Next-Shell Concept</h2>
+            <p>Authority-first renderer rail, fewer shell badges, lab drawer collapsed.</p>
+          </div>
+          <div class="tag-row">
+            <div class="tag gold">Viewport First</div>
+            <div class="tag cyan">One Global Status</div>
+            <div class="tag green">Lab Drawer</div>
+          </div>
+        </div>
+        <div class="window">
+          <div class="window-top">
+            <div class="window-title">LocusQ &nbsp; Calibrate &nbsp; Emitter &nbsp; <span style="color:#f4df9b;">Renderer</span></div>
+            <div class="tag-row">
+              <div class="chip primary">Fallback Direct</div>
+              <div class="chip info">Viewport Locked</div>
+            </div>
+          </div>
+          <div class="window-body plugin-body">
+            <div class="viewport">
+              <div class="viewport-status">
+                <div class="chip ok">Profile Active</div>
+                <div class="chip warn">Headphone Downmix</div>
+                <div class="chip info">2ch Stereo</div>
+              </div>
+              <div class="orb"></div>
+              <div class="arrow"></div>
+            </div>
+            <div class="rail">
+              <div class="mode-summary">
+                <div class="kicker">Renderer Question</div>
+                <div class="headline">What output path is active, and can I trust it?</div>
+                <div class="support">The top card handles authority and fallback. Editable controls stay below it. Diagnostics move into a drawer.</div>
+              </div>
+              <div class="card-stack">
+                <div class="mini-card">
+                  <div class="title">Authority</div>
+                  <div class="row"><span>Requested Output</span><span class="right">Virtual 3D Stereo</span></div>
+                  <div class="row"><span>Active Path</span><span class="right">Stereo Downmix</span></div>
+                  <div class="row"><span>Why It Changed</span><span class="right">Steam unavailable</span></div>
+                </div>
+                <div class="mini-card">
+                  <div class="title">Spatialization</div>
+                  <div class="row"><span>Distance Model</span><strong>Inverse</strong></div>
+                  <div class="row"><span>Headphone Path</span><strong>Downmix</strong></div>
+                  <div class="row"><span>Doppler</span><strong>Off</strong></div>
+                </div>
+                <div class="mini-card">
+                  <div class="title">Room</div>
+                  <div class="row"><span>Room FX</span><strong>On</strong></div>
+                  <div class="row"><span>Mix</span><strong>22%</strong></div>
+                  <div class="row"><span>Damping</span><strong>0.42</strong></div>
+                </div>
+              </div>
+              <div class="drawer">Lab Drawer Collapsed: diagnostics, stage details, scene monitor, deep telemetry</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="board">
+        <div class="board-header">
+          <div class="board-title">
+            <h2>Companion Focus-Mode Concept</h2>
+            <p>Readiness funnel first, guided capture second, lab telemetry hidden until needed.</p>
+          </div>
+          <div class="tag-row">
+            <div class="tag cyan">Focus Mode</div>
+            <div class="tag green">Guided Capture</div>
+            <div class="tag warn">Lab Optional</div>
+          </div>
+        </div>
+        <div class="window">
+          <div class="window-top">
+            <div class="window-title">Head-Tracking Companion</div>
+            <div class="tag-row">
+              <div class="chip ok">Active Ready</div>
+              <div class="chip info">Plugin Ingest Live</div>
+            </div>
+          </div>
+          <div class="window-body companion-body">
+            <div class="session-ladder">
+              <div class="step">
+                <div class="top">
+                  <div class="name">Step 1</div>
+                  <div class="chip ok">Connected</div>
+                </div>
+                <div class="body">Supported headphones are connected.</div>
+                <div class="help">Device identity is visible, but low-level audio transport details stay secondary.</div>
+              </div>
+              <div class="step">
+                <div class="top">
+                  <div class="name">Step 2</div>
+                  <div class="chip ok">Ready</div>
+                </div>
+                <div class="body">Motion stream is active and the send gate is open.</div>
+                <div class="help">The user sees one clear readiness sentence before any raw telemetry.</div>
+              </div>
+              <div class="step">
+                <div class="top">
+                  <div class="name">Step 3</div>
+                  <div class="chip info">Centered</div>
+                </div>
+                <div class="body">Center / Sync is a primary action, not one control among many.</div>
+                <div class="help">Axis inversion and deep orientation debugging live under an advanced disclosure.</div>
+              </div>
+              <div class="step">
+                <div class="top">
+                  <div class="name">Step 4</div>
+                  <div class="chip warn">Profile Pending</div>
+                </div>
+                <div class="body">Capture three views to write a trusted profile.</div>
+                <div class="help">The operator sees a guided acquisition flow instead of a telemetry matrix.</div>
+              </div>
+            </div>
+            <div class="focus-panel">
+              <div class="mode-summary">
+                <div class="kicker">Companion Question</div>
+                <div class="headline">Is head tracking live, centered, and trusted?</div>
+                <div class="support">Everything needed for that answer is visible. Everything else moves to Lab mode or an advanced drawer.</div>
+              </div>
+              <div class="capture-grid">
+                <div class="capture">
+                  <div class="slot">Left Ear</div>
+                  <div class="shot"></div>
+                  <div class="cta">Capture Left</div>
+                </div>
+                <div class="capture">
+                  <div class="slot">Right Ear</div>
+                  <div class="shot"></div>
+                  <div class="cta">Capture Right</div>
+                </div>
+                <div class="capture">
+                  <div class="slot">Front View</div>
+                  <div class="shot"></div>
+                  <div class="cta">Capture Front</div>
+                </div>
+              </div>
+              <div class="match-card">
+                <div class="title">Best Match Ready</div>
+                <div class="match-grid">
+                  <div><strong>Subject</strong>H3</div>
+                  <div><strong>SOFA</strong>sadie2/H3_HRIR.sofa</div>
+                  <div><strong>Similarity</strong>0.83</div>
+                </div>
+              </div>
+              <div class="drawer">Lab Mode Hidden: raw quaternion, seq gap, jitter, smoothed vectors, ingest counters, axis debug</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="strip">
+      <div class="rules">
+        <h3>Scope Guardrails</h3>
+        <p>Keep the plugin centered on scene truth and the companion centered on device trust. Every visible control should earn its place by resolving a real uncertainty fast.</p>
+        <div class="bullets">
+          <div class="bullet"><span>01</span><span>No new always-visible control unless it removes ambiguity within five seconds.</span></div>
+          <div class="bullet"><span>02</span><span>Diagnostics summarize by default and explain on demand.</span></div>
+          <div class="bullet"><span>03</span><span>Device-bound capture and trust workflows stay in the companion.</span></div>
+          <div class="bullet"><span>04</span><span>If a feature does not strengthen Calibrate, Emitter, Renderer, or Trusted Head Tracking, it is a side quest.</span></div>
+        </div>
+      </div>
+      <div class="strip-card">
+        <h3>Recommended Product Shape</h3>
+        <p>The fastest win is not a visual overhaul. It is a hierarchy overhaul:</p>
+        <div class="tag-row">
+          <div class="tag gold">One Question Per Mode</div>
+          <div class="tag cyan">Focus vs Lab</div>
+          <div class="tag green">Authority First</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

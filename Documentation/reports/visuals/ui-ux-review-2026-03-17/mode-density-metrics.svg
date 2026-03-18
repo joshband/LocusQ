@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">LocusQ and Companion UI Density Metrics</title>
+  <desc id="desc">Bar chart comparing visible interface density across Calibrate, Emitter, Renderer, and Companion surfaces.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#131820"/>
+      <stop offset="100%" stop-color="#0b0f15"/>
+    </linearGradient>
+    <linearGradient id="goldBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#9b7727"/>
+      <stop offset="100%" stop-color="#d4a847"/>
+    </linearGradient>
+    <linearGradient id="cyanBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#236e88"/>
+      <stop offset="100%" stop-color="#58d8ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="760" rx="28" fill="url(#bg)"/>
+  <rect x="18" y="18" width="1244" height="724" rx="22" fill="none" stroke="#2a3340"/>
+
+  <text x="72" y="92" fill="#d4a847" font-size="14" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="3">UI DENSITY SNAPSHOT</text>
+  <text x="72" y="138" fill="#eef4fb" font-size="38" font-family="Arial, Helvetica, sans-serif" font-weight="700">Visible Complexity Is Highest In Renderer And The Companion</text>
+  <text x="72" y="176" fill="#93a6bc" font-size="18" font-family="Arial, Helvetica, sans-serif">Density index combines always-visible rows, buttons, selects, toggles, and status chips from the authored surfaces.</text>
+
+  <line x1="120" y1="610" x2="1160" y2="610" stroke="#334154" stroke-width="2"/>
+  <line x1="120" y1="260" x2="120" y2="610" stroke="#334154" stroke-width="2"/>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#7f91a7">
+    <text x="84" y="614">0</text>
+    <text x="78" y="544">20</text>
+    <text x="78" y="474">40</text>
+    <text x="78" y="404">60</text>
+    <text x="78" y="334">80</text>
+    <text x="72" y="264">100</text>
+  </g>
+
+  <g opacity="0.4" stroke="#233041" stroke-width="1">
+    <line x1="120" y1="540" x2="1160" y2="540"/>
+    <line x1="120" y1="470" x2="1160" y2="470"/>
+    <line x1="120" y1="400" x2="1160" y2="400"/>
+    <line x1="120" y1="330" x2="1160" y2="330"/>
+    <line x1="120" y1="260" x2="1160" y2="260"/>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="178" y="654" fill="#eef4fb" font-size="20" font-weight="700">CALIBRATE</text>
+    <text x="178" y="684" fill="#8da2ba" font-size="15">5 cards, 16 rows</text>
+    <rect x="170" y="467" width="130" height="143" rx="18" fill="url(#goldBar)"/>
+    <text x="226" y="548" fill="#0b0f15" font-size="40" font-weight="700">41</text>
+
+    <text x="436" y="654" fill="#eef4fb" font-size="20" font-weight="700">EMITTER</text>
+    <text x="436" y="684" fill="#8da2ba" font-size="15">6 cards, 37 rows</text>
+    <rect x="428" y="337" width="130" height="273" rx="18" fill="url(#goldBar)"/>
+    <text x="485" y="488" fill="#0b0f15" font-size="40" font-weight="700">78</text>
+
+    <text x="696" y="654" fill="#eef4fb" font-size="20" font-weight="700">RENDERER</text>
+    <text x="696" y="684" fill="#8da2ba" font-size="15">9 cards, 29 rows</text>
+    <rect x="688" y="327" width="130" height="283" rx="18" fill="url(#goldBar)"/>
+    <text x="745" y="483" fill="#0b0f15" font-size="40" font-weight="700">81</text>
+
+    <text x="930" y="654" fill="#eef4fb" font-size="20" font-weight="700">COMPANION</text>
+    <text x="930" y="684" fill="#8da2ba" font-size="15">73 rows, 11 capture actions</text>
+    <rect x="922" y="288" width="130" height="322" rx="18" fill="url(#cyanBar)"/>
+    <text x="979" y="470" fill="#071015" font-size="40" font-weight="700">92</text>
+  </g>
+
+  <g transform="translate(1040 236)">
+    <rect x="0" y="0" width="170" height="84" rx="16" fill="#0f151d" stroke="#37506a"/>
+    <text x="16" y="26" fill="#58d8ff" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">INTERPRETATION</text>
+    <text x="16" y="48" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Companion launches</text>
+    <text x="16" y="69" fill="#93a6bc" font-size="14" font-family="Arial, Helvetica, sans-serif">more like a lab than a guide.</text>
+  </g>
+
+  <g transform="translate(72 710)" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#7f91a7">
+    <text x="0" y="0">Density is not automatically bad. The question is whether the user must parse it continuously. The review recommendation is to keep density available but hide most of it behind progressive disclosure.</text>
+  </g>
+</svg>

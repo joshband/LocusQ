@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-17 (BL-039/BL-040/BL-053/BL-054/BL-055/BL-056/BL-058/BL-059 Done; BL-068 Done-candidate)
+Last Modified Date: 2026-03-18 (BL-089..BL-092 advanced to Done-candidate with owner sync packet and fresh trust-wave captures; BL-080 advanced to Done-candidate after standalone selftest recovery; BL-095..BL-099 added/refined after review follow-up; BL-055/BL-067/BL-072/BL-089/BL-097 refined; UI/UX trust-wave execution packet linked)
 
 # LocusQ Master Backlog Index
 
@@ -103,6 +103,41 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 - Owner prompts may temporarily raise cadence for deterministic tie-breaks; the reason must be recorded in `owner_decisions.md` or `lane_notes.md`.
 - Any cadence override must include a cost rationale and a rollback path to normal tiering.
 
+## UI/UX Prioritization Snapshot (2026-03-18)
+
+Derived from:
+- `Documentation/reports/2026-03-17-locusq-ui-ux-design-review.md`
+- `Documentation/reports/2026-03-17-locusq-ui-ux-refinement-pass.md`
+- `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`
+
+| Order | Item | Status | Priority | Why now |
+|---:|---|---|---|---|
+| 1 | BL-091 Companion Focus/Lab trust flow | `[DONE]` | P1 | Focus/Lab trust flow is implemented, capture-backed, and packaged for promotion; only formal archive/closeout remains. |
+| 2 | BL-090 Plugin authority-first shell and renderer hierarchy | `[DONE]` | P1 | The compressed shell is live, capture-backed, and packaged for promotion; only formal archive/closeout remains. |
+| 3 | BL-089 Render trust contract and requested-vs-active language | `[DONE]` | P1 | Shared trust vocabulary is live, representative parity evidence exists, and bounded truth-language keeps BL-095/BL-099 follow-ons separate. |
+| 4 | BL-092 Cross-format capability messaging parity | `[DONE]` | P2 | Representative native and preview parity is capture-backed and packaged for promotion; only formal archive/closeout remains. |
+| 5 | BL-093 Visual DNA token adoption and polish | `[DONE]` | P2 | Token drift is reconciled in the live plugin and companion shells, the owner sync packet is written, and only archive/closeout remains. |
+| 6 | BL-094 Reactive/simulation/temporal lab containment | `[DONE]` | P2 | The containment rule is now live in docs, architecture, and the `EMITTER` motion shell; only archive/closeout remains. |
+
+Execution note:
+- BL-091, BL-090, and BL-089 remain one coordinated P1 trust wave.
+- BL-091, BL-090, BL-089, and BL-092 are now `Done-candidate` with owner sync packet `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md` and fresh captures under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`.
+- BL-093 is now `Done-candidate` with validation bundle `TestEvidence/bl093_visual_token_polish_20260318T042850Z/summary.md` and owner sync packet `TestEvidence/bl093_owner_sync_z1_20260318T044057Z/promotion_decision.md`.
+- BL-094 is now `Done-candidate` with containment bundle `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/summary.md` and owner sync packet `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/promotion_decision.md`.
+
+### Trust Wave Execution Packet (2026-03-17)
+
+Primary packet:
+- `Documentation/plans/2026-03-17-ui-ux-trust-wave-execution-packet.md`
+
+Immediate wave summary:
+
+| Wave | Primary BL | Outcome | Primary Write Set | Promotion Constraint |
+|---|---|---|---|---|
+| 1A | BL-091 | Companion launches trust-first with Focus/Lab split | `companion/Sources/LocusQHeadTrackingCompanion/main.swift` | BL-089 copy contract must reconcile before promotion |
+| 1B | BL-090 | Plugin header and `RENDERER` hierarchy are compressed without losing boot/trust signals | `Source/ui/public/index.html`, `Source/ui/src/index.ts` | BL-089 copy contract must reconcile before promotion |
+| 1C | BL-089 | Shared requested/active/fallback language is frozen and normalized | docs first, then targeted plugin/companion text hooks | engine-specific trust text must stay truthful relative to BL-095 |
+
 ## Active Queue
 
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
@@ -136,35 +171,46 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 27 | BL-052 | Steam Audio virtual surround quad layout | P1 | **Done** (A1 and test-phase lanes PASS; owner closeout sync Z1 PASS) | E | BL-038 (Done) | BL-053, BL-054 | [bl-052](done/bl-052-steam-audio-virtual-surround-quad-layout.md) |
 | 28 | BL-053 | Head tracking orientation injection | P1 | **Done** (Z1 owner sync 2026-03-16: T3 replay 10/10 PASS; A2 operator listen deferred non-blocking; formal Done 2026-03-17) | E | BL-052, BL-045 | BL-059 | [bl-053](done/bl-053-head-tracking-orientation-injection.md) |
 | 29 | BL-054 | PEQ cascade RT integration | P1 | **Done** (Z1 owner sync 2026-03-17: T3 10/10 PASS; archive sync complete) | E | BL-052 | BL-056 | [bl-054](done/bl-054-peq-cascade-rt-integration.md) |
-| 30 | BL-055 | FIR convolution engine | P1 | **Done** (Z1 owner sync 2026-03-16: T3 10/10 PASS; archive sync complete 2026-03-17; offline parity deferred non-blocking) | E | — | BL-056 | [bl-055](done/bl-055-fir-convolution-engine.md) |
+| 30 | BL-055 | FIR convolution engine | P1 | **Done** (historical closeout retained; 2026-03-17 review opened BL-095 for truthfulness/objective-validation follow-up) | E | — | BL-056 | [bl-055](done/bl-055-fir-convolution-engine.md) |
 | 31 | BL-056 | Calibration state migration + latency contract | P1 | **Done** (Z1 owner sync 2026-03-17: T3 10/10 PASS; BL-054+BL-055 Done gates met; archive sync complete 2026-03-17) | E | BL-054, BL-055 | BL-059 | [bl-056](done/bl-056-calibration-state-migration-latency.md) |
 | 32 | BL-057 | Device preset library (AirPods Pro 1/2/3 + WH-1000XM5) | P1 | **Done** (preset matrix complete; execute T2 `5/5` + T3 `10/10` PASS; Nyquist resonance gate PASS) | E | BL-046 | — (BL-058 unblocked) | [bl-057](done/bl-057-device-preset-library.md) |
 | 33 | BL-058 | Companion profile acquisition UI + HRTF matching | P0 | **Done** (Z1 owner sync 2026-03-17: execute lane 16/16 PASS; selftest 7/7 PASS; matching_latency=0.1050ms; send gate closed; privacy contract clean; formal Done 2026-03-17) | E | BL-057 | BL-059 | [bl-058](done/bl-058-companion-profile-acquisition.md) |
 | 34 | BL-059 | CalibrationProfile integration handoff | P0 | **Done** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 deps PASS; BL-056 Done gate met; formal Done 2026-03-17) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](done/bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | In Validation (T1+T2 3/3 PASS 2026-03-17; fixture gate 45.5% ext improvement p<0.0001; blocked on ≥5 real participant sessions) | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
-| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
-| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Done-candidate (owner sync Z1 2026-03-17: contract-only 10/10 PASS, execute 3/3 PASS, zero TODO rows, compile-backed execute probe clean; packet `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/promotion_decision.md`) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
+| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | In Validation (2026-03-17 intake: contract `3/3` PASS; execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual execution, and extension-safe runtime-access proof remain blocked) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
+| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | **Done** (owner sync Z1 2026-03-17: contract-only 10/10 PASS, execute 3/3 PASS, zero TODO rows, compile-backed execute probe clean; archive sync complete 2026-03-17) | E | BL-050, BL-055 | — | [bl-068](done/bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 | 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
-| 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-058, BL-059 | BL-060 | [bl-072](done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
+| 42 | BL-072 | Companion runtime protocol parity and BL-058 QA harness | P0 | **Done** (historical closeout retained; 2026-03-17 review opened BL-096 for executable/core reunification follow-up) | E | BL-058, BL-059 | BL-060 | [bl-072](done/bl-072-companion-runtime-protocol-parity-and-bl058-qa-harness.md) |
 | 43 | BL-073 | QA scaffold truthfulness gates for BL-067 and BL-068 | P1 | **Done** (clean verification against BL-067/BL-068 execute lanes PASS; PR #6 merged; closeout/archive sync complete) | G | — | — | [bl-073](done/bl-073-qa-scaffold-truthfulness-gates-bl067-bl068.md) |
 | 44 | BL-074 | WebView runtime reliability diagnostics (strict gesture and degraded mode) | P1 | **Done** (deterministic execute evidence PASS; owner shared-control closeout sync complete) | B | BL-040, BL-067 | — | [bl-074](done/bl-074-webview-runtime-reliability-diagnostics-strict-gesture-and-degraded-mode.md) |
 | 45 | BL-075 | Code comment and API documentation accessibility review | P2 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | G | — | — | [bl-075](done/bl-075-code-comment-and-api-documentation-accessibility-review.md) |
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; `Source/SpatialRenderer.cpp` `662` LOC; closeout/archive sync complete) | F | BL-050, BL-069, BL-070 | — | [bl-076](done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
-| 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | Open (2026-03-05 follow-on created from BL-036 runtime slices A2/B2/C1 so processor-side finite-output work remains explicit) | F | BL-036 | — | [bl-078](bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
+| 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | **Done** (A2/B2/C1/D1 green; owner sync Z1 packet `TestEvidence/bl078_owner_sync_z1_20260317T202724Z/promotion_decision.md`; archive sync complete 2026-03-17) | F | BL-036 | — | [bl-078](done/bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
 | 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | In Validation (W1-D implementation landed locally: `Source/processor_core/ProcessorParameterLayout.cpp` now exposes grouped host hierarchy while preserving all `90` parameter IDs and flattened order; build + parity checks PASS, promotion follow-up pending in a clean checkout) | F | BL-032 | — | [bl-079](bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
-| 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | In Validation (processor snapshot/file history, native undo/redo bridge, and WebView controls landed locally; typecheck/build/bundle-marker checks PASS, but the rebuilt standalone production self-test currently fails earlier on a CALIBRATE topology/legacy-alias timeout before `UI-W3A-01` / `UI-W3A-02` execute) | F | BL-070, BL-074 | — | [bl-080](bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
+| 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | Done-candidate (processor snapshot/file history, native undo/redo bridge, and WebView controls are live; rebuilt standalone production self-test now PASSes with both `UI-W3A-01` and `UI-W3A-02` recorded in `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json`; remaining work is owner promotion/closeout sync) | F | BL-070, BL-074 | — | [bl-080](bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
 | 51 | BL-081 | Perceptual listening harness — upstream extraction to audio-dsp-qa-harness | P2 | Open | G | BL-060 | — | [bl-081](bl-081-perceptual-listening-harness-upstream-extraction.md) |
 | 52 | BL-082 | QA runner app library — upstream extraction to audio-dsp-qa-harness | P0 | Open | G | — | BL-083, BL-084, BL-085 | [bl-082](bl-082-qa-runner-app-library.md) |
 | 53 | BL-083 | Runtime-config contract enforcement — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-083](bl-083-runtime-config-contract.md) |
 | 54 | BL-084 | Profiling contract hardening — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-084](bl-084-profiling-contract-hardening.md) |
-| 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | Open | G | BL-082 | — | [bl-085](bl-085-cmake-integration-module.md) |
+| 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | In Validation (upstream commit `17f2992` publishes `qa_harness_integration.cmake` + `cmake/MIGRATION.md`; local upstream build/test/install and LocusQ configure/build/smoke replay PASS) | G | BL-082 | — | [bl-085](bl-085-cmake-integration-module.md) |
 | 56 | BL-086 | CI checkout composite action — audio-dsp-qa-harness | P1 | Open | G | — | — | [bl-086](bl-086-ci-checkout-composite-action.md) |
 | 57 | BL-087 | Recursive scenario discovery — audio-dsp-qa-harness | P2 | Open (deferred) | G | — | — | [bl-087](bl-087-recursive-scenario-discovery.md) |
 | 58 | BL-088 | HostRunner plugin backends (VST3/AU) — audio-dsp-qa-harness | P2 | Open (deferred; after BL-082/083/084) | G | BL-082, BL-083, BL-084 | — | [bl-088](bl-088-hostrunner-plugin-backends.md) |
+| 59 | BL-089 | Render trust contract and requested-vs-active language | P1 | Done-candidate (shared copy contract is live across plugin + companion; trust-wave evidence bundle captured at `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`; remaining work is only formal archive/closeout while BL-095/BL-099 continue independently) | B | BL-040, BL-053, BL-058, BL-095, BL-099 | BL-090, BL-091, BL-092 | [bl-089](bl-089-render-trust-contract-and-requested-active-language.md) |
+| 60 | BL-090 | Plugin authority-first shell and renderer hierarchy | P1 | Done-candidate (compressed header, authority-first `RENDERER`, and collapsed `Lab` drawer are live; standalone + browser-preview captures are bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`) | C | BL-089, BL-040, BL-027, BL-074 | BL-093 | [bl-090](bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md) |
+| 61 | BL-091 | Companion Focus/Lab trust flow | P1 | Done-candidate (`Focus` default, readiness ladder, synthetic-mode disclosure, and `Lab` containment are live; `Focus` + `Lab` captures are bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`) | C | BL-089, BL-045, BL-058, BL-072 | BL-093 | [bl-091](bl-091-companion-focus-lab-trust-flow.md) |
+| 62 | BL-092 | Cross-format capability messaging parity | P2 | Done-candidate (preview/degraded/AUv3-aware messaging is live; representative browser-preview + native captures are bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`) | A | BL-067, BL-074, BL-089 | — | [bl-092](bl-092-cross-format-capability-messaging-parity.md) |
+| 63 | BL-093 | Visual DNA token adoption and polish | P2 | Done-candidate (token drift is reconciled in the live plugin + companion shells; browser-preview, native standalone, and native companion captures are bundled under `TestEvidence/bl093_visual_token_polish_20260318T042850Z/`; owner sync packet recorded at `TestEvidence/bl093_owner_sync_z1_20260318T044057Z/promotion_decision.md`) | C | BL-089, BL-090, BL-091 | — | [bl-093](bl-093-visual-dna-token-adoption-and-polish.md) |
+| 64 | BL-094 | Reactive/simulation/temporal lab containment | P2 | Done-candidate (guardrail now exists in backlog docs, architecture, and the live `EMITTER` motion shell; containment captures are bundled under `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/`; owner sync packet recorded at `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/promotion_decision.md`) | E | BL-090, BL-091 | future reactive/simulation/temporal expansion lanes | [bl-094](bl-094-reactive-simulation-temporal-lab-containment.md) |
+| 65 | BL-095 | Partitioned FIR truthfulness recovery and objective validation | P0 | Open | E | BL-050, BL-055, BL-073 | — | [bl-095](bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md) |
+| 66 | BL-096 | Companion executable/core protocol reunification | P1 | Open | E | BL-045, BL-072 | — | [bl-096](bl-096-companion-executable-core-protocol-reunification.md) |
+| 67 | BL-097 | Editor bridge cadence tiering and calibration reload isolation | P1 | Open | B | HX-05, BL-059, BL-074 | — | [bl-097](bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md) |
+| 68 | BL-098 | Local validation lane restoration and clean-build completeness | P1 | Open | G | BL-042 | — | [bl-098](bl-098-local-validation-lane-restoration-and-clean-build-completeness.md) |
+| 69 | BL-099 | Headphone verification truthfulness and compensation provenance | P1 | Open | E | BL-034, BL-057 | BL-089 | [bl-099](bl-099-headphone-verification-truthfulness-and-compensation-provenance.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
@@ -242,6 +288,7 @@ graph TD
         BL-069[BL-069 RT-Safe Preset Pipeline Done]
         BL-070[BL-070 Snapshot + Telemetry Seqlock Done]
         BL-074[BL-074 WebView Reliability Diagnostics Done]
+        BL-078[BL-078 Runtime Finite Output Done]
         BL-030[BL-030 Release Gov Done]
     end
 
@@ -270,7 +317,17 @@ graph TD
         BL-073[BL-073 QA Scaffold Truthfulness Gates]
         BL-075[BL-075 Comment/API Docs Accessibility]
         BL-076[BL-076 SpatialRenderer Decomposition]
-        BL-078[BL-078 Runtime Finite Output]
+        BL-089[BL-089 Render Trust Contract]
+        BL-090[BL-090 Plugin Authority-First Shell]
+        BL-091[BL-091 Companion Focus/Lab]
+        BL-092[BL-092 Capability Messaging Parity]
+        BL-093[BL-093 Visual DNA Polish]
+        BL-094[BL-094 Lab Containment]
+        BL-095[BL-095 FIR Truthfulness Recovery]
+        BL-096[BL-096 Companion Protocol Reunification]
+        BL-097[BL-097 Editor Bridge Cadence]
+        BL-098[BL-098 Local Validation Restoration]
+        BL-099[BL-099 Headphone Truth + Compensation Provenance]
         BL-062[BL-062 Ambisonics IR Contract]
         BL-063[BL-063 Renderer Compatibility Guardrails]
         BL-064[BL-064 ADM Mapping Contract]
@@ -365,8 +422,34 @@ graph TD
     BL-059 --> BL-072
     BL-073 --> BL-067
     BL-073 --> BL-068
+    BL-073 --> BL-095
     BL-040 --> BL-074
     BL-067 --> BL-074
+    BL-040 --> BL-089
+    BL-053 --> BL-089
+    BL-058 --> BL-089
+    BL-089 --> BL-090
+    BL-089 --> BL-091
+    BL-095 --> BL-089
+    BL-099 --> BL-089
+    BL-067 --> BL-092
+    BL-074 --> BL-092
+    BL-089 --> BL-092
+    BL-089 --> BL-093
+    BL-090 --> BL-093
+    BL-091 --> BL-093
+    BL-090 --> BL-094
+    BL-091 --> BL-094
+    BL-050 --> BL-095
+    BL-055 --> BL-095
+    BL-045 --> BL-096
+    BL-072 --> BL-096
+    HX-05 --> BL-097
+    BL-059 --> BL-097
+    BL-074 --> BL-097
+    BL-042 --> BL-098
+    BL-034 --> BL-099
+    BL-057 --> BL-099
     BL-051 --> BL-062
     BL-062 --> BL-063
     BL-051 --> BL-064
@@ -385,13 +468,13 @@ graph TD
 
 | Track | Name | Scope | Skills |
 |---|---|---|---|
-| A | Runtime Formats | BL-046, BL-067 | `steam-audio-capi`, `clap-plugin-lifecycle`, `auv3-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
-| B | Scene/UI Runtime | BL-039, BL-040, BL-074 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
-| C | UX Authoring | — (BL-023 Done) | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
+| A | Runtime Formats | BL-046, BL-067, BL-092 | `steam-audio-capi`, `clap-plugin-lifecycle`, `auv3-plugin-lifecycle`, `spatial-audio-engineering`, `skill_docs` |
+| B | Scene/UI Runtime | BL-039, BL-040, BL-074, BL-089, BL-097 | `juce-webview-runtime`, `reactive-av`, `threejs`, `physics-reactive-audio`, `skill_impl`, `skill_docs` |
+| C | UX Authoring | BL-090, BL-091, BL-093 | `skill_design`, `juce-webview-runtime`, `threejs`, `skill_plan`, `skill_docs` |
 | D | QA Platform | BL-049, BL-077 | `skill_test`, `skill_testing`, `skill_troubleshooting`, `skill_plan` |
-| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068, BL-071, BL-072 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
+| E | R&D Expansion | BL-020, BL-021, BL-038, BL-041, BL-045, BL-047, BL-051, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058, BL-059, BL-060, BL-061, BL-062, BL-063, BL-064, BL-065, BL-066, BL-068, BL-071, BL-072, BL-094, BL-095, BL-096, BL-099 | `skill_plan`, `skill_dream`, `spatial-audio-engineering`, `steam-audio-capi`, `reactive-av`, `threejs`, `temporal-effects-engineering` |
 | F | Hardening | BL-032, BL-035, BL-036, BL-037, BL-044, BL-050, BL-069, BL-070, BL-076, BL-078, BL-079, BL-080 | `skill_impl`, `skill_testing`, `juce-webview-runtime`, `skill_docs` |
-| G | Release/Governance | BL-030, BL-042, BL-048, BL-073, BL-075 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship`, `documentation-hygiene-expert` |
+| G | Release/Governance | BL-030, BL-042, BL-048, BL-073, BL-075, BL-098 | `skill_docs`, `skill_plan`, `skill_test`, `skill_ship`, `documentation-hygiene-expert` |
 
 ## Intake Process
 
@@ -498,6 +581,12 @@ Any status change must update in the same changeset:
 | BL-078 | `(pending annex spec)` |
 | BL-079 | `(no annex spec — self-contained runbook)` |
 | BL-080 | `(no annex spec — self-contained runbook)` |
+| BL-089 | `Documentation/reports/2026-03-17-locusq-ui-ux-design-review.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-refinement-pass.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`; `Documentation/reports/visuals/ui-ux-refinement-2026-03-17/trust-state-ladder.svg`; `Documentation/reports/visuals/ui-ux-second-opinion-claude-2026-03-17/render-trust-ladder.svg` |
+| BL-090 | `Documentation/reports/2026-03-17-locusq-ui-ux-design-review.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-refinement-pass.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`; `Documentation/reports/visuals/ui-ux-refinement-2026-03-17/refinement-prototype.html`; `Documentation/reports/visuals/ui-ux-second-opinion-claude-2026-03-17/second-opinion-prototype.html` |
+| BL-091 | `Documentation/reports/2026-03-17-locusq-ui-ux-design-review.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-refinement-pass.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`; `Documentation/reports/visuals/ui-ux-refinement-2026-03-17/focus-lab-operating-model.svg`; `Documentation/reports/visuals/ui-ux-second-opinion-claude-2026-03-17/companion-focus-lab-hierarchy.svg` |
+| BL-092 | `Documentation/reports/2026-03-17-locusq-ui-ux-refinement-pass.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`; `Documentation/reports/visuals/ui-ux-refinement-2026-03-17/format-runtime-parity.svg`; `Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md`; `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md` |
+| BL-093 | `Documentation/reports/ui-ux-refinement-2026-03-17/visual-dna.json`; `Documentation/reports/ui-ux-refinement-2026-03-17/design-tokens.json`; `Documentation/reports/ui-ux-refinement-2026-03-17/component-specs.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`; `Documentation/reports/visuals/ui-ux-second-opinion-claude-2026-03-17/second-opinion-prototype.html` |
+| BL-094 | `Documentation/reports/2026-03-17-locusq-ui-ux-refinement-pass.md`; `Documentation/reports/2026-03-17-locusq-ui-ux-second-opinion-claude.md`; `Documentation/reports/visuals/ui-ux-review-2026-03-17/scope-compass.svg`; `Documentation/reports/visuals/ui-ux-second-opinion-claude-2026-03-17/scope-boundary.svg`; `ARCHITECTURE.md` |
 
 ## Closed Archive
 

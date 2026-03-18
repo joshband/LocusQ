@@ -1103,3 +1103,13 @@ Source/PluginProcessor.cpp:3151:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:3155:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:3158:DYNAMIC_CONTAINER_MUTATION
 Source/PluginProcessor.cpp:3167:HEAP_ALLOC
+# BL-078 / HX-06 reconciliation entries (2026-03-17T20:14:39Z)
+Source/SpatialRenderer.h:551:HEAP_ALLOC
+Source/PhysicsEngine.h:28:HEAP_ALLOC
+Source/SceneGraph.h:15:HEAP_ALLOC
+Source/SceneGraph.h:48:HEAP_ALLOC
+Source/SceneGraph.h:86:HEAP_ALLOC
+Source/SceneGraph.h:129:HEAP_ALLOC
+Source/SceneGraph.h:606:HEAP_ALLOC
+Source/SceneGraph.h:634:HEAP_ALLOC
+Source/SceneGraph.h:635:HEAP_ALLOC

@@ -1,0 +1,192 @@
+{
+  "reasonCode": "failing_check_assertion",
+  "failingCheck": "UI-W3A-01",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "UI-W3A-01: timeline redo restore failed (laneLength=2, canUndo=true, canRedo=false, status=\"Redid: Edit Timeline\")"
+  },
+  "failingCheckDetails": "timeline redo restore failed (laneLength=2, canUndo=true, canRedo=false, status=\"Redid: Edit Timeline\")",
+  "checks": [
+    {
+      "pass": true,
+      "id": "UI-P1-026A",
+      "details": "topology rows mono=1 stereo=2 quad=4 verified; legacy alias sync both directions"
+    },
+    {
+      "pass": true,
+      "details": "custom-map protection verified (auto=1/2/1/2 custom=2/2/1/2 postAck=2/2/1/2)",
+      "id": "UI-P1-026B"
+    },
+    {
+      "details": "preflight gate + start/abort lifecycle verified",
+      "id": "UI-P1-026C",
+      "pass": true
+    },
+    {
+      "pass": true,
+      "id": "UI-P1-026D",
+      "details": "profileState=fail profileChip=FAIL requested=generic active=generic"
+    },
+    {
+      "id": "UI-P1-026E",
+      "pass": true,
+      "details": "downmixState=pass downmixChip=PASS; profileCRUD=save/load/rename/delete; resize=compact+tight"
+    },
+    {
+      "id": "UI-04",
+      "pass": true,
+      "details": "sticky presets verified: orbit, float, bounce"
+    },
+    {
+      "pass": true,
+      "id": "UI-06",
+      "details": "rewind-to-start/play/stop-at-current transport sequence passed"
+    },
+    {
+      "pass": true,
+      "details": "add/move/delete/dbl-click curve cycle verified (fallbacks: add, move, delete; scaffolds: delete-baseline); strict_gesture=off",
+      "id": "UI-07"
+    },
+    {
+      "id": "UI-W3A-01",
+      "details": "timeline redo restore failed (laneLength=2, canUndo=true, canRedo=false, status=\"Redid: Edit Timeline\")",
+      "pass": false
+    },
+    {
+      "id": "failure",
+      "pass": false,
+      "details": "UI-W3A-01: timeline redo restore failed (laneLength=2, canUndo=true, canRedo=false, status=\"Redid: Edit Timeline\")"
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "label": "p0 self-test controls ready",
+      "elapsedMs": 1.0,
+      "pollMs": 40.0,
+      "polls": 1.0,
+      "timeoutMs": 8000.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 30.0,
+      "label": "steam diagnostics baseline",
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 30.0,
+      "label": "clap diagnostics baseline",
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 3000.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 1.0,
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "calibrate topology stereo rows"
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "legacy config follows stereo topology",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology quad rows",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "label": "legacy config follows quad topology",
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology mono rows",
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "label": "legacy config follows mono topology",
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy mono maps topology quad"
+    },
+    {
+      "result": "pass",
+      "label": "legacy stereo maps topology stereo",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "label": "calibrate topology 7.4.2 dynamic rows",
+      "timeoutMs": 2000.0,
+      "polls": 1.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 25.0,
+      "label": "calibration start [attempt 1/4]",
+      "pollMs": 25.0,
+      "timeoutMs": 1800.0,
+      "polls": 2.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "calibration abort [attempt 1/4]",
+      "elapsedMs": 26.0,
+      "timeoutMs": 1800.0,
+      "polls": 2.0
+    },
+    {
+      "result": "pass",
+      "label": "physics preset apply orbit",
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "physics preset apply float"
+    }
+  ]
+}

@@ -13,6 +13,9 @@
     "locusq_25_quality_final_reference",
     "locusq_25_cpu_budget_draft"
   ],
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "stop_on_first_failure": false,
   "shared_config": {
     "mode": "phase_2_5_acceptance"

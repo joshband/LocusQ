@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LocusQ Refinement Prototype Board</title>
+  <style>
+    :root {
+      --bg: #06080b;
+      --panel: #0f141b;
+      --panel-soft: #171d26;
+      --panel-strong: #232b38;
+      --line: #2d3745;
+      --line-soft: rgba(255, 255, 255, 0.08);
+      --gold: #d4a847;
+      --gold-soft: rgba(212, 168, 71, 0.14);
+      --cyan: #59d8ff;
+      --cyan-soft: rgba(89, 216, 255, 0.16);
+      --green: #67e2a5;
+      --green-soft: rgba(103, 226, 165, 0.16);
+      --warn: #ffb86b;
+      --warn-soft: rgba(255, 184, 107, 0.15);
+      --error: #ff7a6e;
+      --error-soft: rgba(255, 122, 110, 0.15);
+      --text: #eef4fb;
+      --muted: #a6b1c2;
+      --dim: #6e7a8e;
+      --shadow: 0 26px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(89, 216, 255, 0.14), transparent 26%),
+        radial-gradient(circle at 78% 18%, rgba(212, 168, 71, 0.14), transparent 28%),
+        radial-gradient(circle at 72% 82%, rgba(103, 226, 165, 0.10), transparent 24%),
+        linear-gradient(180deg, #06080b 0%, #090d13 100%);
+    }
+
+    .page {
+      width: 1600px;
+      margin: 0 auto;
+      padding: 28px 28px 36px;
+      display: grid;
+      gap: 22px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .card,
+    .window,
+    .matrix {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(23, 29, 38, 0.98), rgba(10, 14, 19, 0.98)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 40px;
+      line-height: 1.03;
+      letter-spacing: -0.035em;
+      max-width: 12ch;
+    }
+
+    .lede {
+      max-width: 62ch;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 8px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .chip.gold { border-color: rgba(212, 168, 71, 0.34); background: var(--gold-soft); color: #f8e5b4; }
+    .chip.cyan { border-color: rgba(89, 216, 255, 0.34); background: var(--cyan-soft); color: #c8f2ff; }
+    .chip.green { border-color: rgba(103, 226, 165, 0.34); background: var(--green-soft); color: #d2fae3; }
+    .chip.warn { border-color: rgba(255, 184, 107, 0.34); background: var(--warn-soft); color: #ffe5c6; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .score {
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 4px;
+    }
+
+    .score .label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--dim);
+    }
+
+    .score .value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .score .note {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .principle {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line-soft);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 6px;
+    }
+
+    .principle .title {
+      font-size: 11px;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 700;
+    }
+
+    .principle .body {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .windows {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .window {
+      overflow: hidden;
+    }
+
+    .window-top {
+      height: 46px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+    }
+
+    .window-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .window-badges {
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-body {
+      min-height: 700px;
+      display: grid;
+    }
+
+    .plugin {
+      grid-template-columns: 1.16fr 0.84fr;
+    }
+
+    .companion {
+      grid-template-columns: 0.92fr 1.08fr;
+    }
+
+    .viewport {
+      position: relative;
+      border-right: 1px solid var(--line);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 54%, rgba(212, 168, 71, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(8, 12, 17, 0.94), rgba(6, 8, 11, 0.98));
+    }
+
+    .viewport .header-band {
+      position: absolute;
+      inset: 18px 18px auto 18px;
+      height: 44px;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      background: rgba(12, 17, 24, 0.84);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-left: 10px;
+    }
+
+    .tab {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--dim);
+      border: 1px solid transparent;
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-color: rgba(212, 168, 71, 0.28);
+      background: rgba(212, 168, 71, 0.10);
+    }
+
+    .spacer { flex: 1; }
+
+    .scene-chip {
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+
+    .grid-field,
+    .grid-lines {
+      position: absolute;
+      inset: 110px 36px 90px 36px;
+      transform: perspective(920px) rotateX(61deg);
+      transform-origin: center center;
+      border-radius: 16px;
+    }
+
+    .grid-field {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .grid-lines {
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 26px 26px;
+      opacity: 0.7;
+    }
+
+    .listener,
+    .speaker,
+    .emitter {
+      position: absolute;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 30px rgba(0, 0, 0, 0.26);
+    }
+
+    .listener {
+      width: 72px;
+      height: 72px;
+      left: calc(50% - 36px);
+      top: 50%;
+      background: radial-gradient(circle, rgba(89, 216, 255, 0.28), rgba(89, 216, 255, 0.06));
+      border: 1px solid rgba(89, 216, 255, 0.42);
+      color: #d9f7ff;
+    }
+
+    .speaker {
+      width: 18px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .speaker.a { left: 120px; top: 180px; }
+    .speaker.b { right: 120px; top: 180px; }
+    .speaker.c { left: 120px; bottom: 160px; }
+    .speaker.d { right: 120px; bottom: 160px; }
+
+    .emitter {
+      width: 52px;
+      height: 52px;
+      background: radial-gradient(circle, rgba(212, 168, 71, 0.24), rgba(212, 168, 71, 0.08));
+      border: 1px solid rgba(212, 168, 71, 0.42);
+      color: #f8e7b4;
+    }
+
+    .emitter.one { top: 240px; left: 170px; }
+    .emitter.two { top: 330px; right: 170px; }
+    .emitter.three { bottom: 180px; left: 50%; margin-left: -26px; }
+
+    .trail {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(89, 216, 255, 0), rgba(89, 216, 255, 0.6), rgba(89, 216, 255, 0));
+      transform-origin: left center;
+      opacity: 0.7;
+    }
+
+    .trail.one { width: 150px; left: 174px; top: 266px; transform: rotate(-12deg); }
+    .trail.two { width: 138px; right: 176px; top: 356px; transform: rotate(14deg); }
+    .trail.three { width: 120px; left: calc(50% - 60px); bottom: 206px; transform: rotate(-4deg); }
+
+    .status-stack {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .status-card {
+      flex: 1;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      background: rgba(12, 17, 24, 0.84);
+      padding: 12px 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .status-card .mini {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--dim);
+    }
+
+    .status-card strong {
+      font-size: 14px;
+      letter-spacing: -0.01em;
+    }
+
+    .rail {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(14, 18, 24, 0.96), rgba(9, 12, 18, 0.98));
+    }
+
+    .section {
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 10px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .section-title span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .authority-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-panel {
+      border: 1px solid var(--line-soft);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(8, 10, 14, 0.36);
+      display: grid;
+      gap: 4px;
+    }
+
+    .mini-panel .k {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .mini-panel .v {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .row:last-child { border-bottom: 0; }
+
+    .badge {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .timeline {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line-soft);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 10px;
+    }
+
+    .timeline-track {
+      height: 58px;
+      border-radius: 14px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      background-size: 56px 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .curve {
+      position: absolute;
+      inset: 10px 12px;
+      border-bottom: 2px solid rgba(89, 216, 255, 0.45);
+      border-radius: 18px;
+      transform: skewX(-24deg);
+    }
+
+    .curve::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 10%;
+      width: 64%;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(212, 168, 71, 0.1), rgba(212, 168, 71, 0.85), rgba(212, 168, 71, 0.2));
+      transform: translateY(-18px) rotate(-8deg);
+      transform-origin: left center;
+    }
+
+    .focus-column,
+    .lab-column {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      background: linear-gradient(180deg, rgba(14, 18, 24, 0.96), rgba(9, 12, 18, 0.98));
+    }
+
+    .lab-column {
+      border-left: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(9, 12, 18, 0.96), rgba(6, 8, 12, 0.98));
+    }
+
+    .ladder {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .step-index {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .step .copy {
+      display: grid;
+      gap: 3px;
+    }
+
+    .step .copy strong {
+      font-size: 13px;
+    }
+
+    .step .copy span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tri-view {
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 10px;
+    }
+
+    .tri-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pose {
+      height: 132px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(89, 216, 255, 0.13), transparent 32%),
+        linear-gradient(180deg, rgba(16, 21, 29, 0.96), rgba(7, 10, 15, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pose::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+
+    .pose::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 28%;
+      width: 18px;
+      height: 60px;
+      margin-left: -9px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(89, 216, 255, 0.85), rgba(89, 216, 255, 0.18));
+      box-shadow: 0 0 22px rgba(89, 216, 255, 0.2);
+    }
+
+    .small-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mini-metric {
+      border: 1px solid var(--line-soft);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 5px;
+    }
+
+    .mini-metric .label {
+      font-size: 10px;
+      color: var(--dim);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .mini-metric .value {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .matrix {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .matrix-card {
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 8px;
+    }
+
+    .matrix-card .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .matrix-card .top strong {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .matrix-card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="card">
+        <div class="eyebrow">LocusQ Refinement</div>
+        <h1>Keep the instrument calm. Make trust louder.</h1>
+        <p class="lede">
+          The refined direction keeps LocusQ as a viewport-first spatial instrument while making requested-versus-active truth, device readiness, and fallback reasons easier to read than diagnostics.
+        </p>
+        <div class="chip-row">
+          <div class="chip gold">Spatial Atelier</div>
+          <div class="chip cyan">Viewport First</div>
+          <div class="chip green">Focus Before Lab</div>
+          <div class="chip warn">Diagnostics Contained</div>
+        </div>
+        <div class="principles">
+          <div class="principle">
+            <div class="title">Plugin Scope</div>
+            <div class="body">Scene truth, emitter authoring, and output authority stay in the plugin.</div>
+          </div>
+          <div class="principle">
+            <div class="title">Companion Scope</div>
+            <div class="body">Device trust, sync, and profile acquisition lead before telemetry or matcher internals.</div>
+          </div>
+          <div class="principle">
+            <div class="title">Lab Scope</div>
+            <div class="body">Parity, evidence, and reactive experiments remain accessible, but they do not steer first-run UX.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Shipping Readout</div>
+        <div class="grid-2">
+          <div class="score">
+            <div class="label">Best Direction</div>
+            <div class="value">On-brand</div>
+            <div class="note">Strongest balance of refinement, feasibility, and cross-runtime reliability.</div>
+          </div>
+          <div class="score">
+            <div class="label">Biggest Win</div>
+            <div class="value">Renderer</div>
+            <div class="note">Collapse render truth into one authority card and move everything else down or behind a drawer.</div>
+          </div>
+          <div class="score">
+            <div class="label">Companion Move</div>
+            <div class="value">Focus</div>
+            <div class="note">Readiness, sync, and active profile first. Lab metrics remain one explicit step deeper.</div>
+          </div>
+          <div class="score">
+            <div class="label">Sprawl Guard</div>
+            <div class="value">One Loud Truth</div>
+            <div class="note">New simulation, reactive, or temporal ideas extend existing cards and overlays rather than adding modes.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="windows">
+      <div class="window">
+        <div class="window-top">
+          <div class="window-title">LocusQ Plugin / Renderer Truth</div>
+          <div class="window-badges">
+            <div class="chip gold">Requested vs Active</div>
+            <div class="chip cyan">Viewport Locked</div>
+          </div>
+        </div>
+        <div class="window-body plugin">
+          <div class="viewport">
+            <div class="header-band">
+              <div class="brand">LocusQ</div>
+              <div class="tabs">
+                <div class="tab">Calibrate</div>
+                <div class="tab">Emitter</div>
+                <div class="tab active">Renderer</div>
+              </div>
+              <div class="spacer"></div>
+              <div class="scene-chip chip green">Ready</div>
+              <div class="scene-chip chip cyan">Tracking Live</div>
+            </div>
+            <div class="grid-field"></div>
+            <div class="grid-lines"></div>
+            <div class="speaker a"></div>
+            <div class="speaker b"></div>
+            <div class="speaker c"></div>
+            <div class="speaker d"></div>
+            <div class="listener">Listener</div>
+            <div class="trail one"></div>
+            <div class="trail two"></div>
+            <div class="trail three"></div>
+            <div class="emitter one">Vox</div>
+            <div class="emitter two">FX</div>
+            <div class="emitter three">Pad</div>
+            <div class="status-stack">
+              <div class="status-card">
+                <div class="mini">Global Truth</div>
+                <strong>Active path: Binaural / Personalized</strong>
+              </div>
+              <div class="status-card">
+                <div class="mini">Why this changed</div>
+                <strong>No fallback. Steam path healthy.</strong>
+              </div>
+            </div>
+          </div>
+          <div class="rail">
+            <div class="section">
+              <div class="section-title">
+                <span>Authority Card</span>
+                <div class="chip gold">Shipping</div>
+              </div>
+              <div class="authority-grid">
+                <div class="mini-panel">
+                  <div class="k">Requested</div>
+                  <div class="v">Personalized Binaural</div>
+                </div>
+                <div class="mini-panel">
+                  <div class="k">Active</div>
+                  <div class="v" style="color:#59d8ff;">Steam HRTF Live</div>
+                </div>
+                <div class="mini-panel">
+                  <div class="k">Control Owner</div>
+                  <div class="v">Plugin + Companion</div>
+                </div>
+                <div class="mini-panel">
+                  <div class="k">Fallback Reason</div>
+                  <div class="v">None</div>
+                </div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <span>Spatialization</span>
+                <div class="badge" style="background:var(--gold-soft); color:#f8e5b4;">Always Open</div>
+              </div>
+              <div class="row"><span>Output format</span><strong>Headphone / Personalized</strong></div>
+              <div class="row"><span>Tracking mode</span><strong>Live with stale guard</strong></div>
+              <div class="row"><span>Profile source</span><strong>Companion capture</strong></div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <span>Room & Post</span>
+                <div class="badge" style="background:var(--cyan-soft); color:#d9f7ff;">Scoped</div>
+              </div>
+              <div class="row"><span>Room model</span><strong>Nearfield studio</strong></div>
+              <div class="row"><span>Post stage</span><strong>Trim + latency-safe crossfade</strong></div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <span>Diagnostics Drawer</span>
+                <div class="badge" style="background:var(--warn-soft); color:#ffe5c6;">Lab</div>
+              </div>
+              <div class="row"><span>Parity summary</span><strong>Hidden by default</strong></div>
+              <div class="row"><span>Engine counters</span><strong>Hidden by default</strong></div>
+            </div>
+            <div class="timeline">
+              <div class="section-title">
+                <span>Emitter Timeline</span>
+                <div class="badge" style="background:var(--green-soft); color:#d2fae3;">Existing Metaphor</div>
+              </div>
+              <div class="timeline-track">
+                <div class="curve"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="window">
+        <div class="window-top">
+          <div class="window-title">Head-Tracking Companion / Focus First</div>
+          <div class="window-badges">
+            <div class="chip green">Focus</div>
+            <div class="chip warn">Lab Optional</div>
+          </div>
+        </div>
+        <div class="window-body companion">
+          <div class="focus-column">
+            <div class="section">
+              <div class="section-title">
+                <span>Readiness Ladder</span>
+                <div class="badge" style="background:var(--green-soft); color:#d2fae3;">Default</div>
+              </div>
+              <div class="ladder">
+                <div class="step">
+                  <div class="step-index">1</div>
+                  <div class="copy">
+                    <strong>Device connected</strong>
+                    <span>AirPods motion manager available and healthy.</span>
+                  </div>
+                  <div class="chip green">Ready</div>
+                </div>
+                <div class="step">
+                  <div class="step-index">2</div>
+                  <div class="copy">
+                    <strong>Center / Sync</strong>
+                    <span>Manual sync remains the confidence gate before streaming.</span>
+                  </div>
+                  <div class="chip cyan">Action</div>
+                </div>
+                <div class="step">
+                  <div class="step-index">3</div>
+                  <div class="copy">
+                    <strong>Profile active</strong>
+                    <span>Applied profile and fallback reason are visible before send.</span>
+                  </div>
+                  <div class="chip gold">Applied</div>
+                </div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <span>Capture Tray</span>
+                <div class="badge" style="background:var(--gold-soft); color:#f8e5b4;">Local Only</div>
+              </div>
+              <div class="row"><span>Left ear</span><strong>Captured</strong></div>
+              <div class="row"><span>Right ear</span><strong>Captured</strong></div>
+              <div class="row"><span>Front / fit</span><strong>Needs retake</strong></div>
+              <div class="row"><span>Apply result</span><strong>Enabled when confident</strong></div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <span>Profile Summary</span>
+                <div class="badge" style="background:var(--cyan-soft); color:#d9f7ff;">Trust</div>
+              </div>
+              <div class="row"><span>Requested</span><strong>Personalized capture</strong></div>
+              <div class="row"><span>Active</span><strong>Nearest valid local match</strong></div>
+              <div class="row"><span>Why this changed</span><strong>Front image below confidence</strong></div>
+            </div>
+          </div>
+          <div class="lab-column">
+            <div class="tri-view">
+              <div class="section-title">
+                <span>Lab Diagnostics</span>
+                <div class="badge" style="background:var(--warn-soft); color:#ffe5c6;">Opt-in</div>
+              </div>
+              <div class="tri-grid">
+                <div class="pose"></div>
+                <div class="pose"></div>
+                <div class="pose"></div>
+              </div>
+            </div>
+            <div class="small-grid">
+              <div class="mini-metric">
+                <div class="label">Packet age</div>
+                <div class="value">11 ms</div>
+              </div>
+              <div class="mini-metric">
+                <div class="label">Effective rate</div>
+                <div class="value">59.8 Hz</div>
+              </div>
+              <div class="mini-metric">
+                <div class="label">Yaw / Pitch / Roll</div>
+                <div class="value">24° / 3° / -2°</div>
+              </div>
+              <div class="mini-metric">
+                <div class="label">Fallback state</div>
+                <div class="value">Visible and explicit</div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <span>Focus vs Lab Contract</span>
+                <div class="badge" style="background:var(--green-soft); color:#d2fae3;">Tightened</div>
+              </div>
+              <div class="row"><span>Focus answers</span><strong>Can I trust this now?</strong></div>
+              <div class="row"><span>Lab answers</span><strong>Why did it behave that way?</strong></div>
+              <div class="row"><span>Hidden by default</span><strong>Axis sweeps, matcher internals, raw counters</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="matrix">
+      <div class="section-title">
+        <span>Cross-Format Runtime Matrix</span>
+        <div class="chip gold">One Information Architecture</div>
+      </div>
+      <div class="matrix-grid">
+        <div class="matrix-card">
+          <div class="top"><strong>AU / VST3</strong><div class="chip green">Baseline</div></div>
+          <p>Keep the same shell, copy, and trust hierarchy. Format is not a new product persona.</p>
+        </div>
+        <div class="matrix-card">
+          <div class="top"><strong>CLAP</strong><div class="chip cyan">Parity</div></div>
+          <p>Expose the same authoring and render truth. CLAP-specific behavior stays in capability metadata, not navigation.</p>
+        </div>
+        <div class="matrix-card">
+          <div class="top"><strong>AUv3</strong><div class="chip warn">Limited</div></div>
+          <p>Use explicit limited-capability language when extension boundaries constrain companion or file operations.</p>
+        </div>
+        <div class="matrix-card">
+          <div class="top"><strong>WKWebView / WebView2</strong><div class="chip gold">Runtime</div></div>
+          <p>Boot shells, degraded states, and browser-preview fallbacks are part of the UX contract, not just debug tooling.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

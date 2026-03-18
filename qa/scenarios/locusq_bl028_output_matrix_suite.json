@@ -14,6 +14,9 @@
   "shared_config": {
     "mode": "bl028_output_matrix"
   },
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "bl028_contract_checks": {
     "acceptance_ids": [
       {

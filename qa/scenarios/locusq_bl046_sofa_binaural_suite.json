@@ -12,6 +12,9 @@
   "shared_config": {
     "mode": "bl046_sofa_binaural_contract"
   },
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "bl046_contract_checks": {
     "acceptance_ids": [
       {
