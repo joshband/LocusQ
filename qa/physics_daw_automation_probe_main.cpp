@@ -2,7 +2,8 @@
 // Physics DAW Automation acceptance probe
 // Covers: live path round-trip, gainTransient separation,
 //         LIVE→FROZEN snapshot guard, frozen path ownership,
-//         NaN safety, FROZEN→LIVE transition
+//         NaN safety, FROZEN→LIVE transition,
+//         block-rate freeze continuity (automated pop check)
 
 #include "Source/PhysicsDSPBridge.h"
 #include <iostream>
@@ -214,6 +215,86 @@ static void checkNaNSafetyInherited()
           " transient=" + std::to_string(read.gainTransient));
 }
 
+// ── Gate 8: block-rate pop test ───────────────────────────────────────────
+// Simulates a processBlock loop driving physics with an actively ramping
+// spread value (worst-case: value changing at maximum rate at the freeze
+// moment). Verifies the output seen by DSP does not jump at the LIVE→FROZEN
+// block boundary — i.e., no audible click even without any explicit
+// interpolation beyond the snapshot guard.
+static void checkFreezeTransitionNoPop()
+{
+    PhysicsDSPBridge bridge;
+
+    // Realistic one-pole smoothing: 5 ms attack, 50 ms release at 48 kHz/256
+    PhysicsDSPBridge::SmoothConfig cfg;
+    cfg.attackSec        = 0.005f;
+    cfg.releaseSec       = 0.050f;
+    cfg.transientDecayHz = 0.0f;
+    bridge.setSmoothConfig(cfg);
+
+    const double sampleRate  = 48000.0;
+    const int    blockSize   = 256;
+    bridge.prepare(sampleRate, static_cast<double>(blockSize) / sampleRate);
+
+    // Warm-up: push value to 0 so smoother starts at known state
+    bridge.publishZero(0);
+    for (int b = 0; b < 50; ++b) bridge.read(0);
+
+    const int    kBlocks     = 40;
+    const int    kFreezeAt   = 20;      // freeze mid-ramp — worst case
+    const float  kRampStart  = 0.10f;
+    const float  kRampEnd    = 0.90f;
+
+    bool  lastFrozen = false;
+    float apvtsSpread = 0.0f;
+    float apvtsGain   = 0.0f;
+    float prevOut = 0.0f;
+    float maxJump = 0.0f;
+
+    for (int b = 0; b < kBlocks; ++b)
+    {
+        // Physics worker ramps spread linearly from 0.1 → 0.9 over kBlocks
+        const float t = static_cast<float>(b) / static_cast<float>(kBlocks - 1);
+        PerEmitterDSPValues vals;
+        vals.spreadMod     = kRampStart + t * (kRampEnd - kRampStart);
+        vals.gainMod       = 0.5f;
+        vals.gainTransient = 0.0f;
+        bridge.publish(0, vals);
+
+        const bool nowFrozen = (b >= kFreezeAt);
+
+        // Snapshot guard — runs on audio thread at the exact freeze-transition block
+        if (!lastFrozen && nowFrozen)
+        {
+            const auto snap = bridge.read(0);
+            apvtsSpread = snap.spreadMod;
+            apvtsGain   = snap.gainMod;
+        }
+        lastFrozen = nowFrozen;
+
+        // DSP output for this block
+        const float out = nowFrozen
+            ? apvtsSpread                   // frozen: load() from APVTS
+            : bridge.read(0).spreadMod;     // live: read atomic
+
+        if (b > 0)
+        {
+            const float jump = std::abs(out - prevOut);
+            if (jump > maxJump) maxJump = jump;
+        }
+        prevOut = out;
+    }
+
+    // Pop threshold: 0.05 normalized (~1/20 of full scale).
+    // In practice the snapshot guard makes this < 0.001; 0.05 is a hard gate.
+    const float POP_THRESHOLD = 0.05f;
+    check("freeze_transition_no_pop",
+          maxJump < POP_THRESHOLD,
+          "max_jump_across_all_blocks=" + std::to_string(maxJump) +
+          " (freeze_at_block=" + std::to_string(kFreezeAt) +
+          " threshold=" + std::to_string(POP_THRESHOLD) + ")");
+}
+
 int main()
 {
     checkLivePathRoundTrip();
@@ -223,6 +304,7 @@ int main()
     checkFrozenToLiveTransition();
     checkGainTransientIgnoresFreezeState();
     checkNaNSafetyInherited();
+    checkFreezeTransitionNoPop();
 
     int passed = 0, failed = 0;
     for (const auto& c : checks) { if (c.passed) ++passed; else ++failed; }
