@@ -8,93 +8,69 @@ Last Modified Date: [YYYY-MM-DD]
 
 ## Plain-Language Summary
 
-[1-3 non-technical sentences describing what was delivered, who benefits, and why this completed work matters.]
+[1-3 short sentences. Explain what shipped, who benefits, and why it matters.]
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
-| Who benefited? | [Users/operators/QA/release owners] |
-| What changed? | [Plain-language summary of delivered behavior] |
-| Why did this matter? | [Risk/value outcome] |
-| How was it delivered safely? | [High-level implementation + validation evidence summary] |
-| When was it considered complete? | [Date + gate/outcome summary] |
-| Where is the evidence? | [Runbook path + `TestEvidence/...`] |
+| Who benefited? | [Users / operators / QA / release owners] |
+| What changed? | [Delivered behavior in plain language] |
+| Why did this matter? | [Outcome or risk reduction] |
+| How was it delivered safely? | [Implementation + validation summary] |
+| When was it complete? | [Date + decision signal] |
+| Where is the evidence? | [Done runbook path + `TestEvidence/...`] |
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding.
+Use visuals only when they improve clarity.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status legend + completion snapshot | Makes completed work, dates, and evidence easy to scan without color dependencies. | `## Status Legend`, `## Completion Snapshot` |
-| Promotion gate table | Quick closeout confidence scan | `## Promotion Gate Summary` |
-| Evidence references table/list | Fast traceability for humans and agents | `## Evidence References` |
-| Mermaid diagram (optional) | Clarifies complex lifecycle/decision flow | `## Flow Diagram` |
-| Screenshot/chart (optional) | Clarifies user-visible or metric outcomes | `TestEvidence/...` linked path |
-
-## Status Legend
-
-- `[DONE]` completed and no longer active; use `~~strikethrough~~` on the item name when appropriate.
-- `[ACTIVE]` still open or partially closed.
-- `[NEXT]` follow-on work outside this closeout.
-- `[DEFERRED]` intentionally moved into another lane.
-- `[BLOCKED]` closeout could not finish because a gate is still red.
-- Use portable markdown only: no HTML/CSS color.
-- If exact time or tokens were not logged, use `not logged` or `n/a`.
+| Completion snapshot | Fast scan of what closed and what did not | `## Completion Snapshot` |
+| Gate summary | Quick confidence scan | `## Promotion Gate Summary` |
+| Evidence list | Fast traceability | `## Evidence References` |
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
-| Priority | [P0/P1/P2] |
+| Priority | [P0/P1/P2/P3] |
 | Status | Done |
 | Completed | [YYYY-MM-DD] |
-| Owner Track | [Track X — Name] |
+| Owner Track | [Track X - Name] |
 | Promotion Decision Packet | `TestEvidence/<owner_sync_or_promotion_packet>/promotion_decision.md` |
 | Final Evidence Root | `TestEvidence/<bl_or_hx>_<slice>_<timestamp>/` |
 | Archived Runbook Path | `Documentation/backlog/done/bl-XXX-[slug].md` |
 
-## Automation Contract
-
-This closeout may be drafted by automation, but `Done` and archive moves stay owner-confirmed.
-
-| Field | Value |
-|---|---|
-| Automation Mode | `draft_only` |
-| Stage Cap | `T3` |
-| Owner Approval Required For | `Done`, archive move, or status/index sync |
-| Runner Output | `DRAFT_READY`, `BLOCKED`, or `MANUAL_ONLY` |
-| Rule | Draft the closeout, then wait for owner confirmation |
-
 ## Completion Snapshot
 
-| Item | Status | Priority | Estimate | Actual / Time | Tokens | Completed | Where | Evidence / Remaining |
-|---|---|---|---|---|---|---|---|---|
-| [Closed scope] | `[DONE]` | [P0/P1/P2] | [Small/Medium/Large] | [exact date or `not logged`] | [`n/a` or explicit token count] | [YYYY-MM-DD] | `Source/...` | `TestEvidence/...` |
-| [Deferred follow-on if any] | `[NEXT]` or `[DEFERRED]` | [P0/P1/P2] | [Small/Medium/Large] | not started | `n/a` | [YYYY-MM-DD] | `Documentation/backlog/...` | [what remains outside this closeout] |
+| Item | Status | Completed | Where | Evidence / Remaining |
+|---|---|---|---|---|
+| [Closed scope] | `[DONE]` | [YYYY-MM-DD] | `Source/...` | `TestEvidence/...` |
+| [Follow-on if any] | `[NEXT]` / `[DEFERRED]` | [YYYY-MM-DD or `n/a`] | `Documentation/backlog/...` | [remaining work] |
 
 ## Objective
 
-[Past tense description of what was accomplished and why it mattered.]
+[Past-tense summary of what was accomplished.]
 
-## What Was Built
+## What Shipped
 
-- [Key change 1]
-- [Key change 2]
-- [Key change 3]
+- [Change 1]
+- [Change 2]
+- [Change 3]
 
 ## Key Files
 
-- `[Source/file1.h]`
-- `[Source/file2.cpp]`
-- `[Source/ui/public/js/index.js]`
+- `Source/...`
+- `Source/...`
+- `Documentation/...`
 
 ## Evidence References
 
-- [Link or path to validation artifacts]
-- [TestEvidence/ entries]
-- [Self-test lane results]
+- [Primary evidence path]
+- [Secondary evidence path]
+- [Relevant summary path]
 
 ## Promotion Gate Summary
 
@@ -105,22 +81,15 @@ This closeout may be drafted by automation, but `Done` and archive moves stay ow
 | RT safety | [PASS/FAIL] | `[path]` |
 | Docs freshness | [PASS/FAIL] | `[path]` |
 | Status schema | [PASS/FAIL] | `[path]` |
-| Ownership safety (`SHARED_FILES_TOUCHED`) | [PASS/FAIL] | `[path]` |
+| Ownership safety | [PASS/FAIL] | `[path]` |
 
-## Backlog/Status Sync Checklist
+## Closeout Checklist
 
-- [ ] Runbook moved from `Documentation/backlog/` to `Documentation/backlog/done/`
-- [ ] `Documentation/backlog/index.md` row updated to Done with done-path link
-- [ ] Plain-language summary + 6W snapshot reflect final delivered state
-- [ ] Visual aid index updated and linked assets are current/relevant
-- [ ] Status legend + completion snapshot reflect what closed and what remains elsewhere
+- [ ] Runbook moved to `Documentation/backlog/done/`
+- [ ] `Documentation/backlog/index.md` updated
 - [ ] `status.json` updated
 - [ ] `TestEvidence/build-summary.md` updated
 - [ ] `TestEvidence/validation-trend.md` updated
-- [ ] Owner decision + handoff resolution linked
+- [ ] Owner decision and handoff linked
 - [ ] `./scripts/validate-docs-freshness.sh` passes
 - [ ] `jq empty status.json` passes
-
-## Completion Date
-
-[YYYY-MM-DD]

@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-18 (BL-080 and BL-089..BL-094 promoted to Done with closeout sync; BL-095..BL-099 remain the active follow-on set; draft-only backlog automation contract added)
+Last Modified Date: 2026-03-18 (BL-080 and BL-089..BL-094 promoted to Done with closeout sync; BL-095..BL-101 remain the active follow-on set; draft-only backlog automation contract added)
 
 # LocusQ Master Backlog Index
 
@@ -220,6 +220,7 @@ Immediate wave summary:
 | 67 | BL-097 | Editor bridge cadence tiering and calibration reload isolation | P1 | Open | B | HX-05, BL-059, BL-074 | — | [bl-097](bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md) |
 | 68 | BL-098 | Local validation lane restoration and clean-build completeness | P1 | Open | G | BL-042 | — | [bl-098](bl-098-local-validation-lane-restoration-and-clean-build-completeness.md) |
 | 69 | BL-099 | Headphone verification truthfulness and compensation provenance | P1 | Open | E | BL-034, BL-057 | BL-089 | [bl-099](bl-099-headphone-verification-truthfulness-and-compensation-provenance.md) |
+| 70 | BL-101 | CALIBRATE discovery, provenance, and truthfulness | P1 | Open | E | BL-026, BL-038, BL-059, BL-099 | future CALIBRATE capability-expansion lanes | [bl-101](bl-101-calibrate-discovery-provenance-and-truthfulness.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
