@@ -1,0 +1,97 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_24_physics_spring_lfo",
+  "name": "LocusQ 2.4 Physics Spring LFO",
+  "category": "spatial",
+  "description": "Phase 2.4 acceptance proxy: spring oscillation phase must produce cyclic spread/gain modulation measurable as periodic spatial output changes. phys_spring_k=4.0 with phys_mass=1.0 yields natural frequency omega=sqrt(4/1)=2 rad/s (~0.32 Hz). phys_spring_damp=0 (undamped) sustains oscillation indefinitely. 8-second window captures approximately 2.5 full cycles. emit_spread base is 0 so modulation is physics-driven.",
+
+  "capability_requirements": {
+    "required_effect_types": ["SPATIAL"],
+    "required_behaviors": ["STATEFUL"],
+    "excluded_behaviors": []
+  },
+
+  "stimulus": {
+    "stimulus_id": "sweep",
+    "stimulus_variant": "linear_sine",
+    "parameters": {
+      "start_hz": 330.0,
+      "end_hz": 330.0,
+      "amplitude": 0.35,
+      "duration_seconds": 8.0
+    }
+  },
+
+  "parameter_variations": {
+    "pos_azimuth": 0.50,
+    "pos_elevation": 0.50,
+    "pos_distance": 0.20,
+    "emit_gain": 0.5,
+    "emit_spread": 0.0,
+    "emit_directivity": 0.0,
+    "phys_enable": 1.0,
+    "phys_mass": 1.0,
+    "phys_drag": 0.0,
+    "phys_gravity": 0.0,
+    "phys_throw": 0.0,
+    "phys_spring_enable": 1.0,
+    "phys_spring_k": 4.0,
+    "phys_spring_damp": 0.0,
+    "phys_spring_anchor_mode": 0,
+    "phys_spring_anchor_x": 0.0,
+    "phys_spring_anchor_y": 1.2,
+    "phys_spring_anchor_z": 0.0,
+    "rend_phys_rate": 2,
+    "rend_master_gain": 0.5,
+    "rend_room_enable": 0.0,
+    "rend_doppler": 0.0,
+    "rend_air_absorb": 0.0
+  },
+
+  "scene_setup": {
+    "description": "Single emitter displaced 1.5m from the spring anchor point at simulation start. This displacement initializes oscillation amplitude. With k=4 and m=1, omega=2 rad/s; period~3.1s; the 8s window captures ~2.5 cycles.",
+    "emitter_count": 1,
+    "emitter_overrides": [
+      { "index": 0, "pos_x": 1.5, "pos_y": 1.2, "pos_z": 0.0, "phys_enable": 1.0 }
+    ]
+  },
+
+  "analysis_windows": {
+    "oscillation_window": {
+      "type": "time_range",
+      "start_seconds": 0.25,
+      "end_seconds": 8.0,
+      "description": "Spring oscillation window — periodic position changes drive spread/gain modulation; flux_rate must reflect at least one partial cycle"
+    }
+  },
+
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "oscillation_window",
+      "threshold": {
+        "min": -85.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "oscillation_window",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "spatial_modulation_active": {
+      "metric": "flux_rate",
+      "window": "oscillation_window",
+      "threshold": {
+        "min": 0.00001,
+        "max": 10.0
+      },
+      "severity": "hard_fail"
+    }
+  },
+
+  "pass_criteria": "All hard_fail invariants must pass."
+}
