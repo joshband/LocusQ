@@ -238,6 +238,12 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                                  audioProcessor.abortCalibrationFromUI();
                                  completion (true);
                              })
+        .withNativeFunction ("locusqGetCalibrationStatus",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.getCalibrationStatus());
+                             })
         .withNativeFunction ("locusqRedetectCalibrationRouting",
                              [&audioProcessor] (const juce::Array<juce::var>&,
                                                 juce::WebBrowserComponent::NativeFunctionCompletion completion)

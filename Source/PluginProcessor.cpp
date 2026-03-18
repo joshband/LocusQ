@@ -2706,6 +2706,8 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     }
 
     auto& attractorSystem = physicsWorker.getAttractorSystem();
+    auto& springSystem = physicsWorker.getSpringSystem();
+    auto& turbulenceSystem = physicsWorker.getTurbulenceSystem();
     auto& boidsSystem = physicsWorker.getBoidsSystem();
     auto& collisionSystem = physicsWorker.getCollisionSystem();
     bool anyActiveAttractor = false;
@@ -2752,6 +2754,26 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     boidsSystem.setEmitterGroup (activeEmitterSlot, flockGroupIndex);
     const bool boidsEnabledForEmitter = flockGroupIndex >= 0 && flockGroupIndex < BoidsSystem::kMaxGroups
         && boidsSystem.isGroupEnabled (flockGroupIndex);
+    const bool springEnabledForEmitter =
+        physicsEnabled && apvts.getRawParameterValue ("phys_spring_enable")->load() > 0.5f;
+    springSystem.setEnabled (springEnabledForEmitter);
+    springSystem.setStiffness (apvts.getRawParameterValue ("phys_spring_k")->load());
+    springSystem.setDamping (apvts.getRawParameterValue ("phys_spring_damp")->load());
+    springSystem.setAnchorMode (static_cast<SpringAnchorMode> (juce::jlimit (
+        0,
+        1,
+        static_cast<int> (std::lround (apvts.getRawParameterValue ("phys_spring_anchor_mode")->load())))));
+    springSystem.setAnchorPos ({
+        apvts.getRawParameterValue ("phys_spring_anchor_x")->load(),
+        apvts.getRawParameterValue ("phys_spring_anchor_y")->load(),
+        apvts.getRawParameterValue ("phys_spring_anchor_z")->load()
+    });
+    const float turbulenceAmount = physicsEnabled
+        ? apvts.getRawParameterValue ("phys_turbulence")->load()
+        : 0.0f;
+    turbulenceSystem.setAmplitude (turbulenceAmount);
+    turbulenceSystem.setRate (apvts.getRawParameterValue ("phys_turbulence_rate")->load());
+    const bool turbulenceEnabledForEmitter = turbulenceAmount > 1.0e-4f;
     const bool interactionEnabledForScene =
         physicsEnabled
         && sceneGraph.isPhysicsInteractionEnabled()
@@ -2768,7 +2790,8 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         1000.0f / juce::jmax (1.0f, apvts.getRawParameterValue ("phys_collision_decay_ms")->load()));
 
     const bool coordinatedWorkerActive =
-        physicsEnabled && (anyActiveAttractor || collisionEnabled || boidsEnabledForEmitter || interactionEnabledForScene);
+        physicsEnabled && (anyActiveAttractor || springEnabledForEmitter || turbulenceEnabledForEmitter
+                           || collisionEnabled || boidsEnabledForEmitter || interactionEnabledForScene);
     physicsEngine.setStandaloneMode (! coordinatedWorkerActive);
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
     physicsWorker.setUpdateRateIndex (physicsRateIndex);
