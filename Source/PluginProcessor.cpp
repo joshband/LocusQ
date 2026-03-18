@@ -2697,6 +2697,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     }
 
     auto& attractorSystem = physicsWorker.getAttractorSystem();
+    auto& boidsSystem = physicsWorker.getBoidsSystem();
     auto& collisionSystem = physicsWorker.getCollisionSystem();
     bool anyActiveAttractor = false;
     for (int sourceIndex = 0; sourceIndex < kPhysicsAttractorSourceCount; ++sourceIndex)
@@ -2722,6 +2723,27 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         anyActiveAttractor = anyActiveAttractor || sourceActive;
     }
 
+    for (int groupIndex = 0; groupIndex < BoidsSystem::kMaxGroups; ++groupIndex)
+    {
+        const auto groupIndexText = juce::String (groupIndex);
+        const bool groupEnabled =
+            apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_enable")->load() > 0.5f;
+        boidsSystem.setGroupEnabled  (groupIndex, groupEnabled);
+        boidsSystem.setSepWeight     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_sep_weight")->load());
+        boidsSystem.setAlignWeight   (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_align_weight")->load());
+        boidsSystem.setCohWeight     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_coh_weight")->load());
+        boidsSystem.setSepRadius     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_sep_radius")->load());
+        boidsSystem.setAlignRadius   (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_align_radius")->load());
+        boidsSystem.setCohRadius     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_coh_radius")->load());
+        boidsSystem.setMaxSpeed      (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_max_speed")->load());
+    }
+
+    const int flockGroupChoice = static_cast<int> (std::lround (apvts.getRawParameterValue ("phys_flock_group")->load()));
+    const int flockGroupIndex = flockGroupChoice - 1;
+    boidsSystem.setEmitterGroup (activeEmitterSlot, flockGroupIndex);
+    const bool boidsEnabledForEmitter = flockGroupIndex >= 0 && flockGroupIndex < BoidsSystem::kMaxGroups
+        && boidsSystem.isGroupEnabled (flockGroupIndex);
+
     physicsWorker.setSlotMassOverride (activeEmitterSlot, apvts.getRawParameterValue ("phys_mass_override")->load());
     const bool collisionEnabled =
         physicsEnabled && apvts.getRawParameterValue ("phys_collide_emitters")->load() > 0.5f;
@@ -2732,7 +2754,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     collisionSystem.setDecayRateHz (
         1000.0f / juce::jmax (1.0f, apvts.getRawParameterValue ("phys_collision_decay_ms")->load()));
 
-    const bool coordinatedWorkerActive = physicsEnabled && (anyActiveAttractor || collisionEnabled);
+    const bool coordinatedWorkerActive = physicsEnabled && (anyActiveAttractor || collisionEnabled || boidsEnabledForEmitter);
     physicsEngine.setStandaloneMode (! coordinatedWorkerActive);
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
     physicsWorker.setUpdateRateIndex (physicsRateIndex);
@@ -2751,6 +2773,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         physicsEngine.setCoordinatedForce ({});
         physicsWorker.unregisterEngine (activeEmitterSlot);
         physicsWorker.deactivateSlot (activeEmitterSlot);
+        boidsSystem.setEmitterGroup (activeEmitterSlot, -1);
         physicsDspBridge.publishZero (activeEmitterSlot);
     }
 

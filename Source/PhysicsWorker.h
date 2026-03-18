@@ -439,6 +439,15 @@ private:
             collisionSystem.resolve();
         }
 
+        int coordinatedActiveCount = 0;
+        for (int i = 0; i < kMaxEmitters; ++i)
+        {
+            const auto& slot = slots[static_cast<std::size_t> (i)];
+            PhysicsEngine* engine = engines[static_cast<std::size_t> (i)];
+            if (slot.active.load (std::memory_order_acquire) && engine != nullptr && ! engine->isStandaloneMode())
+                ++coordinatedActiveCount;
+        }
+
         for (int i = 0; i < kMaxEmitters; ++i)
         {
             auto& slot = slots[static_cast<std::size_t> (i)];
@@ -552,13 +561,23 @@ private:
                                   ? boidsSystem.computeSteeringForce (i, currentMass)
                                   : Vec3 {};
             const Vec3 gravityForce = computeGravityVector (currentPos);
+            const Vec3 containmentForce = computeContainmentForce (
+                currentPos,
+                currentVel,
+                restPos,
+                currentMass,
+                coordinatedAuthority,
+                coordinatedActiveCount);
 
             // Sum all coordinated forces and inject into engine
             const Vec3 coordinatedForce
             {
-                gravityForce.x + interactionForce.x + attractorForce.x + springForce.x + turbForce.x + boidsForce.x,
-                gravityForce.y + interactionForce.y + attractorForce.y + springForce.y + turbForce.y + boidsForce.y,
+                gravityForce.x + interactionForce.x + attractorForce.x + springForce.x + turbForce.x + boidsForce.x
+                    + containmentForce.x,
+                gravityForce.y + interactionForce.y + attractorForce.y + springForce.y + turbForce.y + boidsForce.y
+                    + containmentForce.y,
                 gravityForce.z + interactionForce.z + attractorForce.z + springForce.z + turbForce.z + boidsForce.z
+                    + containmentForce.z
             };
             state.force = coordinatedForce;
 
@@ -976,6 +995,64 @@ private:
             default:
                 return { 0.0f, -magnitude, 0.0f };
         }
+    }
+
+    Vec3 computeContainmentForce (const Vec3& position,
+                                  const Vec3& velocity,
+                                  const Vec3& restPos,
+                                  float mass,
+                                  bool coordinatedAuthority,
+                                  int coordinatedActiveCount) const
+    {
+        if (! coordinatedAuthority || coordinatedActiveCount < 2)
+            return {};
+
+        if (! collisionSystem.isEnabled() || ! wallCollisionEnabled.load (std::memory_order_acquire))
+            return {};
+
+        const auto mode = static_cast<PhysicsEngine::BoundaryMode> (boundaryMode.load (std::memory_order_acquire));
+        if (mode == PhysicsEngine::BoundaryMode::Passthrough)
+            return {};
+
+        constexpr float kDeadzoneMeters = 0.2f;
+        constexpr float kContainmentStiffness = 4.0f;
+        constexpr float kContainmentDamping = 1.2f;
+
+        const Vec3 offset
+        {
+            restPos.x - position.x,
+            restPos.y - position.y,
+            restPos.z - position.z
+        };
+
+        const float distanceSq = offset.x * offset.x + offset.y * offset.y + offset.z * offset.z;
+        if (distanceSq <= (kDeadzoneMeters * kDeadzoneMeters))
+            return {};
+
+        const float distance = std::sqrt (distanceSq);
+        const float excess = distance - kDeadzoneMeters;
+        const float invDistance = distance > 1.0e-6f ? (1.0f / distance) : 0.0f;
+        const Vec3 direction
+        {
+            offset.x * invDistance,
+            offset.y * invDistance,
+            offset.z * invDistance
+        };
+
+        const float clampedMass = juce::jmax (0.01f, mass);
+        const float roomScale = juce::jmax (
+            1.0f,
+            juce::jmin (roomWidth.load (std::memory_order_acquire),
+                        roomDepth.load (std::memory_order_acquire)));
+        const float normalizedExcess = juce::jlimit (0.0f, 1.5f, excess / roomScale);
+        const float springAccel = kContainmentStiffness * normalizedExcess;
+        const float dampingAccel = kContainmentDamping;
+
+        return {
+            clampedMass * (direction.x * springAccel - velocity.x * dampingAccel),
+            clampedMass * (direction.y * springAccel - velocity.y * dampingAccel),
+            clampedMass * (direction.z * springAccel - velocity.z * dampingAccel)
+        };
     }
 
     // Max spread depth contributed by spring LFO (30% of full spread range)
