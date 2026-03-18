@@ -1263,6 +1263,26 @@ Note: spec document uses `attractor_pos_N_x/y/z` and `attractor_strength_N` nota
 
 ## Physics DAW Automation Mirror Parameters (8 slots × 3)
 
+### Physics Simulation DAW Automation
+
+**Spec:** `.ideas/physics-daw-automation-spec.md`
+**Plan:** `.ideas/physics-simulation-impl-plan.md`
+
+**Scope:**
+- 24 APVTS output + freeze params: `phys_out_spread_mod_N`, `phys_out_gain_mod_N`, `phys_frozen_N` (N=0..7)
+- `processBlock` mirror step: live path stores bridge atomics to APVTS output params per block
+- Freeze detection: `lastFrozenState[8]` transition detection; LIVE→FROZEN snapshot guard on audio thread
+- Frozen path: APVTS values drive DSP (DAW playback owns spread/gain)
+- gainDelta wired to `data.gain` additively (previously unconnected)
+- `gainTransient` bypasses freeze state (always flows)
+- 24 `ParameterBridgeSpec` relay entries in `EditorParameterBridge.h`
+- LIVE/FROZEN toggle UI in `index.ts` / `index.html` (single-panel per-slot dispatch)
+- RT-safety: `getRawParameterValue()->store()/load()` only; `AsyncUpdater::triggerAsyncUpdate()` for host notification (RT-safe by JUCE contract — atomic flag, no allocation)
+
+**Note:** Task 3 commit also registered missing P2–P6 emitter physics params (spring, turbulence, angular, boids-group, collision, mass-override) and `scenePhysicsGroup` (attractor params × 4 + boids-group params × 4). These were present in the physics system headers but unregistered in APVTS. Parameter count updated accordingly (emitter count now 99).
+
+**Evidence:** `TestEvidence/physics_daw_automation_20260318/`
+
 24 APVTS float parameters exposing per-slot physics output state as DAW-automatable lanes. Registered as part of the physics choreography timeline work on `feat/physics-choreography-timeline-specs`.
 
 ### Renderer-Scope: Physics DAW Automation Mirrors (×8 slots N=0..7)

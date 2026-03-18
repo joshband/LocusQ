@@ -271,9 +271,9 @@ Last Modified Date: 2026-03-18
 |:-----|:---------------|
 | Global | 3 |
 | Calibrate | 9 + profile outputs |
-| Emitter | 55 (+20: Spring ×7, Turbulence ×2, Angular ×8, Flock group + Collision radius + Mass override ×3) |
+| Emitter | 55 (+20: Spring ×7, Turbulence ×2, Angular ×8, Flock group + Collision radius + Mass override ×3; +24: Physics DAW Automation phys_out_spread_mod_N + phys_out_gain_mod_N + phys_frozen_N × 8 slots) = 99 |
 | Renderer | 98 (+69: Attractors ×32, Boids Groups ×32, Collision globals ×3, Boundary ×2) |
-| **Total Unique** | **~165** (+89 Tier A physics simulation params P2–P6) |
+| **Total Unique** | **~165** (+89 Tier A physics simulation params P2–P6; +24 Physics DAW Automation output/freeze params) |
 
 ---
 
