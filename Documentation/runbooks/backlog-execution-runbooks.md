@@ -43,7 +43,7 @@ Preserve the pre-runbook-split execution bundle for historical traceability. Act
 | RB-HX02 | HX-02 | Track F | BL-016 + synchronization contract surfaces |
 | RB-HX06 | HX-06 | Track F | invariants + RT safety policy |
 | RB-BL027 | BL-027 | Track C | `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md` |
-| RB-BL028 | BL-028 | Track A/C | `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md` |
+| RB-BL028 | BL-028 | Track A/C | `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md` |
 | RB-BL029 | BL-029 | Track B | `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` |
 | RB-HX05 | HX-05 | Track F | scene payload/transport contract docs |
 | RB-BL030 | BL-030 | Track G | release + manual device acceptance surfaces |

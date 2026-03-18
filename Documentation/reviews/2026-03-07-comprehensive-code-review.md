@@ -126,7 +126,7 @@ Provide an up-to-date, findings-first review across code, config, architecture, 
     - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md:12-15`
     - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md:12-15`
     - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md:12-15`
-    - `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md:12-14`
+    - `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md:12-14`
     - `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md:16-18`
     - `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md:12-14`
 - Risk:

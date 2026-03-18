@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "defaults": {
+    "automation_mode": "draft_only",
+    "owner_required_for": [
+      "promotion",
+      "archive",
+      "status_transition"
+    ],
+    "allow_status_mutation": false,
+    "allow_archive_mutation": false
+  },
+  "items": {
+    "BL-080": {
+      "runbook": "Documentation/backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "low",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    },
+    "BL-089": {
+      "runbook": "Documentation/backlog/bl-089-render-trust-contract-and-requested-active-language.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "medium",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/",
+        "TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    },
+    "BL-090": {
+      "runbook": "Documentation/backlog/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "medium",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/",
+        "TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    },
+    "BL-091": {
+      "runbook": "Documentation/backlog/bl-091-companion-focus-lab-trust-flow.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "medium",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/",
+        "TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    },
+    "BL-092": {
+      "runbook": "Documentation/backlog/bl-092-cross-format-capability-messaging-parity.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "medium",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/",
+        "TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    },
+    "BL-093": {
+      "runbook": "Documentation/backlog/bl-093-visual-dna-token-adoption-and-polish.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "low",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/bl093_visual_token_polish_20260318T042850Z/",
+        "TestEvidence/bl093_owner_sync_z1_20260318T044057Z/"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    },
+    "BL-094": {
+      "runbook": "Documentation/backlog/bl-094-reactive-simulation-temporal-lab-containment.md",
+      "automation_stage_cap": "T3",
+      "shared_files_risk": "low",
+      "heavy_wrapper": false,
+      "closeout_ready": true,
+      "evidence_roots": [
+        "TestEvidence/bl094_motion_lab_containment_20260318T045654Z/",
+        "TestEvidence/bl094_owner_sync_z1_20260318T045927Z/"
+      ],
+      "commands": {
+        "t3": [
+          "jq empty status.json",
+          "./scripts/export-backlog-summaries.py --check",
+          "./scripts/validate-backlog-plain-language.sh",
+          "./scripts/validate-backlog-redundancy.py",
+          "./scripts/validate-docs-freshness.sh"
+        ]
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@ Title: LocusQ Documentation Standards
 Document Type: Standard
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-06
+Last Modified Date: 2026-03-18
 
 # Documentation Standards
 
@@ -26,6 +26,32 @@ Every in-scope markdown file must include, in this order, at the top of file:
 4. `Created Date`
 5. `Last Modified Date`
 
+## Smart Brevity Writing Standard
+
+Per `Documentation/adr/ADR-0021-smart-brevity-documentation-contract.md`, active documentation should optimize for fast scanning without losing truth.
+
+Authoring rules:
+1. Lead with the answer, decision, or outcome.
+2. Prefer short sentences with one main idea each.
+3. Prefer short paragraphs (`1-3` sentences).
+4. Prefer bullets, tables, and compact labels when they improve scanning.
+5. Use explicit nouns, file paths, dates, thresholds, and owners.
+6. Replace repeated global policy text with pointers to canonical docs.
+7. Remove filler, throat-clearing, and repeated caveats.
+8. Keep long narrative sections only when compression would hide important nuance.
+
+Markdown visualization rules:
+1. Tables are the default rich-text/scannability tool.
+2. Use Mermaid, screenshots, charts, SVGs, or HTML prototypes only when they clarify faster than prose.
+3. Keep visual semantics portable; do not rely on inline HTML/CSS color meaning.
+4. Link visuals to repo-local artifacts whenever possible.
+
+Machine-readability rules:
+1. Keep stable headings and section names.
+2. Prefer explicit labels over implied context.
+3. Keep structured companion artifacts (`json`, `csv`, `tsv`, `yaml`) compact and current.
+4. Do not bury critical decisions inside long narrative paragraphs when a table or short decision block would be clearer.
+
 ## Naming Conventions
 - Use lowercase kebab-case for new docs, except canonical legacy files already in use.
 - ADR names must follow: `ADR-XXXX-kebab-case.md` (zero-padded index).
@@ -37,6 +63,20 @@ Every in-scope markdown file must include, in this order, at the top of file:
 - Stable reference docs/ADRs/invariants/traceability: `Documentation/`
 - Execution runbooks: `Documentation/runbooks/`
 - Validation artifacts and run logs: `TestEvidence/`
+
+Testing folder rule:
+1. `Documentation/testing/README.md` is the classification index for the active testing-doc surface.
+2. Keep reusable guides and stable harness contracts active in `Documentation/testing/`.
+3. Keep BL-specific QA docs active only while they add support value beyond backlog runbooks and `TestEvidence/`.
+4. Move one-off manual notes, superseded audits, and evidence-heavy packets to `Documentation/archive/<YYYY-MM-DD>-<slug>/testing/`.
+5. Do not let `Documentation/testing/` become a second backlog or status ledger.
+
+Test-evidence rule:
+1. `TestEvidence/README.md` is the classification index for evidence surfaces.
+2. Keep `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md` as the only always-canonical evidence docs.
+3. Prefer packet directories over loose top-level files for new evidence.
+4. Treat repeated debug support files as support artifacts, not active authority.
+5. Archive superseded evidence summaries and retired decision packets under `Documentation/archive/<YYYY-MM-DD>-<slug>/testevidence/`.
 
 ## Source-Of-Truth Tiering
 - Tier 0 canonical docs are listed in `Documentation/README.md` and are the only authority for status/closeout claims.
@@ -51,6 +91,7 @@ Every in-scope markdown file must include, in this order, at the top of file:
 3. Plan docs under `Documentation/plans/` carry deep architecture content but must not become competing backlog ledgers.
 4. New backlog items enter via `Documentation/backlog/_template-intake.md` and are promoted to full runbooks using `Documentation/backlog/_template-runbook.md`.
 5. The legacy files `Documentation/backlog-post-v1-agentic-sprints.md` and `Documentation/runbooks/backlog-execution-runbooks.md` are superseded and retained as Tier 2 reference only.
+6. Machine-readable automation eligibility may live in `Documentation/backlog/automation-contracts.json` when item-by-item orchestration needs a stable contract.
 
 ## Backlog Lifecycle Governance Standard
 
@@ -68,6 +109,17 @@ Applies to all remaining open backlog items and all future backlog items.
    - active/open runbooks (`Documentation/backlog/bl-*.md`, `Documentation/backlog/hx-*.md`) must satisfy the current runbook schema and cadence policy;
    - done runbooks (`Documentation/backlog/done/*.md`) must preserve closeout evidence while conforming to readability schema;
    - backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields but must preserve canonical runbook linkage.
+7. Per `ADR-0023`, backlog automation is draft-only by default:
+   - automation may run declared T1/T2/T3 commands,
+   - automation may assemble `TestEvidence/` packets and draft sync summaries,
+   - automation may not finalize status changes, `Done` transitions, or archive moves without owner confirmation unless an item is explicitly marked `owner_gated_auto`.
+8. Backlog automation contracts should declare:
+   - `automation_mode`,
+   - `automation_stage_cap`,
+   - `owner_required_for`,
+   - `heavy_wrapper`,
+   - `shared_files_risk`,
+   - `closeout_ready`.
 
 ## Backlog Plain-Language and Visual Clarity Standard
 
@@ -102,6 +154,8 @@ Recommended scaffolding helper for new items:
 3. Refresh machine-readable backlog summaries after backlog changes: `./scripts/export-backlog-summaries.py`
 4. Summary schema authority: `Documentation/backlog/backlog-summary-schema.md`
 5. Auto-refresh hook (local): `.githooks/pre-commit` refreshes/stages summary artifacts when `Documentation/backlog/**` changes are staged.
+6. Draft automation runner: `scripts/backlog-auto-123.py`
+7. Draft automation guide: `Documentation/backlog/automation-draft-flow.md`
 
 ## Portable Status-Rich Roadmap And Review Standard
 
@@ -178,12 +232,18 @@ When the same closeout also changes backlog status/priority, update `Documentati
 
 ## Minimalism Rule
 Prefer updating canonical docs over creating new files. New docs require a clear owner and purpose.
+When a doc must stay detailed, keep the active surface short and move deep narrative or historical context into evidence packets, appendices, or archive bundles.
+Apply the same rule to testing docs: prefer short guide or contract surfaces in `Documentation/testing/` and keep bulky run output in `TestEvidence/` or archive.
 
 ## Artifact Tracking Rule
 Apply artifact tracking and retention policy from `Documentation/adr/ADR-0010-repository-artifact-tracking-and-retention-policy.md`:
 1. classify by artifact class first;
 2. keep generated/heavy artifacts local-only by default;
 3. track only canonical decision-grade evidence.
+4. keep only the current generated version in active folders;
+5. archive older generated summaries, visuals, and timestamped support packets quickly;
+6. keep active markdown short and pair it with one compact structured companion when needed;
+7. do not treat debug exhaust or repeated payload-failure snippets as active documentation.
 
 ## Archival Rule
 When documentation bloat or ambiguity appears:

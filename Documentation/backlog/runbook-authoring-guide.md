@@ -2,7 +2,7 @@ Title: Backlog Runbook Authoring Guide
 Document Type: Guide
 Author: APC Codex
 Created Date: 2026-03-02
-Last Modified Date: 2026-03-06
+Last Modified Date: 2026-03-18
 
 # Backlog Runbook Authoring Guide
 
@@ -25,6 +25,38 @@ Every runbook must include:
 2. `## 6W Snapshot (Who/What/Why/How/When/Where)`
 3. `## Visual Aid Index`
 
+## Smart Brevity Rules
+
+Per `Documentation/adr/ADR-0021-smart-brevity-documentation-contract.md`:
+1. Lead with the current decision or current need.
+2. Keep most sentences short.
+3. Keep most paragraphs to `1-3` sentences.
+4. Prefer bullets or tables over long narrative when scanning matters.
+5. Use concrete labels:
+   - owner,
+   - status,
+   - dependency,
+   - evidence path,
+   - next action.
+6. Replace repeated global governance text with pointers to:
+   - `Documentation/backlog/index.md`
+   - `Documentation/standards.md`
+7. If a section becomes long, split it into:
+   - decision,
+   - current state,
+   - next action,
+   - evidence.
+
+## Draft-Only Automation Contract
+
+Use the same contract in every backlog template.
+
+1. Default mode is `draft_only`.
+2. T1, T2, and T3 may be run automatically for evidence gathering and packet drafting.
+3. Automation must not finalize promotion, archive moves, or status/index transitions.
+4. Use `MANUAL_ONLY` for lanes that need a human gate, like participant studies or signing workflows.
+5. Use `DRAFT_READY`, `BLOCKED`, or `MANUAL_ONLY` as the runner outcome.
+
 ## Anti-Duplication Rules
 
 1. Keep `Plain-Language Summary` short (2-3 sentences) and avoid repeating the full `Objective` text verbatim.
@@ -34,6 +66,7 @@ Every runbook must include:
 - standards/metadata/readability: `Documentation/standards.md`
 4. Use `Handoff Return Contract` only when item-specific fields differ from canonical owner sync contract.
 5. Use `Governance Alignment` only for item-specific exceptions; do not restate global policy.
+6. Put draft-only automation fields in the template contract, not in every task narrative.
 
 ## Visual Guidance
 
@@ -41,6 +74,7 @@ Every runbook must include:
 2. Add mermaid diagrams only when the behavior/sequence is hard to understand in text.
 3. Add screenshots/charts only when they materially improve decision quality.
 4. Link visual evidence to repo-local artifacts under `TestEvidence/...`.
+5. Do not add visuals just for decoration; each visual should reduce reading time or ambiguity.
 
 ## Portable Status Formatting
 

@@ -2,7 +2,7 @@ Title: BL-XXX Promotion Decision Template
 Document Type: Backlog Template
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-28
+Last Modified Date: [YYYY-MM-DD]
 
 # BL-XXX Promotion Decision (`Slice Z*` Owner Sync)
 
@@ -36,6 +36,18 @@ Use visuals only when they improve understanding.
 | Determinism table | Confidence in replay stability | `## Determinism / Reliability Checks` |
 | Mermaid decision flow (optional) | Clarifies promotion/no-go reasoning | `## Decision Flow` |
 | Screenshot/chart (optional) | Clarifies UI/metric evidence | `TestEvidence/...` linked path |
+
+## Automation Contract
+
+This packet may be drafted by orchestration, but the owner makes the promotion decision.
+
+| Field | Value |
+|---|---|
+| Automation Mode | `draft_only` |
+| Stage Cap | `T3` |
+| Owner Approval Required For | `Done`, archive move, or index/status sync |
+| Runner Output | `DRAFT_READY`, `BLOCKED`, or `MANUAL_ONLY` |
+| Rule | Draft the packet, do not auto-promote |
 
 ## Decision
 - Result: `PASS | FAIL`

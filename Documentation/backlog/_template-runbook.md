@@ -57,6 +57,18 @@ Use visuals only when they improve understanding.
 | Default Replay Tier | [T0/T1/T2/T3/T4 per `Documentation/backlog/index.md`] |
 | Heavy Lane Budget | [Standard / High-cost wrapper] |
 
+## Automation Contract
+
+Draft-only by default. Automation may run T1/T2/T3 lanes, assemble packets, and draft updates, but it does not finalize promotion or archive moves.
+
+| Field | Value |
+|---|---|
+| Automation Mode | `draft_only` unless a separate owner-approved contract says otherwise |
+| Stage Cap | `T1` / `T2` / `T3` as appropriate |
+| Owner Approval Required For | `Done`, archive move, or any status/index transition |
+| Runner Output | `DRAFT_READY`, `BLOCKED`, or `MANUAL_ONLY` |
+| Drafted Artifacts | `status.tsv`, `validation_matrix.tsv`, `owner_decisions.md`, `handoff_resolution.md`, `promotion_decision.md` |
+
 ## Progress Snapshot
 
 | Item | Status | Priority | Estimate | Actual / Time | Tokens | Updated | Where | Remaining |
@@ -184,6 +196,7 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - Heavy wrappers (>=20 binary launches per wrapper run) must avoid repeated full-sweep reruns.
 - On failure, diagnose failing run(s) first; do not blindly repeat full multi-run sweeps.
 - Any cadence override must be documented in `lane_notes.md` or owner decision artifacts.
+- Draft-only automation may prepare the cadence packet for T1/T2/T3, but a human owner still confirms promotion.
 
 ## Risks & Mitigations
 

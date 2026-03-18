@@ -67,6 +67,18 @@ Use visuals only when they improve understanding.
 | Candidate Gate Run Budget | [5 or owner-approved alternative] |
 | Promotion Gate Run Budget | [10 or owner-approved alternative] |
 
+## Automation Contract
+
+Draft-only by default. Automation may help run T1/T2/T3 and assemble the evidence packet, but it must not advance status on its own.
+
+| Field | Value |
+|---|---|
+| Automation Mode | `draft_only` unless a separate owner-approved contract says otherwise |
+| Stage Cap | `T1` / `T2` / `T3` as appropriate |
+| Owner Approval Required For | promotion, archive move, or any status/index transition |
+| Runner Output | `DRAFT_READY`, `BLOCKED`, or `MANUAL_ONLY` |
+| Drafted Artifacts | `status.tsv`, `validation_matrix.tsv`, `owner_decisions.md`, `handoff_resolution.md`, `promotion_decision.md` |
+
 ## Ownership / Evidence Boundaries (Required)
 
 - Owned files/patterns:

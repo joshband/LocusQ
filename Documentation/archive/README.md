@@ -2,7 +2,7 @@ Title: LocusQ Documentation Archive Index
 Document Type: Archive Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-02-25
+Last Modified Date: 2026-03-18
 
 # Documentation Archive Index
 
@@ -53,8 +53,11 @@ Provide a stable archive location for non-canonical documentation artifacts whil
   - keep `Documentation/research/` focused on active workstreams only
   - preserve historical references for traceability without keeping them in active research surface
 
-## Next-Pass Candidates (review required before move)
-1. Historical planning drafts that are now reference-only:
-- `Documentation/plans/2026-02-20-full-project-review.md`
-2. Optional runtime/process notes if no longer active:
-- none currently pending (watchdog guide archived on 2026-02-24)
+6. `Documentation/archive/2026-03-18-doc-surface-consolidation/`
+- Contents:
+  - superseded report packets and generated summaries removed from active `Documentation/reports/`
+  - resolved owner-sync and tracker-issue packets no longer needed in active report surfaces
+  - superseded plan variants and BL-077 design packet variants removed from active `Documentation/plans/`
+- Reason:
+  - reduce competing active report and plan surfaces
+  - keep active folders biased toward current execution rather than historical packet accumulation

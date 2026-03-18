@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-18
 
 
 # Documentation Index
@@ -10,6 +10,7 @@ Last Modified Date: 2026-03-17
 ## Purpose
 Keep documentation lean, canonical, and current while preserving traceability from specs to code to validation evidence.
 Backlog model: `Documentation/backlog/index.md` is the single backlog catalog authority; individual runbook docs in `Documentation/backlog/` hold execution detail and agent prompts; lifecycle templates (`_template-intake.md`, `_template-runbook.md`, `_template-promotion-decision.md`, `_template-closeout.md`) are the required process contract for future and remaining backlog work; annex plan specs in `Documentation/plans/` hold deep architecture. Backlog lifecycle docs must include plain-language + 6W + visual-aid sections so non-technical readers and agents/scripts can consume the same document safely.
+Draft-only backlog automation now has an explicit contract: `Documentation/backlog/automation-contracts.json` holds machine-readable eligibility and `Documentation/backlog/automation-draft-flow.md` defines the safe T1/T2/T3 automation path. Per `ADR-0023`, automation may assemble evidence and draft status updates, but owner confirmation still controls authoritative promotion and archive moves.
 
 ## Source-of-Truth Tiers
 
@@ -39,13 +40,15 @@ Used for implementation planning and validation flow, but status truth remains T
 - `Documentation/backlog/_template-runbook.md` (execution/runbook contract)
 - `Documentation/backlog/_template-closeout.md` (done transition contract)
 - `Documentation/backlog/backlog-summary-schema.md` (machine-readable backlog summary schema contract)
+- `Documentation/backlog/automation-contracts.json` (machine-readable backlog automation eligibility contract)
+- `Documentation/backlog/automation-draft-flow.md` (draft-only T1/T2/T3 automation guide)
 - `Documentation/reports/data/backlog-summary.json` (machine-readable backlog summary for agents/automation)
 - `Documentation/reports/data/backlog-summary.csv` (tabular backlog export for scripts/reports)
 - `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md`
 - `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md`
 - `Documentation/plans/bl-017-head-tracked-monitoring-companion-bridge-plan-2026-02-22.md`
-- `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md`
+- `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md`
 - `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md`
 - `Documentation/plans/bl-029-audition-platform-expansion-plan-2026-02-24.md`
 - `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md`
@@ -53,8 +56,18 @@ Used for implementation planning and validation flow, but status truth remains T
 - `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
 - `Documentation/plans/2026-03-17-ui-ux-trust-wave-execution-packet.md`
 - `Documentation/reports/` (active report artifacts and companion data/visual bundles)
-- `Documentation/testing/`
+- `Documentation/testing/README.md` (testing surface index and classification contract)
 - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`
+- `Documentation/testing/reaper-manual-qa-session.md`
+- `Documentation/testing/selftest-abrt-triage.md`
+- `Documentation/testing/selftest-stability-contract.md`
+- `Documentation/testing/pluginval-stability-contract.md`
+- `TestEvidence/README.md` (test-evidence classification and packet-shape index)
+
+Testing-surface rule:
+- `Documentation/testing/README.md` classifies which testing docs are reusable guides, supporting contracts, or BL-specific support packets.
+- `Documentation/testing/` is a supporting validation surface, not a second backlog or status system.
+- One-off testing evidence notes should move to `Documentation/archive/<date>-<slug>/testing/` once the active truth lives in backlog runbooks or `TestEvidence/`.
 
 ### Tier 2: Reference (historical/research context, not authoritative)
 Reference-only docs are retained for traceability but are not status authority:
@@ -71,8 +84,9 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/archive/2026-03-01-architecture-review-consolidation/`
 - `Documentation/archive/2026-03-01-build-summary-compaction/`
 - `Documentation/archive/2026-03-01-validation-trend-compaction/`
+- `Documentation/archive/2026-03-18-doc-surface-consolidation/`
+- `Documentation/Calibration POC/` (active research prototype surface; reference-only)
 - `Documentation/lessons-learned.md`
-- `Documentation/plans/2026-02-20-full-project-review.md`
 - `Documentation/archive/2026-02-23-clap-reference-bundle/`
 - `Documentation/backlog-post-v1-agentic-sprints.md` (superseded by `Documentation/backlog/index.md`)
 - `Documentation/runbooks/backlog-execution-runbooks.md` (superseded by individual runbook docs)
@@ -106,6 +120,12 @@ Escalation path:
   - `Documentation/exports/` must stay empty/absent at closeout.
   - `Documentation/reports/` is active non-canonical report surface only.
 - Historical narratives and one-off bundles are preserved under `Documentation/archive/`.
+- Per `ADR-0022`, generated report data, visuals, and timestamped support outputs are current-only by default in active folders.
+- Superseded plan packets, legacy report bundles, and stale generated summaries were further reduced from active folders on 2026-03-18 and moved to:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/`
+- The active testing surface was also classified on 2026-03-18:
+  - reusable guides and supporting contracts remain active under `Documentation/testing/`
+  - one-off notes move to `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/`
 - Legacy backlog companions (`Documentation/backlog-post-v1-agentic-sprints.md`, `Documentation/runbooks/backlog-execution-runbooks.md`) remain Tier 2 reference-only.
 
 ## Normative Inputs For Implementation
@@ -125,10 +145,17 @@ Escalation path:
 - Root `README.md` and `CHANGELOG.md` are canonical Tier 0 surfaces.
 - Top-level `Documentation/exports/` remains scratch-only and is blocked by closeout guard checks.
 - `Documentation/reports/` is an active non-canonical report surface (archive snapshots remain under `Documentation/archive/`).
+- Generated report data, visuals, and timestamped support packets are current-only by default per `ADR-0022`.
+- `TestEvidence/README.md` classifies canonical evidence surfaces versus decision packets versus debug exhaust.
 - Backlog machine-readable summary artifacts are freshness-gated via:
   - `./scripts/export-backlog-summaries.py --check`
   - `./scripts/validate-docs-freshness.sh`
 - Backlog summary artifacts auto-refresh on staged `Documentation/backlog/**` changes via `.githooks/pre-commit`.
+- Backlog automation drafts use:
+  - `Documentation/backlog/automation-contracts.json`
+  - `Documentation/backlog/automation-draft-flow.md`
+  - `scripts/backlog-auto-123.py`
+- Per `ADR-0023`, automation packets may draft owner-ready promotion notes but may not finalize `Done` or archive transitions by default.
 - Phase closeout updates are gated by ADR-0005 and validated via `scripts/validate-docs-freshness.sh`.
 - Current acceptance/status claims must resolve through:
   - `Documentation/backlog/index.md`
