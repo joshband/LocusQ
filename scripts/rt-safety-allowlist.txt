@@ -2,6 +2,9 @@
 # Format: Source/path.ext:line:RULE_ID
 # Reconciled baseline from TestEvidence/owner_bl029_p5p6_reconcile_20260225T152901Z/rt_before.tsv
 # Refreshed by owner on 2026-02-25T15:30:41Z
+# 2026-03-18: Add physics DAW automation LIVE->FROZEN snapshot notification
+# AsyncUpdater::triggerAsyncUpdate() is RT-safe by JUCE contract (atomic flag, no allocation)
+Source/PluginProcessor.cpp:2917:MESSAGE_THREAD_CALL
 Source/CalibrationEngine.h:113:HEAP_ALLOC
 Source/CalibrationEngine.h:133:HEAP_ALLOC
 Source/PhysicsEngine.h:30:HEAP_ALLOC
