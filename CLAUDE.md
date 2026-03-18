@@ -2,7 +2,7 @@ Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # CLAUDE.md
 
@@ -79,6 +79,9 @@ Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selec
 - Update `status.json` as phase state changes.
 - Do not auto-advance to the next phase.
 - Stop after completing the requested command output.
+
+## Backlog Automation
+- Backlog automation is draft-only unless the user explicitly approves a promotion flow: scripts may run T1/T2/T3 lanes and prepare packets or proposed status updates, but owner confirmation is required before promotion or archive transitions become authoritative.
 
 ## Framework Discipline
 `ui_framework` in `status.json` is binding:

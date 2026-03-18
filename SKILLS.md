@@ -2,7 +2,7 @@ Title: APC Skills Index
 Document Type: Skill Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # SKILLS.md
 
@@ -33,8 +33,8 @@ For any phase execution:
 ## Specialist Skills
 | Skill | File | Use When |
 |---|---|---|
-| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation governance: metadata compliance, ADR hygiene, traceability upkeep, archive-tier policy, and root-doc sync discipline |
-| `documentation-hygiene-expert` | `.codex/skills/documentation-hygiene-expert/SKILL.md` | SDLC-aware documentation cleanup plus git artifact hygiene: deduplicate bloated docs, enforce freshness ownership/cadence, consolidate canonical sources, align behavior claims to ADRs, and guard against tracked ignored/archive/build artifacts |
+| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation governance: metadata compliance, ADR hygiene, traceability upkeep, archive-tier policy, root-doc sync discipline, and owner-confirmed promotion handoff for draft automation |
+| `documentation-hygiene-expert` | `.codex/skills/documentation-hygiene-expert/SKILL.md` | SDLC-aware documentation cleanup plus git artifact hygiene: deduplicate bloated docs, enforce freshness ownership/cadence, consolidate canonical sources, align behavior claims to ADRs, guard against tracked ignored/archive/build artifacts, and draft T1/T2/T3 backlog packets without auto-promotion |
 | `juce-webview-windows` | `.codex/skills/skill_design_webview/SKILL.md` | WebView implementation details or WebView crash/order hardening |
 | `juce-webview-runtime` | `.codex/skills/juce-webview-runtime/SKILL.md` | Host/runtime interop, WebView bridge timeouts, callback ordering, UI click/hit-target anomalies, startup hydration issues |
 | `skill_testing` | `.codex/skills/skill_testing/SKILL.md` | Detailed harness-first testing and plugin validation workflows |
@@ -54,6 +54,11 @@ For any phase execution:
 | `apple-spatial-companion-platform` | `.codex/skills/apple-spatial-companion-platform/SKILL.md` | Swift companion platform/API ownership for AirPods workflows: CoreMotion motion capture, ear-photo/depth capture flow, privacy-retention policy, and Apple API boundary constraints for BL-057/BL-058 |
 | `hrtf-rendering-validation-lab` | `.codex/skills/hrtf-rendering-validation-lab/SKILL.md` | Offline SOFA truth-render validation, realtime FIR/partitioned-convolver parity, interpolation/crossfade safety, and BL-055/BL-061 evidence gates |
 | `perceptual-listening-harness` | `.codex/skills/perceptual-listening-harness/SKILL.md` | Blinded listening protocol design, trial schema/stats outputs, reproducibility checks, and BL-060/BL-061 gate decision evidence |
+
+## Backlog Automation Ownership
+| Task Pattern | Primary Skill | Secondary Skill(s) |
+|---|---|---|
+| Draft-only T1/T2/T3 backlog automation, packet drafting, and proposed status diffs | `documentation-hygiene-expert` | `skill_docs` |
 
 ## Three.js Skill Bundle
 The `threejs` skill is organized as one triggerable skill plus focused references:

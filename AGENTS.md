@@ -2,7 +2,7 @@ Title: LocusQ Agent Dispatcher
 Document Type: Agent Routing Guide
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # AGENTS.md
 
@@ -115,6 +115,7 @@ All currently supported repo skills that must be considered for routing:
 - Make scoped changes only; avoid unrelated edits.
 - Do not revert user work outside requested scope.
 - Prefer repository scripts over ad-hoc build flows.
+- Backlog automation is draft-only unless explicitly approved: agents may run T1/T2/T3 lanes and draft packets or proposed status diffs, but owner confirmation is required before promotion or archive transitions become authoritative.
 - Report validation status explicitly: `tested`, `partially tested`, or `not tested`.
 
 ## Documentation Archive Contract

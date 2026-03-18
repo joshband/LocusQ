@@ -2,7 +2,7 @@ Title: APC Agent Rule Contract
 Document Type: Rule
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # AGENT_RULE.md
 
@@ -28,6 +28,7 @@ Do not edit those copies directly. After editing this file, sync both copies wit
 - Slash commands and natural-language intent map through `AGENTS.md`.
 - Enforce one phase at a time.
 - Do not auto-advance to the next phase when a phase completes.
+- Backlog automation is draft-only unless explicitly approved: agents may run T1/T2/T3 lanes and draft packets or proposed status updates, but owner confirmation is required before promotion or archive transitions become authoritative.
 - When specialist intents are present, select the minimal specialist skill bundle from `SKILLS.md` / `Documentation/skill-selection-matrix.md` and announce order.
 - For repository-scale docs cleanup/de-bloat requests (including backlog/root/API-doc/code-comment hygiene), include `documentation-hygiene-expert`.
 - For git artifact hygiene requests (tracked ignored files, stale archives, history bloat, pre-commit/CI guardrails), include `documentation-hygiene-expert`.
@@ -52,6 +53,7 @@ Before phase work:
 During phase work:
 - Keep edits in phase scope.
 - Update state directly in `status.json` with explicit rationale in notes/evidence surfaces.
+- Draft-only backlog automation may prepare proposed state changes, but authoritative promotion/archive updates stay pending until owner confirmation.
 
 After phase work:
 - Validate required artifacts exist.
