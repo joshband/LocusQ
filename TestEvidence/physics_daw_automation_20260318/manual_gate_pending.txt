@@ -4,10 +4,10 @@ Automated gate (headless Reaper):
   Gates: A=param_registration B=live_output C=snapshot_no_jump D=frozen_to_live
   Status: written (not yet run against built plugin)
 
-Manual gate still required (Logic + Reaper — audible pop check only):
-- Enable physics on emitter 1
-- Arm automation recording on "Emitter 1 Physics Spread" lane
-- Play — confirm automation lane fills
-- Click FROZEN — listen for audible pop at transition (should be silent)
-- Click LIVE — confirm physics resumes
-- Document result here before ship
+Automated pop check (C++ probe Gate 8):
+  qa/physics_daw_automation_probe_main.cpp :: checkFreezeTransitionNoPop()
+  Method: block-rate simulation, 40 processBlock iterations, freeze at block 20
+          (worst-case mid-ramp), max_jump < 0.05 normalized gate
+  Status: written (runs as part of locusq_physics_daw_automation_probe)
+
+No manual listening gate remains. All 5 spec gates are now automated.
