@@ -20,6 +20,12 @@ def load_contracts() -> dict:
     return json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
+def merged_stage_commands(contracts: dict, item: dict, stage: str) -> list[str]:
+    defaults = contracts.get("defaults", {}).get("commands", {})
+    item_commands = item.get("commands", {})
+    return list(defaults.get(stage, [])) + list(item_commands.get(stage, []))
+
+
 def stage_index(stage: str) -> int:
     return STAGE_ORDER.index(stage)
 
@@ -254,10 +260,9 @@ def main() -> int:
         out_dir = ROOT / "TestEvidence" / f"{item_id.lower()}_auto_{requested}_{now_utc()}"
 
     rows: list[dict] = []
-    commands = item.get("commands", {})
     stages = STAGE_ORDER[: stage_index(requested) + 1] if args.stage == "all" else [requested]
     for stage in stages:
-        for command in commands.get(stage, []):
+        for command in merged_stage_commands(contracts, item, stage):
             log_path = out_dir / f"{stage}_{len(rows)+1:02d}.log"
             exit_code, log_ref = run_command(command, log_path)
             rows.append(

@@ -144,6 +144,11 @@ ProbeResult runProbe()
     setActualParam (processor, "phys_vel_y", 0.0f);
     setActualParam (processor, "phys_vel_z", 0.0f);
     setActualParam (processor, "attractor_0_active", 0.0f);
+    setActualParam (processor, "phys_spring_enable", 0.0f);
+    setActualParam (processor, "phys_turbulence", 0.0f);
+    setActualParam (processor, "phys_collide_emitters", 0.0f);
+    setChoiceParam (processor, "phys_flock_group", 0);
+    setActualParam (processor, "rend_phys_interact", 0.0f);
     setActualParam (processor, "phys_throw", 0.0f);
 
     processor.prepareToPlay (sampleRate, blockSize);

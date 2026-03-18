@@ -70,7 +70,10 @@ void configureBoidsEmitter (LocusQAudioProcessor& processor, float posX)
     setActualParam (processor, "phys_flock_0_max_speed", 1.5f);
 
     setActualParam (processor, "attractor_0_active", 0.0f);
+    setActualParam (processor, "phys_spring_enable", 0.0f);
+    setActualParam (processor, "phys_turbulence", 0.0f);
     setActualParam (processor, "phys_collide_emitters", 0.0f);
+    setActualParam (processor, "rend_phys_interact", 0.0f);
 }
 
 SceneSnapshot parseSceneSnapshot (const juce::String& jsonText, int firstEmitterId, int secondEmitterId)
@@ -164,6 +167,13 @@ ProbeResult runProbe()
     float minDistance = std::numeric_limits<float>::max();
     float maxSpread = 0.0f;
 
+    const auto baselineSnapshot = parseSceneSnapshot (first.getSceneStateJSON(), firstEmitterId, secondEmitterId);
+    if (baselineSnapshot.emitterCount >= 2 && baselineSnapshot.first.found && baselineSnapshot.second.found)
+    {
+        initialDistance = std::abs (baselineSnapshot.second.x - baselineSnapshot.first.x);
+        initialDistanceCaptured = initialDistance >= 1.0f;
+    }
+
     for (int block = 0; block < 64; ++block)
     {
         firstBuffer.clear();
@@ -191,12 +201,13 @@ ProbeResult runProbe()
         {
             sawBothEmitters = true;
             const float distance = std::abs (snapshot.second.x - snapshot.first.x);
-            if (! initialDistanceCaptured)
+            if (! initialDistanceCaptured && distance >= 1.0f)
             {
                 initialDistance = distance;
                 initialDistanceCaptured = true;
             }
-            minDistance = juce::jmin (minDistance, distance);
+            if (initialDistanceCaptured)
+                minDistance = juce::jmin (minDistance, distance);
             maxSpread = juce::jmax (maxSpread, juce::jmax (snapshot.first.spread, snapshot.second.spread));
         }
 
