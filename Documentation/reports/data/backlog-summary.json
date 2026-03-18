@@ -2,9 +2,9 @@
   "schema_version": "locusq-backlog-summary-v1",
   "source": "Documentation/backlog",
   "counts": {
-    "total": 108,
+    "total": 109,
     "open": 23,
-    "done": 85
+    "done": 86
   },
   "items": [
     {
@@ -372,7 +372,7 @@
       "id": "BL-020",
       "title": "BL-020 Confidence/Masking Overlay",
       "state_bucket": "open",
-      "status": "In Validation (latest C4 refresh packet PASS at `20260228T203021Z`; C4b post-R1 packet PASS at `20260228T202240Z`; owner promotion review pending)",
+      "status": "In Validation (latest C4 refresh `PASS` at `20260228T203021Z`; C4b post-R1 `PASS` at `20260228T202240Z`; owner promotion review pending)",
       "priority": "P2",
       "track": "E - R&D Expansion",
       "depends_on": "BL-014 (Done), BL-019 (Done)",
@@ -383,15 +383,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-020 in plain terms: Define a deterministic contract for confidence/masking overlays, including field-level input rules, deterministic rendering/degradation behavior, acceptance thresholds, and QA artifact schema. Current state: In Validation (latest C4 refresh packet PASS at 20260228T203021Z; C4b post-R1 packet PASS at 20260228T202240Z; owner promotion review pending). For technical detail, see ## Objective and ## Validation Plan.",
-      "objective": "Define a deterministic contract for confidence/masking overlays, including field-level input rules, deterministic rendering/degradation behavior, acceptance thresholds, and QA artifact schema.",
+      "plain_language_summary": "BL-020 defines a deterministic confidence/masking overlay contract. The goal is simple: keep overlay behavior replayable, degrade safely, and ship evidence that humans and agents can read fast. Current state: In Validation; the latest C4 refresh packet passed at 20260228T203021Z, the C4b post-R1 packet passed at 20260228T202240Z, and owner promotion review is still pending.",
+      "objective": "Define a deterministic contract for confidence/masking overlays, including input rules, replay behavior, degradation behavior, acceptance thresholds, and QA evidence shape.",
       "runbook_path": "Documentation/backlog/bl-020-confidence-masking.md"
     },
     {
       "id": "BL-021",
       "title": "BL-021 Room-Story Overlays",
       "state_bucket": "open",
-      "status": "In Implementation (C4 execute-mode parity packet PASS at `20260228T170131Z`; C4b post-R1 non-interference packet PASS at `20260228T202813Z`; owner intake/promotion decision pending)",
+      "status": "In Implementation (C4 parity green; owner intake/promotion decision pending)",
       "priority": "P2",
       "track": "",
       "depends_on": "BL-014 (Done), BL-015 (Done), HX-05",
@@ -402,8 +402,8 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-021 in plain terms: Define a deterministic room-story overlay contract for the viewport so room analysis data can be rendered predictably, degrade safely on partial payloads, and be validated with replayable acceptance criteria. Current state: In Implementation (C4 execute-mode parity packet PASS at 20260228T170131Z; C4b post-R1 non-interference packet PASS at 20260228T202813Z; owner intake/promotion decision pending). For technical detail, see ## Objective and ## Validation Plan.",
-      "objective": "Define a deterministic room-story overlay contract for the viewport so room analysis data can be rendered predictably, degrade safely on partial payloads, and be validated with replayable acceptance criteria.",
+      "plain_language_summary": "BL-021 defines the room-story overlay contract for the viewport. It keeps room analysis rendering deterministic, degrades safely on partial payloads, and stays replayable for owner review. Current state: In Implementation with C4 parity green and owner intake/promotion still pending.",
+      "objective": "Define a deterministic room-story overlay contract for the viewport. Preserve predictability, additive degradation, and replayable owner evidence.",
       "runbook_path": "Documentation/backlog/bl-021-room-story-overlays.md"
     },
     {
@@ -619,7 +619,7 @@
       "id": "BL-032",
       "title": "BL-032: Source Modularization of PluginProcessor/PluginEditor",
       "state_bucket": "open",
-      "status": "Done-candidate (Slice A/B/C1 complete; D1 closed `BL032-G-001`; D2 RT reconciliation PASS; E1 owner replay PASS `Ready-for-In-Validation`; F1 done-promotion PASS `Done-candidate`)",
+      "status": "Done-candidate on hold",
       "priority": "P2",
       "track": "",
       "depends_on": "\u2014",
@@ -630,8 +630,8 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-032 in plain terms: Reduce maintenance and merge risk caused by oversized monolithic translation units by decomposing Source/PluginProcessor.cpp and Source/PluginEditor.cpp into coherent, testable modules with explicit ownership boundaries while preserving current behavior and realtime safety constraints. Current state: Done-candidate (Slice A/B/C1 complete; D1 closed BL032-G-001; D2 RT reconciliation PASS; E1 owner replay PASS Ready-for-In-Validation; F1 done-promotion PASS Done-candidate). For technical detail, see ## Objective and ## Validation Plan.",
-      "objective": "Reduce maintenance and merge risk caused by oversized monolithic translation units by decomposing Source/PluginProcessor.cpp and Source/PluginEditor.cpp into coherent, testable modules with explicit ownership boundaries while preserving current behavior and realtime safety constraints.",
+      "plain_language_summary": "BL-032 reduces merge risk and maintenance drag by breaking Source/PluginProcessor.cpp and Source/PluginEditor.cpp into smaller owned modules without changing behavior or violating realtime rules.",
+      "objective": "Reduce maintenance and merge risk by decomposing Source/PluginProcessor.cpp and Source/PluginEditor.cpp into coherent, testable modules with explicit boundaries while preserving behavior and realtime safety.",
       "runbook_path": "Documentation/backlog/bl-032-source-modularization.md"
     },
     {
@@ -1530,8 +1530,8 @@
     {
       "id": "BL-080",
       "title": "BL-080: Authoring Undo/Redo for Timeline and Preset Operations",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P3",
       "track": "",
       "depends_on": "BL-070, BL-074",
@@ -1542,9 +1542,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: Done-candidate. The processor-side history engine, WebView controls, and standalone validation lane are now green, with the rebuilt standalone production self-test explicitly passing UI-W3A-01 and UI-W3A-02; the remaining step is owner promotion and closeout sync.",
+      "plain_language_summary": "BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: Done. The processor-side history engine, WebView controls, and standalone validation lane are green, the rebuilt standalone production self-test passed UI-W3A-01 and UI-W3A-02, and the closeout sync is now complete.",
       "objective": "Add deterministic undo/redo coverage for keyframe timeline edits plus preset lifecycle operations initiated from the WebView UI, while preserving the existing processor authority model, preset-file contract, and native UI-state persistence behavior.",
-      "runbook_path": "Documentation/backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md"
+      "runbook_path": "Documentation/backlog/done/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md"
     },
     {
       "id": "BL-081",
@@ -1925,6 +1925,25 @@
       "plain_language_summary": "BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can launch apps, drive mouse and keyboard actions, capture screenshots or video, and emit machine-readable evidence so plugin repos stop hand-rolling fragile UI automation scripts. Current state: Draft only; not yet indexed into the canonical backlog. For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Create a harness-owned desktop operator layer for audio-dsp-qa-harness that supports deterministic desktop automation on macOS without baking plugin-specific knowledge into the harness core.",
       "runbook_path": "Documentation/backlog/bl-100-desktop-operator-runner-and-evidence-contract.md"
+    },
+    {
+      "id": "BL-101",
+      "title": "BL-101 CALIBRATE discovery, provenance, and truthfulness",
+      "state_bucket": "open",
+      "status": "Open",
+      "priority": "P1",
+      "track": "E - R&D Expansion",
+      "depends_on": "BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Open, complementary)",
+      "blocks": "future CALIBRATE capability-expansion lanes",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-101 in plain terms: make CALIBRATE honest and expandable by separating device discovery, topology inference, profile provenance, and verification truth into explicit contracts instead of implied status text. Current state: Open. This item is the direct follow-on from the 2026-03-18 CALIBRATE research packet and exists because the current panel can show useful status, but it still cannot prove all of its automation and verification claims end-to-end.",
+      "objective": "Make CALIBRATE trustworthy and expandable by freezing one explicit contract for output discovery, input identification, topology inference, profile provenance, and verification truthfulness. BL-101 is complete only when HEADPHONE DEVICE STATUS, AUTOMATION SUMMARY, CALIBRATION STATUS, and HEADPHONE VERIFY can state what is detected, inferred, measured, estimated, generic, stale, or manually overridden without rewriting weaker evidence into stronger claims.",
+      "runbook_path": "Documentation/backlog/bl-101-calibrate-discovery-provenance-and-truthfulness.md"
     },
     {
       "id": "HX-01",

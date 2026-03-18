@@ -287,6 +287,8 @@ Validation summary:
 - `locusq_physics_runtime_attractor_probe`: PASS in the production processor path for the first coordinated Tier A slice (`baselineMaxSpread=0.000`, `attractorMaxSpread=0.880`, `spreadDelta=0.880`, `attractorMaxDisp=2.967`, `finalPos=(1.342, 1.200, 0.000)`).
 - `locusq_physics_runtime_boundary_probe`: PASS in the production processor path for worker-owned boundary response (`maxX=3.000`, `collisionMask=1`, `finalPos=(1.040, 1.200, 0.000)`).
 - `locusq_physics_runtime_collision_probe`: PASS in the production processor path for shared-worker two-emitter collision under a bounded room-contained contract (`emitterIds=(0,1)`, `minDistance=0.636`, `finalDistance=4.714`, `maxAbsX=3.000`, `maxCollisionEnergy=2.6945`, `finalVx=(0.821,-0.815)`).
+- `locusq_physics_runtime_boids_probe`: PASS in the production processor path for flock-driven coordinated motion and density-driven spread (`emitterIds=(0,1)`, `initialDistance=2.992`, `minDistance=2.400`, `maxSpread=1.000`).
+- `locusq_physics_runtime_interaction_probe`: PASS in the production processor path for interaction-only shared-worker repulsion (`emitterIds=(0,1)`, `initialDistance=0.726`, `maxDistance=3.454`, `maxAbsForce=5.682`, `finalVx=(-1.802,1.668)`).
 - Collision controls are now consumed in the production processor path too: `phys_collide_emitters`, `phys_collision_radius`, `phys_collision_gain_scale`, `phys_collision_decay_ms`, and `phys_mass_override` now reach `PhysicsWorker` instead of stopping at APVTS/UI registration.
 - Coordinated physics ownership is now process-shared for the validated runtime path: `PhysicsWorker` / `PhysicsDSPBridge` moved behind a shared runtime so multiple plugin instances can participate in one collision/coordination domain.
 - Shared-worker ownership is still partial overall, but the biggest architectural blocker from the review is now closed: true in-plugin multi-emitter collision validation across plugin instances is possible and green.
@@ -316,6 +318,8 @@ Validation summary:
 - Coordinated slots are no longer re-activated every block; worker-owned motion now persists across blocks instead of being reset by the emitter publish path.
 - Coordinated-worker activation is no longer attractor-only: collision-enabled emitters can now enter the shared worker path without relying on a dummy attractor source.
 - Boids activation is now honest in the production path too: flock-group assignment and per-group boids parameters are pushed into `BoidsSystem`, and flock-enabled emitters can now enter coordinated worker mode even without an attractor or collision gate.
+- Shared physics scene flags are now refreshed from the emitter publish path too, so coordinated-worker features no longer depend on a renderer instance being active to keep shared runtime state truthful.
+- Interaction-only coordinated mode is now honest as well: shared-worker activation can be driven by `rend_phys_interact` in emitter-only scenes when more than one emitter is active.
 
 **Exit gate:**
 - Production plugin reads coordinated physics state from the shared worker for at least one end-to-end Tier A slice, with motion ownership boundaries documented.
@@ -345,6 +349,7 @@ Validation summary:
 - Shared collision mode now has a runtime containment policy instead of relying on probe-side drag tuning alone: when 2+ emitters are in coordinated collision mode with room boundaries enabled, the worker applies a weak rest-pose tether outside a deadzone so post-collision motion recenters before the emitters drift to the room edges.
 - The collision runtime probe now validates that stronger contract under `phys_drag=0.0`, and it stays green with the emitters contained well inside the room (`finalDistance=3.686`, `maxAbsX=2.046`, `finalVx=(0.568, -0.568)`).
 - The first non-attractor coordinated feature slice is now live as well: a new runtime boids probe confirms that flock membership activates shared-worker ownership in the production processor path and produces both coordinated motion and density-driven spread (`initialDistance=2.992`, `minDistance=2.306`, `maxSpread=1.000`).
+- Interaction-only scenes are now covered by the same production-path contract: the emitter publish path refreshes shared physics scene flags, interaction-enabled emitters can enter coordinated worker mode without attractor/collision/flock scaffolding, and a new runtime probe confirms real repulsion force plus separation growth (`initialDistance=0.726`, `maxDistance=3.454`, `maxAbsForce=5.682`, `finalVx=(-1.802, 1.668)`).
 
 **Must-do actions:**
 - Wire attractor APVTS params into processor-owned runtime objects.
