@@ -1,0 +1,1 @@
+physics_runtime_interaction_probe: PASS | emitterIds=(0,1) initialDistance=0.726 maxDistance=3.217 maxAbsForce=5.664 finalFx=(0.000,0.000) finalVx=(-1.791,1.669)

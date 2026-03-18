@@ -1,0 +1,10 @@
+phase	P-interaction
+timestamp	2026-03-18T22:40:00Z
+probe	locusq_physics_runtime_interaction_probe
+result	PASS
+emitter_ids	(0,1)
+initial_distance	0.726
+max_distance	3.217
+max_abs_force	5.664
+final_fx	(0.000,0.000)
+final_vx	(-1.791,1.669)
