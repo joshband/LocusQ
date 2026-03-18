@@ -75,16 +75,51 @@ struct RuntimeProbeMetrics
 {
     float maxSpread = 0.0f;
     float maxRelativeDisplacement = 0.0f;
+    float settleMinX = std::numeric_limits<float>::max();
+    float settleMaxX = std::numeric_limits<float>::lowest();
+    float settleSumX = 0.0f;
+    int settleSampleCount = 0;
     Vec3 originPosition {};
     bool hasOrigin = false;
     Vec3 lastPosition {};
 };
 
+void configureAttractorEmitter (LocusQAudioProcessor& processor)
+{
+    setChoiceParam (processor, "mode", 1); // Emitter mode
+    setActualParam (processor, "emit_spread", 0.0f);
+    setActualParam (processor, "emit_gain", 0.0f);
+    setActualParam (processor, "emit_directivity", 0.0f);
+    setActualParam (processor, "phys_enable", 1.0f);
+    setActualParam (processor, "phys_drag", 1.0f);
+    setActualParam (processor, "phys_gravity", 0.0f);
+    setActualParam (processor, "rend_phys_pause", 0.0f);
+    setChoiceParam (processor, "rend_phys_rate", 1); // 60 Hz
+    setActualParam (processor, "pos_coord_mode", 1.0f); // Cartesian
+    setActualParam (processor, "pos_x", 0.0f);
+    setActualParam (processor, "pos_y", 0.0f);
+    setActualParam (processor, "pos_z", 1.2f);
+    setActualParam (processor, "phys_spring_enable", 0.0f);
+    setActualParam (processor, "phys_turbulence", 0.0f);
+    setActualParam (processor, "phys_collide_emitters", 0.0f);
+    setChoiceParam (processor, "phys_flock_group", 0);
+    setActualParam (processor, "rend_phys_interact", 0.0f);
+    setActualParam (processor, "attractor_0_pos_x", 2.0f);
+    setActualParam (processor, "attractor_0_pos_y", 1.2f);
+    setActualParam (processor, "attractor_0_pos_z", 0.0f);
+    setActualParam (processor, "attractor_0_strength", 80.0f);
+    setActualParam (processor, "attractor_0_radius", 10.0f);
+    setChoiceParam (processor, "attractor_0_falloff", 1);
+    setActualParam (processor, "attractor_0_orbit_stabilize", 0.0f);
+    setActualParam (processor, "attractor_0_active", 0.0f);
+}
+
 RuntimeProbeMetrics runAndSampleMetrics (LocusQAudioProcessor& processor,
                                          juce::AudioBuffer<float>& buffer,
                                          juce::MidiBuffer& midi,
                                          int blocks,
-                                         int sleepMs)
+                                         int sleepMs,
+                                         int settleWindowBlocks = 0)
 {
     const int emitterId = processor.getEmitterSlotId();
     RuntimeProbeMetrics metrics;
@@ -121,6 +156,14 @@ RuntimeProbeMetrics runAndSampleMetrics (LocusQAudioProcessor& processor,
             const float displacement = std::sqrt (delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
             metrics.maxRelativeDisplacement = juce::jmax (metrics.maxRelativeDisplacement, displacement);
             metrics.lastPosition = sample.position;
+
+            if (settleWindowBlocks > 0 && block >= (blocks - settleWindowBlocks))
+            {
+                metrics.settleMinX = juce::jmin (metrics.settleMinX, sample.position.x);
+                metrics.settleMaxX = juce::jmax (metrics.settleMaxX, sample.position.x);
+                metrics.settleSumX += sample.position.x;
+                ++metrics.settleSampleCount;
+            }
         }
 
         if (sleepMs > 0)
@@ -148,27 +191,7 @@ ProbeResult runProbe()
     LocusQAudioProcessor processor;
     processor.setRateAndBufferSizeDetails (sampleRate, blockSize);
 
-    setChoiceParam (processor, "mode", 1); // Emitter mode
-    setActualParam (processor, "emit_spread", 0.0f);
-    setActualParam (processor, "emit_gain", 0.0f);
-    setActualParam (processor, "emit_directivity", 0.0f);
-    setActualParam (processor, "phys_enable", 1.0f);
-    setActualParam (processor, "phys_drag", 0.3f);
-    setActualParam (processor, "phys_gravity", 0.0f);
-    setActualParam (processor, "rend_phys_pause", 0.0f);
-    setChoiceParam (processor, "rend_phys_rate", 1); // 60 Hz
-    setActualParam (processor, "pos_coord_mode", 1.0f); // Cartesian
-    setActualParam (processor, "pos_x", 0.0f);
-    setActualParam (processor, "pos_y", 0.0f);
-    setActualParam (processor, "pos_z", 1.2f);
-    setActualParam (processor, "attractor_0_pos_x", 2.0f);
-    setActualParam (processor, "attractor_0_pos_y", 1.2f);
-    setActualParam (processor, "attractor_0_pos_z", 0.0f);
-    setActualParam (processor, "attractor_0_strength", 80.0f);
-    setActualParam (processor, "attractor_0_radius", 10.0f);
-    setChoiceParam (processor, "attractor_0_falloff", 1);
-    setActualParam (processor, "attractor_0_orbit_stabilize", 0.0f);
-    setActualParam (processor, "attractor_0_active", 0.0f);
+    configureAttractorEmitter (processor);
 
     processor.prepareToPlay (sampleRate, blockSize);
 
@@ -184,32 +207,51 @@ ProbeResult runProbe()
     }
 
     warmupRuntime (processor, buffer, midi, 8, 8);
+    const auto baselineSample = findEmitterSampleFromSceneSnapshot (processor.getSceneStateJSON(), emitterId);
     const auto baselineMetrics = runAndSampleMetrics (processor, buffer, midi, 18, 8);
 
     setActualParam (processor, "attractor_0_active", 1.0f);
     warmupRuntime (processor, buffer, midi, 4, 10);
-    const auto attractorMetrics = runAndSampleMetrics (processor, buffer, midi, 32, 10);
+    const auto attractorMetrics = runAndSampleMetrics (processor, buffer, midi, 32, 10, 8);
 
     processor.releaseResources();
 
-    const bool baselineOk = baselineMetrics.maxSpread <= 0.05f && baselineMetrics.maxRelativeDisplacement <= 0.02f;
+    const bool baselineCaptured = baselineSample.found;
+    const bool baselineOk = baselineCaptured
+                            && baselineMetrics.maxSpread <= 0.05f
+                            && baselineMetrics.maxRelativeDisplacement <= 0.02f;
     const bool attractorLive = attractorMetrics.maxSpread >= 0.20f;
     const bool deltaOk = (attractorMetrics.maxSpread - baselineMetrics.maxSpread) >= 0.15f;
     const bool motionLive = attractorMetrics.maxRelativeDisplacement >= 0.05f;
+    const float settleMeanX = attractorMetrics.settleSampleCount > 0
+        ? attractorMetrics.settleSumX / static_cast<float> (attractorMetrics.settleSampleCount)
+        : 0.0f;
+    const float settleRangeX = attractorMetrics.settleSampleCount > 0
+        ? attractorMetrics.settleMaxX - attractorMetrics.settleMinX
+        : std::numeric_limits<float>::max();
+    const bool settleWindowCaptured = attractorMetrics.settleSampleCount >= 4;
+    const bool settleBandOk = settleWindowCaptured
+        && settleMeanX >= 1.50f
+        && settleMeanX <= 2.20f
+        && settleRangeX <= 1.10f;
 
     juce::String detail;
     detail << "emitterId=" << emitterId
+           << " baselineCaptured=" << (baselineCaptured ? "1" : "0")
            << " baselineMaxSpread=" << juce::String (baselineMetrics.maxSpread, 3)
            << " attractorMaxSpread=" << juce::String (attractorMetrics.maxSpread, 3)
            << " spreadDelta=" << juce::String (attractorMetrics.maxSpread - baselineMetrics.maxSpread, 3)
            << " baselineMaxDisp=" << juce::String (baselineMetrics.maxRelativeDisplacement, 3)
            << " attractorMaxDisp=" << juce::String (attractorMetrics.maxRelativeDisplacement, 3)
+           << " settleSamples=" << attractorMetrics.settleSampleCount
+           << " settleMeanX=" << juce::String (settleMeanX, 3)
+           << " settleRangeX=" << juce::String (settleRangeX, 3)
            << " finalPos=("
            << juce::String (attractorMetrics.lastPosition.x, 3) << ","
            << juce::String (attractorMetrics.lastPosition.y, 3) << ","
            << juce::String (attractorMetrics.lastPosition.z, 3) << ")";
 
-    return { baselineOk && attractorLive && deltaOk && motionLive, detail };
+    return { baselineOk && attractorLive && deltaOk && motionLive && settleBandOk, detail };
 }
 } // namespace
 

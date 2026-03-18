@@ -64,6 +64,8 @@ void configureCollisionEmitter (LocusQAudioProcessor& processor, float posX, flo
     setActualParam (processor, "phys_collision_gain_scale", 1.0f);
     setActualParam (processor, "phys_collision_decay_ms", 50.0f);
     setActualParam (processor, "attractor_0_active", 0.0f);
+    setActualParam (processor, "phys_spring_enable", 0.0f);
+    setActualParam (processor, "phys_turbulence", 0.0f);
     setActualParam (processor, "phys_throw", 0.0f);
 }
 
@@ -173,6 +175,14 @@ ProbeResult runProbe()
 
     bool initialDistanceCaptured = false;
     float maxAbsX = 0.0f;
+
+    const auto preThrowSnapshot = parseSceneSnapshot (first.getSceneStateJSON(), firstEmitterId, secondEmitterId);
+    if (preThrowSnapshot.emitterCount >= 2 && preThrowSnapshot.first.found && preThrowSnapshot.second.found)
+    {
+        initialDistance = std::abs (preThrowSnapshot.second.x - preThrowSnapshot.first.x);
+        initialDistanceCaptured = initialDistance >= 0.85f;
+    }
+
     for (int block = 0; block < 80; ++block)
     {
         firstBuffer.clear();
@@ -200,21 +210,25 @@ ProbeResult runProbe()
         {
             sawBothEmitters = true;
             const float distance = std::abs (snapshot.second.x - snapshot.first.x);
-            if (! initialDistanceCaptured)
+            if (! initialDistanceCaptured && distance >= 0.85f)
             {
                 initialDistance = distance;
                 initialDistanceCaptured = true;
             }
-            minDistance = juce::jmin (minDistance, distance);
-            finalDistance = distance;
-            maxAbsX = juce::jmax (maxAbsX, juce::jmax (std::abs (snapshot.first.x), std::abs (snapshot.second.x)));
-            maxCollisionEnergy = juce::jmax (
-                maxCollisionEnergy,
-                juce::jmax (snapshot.first.collisionEnergy, snapshot.second.collisionEnergy));
-            velocityReversed = velocityReversed
-                               || (snapshot.first.vx < -0.05f && snapshot.second.vx > 0.05f);
-            lastFirst = snapshot.first;
-            lastSecond = snapshot.second;
+
+            if (initialDistanceCaptured)
+            {
+                minDistance = juce::jmin (minDistance, distance);
+                finalDistance = distance;
+                maxAbsX = juce::jmax (maxAbsX, juce::jmax (std::abs (snapshot.first.x), std::abs (snapshot.second.x)));
+                maxCollisionEnergy = juce::jmax (
+                    maxCollisionEnergy,
+                    juce::jmax (snapshot.first.collisionEnergy, snapshot.second.collisionEnergy));
+                velocityReversed = velocityReversed
+                                   || (snapshot.first.vx < -0.05f && snapshot.second.vx > 0.05f);
+                lastFirst = snapshot.first;
+                lastSecond = snapshot.second;
+            }
         }
 
         std::this_thread::sleep_for (std::chrono::milliseconds (20));
@@ -223,7 +237,7 @@ ProbeResult runProbe()
     first.releaseResources();
     second.releaseResources();
 
-    const bool approached = sawBothEmitters && minDistance < (initialDistance - 0.15f);
+    const bool approached = sawBothEmitters && initialDistanceCaptured && minDistance < (initialDistance - 0.15f);
     const bool collisionSeen = maxCollisionEnergy >= 0.005f;
     const bool separatedAfterCollision = sawBothEmitters && finalDistance > (minDistance + 0.20f);
     const bool boundedInRoom = maxAbsX <= 3.01f;

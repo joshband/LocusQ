@@ -63,6 +63,8 @@ void configureInteractionEmitter (LocusQAudioProcessor& processor, float posX)
     setActualParam (processor, "phys_vel_z", 0.0f);
     setActualParam (processor, "phys_collide_emitters", 0.0f);
     setActualParam (processor, "attractor_0_active", 0.0f);
+    setActualParam (processor, "phys_spring_enable", 0.0f);
+    setActualParam (processor, "phys_turbulence", 0.0f);
     setChoiceParam (processor, "phys_flock_group", 0); // Off
 }
 
