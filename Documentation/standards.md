@@ -156,6 +156,7 @@ Recommended scaffolding helper for new items:
 5. Auto-refresh hook (local): `.githooks/pre-commit` refreshes/stages summary artifacts when `Documentation/backlog/**` changes are staged.
 6. Draft automation runner: `scripts/backlog-auto-123.py`
 7. Draft automation guide: `Documentation/backlog/automation-draft-flow.md`
+8. Closeout diff prep runner: `scripts/backlog-closeout-draft.py`
 
 ## Portable Status-Rich Roadmap And Review Standard
 

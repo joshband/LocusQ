@@ -155,6 +155,7 @@ Escalation path:
   - `Documentation/backlog/automation-contracts.json`
   - `Documentation/backlog/automation-draft-flow.md`
   - `scripts/backlog-auto-123.py`
+  - `scripts/backlog-closeout-draft.py`
 - Per `ADR-0023`, automation packets may draft owner-ready promotion notes but may not finalize `Done` or archive transitions by default.
 - Phase closeout updates are gated by ADR-0005 and validated via `scripts/validate-docs-freshness.sh`.
 - Current acceptance/status claims must resolve through:

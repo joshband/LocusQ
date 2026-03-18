@@ -306,7 +306,7 @@ Validation summary:
 **Progress (2026-03-18):**
 - `PluginProcessor` now owns and prepares `PhysicsWorker` / `PhysicsDSPBridge` in the live runtime path.
 - Real emitter lifecycle registration now activates/deactivates worker slots alongside scene registration cleanup.
-- The switchover contract is tighter: coordinated-worker mode only activates when physics is enabled and at least one attractor is active.
+- The switchover contract is tighter: coordinated-worker mode now activates for the coordinated features that actually need shared state, rather than only for the legacy attractor slice.
 - `PhysicsEngine::standaloneMode` now gates whether coordinated force is consumed, so inactive coordinated slices no longer leak worker-derived force into the legacy path.
 - The production processor now prefers worker-published position/velocity/force for the coordinated attractor slice, making the shared worker the source of truth for the first published motion lane.
 - Gravity and inter-emitter interaction are now carried on the worker side for the coordinated slice, while the legacy engine is explicitly zeroed for those forces to avoid dual integration.
@@ -315,6 +315,7 @@ Validation summary:
 - `PhysicsWorker` / `PhysicsDSPBridge` now live behind a shared process-wide runtime instead of per-processor ownership, aligning coordinated physics authority with the existing shared `SceneGraph`.
 - Coordinated slots are no longer re-activated every block; worker-owned motion now persists across blocks instead of being reset by the emitter publish path.
 - Coordinated-worker activation is no longer attractor-only: collision-enabled emitters can now enter the shared worker path without relying on a dummy attractor source.
+- Boids activation is now honest in the production path too: flock-group assignment and per-group boids parameters are pushed into `BoidsSystem`, and flock-enabled emitters can now enter coordinated worker mode even without an attractor or collision gate.
 
 **Exit gate:**
 - Production plugin reads coordinated physics state from the shared worker for at least one end-to-end Tier A slice, with motion ownership boundaries documented.
@@ -341,6 +342,9 @@ Validation summary:
 - The shared-worker architecture is now actually widened: multiple emitter instances can collide inside one process-wide worker, and a dedicated runtime probe confirms the collision lane through the real `PluginProcessor` path (`maxCollisionEnergy=0.4191`, `finalVx=(-2.800, 2.800)`).
 - A runtime reset bug was closed along the way: coordinated slots are no longer re-activated every block, which had been wiping worker-owned motion before the new multi-emitter lane could be observed honestly.
 - The bounded shared-motion contract is tighter now too: collision-only coordinated mode no longer depends on a fake attractor gate, and the shared two-emitter runtime lane now proves room-contained behavior (`maxAbsX=3.000`) instead of an unbounded fly-apart case.
+- Shared collision mode now has a runtime containment policy instead of relying on probe-side drag tuning alone: when 2+ emitters are in coordinated collision mode with room boundaries enabled, the worker applies a weak rest-pose tether outside a deadzone so post-collision motion recenters before the emitters drift to the room edges.
+- The collision runtime probe now validates that stronger contract under `phys_drag=0.0`, and it stays green with the emitters contained well inside the room (`finalDistance=3.686`, `maxAbsX=2.046`, `finalVx=(0.568, -0.568)`).
+- The first non-attractor coordinated feature slice is now live as well: a new runtime boids probe confirms that flock membership activates shared-worker ownership in the production processor path and produces both coordinated motion and density-driven spread (`initialDistance=2.992`, `minDistance=2.306`, `maxSpread=1.000`).
 
 **Must-do actions:**
 - Wire attractor APVTS params into processor-owned runtime objects.

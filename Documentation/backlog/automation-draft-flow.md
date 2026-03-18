@@ -37,6 +37,7 @@ Machine-readable eligibility lives in:
 
 Current runner:
 - `scripts/backlog-auto-123.py`
+- `scripts/backlog-closeout-draft.py`
 
 Packet output:
 - `TestEvidence/<bl_or_hx>_auto_<stage>_<timestamp>/`
@@ -55,11 +56,10 @@ Packet output:
 |---|---|
 | `status.tsv` | machine-readable packet status |
 | `validation_matrix.tsv` | per-command results |
-| `lane_notes.md` | short execution notes |
+| `promotion_decision.md` | draft promotion note |
 | `draft_update_summary.md` | proposed status/doc updates |
-| `owner_decisions.md` | owner review inputs for `T2` and `T3` |
-| `handoff_resolution.md` | ownership and overlap summary for `T2` and `T3` |
-| `promotion_decision.md` | draft promotion note for `T3` |
+| `owner_decisions.md` | optional; add when coordination risk is not low |
+| `handoff_resolution.md` | optional; add when coordination risk is not low |
 
 ## Result Tokens
 
@@ -68,6 +68,14 @@ Packet output:
 | `DRAFT_READY` | checks passed and packet is ready for owner review |
 | `BLOCKED` | one or more required checks failed or config is incomplete |
 | `MANUAL_ONLY` | item is intentionally excluded from automation |
+
+## Closeout Draft Prep
+
+Use:
+- `scripts/backlog-closeout-draft.py --id BL-080 --packet TestEvidence/bl-080_auto_t3_<timestamp>/`
+
+This prepares a closeout diff summary.
+It does not move files or change authoritative status.
 
 ## Pilot Set
 
