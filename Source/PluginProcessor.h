@@ -15,7 +15,9 @@
 #include "HeadTrackingBridge.h"
 #include "HeadPoseInterpolator.h"
 #include "CalibrationEngine.h"
+#include "PhysicsDSPBridge.h"
 #include "PhysicsEngine.h"
+#include "PhysicsWorker.h"
 #include "KeyframeTimeline.h"
 #include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/RegistrationLockFreeContract.h"
@@ -373,9 +375,12 @@ private:
 
     //==============================================================================
     // Physics engine (Phase 2.4)
+    PhysicsDSPBridge physicsDspBridge;
+    PhysicsWorker physicsWorker;
     PhysicsEngine physicsEngine;
     bool lastPhysThrowGate = false;
     bool lastPhysResetGate = false;
+    bool lastFrozenState[8] {};  // per-slot freeze transition detector; zero-initialised
 
     //==============================================================================
     // Keyframe animation timeline (Phase 2.6)

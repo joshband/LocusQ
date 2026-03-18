@@ -23,6 +23,8 @@ namespace
 static_assert (std::atomic<int>::is_always_lock_free,
                "Registration claim/release diagnostics require lockless atomics.");
 
+constexpr int kPhysicsAttractorSourceCount = 4;
+
 const char* toCalibrationStateString (CalibrationEngine::State state)
 {
     switch (state)
@@ -1553,7 +1555,12 @@ LocusQAudioProcessor::~LocusQAudioProcessor()
 
     // Unregister from scene graph
     if (emitterSlotId >= 0)
+    {
+        physicsWorker.unregisterEngine (emitterSlotId);
+        physicsWorker.deactivateSlot (emitterSlotId);
+        physicsDspBridge.publishZero (emitterSlotId);
         sceneGraph.unregisterEmitter (emitterSlotId);
+    }
 
     if (rendererRegistered)
         sceneGraph.unregisterRenderer();
@@ -1582,6 +1589,9 @@ void LocusQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 
     // Prepare physics engine (Phase 2.4)
     physicsEngine.prepare (sampleRate);
+    physicsDspBridge.prepare (sampleRate, 1.0 / 60.0);
+    physicsWorker.attachDSPBridge (&physicsDspBridge);
+    physicsWorker.prepare (sceneGraph.getPhysicsRateIndex());
 
     // Prepare spatial renderer (Phase 2.2)
     spatialRenderer.prepare (sampleRate, samplesPerBlock);
@@ -1603,6 +1613,13 @@ void LocusQAudioProcessor::releaseResources()
 {
     sceneGraph.clearAudioReservation (sceneGraphAudioReservationId);
     headTrackingBridge.stop();
+    if (emitterSlotId >= 0)
+    {
+        physicsWorker.unregisterEngine (emitterSlotId);
+        physicsWorker.deactivateSlot (emitterSlotId);
+        physicsDspBridge.publishZero (emitterSlotId);
+    }
+    physicsWorker.shutdown();
     physicsEngine.shutdown();
     spatialRenderer.shutdown();
     {
@@ -2632,12 +2649,72 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     const bool physicsEnabled = apvts.getRawParameterValue ("phys_enable")->load() > 0.5f;
     data.physicsEnabled = physicsEnabled;
 
+    const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();
     physicsEngine.setUpdateRateIndex (sceneGraph.getPhysicsRateIndex());
     physicsEngine.setPaused (sceneGraph.isPhysicsPaused());
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled());
+    const auto boundaryMode = static_cast<PhysicsEngine::BoundaryMode> (juce::jlimit (
+        0,
+        2,
+        static_cast<int> (apvts.getRawParameterValue ("phys_boundary_mode")->load())));
+    const float softBoundaryDepth = apvts.getRawParameterValue ("phys_soft_boundary_depth")->load();
+    physicsEngine.setBoundaryMode (boundaryMode);
+    physicsEngine.setSoftBoundaryDepth (softBoundaryDepth);
+    physicsWorker.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled());
+    physicsWorker.setBoundaryMode (boundaryMode);
+    physicsWorker.setSoftBoundaryDepth (softBoundaryDepth);
 
     if (auto profile = sceneGraph.getRoomProfile(); profile != nullptr && profile->valid)
+    {
         physicsEngine.setRoomDimensions (profile->dimensions);
+        physicsWorker.setRoomDimensions (profile->dimensions);
+    }
+
+    auto& attractorSystem = physicsWorker.getAttractorSystem();
+    bool anyActiveAttractor = false;
+    for (int sourceIndex = 0; sourceIndex < kPhysicsAttractorSourceCount; ++sourceIndex)
+    {
+        const auto sourceIndexText = juce::String (sourceIndex);
+        auto& source = attractorSystem.source (sourceIndex);
+        const bool sourceActive =
+            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_active")->load() > 0.5f;
+        source.setActive (sourceActive);
+        source.setPosition ({
+            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_pos_x")->load(),
+            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_pos_y")->load(),
+            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_pos_z")->load()
+        });
+        source.setStrength (apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_strength")->load());
+        source.setRadius (apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_radius")->load());
+        source.setFalloff (static_cast<AttractorFalloff> (juce::jlimit (
+            0,
+            2,
+            static_cast<int> (apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_falloff")->load()))));
+        source.setOrbitStabilize (
+            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_orbit_stabilize")->load() > 0.5f);
+        anyActiveAttractor = anyActiveAttractor || sourceActive;
+    }
+
+    const bool coordinatedWorkerActive = physicsEnabled && anyActiveAttractor;
+    physicsEngine.setStandaloneMode (! coordinatedWorkerActive);
+    physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
+    physicsWorker.setUpdateRateIndex (physicsRateIndex);
+    physicsWorker.setPaused (sceneGraph.isPhysicsPaused());
+    physicsDspBridge.prepare (currentSampleRate, physicsWorker.getPeriodMs() * 0.001);
+
+    if (coordinatedWorkerActive)
+    {
+        physicsWorker.registerEngine (activeEmitterSlot, &physicsEngine);
+        physicsWorker.activateSlot (activeEmitterSlot, basePosition);
+        physicsWorker.setSlotRestPosition (activeEmitterSlot, basePosition);
+    }
+    else
+    {
+        physicsEngine.setCoordinatedForce ({});
+        physicsWorker.unregisterEngine (activeEmitterSlot);
+        physicsWorker.deactivateSlot (activeEmitterSlot);
+        physicsDspBridge.publishZero (activeEmitterSlot);
+    }
 
     physicsEngine.setRestPosition (basePosition);
     physicsEngine.setPhysicsEnabled (physicsEnabled);
@@ -2645,18 +2722,25 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     physicsEngine.setDrag (apvts.getRawParameterValue ("phys_drag")->load());
     physicsEngine.setElasticity (apvts.getRawParameterValue ("phys_elasticity")->load());
     physicsEngine.setFriction (apvts.getRawParameterValue ("phys_friction")->load());
-    physicsEngine.setGravity (
-        apvts.getRawParameterValue ("phys_gravity")->load(),
-        static_cast<int> (apvts.getRawParameterValue ("phys_gravity_dir")->load()));
+    const float gravityMagnitude = apvts.getRawParameterValue ("phys_gravity")->load();
+    const int gravityDirection = static_cast<int> (apvts.getRawParameterValue ("phys_gravity_dir")->load());
+    physicsWorker.setGravity (gravityMagnitude, gravityDirection);
+    physicsEngine.setGravity (coordinatedWorkerActive ? 0.0f : gravityMagnitude,
+                              coordinatedWorkerActive ? 0 : gravityDirection);
 
     Vec3 interactionForce {};
     if (physicsEnabled && sceneGraph.isPhysicsInteractionEnabled())
     {
+        const auto workerState = physicsWorker.getEmitterState (activeEmitterSlot);
         const auto physicsState = physicsEngine.getState();
-        const Vec3 interactionPosition = physicsState.initialized ? physicsState.position : basePosition;
+        const Vec3 interactionPosition =
+            (coordinatedWorkerActive && workerState.initialized)
+                ? workerState.position
+                : (physicsState.initialized ? physicsState.position : basePosition);
         interactionForce = computeEmitterInteractionForce (sceneGraph, activeEmitterSlot, interactionPosition);
     }
-    physicsEngine.setInteractionForce (interactionForce);
+    physicsWorker.setSlotInteractionForce (activeEmitterSlot, interactionForce);
+    physicsEngine.setInteractionForce (coordinatedWorkerActive ? Vec3 {} : interactionForce);
 
     const bool throwGate = apvts.getRawParameterValue ("phys_throw")->load() > 0.5f;
     if (throwGate && ! lastPhysThrowGate)
@@ -2667,19 +2751,47 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             apvts.getRawParameterValue ("phys_vel_z")->load(), // Z in param = Y in 3D (height)
             apvts.getRawParameterValue ("phys_vel_y")->load()
         };
-        physicsEngine.requestThrow (throwVelocity);
+        if (coordinatedWorkerActive)
+            physicsWorker.requestThrow (activeEmitterSlot, throwVelocity);
+        else
+            physicsEngine.requestThrow (throwVelocity);
     }
     lastPhysThrowGate = throwGate;
 
     const bool resetGate = apvts.getRawParameterValue ("phys_reset")->load() > 0.5f;
     if (resetGate && ! lastPhysResetGate)
-        physicsEngine.requestReset();
+    {
+        if (coordinatedWorkerActive)
+            physicsWorker.requestReset (activeEmitterSlot);
+        else
+            physicsEngine.requestReset();
+    }
     lastPhysResetGate = resetGate;
 
     if (physicsEnabled)
     {
+        const auto workerState = physicsWorker.getEmitterState (activeEmitterSlot);
+        const bool workerOwnsPublishedMotion =
+            coordinatedWorkerActive
+            && workerState.initialized
+            && (std::abs (workerState.position.x - basePosition.x)
+                + std::abs (workerState.position.y - basePosition.y)
+                + std::abs (workerState.position.z - basePosition.z)
+                + std::abs (workerState.velocity.x)
+                + std::abs (workerState.velocity.y)
+                + std::abs (workerState.velocity.z)) > 1.0e-5f;
+
         const auto physicsState = physicsEngine.getState();
-        if (physicsState.initialized)
+        if (workerOwnsPublishedMotion)
+        {
+            data.position = workerState.position;
+            data.velocity = workerState.velocity;
+            data.force = workerState.force;
+            data.collisionMask = workerState.collisionMask;
+            data.collisionEnergy = workerState.collisionEnergy;
+            data.directivityAim = workerState.directivityAim;
+        }
+        else if (physicsState.initialized)
         {
             data.position = physicsState.position;
             data.velocity = physicsState.velocity;
@@ -2696,10 +2808,61 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     }
     else
     {
+        physicsDspBridge.publishZero (activeEmitterSlot);
         data.velocity = {};
         data.force = {};
         data.collisionMask = 0;
         data.collisionEnergy = 0.0f;
+    }
+
+    if (physicsEnabled)
+    {
+        const int   slot = activeEmitterSlot;
+        juce::String ns (slot);
+
+        // Transition detection
+        const bool nowFrozen =
+            apvts.getRawParameterValue ("phys_frozen_" + ns)->load() > 0.5f;
+        const bool wasFrozen = lastFrozenState[slot];
+
+        const auto dspValues = physicsDspBridge.read (slot);  // single read per slot per block
+
+        if (!wasFrozen && nowFrozen)
+        {
+            // LIVE -> FROZEN: snapshot current atomic into APVTS at the precise
+            // freeze-effective block boundary (audio thread - no setValueNotifyingHost)
+            apvts.getRawParameterValue ("phys_out_spread_mod_" + ns)->store (dspValues.spreadMod);
+            apvts.getRawParameterValue ("phys_out_gain_mod_"   + ns)->store (dspValues.gainMod);
+
+            // Notify host that parameter state changed (UI refresh, automation lane)
+            juce::MessageManager::callAsync ([this] {
+                updateHostDisplay();  // inherited from juce::AudioProcessor - RT-safe from callAsync
+            });
+        }
+
+        lastFrozenState[slot] = nowFrozen;
+
+        float spreadDelta, gainDelta;
+        if (!nowFrozen)
+        {
+            // Live path: mirror atomics to APVTS output params - DAW polls these for recording
+            apvts.getRawParameterValue ("phys_out_spread_mod_" + ns)->store (dspValues.spreadMod);
+            apvts.getRawParameterValue ("phys_out_gain_mod_"   + ns)->store (dspValues.gainMod);
+            spreadDelta = dspValues.spreadMod;  // same val as mirrored - not a second read
+            gainDelta   = dspValues.gainMod;
+        }
+        else
+        {
+            // Frozen path: DAW playback owns the APVTS value; load() it for DSP
+            spreadDelta = apvts.getRawParameterValue ("phys_out_spread_mod_" + ns)->load();
+            gainDelta   = apvts.getRawParameterValue ("phys_out_gain_mod_"   + ns)->load();
+            // no store() - DAW owns the value; physics atomics still update silently
+        }
+
+        data.spread       = juce::jlimit (0.0f, 1.0f, data.spread + spreadDelta);
+        data.gain         = juce::jlimit (0.0f, 1.0f, data.gain   + gainDelta);
+        data.collisionEnergy = juce::jmax (data.collisionEnergy, dspValues.gainTransient);
+        // gainTransient bypasses freeze state - one-shot bursts always flow through
     }
 
     data.colorIndex = static_cast<uint8_t> (juce::jlimit (
