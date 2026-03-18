@@ -18,8 +18,7 @@ struct ProbeResult
 struct EmitterSample
 {
     float x = 0.0f;
-    float vx = 0.0f;
-    float collisionEnergy = 0.0f;
+    float spread = 0.0f;
     bool found = false;
 };
 
@@ -41,9 +40,10 @@ void setChoiceParam (LocusQAudioProcessor& processor, const char* paramId, int c
     setActualParam (processor, paramId, static_cast<float> (choiceIndex));
 }
 
-void configureCollisionEmitter (LocusQAudioProcessor& processor, float posX, float velX)
+void configureBoidsEmitter (LocusQAudioProcessor& processor, float posX)
 {
     setChoiceParam (processor, "mode", 1); // Emitter
+    setActualParam (processor, "emit_spread", 0.0f);
     setActualParam (processor, "phys_enable", 1.0f);
     setActualParam (processor, "phys_drag", 0.0f);
     setActualParam (processor, "phys_gravity", 0.0f);
@@ -55,16 +55,22 @@ void configureCollisionEmitter (LocusQAudioProcessor& processor, float posX, flo
     setActualParam (processor, "pos_x", posX);
     setActualParam (processor, "pos_y", 0.0f);
     setActualParam (processor, "pos_z", 1.2f);
-    setActualParam (processor, "phys_vel_x", velX);
+    setActualParam (processor, "phys_vel_x", 0.0f);
     setActualParam (processor, "phys_vel_y", 0.0f);
     setActualParam (processor, "phys_vel_z", 0.0f);
-    setActualParam (processor, "phys_collision_radius", 0.70f);
-    setActualParam (processor, "phys_mass_override", 0.0f);
-    setActualParam (processor, "phys_collide_emitters", 1.0f);
-    setActualParam (processor, "phys_collision_gain_scale", 1.0f);
-    setActualParam (processor, "phys_collision_decay_ms", 50.0f);
+
+    setChoiceParam (processor, "phys_flock_group", 1); // Group 1
+    setActualParam (processor, "phys_flock_0_enable", 1.0f);
+    setActualParam (processor, "phys_flock_0_sep_weight", 0.10f);
+    setActualParam (processor, "phys_flock_0_align_weight", 0.35f);
+    setActualParam (processor, "phys_flock_0_coh_weight", 0.90f);
+    setActualParam (processor, "phys_flock_0_sep_radius", 0.75f);
+    setActualParam (processor, "phys_flock_0_align_radius", 4.0f);
+    setActualParam (processor, "phys_flock_0_coh_radius", 8.0f);
+    setActualParam (processor, "phys_flock_0_max_speed", 1.5f);
+
     setActualParam (processor, "attractor_0_active", 0.0f);
-    setActualParam (processor, "phys_throw", 0.0f);
+    setActualParam (processor, "phys_collide_emitters", 0.0f);
 }
 
 SceneSnapshot parseSceneSnapshot (const juce::String& jsonText, int firstEmitterId, int secondEmitterId)
@@ -95,8 +101,7 @@ SceneSnapshot parseSceneSnapshot (const juce::String& jsonText, int firstEmitter
             const int emitterId = static_cast<int> (emitter->getProperty ("id"));
             EmitterSample sample;
             sample.x = static_cast<float> (emitter->getProperty ("x"));
-            sample.vx = static_cast<float> (emitter->getProperty ("vx"));
-            sample.collisionEnergy = static_cast<float> (emitter->getProperty ("collisionEnergy"));
+            sample.spread = static_cast<float> (emitter->getProperty ("spread"));
             sample.found = true;
 
             if (emitterId == firstEmitterId)
@@ -120,8 +125,8 @@ ProbeResult runProbe()
     first.setRateAndBufferSizeDetails (sampleRate, blockSize);
     second.setRateAndBufferSizeDetails (sampleRate, blockSize);
 
-    configureCollisionEmitter (first, -0.45f, 4.0f);
-    configureCollisionEmitter (second, 0.45f, -4.0f);
+    configureBoidsEmitter (first, -1.5f);
+    configureBoidsEmitter (second, 1.5f);
 
     first.prepareToPlay (sampleRate, blockSize);
     second.prepareToPlay (sampleRate, blockSize);
@@ -142,7 +147,7 @@ ProbeResult runProbe()
         return { false, "emitters did not register as distinct shared slots" };
     }
 
-    for (int warmup = 0; warmup < 4; ++warmup)
+    for (int warmup = 0; warmup < 8; ++warmup)
     {
         firstBuffer.clear();
         secondBuffer.clear();
@@ -150,30 +155,16 @@ ProbeResult runProbe()
         second.processBlock (secondBuffer, secondMidi);
         firstMidi.clear();
         secondMidi.clear();
-        std::this_thread::sleep_for (std::chrono::milliseconds (20));
+        std::this_thread::sleep_for (std::chrono::milliseconds (10));
     }
 
-    setActualParam (first, "phys_throw", 1.0f);
-    setActualParam (second, "phys_throw", 1.0f);
-    first.processBlock (firstBuffer, firstMidi);
-    second.processBlock (secondBuffer, secondMidi);
-    firstMidi.clear();
-    secondMidi.clear();
-    setActualParam (first, "phys_throw", 0.0f);
-    setActualParam (second, "phys_throw", 0.0f);
-
     bool sawBothEmitters = false;
-    bool velocityReversed = false;
+    bool initialDistanceCaptured = false;
     float initialDistance = 0.0f;
     float minDistance = std::numeric_limits<float>::max();
-    float finalDistance = 0.0f;
-    float maxCollisionEnergy = 0.0f;
-    EmitterSample lastFirst;
-    EmitterSample lastSecond;
+    float maxSpread = 0.0f;
 
-    bool initialDistanceCaptured = false;
-    float maxAbsX = 0.0f;
-    for (int block = 0; block < 80; ++block)
+    for (int block = 0; block < 64; ++block)
     {
         firstBuffer.clear();
         secondBuffer.clear();
@@ -185,8 +176,8 @@ ProbeResult runProbe()
             for (int i = 0; i < blockSize; ++i)
             {
                 const float phase = 0.01f * static_cast<float> (block * blockSize + i);
-                firstSamples[i] = 0.05f * std::sin (phase);
-                secondSamples[i] = 0.05f * std::cos (phase);
+                firstSamples[i] = 0.04f * std::sin (phase);
+                secondSamples[i] = 0.04f * std::cos (phase);
             }
         }
 
@@ -206,48 +197,26 @@ ProbeResult runProbe()
                 initialDistanceCaptured = true;
             }
             minDistance = juce::jmin (minDistance, distance);
-            finalDistance = distance;
-            maxAbsX = juce::jmax (maxAbsX, juce::jmax (std::abs (snapshot.first.x), std::abs (snapshot.second.x)));
-            maxCollisionEnergy = juce::jmax (
-                maxCollisionEnergy,
-                juce::jmax (snapshot.first.collisionEnergy, snapshot.second.collisionEnergy));
-            velocityReversed = velocityReversed
-                               || (snapshot.first.vx < -0.05f && snapshot.second.vx > 0.05f);
-            lastFirst = snapshot.first;
-            lastSecond = snapshot.second;
+            maxSpread = juce::jmax (maxSpread, juce::jmax (snapshot.first.spread, snapshot.second.spread));
         }
 
-        std::this_thread::sleep_for (std::chrono::milliseconds (20));
+        std::this_thread::sleep_for (std::chrono::milliseconds (10));
     }
 
     first.releaseResources();
     second.releaseResources();
 
-    const bool approached = sawBothEmitters && minDistance < (initialDistance - 0.15f);
-    const bool collisionSeen = maxCollisionEnergy >= 0.005f;
-    const bool separatedAfterCollision = sawBothEmitters && finalDistance > (minDistance + 0.20f);
-    const bool boundedInRoom = maxAbsX <= 3.01f;
-    const bool containedAwayFromWalls = maxAbsX <= 2.10f;
-    const bool settledTowardRestWindow = finalDistance <= 4.00f;
-    const bool oppositeDirectionMotion =
-        std::abs (lastFirst.vx) > 0.05f
-        && std::abs (lastSecond.vx) > 0.05f
-        && (lastFirst.vx * lastSecond.vx) < 0.0f;
+    const bool capturedValidBaseline = initialDistanceCaptured && initialDistance >= 1.0f;
+    const bool approached = capturedValidBaseline && minDistance < (initialDistance - 0.25f);
+    const bool spreadLive = maxSpread >= 0.20f;
 
     juce::String detail;
     detail << "emitterIds=(" << firstEmitterId << "," << secondEmitterId << ")"
            << " initialDistance=" << juce::String (initialDistance, 3)
            << " minDistance=" << juce::String (minDistance, 3)
-           << " finalDistance=" << juce::String (finalDistance, 3)
-           << " maxAbsX=" << juce::String (maxAbsX, 3)
-           << " maxCollisionEnergy=" << juce::String (maxCollisionEnergy, 4)
-           << " finalVx=(" << juce::String (lastFirst.vx, 3) << "," << juce::String (lastSecond.vx, 3) << ")"
-           << " finalX=(" << juce::String (lastFirst.x, 3) << "," << juce::String (lastSecond.x, 3) << ")";
+           << " maxSpread=" << juce::String (maxSpread, 3);
 
-    return { sawBothEmitters && approached && collisionSeen && separatedAfterCollision
-             && oppositeDirectionMotion && boundedInRoom && containedAwayFromWalls
-             && settledTowardRestWindow,
-             detail };
+    return { sawBothEmitters && capturedValidBaseline && approached && spreadLive, detail };
 }
 } // namespace
 
@@ -256,7 +225,7 @@ int main()
     juce::ScopedJuceInitialiser_GUI juceInit;
 
     const auto result = runProbe();
-    std::cout << "physics_runtime_collision_probe: "
+    std::cout << "physics_runtime_boids_probe: "
               << (result.passed ? "PASS" : "FAIL")
               << " | " << result.detail << std::endl;
 
