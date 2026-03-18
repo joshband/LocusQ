@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-18
 
 # LocusQ Implementation Traceability
 
@@ -79,6 +79,7 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 - BL-045 Slice A: Companion v2 packet (52B) — `MotionSample`/`PosePacket` extended; `HeadTrackingPoseSnapshot` 32→48B; `SpatialRenderer::PoseSnapshot` 32→48B; v1/v2 versioned dispatch + v1 off-by-4 fix
 - BL-045 Slice B: `Source/HeadPoseInterpolator.h` — slerp/nlerp, bounded angular-velocity prediction, sensor-switch crossfade; wired into `processBlock`
 - BL-045 Slice C: Re-center UX + drift telemetry — `yawReferenceDeg`/`yawReferenceSet`/`lastHeadTrackYawDeg` atomics; `setYawReference()`; processBlock quaternion pre-rotation; `pushHeadTrackDrift()` telemetry; UI `Set Forward` button + drift display
+- Physics Simulation Tier A (P1–P8): PhysicsWorker infrastructure, AttractorSystem, SpringSystem, TurbulenceSystem, AngularPhysicsSystem, BoidsSystem, CollisionSystem, PhysicsDSPBridge, WebView controls (89 ParameterBridgeSpec entries), Tier A acceptance probe 12/12 PASS
 - Reference: `.ideas/plan.md`
 
 ## Architecture Review W1-D APVTS Grouping
@@ -142,6 +143,40 @@ This document tracks end-to-end parameter wiring for implementation phases compl
 | `rend_phys_walls` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global wall-collision enable |
 | `rend_phys_interact` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (`processBlock` renderer global + `publishEmitterState` interaction force path) and `Source/PhysicsEngine.h` (`setInteractionForce`) | Bound in Stage 12 incremental UI (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/incremental/js/stage12_ui.js`) | Enables global soft inter-emitter interaction force for physics-enabled emitters |
 | `rend_phys_pause` | `Source/PluginProcessor.cpp` | `Source/PluginProcessor.cpp` (Renderer writes SceneGraph global, Emitter reads and applies) | Bound (`Source/PluginEditor.h`, `Source/PluginEditor.cpp`, `Source/ui/public/js/index.js`) | Global pause/freeze control |
+| `phys_boundary_mode` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/PhysicsEngine.h` (soft-boundary repulsive force path in `PhysicsWorker::tick`) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `comboStates.phys_boundary_mode` + `#rend-boundary-mode`) | Boundary mode: hard / soft / passthrough (renderer-scope) |
+| `phys_soft_boundary_depth` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/PhysicsEngine.h` (soft-boundary depth in repulsive force computation) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_soft_boundary_depth` + `#val-soft-boundary-depth`) | Soft boundary influence depth in meters (renderer-scope) |
+| `attractor_0_active` .. `attractor_3_active` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AttractorSystem.h` (slot enable gate in `AttractorSystem::tick`) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `toggleStates.attractor_N_active` + `#toggle-attr-N-active`) | Per-attractor active flag (renderer-scope) |
+| `attractor_0_pos_x/y/z` .. `attractor_3_pos_x/y/z` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AttractorSystem.h` (force origin) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×12; `Source/ui/src/index.ts` `sliderStates.attractor_N_pos_x/y/z` + `#val-attr-N-pos-x/y/z`) | Attractor position Vec3 (renderer-scope) |
+| `attractor_0_strength` .. `attractor_3_strength` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AttractorSystem.h` (signed force magnitude) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_strength` + `#val-attr-N-strength`) | Signed attractor strength; positive=attract, negative=repel (renderer-scope) |
+| `attractor_0_falloff` .. `attractor_3_falloff` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AttractorSystem.h` (falloff mode switch) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `comboStates.attractor_N_falloff` + `#sel-attr-N-falloff`) | Falloff: 1/r / 1/r² / constant (renderer-scope) |
+| `attractor_0_radius` .. `attractor_3_radius` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AttractorSystem.h` (hard influence cutoff) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_radius` + `#val-attr-N-radius`) | Attractor influence radius in meters (renderer-scope) |
+| `attractor_0_orbit_stabilize` .. `attractor_3_orbit_stabilize` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AttractorSystem.h` (tangential correction force) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `toggleStates.attractor_N_orbit_stabilize` + `#toggle-attr-N-orbit`) | Orbital stabilization flag (renderer-scope) |
+| `phys_spring_enable` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/SpringSystem.h` (`SpringSystem::tick` enable gate) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `toggleStates.phys_spring_enable` + `#toggle-spring-enable`) | Per-emitter spring enable (emitter-scope) |
+| `phys_spring_k` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/SpringSystem.h` (stiffness → `ω = √(k/m)`) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_k` + `#val-spring-k`) | Spring stiffness (emitter-scope) |
+| `phys_spring_damp` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/SpringSystem.h` (damping ratio 0=undamped..1=critical) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_damp` + `#val-spring-damp`) | Spring damping ratio (emitter-scope) |
+| `phys_spring_anchor_mode` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/SpringSystem.h` (rest_pose vs fixed_point branch) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `comboStates.phys_spring_anchor_mode` + `#sel-spring-anchor`) | Anchor mode: rest_pose / fixed_point (emitter-scope) |
+| `phys_spring_anchor_x/y/z` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/SpringSystem.h` (fixed-point anchor position) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×3; `Source/ui/src/index.ts` `sliderStates.phys_spring_anchor_x/y/z` + `#val-spring-anc-x/y/z`) | Fixed-point anchor Vec3 (emitter-scope) |
+| `phys_turbulence` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/TurbulenceSystem.h` (impulse magnitude scaler) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_turbulence` + `#val-turbulence`) | Turbulence intensity 0..1 (emitter-scope) |
+| `phys_turbulence_rate` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/TurbulenceSystem.h` (one-pole smoother cutoff Hz) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_turbulence_rate` + `#val-turbulence-rate`) | Turbulence coherence rate Hz (emitter-scope) |
+| `phys_ang_enable` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AngularPhysicsSystem.h` (enable gate) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `toggleStates.phys_ang_enable` + `#toggle-ang-enable`) | Angular physics enable (emitter-scope) |
+| `phys_ang_drag` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AngularPhysicsSystem.h` (angular velocity decay per tick) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_drag` + `#val-ang-drag`) | Angular drag 0..1 (emitter-scope) |
+| `phys_ang_impulse_x/y/z` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AngularPhysicsSystem.h` (impulse components) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×3; `Source/ui/src/index.ts` `sliderStates.phys_ang_impulse_x/y/z` + `#val-ang-imp-x/y/z`) | Angular impulse Vec3 (emitter-scope) |
+| `phys_ang_throw` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AngularPhysicsSystem.h` (one-shot angular throw trigger) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `btn-ang-throw` binding) | One-shot angular throw (emitter-scope) |
+| `phys_ang_reset` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AngularPhysicsSystem.h` (zero angular velocity, restore default aim) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `btn-ang-reset` binding) | One-shot angular reset (emitter-scope) |
+| `phys_ang_attractor_torque` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/AngularPhysicsSystem.h` (torque toward nearest attractor) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_attractor_torque` + `#val-ang-torque`) | Attractor-pull torque magnitude (emitter-scope) |
+| `phys_flock_group` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (group assignment for inter-emitter rules) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `comboStates.phys_flock_group` + `#sel-flock-group`) | Boids group assignment combo 0..3 (emitter-scope) |
+| `phys_collision_radius` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/CollisionSystem.h` (per-emitter collision sphere radius) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_collision_radius` + `#val-collision-radius`) | Per-emitter collision radius (emitter-scope) |
+| `phys_mass_override` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/PhysicsEngine.h` (per-emitter mass override; 0=use global) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_mass_override` + `#val-mass-override`) | Per-emitter mass override (emitter-scope) |
+| `phys_collide_emitters` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/CollisionSystem.h` (global enable for O(n²) collision pass) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `toggleStates.phys_collide_emitters` + `#toggle-collide-emitters`) | Global inter-emitter collision enable (renderer-scope) |
+| `phys_collision_gain_scale` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/CollisionSystem.h` (peak dB for collision gain transient) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_collision_gain_scale` + `#val-collision-gain-scale`) | Collision gain transient peak dB (renderer-scope) |
+| `phys_collision_decay_ms` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/CollisionSystem.h` (exponential decay of collision gain burst) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_collision_decay_ms` + `#val-collision-decay-ms`) | Collision gain transient decay ms (renderer-scope) |
+| `phys_flock_0_sep_weight` .. `phys_flock_3_sep_weight` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (separation rule weight per group) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_sep_weight` + `#val-flock-N-sep-w`) | Boids separation weight (renderer-scope per group) |
+| `phys_flock_0_align_weight` .. `phys_flock_3_align_weight` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (alignment rule weight per group) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_align_weight` + `#val-flock-N-align-w`) | Boids alignment weight (renderer-scope per group) |
+| `phys_flock_0_coh_weight` .. `phys_flock_3_coh_weight` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (cohesion rule weight per group) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_coh_weight` + `#val-flock-N-coh-w`) | Boids cohesion weight (renderer-scope per group) |
+| `phys_flock_0_sep_radius` .. `phys_flock_3_sep_radius` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (separation influence radius) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_sep_radius` + `#val-flock-N-sep-r`) | Separation radius meters (renderer-scope per group) |
+| `phys_flock_0_align_radius` .. `phys_flock_3_align_radius` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (alignment influence radius) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_align_radius` + `#val-flock-N-align-r`) | Alignment radius meters (renderer-scope per group) |
+| `phys_flock_0_coh_radius` .. `phys_flock_3_coh_radius` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (cohesion influence radius) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_coh_radius` + `#val-flock-N-coh-r`) | Cohesion radius meters (renderer-scope per group) |
+| `phys_flock_0_max_speed` .. `phys_flock_3_max_speed` | `Source/processor_core/ProcessorParameterLayout.cpp` | `Source/BoidsSystem.h` (per-emitter speed cap) | Bound (`Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_max_speed` + `#val-flock-N-speed`) | Per-emitter speed cap m/s (renderer-scope per group) |
 
 ## Phase 2.4 Acceptance Coverage
 
@@ -1115,6 +1150,130 @@ Scope: reconcile F/F1/F2 handoffs with a fresh owner replay and retain done post
 | BL045-C-001 | `scripts/qa-bl045-headtracking-fidelity-lane-mac.sh --slice C` | `TestEvidence/bl045_headtracking_fidelity_20260227T033038Z` | Structural: atomic write + processBlock read + native function registered |
 | BL045-C-002 | `scripts/qa-bl045-headtracking-fidelity-lane-mac.sh --slice C` | `TestEvidence/bl045_headtracking_fidelity_20260227T033038Z` | Drift telemetry interval `kDriftTelemetryIntervalTicks=15` ≈ 495ms ≤ 20ms jitter |
 | BL045-C-003 | `scripts/qa-bl045-headtracking-fidelity-lane-mac.sh --slice C` | `TestEvidence/bl045_headtracking_fidelity_20260227T033038Z` | State NOT persisted: yawReferenceSet/yawReferenceDeg absent from state XML paths |
+
+## Physics Simulation Tier A — Parameter Mapping (P2–P6)
+
+Validation status: `tested` — Tier A acceptance probe 12/12 PASS (2026-03-18). Evidence: `TestEvidence/physics_p8_tier_a_20260318/`.
+
+### Renderer-Scope: Attractors (P2, ×4 slots N=0..3)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `attractor_N_active` | `scene_physics` | `Source/AttractorSystem.h` (slot enable gate) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `toggleStates.attractor_N_active` + `#toggle-attr-N-active` | Per-attractor active flag; N ∈ {0,1,2,3} |
+| `attractor_N_pos_x` | `scene_physics` | `Source/AttractorSystem.h` (force origin X) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_pos_x` + `#val-attr-N-pos-x` | Attractor position X; N ∈ {0,1,2,3} |
+| `attractor_N_pos_y` | `scene_physics` | `Source/AttractorSystem.h` (force origin Y) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_pos_y` + `#val-attr-N-pos-y` | Attractor position Y (height) |
+| `attractor_N_pos_z` | `scene_physics` | `Source/AttractorSystem.h` (force origin Z) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_pos_z` + `#val-attr-N-pos-z` | Attractor position Z |
+| `attractor_N_strength` | `scene_physics` | `Source/AttractorSystem.h` (signed force magnitude) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_strength` + `#val-attr-N-strength` | Positive = attract, negative = repel |
+| `attractor_N_falloff` | `scene_physics` | `Source/AttractorSystem.h` (falloff mode switch) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `comboStates.attractor_N_falloff` + `#sel-attr-N-falloff` | Enum: 1/r / 1/r² / Constant |
+| `attractor_N_radius` | `scene_physics` | `Source/AttractorSystem.h` (hard influence cutoff) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.attractor_N_radius` + `#val-attr-N-radius` | Influence cutoff radius in meters |
+| `attractor_N_orbit_stabilize` | `scene_physics` | `Source/AttractorSystem.h` (tangential correction force) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `toggleStates.attractor_N_orbit_stabilize` + `#toggle-attr-N-orbit` | Orbital stabilization flag |
+
+Note: spec document uses `attractor_pos_N_x/y/z` and `attractor_strength_N` notation; registered APVTS IDs use `attractor_N_pos_x/y/z` and `attractor_N_strength` (index before field name). Use registered IDs.
+
+### Renderer-Scope: Boundary (P2)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_boundary_mode` | `renderer_physics` | `Source/PhysicsEngine.h` (soft-boundary repulsive force path in `PhysicsWorker::tick`) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `comboStates.phys_boundary_mode` + `#rend-boundary-mode` | Enum: Hard / Soft / Passthrough |
+| `phys_soft_boundary_depth` | `renderer_physics` | `Source/PhysicsEngine.h` (soft-boundary influence depth) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_soft_boundary_depth` + `#val-soft-boundary-depth` | Depth in meters for soft repulsion ramp |
+
+### Emitter-Scope: Spring Oscillator (P3)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_spring_enable` | `emitter_physics` | `Source/SpringSystem.h` (enable gate) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `toggleStates.phys_spring_enable` + `#toggle-spring-enable` | Per-emitter spring tether enable |
+| `phys_spring_k` | `emitter_physics` | `Source/SpringSystem.h` (stiffness → ω = √(k/m)) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_k` + `#val-spring-k` | Spring stiffness N/m |
+| `phys_spring_damp` | `emitter_physics` | `Source/SpringSystem.h` (damping ratio 0=undamped..1=critical) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_damp` + `#val-spring-damp` | Spring damping ratio |
+| `phys_spring_anchor_mode` | `emitter_physics` | `Source/SpringSystem.h` (rest_pose vs fixed_point branch) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `comboStates.phys_spring_anchor_mode` + `#sel-spring-anchor` | Anchor mode enum |
+| `phys_spring_anchor_x` | `emitter_physics` | `Source/SpringSystem.h` (fixed-point anchor X) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_anchor_x` + `#val-spring-anc-x` | Fixed-point anchor X in meters |
+| `phys_spring_anchor_y` | `emitter_physics` | `Source/SpringSystem.h` (fixed-point anchor Y) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_anchor_y` + `#val-spring-anc-y` | Fixed-point anchor Y in meters |
+| `phys_spring_anchor_z` | `emitter_physics` | `Source/SpringSystem.h` (fixed-point anchor Z) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_spring_anchor_z` + `#val-spring-anc-z` | Fixed-point anchor Z in meters |
+
+### Emitter-Scope: Turbulence (P3)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_turbulence` | `emitter_physics` | `Source/TurbulenceSystem.h` (impulse magnitude scaler) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_turbulence` + `#val-turbulence` | Turbulence intensity 0..1 |
+| `phys_turbulence_rate` | `emitter_physics` | `Source/TurbulenceSystem.h` (one-pole smoother cutoff Hz) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_turbulence_rate` + `#val-turbulence-rate` | Turbulence coherence rate in Hz |
+
+### Emitter-Scope: Angular Physics (P4)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_ang_enable` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (enable gate; drives `directivityAim`) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `toggleStates.phys_ang_enable` + `#toggle-ang-enable` | Enable angular physics |
+| `phys_ang_drag` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (angular velocity decay per tick) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_drag` + `#val-ang-drag` | Angular drag 0..1 |
+| `phys_ang_impulse_x` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (impulse X component) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_impulse_x` + `#val-ang-imp-x` | Angular impulse X |
+| `phys_ang_impulse_y` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (impulse Y component) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_impulse_y` + `#val-ang-imp-y` | Angular impulse Y |
+| `phys_ang_impulse_z` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (impulse Z component) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_impulse_z` + `#val-ang-imp-z` | Angular impulse Z |
+| `phys_ang_throw` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (one-shot angular throw trigger) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `btn-ang-throw` binding | One-shot angular throw; spec name `phys_ang_throw` matches registered ID |
+| `phys_ang_reset` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (zero angular velocity, restore default aim) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `btn-ang-reset` binding | One-shot angular reset |
+| `phys_ang_attractor_torque` | `emitter_physics` | `Source/AngularPhysicsSystem.h` (torque toward nearest attractor) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_ang_attractor_torque` + `#val-ang-torque` | Spec name `attractor_torque_strength`; registered ID is `phys_ang_attractor_torque` |
+
+### Renderer-Scope: Boids Groups (P5, ×4 groups G=0..3)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_flock_G_enable` | `scene_physics` | `Source/BoidsSystem.h` (group active gate) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `toggleStates.phys_flock_G_enable` + `#toggle-flock-G-enable` | Per-group enable; G ∈ {0,1,2,3} |
+| `phys_flock_G_sep_weight` | `scene_physics` | `Source/BoidsSystem.h` (separation rule weight) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_sep_weight` + `#val-flock-N-sep-w` | Spec name `boids_sep_weight`; registered ID `phys_flock_G_sep_weight` |
+| `phys_flock_G_align_weight` | `scene_physics` | `Source/BoidsSystem.h` (alignment rule weight) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_align_weight` + `#val-flock-N-align-w` | Spec name `boids_align_weight`; registered ID `phys_flock_G_align_weight` |
+| `phys_flock_G_coh_weight` | `scene_physics` | `Source/BoidsSystem.h` (cohesion rule weight) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_coh_weight` + `#val-flock-N-coh-w` | Spec name `boids_coh_weight`; registered ID `phys_flock_G_coh_weight` |
+| `phys_flock_G_sep_radius` | `scene_physics` | `Source/BoidsSystem.h` (separation influence radius) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_sep_radius` + `#val-flock-N-sep-r` | Spec name `boids_sep_radius`; registered ID `phys_flock_G_sep_radius` |
+| `phys_flock_G_align_radius` | `scene_physics` | `Source/BoidsSystem.h` (alignment influence radius) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_align_radius` + `#val-flock-N-align-r` | Spec name `boids_align_radius`; registered ID `phys_flock_G_align_radius` |
+| `phys_flock_G_coh_radius` | `scene_physics` | `Source/BoidsSystem.h` (cohesion influence radius) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_coh_radius` + `#val-flock-N-coh-r` | Spec name `boids_cohesion_radius`; registered ID `phys_flock_G_coh_radius` |
+| `phys_flock_G_max_speed` | `scene_physics` | `Source/BoidsSystem.h` (per-emitter speed cap) | `Source/editor_webview/EditorParameterBridge.h` relay ×4; `Source/ui/src/index.ts` `sliderStates.phys_flock_N_max_speed` + `#val-flock-N-speed` | Spec name `boids_max_speed`; registered ID `phys_flock_G_max_speed` |
+
+### Emitter-Scope: Flock Group Assignment (P5)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_flock_group` | `emitter_physics` | `Source/BoidsSystem.h` (group assignment for inter-emitter rules) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `comboStates.phys_flock_group` + `#sel-flock-group` | Enum: None / Group 1..4; per-emitter assignment |
+
+### Renderer-Scope: Collision Globals (P6)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_collide_emitters` | `renderer_physics` | `Source/CollisionSystem.h` (global O(n²) collision pass enable) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `toggleStates.phys_collide_emitters` + `#toggle-collide-emitters` | Global inter-emitter collision enable |
+| `phys_collision_gain_scale` | `renderer_physics` | `Source/CollisionSystem.h` (collision gain transient peak dB scale) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_collision_gain_scale` + `#val-collision-gain-scale` | Peak scale for collision DSP gain burst |
+| `phys_collision_decay_ms` | `renderer_physics` | `Source/CollisionSystem.h` (exponential decay of collision gain burst) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_collision_decay_ms` + `#val-collision-decay-ms` | Collision gain transient decay in ms |
+
+### Emitter-Scope: Per-Emitter Collision / Mass (P6)
+
+| Parameter ID | APVTS group | DSP target | Bridge entry | Notes |
+|---|---|---|---|---|
+| `phys_collision_radius` | `emitter_physics` | `Source/CollisionSystem.h` (per-emitter collision sphere) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_collision_radius` + `#val-collision-radius` | Per-emitter collision sphere radius |
+| `phys_mass_override` | `emitter_physics` | `Source/PhysicsEngine.h` (per-emitter mass; 0 = use global phys_mass) | `Source/editor_webview/EditorParameterBridge.h` relay; `Source/ui/src/index.ts` `sliderStates.phys_mass_override` + `#val-mass-override` | Per-emitter mass override |
+
+### Physics Simulation Tier A Core Files
+
+- `Source/PhysicsWorker.h` — scene-level tick loop, emitter state aggregation, stall detection
+- `Source/PhysicsDSPBridge.h` — per-emitter DSP-mapped value struct, atomic slot, normalize→curve→smooth→clamp pipeline
+- `Source/AttractorSystem.h` — up to 4 force sources, falloff enum, orbit-stabilize tangential correction
+- `Source/SpringSystem.h` — per-emitter spring tether with stiffness, damping, and anchor modes
+- `Source/TurbulenceSystem.h` — one-pole filtered stochastic force injection per emitter
+- `Source/AngularPhysicsSystem.h` — per-emitter angular integration driving `directivityAim`
+- `Source/BoidsSystem.h` — separation / alignment / cohesion per group, centroid tracking
+- `Source/CollisionSystem.h` — emitter-pair overlap detection and impulse resolution
+- `Source/PhysicsEngine.h` — extended with soft-boundary mode and per-emitter mass override slot
+- `Source/editor_webview/EditorParameterBridge.h` — 89 new ParameterBridgeSpec entries
+- `Source/ui/src/index.ts` — all P2–P6 UI bindings, Three.js overlay objects
+- `Source/ui/public/index.html` — Spring/Turbulence/Angular/Scene Membership/Attractors/Boids subsections
+- `Source/processor_core/ProcessorParameterLayout.cpp` — all Tier A APVTS parameter registrations
+- `qa/physics_tier_a_probe_main.cpp` — 12-check Tier A acceptance probe
+- `CMakeLists.txt` — `locusq_physics_tier_a_probe` build target
+
+## Physics DAW Automation Mirror Parameters (8 slots × 3)
+
+24 APVTS float parameters exposing per-slot physics output state as DAW-automatable lanes. Registered as part of the physics choreography timeline work on `feat/physics-choreography-timeline-specs`.
+
+### Renderer-Scope: Physics DAW Automation Mirrors (×8 slots N=0..7)
+
+| Parameter ID | APVTS group | DSP / Runtime Read Path | UI Relay / Attachment | Notes |
+|---|---|---|---|---|
+| `phys_out_gain_mod_0` .. `phys_out_gain_mod_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (live physics output mirror; freeze-holds last-live value when `phys_frozen_N=1`) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` + `Source/ui/public/index.html` | Physics gain modulation mirror 0.0–1.0; `gainTransient` excluded from freeze snapshot |
+| `phys_out_spread_mod_0` .. `phys_out_spread_mod_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (live physics output mirror; freeze-holds last-live value when `phys_frozen_N=1`) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` + `Source/ui/public/index.html` | Physics spread modulation mirror 0.0–1.0; same freeze/live behavior as gain mod |
+| `phys_frozen_0` .. `phys_frozen_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (freeze gate read; suppresses mirror advance when 1.0) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` + `Source/ui/public/index.html` | Bool 0.0/1.0; freeze gate for slot N; `gainTransient` excluded from snapshot |
+
+Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` lines 314–335 (8 slots × 3 = 24 parameters).
 
 ## Notes
 
