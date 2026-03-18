@@ -1,0 +1,429 @@
+[
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T193857Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T193857Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:38:57Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T195826Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T195826Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:58:26Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T195837Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T195837Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:58:37Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T195852Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T195852Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T19:58:52Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T200016Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T200016Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:00:16Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T200027Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T200027Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:00:27Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T200040Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T200040Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:00:40Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T201645Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T201645Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:16:45Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T202031Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T202031Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:20:31Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T202233Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T202233Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:22:33Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T202245Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T202245Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:22:45Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T204437Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T204437Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:44:37Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T204505Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T204505Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:45:05Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260222T204517Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260222T204517Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-22T20:45:17Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_contract_20260223T015214Z/status.tsv",
+    "run_name": "bl009_headphone_contract_20260223T015214Z",
+    "category": "bl009_headphone_contract",
+    "timestamp_utc": "2026-02-23T01:52:14Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_profile_contract_20260222T204130Z/status.tsv",
+    "run_name": "bl009_headphone_profile_contract_20260222T204130Z",
+    "category": "bl009_headphone_profile_contract",
+    "timestamp_utc": "2026-02-22T20:41:30Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_profile_contract_20260222T204324Z/status.tsv",
+    "run_name": "bl009_headphone_profile_contract_20260222T204324Z",
+    "category": "bl009_headphone_profile_contract",
+    "timestamp_utc": "2026-02-22T20:43:24Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/bl009_headphone_profile_contract_20260222T204451Z/status.tsv",
+    "run_name": "bl009_headphone_profile_contract_20260222T204451Z",
+    "category": "bl009_headphone_profile_contract",
+    "timestamp_utc": "2026-02-22T20:44:51Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl010_validation_20260222T191102Z/status.tsv",
+    "run_name": "bl010_validation_20260222T191102Z",
+    "category": "bl010_validation",
+    "timestamp_utc": "2026-02-22T19:11:02Z",
+    "overall": "warn"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T195416Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T195416Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:54:16Z",
+    "overall": "warn"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T195448Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T195448Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:54:48Z",
+    "overall": "warn"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T195837Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T195837Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:58:37Z",
+    "overall": "warn"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T195852Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T195852Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T19:58:52Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T200026Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T200026Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:00:26Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T200040Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T200040Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:00:40Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T201656Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T201656Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:16:56Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T202029Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T202029Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:20:29Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T202244Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T202244Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:22:44Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl018_ambisonic_contract_20260222T204516Z/status.tsv",
+    "run_name": "bl018_ambisonic_contract_20260222T204516Z",
+    "category": "bl018_ambisonic_contract",
+    "timestamp_utc": "2026-02-22T20:45:16Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/bl022_validation_20260222T213204Z/status.tsv",
+    "run_name": "bl022_validation_20260222T213204Z",
+    "category": "bl022_validation",
+    "timestamp_utc": "2026-02-22T21:32:04Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/stage13_acceptance_sweep_20260220T180204Z/status.tsv",
+    "run_name": "stage13_acceptance_sweep_20260220T180204Z",
+    "category": "stage13_acceptance_sweep",
+    "timestamp_utc": "2026-02-20T18:02:04Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/stage16a_scenario_validation_20260220T230314Z/status.tsv",
+    "run_name": "stage16a_scenario_validation_20260220T230314Z",
+    "category": "stage16a_scenario_validation",
+    "timestamp_utc": "2026-02-20T23:03:14Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/stage16a_scenario_validation_20260220T230400Z/status.tsv",
+    "run_name": "stage16a_scenario_validation_20260220T230400Z",
+    "category": "stage16a_scenario_validation",
+    "timestamp_utc": "2026-02-20T23:04:00Z",
+    "overall": "warn"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260219T231854Z/status.tsv",
+    "run_name": "ui_pr_gate_20260219T231854Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-19T23:18:54Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T024136Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T024136Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T02:41:36Z",
+    "overall": "fail"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T024215Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T024215Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T02:42:15Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T025111Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T025111Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T02:51:11Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T030133Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T030133Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T03:01:33Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T031226Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T031226Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T03:12:26Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T033031Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T033031Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T03:30:31Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T040540Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T040540Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:05:40Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T041501Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T041501Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:15:01Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T045202Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T045202Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:52:02Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T045405Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T045405Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T04:54:05Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T061917Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T061917Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T06:19:17Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T173332Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T173332Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T17:33:32Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T174757Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T174757Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T17:47:57Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T175530Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T175530Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T17:55:30Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T180214Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T180214Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T18:02:14Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260220T193031Z/status.tsv",
+    "run_name": "ui_pr_gate_20260220T193031Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-20T19:30:31Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T001557Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T001557Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T00:15:57Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T002339Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T002339Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T00:23:39Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T005211Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T005211Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T00:52:11Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T013208Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T013208Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T01:32:08Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T014738Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T014738Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T01:47:38Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T031609Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T031609Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T03:16:09Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T083650Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T083650Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T08:36:50Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T083926Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T083926Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T08:39:26Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T092337Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T092337Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T09:23:37Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T102057Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T102057Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T10:20:57Z",
+    "overall": "pass"
+  },
+  {
+    "path": "TestEvidence/ui_pr_gate_20260221T102652Z/status.tsv",
+    "run_name": "ui_pr_gate_20260221T102652Z",
+    "category": "ui_pr_gate",
+    "timestamp_utc": "2026-02-21T10:26:52Z",
+    "overall": "pass"
+  }
+]

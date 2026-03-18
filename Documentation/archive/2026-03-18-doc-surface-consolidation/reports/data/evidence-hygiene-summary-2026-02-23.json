@@ -1,0 +1,98 @@
+{
+  "generated_at_utc": "2026-02-23T01:57:30Z",
+  "run_dir_count": 114,
+  "outcome_counts": {
+    "unknown": 13,
+    "fail": 43,
+    "pass": 53,
+    "warn": 5
+  },
+  "candidate_count": 15,
+  "candidate_total_size_mb": 30.12,
+  "kept_count": 99,
+  "kept_total_size_mb": 302.32,
+  "top_categories_by_count": [
+    {
+      "category": "standalone_ui_smoke",
+      "count": 32
+    },
+    {
+      "category": "ui_pr_gate",
+      "count": 28
+    },
+    {
+      "category": "bl009_headphone_contract",
+      "count": 15
+    },
+    {
+      "category": "bl018_ambisonic_contract",
+      "count": 10
+    },
+    {
+      "category": "appium_ui_regression",
+      "count": 7
+    },
+    {
+      "category": "reaper_headless_render",
+      "count": 6
+    },
+    {
+      "category": "bl009_headphone_profile_contract",
+      "count": 3
+    },
+    {
+      "category": "clap_validation",
+      "count": 3
+    },
+    {
+      "category": "stage16a_scenario_validation",
+      "count": 2
+    },
+    {
+      "category": "standalone_ui_smoke_stage1",
+      "count": 2
+    },
+    {
+      "category": "_coord_probe",
+      "count": 1
+    },
+    {
+      "category": "bl010_validation",
+      "count": 1
+    },
+    {
+      "category": "bl022_validation",
+      "count": 1
+    },
+    {
+      "category": "manual_click_probe",
+      "count": 1
+    },
+    {
+      "category": "stage13_acceptance_sweep",
+      "count": 1
+    },
+    {
+      "category": "stage17a_portable_acceptance",
+      "count": 1
+    }
+  ],
+  "top_candidate_categories": [
+    [
+      "bl009_headphone_contract",
+      8
+    ],
+    [
+      "ui_pr_gate",
+      5
+    ],
+    [
+      "standalone_ui_smoke",
+      1
+    ],
+    [
+      "reaper_headless_render",
+      1
+    ]
+  ]
+}
