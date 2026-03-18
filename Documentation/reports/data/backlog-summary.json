@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 108,
-    "open": 29,
-    "done": 79
+    "open": 23,
+    "done": 85
   },
   "items": [
     {
@@ -1701,8 +1701,8 @@
     {
       "id": "BL-089",
       "title": "BL-089 Render Trust Contract and Requested-vs-Active Language",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "B - Scene/UI Runtime",
       "depends_on": "BL-040 (Done), BL-053 (Done), BL-058 (Done), BL-095, BL-099",
@@ -1713,15 +1713,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-089 in plain terms: define one honest render-trust language contract for LocusQ so the plugin and companion always tell the operator what they asked for, what is actually active, why anything changed, and whether quality-style scores are measured, estimated, or unavailable. Current state: Done-candidate. The operator-facing copy audit highlighted by the 2026-03-17 second-opinion review is now implemented in the plugin and companion shells, representative parity evidence is captured, and the owner packet is written; remaining work is only the later archive/closeout move, while BL-095 and BL-099 continue independently as truthfulness follow-on lanes.",
+      "plain_language_summary": "BL-089 in plain terms: define one honest render-trust language contract for LocusQ so the plugin and companion always tell the operator what they asked for, what is actually active, why anything changed, and whether quality-style scores are measured, estimated, or unavailable. Current state: Done. The operator-facing copy audit highlighted by the 2026-03-17 second-opinion review is now implemented in the plugin and companion shells, representative parity evidence is captured, the owner packet is written, and the archive/closeout sync is complete, while BL-095 and BL-099 continue independently as truthfulness follow-on lanes.",
       "objective": "Define one additive render-trust contract that both the plugin and companion can present consistently.",
-      "runbook_path": "Documentation/backlog/bl-089-render-trust-contract-and-requested-active-language.md"
+      "runbook_path": "Documentation/backlog/done/bl-089-render-trust-contract-and-requested-active-language.md"
     },
     {
       "id": "BL-090",
       "title": "BL-090 Plugin Authority-First Shell and Renderer Hierarchy",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "C - UX Authoring",
       "depends_on": "BL-040 (Done), BL-027 (Done), BL-074 (Done)",
@@ -1732,15 +1732,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-090 in plain terms: tighten the LocusQ plugin shell so the viewport stays primary, the header stops shouting too many truths at once, and RENDERER becomes an authority-first trust surface instead of the busiest rail. Current state: Done-candidate. The 2026-03-17 second-opinion review sharpened this from a general clean-up into a more specific reduction, and that structure is now live in the shipping shell with fresh native and preview captures plus an owner promotion packet; remaining work is only the later archive/closeout move.",
+      "plain_language_summary": "BL-090 in plain terms: tighten the LocusQ plugin shell so the viewport stays primary, the header stops shouting too many truths at once, and RENDERER becomes an authority-first trust surface instead of the busiest rail. Current state: Done. The 2026-03-17 second-opinion review sharpened this from a general clean-up into a more specific reduction, and that structure is now live in the shipping shell with fresh native and preview captures, an owner promotion packet, and a completed archive/closeout sync.",
       "objective": "Implement an authority-first plugin shell with these hierarchy rules:",
-      "runbook_path": "Documentation/backlog/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md"
+      "runbook_path": "Documentation/backlog/done/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md"
     },
     {
       "id": "BL-091",
       "title": "BL-091 Companion Focus/Lab Trust Flow",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "C - UX Authoring",
       "depends_on": "BL-045 (Done), BL-058 (Done), BL-072 (Done)",
@@ -1751,15 +1751,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-091 in plain terms: reorganize the Head-Tracking Companion so it launches as a confidence tool first and a lab console second. Current state: Done-candidate. The 2026-03-17 second-opinion review raised the urgency of this lane, and the Focus/Lab split is now live with synthetic-mode disclosure, Plugin Ack, and first-layer orientation/profile controls; the live Focus/Lab captures and owner packet are now in place, so only the later archive/closeout step remains.",
+      "plain_language_summary": "BL-091 in plain terms: reorganize the Head-Tracking Companion so it launches as a confidence tool first and a lab console second. Current state: Done. The 2026-03-17 second-opinion review raised the urgency of this lane, and the Focus/Lab split is now live with synthetic-mode disclosure, Plugin Ack, and first-layer orientation/profile controls; the live Focus/Lab captures and owner packet are now in place, and the archive/closeout step is complete.",
       "objective": "Create a trust-first companion information architecture with these rules:",
-      "runbook_path": "Documentation/backlog/bl-091-companion-focus-lab-trust-flow.md"
+      "runbook_path": "Documentation/backlog/done/bl-091-companion-focus-lab-trust-flow.md"
     },
     {
       "id": "BL-092",
       "title": "BL-092 Cross-Format Capability Messaging Parity",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P2",
       "track": "A - Runtime Formats",
       "depends_on": "BL-067 (In Validation), BL-074 (Done), BL-089",
@@ -1770,15 +1770,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-092 in plain terms: keep LocusQ feeling like one instrument across AU, VST3, CLAP, AUv3, browser preview, WKWebView, and WebView2, while explaining limited capabilities honestly instead of silently hiding them. Current state: Done-candidate. The 2026-03-17 second-opinion review reinforced that AUv3 should not get a separate UI worldview, and the current plugin shell now carries the preview/degraded/AUv3 language path with representative native and preview captures plus an owner packet; remaining work is only the later archive/closeout move.",
+      "plain_language_summary": "BL-092 in plain terms: keep LocusQ feeling like one instrument across AU, VST3, CLAP, AUv3, browser preview, WKWebView, and WebView2, while explaining limited capabilities honestly instead of silently hiding them. Current state: Done. The 2026-03-17 second-opinion review reinforced that AUv3 should not get a separate UI worldview, and the current plugin shell now carries the preview/degraded/AUv3 language path with representative native and preview captures, an owner packet, and a completed archive/closeout sync.",
       "objective": "Keep one information architecture across supported runtime contexts while making capability limits honest and explicit.",
-      "runbook_path": "Documentation/backlog/bl-092-cross-format-capability-messaging-parity.md"
+      "runbook_path": "Documentation/backlog/done/bl-092-cross-format-capability-messaging-parity.md"
     },
     {
       "id": "BL-093",
       "title": "BL-093 Visual DNA Token Adoption and Hierarchy Polish",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P2",
       "track": "C - UX Authoring",
       "depends_on": "BL-089, BL-090, BL-091",
@@ -1789,15 +1789,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-093 in plain terms: take the reviewed Spatial Atelier / Diagnostic Calm direction and make it real through design tokens, hierarchy polish, and consistent state styling across plugin and companion. Current state: Done-candidate. The 2026-03-17 second-opinion review added one hard prerequisite: reconcile token drift against the live HTML before the token packet is treated as canonical implementation guidance. That reconciliation is now live in the plugin shell, the companion shell, and the updated token packet, with an owner sync packet recorded for promotion; remaining work is only the later archive/closeout move.",
+      "plain_language_summary": "BL-093 in plain terms: take the reviewed Spatial Atelier / Diagnostic Calm direction and make it real through design tokens, hierarchy polish, and consistent state styling across plugin and companion. Current state: Done. The 2026-03-17 second-opinion review added one hard prerequisite: reconcile token drift against the live HTML before the token packet is treated as canonical implementation guidance. That reconciliation is now live in the plugin shell, the companion shell, and the updated token packet, with an owner sync packet recorded for promotion and the archive/closeout sync now complete.",
       "objective": "Adopt the reviewed visual DNA and token system without turning polish into a generic reskin.",
-      "runbook_path": "Documentation/backlog/bl-093-visual-dna-token-adoption-and-polish.md"
+      "runbook_path": "Documentation/backlog/done/bl-093-visual-dna-token-adoption-and-polish.md"
     },
     {
       "id": "BL-094",
       "title": "BL-094 Reactive/Simulation/Temporal Lab Containment",
-      "state_bucket": "open",
-      "status": "Done-candidate",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P2",
       "track": "E - R&D Expansion",
       "depends_on": "BL-090, BL-091",
@@ -1808,9 +1808,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-094 in plain terms: prevent reactive, simulation-driven, and temporal-feature work from turning into top-level product sprawl. Current state: Done-candidate. This item converts the 2026-03-17 scope guardrails into an explicit backlog lane so new ideas extend existing cards, overlays, or lab drawers instead of fragmenting LocusQ into too many modes and side quests. The guardrail is now written into the backlog and architecture, and the live EMITTER motion card explicitly contains Physics plus Choreography inside a Motion Lab drawer instead of presenting them as equal first-layer paths.",
+      "plain_language_summary": "BL-094 in plain terms: prevent reactive, simulation-driven, and temporal-feature work from turning into top-level product sprawl. Current state: Done. This item converts the 2026-03-17 scope guardrails into an explicit backlog lane so new ideas extend existing cards, overlays, or lab drawers instead of fragmenting LocusQ into too many modes and side quests. The guardrail is now written into the backlog and architecture, the live EMITTER motion card explicitly contains Physics plus Choreography inside a Motion Lab drawer instead of presenting them as equal first-layer paths, and the archive/closeout sync is complete.",
       "objective": "Freeze the following containment rules:",
-      "runbook_path": "Documentation/backlog/bl-094-reactive-simulation-temporal-lab-containment.md"
+      "runbook_path": "Documentation/backlog/done/bl-094-reactive-simulation-temporal-lab-containment.md"
     },
     {
       "id": "BL-095",

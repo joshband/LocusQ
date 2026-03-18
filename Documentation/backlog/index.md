@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-18 (BL-089..BL-092 advanced to Done-candidate with owner sync packet and fresh trust-wave captures; BL-080 advanced to Done-candidate after standalone selftest recovery; BL-095..BL-099 added/refined after review follow-up; BL-055/BL-067/BL-072/BL-089/BL-097 refined; UI/UX trust-wave execution packet linked)
+Last Modified Date: 2026-03-18 (BL-089..BL-092 advanced to Done-candidate with owner sync packet and fresh trust-wave captures; BL-080 advanced to Done-candidate after standalone selftest recovery; BL-095..BL-099 added/refined after review follow-up; BL-055/BL-067/BL-072/BL-089/BL-097 refined; UI/UX trust-wave execution packet linked; draft-only backlog automation contract added)
 
 # LocusQ Master Backlog Index
 
@@ -57,6 +57,14 @@ Applies to all remaining open items and all future backlog items.
    - `Documentation/backlog/backlog-summary-schema.md`
 16. Pre-commit auto-refresh hook:
    - `.githooks/pre-commit` refreshes and stages summary artifacts when `Documentation/backlog/**` changes are staged.
+17. Draft-only backlog automation:
+   - machine-readable contract: `Documentation/backlog/automation-contracts.json`
+   - operator guide: `Documentation/backlog/automation-draft-flow.md`
+   - runner: `scripts/backlog-auto-123.py`
+18. Default automation posture:
+   - run declared T1/T2/T3 checks,
+   - assemble compact `TestEvidence/` draft packets,
+   - stop at `DRAFT_READY` unless the item is explicitly configured for owner-gated automation.
 
 ## Layer Model
 
@@ -96,6 +104,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
    - debugging: single-run targeted repro;
    - candidate check: 2 runs;
    - promotion check: 3 runs unless owner requires broader coverage.
+7. Per `ADR-0023`, replay automation may draft packets and sync summaries, but authoritative promotion remains owner-confirmed by default.
 
 ### Override Contract
 

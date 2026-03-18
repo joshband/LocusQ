@@ -55,6 +55,18 @@ Use visuals only when they improve understanding.
 | Final Evidence Root | `TestEvidence/<bl_or_hx>_<slice>_<timestamp>/` |
 | Archived Runbook Path | `Documentation/backlog/done/bl-XXX-[slug].md` |
 
+## Automation Contract
+
+This closeout may be drafted by automation, but `Done` and archive moves stay owner-confirmed.
+
+| Field | Value |
+|---|---|
+| Automation Mode | `draft_only` |
+| Stage Cap | `T3` |
+| Owner Approval Required For | `Done`, archive move, or status/index sync |
+| Runner Output | `DRAFT_READY`, `BLOCKED`, or `MANUAL_ONLY` |
+| Rule | Draft the closeout, then wait for owner confirmation |
+
 ## Completion Snapshot
 
 | Item | Status | Priority | Estimate | Actual / Time | Tokens | Completed | Where | Evidence / Remaining |
