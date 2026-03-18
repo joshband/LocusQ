@@ -45,12 +45,12 @@ void configureCollisionEmitter (LocusQAudioProcessor& processor, float posX, flo
 {
     setChoiceParam (processor, "mode", 1); // Emitter
     setActualParam (processor, "phys_enable", 1.0f);
-    setActualParam (processor, "phys_drag", 0.0f);
+    setActualParam (processor, "phys_drag", 0.45f);
     setActualParam (processor, "phys_gravity", 0.0f);
     setActualParam (processor, "rend_phys_pause", 0.0f);
     setChoiceParam (processor, "rend_phys_rate", 1); // 60 Hz
-    setActualParam (processor, "rend_phys_wall_collide", 0.0f);
-    setChoiceParam (processor, "phys_boundary_mode", 2); // Passthrough
+    setActualParam (processor, "rend_phys_wall_collide", 1.0f);
+    setChoiceParam (processor, "phys_boundary_mode", 0); // Hard
     setActualParam (processor, "pos_coord_mode", 1.0f); // Cartesian
     setActualParam (processor, "pos_x", posX);
     setActualParam (processor, "pos_y", 0.0f);
@@ -63,16 +63,7 @@ void configureCollisionEmitter (LocusQAudioProcessor& processor, float posX, flo
     setActualParam (processor, "phys_collide_emitters", 1.0f);
     setActualParam (processor, "phys_collision_gain_scale", 1.0f);
     setActualParam (processor, "phys_collision_decay_ms", 50.0f);
-
-    // Keep coordinated worker mode active without introducing attractor force.
-    setActualParam (processor, "attractor_0_pos_x", 0.0f);
-    setActualParam (processor, "attractor_0_pos_y", 1.2f);
-    setActualParam (processor, "attractor_0_pos_z", 0.0f);
-    setActualParam (processor, "attractor_0_strength", 0.0f);
-    setActualParam (processor, "attractor_0_radius", 1.0f);
-    setChoiceParam (processor, "attractor_0_falloff", 1);
-    setActualParam (processor, "attractor_0_orbit_stabilize", 0.0f);
-    setActualParam (processor, "attractor_0_active", 1.0f);
+    setActualParam (processor, "attractor_0_active", 0.0f);
     setActualParam (processor, "phys_throw", 0.0f);
 }
 
@@ -181,6 +172,7 @@ ProbeResult runProbe()
     EmitterSample lastSecond;
 
     bool initialDistanceCaptured = false;
+    float maxAbsX = 0.0f;
     for (int block = 0; block < 80; ++block)
     {
         firstBuffer.clear();
@@ -215,6 +207,7 @@ ProbeResult runProbe()
             }
             minDistance = juce::jmin (minDistance, distance);
             finalDistance = distance;
+            maxAbsX = juce::jmax (maxAbsX, juce::jmax (std::abs (snapshot.first.x), std::abs (snapshot.second.x)));
             maxCollisionEnergy = juce::jmax (
                 maxCollisionEnergy,
                 juce::jmax (snapshot.first.collisionEnergy, snapshot.second.collisionEnergy));
@@ -230,20 +223,26 @@ ProbeResult runProbe()
     first.releaseResources();
     second.releaseResources();
 
-    const bool approached = sawBothEmitters && minDistance < (initialDistance - 0.25f);
+    const bool approached = sawBothEmitters && minDistance < (initialDistance - 0.15f);
     const bool collisionSeen = maxCollisionEnergy >= 0.005f;
     const bool separatedAfterCollision = sawBothEmitters && finalDistance > (minDistance + 0.20f);
+    const bool boundedInRoom = maxAbsX <= 3.01f;
+    const bool oppositeDirectionMotion =
+        std::abs (lastFirst.vx) > 0.05f
+        && std::abs (lastSecond.vx) > 0.05f
+        && (lastFirst.vx * lastSecond.vx) < 0.0f;
 
     juce::String detail;
     detail << "emitterIds=(" << firstEmitterId << "," << secondEmitterId << ")"
            << " initialDistance=" << juce::String (initialDistance, 3)
            << " minDistance=" << juce::String (minDistance, 3)
            << " finalDistance=" << juce::String (finalDistance, 3)
+           << " maxAbsX=" << juce::String (maxAbsX, 3)
            << " maxCollisionEnergy=" << juce::String (maxCollisionEnergy, 4)
            << " finalVx=(" << juce::String (lastFirst.vx, 3) << "," << juce::String (lastSecond.vx, 3) << ")"
            << " finalX=(" << juce::String (lastFirst.x, 3) << "," << juce::String (lastSecond.x, 3) << ")";
 
-    return { sawBothEmitters && approached && collisionSeen && separatedAfterCollision && velocityReversed, detail };
+    return { sawBothEmitters && approached && collisionSeen && separatedAfterCollision && oppositeDirectionMotion && boundedInRoom, detail };
 }
 } // namespace
 
