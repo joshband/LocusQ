@@ -7,7 +7,7 @@ Last Modified Date: 2026-02-19
 # ADR-0003: Automation Authority Precedence
 
 ## Status
-Accepted
+Accepted — §Decision (three-layer model) superseded by ADR-0020; §Rationale, §Consequences, and §Guardrails remain in force
 
 ## Context
 
@@ -53,3 +53,4 @@ This precedence applies at block evaluation boundaries and must be deterministic
 - `.ideas/architecture.md`
 - `.ideas/parameter-spec.md`
 - `Documentation/invariants.md`
+- `Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md` — extends §Decision to four-layer model; Choreography Lab arbitration
