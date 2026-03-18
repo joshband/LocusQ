@@ -1,0 +1,7 @@
+check	result	notes
+build_vst3	PASS	cmake --build build_local --target LocusQ_VST3; 0 errors; pre-existing sign-conversion warnings in SceneGraph.h/VBAPPanner.h/PhysicsEngine.h only
+rt_non_allowlisted	0	grep for new/delete/malloc/mutex/lock()/throw in AngularPhysicsSystem.h — 0 hits
+nan_guard	NOT_TESTED	adversarial impulse NaN-safety requires runtime soak harness (P7)
+yaw_pitch_roll_sweep	NOT_TESTED	full yaw/pitch/roll sweep ±5% cardioid modulation requires runtime harness (P7)
+apvts_params	PARTIAL	phys_ang_enable/drag/impulse_x/y/z/throw/reset/attractor_torque registered in emitterPhysicsGroup; IDs verified by code review
+directivity_aim_carrier	PARTIAL	WorkerEmitterState.directivityAim added; angular aim written to slot in PhysicsWorker::tick(); runtime publish path to audio thread verified by code review; end-to-end DSP wiring deferred to P7

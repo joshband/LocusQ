@@ -1,0 +1,8 @@
+phase=P1
+timestamp=2026-03-18T05:35:06Z
+build=PASS
+rt_non_allowlisted=0
+new_files=Source/PhysicsWorker.h,Source/PhysicsDSPBridge.h
+modified_files=Source/PhysicsEngine.h
+VST3_artifact=build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3
+note=P1 infrastructure: PhysicsWorker tick loop + stall guard + PhysicsDSPBridge atomic pub/sub + PhysicsEngine standalone-mode flag
