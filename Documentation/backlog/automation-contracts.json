@@ -12,7 +12,7 @@
   },
   "items": {
     "BL-080": {
-      "runbook": "Documentation/backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md",
+      "runbook": "Documentation/backlog/done/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "low",
       "heavy_wrapper": false,
@@ -31,7 +31,7 @@
       }
     },
     "BL-089": {
-      "runbook": "Documentation/backlog/bl-089-render-trust-contract-and-requested-active-language.md",
+      "runbook": "Documentation/backlog/done/bl-089-render-trust-contract-and-requested-active-language.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "medium",
       "heavy_wrapper": false,
@@ -51,7 +51,7 @@
       }
     },
     "BL-090": {
-      "runbook": "Documentation/backlog/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md",
+      "runbook": "Documentation/backlog/done/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "medium",
       "heavy_wrapper": false,
@@ -71,7 +71,7 @@
       }
     },
     "BL-091": {
-      "runbook": "Documentation/backlog/bl-091-companion-focus-lab-trust-flow.md",
+      "runbook": "Documentation/backlog/done/bl-091-companion-focus-lab-trust-flow.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "medium",
       "heavy_wrapper": false,
@@ -91,7 +91,7 @@
       }
     },
     "BL-092": {
-      "runbook": "Documentation/backlog/bl-092-cross-format-capability-messaging-parity.md",
+      "runbook": "Documentation/backlog/done/bl-092-cross-format-capability-messaging-parity.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "medium",
       "heavy_wrapper": false,
@@ -111,7 +111,7 @@
       }
     },
     "BL-093": {
-      "runbook": "Documentation/backlog/bl-093-visual-dna-token-adoption-and-polish.md",
+      "runbook": "Documentation/backlog/done/bl-093-visual-dna-token-adoption-and-polish.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "low",
       "heavy_wrapper": false,
@@ -131,7 +131,7 @@
       }
     },
     "BL-094": {
-      "runbook": "Documentation/backlog/bl-094-reactive-simulation-temporal-lab-containment.md",
+      "runbook": "Documentation/backlog/done/bl-094-reactive-simulation-temporal-lab-containment.md",
       "automation_stage_cap": "T3",
       "shared_files_risk": "low",
       "heavy_wrapper": false,

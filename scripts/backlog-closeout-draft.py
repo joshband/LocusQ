@@ -45,8 +45,13 @@ def render_metadata(title: str, doc_type: str) -> str:
 
 def extract_index_row(item_id: str) -> str:
     text = INDEX_PATH.read_text(encoding="utf-8")
-    match = re.search(rf"^\| .* \| {re.escape(item_id)} \|.*$", text, flags=re.MULTILINE)
-    return match.group(0) if match else "(row not found)"
+    matches = re.findall(rf"^\| .* \| {re.escape(item_id)} \|.*$", text, flags=re.MULTILINE)
+    if not matches:
+        return "(row not found)"
+    for line in reversed(matches):
+        if f"[{item_id.lower()}]" in line or "**Done**" in line or "Done-candidate" in line or "In Validation" in line or "Open" in line:
+            return line
+    return matches[-1]
 
 
 def write_text(path: Path, content: str) -> None:
