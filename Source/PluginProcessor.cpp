@@ -2551,6 +2551,15 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     if (activeEmitterSlot < 0)
         return;
 
+    sceneGraph.setPhysicsRateIndex (
+        static_cast<int> (apvts.getRawParameterValue ("rend_phys_rate")->load()));
+    sceneGraph.setPhysicsPaused (
+        apvts.getRawParameterValue ("rend_phys_pause")->load() > 0.5f);
+    sceneGraph.setPhysicsWallCollisionEnabled (
+        apvts.getRawParameterValue ("rend_phys_walls")->load() > 0.5f);
+    sceneGraph.setPhysicsInteractionEnabled (
+        apvts.getRawParameterValue ("rend_phys_interact")->load() > 0.5f);
+
     const auto existingData = sceneGraph.getSlot (activeEmitterSlot).read();
 
     EmitterData data;
@@ -2743,6 +2752,10 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     boidsSystem.setEmitterGroup (activeEmitterSlot, flockGroupIndex);
     const bool boidsEnabledForEmitter = flockGroupIndex >= 0 && flockGroupIndex < BoidsSystem::kMaxGroups
         && boidsSystem.isGroupEnabled (flockGroupIndex);
+    const bool interactionEnabledForScene =
+        physicsEnabled
+        && sceneGraph.isPhysicsInteractionEnabled()
+        && sceneGraph.getActiveEmitterCount() > 1;
 
     physicsWorker.setSlotMassOverride (activeEmitterSlot, apvts.getRawParameterValue ("phys_mass_override")->load());
     const bool collisionEnabled =
@@ -2754,7 +2767,8 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     collisionSystem.setDecayRateHz (
         1000.0f / juce::jmax (1.0f, apvts.getRawParameterValue ("phys_collision_decay_ms")->load()));
 
-    const bool coordinatedWorkerActive = physicsEnabled && (anyActiveAttractor || collisionEnabled || boidsEnabledForEmitter);
+    const bool coordinatedWorkerActive =
+        physicsEnabled && (anyActiveAttractor || collisionEnabled || boidsEnabledForEmitter || interactionEnabledForScene);
     physicsEngine.setStandaloneMode (! coordinatedWorkerActive);
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
     physicsWorker.setUpdateRateIndex (physicsRateIndex);
@@ -2790,7 +2804,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
                               coordinatedWorkerActive ? 0 : gravityDirection);
 
     Vec3 interactionForce {};
-    if (physicsEnabled && sceneGraph.isPhysicsInteractionEnabled())
+    if (interactionEnabledForScene)
     {
         const auto workerState = physicsWorker.getEmitterState (activeEmitterSlot);
         const auto physicsState = physicsEngine.getState();
