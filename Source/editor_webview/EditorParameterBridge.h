@@ -124,7 +124,148 @@ inline constexpr std::array kParameterBridgeSpecs {
     ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "rend_viz_physics_lens" },
     ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "rend_viz_trail_len" },
     ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "rend_viz_trails" },
-    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "rend_viz_vectors" }
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "rend_viz_vectors" },
+
+    // ===== P3 — Spring oscillator (emitter) =====
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_spring_enable" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_spring_k" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_spring_damp" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::combo,  "phys_spring_anchor_mode" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_spring_anchor_x" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_spring_anchor_y" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_spring_anchor_z" },
+
+    // ===== P3 — Turbulence (emitter) =====
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_turbulence" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_turbulence_rate" },
+
+    // ===== P4 — Angular physics (emitter) =====
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_ang_enable" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_ang_drag" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_ang_impulse_x" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_ang_impulse_y" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_ang_impulse_z" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_ang_throw" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_ang_reset" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_ang_attractor_torque" },
+
+    // ===== P5 — Boids group assignment (emitter) =====
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::combo,  "phys_flock_group" },
+
+    // ===== P6 — Collision radius + mass override (emitter) =====
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_collision_radius" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_mass_override" },
+
+    // ===== P2 — Boundary mode (renderer) =====
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::combo,  "phys_boundary_mode" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_soft_boundary_depth" },
+
+    // ===== P6 — Inter-emitter collision globals (renderer) =====
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "phys_collide_emitters" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_collision_gain_scale" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_collision_decay_ms" },
+
+    // ===== P2 — Attractors ×4 (renderer / scene) =====
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_0_active" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_0_pos_x" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_0_pos_y" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_0_pos_z" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_0_strength" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::combo,  "attractor_0_falloff" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_0_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_0_orbit_stabilize" },
+
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_1_active" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_1_pos_x" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_1_pos_y" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_1_pos_z" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_1_strength" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::combo,  "attractor_1_falloff" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_1_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_1_orbit_stabilize" },
+
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_2_active" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_2_pos_x" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_2_pos_y" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_2_pos_z" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_2_strength" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::combo,  "attractor_2_falloff" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_2_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_2_orbit_stabilize" },
+
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_3_active" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_3_pos_x" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_3_pos_y" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_3_pos_z" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_3_strength" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::combo,  "attractor_3_falloff" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "attractor_3_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "attractor_3_orbit_stabilize" },
+
+    // ===== P5 — Boids groups ×4 (renderer / scene) =====
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "phys_flock_0_enable" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_sep_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_align_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_coh_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_sep_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_align_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_coh_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_0_max_speed" },
+
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "phys_flock_1_enable" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_sep_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_align_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_coh_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_sep_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_align_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_coh_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_1_max_speed" },
+
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "phys_flock_2_enable" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_sep_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_align_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_coh_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_sep_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_align_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_coh_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_2_max_speed" },
+
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::toggle, "phys_flock_3_enable" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_sep_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_align_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_coh_weight" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_sep_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_align_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_coh_radius" },
+    ParameterBridgeSpec { ParameterScope::renderer, RelayKind::slider, "phys_flock_3_max_speed" },
+
+    // ===== Physics DAW Output Mirrors and Freeze Toggles =====
+    // Physics DAW Output Mirrors (slider = read-only display relay)
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_0" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_1" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_2" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_3" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_4" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_5" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_6" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_spread_mod_7" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_0" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_1" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_2" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_3" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_4" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_5" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_6" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::slider, "phys_out_gain_mod_7" },
+    // Physics Freeze Toggles
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_0" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_1" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_2" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_3" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_4" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_5" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_6" },
+    ParameterBridgeSpec { ParameterScope::emitter, RelayKind::toggle, "phys_frozen_7" }
 };
 
 class ParameterBridgeAttachment
