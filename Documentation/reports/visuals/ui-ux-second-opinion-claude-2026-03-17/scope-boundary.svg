@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="640" viewBox="0 0 1080 640" role="img" aria-labelledby="title desc">
+  <title id="title">LocusQ Scope Boundary — Plugin vs Companion vs Lab</title>
+  <desc id="desc">Visual showing what belongs in the plugin, companion, and lab surfaces. Center column shows the boundary rules.</desc>
+
+  <rect width="1080" height="640" rx="20" fill="#08090D"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="1080" height="52" rx="0" fill="#0E1218"/>
+  <rect x="0" y="44" width="1080" height="8" rx="0" fill="#08090D"/>
+  <text x="540" y="33" fill="#D4A847" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2.4" text-anchor="middle">SCOPE BOUNDARY — PLUGIN · COMPANION · LAB</text>
+
+  <!-- Plugin column -->
+  <rect x="24" y="72" width="302" height="540" rx="18" fill="#0E1218" stroke="#2D3745"/>
+  <rect x="24" y="72" width="302" height="44" rx="18" fill="#171D26"/>
+  <rect x="24" y="98" width="302" height="18" fill="#171D26"/>
+  <text x="175" y="100" fill="#D4A847" font-size="11" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2" text-anchor="middle">PLUGIN</text>
+
+  <!-- Plugin items -->
+  <rect x="48" y="132" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="68" y="152" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Scene authoring</text>
+  <text x="68" y="170" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Emitter placement, motion, timeline</text>
+
+  <rect x="48" y="188" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="68" y="208" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Calibration authority</text>
+  <text x="68" y="226" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Room profile, measurement readiness</text>
+
+  <rect x="48" y="244" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="68" y="264" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Render state truth</text>
+  <text x="68" y="282" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Requested → active → fallback</text>
+
+  <rect x="48" y="300" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="68" y="320" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Output format selection</text>
+  <text x="68" y="338" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Binaural / Stereo / Passthrough</text>
+
+  <rect x="48" y="356" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="68" y="376" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Draft / Final state</text>
+  <text x="68" y="394" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Scene commit gate</text>
+
+  <rect x="48" y="412" width="254" height="46" rx="12" fill="#111924" stroke="#59D8FF" stroke-dasharray="6 5"/>
+  <text x="68" y="432" fill="#59D8FF" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="600">Lab: Parity counters</text>
+  <text x="68" y="450" fill="#6E7A8E" font-size="11" font-family="Arial, Helvetica, sans-serif">Engine diagnostics, packet stats</text>
+
+  <rect x="48" y="468" width="254" height="46" rx="12" fill="#111924" stroke="#59D8FF" stroke-dasharray="6 5"/>
+  <text x="68" y="488" fill="#59D8FF" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="600">Lab: Reactive overlays</text>
+  <text x="68" y="506" fill="#6E7A8E" font-size="11" font-family="Arial, Helvetica, sans-serif">Field, trail, and density lenses</text>
+
+  <!-- Border rules column (center) -->
+  <rect x="350" y="72" width="380" height="540" rx="18" fill="#0B0F14" stroke="#1E2938"/>
+  <rect x="350" y="72" width="380" height="44" rx="18" fill="#131B24"/>
+  <rect x="350" y="98" width="380" height="18" fill="#131B24"/>
+  <text x="540" y="100" fill="#FFB86B" font-size="11" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2" text-anchor="middle">BOUNDARY RULES</text>
+
+  <text x="540" y="146" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">Does it change scene truth?</text>
+  <text x="540" y="164" fill="#A6B1C2" font-size="12" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">→ Plugin scope</text>
+
+  <line x1="390" y1="178" x2="690" y2="178" stroke="#1E2938" stroke-width="1"/>
+
+  <text x="540" y="202" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">Does it prove device trust or capture</text>
+  <text x="540" y="220" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">profiles?</text>
+  <text x="540" y="238" fill="#A6B1C2" font-size="12" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">→ Companion scope</text>
+
+  <line x1="390" y1="254" x2="690" y2="254" stroke="#1E2938" stroke-width="1"/>
+
+  <text x="540" y="278" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">Does it only explain internals,</text>
+  <text x="540" y="296" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">parity, or evidence?</text>
+  <text x="540" y="314" fill="#A6B1C2" font-size="12" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">→ Lab drawer only</text>
+
+  <line x1="390" y1="330" x2="690" y2="330" stroke="#1E2938" stroke-width="1"/>
+
+  <text x="540" y="354" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">Can it live inside an existing card,</text>
+  <text x="540" y="372" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">overlay, or timeline?</text>
+  <text x="540" y="390" fill="#67E2A5" font-size="12" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">→ Good candidate — add it there</text>
+
+  <line x1="390" y1="406" x2="690" y2="406" stroke="#1E2938" stroke-width="1"/>
+
+  <text x="540" y="430" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">Does it require a new top-level</text>
+  <text x="540" y="448" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">mode or panel?</text>
+  <text x="540" y="466" fill="#FF7A6E" font-size="12" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">→ Blocked until equal complexity removed</text>
+
+  <line x1="390" y1="482" x2="690" y2="482" stroke="#1E2938" stroke-width="1"/>
+
+  <text x="540" y="506" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">Is it a reactive / simulation /</text>
+  <text x="540" y="524" fill="#EEF4FB" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700" text-anchor="middle">temporal idea?</text>
+  <text x="540" y="542" fill="#A6B1C2" font-size="12" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">→ Extend emitter timeline or lab overlay only</text>
+
+  <!-- Companion column -->
+  <rect x="754" y="72" width="302" height="540" rx="18" fill="#0E1218" stroke="#2D3745"/>
+  <rect x="754" y="72" width="302" height="44" rx="18" fill="#171D26"/>
+  <rect x="754" y="98" width="302" height="18" fill="#171D26"/>
+  <text x="905" y="100" fill="#59D8FF" font-size="11" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2" text-anchor="middle">COMPANION</text>
+
+  <!-- Focus badge -->
+  <rect x="778" y="128" width="68" height="22" rx="11" fill="#1A2F3A" stroke="#59D8FF"/>
+  <text x="812" y="143" fill="#59D8FF" font-size="10" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="1.2" text-anchor="middle">FOCUS</text>
+
+  <rect x="778" y="160" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="798" y="180" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Device availability</text>
+  <text x="798" y="198" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Supported? Connected? Authorized?</text>
+
+  <rect x="778" y="216" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="798" y="236" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Readiness funnel</text>
+  <text x="798" y="254" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Motion ready → sync → send gate</text>
+
+  <rect x="778" y="272" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="798" y="292" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Center / Sync</text>
+  <text x="798" y="310" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Primary operator action</text>
+
+  <rect x="778" y="328" width="254" height="46" rx="12" fill="#171D26" stroke="#2D3745"/>
+  <text x="798" y="348" fill="#EEF4FB" font-size="13" font-family="Arial, Helvetica, sans-serif" font-weight="600">Profile capture tray</text>
+  <text x="798" y="366" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Guided 3-step acquisition</text>
+
+  <!-- Note: synthetic mode indicator -->
+  <rect x="778" y="384" width="254" height="46" rx="12" fill="#211810" stroke="#FFB86B"/>
+  <text x="798" y="404" fill="#FFB86B" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="600">★ Synthetic mode indicator</text>
+  <text x="798" y="422" fill="#A6B1C2" font-size="11" font-family="Arial, Helvetica, sans-serif">Missed in previous review — must be visible</text>
+
+  <!-- Lab badge -->
+  <rect x="778" y="448" width="60" height="22" rx="11" fill="#111924" stroke="#59D8FF" stroke-dasharray="5 4"/>
+  <text x="808" y="463" fill="#59D8FF" font-size="10" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="1.2" text-anchor="middle">LAB</text>
+
+  <rect x="778" y="480" width="254" height="46" rx="12" fill="#111924" stroke="#59D8FF" stroke-dasharray="6 5"/>
+  <text x="798" y="500" fill="#59D8FF" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="600">Axis flip / orientation</text>
+  <text x="798" y="518" fill="#6E7A8E" font-size="11" font-family="Arial, Helvetica, sans-serif">Axis sanity, yaw/pitch/roll breakdown</text>
+
+  <rect x="778" y="536" width="254" height="46" rx="12" fill="#111924" stroke="#59D8FF" stroke-dasharray="6 5"/>
+  <text x="798" y="556" fill="#59D8FF" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="600">Raw telemetry</text>
+  <text x="798" y="574" fill="#6E7A8E" font-size="11" font-family="Arial, Helvetica, sans-serif">Quaternion, packet stats, matcher scores</text>
+
+  <!-- Legend -->
+  <rect x="24" y="622" width="14" height="10" rx="3" fill="#171D26" stroke="#2D3745"/>
+  <text x="44" y="632" fill="#A6B1C2" font-size="10" font-family="Arial, Helvetica, sans-serif">Focus (operator-first)</text>
+  <rect x="200" y="622" width="14" height="10" rx="3" fill="#111924" stroke="#59D8FF" stroke-dasharray="4 3"/>
+  <text x="220" y="632" fill="#A6B1C2" font-size="10" font-family="Arial, Helvetica, sans-serif">Lab (expert, opt-in)</text>
+  <rect x="390" y="622" width="14" height="10" rx="3" fill="#211810" stroke="#FFB86B"/>
+  <text x="410" y="632" fill="#A6B1C2" font-size="10" font-family="Arial, Helvetica, sans-serif">Missing from prior review</text>
+</svg>

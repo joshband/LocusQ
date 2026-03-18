@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "style": "Spatial Atelier / Diagnostic Calm",
+    "performanceTier": "Medium",
+    "targetFrameworks": ["three.js", "WKWebView", "WebView2", "Swift companion monitor"],
+    "sourceOfTruth": "reconciled_live_shell_2026-03-18"
+  },
+  "colors": {
+    "shell": {
+      "bg": "#06080B",
+      "surface": "#0E1218",
+      "surfaceRaised": "#171D26",
+      "surfaceGlass": "rgba(23,29,38,0.82)",
+      "surfaceSoft": "#232B38",
+      "line": "#2D3745",
+      "lineSoft": "#212936"
+    },
+    "text": {
+      "primary": "#EEF4FB",
+      "secondary": "#A6B1C2",
+      "dim": "#6E7A8E",
+      "inverse": "#06080B"
+    },
+    "signal": {
+      "instrument": "#D4A847",
+      "live": "#59D8FF",
+      "ready": "#67E2A5",
+      "warn": "#FFB86B",
+      "error": "#FF7A6E"
+    },
+    "state": {
+      "requested": "#D4A847",
+      "active": "#59D8FF",
+      "fallback": "#FFB86B",
+      "offline": "#6E7A8E",
+      "success": "#67E2A5"
+    }
+  },
+  "typography": {
+    "families": {
+      "display": "\"Avenir Next\", \"Segoe UI\", sans-serif",
+      "body": "\"IBM Plex Sans\", \"Segoe UI\", sans-serif",
+      "mono": "\"IBM Plex Mono\", \"SFMono-Regular\", monospace"
+    },
+    "sizes": {
+      "displayLg": 40,
+      "displayMd": 28,
+      "title": 20,
+      "body": 14,
+      "bodySm": 12,
+      "caps": 11,
+      "micro": 10
+    },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "tracking": {
+      "display": -0.03,
+      "caps": 0.16,
+      "micro": 0.12
+    }
+  },
+  "spacing": [4, 8, 12, 16, 20, 24, 32, 40, 56],
+  "radii": {
+    "chip": 999,
+    "sm": 8,
+    "md": 14,
+    "lg": 22,
+    "xl": 32
+  },
+  "borders": {
+    "hairline": 1,
+    "strong": 2
+  },
+  "shadows": {
+    "panel": "0 22px 60px rgba(0,0,0,0.40)",
+    "glass": "0 18px 42px rgba(0,0,0,0.32)",
+    "focus": "0 0 0 2px rgba(89,216,255,0.32)"
+  },
+  "motion": {
+    "durationsMs": {
+      "fast": 90,
+      "base": 160,
+      "slow": 240,
+      "scene": 420
+    },
+    "easing": {
+      "enter": "easeOutCubic",
+      "settle": "easeInOutQuad",
+      "realtime": "linear"
+    }
+  },
+  "layout": {
+    "headerHeight": 44,
+    "railWidth": {
+      "base": 348,
+      "compact": 320,
+      "tight": 292
+    },
+    "timelineHeight": {
+      "base": 152,
+      "compact": 136,
+      "tight": 124
+    },
+    "viewportOverlayMargin": 24
+  },
+  "components": {
+    "statusBand": {
+      "maxPersistentPills": 2,
+      "defaultStateOrder": ["session", "trust"],
+      "labStateLocation": "drawer"
+    },
+    "authorityCard": {
+      "fields": ["requested", "active", "fallbackReason", "controlOwner"],
+      "alwaysVisible": true
+    },
+    "focusLabToggle": {
+      "default": "focus",
+      "labBadge": "advanced"
+    }
+  },
+  "implementation": {
+    "decision": "After BL-093 reconciliation, this token packet is the canonical visual baseline and the live plugin plus companion shells should follow these values.",
+    "driftResolved": {
+      "background": {
+        "plugin": "#06080B",
+        "companion": "#06080B"
+      },
+      "headerHeight": {
+        "pluginPx": 44
+      },
+      "primaryFont": {
+        "display": "\"Avenir Next\", \"IBM Plex Sans\", \"Segoe UI\", sans-serif",
+        "body": "\"IBM Plex Sans\", \"Avenir Next\", \"Segoe UI\", sans-serif"
+      },
+      "baseRailWidth": {
+        "pluginPx": 348
+      }
+    }
+  }
+}

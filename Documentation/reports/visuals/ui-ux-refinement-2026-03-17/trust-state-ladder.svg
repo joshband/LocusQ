@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" fill="none">
+  <rect width="1280" height="760" fill="#06080B"/>
+  <rect x="40" y="40" width="1200" height="680" rx="28" fill="#0E1218" stroke="#2D3745"/>
+  <text x="80" y="98" fill="#D4A847" font-family="Avenir Next, Segoe UI, sans-serif" font-size="18" font-weight="700" letter-spacing="4">SPATIAL TRUST LADDER</text>
+  <text x="80" y="140" fill="#EEF4FB" font-family="Avenir Next, Segoe UI, sans-serif" font-size="42" font-weight="700">Requested and active state must be readable together.</text>
+
+  <rect x="100" y="216" width="1080" height="120" rx="22" fill="#171D26" stroke="#2D3745"/>
+  <rect x="130" y="246" width="220" height="60" rx="18" fill="#D4A847" fill-opacity="0.14" stroke="#D4A847"/>
+  <text x="158" y="270" fill="#F8E5B4" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700" letter-spacing="2">REQUESTED</text>
+  <text x="158" y="294" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="20" font-weight="700">What the operator asked for</text>
+  <path d="M374 276H440" stroke="#2D3745" stroke-width="2"/>
+  <path d="M430 266L440 276L430 286" stroke="#2D3745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="462" y="246" width="220" height="60" rx="18" fill="#59D8FF" fill-opacity="0.14" stroke="#59D8FF"/>
+  <text x="490" y="270" fill="#C8F2FF" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700" letter-spacing="2">ACTIVE</text>
+  <text x="490" y="294" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="20" font-weight="700">What the system is doing now</text>
+  <path d="M706 276H772" stroke="#2D3745" stroke-width="2"/>
+  <path d="M762 266L772 276L762 286" stroke="#2D3745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="794" y="246" width="356" height="60" rx="18" fill="#FFB86B" fill-opacity="0.14" stroke="#FFB86B"/>
+  <text x="822" y="270" fill="#FFE5C6" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700" letter-spacing="2">WHY THIS CHANGED</text>
+  <text x="822" y="294" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="20" font-weight="700">Plain-language fallback or constraint reason</text>
+
+  <rect x="100" y="386" width="500" height="250" rx="24" fill="#171D26" stroke="#2D3745"/>
+  <text x="132" y="432" fill="#67E2A5" font-family="Avenir Next, Segoe UI, sans-serif" font-size="24" font-weight="700">Good First-Layer Copy</text>
+  <text x="132" y="476" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Requested Headphone Profile</text>
+  <text x="132" y="512" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Active Render Path</text>
+  <text x="132" y="548" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Why this changed</text>
+  <text x="132" y="584" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Control owner</text>
+
+  <rect x="650" y="386" width="530" height="250" rx="24" fill="#171D26" stroke="#2D3745"/>
+  <text x="682" y="432" fill="#FF7A6E" font-family="Avenir Next, Segoe UI, sans-serif" font-size="24" font-weight="700">Avoid In The First Layer</text>
+  <text x="682" y="476" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Raw aliases or internal enum names</text>
+  <text x="682" y="512" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Compile/runtime jargon as headline copy</text>
+  <text x="682" y="548" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Diagnostic counters without context</text>
+  <text x="682" y="584" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Personalization claims without active confirmation</text>
+</svg>

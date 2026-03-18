@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" role="img" aria-labelledby="title desc">
+  <title id="title">Plugin Shell Wireframe</title>
+  <desc id="desc">Wireframe showing the recommended plugin information architecture.</desc>
+  <rect width="1180" height="760" rx="24" fill="#0c1016"/>
+  <rect x="18" y="18" width="1144" height="724" rx="18" fill="none" stroke="#364454"/>
+  <rect x="48" y="48" width="1084" height="52" rx="14" fill="#111722" stroke="#364454"/>
+  <text x="76" y="80" fill="#d4a847" font-size="14" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">PLUGIN SHELL WIREFRAME</text>
+  <rect x="820" y="60" width="128" height="28" rx="14" fill="#19212c" stroke="#4b6075"/>
+  <text x="842" y="79" fill="#eef4fb" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700">Global Status</text>
+  <rect x="962" y="60" width="142" height="28" rx="14" fill="#19212c" stroke="#4b6075"/>
+  <text x="985" y="79" fill="#eef4fb" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700">Trust Badge</text>
+
+  <rect x="48" y="120" width="700" height="520" rx="20" fill="#0b0f15" stroke="#364454"/>
+  <text x="78" y="154" fill="#eef4fb" font-size="20" font-family="Arial, Helvetica, sans-serif" font-weight="700">Persistent Viewport</text>
+  <text x="78" y="182" fill="#95a8be" font-size="15" font-family="Arial, Helvetica, sans-serif">One stable world across Calibrate, Emitter, and Renderer.</text>
+
+  <rect x="780" y="120" width="352" height="520" rx="20" fill="#111722" stroke="#364454"/>
+  <text x="810" y="154" fill="#eef4fb" font-size="20" font-family="Arial, Helvetica, sans-serif" font-weight="700">Mode Rail</text>
+  <text x="810" y="182" fill="#95a8be" font-size="15" font-family="Arial, Helvetica, sans-serif">One dominant question first. Editable controls next.</text>
+
+  <rect x="808" y="212" width="296" height="104" rx="16" fill="#171f2a" stroke="#4c6178"/>
+  <text x="828" y="240" fill="#d4a847" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">TOP CARD</text>
+  <text x="828" y="274" fill="#eef4fb" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">Authority or health</text>
+  <text x="828" y="298" fill="#9db0c5" font-size="14" font-family="Arial, Helvetica, sans-serif">Never both authority, health, and deep diagnostics at once.</text>
+
+  <rect x="808" y="336" width="296" height="88" rx="16" fill="#151c25" stroke="#364454"/>
+  <text x="828" y="368" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Editable Card A</text>
+  <text x="828" y="392" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Controls that change outcomes.</text>
+
+  <rect x="808" y="438" width="296" height="88" rx="16" fill="#151c25" stroke="#364454"/>
+  <text x="828" y="470" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Editable Card B</text>
+  <text x="828" y="494" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Controls that still matter in the current task.</text>
+
+  <rect x="808" y="548" width="296" height="64" rx="16" fill="#111924" stroke="#58d8ff" stroke-dasharray="7 7"/>
+  <text x="828" y="586" fill="#bfefff" font-size="15" font-family="Arial, Helvetica, sans-serif" font-weight="700">Collapsed Lab Drawer</text>
+
+  <rect x="48" y="662" width="1084" height="50" rx="16" fill="#111722" stroke="#364454"/>
+  <text x="78" y="693" fill="#eef4fb" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">Mode-Specific Strip</text>
+  <text x="250" y="693" fill="#95a8be" font-size="15" font-family="Arial, Helvetica, sans-serif">Emitter timeline only when motion authoring is active.</text>
+</svg>

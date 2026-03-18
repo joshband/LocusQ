@@ -12,6 +12,9 @@
   "shared_config": {
     "mode": "bl031_tempo_token"
   },
+  "runtime_config": {
+    "enable_profiling": true
+  },
 
   "capability_requirements": {
     "required_effect_types": ["SPATIAL"],

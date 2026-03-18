@@ -2,13 +2,13 @@ Title: BL-055 FIR Convolution Engine
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-16
+Last Modified Date: 2026-03-17
 
 # BL-055 FIR Convolution Engine
 
 ## Plain-Language Summary
 
-BL-055 in plain terms: Integrate FirEngineManager (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Current state: In Validation (C4/C6 remediation landed; owner follow-up contract+execute PASS; 2026-03-07 execute replay PASS after lane path refresh). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-055 in plain terms: Integrate FirEngineManager into the monitoring chain after PEQ. Historical closeout is retained here for traceability, but the 2026-03-17 comprehensive review opened follow-on `BL-095` because the archived execute lane proves structural markers more strongly than it proves a real partitioned runtime implementation. For technical detail, see `## Objective`, `## Validation Plan`, and the follow-on note below.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -44,7 +44,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-055 |
 | Priority | P1 |
-| Status | **Done** (Z1 owner sync 2026-03-16: T3 10/10 PASS; archive sync complete 2026-03-17; offline parity deferred non-blocking) |
+| Status | **Done** (historical closeout retained; 2026-03-17 review opened `BL-095` for truthfulness and objective-validation follow-up) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | — |
@@ -54,7 +54,14 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 
 ## Objective
 
-Integrate `FirEngineManager` (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. Engine/profile swaps must be atomic and click-safe, with output crossfade when filter topology changes. Report latency via `setLatencySamples()` and keep offline parity references for truth-render validation.
+Integrate `FirEngineManager` (historically documented here as `DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps`) into the monitoring chain after PEQ. Engine/profile swaps must be atomic and click-safe, with output crossfade when filter topology changes. Report latency via `setLatencySamples()` and keep offline parity references for truth-render validation.
+
+## Historical Follow-On Note (2026-03-17)
+
+- This archived runbook remains the historical record of the original BL-055 closeout.
+- The 2026-03-17 comprehensive review found that the archived BL-055 lane can pass partitioned-latency and crossfade gates by detecting markers such as `DirectFirConvolver`, `PartitionedFftConvolver`, `nextPow2`, `crossfade`, and `blend`.
+- Follow-on corrective lane: `Documentation/backlog/bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md`.
+- Treat BL-095, not this archived runbook alone, as the current authority for unresolved partitioned-FIR truthfulness work.
 
 ## Acceptance IDs
 

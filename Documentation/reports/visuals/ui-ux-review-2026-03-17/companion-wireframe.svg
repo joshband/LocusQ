@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" role="img" aria-labelledby="title desc">
+  <title id="title">Companion Focus Wireframe</title>
+  <desc id="desc">Wireframe showing a focus-mode-first companion information architecture.</desc>
+  <rect width="1180" height="760" rx="24" fill="#0b1017"/>
+  <rect x="18" y="18" width="1144" height="724" rx="18" fill="none" stroke="#354454"/>
+  <rect x="48" y="48" width="1084" height="52" rx="14" fill="#111823" stroke="#354454"/>
+  <text x="76" y="80" fill="#58d8ff" font-size="14" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">COMPANION WIREFRAME</text>
+
+  <rect x="48" y="120" width="340" height="564" rx="20" fill="#111722" stroke="#354454"/>
+  <text x="76" y="154" fill="#eef4fb" font-size="20" font-family="Arial, Helvetica, sans-serif" font-weight="700">Readiness Ladder</text>
+  <text x="76" y="182" fill="#95a8be" font-size="15" font-family="Arial, Helvetica, sans-serif">Connected → Ready → Synced → Sending → Profile Ready</text>
+
+  <rect x="74" y="214" width="288" height="88" rx="16" fill="#161e29" stroke="#4c6178"/>
+  <text x="94" y="246" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Device Status</text>
+  <text x="94" y="270" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Headphones connected and motion active.</text>
+
+  <rect x="74" y="320" width="288" height="88" rx="16" fill="#161e29" stroke="#4c6178"/>
+  <text x="94" y="352" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Center / Sync</text>
+  <text x="94" y="376" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">The primary action for a live session.</text>
+
+  <rect x="74" y="426" width="288" height="88" rx="16" fill="#161e29" stroke="#4c6178"/>
+  <text x="94" y="458" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Plugin Ingest Trust</text>
+  <text x="94" y="482" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Simple live/ready/stale language before counters.</text>
+
+  <rect x="420" y="120" width="712" height="564" rx="20" fill="#111722" stroke="#354454"/>
+  <text x="450" y="154" fill="#eef4fb" font-size="20" font-family="Arial, Helvetica, sans-serif" font-weight="700">Guided Capture + Compact Visualization</text>
+  <text x="450" y="182" fill="#95a8be" font-size="15" font-family="Arial, Helvetica, sans-serif">Profile acquisition becomes the main task after trust is established.</text>
+
+  <rect x="450" y="214" width="652" height="140" rx="18" fill="#161e29" stroke="#4c6178"/>
+  <text x="474" y="248" fill="#58d8ff" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">COMPACT VISUALIZATION</text>
+  <text x="474" y="284" fill="#eef4fb" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">Readable pose state and sync status</text>
+  <text x="474" y="312" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Show only the visual cues that help a session succeed.</text>
+
+  <rect x="450" y="382" width="202" height="178" rx="18" fill="#161e29" stroke="#354454"/>
+  <rect x="674" y="382" width="202" height="178" rx="18" fill="#161e29" stroke="#354454"/>
+  <rect x="898" y="382" width="202" height="178" rx="18" fill="#161e29" stroke="#354454"/>
+  <text x="474" y="414" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Left Ear</text>
+  <text x="698" y="414" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Right Ear</text>
+  <text x="922" y="414" fill="#eef4fb" font-size="17" font-family="Arial, Helvetica, sans-serif" font-weight="700">Front View</text>
+  <text x="474" y="444" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Capture tile</text>
+  <text x="698" y="444" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Capture tile</text>
+  <text x="922" y="444" fill="#95a8be" font-size="14" font-family="Arial, Helvetica, sans-serif">Capture tile</text>
+
+  <rect x="450" y="582" width="652" height="76" rx="18" fill="#11201a" stroke="#62e3a0"/>
+  <text x="474" y="614" fill="#cbf8dd" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="2">MATCH SUMMARY</text>
+  <text x="474" y="640" fill="#eef4fb" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">One clear subject match card plus write action</text>
+
+  <rect x="48" y="702" width="1084" height="26" rx="13" fill="#0f1620" stroke="#58d8ff" stroke-dasharray="7 7"/>
+  <text x="72" y="720" fill="#bfefff" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="1.5">LAB DRAWER: raw quaternion, jitter, seq gap, smoothed vectors, counters, axis debug</text>
+</svg>

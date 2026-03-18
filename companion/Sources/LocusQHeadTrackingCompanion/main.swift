@@ -2033,17 +2033,27 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
           <title>LocusQ Head-Tracking Companion</title>
           <style>
             :root {
-              --bg: #05070c;
-              --card: #0f151f;
-              --card-border: #1f2f46;
-              --muted: #8fa7c4;
-              --text: #ddeaf9;
-              --accent: #51d2ff;
-              --accent-soft: rgba(81, 210, 255, 0.18);
-              --accent-glow: rgba(75, 198, 255, 0.2);
-              --ok: #46e089;
-              --warn: #ffca66;
-              --error: #ff6c6c;
+              --bg: #06080B;
+              --surface: #0E1218;
+              --surface-raised: #171D26;
+              --surface-soft: #232B38;
+              --card: #0E1218;
+              --card-border: #2D3745;
+              --card-border-soft: #212936;
+              --muted: #A6B1C2;
+              --text: #EEF4FB;
+              --text-dim: #6E7A8E;
+              --accent: #59D8FF;
+              --accent-soft: rgba(89, 216, 255, 0.18);
+              --accent-glow: rgba(89, 216, 255, 0.20);
+              --ok: #67E2A5;
+              --warn: #FFB86B;
+              --error: #FF7A6E;
+              --instrument: #D4A847;
+              --inactive: #6E7A8E;
+              --font-display: "Avenir Next", "IBM Plex Sans", "Segoe UI", sans-serif;
+              --font-body: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+              --font-mono: "IBM Plex Mono", "SFMono-Regular", "Menlo", "Monaco", monospace;
               --font-xs: clamp(8px, 0.58vw, 10px);
               --font-sm: clamp(9px, 0.68vw, 11px);
               --row-pad-y: clamp(2px, 0.24vh, 4px);
@@ -2055,9 +2065,12 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               width: 100%;
               height: 100%;
               overflow: hidden;
-              background: radial-gradient(circle at 15% 10%, #0f1a2b 0%, #05070c 60%);
+              background:
+                radial-gradient(circle at 15% 10%, rgba(89, 216, 255, 0.16) 0%, transparent 34%),
+                radial-gradient(circle at 88% 92%, rgba(212, 168, 71, 0.12) 0%, transparent 32%),
+                linear-gradient(180deg, #06080B 0%, #05070c 100%);
               color: var(--text);
-              font-family: "SF Mono", "Menlo", "Monaco", monospace;
+              font-family: var(--font-body);
               letter-spacing: 0.01em;
             }
             #root {
@@ -2087,8 +2100,8 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               border: 1px solid var(--card-border);
               border-radius: 14px;
               background:
-                linear-gradient(180deg, rgba(13, 20, 31, 0.97), rgba(8, 12, 19, 0.985)),
-                radial-gradient(180% 130% at 10% 2%, rgba(31, 79, 122, 0.14), transparent 65%);
+                linear-gradient(180deg, rgba(14, 18, 24, 0.97), rgba(10, 13, 18, 0.985)),
+                radial-gradient(180% 130% at 10% 2%, rgba(89, 216, 255, 0.10), transparent 65%);
               box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
               overflow: hidden;
               min-height: 0;
@@ -2103,40 +2116,49 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               align-items: center;
               gap: 12px;
               padding: clamp(8px, 0.95vh, 10px) clamp(12px, 0.95vw, 14px);
-              border-bottom: 1px solid rgba(84, 115, 160, 0.28);
+              border-bottom: 1px solid rgba(45, 55, 69, 0.86);
               background:
-                linear-gradient(90deg, rgba(18, 32, 50, 0.58), rgba(11, 24, 38, 0.34)),
-                rgba(16, 28, 44, 0.36);
+                linear-gradient(90deg, rgba(23, 29, 38, 0.72), rgba(14, 18, 24, 0.56)),
+                rgba(14, 18, 24, 0.48);
             }
             .headerTitle {
               font-size: var(--font-sm);
               letter-spacing: 0.18em;
               text-transform: uppercase;
-              color: #89b8de;
+              color: var(--muted);
+              font-family: var(--font-display);
+            }
+            #ageIndicator {
+              font-size: 12px;
+              color: var(--muted);
+              font-family: var(--font-mono);
+              font-variant-numeric: tabular-nums;
             }
             #statusPill {
               font-size: var(--font-sm);
               font-weight: 700;
               padding: clamp(4px, 0.5vh, 5px) clamp(9px, 0.7vw, 11px);
               border-radius: 999px;
-              border: 1px solid rgba(93, 149, 214, 0.38);
-              color: #86d6ff;
-              background: rgba(43, 86, 124, 0.28);
+              border: 1px solid rgba(89, 216, 255, 0.34);
+              color: var(--accent);
+              background: rgba(89, 216, 255, 0.12);
+              font-family: var(--font-display);
+              font-variant-numeric: tabular-nums;
             }
             #statusPill.active {
-              color: #74edaa;
-              border-color: rgba(102, 209, 143, 0.5);
-              background: rgba(44, 113, 78, 0.25);
+              color: var(--ok);
+              border-color: rgba(103, 226, 165, 0.44);
+              background: rgba(103, 226, 165, 0.12);
             }
             #statusPill.warn {
-              color: #ffd17d;
-              border-color: rgba(255, 184, 83, 0.45);
-              background: rgba(122, 80, 21, 0.25);
+              color: var(--warn);
+              border-color: rgba(255, 184, 107, 0.44);
+              background: rgba(56, 35, 13, 0.28);
             }
             #statusPill.error {
-              color: #ff9393;
-              border-color: rgba(255, 113, 113, 0.5);
-              background: rgba(123, 38, 38, 0.32);
+              color: var(--error);
+              border-color: rgba(255, 122, 110, 0.44);
+              background: rgba(64, 21, 21, 0.32);
             }
             #vizWrap {
               position: relative;
@@ -2206,28 +2228,29 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               letter-spacing: 0.08em;
               text-transform: uppercase;
               border-radius: 999px;
-              border: 1px solid rgba(96, 138, 184, 0.44);
+              border: 1px solid rgba(45, 55, 69, 0.88);
               padding: 3px 8px;
-              background: rgba(8, 17, 28, 0.82);
-              color: #b5d4ee;
+              background: rgba(14, 18, 24, 0.82);
+              color: var(--muted);
+              font-family: var(--font-display);
             }
             .orientationChip.left {
-              color: #a9dbff;
-              border-color: rgba(84, 183, 255, 0.56);
-              background: rgba(22, 65, 98, 0.5);
+              color: var(--accent);
+              border-color: rgba(89, 216, 255, 0.46);
+              background: rgba(15, 38, 52, 0.56);
             }
             .orientationChip.right {
-              color: #ffc1cf;
-              border-color: rgba(255, 145, 170, 0.56);
-              background: rgba(91, 35, 53, 0.5);
+              color: var(--instrument);
+              border-color: rgba(212, 168, 71, 0.46);
+              background: rgba(53, 39, 14, 0.52);
             }
             .orientationHint {
               width: 100%;
               font-size: var(--font-xs);
-              color: #9ec3e6;
+              color: var(--muted);
               letter-spacing: 0.05em;
               padding: 2px 0 0 1px;
-              text-shadow: 0 0 10px rgba(38, 121, 188, 0.25);
+              text-shadow: 0 0 10px rgba(89, 216, 255, 0.16);
             }
             #viewControls {
               position: absolute;
@@ -2239,10 +2262,10 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               pointer-events: auto;
             }
             .viewBtn {
-              border: 1px solid rgba(74, 119, 167, 0.56);
+              border: 1px solid rgba(45, 55, 69, 0.88);
               border-radius: 6px;
-              background: rgba(8, 16, 26, 0.86);
-              color: #a8c7e4;
+              background: rgba(14, 18, 24, 0.86);
+              color: var(--muted);
               font-size: var(--font-xs);
               font-weight: 700;
               letter-spacing: 0.12em;
@@ -2252,17 +2275,18 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               padding: 0 8px;
               cursor: pointer;
               transition: all 0.12s ease;
+              font-family: var(--font-display);
             }
             .viewBtn:hover {
-              border-color: rgba(100, 185, 255, 0.72);
-              color: #d5ecff;
-              background: rgba(18, 37, 56, 0.9);
+              border-color: rgba(89, 216, 255, 0.54);
+              color: var(--text);
+              background: rgba(18, 31, 43, 0.9);
             }
             .viewBtn.active {
-              border-color: rgba(102, 196, 255, 0.9);
-              color: #f5fbff;
-              background: linear-gradient(180deg, rgba(52, 124, 179, 0.64), rgba(31, 87, 135, 0.62));
-              box-shadow: 0 0 10px rgba(78, 176, 248, 0.24);
+              border-color: rgba(89, 216, 255, 0.88);
+              color: var(--text);
+              background: linear-gradient(180deg, rgba(37, 86, 118, 0.74), rgba(18, 55, 82, 0.7));
+              box-shadow: 0 0 10px rgba(89, 216, 255, 0.22);
             }
             #legend {
               position: absolute;
@@ -2273,12 +2297,12 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               gap: 6px 12px;
               padding: clamp(8px, 0.8vh, 10px) clamp(10px, 0.8vw, 12px);
               border-radius: 10px;
-              border: 1px solid rgba(76, 108, 149, 0.5);
-              background: linear-gradient(180deg, rgba(8, 17, 28, 0.86), rgba(7, 15, 24, 0.76));
+              border: 1px solid rgba(45, 55, 69, 0.82);
+              background: linear-gradient(180deg, rgba(14, 18, 24, 0.86), rgba(10, 13, 18, 0.8));
               font-size: var(--font-xs);
-              color: #a9c3df;
+              color: var(--muted);
               backdrop-filter: blur(3px);
-              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), 0 0 20px rgba(65, 155, 233, 0.08);
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35), 0 0 20px rgba(89, 216, 255, 0.08);
               z-index: 3;
             }
             .legendDot {
@@ -2293,13 +2317,256 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               grid-template-rows: auto auto minmax(0, 1fr);
               min-height: 0;
             }
+            .diagTabs {
+              display: flex;
+              gap: 8px;
+              padding: 8px 12px 0;
+              border-bottom: 1px solid rgba(45, 55, 69, 0.8);
+              background: linear-gradient(180deg, rgba(23, 29, 38, 0.78), rgba(14, 18, 24, 0.72));
+            }
+            .diagTab {
+              appearance: none;
+              border: 1px solid rgba(45, 55, 69, 0.78);
+              border-radius: 999px;
+              padding: 7px 12px;
+              font-size: var(--font-xs);
+              font-weight: 700;
+              letter-spacing: 0.12em;
+              text-transform: uppercase;
+              color: var(--muted);
+              background: rgba(14, 18, 24, 0.58);
+              cursor: pointer;
+              transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+              font-family: var(--font-display);
+            }
+            .diagTab:hover {
+              border-color: rgba(89, 216, 255, 0.52);
+              color: var(--text);
+            }
+            .diagTab.active {
+              border-color: rgba(89, 216, 255, 0.78);
+              color: var(--text);
+              background: linear-gradient(180deg, rgba(24, 63, 87, 0.82), rgba(14, 42, 61, 0.9));
+              box-shadow: 0 0 16px rgba(89, 216, 255, 0.16);
+            }
+            #diagPanels {
+              min-height: 0;
+              display: grid;
+            }
+            .diagPanel {
+              display: none;
+              min-height: 0;
+            }
+            .diagPanel.active {
+              display: grid;
+            }
+            #focusPanel {
+              gap: 10px;
+              padding: 10px;
+              overflow: auto;
+              align-content: start;
+            }
+            .focusHero {
+              border: 1px solid rgba(45, 55, 69, 0.82);
+              border-radius: 14px;
+              padding: 12px 14px;
+              background:
+                radial-gradient(circle at top left, rgba(89, 216, 255, 0.14), transparent 42%),
+                linear-gradient(180deg, rgba(14, 18, 24, 0.96), rgba(10, 13, 18, 0.9));
+              box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            }
+            .focusHeroLabel {
+              color: var(--muted);
+              font-size: var(--font-xs);
+              font-weight: 700;
+              letter-spacing: 0.16em;
+              text-transform: uppercase;
+              font-family: var(--font-display);
+            }
+            .focusHeadline {
+              margin-top: 6px;
+              font-size: clamp(18px, 2.0vh, 22px);
+              font-weight: 800;
+              letter-spacing: -0.02em;
+              color: var(--text);
+              font-family: var(--font-display);
+            }
+            .focusSubhead {
+              margin-top: 6px;
+              font-size: var(--font-sm);
+              line-height: 1.42;
+              color: var(--muted);
+              max-width: 60ch;
+            }
+            .focusWarning {
+              margin-top: 10px;
+              padding: 8px 10px;
+              border-radius: 10px;
+              border: 1px solid rgba(255, 184, 107, 0.42);
+              background: rgba(56, 35, 13, 0.32);
+              color: var(--warn);
+              font-size: var(--font-sm);
+              line-height: 1.35;
+            }
+            .focusWarning.hidden {
+              display: none;
+            }
+            .readinessSteps {
+              margin-top: 12px;
+              display: grid;
+              grid-template-columns: repeat(5, minmax(0, 1fr));
+              gap: 8px;
+            }
+            .readinessStep {
+              border-radius: 12px;
+              border: 1px solid rgba(45, 55, 69, 0.78);
+              background: rgba(14, 18, 24, 0.74);
+              padding: 8px 9px;
+              display: grid;
+              gap: 3px;
+              min-height: 62px;
+            }
+            .readinessStepLabel {
+              color: var(--text-dim);
+              font-size: var(--font-xs);
+              letter-spacing: 0.12em;
+              text-transform: uppercase;
+              font-family: var(--font-display);
+            }
+            .readinessStepValue {
+              color: var(--muted);
+              font-size: var(--font-sm);
+              line-height: 1.25;
+            }
+            .readinessStep.complete {
+              border-color: rgba(103, 226, 165, 0.4);
+              background: rgba(11, 32, 23, 0.82);
+            }
+            .readinessStep.complete .readinessStepValue {
+              color: #dcfff0;
+            }
+            .readinessStep.active {
+              border-color: rgba(89, 216, 255, 0.46);
+              background: rgba(13, 29, 42, 0.84);
+            }
+            .readinessStep.active .readinessStepValue {
+              color: var(--text);
+            }
+            .readinessStep.warning {
+              border-color: rgba(255, 184, 107, 0.42);
+              background: rgba(56, 35, 13, 0.82);
+            }
+            .readinessStep.warning .readinessStepValue {
+              color: var(--warn);
+            }
+            .readinessStep.idle {
+              opacity: 0.9;
+            }
+            .focusGrid {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 10px;
+              align-content: start;
+            }
+            .focusCard {
+              border: 1px solid rgba(45, 55, 69, 0.78);
+              border-radius: 12px;
+              background: rgba(14, 18, 24, 0.76);
+              padding: 12px;
+              display: grid;
+              gap: 10px;
+              align-content: start;
+            }
+            .focusCard h3 {
+              margin: 0;
+              font-size: var(--font-xs);
+              letter-spacing: 0.16em;
+              text-transform: uppercase;
+              color: var(--muted);
+              font-family: var(--font-display);
+            }
+            .focusSummaryList {
+              display: grid;
+              gap: 8px;
+            }
+            .focusSummaryLine {
+              display: grid;
+              gap: 3px;
+            }
+            .focusSummaryLabel {
+              color: var(--text-dim);
+              font-size: var(--font-xs);
+              letter-spacing: 0.10em;
+              text-transform: uppercase;
+              font-family: var(--font-display);
+            }
+            .focusSummaryValue {
+              color: var(--text);
+              font-size: var(--font-sm);
+              line-height: 1.35;
+              word-break: break-word;
+              overflow-wrap: anywhere;
+            }
+            .focusSummaryValue.muted {
+              color: var(--muted);
+            }
+            .axisButtonRow {
+              display: flex;
+              gap: 6px;
+              flex-wrap: wrap;
+            }
+            .axisButtonRow .syncButton {
+              flex: 1 1 92px;
+            }
+            .captureTray {
+              display: grid;
+              gap: 10px;
+            }
+            .captureTrayRow {
+              border: 1px solid rgba(45, 55, 69, 0.72);
+              border-radius: 10px;
+              background: rgba(14, 18, 24, 0.82);
+              padding: 10px;
+              display: grid;
+              gap: 8px;
+            }
+            .captureTrayRowHeader {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 10px;
+            }
+            .captureTrayTitle {
+              color: var(--text);
+              font-size: var(--font-sm);
+              font-weight: 700;
+              letter-spacing: 0.04em;
+              font-family: var(--font-display);
+            }
+            .captureTraySummary {
+              color: var(--muted);
+              font-size: var(--font-sm);
+              line-height: 1.35;
+              word-break: break-word;
+              overflow-wrap: anywhere;
+            }
+            #labPanel {
+              grid-template-rows: auto auto minmax(0, 1fr);
+              min-height: 0;
+            }
+            .labIntro {
+              padding: 10px 12px 0;
+              color: var(--muted);
+              font-size: var(--font-sm);
+              line-height: 1.4;
+            }
             #smoothingControls {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
               gap: 8px 10px;
               padding: clamp(8px, 0.9vh, 10px) clamp(12px, 0.9vw, 14px);
-              border-bottom: 1px solid rgba(84, 115, 160, 0.28);
-              background: rgba(10, 18, 30, 0.45);
+              border-bottom: 1px solid rgba(45, 55, 69, 0.82);
+              background: rgba(14, 18, 24, 0.45);
               font-size: var(--font-xs);
             }
             .controlBlock {
@@ -2311,20 +2578,23 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               text-transform: uppercase;
               letter-spacing: 0.12em;
               font-size: var(--font-xs);
+              font-family: var(--font-display);
             }
             .controlBlock input[type="range"] {
               width: 100%;
               accent-color: var(--accent);
             }
             .controlValue {
-              color: #c6e6ff;
+              color: var(--text);
               font-size: var(--font-sm);
+              font-family: var(--font-mono);
+              font-variant-numeric: tabular-nums;
             }
             .syncButton {
-              border: 1px solid rgba(86, 144, 199, 0.66);
+              border: 1px solid rgba(89, 216, 255, 0.46);
               border-radius: 8px;
-              background: rgba(14, 30, 46, 0.88);
-              color: #d4ecff;
+              background: rgba(13, 29, 42, 0.88);
+              color: var(--text);
               font-size: var(--font-xs);
               font-weight: 700;
               letter-spacing: 0.12em;
@@ -2332,26 +2602,27 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               min-height: 30px;
               cursor: pointer;
               transition: all 0.12s ease;
+              font-family: var(--font-display);
             }
             .syncButton:hover {
-              border-color: rgba(112, 195, 255, 0.84);
-              background: rgba(26, 53, 77, 0.92);
+              border-color: rgba(89, 216, 255, 0.74);
+              background: rgba(18, 41, 59, 0.92);
             }
             .syncButton:disabled {
               cursor: default;
               opacity: 0.55;
-              border-color: rgba(75, 95, 118, 0.46);
-              background: rgba(12, 19, 28, 0.82);
-              color: #9fb4c9;
+              border-color: rgba(45, 55, 69, 0.76);
+              background: rgba(14, 18, 24, 0.82);
+              color: var(--muted);
             }
             .syncButton.axisFlipActive {
-              border-color: rgba(220, 90, 90, 0.80);
-              background: rgba(80, 20, 20, 0.72);
-              color: #ffb3b3;
+              border-color: rgba(255, 122, 110, 0.8);
+              background: rgba(73, 21, 21, 0.72);
+              color: #ffd0cc;
             }
             .syncButton.axisFlipActive:hover {
-              border-color: rgba(255, 120, 120, 0.90);
-              background: rgba(110, 28, 28, 0.88);
+              border-color: rgba(255, 122, 110, 0.9);
+              background: rgba(94, 28, 28, 0.88);
             }
             #metrics {
               overflow: auto;
@@ -2364,11 +2635,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               min-height: 0;
             }
             .section {
-              border: 1px solid rgba(74, 102, 140, 0.32);
+              border: 1px solid rgba(45, 55, 69, 0.78);
               border-radius: 10px;
               margin: 0;
               overflow: hidden;
-              background: rgba(7, 12, 20, 0.72);
+              background: rgba(14, 18, 24, 0.74);
               display: grid;
               grid-template-rows: auto minmax(0, 1fr);
               min-height: 0;
@@ -2379,9 +2650,10 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               font-size: var(--font-xs);
               letter-spacing: 0.16em;
               text-transform: uppercase;
-              color: #8cb8dc;
-              border-bottom: 1px solid rgba(74, 102, 140, 0.25);
-              background: rgba(12, 21, 34, 0.48);
+              color: var(--muted);
+              border-bottom: 1px solid rgba(45, 55, 69, 0.76);
+              background: rgba(23, 29, 38, 0.48);
+              font-family: var(--font-display);
             }
             .rows {
               display: grid;
@@ -2391,19 +2663,21 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             .rowLabel, .rowValue {
               font-size: var(--font-sm);
               padding: var(--row-pad-y) var(--row-pad-x);
-              border-bottom: 1px solid rgba(67, 89, 119, 0.19);
+              border-bottom: 1px solid rgba(45, 55, 69, 0.46);
               line-height: 1.18;
               min-width: 0;
             }
             .rowLabel { color: var(--muted); }
             .rowValue {
-              color: #e4f2ff;
+              color: var(--text);
               text-align: right;
               word-break: break-word;
               overflow-wrap: anywhere;
+              font-family: var(--font-mono);
+              font-variant-numeric: tabular-nums;
             }
             .rowValue.raw {
-              color: #ffdca2;
+              color: var(--warn);
             }
             .rowValueButtons {
               text-align: left;
@@ -2419,20 +2693,21 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
             }
             .captureButton {
               appearance: none;
-              border: 1px solid rgba(87, 153, 211, 0.44);
+              border: 1px solid rgba(89, 216, 255, 0.34);
               border-radius: 8px;
               padding: 6px 9px;
               font-size: var(--font-xs);
               letter-spacing: 0.08em;
               text-transform: uppercase;
-              color: #dbeeff;
-              background: rgba(13, 26, 40, 0.9);
+              color: var(--text);
+              background: rgba(13, 29, 42, 0.9);
               cursor: pointer;
               transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+              font-family: var(--font-display);
             }
             .captureButton:hover:not(:disabled) {
-              border-color: rgba(112, 195, 255, 0.82);
-              background: rgba(23, 45, 68, 0.94);
+              border-color: rgba(89, 216, 255, 0.72);
+              background: rgba(18, 41, 59, 0.94);
               transform: translateY(-1px);
             }
             .captureButton:disabled {
@@ -2441,13 +2716,13 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               transform: none;
             }
             .captureButton.secondary {
-              color: #a8bfd7;
-              border-color: rgba(90, 112, 137, 0.38);
-              background: rgba(10, 16, 24, 0.9);
+              color: var(--muted);
+              border-color: rgba(45, 55, 69, 0.78);
+              background: rgba(14, 18, 24, 0.9);
             }
             .captureButton.apply {
-              color: #dbffef;
-              border-color: rgba(88, 208, 146, 0.42);
+              color: #dcfff0;
+              border-color: rgba(103, 226, 165, 0.42);
               background: rgba(11, 34, 26, 0.95);
             }
             #threeNotice {
@@ -2457,11 +2732,19 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               font-size: var(--font-xs);
               padding: 6px 9px;
               border-radius: 8px;
-              color: #ffcf82;
-              border: 1px solid rgba(255, 181, 83, 0.44);
-              background: rgba(75, 47, 13, 0.35);
+              color: var(--warn);
+              border: 1px solid rgba(255, 184, 107, 0.44);
+              background: rgba(56, 35, 13, 0.35);
               display: none;
               z-index: 4;
+            }
+            .viewBtn:focus-visible,
+            .diagTab:focus-visible,
+            .syncButton:focus-visible,
+            .captureButton:focus-visible {
+              outline: none;
+              border-color: var(--accent);
+              box-shadow: 0 0 0 2px rgba(89, 216, 255, 0.18), 0 0 0 1px var(--accent);
             }
             @media (max-height: 820px) {
               #legend {
@@ -2469,9 +2752,25 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 max-width: 210px;
                 gap: 4px;
               }
+              .readinessSteps {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+              }
               #smoothingControls {
                 padding: 6px 10px;
                 gap: 6px 8px;
+              }
+            }
+            @media (max-width: 1180px) {
+              .focusGrid {
+                grid-template-columns: 1fr;
+              }
+              .readinessSteps {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+              }
+            }
+            @media (max-width: 840px) {
+              .readinessSteps {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
               }
             }
           </style>
@@ -2512,155 +2811,249 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
 
             <section id="diagCard" class="card">
               <div class="cardHeader">
-                <div class="headerTitle">Telemetry</div>
-                <div id="ageIndicator" style="font-size:12px;color:#8fb5d7;">age=0.0 ms</div>
+                <div class="headerTitle">Companion Status</div>
+                <div id="ageIndicator">age=0.0 ms</div>
               </div>
-              <div id="smoothingControls">
-                <div class="controlBlock">
-                  <label for="smoothOrientation">Orientation Smoothing</label>
-                  <input id="smoothOrientation" type="range" min="0.02" max="0.60" step="0.01" value="0.18" />
-                  <div id="smoothOrientationValue" class="controlValue">0.18</div>
-                </div>
-                <div class="controlBlock">
-                  <label for="smoothVectors">Vector/Telemetry Smoothing</label>
-                  <input id="smoothVectors" type="range" min="0.02" max="0.65" step="0.01" value="0.22" />
-                  <div id="smoothVectorsValue" class="controlValue">0.22</div>
-                </div>
-                <div class="controlBlock">
-                  <label for="syncButton">Center / Sync</label>
-                  <button id="syncButton" class="syncButton" type="button">Center / Sync</button>
-                  <div id="syncHint" class="controlValue">Waiting for readiness…</div>
-                </div>
-                <div class="controlBlock">
-                  <label>Axis Inversion</label>
-                  <div style="display:flex;gap:6px;margin-top:4px;">
-                    <button id="flipYawBtn"   class="syncButton" type="button" data-flipped="false" style="flex:1;">Yaw</button>
-                    <button id="flipPitchBtn" class="syncButton" type="button" data-flipped="false" style="flex:1;">Pitch</button>
-                    <button id="flipRollBtn"  class="syncButton" type="button" data-flipped="true"  style="flex:1;">Roll</button>
-                  </div>
-                  <div id="axisFlipHint" class="controlValue">Tap a button to invert that axis</div>
-                </div>
+              <div class="diagTabs" role="tablist" aria-label="Companion surfaces">
+                <button id="focusTab" class="diagTab active" type="button" data-panel="focus" role="tab" aria-selected="true" aria-controls="focusPanel">Focus</button>
+                <button id="labTab" class="diagTab" type="button" data-panel="lab" role="tab" aria-selected="false" aria-controls="labPanel">Lab</button>
               </div>
-              <div id="metrics">
-                <div class="section">
-                  <h3>Transport</h3>
-                  <div class="rows">
-                    <div class="rowLabel">Mode</div><div id="mode" class="rowValue">n/a</div>
-                    <div class="rowLabel">Source</div><div id="source" class="rowValue">n/a</div>
-                    <div class="rowLabel">Connection</div><div id="connection" class="rowValue">n/a</div>
-                    <div class="rowLabel">Destination</div><div id="destination" class="rowValue">n/a</div>
-                    <div class="rowLabel">Scheduling Profile</div><div id="schedulingProfile" class="rowValue">n/a</div>
-                    <div class="rowLabel">Monitor Refresh</div><div id="monitorHz" class="rowValue">n/a</div>
-                    <div class="rowLabel">Rate</div><div id="rateHz" class="rowValue">n/a</div>
-                    <div class="rowLabel">Duration</div><div id="durationText" class="rowValue">n/a</div>
-                    <div class="rowLabel">Sequence</div><div id="sequence" class="rowValue">n/a</div>
-                    <div class="rowLabel">Timestamp</div><div id="timestampMs" class="rowValue">n/a</div>
-                    <div class="rowLabel">Packets</div><div id="packetCount" class="rowValue">n/a</div>
-                    <div class="rowLabel">Send Errors</div><div id="sendErrors" class="rowValue">n/a</div>
-                    <div class="rowLabel">Invalid Samples</div><div id="invalidSamples" class="rowValue">n/a</div>
-                    <div class="rowLabel">Effective Rate</div><div id="streamEffectiveRateHz" class="rowValue">n/a</div>
-                    <div class="rowLabel">Interval / Jitter</div><div id="streamIntervalJitter" class="rowValue">n/a</div>
-                    <div class="rowLabel">Seq Gap</div><div id="streamSeqGap" class="rowValue">n/a</div>
-                    <div class="rowLabel">Readiness</div><div id="readinessState" class="rowValue">n/a</div>
-                    <div class="rowLabel">Send Gate</div><div id="sendGateOpen" class="rowValue">n/a</div>
-                    <div class="rowLabel">Plugin Ingest</div><div id="pluginIngestState" class="rowValue">n/a</div>
-                    <div class="rowLabel">Plugin Sources / Consumers</div><div id="pluginIngestCounts" class="rowValue">n/a</div>
-                    <div class="rowLabel">Plugin Endpoint</div><div id="pluginIngestEndpoint" class="rowValue">n/a</div>
-                    <div class="rowLabel">Plugin Seq / Pose Age</div><div id="pluginIngestSeqAge" class="rowValue">n/a</div>
-                    <div class="rowLabel">Plugin Ack Age</div><div id="pluginIngestAckAge" class="rowValue">n/a</div>
-                    <div class="rowLabel">Plugin Invalid / Decode</div><div id="pluginIngestInvalidDecode" class="rowValue">n/a</div>
-                    <div class="rowLabel">Last Error</div><div id="lastError" class="rowValue">none</div>
-                  </div>
-                </div>
-                <div class="section">
-                  <h3>Orientation</h3>
-                  <div class="rows">
-                    <div class="rowLabel">Yaw/Pitch/Roll Raw</div><div id="yprRaw" class="rowValue raw">n/a</div>
-                    <div class="rowLabel">Yaw/Pitch/Roll Smoothed</div><div id="yprSmooth" class="rowValue">n/a</div>
-                    <div class="rowLabel">Quaternion Raw (x,y,z,w)</div><div id="quatRaw" class="rowValue raw">n/a</div>
-                    <div class="rowLabel">Quaternion Smoothed</div><div id="quatSmooth" class="rowValue">n/a</div>
-                    <div class="rowLabel">Frame Mapping</div><div id="frameMapping" class="rowValue">n/a</div>
-                    <div class="rowLabel">Heading</div><div id="headingDeg" class="rowValue">n/a</div>
-                    <div class="rowLabel">Sensor Location</div><div id="sensorLocation" class="rowValue">n/a</div>
-                  </div>
-                </div>
-                <div class="section">
-                  <h3>Motion</h3>
-                  <div class="rows">
-                    <div class="rowLabel">Rot Rate Raw (deg/s)</div><div id="rotRateRaw" class="rowValue raw">n/a</div>
-                    <div class="rowLabel">Rot Rate Smoothed</div><div id="rotRateSmooth" class="rowValue">n/a</div>
-                    <div class="rowLabel">Angular Speed</div><div id="angularSpeedDegPerSec" class="rowValue">n/a</div>
-                    <div class="rowLabel">Gravity (g)</div><div id="gravityG" class="rowValue">n/a</div>
-                    <div class="rowLabel">Accel Raw (g)</div><div id="accelRaw" class="rowValue raw">n/a</div>
-                    <div class="rowLabel">Accel Smoothed</div><div id="accelSmooth" class="rowValue">n/a</div>
-                    <div class="rowLabel">Velocity Raw (m/s)</div><div id="velocityRaw" class="rowValue raw">n/a</div>
-                    <div class="rowLabel">Velocity Smoothed</div><div id="velocitySmooth" class="rowValue">n/a</div>
-                    <div class="rowLabel">Displacement (m)</div><div id="displacementEstimateM" class="rowValue">n/a</div>
-                    <div class="rowLabel">dt</div><div id="dtSec" class="rowValue">n/a</div>
-                    <div class="rowLabel">Motion Norm</div><div id="motionNorm" class="rowValue">n/a</div>
-                    <div class="rowLabel">Stability Norm</div><div id="stabilityNorm" class="rowValue">n/a</div>
-                  </div>
-                </div>
-                <div class="section">
-                  <h3>Stabilization Config</h3>
-                  <div class="rows">
-                    <div class="rowLabel">Output Device</div><div id="outputDeviceName" class="rowValue">n/a</div>
-                    <div class="rowLabel">Model</div><div id="outputDeviceModel" class="rowValue">n/a</div>
-                    <div class="rowLabel">Transport</div><div id="outputDeviceTransport" class="rowValue">n/a</div>
-                    <div class="rowLabel">Sample Rate / Ch</div><div id="outputDeviceSampleRateCh" class="rowValue">n/a</div>
-                    <div class="rowLabel">Connected</div><div id="outputDeviceConnected" class="rowValue">n/a</div>
-                    <div class="rowLabel">Recenter on Start</div><div id="recenterOnStart" class="rowValue">n/a</div>
-                    <div class="rowLabel">Baseline State</div><div id="baselineState" class="rowValue">n/a</div>
-                    <div class="rowLabel">Alpha</div><div id="stabilizationAlpha" class="rowValue">n/a</div>
-                    <div class="rowLabel">Deadband (deg)</div><div id="deadbandDeg" class="rowValue">n/a</div>
-                    <div class="rowLabel">Velocity Damping</div><div id="velocityDamping" class="rowValue">n/a</div>
-                  </div>
-                </div>
-                <div class="section">
-                  <h3>Profile Acquisition</h3>
-                  <div class="rows">
-                    <div class="rowLabel">State</div><div id="profileState" class="rowValue">idle</div>
-                    <div class="rowLabel">Detected Headphone</div><div id="profileDetectedHeadphone" class="rowValue">n/a</div>
-                    <div class="rowLabel">Capture Count</div><div id="profileCaptureCount" class="rowValue">0 / 3</div>
-                    <div class="rowLabel">Matched Subject</div><div id="profileSubjectId" class="rowValue">n/a</div>
-                    <div class="rowLabel">Matched SOFA</div><div id="profileSofaRef" class="rowValue">n/a</div>
-                    <div class="rowLabel">Similarity</div><div id="profileSimilarity" class="rowValue">n/a</div>
-                    <div class="rowLabel">Fallback Mode</div><div id="profileFallback" class="rowValue">n/a</div>
-                    <div class="rowLabel">Embedding Hash</div><div id="profileEmbeddingHash" class="rowValue">n/a</div>
-                    <div class="rowLabel">Left Ear Capture</div><div id="profileLeftSummary" class="rowValue">Awaiting selection</div>
-                    <div class="rowLabel">Left Ear Actions</div>
-                    <div class="rowValue rowValueButtons">
-                      <div class="captureButtons">
-                        <button id="profileLeftSelect" class="captureButton" type="button">Select</button>
-                        <button id="profileLeftClear" class="captureButton secondary" type="button">Clear</button>
+              <div id="diagPanels">
+                <div id="focusPanel" class="diagPanel active" role="tabpanel" aria-labelledby="focusTab">
+                  <div class="focusHero">
+                    <div class="focusHeroLabel">Trust Summary</div>
+                    <div id="focusHeadline" class="focusHeadline">Waiting for companion state…</div>
+                    <div id="focusSubhead" class="focusSubhead">Readiness, sync, and plugin acknowledgement will appear here before deep telemetry.</div>
+                    <div id="focusModeWarning" class="focusWarning hidden">Synthetic mode active - motion is simulated.</div>
+                    <div class="readinessSteps" aria-label="Readiness ladder">
+                      <div id="focus-step-device" class="readinessStep idle">
+                        <div class="readinessStepLabel">Device</div>
+                        <div id="focus-step-device-value" class="readinessStepValue">Waiting</div>
+                      </div>
+                      <div id="focus-step-motion" class="readinessStep idle">
+                        <div class="readinessStepLabel">Motion</div>
+                        <div id="focus-step-motion-value" class="readinessStepValue">Waiting</div>
+                      </div>
+                      <div id="focus-step-sync" class="readinessStep idle">
+                        <div class="readinessStepLabel">Synced</div>
+                        <div id="focus-step-sync-value" class="readinessStepValue">Waiting</div>
+                      </div>
+                      <div id="focus-step-send" class="readinessStep idle">
+                        <div class="readinessStepLabel">Sending</div>
+                        <div id="focus-step-send-value" class="readinessStepValue">Waiting</div>
+                      </div>
+                      <div id="focus-step-plugin" class="readinessStep idle">
+                        <div class="readinessStepLabel">Plugin Ack</div>
+                        <div id="focus-step-plugin-value" class="readinessStepValue">Waiting</div>
                       </div>
                     </div>
-                    <div class="rowLabel">Right Ear Capture</div><div id="profileRightSummary" class="rowValue">Awaiting selection</div>
-                    <div class="rowLabel">Right Ear Actions</div>
-                    <div class="rowValue rowValueButtons">
-                      <div class="captureButtons">
-                        <button id="profileRightSelect" class="captureButton" type="button">Select</button>
-                        <button id="profileRightClear" class="captureButton secondary" type="button">Clear</button>
+                  </div>
+                  <div class="focusGrid">
+                    <section class="focusCard">
+                      <h3>Readiness</h3>
+                      <div class="focusSummaryList">
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Why This Changed</div>
+                          <div id="focusWhyChanged" class="focusSummaryValue muted">Waiting for readiness state.</div>
+                        </div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Live Mode</div>
+                          <div id="focusModeState" class="focusSummaryValue">Waiting for source selection.</div>
+                        </div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Plugin Link</div>
+                          <div id="focusPluginLink" class="focusSummaryValue">Awaiting plugin acknowledgement.</div>
+                        </div>
+                      </div>
+                    </section>
+                    <section class="focusCard">
+                      <h3>Center and Orientation</h3>
+                      <div class="focusSummaryList">
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Center / Sync</div>
+                          <button id="syncButton" class="syncButton" type="button">Center / Sync</button>
+                        </div>
+                        <div id="syncHint" class="focusSummaryValue muted">Waiting for readiness…</div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Axis Orientation</div>
+                          <div class="axisButtonRow">
+                            <button id="flipYawBtn" class="syncButton" type="button" data-flipped="false">Yaw</button>
+                            <button id="flipPitchBtn" class="syncButton" type="button" data-flipped="false">Pitch</button>
+                            <button id="flipRollBtn" class="syncButton" type="button" data-flipped="true">Roll</button>
+                          </div>
+                        </div>
+                        <div id="axisFlipHint" class="focusSummaryValue muted">Tap a button to invert that axis</div>
+                      </div>
+                    </section>
+                    <section class="focusCard">
+                      <h3>Active Profile</h3>
+                      <div class="focusSummaryList">
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Summary</div>
+                          <div id="focusProfileSummary" class="focusSummaryValue">No active profile yet.</div>
+                        </div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Profile Source</div>
+                          <div id="focusProfileSource" class="focusSummaryValue">Awaiting three captures.</div>
+                        </div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Detected Headphone</div>
+                          <div id="focusDetectedHeadphone" class="focusSummaryValue">n/a</div>
+                        </div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Apply State</div>
+                          <div id="profileApplyHint" class="focusSummaryValue muted">Load all three views to enable apply.</div>
+                        </div>
+                        <div class="focusSummaryLine">
+                          <div class="focusSummaryLabel">Local Privacy</div>
+                          <div id="profilePrivacy" class="focusSummaryValue muted">Local-only processing.</div>
+                        </div>
+                        <div class="captureButtons">
+                          <button id="profileApply" class="captureButton apply" type="button">Write Profile</button>
+                        </div>
+                      </div>
+                    </section>
+                    <section class="focusCard">
+                      <h3>Capture Tray</h3>
+                      <div class="captureTray">
+                        <div class="captureTrayRow">
+                          <div class="captureTrayRowHeader">
+                            <div class="captureTrayTitle">Left Ear</div>
+                            <div class="captureButtons">
+                              <button id="profileLeftSelect" class="captureButton" type="button">Select</button>
+                              <button id="profileLeftClear" class="captureButton secondary" type="button">Clear</button>
+                            </div>
+                          </div>
+                          <div id="focusProfileLeftSummary" class="captureTraySummary">Awaiting selection | No capture loaded</div>
+                        </div>
+                        <div class="captureTrayRow">
+                          <div class="captureTrayRowHeader">
+                            <div class="captureTrayTitle">Right Ear</div>
+                            <div class="captureButtons">
+                              <button id="profileRightSelect" class="captureButton" type="button">Select</button>
+                              <button id="profileRightClear" class="captureButton secondary" type="button">Clear</button>
+                            </div>
+                          </div>
+                          <div id="focusProfileRightSummary" class="captureTraySummary">Awaiting selection | No capture loaded</div>
+                        </div>
+                        <div class="captureTrayRow">
+                          <div class="captureTrayRowHeader">
+                            <div class="captureTrayTitle">Frontal</div>
+                            <div class="captureButtons">
+                              <button id="profileFrontSelect" class="captureButton" type="button">Select</button>
+                              <button id="profileFrontClear" class="captureButton secondary" type="button">Clear</button>
+                            </div>
+                          </div>
+                          <div id="focusProfileFrontSummary" class="captureTraySummary">Awaiting selection | No capture loaded</div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+                <div id="labPanel" class="diagPanel" role="tabpanel" aria-labelledby="labTab">
+                  <div class="labIntro">Deep telemetry stays here for packet age, axis sanity, plugin ingest, and matcher diagnostics.</div>
+                  <div id="smoothingControls">
+                    <div class="controlBlock">
+                      <label for="smoothOrientation">Orientation Smoothing</label>
+                      <input id="smoothOrientation" type="range" min="0.02" max="0.60" step="0.01" value="0.18" />
+                      <div id="smoothOrientationValue" class="controlValue">0.18</div>
+                    </div>
+                    <div class="controlBlock">
+                      <label for="smoothVectors">Vector/Telemetry Smoothing</label>
+                      <input id="smoothVectors" type="range" min="0.02" max="0.65" step="0.01" value="0.22" />
+                      <div id="smoothVectorsValue" class="controlValue">0.22</div>
+                    </div>
+                  </div>
+                  <div id="metrics">
+                    <div class="section">
+                      <h3>Transport</h3>
+                      <div class="rows">
+                        <div class="rowLabel">Mode</div><div id="mode" class="rowValue">n/a</div>
+                        <div class="rowLabel">Source</div><div id="source" class="rowValue">n/a</div>
+                        <div class="rowLabel">Connection</div><div id="connection" class="rowValue">n/a</div>
+                        <div class="rowLabel">Destination</div><div id="destination" class="rowValue">n/a</div>
+                        <div class="rowLabel">Scheduling Profile</div><div id="schedulingProfile" class="rowValue">n/a</div>
+                        <div class="rowLabel">Monitor Refresh</div><div id="monitorHz" class="rowValue">n/a</div>
+                        <div class="rowLabel">Rate</div><div id="rateHz" class="rowValue">n/a</div>
+                        <div class="rowLabel">Duration</div><div id="durationText" class="rowValue">n/a</div>
+                        <div class="rowLabel">Sequence</div><div id="sequence" class="rowValue">n/a</div>
+                        <div class="rowLabel">Timestamp</div><div id="timestampMs" class="rowValue">n/a</div>
+                        <div class="rowLabel">Packets</div><div id="packetCount" class="rowValue">n/a</div>
+                        <div class="rowLabel">Send Errors</div><div id="sendErrors" class="rowValue">n/a</div>
+                        <div class="rowLabel">Invalid Samples</div><div id="invalidSamples" class="rowValue">n/a</div>
+                        <div class="rowLabel">Effective Rate</div><div id="streamEffectiveRateHz" class="rowValue">n/a</div>
+                        <div class="rowLabel">Interval / Jitter</div><div id="streamIntervalJitter" class="rowValue">n/a</div>
+                        <div class="rowLabel">Seq Gap</div><div id="streamSeqGap" class="rowValue">n/a</div>
+                        <div class="rowLabel">Readiness</div><div id="readinessState" class="rowValue">n/a</div>
+                        <div class="rowLabel">Send Gate</div><div id="sendGateOpen" class="rowValue">n/a</div>
+                        <div class="rowLabel">Plugin Ingest</div><div id="pluginIngestState" class="rowValue">n/a</div>
+                        <div class="rowLabel">Plugin Sources / Consumers</div><div id="pluginIngestCounts" class="rowValue">n/a</div>
+                        <div class="rowLabel">Plugin Endpoint</div><div id="pluginIngestEndpoint" class="rowValue">n/a</div>
+                        <div class="rowLabel">Plugin Seq / Pose Age</div><div id="pluginIngestSeqAge" class="rowValue">n/a</div>
+                        <div class="rowLabel">Plugin Ack Age</div><div id="pluginIngestAckAge" class="rowValue">n/a</div>
+                        <div class="rowLabel">Plugin Invalid / Decode</div><div id="pluginIngestInvalidDecode" class="rowValue">n/a</div>
+                        <div class="rowLabel">Last Error</div><div id="lastError" class="rowValue">none</div>
                       </div>
                     </div>
-                    <div class="rowLabel">Frontal Capture</div><div id="profileFrontSummary" class="rowValue">Awaiting selection</div>
-                    <div class="rowLabel">Frontal Actions</div>
-                    <div class="rowValue rowValueButtons">
-                      <div class="captureButtons">
-                        <button id="profileFrontSelect" class="captureButton" type="button">Select</button>
-                        <button id="profileFrontClear" class="captureButton secondary" type="button">Clear</button>
+                    <div class="section">
+                      <h3>Orientation</h3>
+                      <div class="rows">
+                        <div class="rowLabel">Yaw/Pitch/Roll Raw</div><div id="yprRaw" class="rowValue raw">n/a</div>
+                        <div class="rowLabel">Yaw/Pitch/Roll Smoothed</div><div id="yprSmooth" class="rowValue">n/a</div>
+                        <div class="rowLabel">Quaternion Raw (x,y,z,w)</div><div id="quatRaw" class="rowValue raw">n/a</div>
+                        <div class="rowLabel">Quaternion Smoothed</div><div id="quatSmooth" class="rowValue">n/a</div>
+                        <div class="rowLabel">Frame Mapping</div><div id="frameMapping" class="rowValue">n/a</div>
+                        <div class="rowLabel">Heading</div><div id="headingDeg" class="rowValue">n/a</div>
+                        <div class="rowLabel">Sensor Location</div><div id="sensorLocation" class="rowValue">n/a</div>
                       </div>
                     </div>
-                    <div class="rowLabel">Apply Match</div>
-                    <div class="rowValue rowValueButtons">
-                      <div class="captureButtons">
-                        <button id="profileApply" class="captureButton apply" type="button">Write Profile</button>
+                    <div class="section">
+                      <h3>Motion</h3>
+                      <div class="rows">
+                        <div class="rowLabel">Rot Rate Raw (deg/s)</div><div id="rotRateRaw" class="rowValue raw">n/a</div>
+                        <div class="rowLabel">Rot Rate Smoothed</div><div id="rotRateSmooth" class="rowValue">n/a</div>
+                        <div class="rowLabel">Angular Speed</div><div id="angularSpeedDegPerSec" class="rowValue">n/a</div>
+                        <div class="rowLabel">Gravity (g)</div><div id="gravityG" class="rowValue">n/a</div>
+                        <div class="rowLabel">Accel Raw (g)</div><div id="accelRaw" class="rowValue raw">n/a</div>
+                        <div class="rowLabel">Accel Smoothed</div><div id="accelSmooth" class="rowValue">n/a</div>
+                        <div class="rowLabel">Velocity Raw (m/s)</div><div id="velocityRaw" class="rowValue raw">n/a</div>
+                        <div class="rowLabel">Velocity Smoothed</div><div id="velocitySmooth" class="rowValue">n/a</div>
+                        <div class="rowLabel">Displacement (m)</div><div id="displacementEstimateM" class="rowValue">n/a</div>
+                        <div class="rowLabel">dt</div><div id="dtSec" class="rowValue">n/a</div>
+                        <div class="rowLabel">Motion Norm</div><div id="motionNorm" class="rowValue">n/a</div>
+                        <div class="rowLabel">Stability Norm</div><div id="stabilityNorm" class="rowValue">n/a</div>
                       </div>
                     </div>
-                    <div class="rowLabel">Apply Hint</div><div id="profileApplyHint" class="rowValue">Load all three views to enable apply.</div>
-                    <div class="rowLabel">Profile Path</div><div id="profilePath" class="rowValue">n/a</div>
-                    <div class="rowLabel">Privacy</div><div id="profilePrivacy" class="rowValue">Local-only processing.</div>
-                    <div class="rowLabel">Last Action</div><div id="profileLastAction" class="rowValue">Awaiting profile captures</div>
+                    <div class="section">
+                      <h3>Stabilization Config</h3>
+                      <div class="rows">
+                        <div class="rowLabel">Output Device</div><div id="outputDeviceName" class="rowValue">n/a</div>
+                        <div class="rowLabel">Model</div><div id="outputDeviceModel" class="rowValue">n/a</div>
+                        <div class="rowLabel">Transport</div><div id="outputDeviceTransport" class="rowValue">n/a</div>
+                        <div class="rowLabel">Sample Rate / Ch</div><div id="outputDeviceSampleRateCh" class="rowValue">n/a</div>
+                        <div class="rowLabel">Connected</div><div id="outputDeviceConnected" class="rowValue">n/a</div>
+                        <div class="rowLabel">Recenter on Start</div><div id="recenterOnStart" class="rowValue">n/a</div>
+                        <div class="rowLabel">Baseline State</div><div id="baselineState" class="rowValue">n/a</div>
+                        <div class="rowLabel">Alpha</div><div id="stabilizationAlpha" class="rowValue">n/a</div>
+                        <div class="rowLabel">Deadband (deg)</div><div id="deadbandDeg" class="rowValue">n/a</div>
+                        <div class="rowLabel">Velocity Damping</div><div id="velocityDamping" class="rowValue">n/a</div>
+                      </div>
+                    </div>
+                    <div class="section">
+                      <h3>Profile Acquisition</h3>
+                      <div class="rows">
+                        <div class="rowLabel">State</div><div id="profileState" class="rowValue">idle</div>
+                        <div class="rowLabel">Detected Headphone</div><div id="profileDetectedHeadphone" class="rowValue">n/a</div>
+                        <div class="rowLabel">Capture Count</div><div id="profileCaptureCount" class="rowValue">0 / 3</div>
+                        <div class="rowLabel">Matched Subject</div><div id="profileSubjectId" class="rowValue">n/a</div>
+                        <div class="rowLabel">Matched SOFA</div><div id="profileSofaRef" class="rowValue">n/a</div>
+                        <div class="rowLabel">Similarity</div><div id="profileSimilarity" class="rowValue">n/a</div>
+                        <div class="rowLabel">Fallback Mode</div><div id="profileFallback" class="rowValue">n/a</div>
+                        <div class="rowLabel">Embedding Hash</div><div id="profileEmbeddingHash" class="rowValue">n/a</div>
+                        <div class="rowLabel">Profile Path</div><div id="profilePath" class="rowValue">n/a</div>
+                        <div class="rowLabel">Last Action</div><div id="profileLastAction" class="rowValue">Awaiting profile captures</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2696,6 +3089,19 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               const num = (value, fallback = 0) => (typeof value === "number" && Number.isFinite(value)) ? value : fallback;
               const get = (id) => document.getElementById(id);
               const setText = (id, text) => { const el = get(id); if (el) el.textContent = text; };
+              const prettifyToken = (value, fallback = "n/a") => {
+                const trimmed = String(value || "").trim();
+                if (!trimmed) return fallback;
+                return trimmed
+                  .replace(/[_-]+/g, " ")
+                  .replace(/\\s+/g, " ")
+                  .replace(/\\b\\w/g, (match) => match.toUpperCase());
+              };
+              const formatAgeText = (valueMs) => {
+                const ms = num(valueMs, 0);
+                if (ms >= 1000.0) return f(ms / 1000.0, 1) + " seconds";
+                return f(ms, 0) + " ms";
+              };
               const postNativeMessage = (payload) => {
                 if (window.webkit
                     && window.webkit.messageHandlers
@@ -2704,11 +3110,232 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                   window.webkit.messageHandlers.locusqControl.postMessage(payload);
                 }
               };
+              const modeLabel = (value) => value === "live"
+                ? "Live motion"
+                : "Synthetic mode";
               const readinessLabel = (value) => {
-                if (value === "active_ready") return "active_ready";
-                if (value === "active_not_ready") return "active_not_ready";
-                return "disabled_disconnected";
+                if (value === "active_ready") return "Ready to stream";
+                if (value === "active_not_ready") return "Device connected, waiting for sync";
+                return "Device not connected";
               };
+              const pluginIngestLabel = (value) => {
+                const token = String(value || "").trim();
+                if (!token) return "Unavailable";
+                if (token === "disabled") return "Plugin ack disabled";
+                if (token === "unavailable") return "Plugin ack unavailable";
+                if (token === "waiting") return "Awaiting plugin ack";
+                if (token === "active") return "Plugin ack fresh";
+                if (token === "stale") return "Plugin ack stale";
+                if (token === "pose_stale") return "Plugin pose stale";
+                return prettifyToken(token, "Unavailable");
+              };
+              const profileSourceLabel = (profile) => {
+                if (profile.usedFallback) return "Fallback profile";
+                if (profile.subjectId && profile.subjectId !== "n/a") return "Personalized match";
+                return "Awaiting guided captures";
+              };
+              const profileStateLabel = (value) => {
+                const token = String(value || "").trim().toLowerCase();
+                if (token === "awaiting_capture") return "Awaiting captures";
+                if (token === "capturing") return "Capture in progress";
+                if (token === "ready_to_apply") return "Ready to apply";
+                if (token === "applied") return "Profile applied";
+                if (token === "idle") return "Idle";
+                return prettifyToken(token, "Idle");
+              };
+              const baselineStateLabel = (value) => {
+                const token = String(value || "").trim().toLowerCase();
+                if (token === "synthetic_not_applicable") return "Synthetic mode";
+                if (token === "awaiting_center") return "Awaiting center";
+                if (token === "centered") return "Centered";
+                if (token === "disabled") return "Disabled";
+                return prettifyToken(token, "n/a");
+              };
+              const frameMappingLabel = (value) => {
+                const token = String(value || "").trim().toLowerCase();
+                if (token === "steam_basis_identity" || token === "synthetic_steam_basis_identity") {
+                  return "+X right · +Y up · -Z ahead";
+                }
+                return prettifyToken(token, "n/a");
+              };
+              const formatMatchPercent = (score) => {
+                const value = Number(score);
+                if (!Number.isFinite(value) || value <= 0.0) return "Match pending";
+                return Math.max(0, Math.min(100, Math.round(value * 100))) + "%";
+              };
+              const setStepState = (stepId, valueId, text, tone) => {
+                const step = get(stepId);
+                if (step) {
+                  step.classList.remove("idle", "active", "complete", "warning");
+                  step.classList.add(tone || "idle");
+                }
+                setText(valueId, text);
+              };
+
+              function setDiagPanel(panelName) {
+                const nextPanel = panelName === "lab" ? "lab" : "focus";
+                state.activePanel = nextPanel;
+                document.querySelectorAll(".diagTab[data-panel]").forEach((tab) => {
+                  const active = tab.dataset.panel === nextPanel;
+                  tab.classList.toggle("active", active);
+                  tab.setAttribute("aria-selected", active ? "true" : "false");
+                });
+                document.querySelectorAll(".diagPanel").forEach((panel) => {
+                  const active = panel.id === `${nextPanel}Panel`;
+                  panel.classList.toggle("active", active);
+                });
+              }
+
+              function bindDetailTabs() {
+                const tabs = document.querySelectorAll(".diagTab[data-panel]");
+                if (!tabs || tabs.length === 0) return;
+                tabs.forEach((tab) => {
+                  tab.addEventListener("click", () => {
+                    setDiagPanel(tab.dataset.panel || "focus");
+                  });
+                });
+                setDiagPanel("focus");
+              }
+
+              function updateFocus(snapshot) {
+                const profile = snapshot.profileAcquisition || {};
+                const profileLeft = profile.leftEar || {};
+                const profileRight = profile.rightEar || {};
+                const profileFront = profile.frontal || {};
+                const plugin = snapshot.pluginIngest || {};
+                const modeToken = String(snapshot.mode || "synthetic");
+                const isSynthetic = modeToken === "synthetic";
+                const readinessToken = String(snapshot.readinessState || "disabled_disconnected");
+                const sendGateOpen = !!snapshot.sendGateOpen;
+                const syncRequired = !!snapshot.syncRequired;
+                const ageMs = num(snapshot.ageMs, 0);
+                const sendErrors = num(snapshot.sendErrors, 0);
+                const invalidSamples = num(snapshot.invalidSamples, 0);
+                const hasErrors = sendErrors > 0 || invalidSamples > 0;
+                const pluginAckPackets = Math.max(0, Number(plugin.ackPackets || 0));
+                const pluginAckAgeMs = num(plugin.ackAgeMs, 0);
+                const pluginHasConsumers = Math.max(0, Number(plugin.consumerCount || 0)) > 0;
+                const pluginAckFresh = pluginAckPackets > 0 && pluginAckAgeMs <= 1500.0;
+                const deviceConnected = !isSynthetic && readinessToken !== "disabled_disconnected";
+
+                let headline = "Waiting for companion state";
+                let subhead = "Readiness, sync, and plugin acknowledgement will appear here before deep telemetry.";
+                let whyChanged = "Waiting for readiness state.";
+
+                if (hasErrors) {
+                  headline = "Companion needs attention";
+                  subhead = "Transport or sample errors were reported. Check the Lab surface for packet and error detail.";
+                  whyChanged = (snapshot.lastError && String(snapshot.lastError).length > 0)
+                    ? snapshot.lastError
+                    : "The companion reported send or sample errors.";
+                } else if (isSynthetic) {
+                  headline = sendGateOpen ? "Synthetic motion is streaming" : "Synthetic mode is active";
+                  subhead = sendGateOpen
+                    ? "The companion is sending simulated motion while live tracking is unavailable."
+                    : "Synthetic mode is visible by design. Press Center / Sync to open the synthetic send gate.";
+                  whyChanged = "Synthetic mode is enabled, so motion is simulated until a live headphone device is available.";
+                } else if (readinessToken === "disabled_disconnected") {
+                  headline = "Connect in-ear headphones";
+                  subhead = "The companion is waiting for a live motion device before sync can open the send gate.";
+                  whyChanged = "No live headphone motion device is connected.";
+                } else if (readinessToken !== "active_ready") {
+                  headline = "Headphones connected, waiting for a stable ready state";
+                  subhead = "Keep the device in-ear, then press Center / Sync once the motion path is ready.";
+                  whyChanged = "Device connected, but motion is not ready for streaming yet.";
+                } else if (syncRequired && !sendGateOpen) {
+                  headline = "Ready to center and stream";
+                  subhead = "Press Center / Sync to lock the forward direction and open the send gate.";
+                  whyChanged = "Center / Sync is required before the stream can reach the plugin.";
+                } else if (ageMs > 120.0) {
+                  headline = "Pose stream is stale";
+                  subhead = "The companion is not receiving fresh motion samples right now.";
+                  whyChanged = "No pose received for " + formatAgeText(ageMs) + ".";
+                } else if (!pluginAckFresh) {
+                  headline = "Streaming, waiting for plugin acknowledgement";
+                  subhead = "The send gate is open, but the plugin has not confirmed a fresh acknowledgement yet.";
+                  whyChanged = pluginHasConsumers
+                    ? "Plugin acknowledgement is " + formatAgeText(pluginAckAgeMs) + " old."
+                    : "The plugin has not confirmed a listening consumer yet.";
+                } else {
+                  headline = "Streaming to plugin";
+                  subhead = "Live motion, sync, and plugin acknowledgement are all active.";
+                  whyChanged = "Live motion is centered and the plugin is acknowledging fresh pose data.";
+                }
+
+                setText("focusHeadline", headline);
+                setText("focusSubhead", subhead);
+                setText("focusWhyChanged", whyChanged);
+                setText(
+                  "focusModeState",
+                  isSynthetic
+                    ? "Synthetic mode is active. Motion is simulated."
+                    : "Live motion from " + prettifyToken(snapshot.source || "headphone tracking", "Headphone tracking") + "."
+                );
+                setText(
+                  "focusPluginLink",
+                  pluginAckFresh
+                    ? "Plugin confirmed fresh pose delivery (" + f(pluginAckAgeMs, 1) + " ms ago)."
+                    : (pluginHasConsumers
+                      ? "Plugin is listening, but the latest confirmation is " + formatAgeText(pluginAckAgeMs) + " old."
+                      : "No plugin confirmation is visible yet.")
+                );
+
+                const modeWarning = get("focusModeWarning");
+                if (modeWarning) {
+                  modeWarning.classList.toggle("hidden", !isSynthetic);
+                }
+
+                setStepState(
+                  "focus-step-device",
+                  "focus-step-device-value",
+                  isSynthetic ? "Simulated" : (deviceConnected ? "Connected" : "Waiting"),
+                  isSynthetic ? "warning" : (deviceConnected ? "complete" : "warning")
+                );
+                setStepState(
+                  "focus-step-motion",
+                  "focus-step-motion-value",
+                  isSynthetic
+                    ? "Synthetic motion"
+                    : (readinessToken === "active_ready" ? "Ready" : (deviceConnected ? "Waiting for sync" : "Idle")),
+                  isSynthetic ? "warning" : (readinessToken === "active_ready" ? "complete" : (deviceConnected ? "active" : "idle"))
+                );
+                setStepState(
+                  "focus-step-sync",
+                  "focus-step-sync-value",
+                  sendGateOpen
+                    ? (isSynthetic ? "Synthetic center" : "Centered")
+                    : (syncRequired ? "Center required" : (readinessToken === "active_ready" ? "Auto" : "Waiting")),
+                  sendGateOpen ? "complete" : ((readinessToken === "active_ready" || isSynthetic) ? "active" : "idle")
+                );
+                setStepState(
+                  "focus-step-send",
+                  "focus-step-send-value",
+                  (sendGateOpen && readinessToken === "active_ready") ? "Streaming" : (syncRequired ? "Gate closed" : "Waiting"),
+                  (sendGateOpen && readinessToken === "active_ready") ? "complete" : ((readinessToken === "active_ready" || isSynthetic) ? "active" : "idle")
+                );
+                setStepState(
+                  "focus-step-plugin",
+                  "focus-step-plugin-value",
+                  pluginAckFresh ? "Fresh" : (pluginHasConsumers ? "Listening" : "Not confirmed"),
+                  pluginAckFresh ? "complete" : ((sendGateOpen && pluginHasConsumers) ? "active" : ((sendGateOpen || isSynthetic) ? "warning" : "idle"))
+                );
+
+                const profileSummary = (profile.subjectId && profile.subjectId !== "n/a")
+                  ? (profile.usedFallback
+                    ? "Fallback subject (" + formatMatchPercent(profile.similarityScore) + ")"
+                    : "Personalized (" + formatMatchPercent(profile.similarityScore) + ")")
+                  : "No active profile yet";
+                const profileSource = (profile.subjectId && profile.subjectId !== "n/a")
+                  ? (profileSourceLabel(profile) + " · " + profile.subjectId + ((profile.sofaRef && profile.sofaRef !== "n/a") ? (" · " + profile.sofaRef) : ""))
+                  : "Awaiting three guided captures";
+
+                setText("focusProfileSummary", profileSummary);
+                setText("focusProfileSource", profileSource);
+                setText("focusDetectedHeadphone", profile.detectedHeadphone || "n/a");
+                setText("focusProfileLeftSummary", (profileLeft.fileName || "Awaiting selection") + " | " + (profileLeft.detail || "No capture loaded"));
+                setText("focusProfileRightSummary", (profileRight.fileName || "Awaiting selection") + " | " + (profileRight.detail || "No capture loaded"));
+                setText("focusProfileFrontSummary", (profileFront.fileName || "Awaiting selection") + " | " + (profileFront.detail || "No capture loaded"));
+              }
 
               function bindViewControls() {
                 const buttons = document.querySelectorAll("#viewControls .viewBtn[data-view]");
@@ -3072,18 +3699,22 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
 
                 const ageMs = num(snapshot.ageMs, 0);
                 const hasErrors = num(snapshot.sendErrors, 0) > 0 || num(snapshot.invalidSamples, 0) > 0;
-                const readiness = readinessLabel(snapshot.readinessState);
+                const readinessToken = String(snapshot.readinessState || "disabled_disconnected");
                 const sendGateOpen = !!snapshot.sendGateOpen;
                 const syncRequired = !!snapshot.syncRequired;
+                const isSynthetic = String(snapshot.mode || "synthetic") === "synthetic";
 
                 pill.className = "";
                 if (hasErrors) {
                   pill.classList.add("error");
                   pill.textContent = "ERROR";
-                } else if (readiness === "disabled_disconnected") {
+                } else if (isSynthetic) {
+                  pill.classList.add("warn");
+                  pill.textContent = "SYNTHETIC";
+                } else if (readinessToken === "disabled_disconnected") {
                   pill.classList.add("warn");
                   pill.textContent = "DISCONNECTED";
-                } else if (readiness !== "active_ready") {
+                } else if (readinessToken !== "active_ready") {
                   pill.classList.add("warn");
                   pill.textContent = "NOT READY";
                 } else if (syncRequired && !sendGateOpen) {
@@ -3100,11 +3731,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
               }
 
               function updateMetrics(snapshot) {
-                setText("mode", snapshot.mode || "n/a");
-                setText("source", snapshot.source || "n/a");
-                setText("connection", snapshot.connection || "n/a");
+                setText("mode", modeLabel(snapshot.mode));
+                setText("source", prettifyToken(snapshot.source || "n/a", "n/a"));
+                setText("connection", prettifyToken(snapshot.connection || "n/a", "n/a"));
                 setText("destination", snapshot.destination || "n/a");
-                setText("schedulingProfile", snapshot.schedulingProfile || "n/a");
+                setText("schedulingProfile", prettifyToken(snapshot.schedulingProfile || "n/a", "n/a"));
                 setText("monitorHz", f(num(snapshot.monitorHz, 0), 0) + " Hz");
                 setText("rateHz", f(num(snapshot.rateHz, 0), 0) + " Hz");
                 setText("durationText", snapshot.durationText || "n/a");
@@ -3113,7 +3744,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 setText("packetCount", String(snapshot.packetCount ?? "0"));
                 setText("sendErrors", String(snapshot.sendErrors ?? "0"));
                 setText("invalidSamples", String(snapshot.invalidSamples ?? "0"));
-                setText("lastError", (snapshot.lastError && String(snapshot.lastError).length > 0) ? snapshot.lastError : "none");
+                setText("lastError", (snapshot.lastError && String(snapshot.lastError).length > 0) ? snapshot.lastError : "None");
 
                 const q = snapshot.quaternion || {};
                 const ypr = snapshot.yawPitchRollDeg || {};
@@ -3127,9 +3758,11 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 const outputDevice = snapshot.outputDevice || {};
                 const controls = snapshot.controls || {};
                 const profile = snapshot.profileAcquisition || {};
-                const readiness = readinessLabel(snapshot.readinessState);
+                const readinessToken = String(snapshot.readinessState || "disabled_disconnected");
+                const readiness = readinessLabel(readinessToken);
                 const sendGateOpen = !!snapshot.sendGateOpen;
                 const syncRequired = !!snapshot.syncRequired;
+                const isSynthetic = String(snapshot.mode || "synthetic") === "synthetic";
                 const syncButton = get("syncButton");
                 const syncHint = get("syncHint");
                 const profileLeft = profile.leftEar || {};
@@ -3138,7 +3771,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
 
                 setText("quatRaw", "[" + f(num(q.x), 4) + ", " + f(num(q.y), 4) + ", " + f(num(q.z), 4) + ", " + f(num(q.w, 1), 4) + "]");
                 setText("yprRaw", f(num(ypr.yaw), 2) + " / " + f(num(ypr.pitch), 2) + " / " + f(num(ypr.roll), 2) + " deg");
-                setText("frameMapping", snapshot.frameMapping || "n/a");
+                setText("frameMapping", frameMappingLabel(snapshot.frameMapping || "n/a"));
                 setText("rotRateRaw", f(num(rot.x), 2) + " / " + f(num(rot.y), 2) + " / " + f(num(rot.z), 2));
                 setText("angularSpeedDegPerSec", f(num(snapshot.angularSpeedDegPerSec), 2) + " deg/s");
                 setText("gravityG", "[" + f(num(grav.x), 3) + ", " + f(num(grav.y), 3) + ", " + f(num(grav.z), 3) + "]");
@@ -3154,8 +3787,8 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 setText("streamIntervalJitter", f(num(stream.intervalMs), 1) + " ms / " + f(num(stream.jitterMs), 2) + " ms");
                 setText("streamSeqGap", String(stream.seqGap ?? "0"));
                 setText("readinessState", readiness);
-                setText("sendGateOpen", sendGateOpen ? "open" : "closed");
-                setText("pluginIngestState", plugin.state || "n/a");
+                setText("sendGateOpen", sendGateOpen ? "Open" : "Closed");
+                setText("pluginIngestState", pluginIngestLabel(plugin.state || "n/a"));
                 setText("pluginIngestCounts", String(plugin.sourceCount ?? "0") + " / " + String(plugin.consumerCount ?? "0"));
                 setText("pluginIngestEndpoint", plugin.endpoint || "n/a");
                 setText("pluginIngestSeqAge", String(plugin.sequence ?? "0") + " / " + f(num(plugin.poseAgeMs), 1) + " ms");
@@ -3165,19 +3798,19 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 setText("outputDeviceModel", outputDevice.model || "n/a");
                 setText("outputDeviceTransport", outputDevice.transport || "n/a");
                 setText("outputDeviceSampleRateCh", f(num(outputDevice.sampleRateHz), 1) + " Hz / " + String(outputDevice.channels ?? "0"));
-                setText("outputDeviceConnected", outputDevice.connected ? "true" : "false");
-                setText("recenterOnStart", controls.recenterOnStart ? "true" : "false");
-                setText("baselineState", snapshot.baselineState || "n/a");
+                setText("outputDeviceConnected", outputDevice.connected ? "Yes" : "No");
+                setText("recenterOnStart", controls.recenterOnStart ? "Enabled" : "Disabled");
+                setText("baselineState", baselineStateLabel(snapshot.baselineState || "n/a"));
                 setText("stabilizationAlpha", f(num(controls.stabilizationAlpha), 3));
                 setText("deadbandDeg", f(num(controls.deadbandDeg), 3));
                 setText("velocityDamping", f(num(controls.velocityDamping), 3));
-                setText("profileState", profile.state || "idle");
+                setText("profileState", profileStateLabel(profile.state || "idle"));
                 setText("profileDetectedHeadphone", profile.detectedHeadphone || "n/a");
                 setText("profileCaptureCount", String(profile.captureCount ?? 0) + " / 3");
                 setText("profileSubjectId", profile.subjectId || "n/a");
                 setText("profileSofaRef", profile.sofaRef || "n/a");
-                setText("profileSimilarity", f(num(profile.similarityScore), 3));
-                setText("profileFallback", profile.usedFallback ? "fallback_subject" : "nearest_neighbor");
+                setText("profileSimilarity", formatMatchPercent(profile.similarityScore));
+                setText("profileFallback", profileSourceLabel(profile));
                 setText("profileEmbeddingHash", (profile.embeddingHash && String(profile.embeddingHash).length > 0) ? profile.embeddingHash : "n/a");
                 setText("profileLeftSummary", (profileLeft.fileName || "Awaiting selection") + " | " + (profileLeft.detail || "No capture loaded"));
                 setText("profileRightSummary", (profileRight.fileName || "Awaiting selection") + " | " + (profileRight.detail || "No capture loaded"));
@@ -3187,20 +3820,24 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 setText("profileLastAction", profile.lastAction || "Awaiting profile captures");
 
                 if (syncButton) {
-                  syncButton.disabled = readiness !== "active_ready";
+                  syncButton.disabled = readinessToken !== "active_ready";
                 }
                 if (typeof state.syncAxisFlipButtons === "function") {
                   state.syncAxisFlipButtons(snapshot.axisFlip);
                 }
                 if (syncHint) {
-                  if (readiness !== "active_ready") {
-                    syncHint.textContent = "Waiting for in-ear ready state";
+                  if (isSynthetic && !sendGateOpen && syncRequired) {
+                    syncHint.textContent = "Synthetic mode is ready. Press Center / Sync to start simulated streaming.";
+                  } else if (isSynthetic && sendGateOpen) {
+                    syncHint.textContent = "Synthetic motion is streaming to the plugin.";
+                  } else if (readinessToken !== "active_ready") {
+                    syncHint.textContent = "Waiting for a ready in-ear device.";
                   } else if (syncRequired && !sendGateOpen) {
-                    syncHint.textContent = "Ready. Press Center / Sync to open send gate";
+                    syncHint.textContent = "Ready. Press Center / Sync to start streaming.";
                   } else if (sendGateOpen) {
-                    syncHint.textContent = "Synced. Streaming pose to plugin";
+                    syncHint.textContent = "Centered. Streaming pose to plugin.";
                   } else {
-                    syncHint.textContent = "Ready";
+                    syncHint.textContent = "Ready.";
                   }
                 }
 
@@ -3219,15 +3856,17 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 const profileApplyHint = get("profileApplyHint");
                 if (profileApplyHint) {
                   if (!profile.canApply) {
-                    profileApplyHint.textContent = "Load left, right, and frontal captures to enable profile apply.";
+                    profileApplyHint.textContent = "Load left, right, and frontal captures to enable Apply.";
                   } else if (profile.appliedProfile) {
-                    profileApplyHint.textContent = "Profile written. Plugin polling can now ingest the updated CalibrationProfile.json.";
+                    profileApplyHint.textContent = "Profile written. The plugin can now load the updated CalibrationProfile.json.";
                   } else if (profile.usedFallback) {
-                    profileApplyHint.textContent = "Ready to write fallback subject because similarity stayed below threshold.";
+                    profileApplyHint.textContent = "Ready to write a fallback profile because the match stayed below threshold.";
                   } else {
-                    profileApplyHint.textContent = "Ready to write nearest-neighbor subject to CalibrationProfile.json.";
+                    profileApplyHint.textContent = "Ready to write a personalized profile to CalibrationProfile.json.";
                   }
                 }
+
+                updateFocus(snapshot);
               }
 
               function applySmoothing(snapshot) {
@@ -3303,6 +3942,7 @@ private final class CompanionMonitorWindow: NSObject, NSWindowDelegate, WKScript
                 updateThree(snapshot);
               };
 
+              bindDetailTabs();
               bindSmoothingControls();
               bindSyncControls();
               bindAxisFlipControls();

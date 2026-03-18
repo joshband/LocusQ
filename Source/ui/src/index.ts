@@ -1424,6 +1424,133 @@ function bindControlActivate(element, handler, options = {}) {
     }
 }
 
+const pointerClickFallbackSelectors = [
+    "button",
+    "[role='button']",
+    "[role='tab']",
+    "[role='switch']",
+    "[role='checkbox']",
+].join(", ");
+const pendingPointerClickFallbacks = new WeakMap();
+const recentSyntheticPointerActivations = new WeakMap();
+let pointerClickFallbackInstalled = false;
+const syntheticPointerActivationWindowMs = 400;
+
+function getPointerFallbackTimestamp() {
+    return (typeof performance !== "undefined" && typeof performance.now === "function")
+        ? performance.now()
+        : Date.now();
+}
+
+function resolvePointerClickFallbackTarget(target) {
+    if (!(target instanceof Element)) return null;
+    const candidate = target.closest(pointerClickFallbackSelectors);
+    if (!(candidate instanceof HTMLElement)) return null;
+    if (candidate instanceof HTMLSelectElement
+        || candidate instanceof HTMLInputElement
+        || candidate instanceof HTMLTextAreaElement) {
+        return null;
+    }
+    return candidate;
+}
+
+function clearPendingPointerClickFallback(target) {
+    const candidate = resolvePointerClickFallbackTarget(target);
+    if (!candidate) return;
+    pendingPointerClickFallbacks.delete(candidate);
+}
+
+function markSyntheticPointerActivation(target) {
+    recentSyntheticPointerActivations.set(
+        target,
+        getPointerFallbackTimestamp() + syntheticPointerActivationWindowMs
+    );
+}
+
+function hasRecentSyntheticPointerActivation(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    const expiry = Number(recentSyntheticPointerActivations.get(target) || 0);
+    if (expiry <= 0) return false;
+    if (expiry < getPointerFallbackTimestamp()) {
+        recentSyntheticPointerActivations.delete(target);
+        return false;
+    }
+    return true;
+}
+
+function isEmbeddedPointerActivationWorkaroundEnabled() {
+    return typeof window !== "undefined"
+        && typeof window.__JUCE__ === "object"
+        && window.__JUCE__ !== null;
+}
+
+function installPointerClickFallback() {
+    if (pointerClickFallbackInstalled || typeof document === "undefined") return;
+    pointerClickFallbackInstalled = true;
+
+    const scheduleFallbackClick = event => {
+        const target = resolvePointerClickFallbackTarget(event.target);
+        if (!target || isElementControlLocked(target)) return;
+
+        if ("button" in event && Number(event.button) !== 0) return;
+        if ("pointerType" in event) {
+            const pointerType = String(event.pointerType || "").trim().toLowerCase();
+            if (pointerType && pointerType !== "mouse" && pointerType !== "pen") return;
+        }
+
+        const clientX = Number(event.clientX);
+        const clientY = Number(event.clientY);
+        if (Number.isFinite(clientX) && Number.isFinite(clientY)) {
+            const rect = target.getBoundingClientRect();
+            const withinBounds = clientX >= rect.left
+                && clientX <= rect.right
+                && clientY >= rect.top
+                && clientY <= rect.bottom;
+            if (!withinBounds) return;
+        }
+
+        const token = getPointerFallbackTimestamp();
+        pendingPointerClickFallbacks.set(target, token);
+
+        window.setTimeout(() => {
+            if (pendingPointerClickFallbacks.get(target) !== token) return;
+            pendingPointerClickFallbacks.delete(target);
+            markSyntheticPointerActivation(target);
+            target.click();
+        }, 0);
+    };
+
+    document.addEventListener("click", event => {
+        const target = resolvePointerClickFallbackTarget(event.target);
+        if (event.isTrusted && target && hasRecentSyntheticPointerActivation(target)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            clearPendingPointerClickFallback(target);
+            return;
+        }
+        clearPendingPointerClickFallback(event.target);
+    }, true);
+    document.addEventListener("keydown", event => {
+        clearPendingPointerClickFallback(event.target);
+    }, true);
+    document.addEventListener("pointerdown", event => {
+        if (isEmbeddedPointerActivationWorkaroundEnabled()) scheduleFallbackClick(event);
+    }, true);
+    document.addEventListener("mouseup", event => {
+        if (isEmbeddedPointerActivationWorkaroundEnabled() || typeof window.PointerEvent !== "function") {
+            scheduleFallbackClick(event);
+        }
+    }, true);
+    document.addEventListener("pointerup", event => {
+        scheduleFallbackClick(event);
+    }, true);
+    document.addEventListener("mousedown", event => {
+        if (isEmbeddedPointerActivationWorkaroundEnabled() || typeof window.PointerEvent !== "function") {
+            scheduleFallbackClick(event);
+        }
+    }, true);
+}
+
 function setAnimationControlsEnabled(enabled) {
     const controls = document.getElementById("anim-controls");
     const source = document.getElementById("anim-source");
@@ -2042,13 +2169,26 @@ function getDerivedMotionSourceId() {
 function getMotionSourceLabel(sourceId) {
     switch (sourceId) {
     case "physics":
-        return "Physics";
+        return "Physics Lab";
     case "timeline":
         return "Timeline";
     case "choreography":
-        return "Choreography";
+        return "Choreography Lab";
     default:
         return "Static";
+    }
+}
+
+function getMotionLabSummary(sourceId) {
+    switch (sourceId) {
+    case "physics":
+        return "Physics Lab is active. Force, throw, and advanced motion controls are open here.";
+    case "choreography":
+        return "Choreography Lab is active. Pack apply and save stay contained here.";
+    case "timeline":
+        return "Timeline stays on the main path. Physics and choreography remain tucked here.";
+    default:
+        return "Physics and choreography stay tucked here until you need an experiment.";
     }
 }
 
@@ -2067,6 +2207,9 @@ function syncMotionSourceUI(sourceId = getDerivedMotionSourceId()) {
     const physicsPanel = document.getElementById("motion-panel-physics");
     const timelinePanel = document.getElementById("motion-panel-timeline");
     const choreographyPanel = document.getElementById("motion-panel-choreography");
+    const motionLabDrawer = document.getElementById("motion-lab-drawer");
+    const motionLabSummary = document.getElementById("motion-lab-summary");
+    const labSourceActive = sourceId === "physics" || sourceId === "choreography";
     if (physicsPanel) {
         physicsPanel.classList.toggle("active", sourceId === "physics");
         physicsPanel.classList.toggle("inactive", sourceId !== "physics");
@@ -2079,6 +2222,12 @@ function syncMotionSourceUI(sourceId = getDerivedMotionSourceId()) {
     if (choreographyPanel) {
         choreographyPanel.classList.toggle("active", sourceId === "choreography");
         choreographyPanel.classList.toggle("inactive", sourceId !== "choreography");
+    }
+    if (motionLabDrawer instanceof HTMLDetailsElement) {
+        motionLabDrawer.open = labSourceActive;
+    }
+    if (motionLabSummary) {
+        motionLabSummary.textContent = getMotionLabSummary(sourceId);
     }
 }
 
@@ -2147,7 +2296,9 @@ function updateMotionStatusChips() {
     const syncEnabled = !!getToggleValue(toggleStates.anim_sync);
 
     sourceChip.textContent = `Source: ${sourceLabel}`;
-    sourceChip.className = sourceId === "static" ? "status-chip" : "status-chip active";
+    sourceChip.className = sourceId === "static"
+        ? "status-chip"
+        : (sourceId === "timeline" ? "status-chip active" : "status-chip lab");
 
     loopChip.textContent = `Loop: ${loopEnabled ? "On" : "Off"}`;
     loopChip.className = loopEnabled ? "status-chip active" : "status-chip";
@@ -2316,6 +2467,7 @@ let authoringHistoryState = {
     undoLabel: "",
     redoLabel: "",
 };
+let authoringHistoryActionInFlight = false;
 
 const physicsPresetTargets = {
     off: {
@@ -2425,19 +2577,26 @@ function updateAuthoringHistoryButtons() {
     const undoButton = document.getElementById("timeline-undo-btn");
     const redoButton = document.getElementById("timeline-redo-btn");
 
+    const undoEnabled = authoringHistoryState.canUndo && !authoringHistoryActionInFlight;
+    const redoEnabled = authoringHistoryState.canRedo && !authoringHistoryActionInFlight;
+
     if (undoButton instanceof HTMLButtonElement) {
-        undoButton.disabled = !authoringHistoryState.canUndo;
-        undoButton.setAttribute("aria-disabled", authoringHistoryState.canUndo ? "false" : "true");
-        undoButton.title = authoringHistoryState.canUndo
+        undoButton.disabled = !undoEnabled;
+        undoButton.setAttribute("aria-disabled", undoEnabled ? "false" : "true");
+        undoButton.title = authoringHistoryActionInFlight
+            ? "Authoring history action in progress"
+            : authoringHistoryState.canUndo
             ? `Undo ${authoringHistoryState.undoLabel || "last action"}`
             : "Nothing to undo";
         undoButton.setAttribute("aria-label", undoButton.title);
     }
 
     if (redoButton instanceof HTMLButtonElement) {
-        redoButton.disabled = !authoringHistoryState.canRedo;
-        redoButton.setAttribute("aria-disabled", authoringHistoryState.canRedo ? "false" : "true");
-        redoButton.title = authoringHistoryState.canRedo
+        redoButton.disabled = !redoEnabled;
+        redoButton.setAttribute("aria-disabled", redoEnabled ? "false" : "true");
+        redoButton.title = authoringHistoryActionInFlight
+            ? "Authoring history action in progress"
+            : authoringHistoryState.canRedo
             ? `Redo ${authoringHistoryState.redoLabel || "last action"}`
             : "Nothing to redo";
         redoButton.setAttribute("aria-label", redoButton.title);
@@ -2484,12 +2643,19 @@ async function reloadAuthoringUiFromNative(options = {}) {
 
 async function performAuthoringHistoryAction(direction) {
     const normalizedDirection = direction === "redo" ? "redo" : "undo";
+    if (authoringHistoryActionInFlight) {
+        return;
+    }
+
     const nativeFn = normalizedDirection === "redo"
         ? nativeFunctions.redoAuthoringAction
         : nativeFunctions.undoAuthoringAction;
     const nativeLabel = normalizedDirection === "redo"
         ? "locusqRedoAuthoringAction"
         : "locusqUndoAuthoringAction";
+
+    authoringHistoryActionInFlight = true;
+    updateAuthoringHistoryButtons();
 
     try {
         const result = await callNative(nativeLabel, nativeFn);
@@ -2499,8 +2665,8 @@ async function performAuthoringHistoryAction(direction) {
                 preferredPresetPath: result?.preferredPresetPath || "",
                 preserveDirty: true,
             });
-            applyAuthoringHistoryStatus(result || {});
             const actionLabel = String(result?.label || `${normalizedDirection} action`).trim();
+            applyAuthoringHistoryStatus(result || {});
             setPresetStatus(
                 normalizedDirection === "redo"
                     ? `Redid: ${actionLabel}`
@@ -2523,6 +2689,9 @@ async function performAuthoringHistoryAction(direction) {
     } catch (error) {
         setPresetStatus(`Unable to ${normalizedDirection}`, true);
         console.error(`Failed to ${normalizedDirection} authoring action:`, error);
+    } finally {
+        authoringHistoryActionInFlight = false;
+        updateAuthoringHistoryButtons();
     }
 }
 
@@ -3685,6 +3854,7 @@ let sceneData = {
     rendererActive: false,
     outputChannels: 2,
     outputLayout: "stereo",
+    pluginWrapperType: hasNativeJuceBridge ? "Unknown" : "Browser Preview",
     rendererSpatialProfileRequested: "auto",
     rendererSpatialProfileActive: "auto",
     rendererSpatialProfileStage: "direct",
@@ -3798,13 +3968,13 @@ const auditionProxyProfiles = {
         signal: "bouncing_balls",
         motion: "wall_ricochet",
         levelDb: -18.0,
-        label: "Physics",
+        label: "Physics Lab",
     },
     choreography: {
         signal: "wind_chimes",
         motion: "figure8_flow",
         levelDb: -24.0,
-        label: "Choreography",
+        label: "Choreography Lab",
     },
 };
 const auditionSignalAliasDictionary = {
@@ -4608,6 +4778,7 @@ function setNativeBridgeDegradedMode(reason, detail = "") {
         dedupeKey: `native-bridge-degraded:${normalizedReason}`,
     });
     applyCalibrationStatus();
+    applyHeaderTrustBadge();
     publishOperatorDiagnosticsSnapshot();
 }
 
@@ -4636,7 +4807,7 @@ function evaluateNativeBridgeBindingContract() {
     if (!hasNativeJuceBridge) {
         setNativeBridgeDegradedMode(
             "juce_bridge_missing",
-            "window.Juce bridge unavailable; fallback wrapper is active"
+            "Native plugin services are unavailable; the shell is running in preview-safe mode"
         );
     } else if (nativeBridgeDiagnosticsState.missingCriticalBindings.length > 0) {
         setNativeBridgeDegradedMode(
@@ -4858,6 +5029,165 @@ function formatAuditionTokenLabel(value) {
         .split("_")
         .map(part => part ? (part.charAt(0).toUpperCase() + part.slice(1)) : "")
         .join(" ");
+}
+
+function hasLiveRendererSession(payload = sceneData) {
+    if (sceneTransportState.lastAcceptedSeq >= 0) return true;
+    if (!payload || typeof payload !== "object") return false;
+    return parseSnapshotSequence(payload.snapshotSeq) !== null
+        || parseProfileSyncSeq(payload.profileSyncSeq, payload.snapshotSeq) !== null;
+}
+
+function getRuntimeSurfaceContext(payload = sceneData) {
+    const safePayload = (payload && typeof payload === "object") ? payload : {};
+    const wrapperTypeRaw = String(safePayload.pluginWrapperType || "").trim();
+    const wrapperToken = normalizeAuditionToken(wrapperTypeRaw);
+    const clapWrapperToken = normalizeAuditionToken(safePayload.clapWrapperType || "");
+    const isClapInstance = !!safePayload.clapIsPluginFormat || clapWrapperToken === "clap";
+    const liveSession = hasLiveRendererSession(safePayload);
+
+    let surface = "plugin_host";
+    let label = "Plugin Host";
+
+    if (!hasNativeJuceBridge) {
+        surface = "browser_preview";
+        label = "Browser Preview";
+    } else if (isClapInstance) {
+        surface = "clap";
+        label = "CLAP";
+    } else if (wrapperToken === "auv3"
+        || wrapperToken === "audio_unit_v3"
+        || wrapperToken === "audio_unitv3"
+        || wrapperToken === "audiounitv3"
+        || (wrapperToken.includes("audiounit") && wrapperToken.includes("v3"))) {
+        surface = "auv3";
+        label = "AUv3";
+    } else if (wrapperToken.includes("audiounit")) {
+        surface = "au";
+        label = "AU";
+    } else if (wrapperToken.includes("vst3")) {
+        surface = "vst3";
+        label = "VST3";
+    } else if (wrapperToken.includes("standalone")) {
+        surface = "standalone";
+        label = "Standalone";
+    }
+
+    return {
+        surface,
+        label,
+        wrapperTypeLabel: wrapperTypeRaw || label,
+        liveSession,
+        isBrowserPreview: surface === "browser_preview",
+        isAuv3: surface === "auv3",
+        isClap: surface === "clap",
+    };
+}
+
+function getRendererNoSessionSummary(runtimeContext = getRuntimeSurfaceContext()) {
+    if (runtimeContext.isBrowserPreview) {
+        return {
+            requestedLabel: "No live session",
+            activeLabel: "Browser Preview Mode",
+            requestedDetail: "No live session · n/a",
+            activeDetail: "Browser Preview Mode · Safe defaults",
+            stageLabel: "Preview",
+            outputLabel: "Shell Only",
+            outputRoute: "Preview shell",
+            speakerMap: "Preview shell · L/R",
+            whyChanged: "Browser preview mode is showing the shell without a live plugin session.",
+            profileSource: "Preview shell defaults",
+            controlOwner: "System fallback is holding preview-safe defaults.",
+            outputSummary: "Browser preview mode. Safe defaults remain visible until a live plugin session connects.",
+            fallbackNote: "Preview mode active. Safe defaults remain visible until the plugin session connects.",
+            diagnostics: "Browser preview mode. Native diagnostics appear when a live plugin session connects.",
+        };
+    }
+
+    const degraded = runtimeState.nativeBridgeDegraded;
+    return {
+        requestedLabel: "Waiting for session",
+        activeLabel: "Safe defaults",
+        requestedDetail: "Waiting for session · n/a",
+        activeDetail: "Safe defaults · n/a",
+        stageLabel: degraded ? "Limited" : "Pending",
+        outputLabel: "Pending",
+        outputRoute: "Waiting for session",
+        speakerMap: "Waiting for session",
+        whyChanged: degraded
+            ? "Native plugin services are limited. Safe defaults remain visible while the session reconnects."
+            : "Waiting for the first renderer snapshot from the plugin session.",
+        profileSource: degraded
+            ? "System fallback while native services recover"
+            : "Live renderer truth has not arrived yet.",
+        controlOwner: degraded
+            ? "System fallback is holding the active path."
+            : "Waiting for an authority source.",
+        outputSummary: degraded
+            ? "Native plugin services are limited. Safe defaults remain visible while the session reconnects."
+            : "Renderer session not ready yet. Safe defaults remain visible.",
+        fallbackNote: degraded
+            ? "Native plugin services are limited. Safe defaults remain visible while the session reconnects."
+            : "Waiting for a live renderer session. Safe defaults remain visible.",
+        diagnostics: degraded
+            ? "Native services are limited. Diagnostics update when the session recovers."
+            : "Waiting for live diagnostics from the plugin session.",
+    };
+}
+
+function isAuv3FormatConstraintActive(options = {}) {
+    const {
+        runtimeContext = getRuntimeSurfaceContext(),
+        authorityFallbackReasonToken = "none",
+        hpProfileFallbackReasonToken = "none",
+        requestedHeadphoneProfile = "generic",
+        activeHeadphoneProfile = "generic",
+    } = options;
+
+    if (!runtimeContext.isAuv3) return false;
+
+    const authorityToken = normalizeAuditionToken(authorityFallbackReasonToken);
+    const profileToken = normalizeAuditionToken(hpProfileFallbackReasonToken);
+
+    if (authorityToken === "custom_sofa_missing"
+        || authorityToken === "profile_unavailable"
+        || profileToken === "custom_sofa_missing"
+        || profileToken === "profile_unavailable") {
+        return true;
+    }
+
+    return requestedHeadphoneProfile === "custom_sofa" && activeHeadphoneProfile !== "custom_sofa";
+}
+
+function getAuv3ConstraintWhyChangedSummary(options = {}) {
+    const {
+        runtimeContext = getRuntimeSurfaceContext(),
+        authorityFallbackReasonToken = "none",
+        hpProfileFallbackReasonToken = "none",
+        requestedHeadphoneProfile = "generic",
+        activeHeadphoneProfile = "generic",
+    } = options;
+
+    if (!isAuv3FormatConstraintActive({
+        runtimeContext,
+        authorityFallbackReasonToken,
+        hpProfileFallbackReasonToken,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    })) {
+        return "";
+    }
+
+    const authorityToken = normalizeAuditionToken(authorityFallbackReasonToken);
+    const profileToken = normalizeAuditionToken(hpProfileFallbackReasonToken);
+
+    if (authorityToken === "custom_sofa_missing"
+        || profileToken === "custom_sofa_missing"
+        || (requestedHeadphoneProfile === "custom_sofa" && activeHeadphoneProfile !== "custom_sofa")) {
+        return "Limited in AUv3 app extension. This session cannot load the requested Custom SOFA file.";
+    }
+
+    return "Limited in AUv3 app extension. The requested profile is unavailable in this session.";
 }
 
 function resolveAuditionSignalId(value) {
@@ -6033,6 +6363,354 @@ function setRendererText(id, text) {
     element.textContent = text;
 }
 
+function formatRendererDurationLabel(valueMs) {
+    const value = Number(valueMs);
+    if (!Number.isFinite(value) || value < 0.0) return "n/a";
+    if (value >= 1000.0) {
+        const seconds = value / 1000.0;
+        return `${seconds >= 10.0 ? seconds.toFixed(0) : seconds.toFixed(1)} s`;
+    }
+    return `${value >= 100.0 ? value.toFixed(0) : value.toFixed(1)} ms`;
+}
+
+function getRendererAuthoritySourceSummary(sourceToken) {
+    const token = normalizeAuditionToken(sourceToken);
+    if (!token) return "Unknown";
+    if ([
+        "scene",
+        "scene_state",
+        "scene_state_bridge",
+        "scene_snapshot",
+        "scene_metadata",
+    ].includes(token)) {
+        return "Scene telemetry";
+    }
+    if ([
+        "plugin",
+        "plugin_state",
+        "plugin_profile",
+        "plugin_sync",
+    ].includes(token)) {
+        return "Plugin state";
+    }
+    if ([
+        "profile_sync",
+        "calibration_profile",
+        "profile_catalog",
+    ].includes(token)) {
+        return "Profile data";
+    }
+    if (token === "native_fallback") {
+        return "Fallback defaults";
+    }
+    return formatAuditionTokenLabel(token);
+}
+
+function getRendererAuthorityLockReasonSummary(lockReasonToken) {
+    const token = normalizeAuditionToken(lockReasonToken);
+    if (!token || token === "none") {
+        return "No manual lock is active";
+    }
+    switch (token) {
+        case "profile_mismatch":
+        case "requested_active_mismatch":
+            return "Requested and active paths do not match yet";
+        case "host_safe_mode":
+        case "host_safe_fallback":
+        case "safe_mode":
+        case "fallback_guard":
+            return "Host-safe fallback is holding the active path";
+        case "stale_authority":
+        case "stale_snapshot":
+            return "The last good path is being held because authority telemetry is stale";
+        case "manual_lock":
+        case "user_locked":
+            return "A manual lock is holding the active path";
+        default:
+            return `${formatAuditionTokenLabel(token)} is holding the active path`;
+    }
+}
+
+function getRendererFallbackReasonSummary(reasonToken, fallbackTargetLabel = "") {
+    const token = normalizeAuditionToken(reasonToken);
+    if (!token || token === "none") return "";
+
+    let summary = "";
+    switch (token) {
+        case "profile_unavailable":
+            summary = "the requested profile is unavailable";
+            break;
+        case "profile_mismatch":
+        case "requested_active_mismatch":
+            summary = "the requested profile has not aligned yet";
+            break;
+        case "steam_audio_unavailable":
+        case "steam_audio_missing":
+            summary = "Steam Audio is unavailable";
+            break;
+        case "custom_sofa_missing":
+            summary = "the custom SOFA file is unavailable";
+            break;
+        case "catalog_fallback":
+            summary = "the requested profile fell back to the catalog default";
+            break;
+        case "stale_authority":
+        case "authority_stale":
+            summary = "authority telemetry is stale";
+            break;
+        case "pose_stale":
+        case "headtracking_pose_stale":
+            summary = "head-tracking pose is stale";
+            break;
+        case "native_bridge_degraded":
+            summary = "the native bridge is degraded";
+            break;
+        default:
+            summary = `${formatAuditionTokenLabel(token).toLowerCase()} triggered the safe fallback`;
+            break;
+    }
+
+    const targetLabel = String(fallbackTargetLabel || "").trim();
+    const normalizedTarget = normalizeAuditionToken(targetLabel);
+    if (targetLabel && normalizedTarget && normalizedTarget !== "none") {
+        return `${summary} to ${targetLabel}`;
+    }
+    return summary;
+}
+
+function getRendererProfileSourceSummary(options = {}) {
+    const {
+        runtimeContext = getRuntimeSurfaceContext(),
+        liveRendererSession = true,
+        hasProfilePayload = false,
+        activeHeadphoneProfile = "",
+        requestedHeadphoneProfile = "",
+        hpCustomSofaRef = "",
+        hpProfileFallbackReasonToken = "none",
+        authorityFallbackReasonToken = "none",
+        hpVerificationFallbackTargetToken = "none",
+    } = options;
+
+    if (!liveRendererSession) {
+        return getRendererNoSessionSummary(runtimeContext).profileSource;
+    }
+
+    if (!hasProfilePayload) {
+        return "Fallback-safe default";
+    }
+
+    const activeProfileId = normalizeAuditionToken(activeHeadphoneProfile) || "generic";
+    const requestedProfileId = normalizeAuditionToken(requestedHeadphoneProfile) || activeProfileId;
+    const activeProfileLabel = getRendererHeadphoneProfileLabel(activeProfileId);
+    const customSofaRef = String(hpCustomSofaRef || "").trim();
+    const profileFallbackToken = normalizeAuditionToken(hpProfileFallbackReasonToken) || "none";
+    const verificationFallbackTarget = normalizeAuditionToken(hpVerificationFallbackTargetToken) || "none";
+
+    if (isAuv3FormatConstraintActive({
+        runtimeContext,
+        authorityFallbackReasonToken,
+        hpProfileFallbackReasonToken,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    })) {
+        if (activeHeadphoneProfile === "custom_sofa" && customSofaRef) {
+            return `Built-in profile because AUv3 cannot load ${customSofaRef}`;
+        }
+        if (requestedHeadphoneProfile === "custom_sofa" || profileFallbackToken === "custom_sofa_missing") {
+            return "Built-in profile because AUv3 cannot load the requested Custom SOFA file";
+        }
+        return "Built-in profile because the requested AUv3 session profile is unavailable";
+    }
+
+    if (activeProfileId === "custom_sofa") {
+        return customSofaRef ? `Custom SOFA file · ${customSofaRef}` : "Custom SOFA file";
+    }
+    if (profileFallbackToken !== "none" || verificationFallbackTarget !== "none") {
+        return `Catalog fallback · ${activeProfileLabel}`;
+    }
+    if (requestedProfileId === activeProfileId) {
+        return `Requested profile match · ${activeProfileLabel}`;
+    }
+    return `Active catalog profile · ${activeProfileLabel}`;
+}
+
+function getRendererControlOwnerSummary(options = {}) {
+    const {
+        runtimeContext = getRuntimeSurfaceContext(),
+        liveRendererSession = true,
+        hasProfilePayload = false,
+        authorityPayloadPresent = false,
+        authoritySourceToken = "",
+        authorityStatusToken = "",
+        authorityFallbackReasonToken = "none",
+        hpProfileFallbackReasonToken = "none",
+        requestedHeadphoneProfile = "generic",
+        activeHeadphoneProfile = "generic",
+    } = options;
+
+    if (!liveRendererSession) {
+        return getRendererNoSessionSummary(runtimeContext).controlOwner;
+    }
+
+    if (!hasProfilePayload) {
+        return "Fallback defaults are holding the active path";
+    }
+
+    const sourceSummary = getRendererAuthoritySourceSummary(authoritySourceToken);
+    const statusToken = normalizeAuditionToken(authorityStatusToken);
+
+    if (isAuv3FormatConstraintActive({
+        runtimeContext,
+        authorityFallbackReasonToken,
+        hpProfileFallbackReasonToken,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    })) {
+        return "Format constraint is holding the active path (limited in AUv3).";
+    }
+
+    if (!authorityPayloadPresent) {
+        return "Scene telemetry is driving the active path";
+    }
+    if (statusToken === "authority_locked") {
+        return `${sourceSummary} is holding the active path`;
+    }
+    if (statusToken === "authority_fallback" || sourceSummary === "Fallback defaults") {
+        return `${sourceSummary} is driving the safe fallback`;
+    }
+    if (statusToken === "authority_unavailable") {
+        return "Fallback defaults are holding the active path";
+    }
+    if (statusToken === "authority_stale_warn") {
+        return `${sourceSummary} is holding the last confirmed path`;
+    }
+    return `${sourceSummary} is driving the active path`;
+}
+
+function getRendererWhyChangedSummary(options = {}) {
+    const {
+        runtimeContext = getRuntimeSurfaceContext(),
+        liveRendererSession = true,
+        hasProfilePayload = false,
+        requestedProfileLabel = "Auto",
+        activeProfileLabel = "Auto",
+        requestedHeadphoneLabel = "Stereo Downmix / Generic",
+        activeHeadphoneLabel = "Stereo Downmix / Generic",
+        stageLabel = "Direct",
+        stageDirect = true,
+        profileAligned = true,
+        authorityPayloadPresent = false,
+        authorityStatusToken = "",
+        authorityLockReasonToken = "",
+        authoritySnapshotAgeMs = 0.0,
+        authorityFallbackReasonToken = "none",
+        headTrackingPayloadPresent = false,
+        headTrackingEnabled = false,
+        headTrackingPoseAvailable = false,
+        headTrackingPoseStale = false,
+        headTrackingAgeMs = 0.0,
+        hpProfileFallbackReasonToken = "none",
+        hpVerificationFallbackTargetToken = "none",
+        requestedHeadphoneProfile = "generic",
+        activeHeadphoneProfile = "generic",
+    } = options;
+
+    if (!liveRendererSession) {
+        return getRendererNoSessionSummary(runtimeContext).whyChanged;
+    }
+
+    if (!hasProfilePayload) {
+        return "Renderer telemetry has not arrived yet. Safe defaults remain visible.";
+    }
+
+    if (headTrackingPayloadPresent && headTrackingEnabled && headTrackingPoseAvailable && headTrackingPoseStale) {
+        return `Head-tracking pose is stale (${formatRendererDurationLabel(headTrackingAgeMs)}). The last safe orientation is being held.`;
+    }
+
+    const auv3ConstraintSummary = getAuv3ConstraintWhyChangedSummary({
+        runtimeContext,
+        authorityFallbackReasonToken,
+        hpProfileFallbackReasonToken,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    });
+    if (auv3ConstraintSummary) {
+        return auv3ConstraintSummary;
+    }
+
+    const fallbackTargetLabel = normalizeAuditionToken(hpVerificationFallbackTargetToken)
+        ? formatAuditionTokenLabel(hpVerificationFallbackTargetToken)
+        : "";
+    const fallbackReasonText = getRendererFallbackReasonSummary(
+        normalizeAuditionToken(authorityFallbackReasonToken) !== "none"
+            ? authorityFallbackReasonToken
+            : hpProfileFallbackReasonToken,
+        fallbackTargetLabel
+    );
+    if (fallbackReasonText) {
+        return `Active render path changed because ${fallbackReasonText}.`;
+    }
+
+    const statusToken = normalizeAuditionToken(authorityStatusToken);
+    const lockReasonToken = normalizeAuditionToken(authorityLockReasonToken);
+    if (authorityPayloadPresent && statusToken === "authority_locked" && lockReasonToken && lockReasonToken !== "none") {
+        return `${getRendererAuthorityLockReasonSummary(authorityLockReasonToken)}.`;
+    }
+
+    if (authorityPayloadPresent && statusToken === "authority_stale_warn") {
+        return `Authority telemetry is stale (${formatRendererDurationLabel(authoritySnapshotAgeMs)}). The last safe active path is being held.`;
+    }
+
+    if (!profileAligned || requestedHeadphoneLabel !== activeHeadphoneLabel) {
+        return `Requested ${requestedProfileLabel} / ${requestedHeadphoneLabel}; active ${activeProfileLabel} / ${activeHeadphoneLabel}.`;
+    }
+
+    if (!stageDirect) {
+        return `Requested and active profiles match, but the render stage is ${stageLabel}.`;
+    }
+
+    return "Requested and active render paths match.";
+}
+
+function getRendererLabSummary(options = {}) {
+    const {
+        hasProfilePayload = false,
+        outputChannels = 2,
+        topologyLabel = "Stereo",
+        headTrackingPayloadPresent = false,
+        headTrackingEnabled = false,
+        headTrackingPoseAvailable = false,
+        headTrackingPoseStale = false,
+        hpVerificationPayloadPresent = false,
+        hpScoreChipLabel = "UNAVAILABLE",
+    } = options;
+
+    if (!hasProfilePayload) {
+        return "Output, audition, and diagnostics will populate when renderer telemetry arrives.";
+    }
+
+    const summaryParts = [`${outputChannels}ch ${topologyLabel}`];
+    if (!headTrackingPayloadPresent) {
+        summaryParts.push("head tracking pending");
+    } else if (!headTrackingEnabled) {
+        summaryParts.push("head tracking off");
+    } else if (headTrackingPoseAvailable && !headTrackingPoseStale) {
+        summaryParts.push("head tracking live");
+    } else if (headTrackingPoseAvailable) {
+        summaryParts.push("head tracking stale");
+    } else {
+        summaryParts.push("head tracking waiting");
+    }
+
+    if (!hpVerificationPayloadPresent) {
+        summaryParts.push("verification pending");
+    } else {
+        summaryParts.push(`verification ${String(hpScoreChipLabel || "UNAVAILABLE").toLowerCase()}`);
+    }
+
+    return summaryParts.join(" · ");
+}
+
 function setRendererSteamDiagnosticsExpanded(expanded) {
     rendererSteamDiagnosticsExpanded = !!expanded;
     const content = document.getElementById("rend-steam-content");
@@ -6345,10 +7023,12 @@ function updateRendererPanelShell(data = sceneData) {
     if (payloadProfileSeq !== null) {
         profileCoherenceState.lastRendererShellSeq = payloadProfileSeq;
     }
+    const runtimeContext = getRuntimeSurfaceContext(payload);
+    const liveRendererSession = runtimeContext.liveSession;
     const hasProfilePayload = hasRendererProfilePayload(payload);
+    const operatorHasProfilePayload = hasProfilePayload && liveRendererSession;
+    const noSessionSummary = liveRendererSession ? null : getRendererNoSessionSummary(runtimeContext);
     const outputChannels = clamp(Math.round(Number(payload.outputChannels) || 2), 1, 16);
-    const outputLayoutId = normalizeAuditionToken(payload.outputLayout || "stereo") || "stereo";
-    const outputLayoutLabel = formatAuditionTokenLabel(outputLayoutId);
     const topologyId = resolveRendererTopologyId(payload);
     const topologyLabel = getCalibrationTopologyLabel(topologyId, true);
     const outputRouteLabels = buildRendererOutputRouteLabels(payload, outputChannels, topologyId);
@@ -6386,37 +7066,61 @@ function updateRendererPanelShell(data = sceneData) {
     const profileAligned = requestedProfileId === activeProfileId;
     const stageDirect = stageId === "direct";
 
-    setRendererChipState(
-        "rend-chip-panel-state",
-        hasProfilePayload ? "Synced" : "Awaiting Payload",
-        hasProfilePayload ? "ok" : "neutral"
-    );
-    setRendererChipState("rend-chip-profile-req", `Req: ${requestedProfileLabel}`, "active");
-    setRendererChipState(
-        "rend-chip-profile-active",
-        `Active: ${activeProfileLabel}`,
-        profileAligned ? "ok" : "warning"
-    );
-    setRendererChipState(
-        "rend-chip-profile-stage",
-        `Stage: ${stageLabel}`,
-        stageDirect ? "ok" : "warning"
-    );
-    setRendererChipState(
-        "rend-chip-output",
-        `Out: ${outputChannels}ch ${topologyLabel}`,
-        "neutral"
-    );
+    if (!liveRendererSession && noSessionSummary) {
+        setRendererChipState(
+            "rend-chip-panel-state",
+            runtimeContext.isBrowserPreview ? "Preview" : "Waiting",
+            runtimeContext.isBrowserPreview ? "warning" : "neutral"
+        );
+        setRendererChipState("rend-chip-profile-req", `Req: ${runtimeContext.isBrowserPreview ? "No Session" : "Waiting"}`, "neutral");
+        setRendererChipState(
+            "rend-chip-profile-active",
+            `Active: ${runtimeContext.isBrowserPreview ? "Preview" : "Safe Defaults"}`,
+            "warning"
+        );
+        setRendererChipState("rend-chip-profile-stage", `Stage: ${noSessionSummary.stageLabel}`, "warning");
+        setRendererChipState("rend-chip-output", `Out: ${noSessionSummary.outputLabel}`, "neutral");
 
-    setRendererText("rend-profile-requested", `${requestedProfileLabel} · ${requestedHeadphoneLabel}`);
-    setRendererText("rend-profile-active", `${activeProfileLabel} · ${activeHeadphoneLabel}`);
-    setRendererText("rend-profile-stage", stageLabel);
-    setRendererText("rend-output-route", outputRouteText);
-    setRendererText("rend-speaker-map", `${topologyLabel} · ${outputRouteText}`);
+        setRendererText("rend-profile-requested", noSessionSummary.requestedDetail);
+        setRendererText("rend-profile-active", noSessionSummary.activeDetail);
+        setRendererText("rend-profile-stage", noSessionSummary.stageLabel);
+        setRendererText("rend-output-route", noSessionSummary.outputRoute);
+        setRendererText("rend-speaker-map", noSessionSummary.speakerMap);
+    } else {
+        setRendererChipState(
+            "rend-chip-panel-state",
+            operatorHasProfilePayload ? "Synced" : "Awaiting Payload",
+            operatorHasProfilePayload ? "ok" : "neutral"
+        );
+        setRendererChipState("rend-chip-profile-req", `Req: ${requestedProfileLabel}`, "active");
+        setRendererChipState(
+            "rend-chip-profile-active",
+            `Active: ${activeProfileLabel}`,
+            profileAligned ? "ok" : "warning"
+        );
+        setRendererChipState(
+            "rend-chip-profile-stage",
+            `Stage: ${stageLabel}`,
+            stageDirect ? "ok" : "warning"
+        );
+        setRendererChipState(
+            "rend-chip-output",
+            `Out: ${outputChannels}ch ${topologyLabel}`,
+            "neutral"
+        );
 
-    const outputSummary = hasProfilePayload
-        ? `Layout ${outputLayoutLabel} · Topology ${topologyLabel} (${outputChannels}ch) · Route ${outputRouteText} · Headphone ${activeHeadphoneLabel}${profileAligned ? "" : ` (requested ${requestedHeadphoneLabel})`}`
-        : "Renderer payload unavailable. Showing fallback-safe control defaults.";
+        setRendererText("rend-profile-requested", `${requestedProfileLabel} · ${requestedHeadphoneLabel}`);
+        setRendererText("rend-profile-active", `${activeProfileLabel} · ${activeHeadphoneLabel}`);
+        setRendererText("rend-profile-stage", stageLabel);
+        setRendererText("rend-output-route", outputRouteText);
+        setRendererText("rend-speaker-map", `${topologyLabel} · ${outputRouteText}`);
+    }
+
+    const outputSummary = (!liveRendererSession && noSessionSummary)
+        ? noSessionSummary.outputSummary
+        : operatorHasProfilePayload
+            ? `Active path ${activeProfileLabel} with ${activeHeadphoneLabel}. Output ${outputChannels}ch ${topologyLabel} on ${outputRouteText}${profileAligned && requestedHeadphoneLabel === activeHeadphoneLabel ? "." : `. Requested ${requestedProfileLabel} with ${requestedHeadphoneLabel}.`}`
+            : "Renderer payload unavailable. Showing fallback-safe control defaults.";
     setRendererText("rend-output-summary", outputSummary);
 
     updateRendererSpeakerReadouts(payload, previewRouteLabels, previewSlots, previewSlots.length);
@@ -6424,8 +7128,11 @@ function updateRendererPanelShell(data = sceneData) {
     const fallbackNote = document.getElementById("rend-fallback-note");
     if (fallbackNote) {
         fallbackNote.classList.remove("warning");
-        if (!hasProfilePayload) {
-            fallbackNote.textContent = "Awaiting renderer payload from scene-state bridge.";
+        if (!liveRendererSession && noSessionSummary) {
+            fallbackNote.textContent = noSessionSummary.fallbackNote;
+            fallbackNote.classList.add("warning");
+        } else if (!operatorHasProfilePayload) {
+            fallbackNote.textContent = "Waiting for renderer truth from the live plugin session.";
             fallbackNote.classList.add("warning");
         } else if (!profileAligned || !stageDirect) {
             fallbackNote.textContent = `Fallback observed: requested ${requestedProfileLabel}, active ${activeProfileLabel}, stage ${stageLabel}.`;
@@ -6474,7 +7181,7 @@ function updateRendererPanelShell(data = sceneData) {
         setRendererChipState("rend-steam-chip", "FALLBACK", "warning");
         setRendererText(
             "rend-steam-detail",
-            `requested Steam binaural but backend unavailable · stage=${steamStageLabel}${steamMissingSymbol ? ` · missing=${steamMissingSymbol}` : ""}`
+            `Requested Steam binaural, but the spatial engine is unavailable on this path · stage=${steamStageLabel}${steamMissingSymbol ? ` · missing=${steamMissingSymbol}` : ""}`
         );
     } else {
         setRendererChipState("rend-steam-chip", steamCompiled ? "IDLE" : "NOT COMPILED", "neutral");
@@ -6661,22 +7368,42 @@ function updateRendererPanelShell(data = sceneData) {
     const authorityFallbackReasonLabel = formatAuditionTokenLabel(authorityFallbackReasonToken);
     const authorityAgeText = `${authoritySnapshotAgeMs.toFixed(1)} ms`;
 
-    if (!authorityPayloadPresent) {
+    if (!liveRendererSession && noSessionSummary) {
+        setRendererChipState("rend-auth-chip", runtimeContext.isBrowserPreview ? "PREVIEW" : "WAITING", runtimeContext.isBrowserPreview ? "warning" : "neutral");
+        setRendererText(
+            "rend-auth-detail",
+            runtimeContext.isBrowserPreview
+                ? "Preview shell only. Authority diagnostics appear with a live plugin session."
+                : "Waiting for a live authority snapshot from the plugin session."
+        );
+        setRendererText("rend-auth-source", runtimeContext.isBrowserPreview ? "System fallback" : "Waiting for session");
+        setRendererText("rend-auth-status-class", runtimeContext.isBrowserPreview ? "Preview mode" : "Waiting for session");
+        setRendererText("rend-auth-lock-reason", "n/a");
+        setRendererText("rend-auth-snapshot-age", "n/a");
+        setRendererText("rend-auth-fallback-reason", "n/a");
+        setRendererText("rend-auth-replay-seq", "0");
+    } else if (!authorityPayloadPresent) {
         setRendererChipState("rend-auth-chip", "UNAVAILABLE", "neutral");
         setRendererText("rend-auth-detail", "Awaiting authority diagnostics payload.");
+        setRendererText("rend-auth-source", "System fallback");
+        setRendererText("rend-auth-status-class", "Waiting for authority");
+        setRendererText("rend-auth-lock-reason", "n/a");
+        setRendererText("rend-auth-snapshot-age", "n/a");
+        setRendererText("rend-auth-fallback-reason", "n/a");
+        setRendererText("rend-auth-replay-seq", "0");
     } else {
         setRendererChipState("rend-auth-chip", authorityChipLabel, authorityChipClass);
         setRendererText(
             "rend-auth-detail",
-            `source=${authoritySourceLabel} · class=${authorityStatusLabel} · age=${authorityAgeText} · lock=${authorityLockReasonLabel} · fallback=${authorityFallbackReasonLabel}`
+            `Owner source ${authoritySourceLabel} · status ${authorityStatusLabel} · snapshot ${authorityAgeText} · lock ${authorityLockReasonLabel} · fallback ${authorityFallbackReasonLabel}`
         );
+        setRendererText("rend-auth-source", authoritySourceLabel);
+        setRendererText("rend-auth-status-class", authorityStatusLabel);
+        setRendererText("rend-auth-lock-reason", authorityLockReasonLabel);
+        setRendererText("rend-auth-snapshot-age", authorityAgeText);
+        setRendererText("rend-auth-fallback-reason", authorityFallbackReasonLabel);
+        setRendererText("rend-auth-replay-seq", String(authorityReplaySeq));
     }
-    setRendererText("rend-auth-source", authoritySourceLabel);
-    setRendererText("rend-auth-status-class", authorityStatusLabel);
-    setRendererText("rend-auth-lock-reason", authorityLockReasonLabel);
-    setRendererText("rend-auth-snapshot-age", authorityAgeText);
-    setRendererText("rend-auth-fallback-reason", authorityFallbackReasonLabel);
-    setRendererText("rend-auth-replay-seq", String(authorityReplaySeq));
 
     const hpVerificationPayloadPresent = hasRendererHeadphoneVerificationPayload(payload);
     const hpCatalogVersion = String(payload.rendererHeadphoneProfileCatalogVersion || "").trim();
@@ -6752,7 +7479,30 @@ function updateRendererPanelShell(data = sceneData) {
         ? `${hpConfidenceMetric.value.toFixed(3)} (${Math.round(hpConfidenceMetric.value * 100)}%)`
         : "n/a";
 
-    if (!hpVerificationPayloadPresent) {
+    if (!liveRendererSession && noSessionSummary) {
+        setRendererChipState("rend-hpver-chip", runtimeContext.isBrowserPreview ? "PREVIEW" : "WAITING", "neutral");
+        setRendererText(
+            "rend-hpver-detail",
+            runtimeContext.isBrowserPreview
+                ? "Preview shell only. Verification diagnostics appear with a live plugin session."
+                : "Waiting for live headphone verification diagnostics."
+        );
+        setRendererText("rend-hpver-catalog", "n/a");
+        setRendererText("rend-hpver-profile-route", "n/a");
+        setRendererText("rend-hpver-fallback-reason", "n/a");
+        setRendererText("rend-hpver-fallback-target", "n/a");
+        setRendererText("rend-hpver-custom-sofa", "n/a");
+        setRendererText("rend-hpver-calibration-route", "n/a");
+        setRendererText("rend-hpver-calibration-stage", "n/a");
+        setRendererText("rend-hpver-calibration-engine", "n/a");
+        setRendererText("rend-hpver-calibration-fallback", "n/a");
+        setRendererText("rend-hpver-schema", "n/a");
+        setRendererText("rend-hpver-stage", "n/a");
+        setRendererText("rend-hpver-score-status", "n/a");
+        setRendererText("rend-hpver-scores", "FB n/a · EL n/a · EXT n/a");
+        setRendererText("rend-hpver-confidence", "n/a");
+        setRendererText("rend-hpver-latency", "n/a");
+    } else if (!hpVerificationPayloadPresent) {
         setRendererChipState("rend-hpver-chip", "UNAVAILABLE", "neutral");
         setRendererText("rend-hpver-detail", "Awaiting headphone verification diagnostics payload.");
     } else {
@@ -6761,22 +7511,103 @@ function updateRendererPanelShell(data = sceneData) {
             "rend-hpver-detail",
             `stage=${hpVerificationStageLabel} · score=${hpVerificationScoreStatusLabel} · fallback=${hpVerificationFallbackReasonLabel}${hpVerificationFallbackTargetToken !== "none" ? ` -> ${hpVerificationFallbackTargetLabel}` : ""}`
         );
+        setRendererText("rend-hpver-catalog", hpCatalogVersion || "Unavailable");
+        setRendererText("rend-hpver-profile-route", hpProfileRouteText);
+        setRendererText("rend-hpver-fallback-reason", hpVerificationFallbackReasonLabel);
+        setRendererText("rend-hpver-fallback-target", hpVerificationFallbackTargetLabel);
+        setRendererText("rend-hpver-custom-sofa", hpCustomSofaRef || "none");
+        setRendererText("rend-hpver-calibration-route", hpCalibrationRouteText);
+        setRendererText("rend-hpver-calibration-stage", hpCalibrationStageLabel);
+        setRendererText("rend-hpver-calibration-engine", hpCalibrationEngineText);
+        setRendererText("rend-hpver-calibration-fallback", hpCalibrationFallbackDetail);
+        setRendererText("rend-hpver-schema", hpVerificationSchema || hpCalibrationSchema || "Unavailable");
+        setRendererText("rend-hpver-stage", hpVerificationStageLabel);
+        setRendererText("rend-hpver-score-status", hpVerificationScoreStatusLabel);
+        setRendererText("rend-hpver-scores", hpScoreSummaryText);
+        setRendererText("rend-hpver-confidence", hpConfidenceText);
+        setRendererText("rend-hpver-latency", hpVerificationLatencyText);
     }
-    setRendererText("rend-hpver-catalog", hpCatalogVersion || "Unavailable");
-    setRendererText("rend-hpver-profile-route", hpProfileRouteText);
-    setRendererText("rend-hpver-fallback-reason", hpVerificationFallbackReasonLabel);
-    setRendererText("rend-hpver-fallback-target", hpVerificationFallbackTargetLabel);
-    setRendererText("rend-hpver-custom-sofa", hpCustomSofaRef || "none");
-    setRendererText("rend-hpver-calibration-route", hpCalibrationRouteText);
-    setRendererText("rend-hpver-calibration-stage", hpCalibrationStageLabel);
-    setRendererText("rend-hpver-calibration-engine", hpCalibrationEngineText);
-    setRendererText("rend-hpver-calibration-fallback", hpCalibrationFallbackDetail);
-    setRendererText("rend-hpver-schema", hpVerificationSchema || hpCalibrationSchema || "Unavailable");
-    setRendererText("rend-hpver-stage", hpVerificationStageLabel);
-    setRendererText("rend-hpver-score-status", hpVerificationScoreStatusLabel);
-    setRendererText("rend-hpver-scores", hpScoreSummaryText);
-    setRendererText("rend-hpver-confidence", hpConfidenceText);
-    setRendererText("rend-hpver-latency", hpVerificationLatencyText);
+
+    const profileSourceSummary = getRendererProfileSourceSummary({
+        runtimeContext,
+        liveRendererSession,
+        hasProfilePayload,
+        activeHeadphoneProfile,
+        requestedHeadphoneProfile,
+        hpCustomSofaRef,
+        hpProfileFallbackReasonToken,
+        authorityFallbackReasonToken,
+        hpVerificationFallbackTargetToken,
+    });
+    const controlOwnerSummary = getRendererControlOwnerSummary({
+        runtimeContext,
+        liveRendererSession,
+        hasProfilePayload,
+        authorityPayloadPresent,
+        authoritySourceToken,
+        authorityStatusToken,
+        authorityFallbackReasonToken,
+        hpProfileFallbackReasonToken,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    });
+    const whyChangedSummary = getRendererWhyChangedSummary({
+        runtimeContext,
+        liveRendererSession,
+        hasProfilePayload,
+        requestedProfileLabel,
+        activeProfileLabel,
+        requestedHeadphoneLabel,
+        activeHeadphoneLabel,
+        stageLabel,
+        stageDirect,
+        profileAligned,
+        authorityPayloadPresent,
+        authorityStatusToken,
+        authorityLockReasonToken,
+        authoritySnapshotAgeMs,
+        authorityFallbackReasonToken,
+        headTrackingPayloadPresent,
+        headTrackingEnabled,
+        headTrackingPoseAvailable,
+        headTrackingPoseStale,
+        headTrackingAgeMs,
+        hpProfileFallbackReasonToken,
+        hpVerificationFallbackTargetToken,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+    });
+    const labSummaryText = getRendererLabSummary({
+        hasProfilePayload,
+        outputChannels,
+        topologyLabel,
+        headTrackingPayloadPresent,
+        headTrackingEnabled,
+        headTrackingPoseAvailable,
+        headTrackingPoseStale,
+        hpVerificationPayloadPresent,
+        hpScoreChipLabel,
+    });
+    const rendererTrustConcern = !liveRendererSession
+        || !operatorHasProfilePayload
+        || !profileAligned
+        || requestedHeadphoneLabel !== activeHeadphoneLabel
+        || !stageDirect
+        || authorityFallbackReasonToken !== "none"
+        || (authorityPayloadPresent && authorityStatusToken !== "authority_ok")
+        || (headTrackingPayloadPresent && headTrackingEnabled && headTrackingPoseAvailable && headTrackingPoseStale);
+
+    setRendererText("rend-profile-why", whyChangedSummary);
+    setRendererText("rend-profile-source", profileSourceSummary);
+    setRendererText("rend-profile-owner", controlOwnerSummary);
+    setRendererText("rend-lab-summary", labSummaryText);
+    if (fallbackNote) {
+        fallbackNote.textContent = rendererTrustConcern
+            ? whyChangedSummary
+            : "Requested and active renderer paths match.";
+        fallbackNote.classList.toggle("warning", rendererTrustConcern);
+    }
+
     updateRendererResizeDiagnosticsPanel();
 
     const nativeBridgePayloadPresent = hasNativeBridgeDiagnosticsPayload(payload);
@@ -6837,6 +7668,11 @@ function updateRendererPanelShell(data = sceneData) {
 
     const diagnosticsAvailability = document.getElementById("rend-diagnostics-availability");
     if (diagnosticsAvailability) {
+        if (!liveRendererSession && noSessionSummary) {
+            diagnosticsAvailability.textContent = noSessionSummary.diagnostics;
+            publishOperatorDiagnosticsSnapshot();
+            return;
+        }
         const bridgeSummary = runtimeState.nativeBridgeDegraded
             ? `Bridge degraded (${runtimeState.nativeBridgeDegradedReason})`
             : "Bridge healthy";
@@ -6981,7 +7817,7 @@ function syncLegacyConfigAliasFromTopology(topologyId = "") {
     calibrationLegacyAliasSyncInFlight = true;
     calibrationLegacyAliasSyncSource = "topology";
     setChoiceIndex(comboStates.cal_spk_config, desiredLegacyConfig, 2);
-    scheduleCalibrationLegacyAliasSyncReset("topology");
+    clearCalibrationLegacyAliasSync("topology");
 }
 
 function syncTopologyFromLegacyConfigAlias(configIndex) {
@@ -7009,7 +7845,7 @@ function syncTopologyFromLegacyConfigAlias(configIndex) {
     }
 
     setChoiceIndex(comboStates.cal_topology_profile, desiredTopologyIndex, calibrationTopologyIds.length);
-    scheduleCalibrationLegacyAliasSyncReset("legacy");
+    clearCalibrationLegacyAliasSync("legacy");
 }
 
 function getCalibrationViewportTopologyId() {
@@ -7376,6 +8212,7 @@ function markViewportDegraded(error) {
         }
     );
     applyCalibrationStatus();
+    applyHeaderTrustBadge();
     publishOperatorDiagnosticsSnapshot();
 }
 
@@ -8405,6 +9242,7 @@ async function runProductionP0SelfTest() {
         const laneName = "azimuth";
         setTrackForLane(laneName, []);
         renderTimelineLanes();
+        await commitTimelineToNative();
         await waitForCondition("azimuth lane track", () => {
             const laneTrack = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .lane-track`);
             if (!laneTrack) return false;
@@ -8433,6 +9271,15 @@ async function runProductionP0SelfTest() {
         const addX = laneRect.left + laneRect.width * 0.32;
         const addY = laneRect.top + laneRect.height * 0.52;
         const gestureFallbacks = [];
+        const contractScaffolds = [];
+        const flushTimelineCommitForSelftest = async () => {
+            if (timelineCommitTimer !== null) {
+                window.clearTimeout(timelineCommitTimer);
+                timelineCommitTimer = null;
+            }
+            await commitTimelineToNative();
+            await loadTimelineFromNative({ markClean: false });
+        };
         dispatchPointer(laneTrack, "pointerdown", addX, addY, 301, 0);
         let keyframeAdded = false;
         try {
@@ -8460,6 +9307,7 @@ async function runProductionP0SelfTest() {
         if (!keyframeAdded) {
             failCheck("UI-07", "unable to create keyframe");
         }
+        await flushTimelineCommitForSelftest();
 
         renderTimelineLanes();
         let keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot`);
@@ -8508,6 +9356,7 @@ async function runProductionP0SelfTest() {
         if (!moved) {
             failCheck("UI-07", "drag gesture did not move keyframe");
         }
+        await flushTimelineCommitForSelftest();
 
         renderTimelineLanes();
         keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot`);
@@ -8533,28 +9382,55 @@ async function runProductionP0SelfTest() {
         if (!curveAfter || curveAfter === curveBefore) {
             failCheck("UI-07", `dbl-click did not cycle curve (${curveBefore} -> ${curveAfter})`);
         }
+        await flushTimelineCommitForSelftest();
+
+        let trackBeforeDelete = getTrackForLane(laneName);
+        if (trackBeforeDelete.length < 2) {
+            const anchorValue = trackBeforeDelete[0]?.value ?? 0.0;
+            const anchorCurve = trackBeforeDelete[0]?.curve || "easeInOut";
+            const anchorTime = clamp(timelineState.durationSeconds * 0.92, 0.0, timelineState.durationSeconds);
+            const deleteAnchorKeyframe = createKeyframe(anchorTime, anchorValue, anchorCurve);
+            setTrackForLane(laneName, [...trackBeforeDelete, deleteAnchorKeyframe]);
+            renderTimelineLanes();
+            await flushTimelineCommitForSelftest();
+            contractScaffolds.push("delete-baseline");
+            trackBeforeDelete = getTrackForLane(laneName);
+        }
+
+        const deleteTargetUid = trackBeforeDelete[0]?.uid;
+        if (!deleteTargetUid) {
+            failCheck("UI-07", "missing delete target keyframe");
+        }
 
         renderTimelineLanes();
-        keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot`);
+        keyframeDot = document.querySelector(`.timeline-lane[data-lane="${laneName}"] .keyframe-dot[data-uid="${deleteTargetUid}"]`);
         if (!keyframeDot) {
             failCheck("UI-07", "missing keyframe dot before delete");
         }
         keyframeDot.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
         try {
-            await waitForCondition("keyframe delete", () => getTrackForLane(laneName).length === 0, 800, 20);
+            await waitForCondition("keyframe delete", () => getTrackForLane(laneName).length === 1, 800, 20);
         } catch (_) {
-            setTrackForLane(laneName, []);
+            const reducedTrack = getTrackForLane(laneName).filter(keyframe => keyframe.uid !== deleteTargetUid);
+            setTrackForLane(laneName, reducedTrack);
             renderTimelineLanes();
             gestureFallbacks.push("delete");
         }
-        if (getTrackForLane(laneName).length !== 0) {
+        if (getTrackForLane(laneName).length !== 1) {
             failCheck("UI-07", "keyframe delete failed");
+        }
+        await flushTimelineCommitForSelftest();
+        if (getTrackForLane(laneName).length !== 1) {
+            failCheck("UI-07", "native timeline delete commit did not persist a single-keyframe lane");
         }
         if (strictGestureModeEnabled && gestureFallbacks.length > 0) {
             failCheck("UI-07", `strict_gesture enabled; fallback gesture path used (${gestureFallbacks.join(", ")})`);
         }
-        const fallbackNote = gestureFallbacks.length > 0
-            ? ` (fallbacks: ${gestureFallbacks.join(", ")})`
+        const noteParts = [];
+        if (gestureFallbacks.length > 0) noteParts.push(`fallbacks: ${gestureFallbacks.join(", ")}`);
+        if (contractScaffolds.length > 0) noteParts.push(`scaffolds: ${contractScaffolds.join(", ")}`);
+        const fallbackNote = noteParts.length > 0
+            ? ` (${noteParts.join("; ")})`
             : "";
         recordCheck(
             "UI-07",
@@ -8570,9 +9446,19 @@ async function runProductionP0SelfTest() {
 
         await waitForCondition("timeline undo availability", () => !authoringUndoButton.disabled, 2500, 25);
         authoringUndoButton.click();
-        await waitForCondition("timeline undo restore", () => getTrackForLane(laneName).length === 1, 2500, 25);
+        await waitForCondition("timeline undo restore", () => getTrackForLane(laneName).length === 2, 2500, 25);
+        await waitForCondition("timeline redo availability", () => !authoringRedoButton.disabled, 2500, 25);
         authoringRedoButton.click();
-        await waitForCondition("timeline redo restore", () => getTrackForLane(laneName).length === 0, 2500, 25);
+        try {
+            await waitForCondition("timeline redo restore", () => getTrackForLane(laneName).length === 1, 2500, 25);
+        } catch (_) {
+            const redoHistoryStatus = await refreshAuthoringHistoryStatus();
+            const presetStatusText = String(document.getElementById("preset-status")?.textContent || "").trim();
+            failCheck(
+                "UI-W3A-01",
+                `timeline redo restore failed (laneLength=${getTrackForLane(laneName).length}, canUndo=${!!redoHistoryStatus?.canUndo}, canRedo=${!!redoHistoryStatus?.canRedo}, status="${presetStatusText || "n/a"}")`
+            );
+        }
         recordCheck("UI-W3A-01", true, "timeline undo/redo restored deleted keyframe");
 
         // UI-P1-025A: position-mode visibility/editability contract + emitter scaffold controls.
@@ -8662,13 +9548,14 @@ async function runProductionP0SelfTest() {
         const motionPhysicsPanel = document.getElementById("motion-panel-physics");
         const motionTimelinePanel = document.getElementById("motion-panel-timeline");
         const motionChoreoPanel = document.getElementById("motion-panel-choreography");
+        const motionLabDrawer = document.getElementById("motion-lab-drawer");
         const timelineLoopToggle = document.getElementById("toggle-timeline-loop");
         const timelineSyncToggle = document.getElementById("toggle-timeline-sync");
         const timelineTimeReadback = document.getElementById("timeline-time");
         if (!motionSourceSelect || !motionTransportStrip || !motionTransportTime
             || !motionRewindButton || !motionStopButton || !motionPlayButton
             || !motionLoopToggle || !motionSyncToggle
-            || !motionPhysicsPanel || !motionTimelinePanel || !motionChoreoPanel
+            || !motionPhysicsPanel || !motionTimelinePanel || !motionChoreoPanel || !motionLabDrawer
             || !timelineLoopToggle || !timelineSyncToggle || !timelineTimeReadback) {
             failCheck("UI-P1-025B", "missing unified motion controls");
         }
@@ -8676,9 +9563,11 @@ async function runProductionP0SelfTest() {
         motionSourceSelect.value = "physics";
         motionSourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
         await waitForCondition("motion source physics", () => {
+            const motionLabOpen = motionLabDrawer instanceof HTMLDetailsElement && motionLabDrawer.open;
             return motionPhysicsPanel.classList.contains("active")
                 && motionTimelinePanel.classList.contains("inactive")
                 && motionChoreoPanel.classList.contains("inactive")
+                && motionLabOpen
                 && motionTransportStrip.classList.contains("inactive")
                 && !getToggleValue(toggleStates.anim_enable)
                 && normalizePhysicsPresetName(uiState.physicsPreset) !== "off";
@@ -8687,9 +9576,11 @@ async function runProductionP0SelfTest() {
         motionSourceSelect.value = "timeline";
         motionSourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
         await waitForCondition("motion source timeline", () => {
+            const motionLabOpen = motionLabDrawer instanceof HTMLDetailsElement && motionLabDrawer.open;
             return motionTimelinePanel.classList.contains("active")
                 && motionPhysicsPanel.classList.contains("inactive")
                 && motionChoreoPanel.classList.contains("inactive")
+                && !motionLabOpen
                 && !motionTransportStrip.classList.contains("inactive")
                 && getToggleValue(toggleStates.anim_enable)
                 && normalizePhysicsPresetName(uiState.physicsPreset) === "off"
@@ -8750,8 +9641,10 @@ async function runProductionP0SelfTest() {
         motionSourceSelect.value = "choreography";
         motionSourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
         await waitForCondition("motion source choreography", () => {
+            const motionLabOpen = motionLabDrawer instanceof HTMLDetailsElement && motionLabDrawer.open;
             return motionChoreoPanel.classList.contains("active")
                 && motionTimelinePanel.classList.contains("active")
+                && motionLabOpen
                 && !motionTransportStrip.classList.contains("inactive")
                 && getToggleValue(toggleStates.anim_enable)
                 && normalizeChoreographyPackId(uiState.choreographyPack) !== "custom"
@@ -9625,40 +10518,6 @@ async function runProductionP0SelfTest() {
     return report;
 }
 
-let uiRuntimeBootstrapStarted = false;
-
-function bootstrapUIRuntimeOnce() {
-    if (uiRuntimeBootstrapStarted) {
-        return;
-    }
-    uiRuntimeBootstrapStarted = true;
-    presentBootShellStage("booting");
-
-    if (productionP0SelfTestRequested) {
-        // Watchdog kickoff: ensure self-test eventually runs even if startup hydration stalls.
-        startProductionP0SelfTestAfterDelay(2500, "domcontentloaded-watchdog");
-    }
-
-    initialiseUIRuntime()
-        .then(() => {
-            startProductionP0SelfTestAfterDelay(700, "runtime-init-success");
-        })
-        .catch(error => {
-            console.error("LocusQ: UI runtime initialisation failed:", error);
-            markViewportDegraded(error);
-
-            if (productionP0SelfTestRequested) {
-                startProductionP0SelfTestAfterDelay(0, "runtime-init-failed");
-            }
-        });
-}
-
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootstrapUIRuntimeOnce);
-} else {
-    bootstrapUIRuntimeOnce();
-}
-
 // ===== THREE.JS INITIALIZATION =====
 function initThreeJS() {
     canvas = document.getElementById("viewport-canvas");
@@ -10141,6 +11000,7 @@ function applyPhysicsPreset(presetName, persistUiState = true) {
 
 function initUIBindings() {
     syncResponsiveLayoutMode();
+    installPointerClickFallback();
     ensureCalibrationMappingRows();
     syncModeTabsAccessibility();
     syncViewButtonAccessibility();
@@ -11332,6 +12192,76 @@ function updateValueDisplay(id, value, unit) {
     }
 }
 
+function setHeaderTrustBadge(label, tone = "neutral") {
+    const badge = document.getElementById("header-trust-badge");
+    if (!badge) return;
+    badge.className = "trust-badge";
+    if (tone && tone !== "neutral") {
+        badge.classList.add(tone);
+    }
+    badge.textContent = label;
+}
+
+function applyHeaderTrustBadge() {
+    if (runtimeState.nativeBridgeDegraded) {
+        setHeaderTrustBadge("Native Bridge Degraded", "degraded");
+        return;
+    }
+
+    if (runtimeState.viewportDegraded) {
+        setHeaderTrustBadge("Viewport Safe Mode", "warning");
+        return;
+    }
+
+    if (sceneTransportState.stale && currentMode !== "calibrate") {
+        setHeaderTrustBadge("Snapshot Stale", "warning");
+        return;
+    }
+
+    if (currentMode === "calibrate") {
+        if (calibrationState.complete || calibrationState.profileValid) {
+            setHeaderTrustBadge("Profile Loaded", "safe");
+        } else if (calibrationState.running) {
+            setHeaderTrustBadge("Measurement Active", "warning");
+        } else {
+            setHeaderTrustBadge("Profile Needed", "warning");
+        }
+        return;
+    }
+
+    if (currentMode === "renderer") {
+        const runtimeContext = getRuntimeSurfaceContext(sceneData);
+        if (!runtimeContext.liveSession) {
+            setHeaderTrustBadge(runtimeContext.isBrowserPreview ? "Preview Mode" : "Awaiting Renderer", "warning");
+            return;
+        }
+        if (!sceneData || (typeof sceneData === "object" && Object.keys(sceneData).length === 0)) {
+            setHeaderTrustBadge("Awaiting Renderer", "warning");
+            return;
+        }
+        const spatialProfileRequested = String(sceneData?.rendererSpatialProfileRequested || "auto").trim().toLowerCase();
+        const spatialProfileActive = String(sceneData?.rendererSpatialProfileActive || spatialProfileRequested || "auto").trim().toLowerCase();
+        const headphoneRequested = String(sceneData?.rendererHeadphoneModeRequested || "stereo_downmix").trim().toLowerCase();
+        const headphoneActive = String(sceneData?.rendererHeadphoneModeActive || headphoneRequested || "stereo_downmix").trim().toLowerCase();
+        const profileStage = String(sceneData?.rendererSpatialProfileStage || "direct").trim().toLowerCase();
+        const fallbackReason = String(
+            sceneData?.rendererHeadphoneProfileFallbackReason
+            || sceneData?.rendererHeadphoneCalibrationFallbackReason
+            || sceneData?.authorityFallbackReason
+            || ""
+        ).trim();
+        const fallbackActive = spatialProfileRequested !== spatialProfileActive
+            || headphoneRequested !== headphoneActive
+            || (profileStage.length > 0 && profileStage !== "direct")
+            || fallbackReason.length > 0;
+        setHeaderTrustBadge(fallbackActive ? "Fallback Active" : "Render Active", fallbackActive ? "warning" : "safe");
+        return;
+    }
+
+    const selectedEmitter = getSelectedEmitter();
+    setHeaderTrustBadge(selectedEmitter ? "Emitter Selected" : "Authoring Ready", "safe");
+}
+
 function applySceneStatusBadge() {
     const ss = document.getElementById("scene-status");
     if (!ss) return;
@@ -11341,22 +12271,26 @@ function applySceneStatusBadge() {
     if (sceneTransportState.stale && currentMode !== "calibrate") {
         ss.textContent = "STALE SNAPSHOT";
         ss.classList.add("stale");
+        applyHeaderTrustBadge();
         return;
     }
 
     if (currentMode === "calibrate") {
         ss.textContent = "NO PROFILE";
         ss.classList.add("noprofile");
+        applyHeaderTrustBadge();
         return;
     }
 
     if (currentMode === "renderer") {
         ss.textContent = "READY";
         ss.classList.add("ready");
+        applyHeaderTrustBadge();
         return;
     }
 
     ss.textContent = "STABLE";
+    applyHeaderTrustBadge();
 }
 
 function parseSnapshotSequence(value) {
@@ -12774,6 +13708,15 @@ window.updateSceneState = function(data) {
             const emitterPerfText = perfEmitter !== null ? ` \u00B7 Emit ${perfEmitter.toFixed(2)}ms` : "";
             info.textContent = "Emitter Mode \u00B7 " + data.emitterCount + " objects" + selectedText + emitterPerfText;
         } else if (currentMode === "renderer") {
+            const runtimeContext = getRuntimeSurfaceContext(data);
+            if (!runtimeContext.liveSession) {
+                info.textContent = runtimeContext.isBrowserPreview
+                    ? "Renderer Mode · Browser Preview · Safe Defaults"
+                    : "Renderer Mode · Waiting for live session";
+                applySceneStatusBadge();
+                applyCalibrationStatus();
+                return;
+            }
             const rendererPerfText = perfRenderer !== null ? ` \u00B7 Render ${perfRenderer.toFixed(2)}ms` : "";
             const blockPerfText = perfBlock !== null ? ` \u00B7 Block ${perfBlock.toFixed(2)}ms` : "";
             const qualityBadge = document.getElementById("quality-badge");
@@ -12832,11 +13775,9 @@ window.updateSceneState = function(data) {
                     headphoneText += ` [reqProfile ${headphoneProfileRequested}]`;
                 }
                 if (headphoneRequested === "steam_binaural" && !steamAvailable) {
-                    headphoneText += ` fallback [${steamCompiled ? "compiled" : "not-compiled"}:${steamInitStage}`;
-                    if (steamInitErrorCode !== 0) {
-                        headphoneText += `:${steamInitErrorCode}`;
-                    }
-                    headphoneText += "]";
+                    headphoneText += steamCompiled
+                        ? " · Spatial engine unavailable on this host"
+                        : " · Spatial engine not compiled in this build";
                 }
             }
             let headTrackingText = "";
@@ -13967,6 +14908,8 @@ function applyCalibrationStatus() {
         const lat = hp ? Number(hp.fir_latency_samples || 0) : 0;
         hpFirLatEl.textContent = lat > 0 ? `${lat} smp` : "0 smp";
     }
+
+    applyHeaderTrustBadge();
 }
 
 function updateEmitterMeshes(emitters) {
@@ -14828,6 +15771,40 @@ function animate() {
     if (rendererGL && threeScene && camera) {
         rendererGL.render(threeScene, camera);
     }
+}
+
+let uiRuntimeBootstrapStarted = false;
+
+function bootstrapUIRuntimeOnce() {
+    if (uiRuntimeBootstrapStarted) {
+        return;
+    }
+    uiRuntimeBootstrapStarted = true;
+    presentBootShellStage("booting");
+
+    if (productionP0SelfTestRequested) {
+        // Watchdog kickoff: ensure self-test eventually runs even if startup hydration stalls.
+        startProductionP0SelfTestAfterDelay(2500, "domcontentloaded-watchdog");
+    }
+
+    initialiseUIRuntime()
+        .then(() => {
+            startProductionP0SelfTestAfterDelay(700, "runtime-init-success");
+        })
+        .catch(error => {
+            console.error("LocusQ: UI runtime initialisation failed:", error);
+            markViewportDegraded(error);
+
+            if (productionP0SelfTestRequested) {
+                startProductionP0SelfTestAfterDelay(0, "runtime-init-failed");
+            }
+        });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootstrapUIRuntimeOnce);
+} else {
+    bootstrapUIRuntimeOnce();
 }
 
 })();

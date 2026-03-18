@@ -472,41 +472,42 @@ endif()
 option(BUILD_LOCUSQ_QA "Build LocusQ QA harness test executable" OFF)
 
 if(BUILD_LOCUSQ_QA)
-    # ── Locate the audio-dsp-qa-harness ──────────────────────────────────
-    # Default: sibling repo at ../../audio-dsp-qa-harness (relative to this file).
+    # ── Locate the harness-owned QA integration module ───────────────────
+    # Default: sibling repo at ../audio-dsp-qa-harness (relative to this file).
     # Override: cmake -DQA_HARNESS_DIR=/path/to/audio-dsp-qa-harness ..
     if(NOT DEFINED QA_HARNESS_DIR)
-        set(QA_HARNESS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../audio-dsp-qa-harness"
+        set(QA_HARNESS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../audio-dsp-qa-harness"
             CACHE PATH "Path to audio-dsp-qa-harness root")
     endif()
 
-    if(EXISTS "${QA_HARNESS_DIR}/CMakeLists.txt")
-        if(NOT TARGET qa_core)
-            set(BUILD_QA_TESTS     OFF CACHE BOOL "Disable harness unit tests" FORCE)
-            set(BUILD_QA_EXAMPLES  OFF CACHE BOOL "Disable harness examples"   FORCE)
-            add_subdirectory("${QA_HARNESS_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/qa_harness" EXCLUDE_FROM_ALL)
+    set(_qa_harness_module_dir "")
+    foreach(_qa_harness_candidate
+            "${QA_HARNESS_DIR}/cmake"
+            "${CMAKE_CURRENT_SOURCE_DIR}/external/audio-dsp-qa-harness/cmake")
+        if(EXISTS "${_qa_harness_candidate}/qa_harness_integration.cmake")
+            set(_qa_harness_module_dir "${_qa_harness_candidate}")
+            break()
         endif()
-        message(STATUS "LocusQ QA: Using harness at ${QA_HARNESS_DIR}")
+    endforeach()
+
+    if(_qa_harness_module_dir)
+        list(APPEND CMAKE_MODULE_PATH "${_qa_harness_module_dir}")
+        message(STATUS "LocusQ QA: Using harness integration module at ${_qa_harness_module_dir}")
     else()
-        # Fall back to installed package
         find_package(audio_dsp_qa_harness REQUIRED
             PATHS "$ENV{HOME}/.local/lib/cmake/audio_dsp_qa_harness"
                   "/usr/local/lib/cmake/audio_dsp_qa_harness")
-        message(STATUS "LocusQ QA: Using installed harness package")
+        if(DEFINED audio_dsp_qa_harness_CMAKE_DIR)
+            list(APPEND CMAKE_MODULE_PATH "${audio_dsp_qa_harness_CMAKE_DIR}")
+            message(STATUS "LocusQ QA: Using installed harness module at ${audio_dsp_qa_harness_CMAKE_DIR}")
+        else()
+            message(FATAL_ERROR
+                "LocusQ QA: audio_dsp_qa_harness package was found but did not expose "
+                "audio_dsp_qa_harness_CMAKE_DIR for qa_harness_integration.cmake")
+        endif()
     endif()
 
-    # ── Resolve QA targets (support both namespaced and plain) ────────────
-    if(TARGET qa_core)
-        set(_qa_core     qa_core)
-        set(_qa_runners  qa_runners)
-        set(_qa_scenario qa_scenario_engine)
-    elseif(TARGET qa::qa_core)
-        set(_qa_core     qa::qa_core)
-        set(_qa_runners  qa::qa_runners)
-        set(_qa_scenario qa::qa_scenario_engine)
-    else()
-        message(FATAL_ERROR "LocusQ QA: qa_core target not found — check QA_HARNESS_DIR")
-    endif()
+    include(qa_harness_integration)
 
     # ── QA executable ────────────────────────────────────────────────────
     juce_add_console_app(locusq_qa PRODUCT_NAME "LocusQ QA Harness")
@@ -514,9 +515,6 @@ if(BUILD_LOCUSQ_QA)
 
     target_sources(locusq_qa
         PRIVATE
-            qa/locusq_adapter.h
-            qa/locusq_adapter.cpp
-            qa/main.cpp
             # Include processor sources directly (no plugin client)
             Source/PluginProcessor.cpp
             Source/processor_core/ProcessorAuthoringHistory.cpp
@@ -550,11 +548,19 @@ if(BUILD_LOCUSQ_QA)
             Source/KeyframeTimeline.h
     )
 
-    target_include_directories(locusq_qa
-        PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}          # for Source/ includes
-            ${CMAKE_CURRENT_SOURCE_DIR}/qa        # for locusq_adapter.h
-            "${QA_HARNESS_DIR}"                   # for core/, runners/, scenario_engine/
+    enable_qa_harness(
+        TARGET locusq_qa
+        HARNESS_DIR "${QA_HARNESS_DIR}"
+        ADAPTER_SOURCES
+            qa/LocusQQARunner.h
+            qa/LocusQQARunner.cpp
+            qa/locusq_adapter.h
+            qa/locusq_adapter.cpp
+            qa/main.cpp
+        EXTRA_INCLUDES
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+        QA_FLAG_NAME BUILD_LOCUSQ_QA
     )
 
     if(LOCUSQ_ENABLE_STEAM_AUDIO)
@@ -614,9 +620,6 @@ if(BUILD_LOCUSQ_QA)
 
     target_link_libraries(locusq_qa
         PRIVATE
-            ${_qa_core}
-            ${_qa_runners}
-            ${_qa_scenario}
             juce::juce_audio_basics
             juce::juce_audio_devices
             juce::juce_audio_formats
