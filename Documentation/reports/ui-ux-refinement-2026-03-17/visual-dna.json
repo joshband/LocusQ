@@ -1,0 +1,95 @@
+{
+  "visualDNA": {
+    "styleName": "Spatial Atelier / Diagnostic Calm",
+    "keywords": [
+      "viewport-first",
+      "boutique instrument",
+      "technical calm",
+      "trust-first",
+      "cinematic restraint",
+      "scientific but tactile"
+    ],
+    "palette": {
+      "neutrals": [
+        "#06080B",
+        "#0E1218",
+        "#171D26",
+        "#232B38",
+        "#A6B1C2",
+        "#EEF4FB"
+      ],
+      "accents": [
+        "#D4A847",
+        "#59D8FF",
+        "#67E2A5",
+        "#FFB86B"
+      ],
+      "semantic": {
+        "live": "#59D8FF",
+        "ready": "#67E2A5",
+        "warn": "#FFB86B",
+        "error": "#FF7A6E",
+        "inactive": "#6E7A8E"
+      }
+    },
+    "typographyMood": {
+      "primary": "Avenir Next / SF Pro Display fallback",
+      "alt": "IBM Plex Sans",
+      "numerals": "tabular",
+      "tone": "editorial headers with calm technical body copy"
+    },
+    "geometryLanguage": {
+      "cornerRadii": [8, 14, 22, 32],
+      "strokeWeights": [1, 2],
+      "spacingScale": [4, 8, 12, 16, 20, 24, 32, 40],
+      "shapeBias": "long horizontal shells, compressed status pills, framed panes"
+    },
+    "materialsAndLighting": {
+      "baseMaterials": [
+        "matte carbon shell",
+        "smoked glass overlays",
+        "anodized brass accents",
+        "thin signal phosphor highlights"
+      ],
+      "lightingRig": "soft top wash, edge glows for live state, restrained bloom only in hero visualizations",
+      "shadowModel": "short directional shadows with dark ambient grounding"
+    },
+    "motionGrammar": {
+      "microDurationMs": [90, 160, 240, 420],
+      "easing": ["easeOutCubic", "easeInOutQuad", "linear"],
+      "interactionBias": "authoritative, stable, and never twitchy",
+      "reactiveRules": [
+        "Reactive visuals must trail truth, not replace it",
+        "All live overlays need smoothing and deadband",
+        "Diagnostics animate slower than scene objects"
+      ]
+    }
+  },
+  "directions": [
+    {
+      "name": "Conservative",
+      "confidence": "high",
+      "risk": "low",
+      "implementationComplexity": "low",
+      "summary": "Keep the current dark studio-console language and mainly compress hierarchy, header truth, and diagnostic exposure."
+    },
+    {
+      "name": "On-brand",
+      "confidence": "highest",
+      "risk": "medium-low",
+      "implementationComplexity": "medium",
+      "summary": "Spatial Atelier: a viewport-led shell with a gold authority spine, cyan live-state accents, and a clean Focus-versus-Lab split."
+    },
+    {
+      "name": "Experimental",
+      "confidence": "medium",
+      "risk": "medium-high",
+      "implementationComplexity": "high",
+      "summary": "Push time-layered 4D histories, denser reactive fields, and more sculptural materials, but keep them behind lab affordances."
+    }
+  ],
+  "finalRecommendation": {
+    "direction": "On-brand",
+    "rationale": "It sharpens scope and trust without forcing a full visual reinvention or adding cross-runtime fragility."
+  }
+}

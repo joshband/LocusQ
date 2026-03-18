@@ -1,0 +1,99 @@
+{
+  "reasonCode": "payload_error_without_check",
+  "failingCheck": "none",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "legacy mono maps topology quad timed out after 2000ms (elapsed=2021ms, polls=79)"
+  },
+  "failingCheckDetails": "",
+  "checks": [
+    {
+      "id": "failure",
+      "pass": false,
+      "details": "legacy mono maps topology quad timed out after 2000ms (elapsed=2021ms, polls=79)"
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "pollMs": 40.0,
+      "elapsedMs": 0.0,
+      "label": "p0 self-test controls ready",
+      "polls": 1.0,
+      "timeoutMs": 8000.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "steam diagnostics baseline",
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "pollMs": 30.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 30.0,
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "label": "clap diagnostics baseline"
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology stereo rows",
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy config follows stereo topology"
+    },
+    {
+      "result": "pass",
+      "label": "calibrate topology quad rows",
+      "elapsedMs": 26.0,
+      "polls": 2.0,
+      "pollMs": 25.0,
+      "timeoutMs": 2000.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "legacy config follows quad topology",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 25.0,
+      "pollMs": 25.0,
+      "polls": 2.0,
+      "timeoutMs": 2000.0,
+      "label": "calibrate topology mono rows"
+    },
+    {
+      "result": "pass",
+      "label": "legacy config follows mono topology",
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "timeout",
+      "elapsedMs": 2021.0,
+      "label": "legacy mono maps topology quad",
+      "pollMs": 25.0,
+      "polls": 79.0,
+      "timeoutMs": 2000.0
+    }
+  ]
+}

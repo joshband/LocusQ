@@ -7,6 +7,9 @@
     "locusq_26_full_system_cpu_draft",
     "locusq_26_host_edge_roundtrip_multipass"
   ],
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "stop_on_first_failure": false,
   "shared_config": {
     "mode": "phase_2_6_acceptance"

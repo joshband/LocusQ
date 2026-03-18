@@ -1,0 +1,104 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl078_room_doppler_quad",
+  "name": "LocusQ BL-078 Room Doppler Quad",
+  "category": "stability",
+  "description": "Moderate multi-emitter room plus doppler motion under quad output must remain finite and deadline-safe across the runtime output path.",
+  "bl078_fuzz_profile": {
+    "stress_axis": "room_doppler_motion_quad",
+    "seed": 7821,
+    "coverage": [
+      "room_feedback",
+      "doppler_motion",
+      "physics_and_animation"
+    ],
+    "expected_guardrail_activity": "contained_or_none"
+  },
+  "capability_requirements": {
+    "required_effect_types": [
+      "SPATIAL"
+    ],
+    "required_behaviors": [
+      "STATEFUL"
+    ],
+    "excluded_behaviors": []
+  },
+  "stimulus": {
+    "stimulus_id": "noise",
+    "stimulus_variant": "white",
+    "parameters": {
+      "amplitude": 0.5,
+      "duration_seconds": 3.0,
+      "seed": 7821
+    }
+  },
+  "parameter_variations": {
+    "qa_emitter_instances": 0.6,
+    "pos_azimuth": 0.1,
+    "pos_elevation": 0.8,
+    "pos_distance": 0.05,
+    "emit_gain": 0.6,
+    "emit_spread": 0.8,
+    "emit_directivity": 0.8,
+    "emit_dir_azimuth": 0.0,
+    "emit_dir_elevation": 1.0,
+    "rend_master_gain": 0.6,
+    "rend_quality": 1.0,
+    "rend_room_enable": 1.0,
+    "rend_room_mix": 0.8,
+    "rend_room_size": 1.0,
+    "rend_room_damping": 0.0,
+    "rend_room_er_only": 0.0,
+    "rend_doppler": 1.0,
+    "rend_doppler_scale": 1.0,
+    "rend_air_absorb": 1.0,
+    "phys_enable": 1.0,
+    "phys_drag": 0.0,
+    "phys_gravity": 1.0,
+    "phys_vel_x": 1.0,
+    "phys_vel_y": 0.0,
+    "phys_vel_z": 1.0,
+    "phys_throw": 1.0,
+    "anim_enable": 1.0,
+    "anim_mode": 1.0,
+    "anim_loop": 1.0,
+    "anim_speed": 1.0,
+    "anim_sync": 1.0,
+    "rend_headphone_mode": 0.0,
+    "rend_headphone_profile": 0.0,
+    "rend_spatial_profile": 0.0
+  },
+  "analysis_windows": {
+    "full": {
+      "type": "time_range",
+      "start_seconds": 0.1,
+      "end_seconds": 3.0
+    }
+  },
+  "expected_invariants": {
+    "signal_present": {
+      "metric": "rms_energy",
+      "window": "full",
+      "threshold": {
+        "min": -100.0
+      },
+      "severity": "hard_fail"
+    },
+    "no_nan_inf": {
+      "metric": "non_finite",
+      "window": "full",
+      "threshold": {
+        "max_count": 0
+      },
+      "severity": "hard_fail"
+    },
+    "deadline": {
+      "metric": "perf_meets_deadline",
+      "threshold": {
+        "equals": true
+      },
+      "severity": "hard_fail"
+    }
+  },
+  "pass_criteria": "All hard-fail invariants must pass."
+}

@@ -2,13 +2,13 @@ Title: BL-080 Authoring Undo/Redo for Timeline and Preset Operations
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-07
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-18
 
 # BL-080: Authoring Undo/Redo for Timeline and Preset Operations
 
 ## Plain-Language Summary
 
-BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: In Validation. The processor-side history engine and WebView controls are implemented locally, and the CALIBRATE reverse-alias helper has been tightened, but the rebuilt standalone production self-test still trips in the `cal-config` replay path before the new `UI-W3A-*` checks execute.
+BL-080 adds a real undo/redo history for the authoring flows the DAW host does not cover well on its own: manual keyframe edits, choreography/timeline changes, and preset save/load/rename/delete actions coming from the WebView UI. Current state: Done-candidate. The processor-side history engine, WebView controls, and standalone validation lane are now green, with the rebuilt standalone production self-test explicitly passing `UI-W3A-01` and `UI-W3A-02`; the remaining step is owner promotion and closeout sync.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-080 adds a real undo/redo history for the authoring flows the DAW host does n
 | What is changing? | The processor now stores undo/redo history snapshots for timeline and preset operations, and the WebView exposes undo/redo buttons, status, and keyboard shortcuts. |
 | Why is this important? | DAW undo covers APVTS automation well, but custom keyframe/preset workflows had no authoring recovery path before this lane. |
 | How will we deliver it? | Add a processor-owned snapshot/file history engine, route native preset/timeline mutations through it, then expose undo/redo controls and validation hooks in the WebView. |
-| When is it done? | When the rebuilt standalone app replays the production self-test without the CALIBRATE alias blocker and the embedded `UI-W3A-01` / `UI-W3A-02` checks execute successfully. |
+| When is it done? | When the rebuilt standalone app replays the production self-test with both embedded `UI-W3A-01` / `UI-W3A-02` checks passing, and the owner promotion note records that evidence. |
 | Where is the source of truth? | This runbook, `Documentation/architecture-code-review-2026-03-06.md`, `Documentation/backlog/index.md`, and evidence under `TestEvidence/`. |
 
 ## Visual Aid Index
@@ -45,7 +45,7 @@ BL-080 adds a real undo/redo history for the authoring flows the DAW host does n
 |---|---|
 | ID | BL-080 |
 | Priority | P3 |
-| Status | In Validation |
+| Status | Done-candidate |
 | Owner Track | F - Hardening |
 | Depends On | BL-070, BL-074 |
 | Blocks | — |
@@ -59,7 +59,8 @@ BL-080 adds a real undo/redo history for the authoring flows the DAW host does n
 |---|---|---|---|---|---|---|---|---|
 | `~~Slice A~~` processor-owned authoring history core | `[DONE]` | P3 | Medium | focused local slice completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/PluginProcessor.h`, `Source/processor_core/ProcessorAuthoringHistory.cpp`, `Source/processor_core/ProcessorPresetManager.cpp` | none |
 | `~~Slice B~~` native bridge + WebView undo/redo controls | `[DONE]` | P3 | Medium | focused local slice completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/editor_webview/EditorWebViewRuntime.h`, `Source/ui/src/index.ts`, `Source/ui/public/index.html` | none |
-| Slice C production validation + CALIBRATE replay cleanup | `[ACTIVE]` | P3 | Small | focused validation on 2026-03-07 | `n/a` | 2026-03-07 | `build_local`, `TestEvidence/locusq_production_p0_selftest_20260307T045253Z.json` | resolve the CALIBRATE `cal-config` replay blocker so `UI-W3A-01` / `UI-W3A-02` can execute in the rebuilt standalone app; direct helper invocation now recovers the topology, so the remaining gap is the replay path rather than the history engine |
+| `~~Slice C~~` production validation + CALIBRATE replay cleanup | `[DONE]` | P3 | Small | focused validation completed 2026-03-18 | `n/a` | 2026-03-18 | `build_local`, `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json` | none |
+| Slice D owner promotion and archive sync | `[NEXT]` | P3 | Small | not started | `n/a` | 2026-03-18 | backlog/status/evidence sync surfaces | record promotion decision and archive/closeout sync |
 
 ## Objective
 
@@ -116,7 +117,7 @@ Add deterministic undo/redo coverage for keyframe timeline edits plus preset lif
 | BL080-BUNDLE | Automated | `cd Source/ui && npm run build` | Exit 0 and `Source/ui/generated/index.js` refreshes cleanly |
 | BL080-BUILD | Automated | `cmake --build build_local --config Release --target LocusQ_Standalone locusq_qa -- -j8` | Exit 0 |
 | BL080-BUNDLE-MARKERS | Automated | `rg -o "UI-W3A-[0-9]+" Source/ui/generated/index.js | sort -u` | emits `UI-W3A-01` and `UI-W3A-02` |
-| BL080-SELFTEST | Automated | `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | W3-A checks execute in the rebuilt app; currently blocked earlier by the CALIBRATE `cal-config` replay path (`legacy mono maps topology quad` in the latest replay) |
+| BL080-SELFTEST | Automated | `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` | `PASS`; rebuilt standalone replay records `UI-W3A-01` and `UI-W3A-02` in `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json` |
 
 ## Replay Cadence Plan (Required)
 
@@ -135,7 +136,7 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 | Undo/redo restores state the host does not expect | High | Medium | keep history scoped to authoring-state snapshots and preset-file changes, not raw APVTS automation rewrites |
 | Preset save/rename/delete undo corrupts file-library state | High | Medium | capture file snapshots before/after each file operation and restore atomically through the processor helper |
 | WebView buttons/shortcuts drift from processor history truth | Medium | Medium | drive button enabled/disabled state from native `locusqGetAuthoringHistoryStatus` response only |
-| Production self-test never reaches W3-A checks because another UI lane fails first | Medium | High | record BL-080 as in-validation and track the CALIBRATE `cal-config` replay blocker explicitly instead of overstating completion |
+| Production self-test regresses before W3-A checks in future UI work | Medium | Medium | keep the rebuilt standalone production self-test in the dev loop and retain the passing BL-080 evidence artifact as the baseline |
 
 ## Evidence Bundle Contract
 
@@ -155,6 +156,6 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - [x] Architecture review updated
 - [x] Backlog index row added
 - [x] Build/typecheck evidence recorded
-- [ ] Rebuilt standalone self-test reaches and records `UI-W3A-01`
-- [ ] Rebuilt standalone self-test reaches and records `UI-W3A-02`
-- [ ] Promotion decision recorded after the CALIBRATE blocker clears
+- [x] Rebuilt standalone self-test reaches and records `UI-W3A-01`
+- [x] Rebuilt standalone self-test reaches and records `UI-W3A-02`
+- [ ] Promotion decision recorded

@@ -1,0 +1,118 @@
+{
+  "scenario_version": "1.0",
+  "id": "locusq_bl078_runtime_finite_output_suite",
+  "name": "LocusQ BL-078 Runtime Finite Output Suite",
+  "category": "stability",
+  "description": "Execute-mode BL-078 finite-output fuzz/soak suite for quad runtime replay, additive diagnostics verification, and deterministic evidence capture.",
+  "scenario_ids": [
+    "locusq_bl078_zero_distance_quad",
+    "locusq_bl078_high_emitters_quad",
+    "locusq_bl078_room_doppler_quad"
+  ],
+  "stop_on_first_failure": false,
+  "shared_config": {
+    "mode": "bl078_runtime_finite_output"
+  },
+  "runtime_config": {
+    "sample_rate": 48000,
+    "block_size": 512,
+    "channels": 4,
+    "enable_profiling": true
+  },
+  "bl078_contract_checks": {
+    "acceptance_ids": [
+      {
+        "id": "BL078-C1-001",
+        "description": "Suite schema and acceptance inventory are parseable and complete."
+      },
+      {
+        "id": "BL078-C1-002",
+        "description": "Finite-output fuzz coverage enumerates the required runtime stress axes."
+      },
+      {
+        "id": "BL078-C1-003",
+        "description": "Additive finite-output diagnostics schema matches the BL-036 publication contract."
+      },
+      {
+        "id": "BL078-C1-004",
+        "description": "Execute-suite replay remains deterministic across soak reruns."
+      },
+      {
+        "id": "BL078-C1-005",
+        "description": "Execute suite completes with zero hard failures, zero warnings, and zero non-finite leaks."
+      },
+      {
+        "id": "BL078-C1-006",
+        "description": "Smoke, UI selftest, RT audit, and docs freshness remain green after execute replay."
+      },
+      {
+        "id": "BL078-C1-007",
+        "description": "Lane artifact schema is complete and machine-readable."
+      }
+    ],
+    "required_guarded_boundaries": [
+      "dsp_ingress",
+      "dsp_intermediate_accumulation",
+      "output_pre_host_write",
+      "diagnostics_publication"
+    ],
+    "required_diagnostics_fields": [
+      "finiteGuardrailsActive",
+      "finiteGuardrailsFallbackReason",
+      "finiteGuardrailsNonFiniteCount",
+      "finiteGuardrailsDenormalCount",
+      "finiteGuardrailsLimiterClampCount",
+      "finiteGuardrailsHardClampCount"
+    ],
+    "required_fuzz_axes": [
+      "zero_distance_quad",
+      "high_emitters_quad",
+      "room_doppler_motion_quad"
+    ],
+    "thresholds": {
+      "suite_status": "PASS",
+      "max_warnings": 0,
+      "max_failures": 0,
+      "max_errors": 0,
+      "max_non_finite_leaks": 0,
+      "max_deadline_failures": 0,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "replay_contract": {
+      "default_runs": 5,
+      "max_signature_divergence": 0,
+      "max_row_drift": 0
+    },
+    "artifact_schema": [
+      "status.tsv",
+      "qa_lane.log",
+      "validation_matrix.tsv",
+      "replay_hashes.tsv",
+      "failure_taxonomy.tsv",
+      "soak_summary.tsv",
+      "finite_fuzz.tsv",
+      "diagnostics_schema.tsv",
+      "build.log",
+      "smoke.log",
+      "smoke_suite_result.json",
+      "ui_selftest.result.json",
+      "ui_selftest.meta.json",
+      "ui_selftest.attempts.tsv",
+      "ui_selftest.failure_taxonomy.tsv",
+      "rt_audit.tsv",
+      "lane_notes.md",
+      "docs_freshness.log"
+    ],
+    "validation_contract": {
+      "build_targets": [
+        "LocusQ_Standalone",
+        "locusq_qa"
+      ],
+      "smoke_suite": "qa/scenarios/locusq_smoke_suite.json",
+      "ui_selftest_scope": "bl029",
+      "rt_audit_output": "rt_audit.tsv"
+    }
+  },
+  "pass_criteria": "All execute-suite runs must finish PASS with zero warnings, zero non-finite leaks, deterministic replay hashes, and green smoke/UI/RT/docs gates."
+}

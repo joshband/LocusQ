@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" fill="none">
+  <rect width="1280" height="760" fill="#06080B"/>
+  <rect x="40" y="40" width="1200" height="680" rx="28" fill="#0E1218" stroke="#2D3745"/>
+  <text x="80" y="98" fill="#D4A847" font-family="Avenir Next, Segoe UI, sans-serif" font-size="18" font-weight="700" letter-spacing="4">FOCUS VS LAB OPERATING MODEL</text>
+  <text x="80" y="140" fill="#EEF4FB" font-family="Avenir Next, Segoe UI, sans-serif" font-size="42" font-weight="700">Tighten the first-run path without losing evidence depth.</text>
+
+  <rect x="80" y="188" width="530" height="470" rx="24" fill="#171D26" stroke="#2D3745"/>
+  <text x="116" y="240" fill="#67E2A5" font-family="Avenir Next, Segoe UI, sans-serif" font-size="22" font-weight="700" letter-spacing="3">FOCUS</text>
+  <text x="116" y="276" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Default surface for operators and first-run confidence.</text>
+
+  <rect x="116" y="312" width="458" height="66" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <circle cx="149" cy="345" r="16" fill="#67E2A5" fill-opacity="0.18" stroke="#67E2A5"/>
+  <text x="144" y="351" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700">1</text>
+  <text x="182" y="339" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Readiness Ladder</text>
+  <text x="182" y="360" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Support, availability, and safe-to-send state before any telemetry density.</text>
+
+  <rect x="116" y="392" width="458" height="66" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <circle cx="149" cy="425" r="16" fill="#59D8FF" fill-opacity="0.18" stroke="#59D8FF"/>
+  <text x="144" y="431" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700">2</text>
+  <text x="182" y="419" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Center / Sync</text>
+  <text x="182" y="440" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Manual confidence gate stays visible and explicit.</text>
+
+  <rect x="116" y="472" width="458" height="66" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <circle cx="149" cy="505" r="16" fill="#D4A847" fill-opacity="0.18" stroke="#D4A847"/>
+  <text x="144" y="511" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700">3</text>
+  <text x="182" y="499" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Active Profile + Capture Tray</text>
+  <text x="182" y="520" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Show profile source, confidence, and next capture step in plain language.</text>
+
+  <rect x="116" y="552" width="458" height="66" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <circle cx="149" cy="585" r="16" fill="#FFB86B" fill-opacity="0.18" stroke="#FFB86B"/>
+  <text x="144" y="591" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" font-weight="700">4</text>
+  <text x="182" y="579" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Apply / Send Confidence</text>
+  <text x="182" y="600" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Only after trust is established does the app feel “ready”.</text>
+
+  <rect x="670" y="188" width="530" height="470" rx="24" fill="#11161E" stroke="#2D3745"/>
+  <text x="706" y="240" fill="#FFB86B" font-family="Avenir Next, Segoe UI, sans-serif" font-size="22" font-weight="700" letter-spacing="3">LAB</text>
+  <text x="706" y="276" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18">Opt-in evidence depth for debugging, parity, and research.</text>
+
+  <rect x="706" y="312" width="458" height="82" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <text x="732" y="342" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Axis + Frame Diagnostics</text>
+  <text x="732" y="368" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Yaw/pitch/roll sweeps, stale-pose visibility, frame sanity overlays.</text>
+
+  <rect x="706" y="412" width="458" height="82" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <text x="732" y="442" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Matcher Confidence + Fallback Detail</text>
+  <text x="732" y="468" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Useful for support and promotion decisions, not for the first-layer screen.</text>
+
+  <rect x="706" y="512" width="458" height="82" rx="16" fill="#0F141B" stroke="#2D3745"/>
+  <text x="732" y="542" fill="#EEF4FB" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="18" font-weight="700">Listening / Parity Evidence</text>
+  <text x="732" y="568" fill="#A6B1C2" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="15">Promotion support for HRTF interpolation and render-path trust, kept out of headline UI.</text>
+
+  <path d="M620 422H656" stroke="#2D3745" stroke-width="2"/>
+  <path d="M648 414L656 422L648 430" stroke="#2D3745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="614" y="398" fill="#6E7A8E" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-size="14" text-anchor="middle">Opt-in</text>
+</svg>

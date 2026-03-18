@@ -7,6 +7,9 @@
     "locusq_29_renderer_guardrail_high_emitters",
     "locusq_210b_renderer_guardrail_high_emitters_final_quality"
   ],
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "stop_on_first_failure": false,
   "shared_config": {
     "mode": "phase_2_10b_renderer_cpu_trend"

@@ -2,9 +2,178 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-18
 
 # LocusQ Build Summary (Acceptance Closeout)
+
+## BL-094 Owner Sync (UTC 2026-03-18T04:59:27Z)
+
+1. Evidence bundle
+- validation bundle:
+  - `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/summary.md`
+- owner packet:
+  - `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/promotion_decision.md`
+- fresh standalone selftest artifact:
+  - `TestEvidence/locusq_production_p0_selftest_20260318T050305Z.json`
+
+2. Validation replay
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS`
+- browser-preview capture review -> `PASS`
+
+3. Disposition
+- BL-094 advances to `Done-candidate`.
+- the guardrail now exists in docs, architecture, and the live `EMITTER` motion surface.
+- formal `Done` is intentionally deferred to archive/closeout sync.
+
+## BL-093 Owner Sync (UTC 2026-03-18T04:40:57Z)
+
+1. Evidence bundle
+- owner packet:
+  - `TestEvidence/bl093_owner_sync_z1_20260318T044057Z/promotion_decision.md`
+- validation bundle:
+  - `TestEvidence/bl093_visual_token_polish_20260318T042850Z/summary.md`
+- fresh standalone selftest artifact:
+  - `TestEvidence/locusq_production_p0_selftest_20260318T044147Z.json`
+
+2. Validation replay
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cd companion && swift build` -> `PASS`
+- `cd companion && swift test` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS`
+
+3. Disposition
+- BL-093 advances to `Done-candidate`.
+- no new BL-093 implementation slice remains.
+- formal `Done` is intentionally deferred to archive/closeout sync.
+
+## BL-093 Validation Intake (UTC 2026-03-18T04:36:44Z)
+
+1. Evidence bundle
+- validation packet:
+  - `TestEvidence/bl093_visual_token_polish_20260318T042850Z/summary.md`
+- canonical captures:
+  - `plugin-browser-preview-renderer.png`
+  - `plugin-standalone-shell.png`
+  - `companion-focus-native.png`
+
+2. Validation replay
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cd companion && swift build` -> `PASS`
+- `cd companion && swift test` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` -> `PASS`
+
+3. Disposition
+- BL-093 advances to `In Validation`.
+- the approved visual token packet is now authoritative after the live-shell reconciliation.
+- remaining work is owner promotion and later archive/closeout, not missing implementation.
+
+## UI/UX Trust Wave Validation Sync (UTC 2026-03-18T03:57:20Z)
+
+1. Evidence bundle
+- fresh validation bundle:
+  - `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/summary.md`
+- canonical captures:
+  - `plugin-renderer-standalone.png`
+  - `browser-preview-renderer.png`
+  - `companion-focus-baseline.png`
+  - `companion-lab.png`
+
+2. Lightweight code validation
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cd companion && swift test` -> `PASS`
+
+3. Disposition
+- BL-089 advances to `In Validation`.
+- BL-090 advances to `In Validation`.
+- BL-091 advances to `In Validation`.
+- BL-092 advances to `In Validation`.
+- remaining work is the owner-facing parity/promotion packet rather than missing implementation.
+
+## BL-080 Validation Recovery Addendum (UTC 2026-03-18T02:24:50Z)
+
+1. Validation recovery scope
+- confirmed the rebuilt standalone production self-test now reaches and records both authoring-history checks:
+  - `UI-W3A-01`: `timeline undo/redo restored deleted keyframe`
+  - `UI-W3A-02`: `preset delete undo/redo restored and removed renamed motion preset`
+- evidence artifact:
+  - `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json`
+
+2. Validation replay
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` -> `PASS`
+- `./scripts/standalone-ui-selftest-production-p0-mac.sh build_local/LocusQ_artefacts/Release/Standalone/LocusQ.app` -> `PASS`
+
+3. Disposition
+- BL-080 advances from `In Validation` to `Done-candidate`.
+- the earlier CALIBRATE topology/legacy-alias blocker is no longer active in the rebuilt standalone replay.
+- remaining work is owner promotion and archive/closeout sync.
+
+4. Governance sync
+- `./scripts/export-backlog-summaries.py` -> `PASS`
+- `./scripts/export-backlog-summaries.py --check` -> `PASS`
+- `./scripts/validate-backlog-plain-language.sh` -> `PASS`
+- `./scripts/validate-backlog-redundancy.py` -> `PASS`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+
+## BL-085 CMake Integration Intake (UTC 2026-03-17T23:00:00Z)
+
+1. Implementation slice
+- upstream harness now publishes `cmake/qa_harness_integration.cmake` plus `cmake/MIGRATION.md`, and exposes the module from the installed package config
+- upstream module commit: `17f2992` (`Add QA harness integration module`)
+- LocusQ `CMakeLists.txt` now bootstraps the harness module from either a source checkout or an installed package and routes QA target wiring through `enable_qa_harness(...)`
+- added local validation lane: `scripts/qa-bl085-cmake-integration-mac.sh`
+
+2. Validation replay
+- `bash -n scripts/qa-bl085-cmake-integration-mac.sh` -> `PASS`
+- `cmake -S /Users/artbox/Documents/Repos/audio-dsp-qa-harness -B /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module -DBUILD_QA_TESTS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5` -> `PASS`
+- `cmake --build /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --target qa_runner_app qa_runner_app_test test_suite_test performance_invariant_test --parallel` -> `PASS`
+- `ctest --test-dir /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --output-on-failure -R 'qa_runner_app_test|test_suite_test|performance_invariant_test'` -> `PASS`
+- `cmake --build /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --target qa_state --parallel` -> `PASS`
+- `cmake --install /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --prefix /tmp/audio-dsp-qa-harness-bl085-install.Qp1uEh` -> `PASS`
+- `./scripts/qa-bl085-cmake-integration-mac.sh --build-dir build_bl085_locusq --out-dir TestEvidence/bl085_cmake_integration_20260317T230000Z` -> `PASS`
+- LocusQ artifact root: `TestEvidence/bl085_cmake_integration_20260317T230000Z`
+
+3. Validation notes
+- installed-package verification confirmed both exported module surfaces:
+  - `/tmp/audio-dsp-qa-harness-bl085-install.Qp1uEh/lib/cmake/audio_dsp_qa_harness/qa_harness_integration.cmake`
+  - `/tmp/audio-dsp-qa-harness-bl085-install.Qp1uEh/share/audio_dsp_qa_harness/cmake/MIGRATION.md`
+- the first install attempt failed only because `qa_state` had not yet been built in the targeted validation build; after building the exported library target, install/export passed unchanged
+- LocusQ source-checkout integration path is green end-to-end: configure, `LocusQ_Standalone`, `locusq_qa`, and smoke replay all pass through the harness module path
+
+4. Disposition
+- BL-085 advances to `In Validation`
+- the remaining follow-up is CI/downstream adoption breadth, not another local integration implementation pass
+
+## BL-067 Validation Intake (UTC 2026-03-17T19:12:47Z)
+
+1. Intake scope
+- files: `scripts/qa-bl067-auv3-lifecycle-mac.sh`, `Documentation/backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md`, `Documentation/backlog/index.md`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, `status.json`
+- scope: integrate the proven AUv3 QA-lane upgrade into a clean intake worktree and convert the rerun into an honest validation packet without widening into Slice C or CI cleanup
+
+2. Validation replay
+- `bash -n scripts/qa-bl067-auv3-lifecycle-mac.sh` -> `PASS`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only --runs 3 --out-dir /Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract --build-root /Users/artbox/Documents/Repos/LocusQ-bl067-intake/build_bl067_auv3_lane_intake_20260317T191247Z_contract` -> `PASS`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --execute --runs 1 --out-dir /Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute --build-root /Users/artbox/Documents/Repos/LocusQ-bl067-intake/build_bl067_auv3_lane_intake_20260317T191247Z_execute` -> `PASS`
+- execute `TODO` rows: `0` (`/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute/run_summary.tsv`)
+- contract artifact root: `/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
+- execute artifact root: `/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute`
+
+3. Blocker split
+- code blockers: none observed in Slice A/B intake evidence; packaging, embedding, lifecycle hooks, and execute truthfulness all pass
+- signing blockers: `/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute/signed_build_probe.log` reaches Xcode `Sign to Run Locally`, but both the AUv3 bundle and the standalone app still report `Signature=adhoc`
+- host-inventory blockers: Logic Pro is installed but only inventory-probed; GarageBand and MainStage are not installed, so host execution evidence remains incomplete
+
+4. Disposition
+- recommendation: move BL-067 to `In Validation`
+- not ready for owner promotion review until Apple-host-ready signing and host execution inventory blockers are cleared
 
 ## W3-A Authoring Undo/Redo (UTC 2026-03-07T04:25:21Z)
 
@@ -5711,3 +5880,172 @@ LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac
 4. Owner disposition
 - BL-068 is recommended for `Done-candidate`.
 - no blocker was found in promotion review; next work is closeout/archive selection, not more temporal intake hardening.
+
+## BL-068 Done Archive Sync (UTC 2026-03-17T22:05:17Z)
+
+1. Closeout scope
+- moved the BL-068 runbook from `Documentation/backlog/` to `Documentation/backlog/done/`
+- synced `Documentation/backlog/index.md`, `status.json`, `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, and backlog summary exports in the same change set
+
+2. Archive validation
+- `./scripts/export-backlog-summaries.py` -> `PASS`
+- `jq empty status.json` -> `PASS`
+- `./scripts/export-backlog-summaries.py --check` -> `PASS`
+- `./scripts/validate-backlog-plain-language.sh` -> `PASS`
+- `./scripts/validate-backlog-redundancy.py` -> `PASS`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+- `git diff --check` -> `PASS`
+
+3. Archive evidence root
+- `TestEvidence/bl068_done_archive_20260317T220517Z/`
+
+4. Final disposition
+- BL-068 is promoted from `Done-candidate` to formal `Done`
+- no new blocker surfaced during archive sync; the owner packet remains the governing promotion decision at `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/promotion_decision.md`
+
+## BL-078 C1 Fuzz/Soak Addendum (UTC 2026-03-17)
+
+1. C1 harness intake
+- new owned surfaces landed locally:
+  - `scripts/qa-bl078-runtime-finite-output-mac.sh`
+  - `qa/scenarios/locusq_bl078_runtime_finite_output_suite.json`
+  - `qa/scenarios/locusq_bl078_zero_distance_quad.json`
+  - `qa/scenarios/locusq_bl078_high_emitters_quad.json`
+  - `qa/scenarios/locusq_bl078_room_doppler_quad.json`
+
+2. C1 evidence
+- bundle: `TestEvidence/bl078_c1_20260317T200916Z/`
+- syntax gate: `bash -n scripts/qa-bl078-runtime-finite-output-mac.sh` -> `PASS`
+- deterministic soak: `5` runs, `signature_divergence=0`, `row_drift=0`
+- smoke suite: `PASS`
+- `LOCUSQ_UI_SELFTEST_SCOPE=bl029` selftest: `PASS`
+- execute artifact schema complete:
+  - `status.tsv`
+  - `validation_matrix.tsv`
+  - `replay_hashes.tsv`
+  - `soak_summary.tsv`
+  - `finite_fuzz.tsv`
+  - `diagnostics_schema.tsv`
+
+3. Remaining blockers
+- initial bundle captured two repo-level blockers:
+  - RT audit `FAIL` with `non_allowlisted=9` in non-owned files (`Source/SpatialRenderer.h`, `Source/PhysicsEngine.h`, `Source/SceneGraph.h`)
+  - docs freshness `FAIL` due stale backlog summary exports
+- follow-up sync in this workspace cleared the docs blocker:
+  - `./scripts/export-backlog-summaries.py` -> `PASS`
+  - `./scripts/validate-docs-freshness.sh` -> `PASS`
+
+4. Current disposition
+- BL-078 remains `In Implementation`.
+- C1 harness work is complete and green on its owned surfaces.
+- remaining blocker for closeout is RT audit debt outside the BL-078 owned write set.
+
+## BL-078 C1 Recheck Addendum (UTC 2026-03-17)
+
+1. RT audit reconciliation
+- `scripts/rt-safety-allowlist.txt` was refreshed for the current static-audit line map.
+- the reconciled entries cover:
+  - prepare-time scratch allocation in `Source/SpatialRenderer.h`
+  - prepare/destructor reservation storage in `Source/SceneGraph.h`
+  - comment/delete false positives in `Source/PhysicsEngine.h` and `Source/SceneGraph.h`
+
+2. Fresh end-to-end replay
+- bundle: `TestEvidence/bl078_c1_recheck_20260317T202140Z/`
+- command: `./scripts/qa-bl078-runtime-finite-output-mac.sh --runs 5 --out-dir TestEvidence/bl078_c1_recheck_20260317T202140Z`
+- result: `PASS`
+  - deterministic replay stable: `signature_divergence=0`, `row_drift=0`
+  - smoke suite: `PASS`
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029`: `PASS`
+  - RT audit: `PASS` (`non_allowlisted=0`)
+  - docs freshness: `PASS`
+
+3. Current disposition
+- BL-078 advances to `In Validation`.
+- A2/B2/C1 are green end-to-end.
+- remaining work is D1 owner closeout, not another implementation slice.
+
+## BL-078 Owner Closeout Addendum (UTC 2026-03-17)
+
+1. Owner packet
+- packet root: `TestEvidence/bl078_owner_sync_z1_20260317T202724Z/`
+- promotion decision: `TestEvidence/bl078_owner_sync_z1_20260317T202724Z/promotion_decision.md`
+- handoff resolution: `TestEvidence/bl078_owner_sync_z1_20260317T202724Z/handoff_resolution.md`
+- cadence note: `TestEvidence/bl078_owner_sync_z1_20260317T202724Z/owner_decisions.md`
+
+2. Promotion baseline retained
+- owner closeout is based on the already-green fresh bundle:
+  - `TestEvidence/bl078_c1_recheck_20260317T202140Z/`
+- baseline facts retained from that bundle:
+  - deterministic replay: `5` runs
+  - `signature_divergence=0`
+  - `row_drift=0`
+  - smoke suite: `PASS`
+  - `LOCUSQ_UI_SELFTEST_SCOPE=bl029`: `PASS`
+  - RT audit: `non_allowlisted=0`
+  - docs freshness: `PASS`
+
+3. Final owner checks
+- `./scripts/export-backlog-summaries.py` -> `PASS`
+- `jq empty status.json` -> `PASS`
+- `./scripts/export-backlog-summaries.py --check` -> `PASS`
+- `./scripts/validate-backlog-plain-language.sh` -> `PASS`
+- `./scripts/validate-backlog-redundancy.py` -> `PASS`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+
+4. Owner disposition
+- BL-078 advances to `Done-candidate`.
+- no implementation blocker remains on the runtime finite-output lane.
+- formal `Done` is deferred to the later archive/closeout move.
+
+## BL-078 Done Archive Sync Addendum (UTC 2026-03-17)
+
+1. Archive move
+- archived runbook path:
+  - `Documentation/backlog/done/bl-078-runtime-finite-output-enforcement-and-diagnostics.md`
+- active backlog row now points at the done-path runbook and records BL-078 as `Done`.
+
+2. Final closeout checks
+- evidence root: `TestEvidence/bl078_done_archive_20260317T204523Z/`
+- `./scripts/export-backlog-summaries.py` -> `PASS`
+- `jq empty status.json` -> `PASS`
+- `./scripts/export-backlog-summaries.py --check` -> `PASS`
+- `./scripts/validate-backlog-plain-language.sh` -> `PASS`
+- `./scripts/validate-backlog-redundancy.py` -> `PASS`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+
+3. Final disposition
+- BL-078 advances from `Done-candidate` to `Done`.
+- the runtime finite-output follow-on created by BL-036 is now fully closed with archive sync complete.
+
+## UI/UX Trust Wave Owner Sync Addendum (UTC 2026-03-18T04:06:18Z)
+
+1. Owner packet
+- packet root: `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/`
+- promotion decision: `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`
+- handoff resolution: `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/handoff_resolution.md`
+- cadence note: `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/owner_decisions.md`
+
+2. Promotion baseline retained
+- owner closeout is based on the already-green fresh trust-wave validation bundle plus the standalone selftest recovery:
+  - `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`
+  - `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json`
+- baseline facts retained from those artifacts:
+  - representative capture coverage: plugin standalone `Renderer`, plugin browser preview `Renderer`, companion `Focus`, companion `Lab`
+  - standalone production selftest: `PASS`
+  - startup-order dead-button regression: cleared
+
+3. Final owner checks
+- `cd Source/ui && npm run typecheck` -> `PASS`
+- `cd Source/ui && npm run build` -> `PASS`
+- `cd companion && swift test` -> `PASS`
+- `./scripts/export-backlog-summaries.py` -> `PASS`
+- `jq empty status.json` -> `PASS`
+- `./scripts/export-backlog-summaries.py --check` -> `PASS`
+- `./scripts/validate-backlog-plain-language.sh` -> `PASS`
+- `./scripts/validate-backlog-redundancy.py` -> `PASS`
+- `./scripts/validate-docs-freshness.sh` -> `PASS`
+
+4. Owner disposition
+- BL-089, BL-090, BL-091, and BL-092 advance to `Done-candidate`.
+- no implementation blocker remains inside the trust-wave UI/UX bundle.
+- formal `Done` is deferred to the later archive/closeout move.

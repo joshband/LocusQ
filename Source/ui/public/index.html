@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LocusQ</title>
+  <link rel="icon" href="data:,">
   <script>
     window.__LQ_BOOT_ERRORS__ = [];
     window.addEventListener("error", function (event) {
@@ -21,39 +22,91 @@
   </script>
   <script defer src="js/juce/check_native_interop.js"></script>
   <script defer src="js/juce/index.js"></script>
-  <script defer src="js/index.js"></script>
+  <script>
+    (function () {
+      var bootErrors = window.__LQ_BOOT_ERRORS__ || (window.__LQ_BOOT_ERRORS__ = []);
+      var isBrowserPreviewSurface =
+        window.location.protocol === "file:" ||
+        ((window.location.protocol === "http:" || window.location.protocol === "https:") &&
+         /\/public\/index\.html(?:$|\?)/.test(window.location.pathname));
+      var bundleCandidates = (isBrowserPreviewSurface
+        ? ["../generated/index.js", "js/index.js"]
+        : ["js/index.js", "../generated/index.js"]).map(function (candidate) {
+        return new URL(candidate, window.location.href).toString();
+      });
+      var tried = [];
+
+      function loadBundle(candidateIndex) {
+        if (candidateIndex >= bundleCandidates.length) {
+          var message = "Unable to load the LocusQ UI bundle via " + tried.join(" then ");
+          bootErrors.push(message);
+          console.error(message);
+          return;
+        }
+
+        var bundleUrl = bundleCandidates[candidateIndex];
+        tried.push(bundleUrl);
+
+        var bundleScript = document.createElement("script");
+        bundleScript.src = bundleUrl;
+        bundleScript.async = false;
+        bundleScript.onload = function () {
+          window.__LQ_BUNDLE_SRC__ = bundleUrl;
+        };
+        bundleScript.onerror = function () {
+          if (bundleScript.parentNode) bundleScript.parentNode.removeChild(bundleScript);
+          loadBundle(candidateIndex + 1);
+        };
+
+        (document.head || document.documentElement).appendChild(bundleScript);
+      }
+
+      loadBundle(0);
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0A0A0A;
-      --surface: #141414;
-      --surface-elevated: #1E1E1E;
-      --border: #2A2A2A;
+      --bg: #06080B;
+      --surface: #0E1218;
+      --surface-elevated: #171D26;
+      --surface-soft: #232B38;
+      --surface-glass: rgba(23, 29, 38, 0.82);
+      --border: #2D3745;
+      --border-soft: #212936;
       --gold: #D4A847;
       --gold-bright: #E8C464;
       --gold-dim: #8B7234;
-      --text-primary: #E0E0E0;
-      --text-secondary: #AAAAAA;
-      --text-dim: #666666;
-      --text-warning: #AA4444;
-      --text-error: #D4736F;
-      --text-info: #7FA7D9;
-      --text-success: #44AA66;
-      --wireframe: #E0E0E0;
-      --rail-width-base: 356px;
-      --rail-width-compact: 308px;
-      --rail-width-tight: 288px;
+      --signal-live: #59D8FF;
+      --signal-ready: #67E2A5;
+      --signal-warn: #FFB86B;
+      --signal-error: #FF7A6E;
+      --signal-inactive: #6E7A8E;
+      --text-primary: #EEF4FB;
+      --text-secondary: #A6B1C2;
+      --text-dim: #6E7A8E;
+      --text-warning: var(--signal-warn);
+      --text-error: var(--signal-error);
+      --text-info: var(--signal-live);
+      --text-success: var(--signal-ready);
+      --wireframe: #EEF4FB;
+      --rail-width-base: 348px;
+      --rail-width-compact: 320px;
+      --rail-width-tight: 292px;
       --rail-width: var(--rail-width-base);
-      --header-height: 40px;
-      --timeline-height: 158px;
-      --timeline-height-compact: 140px;
-      --timeline-height-tight: 128px;
+      --header-height: 44px;
+      --timeline-height: 152px;
+      --timeline-height-compact: 136px;
+      --timeline-height-tight: 124px;
       --emitter-row-height: 32px;
       --emitter-section-gap: 14px;
       --emitter-inline-input-width: 148px;
       --emitter-inline-input-width-tight: 124px;
-      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: "Avenir Next", "IBM Plex Sans", "Segoe UI", sans-serif;
+      --font-body: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font: var(--font-body);
     }
 
     html, body {
@@ -62,7 +115,10 @@
     }
 
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(1000px 520px at 14% 0%, rgba(89, 216, 255, 0.06), transparent 34%),
+        radial-gradient(880px 480px at 100% 100%, rgba(212, 168, 71, 0.05), transparent 30%),
+        var(--bg);
       color: var(--text-primary);
       font-family: var(--font);
       width: 100%;
@@ -90,7 +146,7 @@
     /* ===== HEADER ===== */
     .header {
       height: var(--header-height);
-      background: var(--surface);
+      background: linear-gradient(180deg, rgba(23, 29, 38, 0.96), rgba(14, 18, 24, 0.98));
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -102,6 +158,7 @@
     .logo {
       font-size: 14px; font-weight: 700;
       letter-spacing: 2px; color: var(--gold);
+      font-family: var(--font-display);
     }
 
     .mode-tabs { display: flex; position: relative; margin-left: 8px; }
@@ -113,6 +170,7 @@
       color: var(--text-dim);
       cursor: pointer; border: none; background: none;
       position: relative; transition: color 200ms;
+      font-family: var(--font-display);
     }
     .mode-tab.active { color: var(--text-primary); }
     .mode-tab.active::after {
@@ -124,29 +182,68 @@
     .mode-tab:hover:not(.active) { color: var(--text-secondary); }
 
     .header-spacer { flex: 1; }
+    .header-status-cluster {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
     .scene-status {
       font-size: 9px; font-weight: 600;
       letter-spacing: 1.5px; text-transform: uppercase;
       padding: 3px 8px; border-radius: 9px;
-      border: 1px solid rgba(170,170,170,0.2);
-      color: var(--text-secondary);
+      border: 1px solid rgba(110, 122, 142, 0.28);
+      color: var(--signal-inactive);
+      background: rgba(10, 14, 20, 0.56);
       transition: all 200ms;
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
     }
     .scene-status.physics { color: var(--gold); border-color: rgba(212,168,71,0.3); animation: statusPulse 1s ease infinite; }
     .scene-status.measuring { color: var(--gold); border-color: rgba(212,168,71,0.3); animation: statusPulse 1s ease infinite; }
-    .scene-status.ready { color: var(--text-success); border-color: rgba(68,170,102,0.3); }
-    .scene-status.noprofile { color: var(--text-warning); border-color: rgba(170,68,68,0.3); }
-    .scene-status.stale { color: var(--text-warning); border-color: rgba(212,168,71,0.4); animation: statusPulse 1.2s ease infinite; }
-    .viewport-lock {
+    .scene-status.ready { color: var(--text-success); border-color: rgba(103,226,165,0.32); background: rgba(11, 32, 23, 0.62); }
+    .scene-status.noprofile { color: var(--text-warning); border-color: rgba(255,184,107,0.34); background: rgba(44, 31, 12, 0.56); }
+    .scene-status.stale { color: var(--text-warning); border-color: rgba(255,184,107,0.42); background: rgba(44, 31, 12, 0.58); animation: statusPulse 1.2s ease infinite; }
+    .trust-badge {
       font-size: 9px;
       font-weight: 600;
       letter-spacing: 1.2px;
       text-transform: uppercase;
-      color: var(--text-dim);
-      border: 1px solid rgba(102,102,102,0.25);
+      color: var(--signal-inactive);
+      border: 1px solid rgba(110, 122, 142, 0.28);
       border-radius: 9px;
       padding: 3px 8px;
+      background: rgba(10, 14, 20, 0.48);
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
+    }
+    .trust-badge.safe {
+      color: var(--text-success);
+      border-color: rgba(103,226,165,0.32);
+      background: rgba(11, 32, 23, 0.56);
+    }
+    .trust-badge.warning {
+      color: var(--text-warning);
+      border-color: rgba(255,184,107,0.36);
+      background: rgba(44, 31, 12, 0.54);
+    }
+    .trust-badge.degraded {
+      color: var(--text-error);
+      border-color: rgba(255,122,110,0.38);
+      background: rgba(52, 18, 18, 0.52);
+    }
+    .viewport-lock.contextual {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 4;
+      display: none;
+      background: var(--surface-glass);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+    }
+    body.mode-emitter .viewport-lock.contextual {
+      display: inline-flex;
     }
 
     @keyframes statusPulse {
@@ -171,7 +268,7 @@
       appearance: none; -webkit-appearance: none;
     }
     .quality-badge.draft { border: 1px solid var(--text-dim); color: var(--text-secondary); background: transparent; }
-    .quality-badge.final { border: 1px solid var(--gold); color: #0A0A0A; background: var(--gold); }
+    .quality-badge.final { border: 1px solid var(--gold); color: var(--bg); background: var(--gold); }
     .sr-only {
       position: absolute;
       width: 1px;
@@ -474,7 +571,7 @@
     .view-buttons { position: absolute; top: 8px; left: 8px; display: flex; gap: 4px; }
     .view-btn {
       width: 28px; height: 28px;
-      background: rgba(20,20,20,0.8);
+      background: rgba(14, 18, 24, 0.82);
       border: 1px solid var(--border); border-radius: 4px;
       color: var(--text-dim); font-size: 10px; font-weight: 600;
       cursor: pointer;
@@ -498,8 +595,8 @@
     .control-value[data-stepper="1"]:focus-visible,
     #viewport-canvas:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px rgba(212, 168, 71, 0.18), 0 0 0 1px var(--gold);
-      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(89, 216, 255, 0.2), 0 0 0 1px var(--signal-live);
+      border-color: var(--signal-live);
     }
 
     .viewport-overlay {
@@ -566,8 +663,8 @@
       cursor: pointer; border-radius: 3px;
       padding: 0 4px; transition: background 100ms;
     }
-    .timeline-lane:hover { background: rgba(42,42,42,0.5); }
-    .timeline-lane.selected { background: rgba(212,168,71,0.08); }
+    .timeline-lane:hover { background: rgba(35, 43, 56, 0.48); }
+    .timeline-lane.selected { background: rgba(212,168,71,0.1); }
 
     .lane-label {
       font-size: 10px; color: var(--text-dim);
@@ -649,6 +746,7 @@
       font-size: 10px; font-weight: 600;
       letter-spacing: 1.2px; text-transform: uppercase;
       color: var(--text-dim);
+      font-family: var(--font-display);
     }
 
     .section { padding: 0 12px 12px; }
@@ -658,6 +756,7 @@
       color: var(--text-dim);
       padding: 12px 0 8px;
       border-top: 1px solid var(--border);
+      font-family: var(--font-display);
     }
 
     .rail-panel[data-panel="emitter"] {
@@ -678,9 +777,9 @@
     }
     .emitter-card {
       padding: 0 10px 10px;
-      border: 1px solid rgba(212, 168, 71, 0.12);
+      border: 1px solid rgba(212, 168, 71, 0.16);
       border-radius: 8px;
-      background: rgba(18, 18, 18, 0.65);
+      background: rgba(14, 18, 24, 0.84);
     }
     .emitter-card .section {
       padding: 0;
@@ -704,12 +803,13 @@
       margin: -4px 12px 2px;
       padding: 5px 8px;
       border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(45, 55, 69, 0.82);
+      background: rgba(14, 18, 24, 0.76);
       color: var(--text-dim);
       font-size: 9px;
       letter-spacing: 0.6px;
       text-transform: uppercase;
+      font-family: var(--font-display);
     }
     .emitter-authority-note.locked {
       border-color: rgba(212, 168, 71, 0.36);
@@ -723,29 +823,46 @@
       text-transform: uppercase;
       padding: 3px 8px;
       border-radius: 9px;
-      border: 1px solid rgba(160, 160, 160, 0.22);
+      border: 1px solid rgba(110, 122, 142, 0.28);
       color: var(--text-secondary);
-      background: rgba(24, 24, 24, 0.7);
+      background: rgba(14, 18, 24, 0.78);
       white-space: nowrap;
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
     }
     .status-chip.active {
-      border-color: rgba(212, 168, 71, 0.45);
+      border-color: rgba(89, 216, 255, 0.42);
+      color: var(--signal-live);
+      background: rgba(89, 216, 255, 0.12);
+    }
+    .status-chip.warning {
+      border-color: rgba(255, 184, 107, 0.38);
+      color: var(--signal-warn);
+      background: rgba(255, 184, 107, 0.1);
+    }
+    .status-chip.lab {
+      border-color: rgba(212, 168, 71, 0.36);
       color: var(--gold);
       background: rgba(212, 168, 71, 0.12);
     }
-    .status-chip.warning {
-      border-color: rgba(212, 168, 71, 0.42);
-      color: var(--gold);
-    }
     .status-chip.local {
-      border-color: rgba(68, 170, 102, 0.45);
+      border-color: rgba(103, 226, 165, 0.4);
       color: var(--text-success);
-      background: rgba(68, 170, 102, 0.1);
+      background: rgba(103, 226, 165, 0.1);
     }
     .status-chip.remote {
       border-color: rgba(212, 168, 71, 0.42);
       color: var(--gold);
       background: rgba(212, 168, 71, 0.12);
+    }
+    .status-chip.error {
+      border-color: rgba(255, 122, 110, 0.4);
+      color: var(--text-error);
+      background: rgba(255, 122, 110, 0.1);
+    }
+    .status-chip.inactive {
+      color: var(--signal-inactive);
+      border-color: rgba(110, 122, 142, 0.28);
     }
     .rail-panel[data-panel="calibrate"] {
       padding-bottom: 12px;
@@ -995,6 +1112,11 @@
       border-radius: 8px;
       background: rgba(18, 18, 18, 0.64);
     }
+    .renderer-card.renderer-authority-card {
+      border-color: rgba(212, 168, 71, 0.28);
+      background: linear-gradient(180deg, rgba(28, 24, 18, 0.92), rgba(18, 18, 18, 0.72));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
     .renderer-card .section {
       padding: 0;
     }
@@ -1020,6 +1142,13 @@
       padding: 0 8px;
       background: rgba(255, 255, 255, 0.02);
     }
+    .renderer-profile-line.long {
+      min-height: 0;
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 7px 8px;
+      gap: 4px;
+    }
     .renderer-profile-label {
       font-size: 10px;
       letter-spacing: 0.5px;
@@ -1032,11 +1161,75 @@
       letter-spacing: 0.2px;
       text-align: right;
     }
+    .renderer-profile-line.long .renderer-profile-value {
+      width: 100%;
+      text-align: left;
+      line-height: 1.35;
+      color: var(--text-secondary);
+    }
     .renderer-output-summary {
       font-size: 10px;
       color: var(--text-secondary);
       line-height: 1.35;
       padding-top: 6px;
+    }
+    .renderer-lab-drawer {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: rgba(12, 12, 12, 0.6);
+      overflow: hidden;
+    }
+    .renderer-lab-drawer[open] {
+      border-color: rgba(212, 168, 71, 0.22);
+      background: rgba(14, 14, 14, 0.72);
+    }
+    .renderer-lab-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .renderer-lab-summary::-webkit-details-marker {
+      display: none;
+    }
+    .renderer-lab-summary-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .renderer-lab-arrow {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--gold);
+      transform: rotate(0deg);
+      transition: transform 140ms ease;
+    }
+    .renderer-lab-drawer[open] .renderer-lab-arrow {
+      transform: rotate(90deg);
+    }
+    .renderer-lab-label {
+      font-size: 11px;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+    .renderer-lab-summary-text {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+      text-align: right;
+      min-width: 0;
+    }
+    .renderer-lab-content {
+      display: grid;
+      gap: 10px;
+      padding: 0 10px 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
     .renderer-diagnostic-list {
       display: grid;
@@ -1225,6 +1418,75 @@
       opacity: 1.0;
       pointer-events: auto;
       filter: none;
+    }
+    .motion-scope-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.03);
+      font-size: 10px;
+      line-height: 1.35;
+      color: var(--text-secondary);
+    }
+    .motion-lab-drawer {
+      margin-top: 10px;
+      border: 1px solid rgba(212, 168, 71, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      overflow: hidden;
+    }
+    .motion-lab-drawer[open] {
+      background: rgba(212, 168, 71, 0.05);
+      border-color: rgba(212, 168, 71, 0.28);
+    }
+    .motion-lab-summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .motion-lab-summary::-webkit-details-marker {
+      display: none;
+    }
+    .motion-lab-summary-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .motion-lab-arrow {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--gold);
+      transform: rotate(0deg);
+      transition: transform 140ms ease;
+    }
+    .motion-lab-drawer[open] .motion-lab-arrow {
+      transform: rotate(90deg);
+    }
+    .motion-lab-label {
+      font-size: 11px;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+    .motion-lab-summary-text {
+      min-width: 0;
+      font-size: 10px;
+      line-height: 1.3;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+    .motion-lab-content {
+      display: grid;
+      gap: 10px;
+      padding: 0 10px 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
     .emitter-diagnostics-toggle {
       cursor: pointer;
@@ -1820,13 +2082,11 @@
       <button class="mode-tab" data-mode="renderer" type="button">Renderer</button>
     </div>
     <div class="header-spacer"></div>
-    <div class="scene-status" id="scene-status">STABLE</div>
-    <div class="viewport-lock" id="viewport-lock">VIEWPORT LOCK</div>
-    <div class="room-profile">
-      <span class="dot none" id="room-dot"></span>
-      <span style="color: var(--text-secondary); font-size: 11px;" id="room-label">No Profile</span>
+    <div class="header-status-cluster">
+      <div class="scene-status" id="scene-status">STABLE</div>
+      <div class="trust-badge" id="header-trust-badge">BOOTING</div>
+      <button class="quality-badge draft" id="quality-badge" type="button">DRAFT</button>
     </div>
-    <button class="quality-badge draft" id="quality-badge" type="button">DRAFT</button>
   </div>
 
   <!-- MAIN -->
@@ -1840,6 +2100,7 @@
         <button class="view-btn" data-view="front" title="Front" aria-label="Front view" type="button">F</button>
         <button class="view-btn" data-view="side" title="Side" aria-label="Side view" type="button">S</button>
       </div>
+      <div class="trust-badge viewport-lock contextual" id="viewport-lock">VIEWPORT SAFE</div>
 
       <div class="calibration-status-dock hidden" id="calibration-status-dock" data-state="idle" aria-live="polite">
         <div class="calibration-status-dock-header">
@@ -2102,7 +2363,8 @@
           <div class="emitter-card" data-emitter-group="motion">
             <div class="section">
               <div class="section-header">Motion</div>
-              <div class="control-row"><span class="control-label">Motion Source</span><select class="dropdown wide" id="motion-source-select"><option value="static">Static</option><option value="physics">Physics</option><option value="timeline">Timeline</option><option value="choreography">Choreography</option></select></div>
+              <div class="control-row"><span class="control-label">Motion Source</span><select class="dropdown wide" id="motion-source-select"><option value="static">Static</option><option value="physics">Physics Lab</option><option value="timeline">Timeline</option><option value="choreography">Choreography Lab</option></select></div>
+              <div class="motion-scope-note" id="motion-scope-note">Static and Timeline stay first-layer. Physics and Choreography live in Motion Lab until you need an experiment.</div>
               <div class="control-row"><span class="control-label">Audition Authority</span><span class="status-chip active" id="audition-authority-chip">Renderer</span></div>
               <div class="control-row"><span class="control-value" id="audition-authority-note">Renderer panel owns audition state.</span></div>
               <div class="control-row"><span class="control-label">Emitter Proxy</span><button class="btn-secondary" id="audition-proxy-emitter-btn">AUDITION THIS</button></div>
@@ -2120,42 +2382,6 @@
                   <span class="control-value motion-speed-value" id="val-anim-speed">1.0<span class="control-unit">x</span></span>
                 </div>
               </div>
-              <div class="motion-subsection active" id="motion-panel-physics" data-motion-panel="physics">
-                <div class="motion-subsection-title">
-                  <span>Physics</span>
-                  <select class="dropdown wide" id="physics-preset">
-                    <option value="off">Off</option>
-                    <option value="bounce">Bounce</option>
-                    <option value="float">Float</option>
-                    <option value="orbit">Orbit</option>
-                    <option value="custom">Custom</option>
-                  </select>
-                </div>
-                <div class="control-row"><span class="control-label">Proxy</span><button class="btn-secondary" id="audition-proxy-physics-btn">AUDITION PHYSICS</button></div>
-                <div id="physics-active" style="display:none;">
-                  <div class="control-row"><span class="control-label">Intensity</span><span class="control-value">0.5</span></div>
-                  <div class="btn-row">
-                    <button class="btn-secondary" id="btn-throw">THROW</button>
-                    <button class="btn-secondary" id="btn-reset">RESET</button>
-                  </div>
-                  <button class="disclosure" id="physics-disclosure" type="button" aria-expanded="false" aria-controls="physics-advanced">
-                    <span class="disclosure-arrow" id="physics-arrow">&#9654;</span>
-                    Advanced
-                  </button>
-                  <div class="disclosure-content" id="physics-advanced">
-                    <div class="control-row"><span class="control-label">Mass</span><span class="control-value" id="val-mass">1.0<span class="control-unit">kg</span></span></div>
-                    <div class="control-row"><span class="control-label">Drag</span><span class="control-value" id="val-drag">0.5</span></div>
-                    <div class="control-row"><span class="control-label">Elasticity</span><span class="control-value" id="val-elasticity">0.7</span></div>
-                    <div class="control-row"><span class="control-label">Gravity</span><span class="control-value" id="val-gravity">0.0<span class="control-unit">m/s&sup2;</span></span></div>
-                    <div class="control-row"><span class="control-label">Friction</span><span class="control-value" id="val-friction">0.3</span></div>
-                    <div class="control-row"><span class="control-label">Direction</span><select class="dropdown" id="phys-grav-dir"><option>Down</option><option>Up</option><option>Center</option><option>From Center</option><option>Custom</option></select></div>
-                    <div class="control-row"><span class="control-label">Init Vel X</span><span class="control-value" id="val-vel-x">0.0<span class="control-unit">m/s</span></span></div>
-                    <div class="control-row"><span class="control-label">Init Vel Y</span><span class="control-value" id="val-vel-y">0.0<span class="control-unit">m/s</span></span></div>
-                    <div class="control-row"><span class="control-label">Init Vel Z</span><span class="control-value" id="val-vel-z">0.0<span class="control-unit">m/s</span></span></div>
-                  </div>
-                </div>
-              </div>
-
               <div class="motion-subsection inactive" id="motion-panel-timeline" data-motion-panel="timeline">
                 <div class="motion-subsection-title">
                   <span>Timeline</span>
@@ -2165,29 +2391,76 @@
                 </div>
               </div>
 
-              <div class="motion-subsection inactive" id="motion-panel-choreography" data-motion-panel="choreography">
-                <div class="motion-subsection-title">
-                  <span>Choreography</span>
+              <details class="motion-lab-drawer" id="motion-lab-drawer">
+                <summary class="motion-lab-summary">
+                  <span class="motion-lab-summary-main">
+                    <span class="motion-lab-arrow">&#9654;</span>
+                    <span class="motion-lab-label">Motion Lab</span>
+                  </span>
+                  <span class="motion-lab-summary-text" id="motion-lab-summary">Physics and choreography stay tucked here until you need an experiment.</span>
+                </summary>
+                <div class="motion-lab-content">
+                  <div class="motion-subsection inactive" id="motion-panel-physics" data-motion-panel="physics">
+                    <div class="motion-subsection-title">
+                      <span>Physics Lab</span>
+                      <select class="dropdown wide" id="physics-preset">
+                        <option value="off">Off</option>
+                        <option value="bounce">Bounce</option>
+                        <option value="float">Float</option>
+                        <option value="orbit">Orbit</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
+                    <div class="control-row"><span class="control-label">Proxy</span><button class="btn-secondary" id="audition-proxy-physics-btn">AUDITION PHYSICS</button></div>
+                    <div id="physics-active" style="display:none;">
+                      <div class="control-row"><span class="control-label">Intensity</span><span class="control-value">0.5</span></div>
+                      <div class="btn-row">
+                        <button class="btn-secondary" id="btn-throw">THROW</button>
+                        <button class="btn-secondary" id="btn-reset">RESET</button>
+                      </div>
+                      <button class="disclosure" id="physics-disclosure" type="button" aria-expanded="false" aria-controls="physics-advanced">
+                        <span class="disclosure-arrow" id="physics-arrow">&#9654;</span>
+                        Advanced
+                      </button>
+                      <div class="disclosure-content" id="physics-advanced">
+                        <div class="control-row"><span class="control-label">Mass</span><span class="control-value" id="val-mass">1.0<span class="control-unit">kg</span></span></div>
+                        <div class="control-row"><span class="control-label">Drag</span><span class="control-value" id="val-drag">0.5</span></div>
+                        <div class="control-row"><span class="control-label">Elasticity</span><span class="control-value" id="val-elasticity">0.7</span></div>
+                        <div class="control-row"><span class="control-label">Gravity</span><span class="control-value" id="val-gravity">0.0<span class="control-unit">m/s&sup2;</span></span></div>
+                        <div class="control-row"><span class="control-label">Friction</span><span class="control-value" id="val-friction">0.3</span></div>
+                        <div class="control-row"><span class="control-label">Direction</span><select class="dropdown" id="phys-grav-dir"><option>Down</option><option>Up</option><option>Center</option><option>From Center</option><option>Custom</option></select></div>
+                        <div class="control-row"><span class="control-label">Init Vel X</span><span class="control-value" id="val-vel-x">0.0<span class="control-unit">m/s</span></span></div>
+                        <div class="control-row"><span class="control-label">Init Vel Y</span><span class="control-value" id="val-vel-y">0.0<span class="control-unit">m/s</span></span></div>
+                        <div class="control-row"><span class="control-label">Init Vel Z</span><span class="control-value" id="val-vel-z">0.0<span class="control-unit">m/s</span></span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="motion-subsection inactive" id="motion-panel-choreography" data-motion-panel="choreography">
+                    <div class="motion-subsection-title">
+                      <span>Choreography Lab</span>
+                    </div>
+                    <div class="control-row"><span class="control-label">Proxy</span><button class="btn-secondary" id="audition-proxy-choreography-btn">AUDITION CHOREO</button></div>
+                    <div class="control-row">
+                      <span class="control-label">Pack</span>
+                      <select class="dropdown wide" id="choreo-pack-select">
+                        <option value="custom">Custom</option>
+                        <option value="orbit">Orbit</option>
+                        <option value="pendulum">Pendulum</option>
+                        <option value="swarm_arc">Swarm Arc</option>
+                        <option value="rise_fall">Rise/Fall</option>
+                      </select>
+                    </div>
+                    <div class="btn-row">
+                      <button class="btn-secondary" id="choreo-apply-btn">APPLY</button>
+                      <button class="btn-secondary" id="choreo-save-btn">SAVE PACK</button>
+                    </div>
+                    <div class="control-row">
+                      <span class="control-value" id="choreo-status">Pack ready</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="control-row"><span class="control-label">Proxy</span><button class="btn-secondary" id="audition-proxy-choreography-btn">AUDITION CHOREO</button></div>
-                <div class="control-row">
-                  <span class="control-label">Pack</span>
-                  <select class="dropdown wide" id="choreo-pack-select">
-                    <option value="custom">Custom</option>
-                    <option value="orbit">Orbit</option>
-                    <option value="pendulum">Pendulum</option>
-                    <option value="swarm_arc">Swarm Arc</option>
-                    <option value="rise_fall">Rise/Fall</option>
-                  </select>
-                </div>
-                <div class="btn-row">
-                  <button class="btn-secondary" id="choreo-apply-btn">APPLY</button>
-                  <button class="btn-secondary" id="choreo-save-btn">SAVE PACK</button>
-                </div>
-                <div class="control-row">
-                  <span class="control-value" id="choreo-status">Pack ready</span>
-                </div>
-              </div>
+              </details>
             </div>
           </div>
 
@@ -2250,30 +2523,19 @@
           <span class="status-chip neutral" id="rend-chip-profile-stage">Stage: Direct</span>
           <span class="status-chip neutral" id="rend-chip-output">Out: 2ch Stereo</span>
         </div>
-        <div class="renderer-fallback-note warning" id="rend-fallback-note">Awaiting renderer payload from scene-state bridge.</div>
+        <div class="renderer-fallback-note warning" id="rend-fallback-note">Waiting for a live renderer session. Safe defaults remain visible.</div>
         <div class="renderer-panel">
-          <div class="renderer-card" data-renderer-group="profile-authority">
+          <div class="renderer-card renderer-authority-card" data-renderer-group="profile-authority">
             <div class="section">
-              <div class="section-header">Profile Authority</div>
+              <div class="section-header">Authority and Active Path</div>
               <div class="renderer-profile-grid">
-                <div class="renderer-profile-line"><span class="renderer-profile-label">Requested</span><span class="renderer-profile-value" id="rend-profile-requested">Auto</span></div>
-                <div class="renderer-profile-line"><span class="renderer-profile-label">Active</span><span class="renderer-profile-value" id="rend-profile-active">Auto</span></div>
-                <div class="renderer-profile-line"><span class="renderer-profile-label">Stage</span><span class="renderer-profile-value" id="rend-profile-stage">Direct</span></div>
-                <div class="renderer-profile-line"><span class="renderer-profile-label">Output Route</span><span class="renderer-profile-value" id="rend-output-route">L/R</span></div>
+                <div class="renderer-profile-line"><span class="renderer-profile-label">Requested</span><span class="renderer-profile-value" id="rend-profile-requested">Waiting for session · n/a</span></div>
+                <div class="renderer-profile-line"><span class="renderer-profile-label">Active</span><span class="renderer-profile-value" id="rend-profile-active">Safe defaults · n/a</span></div>
+                <div class="renderer-profile-line long"><span class="renderer-profile-label">Why This Changed</span><span class="renderer-profile-value" id="rend-profile-why">Waiting for a live renderer session.</span></div>
+                <div class="renderer-profile-line long"><span class="renderer-profile-label">Profile Source</span><span class="renderer-profile-value" id="rend-profile-source">Preview shell defaults until a live session connects.</span></div>
+                <div class="renderer-profile-line long"><span class="renderer-profile-label">Control Owner</span><span class="renderer-profile-value" id="rend-profile-owner">System fallback is holding safe defaults.</span></div>
               </div>
-              <div class="renderer-output-summary" id="rend-output-summary">Renderer payload unavailable. Showing fallback-safe control defaults.</div>
-            </div>
-          </div>
-
-          <div class="renderer-card" data-renderer-group="output">
-            <div class="section">
-              <div class="section-header">Output and Speakers</div>
-              <div class="control-row"><span class="control-label">Master Gain</span><span class="control-value" id="val-master-gain">0.0<span class="control-unit">dB</span></span></div>
-              <div class="control-row"><span class="control-label">Map</span><span class="control-value" id="rend-speaker-map">Stereo · L/R</span></div>
-              <div class="control-row"><span class="control-label">SPK1</span><span class="control-value" id="rend-spk1-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-              <div class="control-row"><span class="control-label">SPK2</span><span class="control-value" id="rend-spk2-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-              <div class="control-row"><span class="control-label">SPK3</span><span class="control-value" id="rend-spk3-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
-              <div class="control-row"><span class="control-label">SPK4</span><span class="control-value" id="rend-spk4-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+              <div class="renderer-output-summary" id="rend-output-summary">Safe defaults remain visible until the renderer session connects.</div>
             </div>
           </div>
 
@@ -2289,71 +2551,16 @@
             </div>
           </div>
 
-          <div class="renderer-card" data-renderer-group="audition">
-            <div class="section">
-              <div class="section-header">Audition Source</div>
-              <div class="control-row">
-                <span class="control-label-cluster">
-                  <span class="control-label">Enable</span>
-                  <button class="control-help-button" id="audition-enable-help" type="button" aria-label="About audition enable" aria-describedby="audition-enable-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-enable-description">?</button>
-                </span>
-                <div class="toggle" id="toggle-audition" aria-describedby="audition-enable-description"><div class="toggle-thumb"></div></div>
-              </div>
-              <div class="control-row">
-                <span class="control-label-cluster">
-                  <span class="control-label">Signal</span>
-                  <button class="control-help-button" id="audition-signal-help" type="button" aria-label="About audition signal choices" aria-describedby="audition-signal-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-signal-description">?</button>
-                </span>
-                <select class="dropdown" id="rend-audition-signal" aria-describedby="audition-signal-description"><option>Sine 440</option><option>Dual Tone</option><option>Pink Noise</option><option>Rain</option><option>Snow</option><option>Bouncing Balls</option><option>Wind Chimes</option><option>Crickets</option><option>Song Birds</option><option>Karplus Plucks</option><option>Membrane Drops</option><option>Krell Patch</option><option>Generative Arp</option></select>
-              </div>
-              <div class="control-row">
-                <span class="control-label-cluster">
-                  <span class="control-label">Motion</span>
-                  <button class="control-help-button" id="audition-motion-help" type="button" aria-label="About audition motion choices" aria-describedby="audition-motion-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-motion-description">?</button>
-                </span>
-                <select class="dropdown" id="rend-audition-motion" aria-describedby="audition-motion-description"><option>Center</option><option>Orbit Slow</option><option>Orbit Fast</option><option>Figure8 Flow</option><option>Helix Rise</option><option>Wall Ricochet</option></select>
-              </div>
-              <div class="control-row">
-                <span class="control-label-cluster">
-                  <span class="control-label">Level</span>
-                  <button class="control-help-button" id="audition-level-help" type="button" aria-label="About audition level presets" aria-describedby="audition-level-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-level-description">?</button>
-                </span>
-                <select class="dropdown" id="rend-audition-level" aria-describedby="audition-level-description"><option>-36 dBFS</option><option>-30 dBFS</option><option>-24 dBFS</option><option>-18 dBFS</option><option>-12 dBFS</option></select>
-              </div>
-              <div class="audition-guide" id="audition-guide" aria-live="polite" aria-atomic="true">
-                <div class="audition-guide-chip-row">
-                  <span class="status-chip neutral" id="audition-guide-family-chip">Reference</span>
-                  <span class="status-chip neutral" id="audition-guide-motion-chip">Center</span>
-                  <span class="status-chip neutral" id="audition-guide-level-chip">-24 dBFS</span>
-                </div>
-                <div class="audition-guide-title" id="audition-guide-title">Sine 440 · Center</div>
-                <div class="audition-guide-summary" id="audition-guide-summary">Single-tone anchor for center-image, speaker-balance, and headphone-parity checks.</div>
-                <div class="audition-guide-grid">
-                  <div class="audition-guide-field">
-                    <span class="audition-guide-field-label">Best For</span>
-                    <span class="audition-guide-field-value" id="audition-guide-best-for">Center image, speaker trim, and fast A/B checks between speaker and headphone modes.</span>
-                  </div>
-                  <div class="audition-guide-field">
-                    <span class="audition-guide-field-label">Motion Cue</span>
-                    <span class="audition-guide-field-value" id="audition-guide-motion-summary">Static front-center anchor keeps timbre and imaging judgments simple.</span>
-                  </div>
-                  <div class="audition-guide-field">
-                    <span class="audition-guide-field-label">Level Cue</span>
-                    <span class="audition-guide-field-value" id="audition-guide-level-summary">-24 dBFS is the general-purpose default: loud enough for motion and room checks without jumping straight to stress-test levels.</span>
-                  </div>
-                  <div class="audition-guide-field">
-                    <span class="audition-guide-field-label">Listen For</span>
-                    <span class="audition-guide-field-value" id="audition-guide-listen-for">Image pull, spectral tilt, binaural externalization stability, and obvious room-coloration artifacts.</span>
-                  </div>
-                </div>
-                <div class="audition-guide-note" id="audition-guide-note">Audition is off. These notes describe the currently selected source and what will happen when the renderer-owned internal audition source is enabled.</div>
-              </div>
-            </div>
-          </div>
-
           <div class="renderer-card" data-renderer-group="room">
             <div class="section">
               <div class="section-header">Room Acoustics</div>
+              <div class="control-row">
+                <span class="control-label">Room Profile</span>
+                <span class="room-profile">
+                  <span class="dot none" id="room-dot"></span>
+                  <span style="color: var(--text-secondary); font-size: 11px;" id="room-label">No Profile</span>
+                </span>
+              </div>
               <div class="control-row"><span class="control-label">Enable</span><div class="toggle on" id="toggle-room"><div class="toggle-thumb"></div></div></div>
               <div class="control-row"><span class="control-label">Mix</span><span class="control-value">0.3</span></div>
               <div class="control-row"><span class="control-label">Size</span><span class="control-value">1.0<span class="control-unit">x</span></span></div>
@@ -2362,132 +2569,215 @@
             </div>
           </div>
 
-          <div class="renderer-card" data-renderer-group="diagnostics">
-            <div class="section">
-              <div class="section-header">Diagnostics</div>
-              <div class="renderer-diagnostic-list">
-                <article class="renderer-diagnostic-card headtracking" id="rend-headtrack-card">
-                  <div class="renderer-diagnostic-header">
-                    <span class="renderer-diagnostic-label">Head Tracking</span>
-                    <span class="status-chip neutral" id="rend-headtrack-chip">OFF</span>
+          <details class="renderer-lab-drawer" data-renderer-group="lab" id="renderer-lab-drawer">
+            <summary class="renderer-lab-summary">
+              <span class="renderer-lab-summary-main">
+                <span class="renderer-lab-arrow">&#9654;</span>
+                <span class="renderer-lab-label">Lab</span>
+              </span>
+              <span class="renderer-lab-summary-text" id="rend-lab-summary">Output, audition, and diagnostics are tucked here until needed.</span>
+            </summary>
+            <div class="renderer-lab-content">
+              <div class="renderer-card" data-renderer-group="output">
+                <div class="section">
+                  <div class="section-header">Output and Speakers</div>
+                  <div class="control-row"><span class="control-label">Master Gain</span><span class="control-value" id="val-master-gain">0.0<span class="control-unit">dB</span></span></div>
+                  <div class="control-row"><span class="control-label">Map</span><span class="control-value" id="rend-speaker-map">Stereo · L/R</span></div>
+                  <div class="control-row"><span class="control-label">SPK1</span><span class="control-value" id="rend-spk1-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+                  <div class="control-row"><span class="control-label">SPK2</span><span class="control-value" id="rend-spk2-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+                  <div class="control-row"><span class="control-label">SPK3</span><span class="control-value" id="rend-spk3-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+                  <div class="control-row"><span class="control-label">SPK4</span><span class="control-value" id="rend-spk4-value">0.0<span class="control-unit">dB</span> · 0.0<span class="control-unit">ms</span></span></div>
+                </div>
+              </div>
+
+              <div class="renderer-card" data-renderer-group="audition">
+                <div class="section">
+                  <div class="section-header">Audition Source</div>
+                  <div class="control-row">
+                    <span class="control-label-cluster">
+                      <span class="control-label">Enable</span>
+                      <button class="control-help-button" id="audition-enable-help" type="button" aria-label="About audition enable" aria-describedby="audition-enable-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-enable-description">?</button>
+                    </span>
+                    <div class="toggle" id="toggle-audition" aria-describedby="audition-enable-description"><div class="toggle-thumb"></div></div>
                   </div>
-                  <div class="renderer-diagnostic-detail" id="rend-headtrack-detail">Bridge disabled in this build.</div>
-                  <div class="renderer-diagnostic-content open" id="rend-headtrack-content">
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Source</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-source">disabled</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Seq</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-seq">0</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Timestamp</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-timestamp">0 ms</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Age</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-age">n/a</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Yaw/Pitch/Roll</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-euler">0.0 / 0.0 / 0.0 deg</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Quaternion</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-quat">0.0000, 0.0000, 0.0000, 1.0000</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Invalid Packets</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-invalid">0</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Bridge Consumers</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-consumers">0</span>
-                    </div>
-                    <div class="renderer-diagnostic-field" id="rend-headtrack-recenter-row">
-                      <span class="renderer-diagnostic-field-label">Re-center</span>
-                      <span class="renderer-diagnostic-field-value" style="display:flex;align-items:center;gap:8px;">
-                        <button id="rend-headtrack-set-forward" class="btn-secondary" style="padding:2px 8px;font-size:11px;" disabled>Set Forward</button>
-                        <span id="rend-headtrack-drift" class="mono" style="font-size:11px;">Drift: n/a</span>
-                      </span>
-                    </div>
+                  <div class="control-row">
+                    <span class="control-label-cluster">
+                      <span class="control-label">Signal</span>
+                      <button class="control-help-button" id="audition-signal-help" type="button" aria-label="About audition signal choices" aria-describedby="audition-signal-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-signal-description">?</button>
+                    </span>
+                    <select class="dropdown" id="rend-audition-signal" aria-describedby="audition-signal-description"><option>Sine 440</option><option>Dual Tone</option><option>Pink Noise</option><option>Rain</option><option>Snow</option><option>Bouncing Balls</option><option>Wind Chimes</option><option>Crickets</option><option>Song Birds</option><option>Karplus Plucks</option><option>Membrane Drops</option><option>Krell Patch</option><option>Generative Arp</option></select>
                   </div>
-                </article>
-                <article class="renderer-diagnostic-card" id="rend-resize-card">
-                  <div class="renderer-diagnostic-header">
-                    <button class="renderer-diagnostic-toggle" id="rend-resize-toggle" aria-expanded="false" aria-controls="rend-resize-content">
-                      <span class="renderer-diagnostic-label">Resize / DPI</span>
-                      <span class="disclosure-arrow" id="rend-resize-arrow">&#9654;</span>
-                    </button>
-                    <span class="status-chip neutral" id="rend-resize-chip">UNKNOWN</span>
+                  <div class="control-row">
+                    <span class="control-label-cluster">
+                      <span class="control-label">Motion</span>
+                      <button class="control-help-button" id="audition-motion-help" type="button" aria-label="About audition motion choices" aria-describedby="audition-motion-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-motion-description">?</button>
+                    </span>
+                    <select class="dropdown" id="rend-audition-motion" aria-describedby="audition-motion-description"><option>Center</option><option>Orbit Slow</option><option>Orbit Fast</option><option>Figure8 Flow</option><option>Helix Rise</option><option>Wall Ricochet</option></select>
                   </div>
-                  <div class="renderer-diagnostic-detail" id="rend-resize-detail">Awaiting resize diagnostics.</div>
-                  <div class="renderer-diagnostic-content" id="rend-resize-content" hidden>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Viewport (W x H)</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-resize-viewport">unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Device Pixel Ratio</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-resize-dpr">unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Layout Bucket</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-resize-bucket">unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Last Resize Settle</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-resize-settle">unknown</span>
-                    </div>
+                  <div class="control-row">
+                    <span class="control-label-cluster">
+                      <span class="control-label">Level</span>
+                      <button class="control-help-button" id="audition-level-help" type="button" aria-label="About audition level presets" aria-describedby="audition-level-description" aria-controls="inline-tooltip-bubble" aria-expanded="false" data-inline-tooltip-id="audition-level-description">?</button>
+                    </span>
+                    <select class="dropdown" id="rend-audition-level" aria-describedby="audition-level-description"><option>-36 dBFS</option><option>-30 dBFS</option><option>-24 dBFS</option><option>-18 dBFS</option><option>-12 dBFS</option></select>
                   </div>
-                </article>
-                <article class="renderer-diagnostic-card" id="rend-auth-card">
-                  <div class="renderer-diagnostic-header">
-                    <button class="renderer-diagnostic-toggle" id="rend-auth-toggle" aria-expanded="false" aria-controls="rend-auth-content">
-                      <span class="renderer-diagnostic-label">Authority Status</span>
-                      <span class="disclosure-arrow" id="rend-auth-arrow">&#9654;</span>
-                    </button>
-                    <span class="status-chip neutral" id="rend-auth-chip">UNAVAILABLE</span>
+                  <div class="audition-guide" id="audition-guide" aria-live="polite" aria-atomic="true">
+                    <div class="audition-guide-chip-row">
+                      <span class="status-chip neutral" id="audition-guide-family-chip">Reference</span>
+                      <span class="status-chip neutral" id="audition-guide-motion-chip">Center</span>
+                      <span class="status-chip neutral" id="audition-guide-level-chip">-24 dBFS</span>
+                    </div>
+                    <div class="audition-guide-title" id="audition-guide-title">Sine 440 · Center</div>
+                    <div class="audition-guide-summary" id="audition-guide-summary">Single-tone anchor for center-image, speaker-balance, and headphone-parity checks.</div>
+                    <div class="audition-guide-grid">
+                      <div class="audition-guide-field">
+                        <span class="audition-guide-field-label">Best For</span>
+                        <span class="audition-guide-field-value" id="audition-guide-best-for">Center image, speaker trim, and fast A/B checks between speaker and headphone modes.</span>
+                      </div>
+                      <div class="audition-guide-field">
+                        <span class="audition-guide-field-label">Motion Cue</span>
+                        <span class="audition-guide-field-value" id="audition-guide-motion-summary">Static front-center anchor keeps timbre and imaging judgments simple.</span>
+                      </div>
+                      <div class="audition-guide-field">
+                        <span class="audition-guide-field-label">Level Cue</span>
+                        <span class="audition-guide-field-value" id="audition-guide-level-summary">-24 dBFS is the general-purpose default: loud enough for motion and room checks without jumping straight to stress-test levels.</span>
+                      </div>
+                      <div class="audition-guide-field">
+                        <span class="audition-guide-field-label">Listen For</span>
+                        <span class="audition-guide-field-value" id="audition-guide-listen-for">Image pull, spectral tilt, binaural externalization stability, and obvious room-coloration artifacts.</span>
+                      </div>
+                    </div>
+                    <div class="audition-guide-note" id="audition-guide-note">Audition is off. These notes describe the currently selected source and what will happen when the renderer-owned internal audition source is enabled.</div>
                   </div>
-                  <div class="renderer-diagnostic-detail" id="rend-auth-detail">Awaiting authority diagnostics payload.</div>
-                  <div class="renderer-diagnostic-content" id="rend-auth-content" hidden>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Source</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-source">native fallback</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Status Class</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-status-class">authority unavailable</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Lock Reason</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-lock-reason">none</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Snapshot Age</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-snapshot-age">0 ms</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Fallback Reason</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-fallback-reason">none</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Replay Seq</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-auth-replay-seq">0</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="renderer-diagnostic-card" id="rend-hpver-card">
-                  <div class="renderer-diagnostic-header">
-                    <button class="renderer-diagnostic-toggle" id="rend-hpver-toggle" aria-expanded="false" aria-controls="rend-hpver-content">
-                      <span class="renderer-diagnostic-label">Headphone Verification</span>
-                      <span class="disclosure-arrow" id="rend-hpver-arrow">&#9654;</span>
-                    </button>
-                    <span class="status-chip neutral" id="rend-hpver-chip">UNAVAILABLE</span>
-                  </div>
-                  <div class="renderer-diagnostic-detail" id="rend-hpver-detail">Awaiting headphone verification diagnostics payload.</div>
-                  <div class="renderer-diagnostic-content" id="rend-hpver-content" hidden>
+                </div>
+              </div>
+
+              <div class="renderer-card" data-renderer-group="diagnostics">
+                <div class="section">
+                  <div class="section-header">Diagnostics</div>
+                  <div class="renderer-diagnostic-list">
+                    <article class="renderer-diagnostic-card headtracking" id="rend-headtrack-card">
+                      <div class="renderer-diagnostic-header">
+                        <span class="renderer-diagnostic-label">Head Tracking</span>
+                        <span class="status-chip neutral" id="rend-headtrack-chip">OFF</span>
+                      </div>
+                      <div class="renderer-diagnostic-detail" id="rend-headtrack-detail">Bridge disabled in this build.</div>
+                      <div class="renderer-diagnostic-content open" id="rend-headtrack-content">
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Source</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-source">disabled</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Seq</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-seq">0</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Timestamp</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-timestamp">0 ms</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Age</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-age">n/a</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Yaw/Pitch/Roll</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-euler">0.0 / 0.0 / 0.0 deg</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Quaternion</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-quat">0.0000, 0.0000, 0.0000, 1.0000</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Invalid Packets</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-invalid">0</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Bridge Consumers</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-headtrack-consumers">0</span>
+                        </div>
+                        <div class="renderer-diagnostic-field" id="rend-headtrack-recenter-row">
+                          <span class="renderer-diagnostic-field-label">Re-center</span>
+                          <span class="renderer-diagnostic-field-value" style="display:flex;align-items:center;gap:8px;">
+                            <button id="rend-headtrack-set-forward" class="btn-secondary" style="padding:2px 8px;font-size:11px;" disabled>Set Forward</button>
+                            <span id="rend-headtrack-drift" class="mono" style="font-size:11px;">Drift: n/a</span>
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                    <article class="renderer-diagnostic-card" id="rend-resize-card">
+                      <div class="renderer-diagnostic-header">
+                        <button class="renderer-diagnostic-toggle" id="rend-resize-toggle" aria-expanded="false" aria-controls="rend-resize-content">
+                          <span class="renderer-diagnostic-label">Resize / DPI</span>
+                          <span class="disclosure-arrow" id="rend-resize-arrow">&#9654;</span>
+                        </button>
+                        <span class="status-chip neutral" id="rend-resize-chip">UNKNOWN</span>
+                      </div>
+                      <div class="renderer-diagnostic-detail" id="rend-resize-detail">Awaiting resize diagnostics.</div>
+                      <div class="renderer-diagnostic-content" id="rend-resize-content" hidden>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Viewport (W x H)</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-resize-viewport">unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Device Pixel Ratio</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-resize-dpr">unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Layout Bucket</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-resize-bucket">unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Last Resize Settle</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-resize-settle">unknown</span>
+                        </div>
+                      </div>
+                    </article>
+                    <article class="renderer-diagnostic-card" id="rend-auth-card">
+                      <div class="renderer-diagnostic-header">
+                        <button class="renderer-diagnostic-toggle" id="rend-auth-toggle" aria-expanded="false" aria-controls="rend-auth-content">
+                          <span class="renderer-diagnostic-label">Authority Status</span>
+                          <span class="disclosure-arrow" id="rend-auth-arrow">&#9654;</span>
+                        </button>
+                        <span class="status-chip neutral" id="rend-auth-chip">UNAVAILABLE</span>
+                      </div>
+                      <div class="renderer-diagnostic-detail" id="rend-auth-detail">Waiting for a live authority snapshot.</div>
+                      <div class="renderer-diagnostic-content" id="rend-auth-content" hidden>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Source</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-auth-source">system fallback</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Status Class</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-auth-status-class">waiting for session</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Lock Reason</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-auth-lock-reason">n/a</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Snapshot Age</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-auth-snapshot-age">n/a</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Fallback Reason</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-auth-fallback-reason">n/a</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Replay Seq</span>
+                          <span class="renderer-diagnostic-field-value mono" id="rend-auth-replay-seq">0</span>
+                        </div>
+                      </div>
+                    </article>
+                    <article class="renderer-diagnostic-card" id="rend-hpver-card">
+                      <div class="renderer-diagnostic-header">
+                        <button class="renderer-diagnostic-toggle" id="rend-hpver-toggle" aria-expanded="false" aria-controls="rend-hpver-content">
+                          <span class="renderer-diagnostic-label">Headphone Verification</span>
+                          <span class="disclosure-arrow" id="rend-hpver-arrow">&#9654;</span>
+                        </button>
+                        <span class="status-chip neutral" id="rend-hpver-chip">UNAVAILABLE</span>
+                      </div>
+                      <div class="renderer-diagnostic-detail" id="rend-hpver-detail">Waiting for live headphone verification diagnostics.</div>
+                      <div class="renderer-diagnostic-content" id="rend-hpver-content" hidden>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Catalog Version</span>
                       <span class="renderer-diagnostic-field-value mono" id="rend-hpver-catalog">Unavailable</span>
@@ -2498,15 +2788,15 @@
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Fallback Reason</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-fallback-reason">none</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-fallback-reason">n/a</span>
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Fallback Target</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-fallback-target">none</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-fallback-target">n/a</span>
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Custom SOFA Ref</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-custom-sofa">none</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-custom-sofa">n/a</span>
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Calibration Route</span>
@@ -2522,7 +2812,7 @@
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Calibration Fallback</span>
-                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-calibration-fallback">Unavailable</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-calibration-fallback">n/a</span>
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Verification Schema</span>
@@ -2548,100 +2838,102 @@
                       <span class="renderer-diagnostic-field-label">Latency Samples</span>
                       <span class="renderer-diagnostic-field-value mono" id="rend-hpver-latency">n/a</span>
                     </div>
+                      </div>
+                    </article>
+                    <article class="renderer-diagnostic-card" id="rend-steam-card">
+                      <div class="renderer-diagnostic-header">
+                        <button class="renderer-diagnostic-toggle" id="rend-steam-toggle" aria-expanded="false" aria-controls="rend-steam-content">
+                          <span class="renderer-diagnostic-label">Steam Audio</span>
+                          <span class="disclosure-arrow" id="rend-steam-arrow">&#9654;</span>
+                        </button>
+                        <span class="status-chip neutral" id="rend-steam-chip">UNAVAILABLE</span>
+                      </div>
+                      <div class="renderer-diagnostic-detail" id="rend-steam-detail">Awaiting Steam diagnostics payload.</div>
+                      <div class="renderer-diagnostic-content" id="rend-steam-content" hidden>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">HRTF</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-steam-hrtf-status">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Binaural Tier</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-steam-binaural-tier">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Reflections</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-steam-reflections-state">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Convolution</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-steam-convolution-method">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field" id="rend-steam-last-error-row">
+                          <span class="renderer-diagnostic-field-label">Last Error</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-steam-last-error">None</span>
+                        </div>
+                      </div>
+                    </article>
+                    <article class="renderer-diagnostic-card" id="rend-ambi-card">
+                      <div class="renderer-diagnostic-header">
+                        <button class="renderer-diagnostic-toggle" id="rend-ambi-toggle" aria-expanded="false" aria-controls="rend-ambi-content">
+                          <span class="renderer-diagnostic-label">Ambisonic</span>
+                          <span class="disclosure-arrow" id="rend-ambi-arrow">&#9654;</span>
+                        </button>
+                        <span class="status-chip neutral" id="rend-ambi-chip">UNAVAILABLE</span>
+                      </div>
+                      <div class="renderer-diagnostic-detail" id="rend-ambi-detail">Awaiting ambisonic diagnostics payload.</div>
+                      <div class="renderer-diagnostic-content" id="rend-ambi-content" hidden>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Order</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-ambi-order">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Channel Count</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-ambi-channel-count">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Decoder State</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-ambi-decoder-state">Unknown</span>
+                        </div>
+                        <div class="renderer-diagnostic-field">
+                          <span class="renderer-diagnostic-field-label">Decoder Type</span>
+                          <span class="renderer-diagnostic-field-value" id="rend-ambi-decoder-type">Unknown</span>
+                        </div>
+                      </div>
+                    </article>
                   </div>
-                </article>
-                <article class="renderer-diagnostic-card" id="rend-steam-card">
-                  <div class="renderer-diagnostic-header">
-                    <button class="renderer-diagnostic-toggle" id="rend-steam-toggle" aria-expanded="false" aria-controls="rend-steam-content">
-                      <span class="renderer-diagnostic-label">Steam Audio</span>
-                      <span class="disclosure-arrow" id="rend-steam-arrow">&#9654;</span>
-                    </button>
-                    <span class="status-chip neutral" id="rend-steam-chip">UNAVAILABLE</span>
-                  </div>
-                  <div class="renderer-diagnostic-detail" id="rend-steam-detail">Awaiting Steam diagnostics payload.</div>
-                  <div class="renderer-diagnostic-content" id="rend-steam-content" hidden>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">HRTF</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-steam-hrtf-status">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Binaural Tier</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-steam-binaural-tier">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Reflections</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-steam-reflections-state">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Convolution</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-steam-convolution-method">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field" id="rend-steam-last-error-row">
-                      <span class="renderer-diagnostic-field-label">Last Error</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-steam-last-error">None</span>
-                    </div>
-                  </div>
-                </article>
-                <article class="renderer-diagnostic-card" id="rend-ambi-card">
-                  <div class="renderer-diagnostic-header">
-                    <button class="renderer-diagnostic-toggle" id="rend-ambi-toggle" aria-expanded="false" aria-controls="rend-ambi-content">
-                      <span class="renderer-diagnostic-label">Ambisonic</span>
-                      <span class="disclosure-arrow" id="rend-ambi-arrow">&#9654;</span>
-                    </button>
-                    <span class="status-chip neutral" id="rend-ambi-chip">UNAVAILABLE</span>
-                  </div>
-                  <div class="renderer-diagnostic-detail" id="rend-ambi-detail">Awaiting ambisonic diagnostics payload.</div>
-                  <div class="renderer-diagnostic-content" id="rend-ambi-content" hidden>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Order</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-ambi-order">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Channel Count</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-ambi-channel-count">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Decoder State</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-ambi-decoder-state">Unknown</span>
-                    </div>
-                    <div class="renderer-diagnostic-field">
-                      <span class="renderer-diagnostic-field-label">Decoder Type</span>
-                      <span class="renderer-diagnostic-field-value" id="rend-ambi-decoder-type">Unknown</span>
-                    </div>
-                  </div>
-                </article>
+                  <div class="renderer-output-summary" id="rend-diagnostics-availability">Diagnostics appear when a live plugin session connects.</div>
+                </div>
               </div>
-              <div class="renderer-output-summary" id="rend-diagnostics-availability">Bridge diagnostics unavailable; controls remain writable with fallback-safe defaults.</div>
-            </div>
-          </div>
 
-          <div class="renderer-card" data-renderer-group="physics">
-            <div class="section">
-              <div class="section-header">Physics (Global)</div>
-              <div class="control-row"><span class="control-label">Rate</span><select class="dropdown" id="rend-phys-rate"><option>30 Hz</option><option selected>60 Hz</option><option>120 Hz</option><option>240 Hz</option></select></div>
-              <div class="control-row"><span class="control-label">Walls</span><div class="toggle on" id="toggle-walls"><div class="toggle-thumb"></div></div></div>
-              <div class="control-row"><span class="control-label">Object Interaction</span><div class="toggle" id="toggle-interact"><div class="toggle-thumb"></div></div></div>
-              <div style="padding-top:8px;"><button class="btn-secondary" style="width:100%;" id="btn-pause-physics">PAUSE ALL</button></div>
-            </div>
-          </div>
+              <div class="renderer-card" data-renderer-group="physics">
+                <div class="section">
+                  <div class="section-header">Physics (Global)</div>
+                  <div class="control-row"><span class="control-label">Rate</span><select class="dropdown" id="rend-phys-rate"><option>30 Hz</option><option selected>60 Hz</option><option>120 Hz</option><option>240 Hz</option></select></div>
+                  <div class="control-row"><span class="control-label">Walls</span><div class="toggle on" id="toggle-walls"><div class="toggle-thumb"></div></div></div>
+                  <div class="control-row"><span class="control-label">Object Interaction</span><div class="toggle" id="toggle-interact"><div class="toggle-thumb"></div></div></div>
+                  <div style="padding-top:8px;"><button class="btn-secondary" style="width:100%;" id="btn-pause-physics">PAUSE ALL</button></div>
+                </div>
+              </div>
 
-          <div class="renderer-card" data-renderer-group="telemetry">
-            <div class="section">
-              <div class="section-header">Viewport Telemetry</div>
-              <div class="control-row"><span class="control-label">Trails</span><div class="toggle on" id="toggle-viz-trails"><div class="toggle-thumb"></div></div></div>
-              <div class="control-row"><span class="control-label">Trail Len</span><span class="control-value" id="val-viz-trail-len">5.0<span class="control-unit">s</span></span></div>
-              <div class="control-row"><span class="control-label">Velocity Vectors</span><div class="toggle" id="toggle-viz-vectors"><div class="toggle-thumb"></div></div></div>
-              <div class="control-row"><span class="control-label">Physics Lens</span><div class="toggle" id="toggle-viz-physics-lens"><div class="toggle-thumb"></div></div></div>
-              <div class="control-row"><span class="control-label">Diagnostic Mix</span><span class="control-value" id="val-viz-diag-mix">55<span class="control-unit">%</span></span></div>
-            </div>
-          </div>
+              <div class="renderer-card" data-renderer-group="telemetry">
+                <div class="section">
+                  <div class="section-header">Viewport Telemetry</div>
+                  <div class="control-row"><span class="control-label">Trails</span><div class="toggle on" id="toggle-viz-trails"><div class="toggle-thumb"></div></div></div>
+                  <div class="control-row"><span class="control-label">Trail Len</span><span class="control-value" id="val-viz-trail-len">5.0<span class="control-unit">s</span></span></div>
+                  <div class="control-row"><span class="control-label">Velocity Vectors</span><div class="toggle" id="toggle-viz-vectors"><div class="toggle-thumb"></div></div></div>
+                  <div class="control-row"><span class="control-label">Physics Lens</span><div class="toggle" id="toggle-viz-physics-lens"><div class="toggle-thumb"></div></div></div>
+                  <div class="control-row"><span class="control-label">Diagnostic Mix</span><span class="control-value" id="val-viz-diag-mix">55<span class="control-unit">%</span></span></div>
+                </div>
+              </div>
 
-          <div class="renderer-card" data-renderer-group="scene">
-            <div class="section">
-              <div class="section-header">Scene Monitor</div>
-              <div id="scene-list" role="listbox" aria-label="Scene monitor emitters"></div>
+              <div class="renderer-card" data-renderer-group="scene">
+                <div class="section">
+                  <div class="section-header">Scene Monitor</div>
+                  <div id="scene-list" role="listbox" aria-label="Scene monitor emitters"></div>
+                </div>
+              </div>
             </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>

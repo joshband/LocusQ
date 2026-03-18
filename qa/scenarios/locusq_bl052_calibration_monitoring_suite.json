@@ -13,5 +13,8 @@
   "stop_on_first_failure": false,
   "shared_config": {
     "mode": "bl052_calibration_monitoring"
+  },
+  "runtime_config": {
+    "enable_profiling": true
   }
 }

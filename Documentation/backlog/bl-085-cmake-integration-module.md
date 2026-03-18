@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-17
 
 ## Plain-Language Summary
 
-BL-085 in plain terms: Add a harness-provided `qa_harness_integration.cmake` module that exposes an `enable_qa_harness()` CMake function so plugins have a single, tested integration path instead of each maintaining subtly different submodule/find_package/target-fallback glue. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-085 in plain terms: Add a harness-provided `qa_harness_integration.cmake` module that exposes an `enable_qa_harness()` CMake function so plugins have a single, tested integration path instead of each maintaining subtly different submodule/find_package/target-fallback glue. Current state: In Validation (2026-03-17: upstream commit `17f2992` publishes the integration module and migration guide; local upstream build/test/install and LocusQ configure/build/smoke replay all pass). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -34,7 +34,7 @@ BL-085 in plain terms: Add a harness-provided `qa_harness_integration.cmake` mod
 |---|---|
 | ID | BL-085 |
 | Priority | P1 |
-| Status | Open |
+| Status | In Validation (2026-03-17: upstream commit `17f2992` publishes the integration module and migration guide; local upstream build/test/install and LocusQ configure/build/smoke replay all pass) |
 | Track | G - Tooling / Governance |
 | Effort | Med / M |
 | Depends On | BL-082 (runner app library; best adopted together) |
@@ -86,6 +86,22 @@ QA harness script: `scripts/qa-bl085-cmake-integration-mac.sh` (to be authored i
 Evidence schema: `TestEvidence/bl085_*/status.tsv`.
 
 Gate criterion: LocusQ CMake configure + build + QA smoke lane produce identical results to pre-change baseline.
+
+## Validation Intake Snapshot (2026-03-17)
+
+- `UPSTREAM_HARNESS_COMMIT`: `17f2992` (`audio-dsp-qa-harness`: `Add QA harness integration module`)
+- `bash -n scripts/qa-bl085-cmake-integration-mac.sh` -> `PASS`
+- `cmake -S /Users/artbox/Documents/Repos/audio-dsp-qa-harness -B /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module -DBUILD_QA_TESTS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5` -> `PASS`
+- `cmake --build /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --target qa_runner_app qa_runner_app_test test_suite_test performance_invariant_test --parallel` -> `PASS`
+- `ctest --test-dir /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --output-on-failure -R 'qa_runner_app_test|test_suite_test|performance_invariant_test'` -> `PASS`
+- `cmake --build /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --target qa_state --parallel` -> `PASS`
+- `cmake --install /Users/artbox/Documents/Repos/audio-dsp-qa-harness/build_bl085_module --prefix /tmp/audio-dsp-qa-harness-bl085-install.Qp1uEh` -> `PASS`
+- installed package exports:
+  - `/tmp/audio-dsp-qa-harness-bl085-install.Qp1uEh/lib/cmake/audio_dsp_qa_harness/qa_harness_integration.cmake`
+  - `/tmp/audio-dsp-qa-harness-bl085-install.Qp1uEh/share/audio_dsp_qa_harness/cmake/MIGRATION.md`
+- `./scripts/qa-bl085-cmake-integration-mac.sh --build-dir build_bl085_locusq --out-dir TestEvidence/bl085_cmake_integration_20260317T230000Z` -> `PASS`
+- LocusQ artifact root: `TestEvidence/bl085_cmake_integration_20260317T230000Z`
+- disposition: move BL-085 to `In Validation`; CI/backport follow-up remains, but the harness module, install/export path, and LocusQ source-checkout integration are locally green
 
 ## Replay Cadence Plan (Required)
 

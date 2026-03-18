@@ -2,13 +2,13 @@ Title: BL-072 Companion Runtime Protocol Parity and BL-058 QA Harness
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-02
+Last Modified Date: 2026-03-17
 
 # BL-072 Companion Runtime Protocol Parity and BL-058 QA Harness
 
 ## Plain-Language Summary
 
-BL-072 in plain terms: Align companion runtime packet contract behavior with validated model semantics and establish a real BL-058 QA lane that verifies readiness/sync gating, stale-packet behavior, sequence continuity, and axis-sweep correctness. Current state: Done (execute + T2 + T3 packets pass; owner promotion decision recorded; done archive sync complete). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-072 in plain terms: Align companion runtime packet contract behavior with validated model semantics and establish a real BL-058 QA lane that verifies readiness/sync gating, stale-packet behavior, sequence continuity, and axis-sweep correctness. Historical closeout is retained here for traceability, but the 2026-03-17 comprehensive review opened follow-on `BL-096` after finding the current shipping executable and tested core runtime had drifted apart again. For technical detail, see `## Objective`, `## Validation Plan`, and the follow-on note below.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -37,7 +37,7 @@ Use visuals only when they materially improve understanding.
 |---|---|
 | ID | BL-072 |
 | Priority | P0 |
-| Status | Done (execute + T2 + T3 packets pass; owner promotion decision recorded; done archive sync complete) |
+| Status | Done (historical closeout retained; 2026-03-17 review opened `BL-096` for executable/core reunification follow-up) |
 | Track | E - R&D Expansion |
 | Effort | Med / M |
 | Depends On | BL-058, BL-059 |
@@ -53,6 +53,13 @@ Use visuals only when they materially improve understanding.
 ## Objective
 
 Align companion runtime packet contract behavior with validated model semantics and establish a real BL-058 QA lane that verifies readiness/sync gating, stale-packet behavior, sequence continuity, and axis-sweep correctness.
+
+## Historical Follow-On Note (2026-03-17)
+
+- This archived runbook remains the historical record of the original BL-072 closeout.
+- The 2026-03-17 comprehensive review found that the current shipping companion executable still contains a local v1 packet/runtime path while `LocusQHeadTrackerCore` and its tests validate a different v2 path.
+- Follow-on corrective lane: `Documentation/backlog/bl-096-companion-executable-core-protocol-reunification.md`.
+- Treat BL-096, not this archived runbook alone, as the current authority for unresolved executable/core protocol reunification work.
 
 ## Acceptance IDs
 

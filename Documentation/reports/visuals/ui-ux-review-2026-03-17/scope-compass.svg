@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="840" viewBox="0 0 1280 840" role="img" aria-labelledby="title desc">
+  <title id="title">Scope Compass For LocusQ And The Head-Tracking Companion</title>
+  <desc id="desc">A four-quadrant scope compass showing what to keep, collapse, extract, and defer.</desc>
+  <rect width="1280" height="840" rx="28" fill="#0a0e14"/>
+  <rect x="20" y="20" width="1240" height="800" rx="24" fill="none" stroke="#293240"/>
+
+  <text x="72" y="86" fill="#d4a847" font-size="14" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="3">SCOPE COMPASS</text>
+  <text x="72" y="132" fill="#eef4fb" font-size="38" font-family="Arial, Helvetica, sans-serif" font-weight="700">Protect The Core, Hide The Lab, Move Device Work To The Companion</text>
+
+  <text x="240" y="204" fill="#7d90a7" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">More central to audible scene truth</text>
+  <text x="868" y="204" fill="#7d90a7" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700">More device or tangent specific</text>
+  <text x="72" y="320" fill="#7d90a7" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700" transform="rotate(-90 72 320)">Keep always visible</text>
+  <text x="72" y="650" fill="#7d90a7" font-size="18" font-family="Arial, Helvetica, sans-serif" font-weight="700" transform="rotate(-90 72 650)">Hide, move, or defer</text>
+
+  <line x1="640" y1="230" x2="640" y2="760" stroke="#324050" stroke-width="2"/>
+  <line x1="120" y1="500" x2="1160" y2="500" stroke="#324050" stroke-width="2"/>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="120" y="230" width="520" height="270" rx="26" fill="#121922" stroke="#41556a"/>
+    <text x="156" y="272" fill="#62e3a0" font-size="14" font-weight="700" letter-spacing="2">KEEP IN PLUGIN</text>
+    <text x="156" y="316" fill="#eef4fb" font-size="30" font-weight="700">Core scene truth</text>
+    <text x="156" y="352" fill="#9cb0c5" font-size="18">These are the reasons the plugin exists as a product.</text>
+    <text x="156" y="402" fill="#eef4fb" font-size="18">• scene authoring and emitter movement</text>
+    <text x="156" y="436" fill="#eef4fb" font-size="18">• render profile and fallback authority</text>
+    <text x="156" y="470" fill="#eef4fb" font-size="18">• calibration run state and result application</text>
+
+    <rect x="640" y="230" width="520" height="270" rx="26" fill="#111820" stroke="#41556a"/>
+    <text x="676" y="272" fill="#58d8ff" font-size="14" font-weight="700" letter-spacing="2">EXTRACT TO COMPANION</text>
+    <text x="676" y="316" fill="#eef4fb" font-size="30" font-weight="700">Device trust and acquisition</text>
+    <text x="676" y="352" fill="#9cb0c5" font-size="18">These are bound to the headset, operator, or Apple-side runtime.</text>
+    <text x="676" y="402" fill="#eef4fb" font-size="18">• headphone readiness and sync state</text>
+    <text x="676" y="436" fill="#eef4fb" font-size="18">• profile photo capture and matching</text>
+    <text x="676" y="470" fill="#eef4fb" font-size="18">• axis inversion, ingest trust, device identity</text>
+
+    <rect x="120" y="500" width="520" height="260" rx="26" fill="#11161e" stroke="#41556a"/>
+    <text x="156" y="542" fill="#ffcb72" font-size="14" font-weight="700" letter-spacing="2">COLLAPSE OR TUCK AWAY</text>
+    <text x="156" y="586" fill="#eef4fb" font-size="30" font-weight="700">Expert telemetry</text>
+    <text x="156" y="622" fill="#9cb0c5" font-size="18">Keep it available, but stop asking every user to parse it continuously.</text>
+    <text x="156" y="672" fill="#eef4fb" font-size="18">• renderer stage diagnostics</text>
+    <text x="156" y="706" fill="#eef4fb" font-size="18">• raw motion vectors and jitter counters</text>
+    <text x="156" y="740" fill="#eef4fb" font-size="18">• verbose profile and codec detail panels</text>
+
+    <rect x="640" y="500" width="520" height="260" rx="26" fill="#11161e" stroke="#41556a"/>
+    <text x="676" y="542" fill="#d4a847" font-size="14" font-weight="700" letter-spacing="2">DEFER / REJECT</text>
+    <text x="676" y="586" fill="#eef4fb" font-size="30" font-weight="700">Side quests</text>
+    <text x="676" y="622" fill="#9cb0c5" font-size="18">These expand surface area without making the current workflow clearer.</text>
+    <text x="676" y="672" fill="#eef4fb" font-size="18">• new top-level tabs</text>
+    <text x="676" y="706" fill="#eef4fb" font-size="18">• permanent extra telemetry in the shell</text>
+    <text x="676" y="740" fill="#eef4fb" font-size="18">• device-management features inside the plugin</text>
+  </g>
+</svg>

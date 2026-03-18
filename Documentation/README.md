@@ -2,7 +2,7 @@ Title: LocusQ Documentation Index
 Document Type: Documentation Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-17
 
 
 # Documentation Index
@@ -51,6 +51,7 @@ Used for implementation planning and validation flow, but status truth remains T
 - `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md`
 - `Documentation/plans/bl-050-partitioned-fir-migration-contract-2026-03-01.md`
 - `Documentation/plans/bl-011-clap-contract-closeout-2026-02-23.md`
+- `Documentation/plans/2026-03-17-ui-ux-trust-wave-execution-packet.md`
 - `Documentation/reports/` (active report artifacts and companion data/visual bundles)
 - `Documentation/testing/`
 - `Documentation/testing/production-selftest-and-reaper-headless-smoke-guide.md`

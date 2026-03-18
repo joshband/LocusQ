@@ -1,0 +1,76 @@
+project:
+  name: "LocusQ UI UX Refinement"
+  platform:
+    plugin_ui: "three.js in WKWebView / WebView2-compatible WebView shell"
+    dsp_backend: "JUCE C++"
+    companion_app: "Swift companion monitor with AppKit/WebKit today and SwiftUI-aligned information architecture"
+  constraints:
+    plugin_sizes_px:
+      base: [1280, 720]
+      min: [980, 560]
+    performance_tier: "Medium" # Low | Medium | High
+    host_matrix:
+      - "AU / VST3 / CLAP parity"
+      - "AUv3 extension-safe boundary"
+      - "WKWebView host variability"
+      - "WebView2 runtime parity"
+    design_guards:
+      - "Viewport remains the primary surface"
+      - "One loud truth per mode"
+      - "Diagnostics default closed"
+      - "Companion leads with trust, not telemetry"
+      - "No feature sprawl beyond plugin scene truth and companion device trust"
+  style_targets:
+    - "spatial instrument"
+    - "boutique"
+    - "diagnostic calm"
+    - "cinematic restraint"
+    - "tactile authority"
+  inputs:
+    reference_images:
+      - id: "plugin_calibrate_capture"
+        description: "Current CALIBRATE state capture"
+      - id: "plugin_emitter_capture"
+        description: "Current EMITTER state capture"
+      - id: "plugin_renderer_capture"
+        description: "Current RENDERER state capture"
+      - id: "plugin_public_shell"
+        description: "Source/ui/public/index.html shell and token inventory"
+      - id: "companion_dashboard"
+        description: "companion/Sources/LocusQHeadTrackingCompanion/main.swift monitor/dashboard layout"
+      - id: "bl067_auv3"
+        description: "AUv3 lifecycle and host-validation plan"
+      - id: "bl011_clap"
+        description: "CLAP lifecycle closeout and validator evidence"
+      - id: "headtracking_methodology"
+        description: "Head-tracking binaural methodology and canonical frame contract"
+      - id: "bl045_headtracking_qa"
+        description: "Head-tracking readiness, stale-pose, and axis QA evidence"
+      - id: "spatial_profiles_usage"
+        description: "Spatial profile usage and requested-versus-active contract"
+  audio_ux:
+    plugin_type: "Spatial instrument for calibration, emitter authoring, and renderer trust"
+    primary_controls:
+      - "Mode: CALIBRATE / EMITTER / RENDERER"
+      - "Viewport scene truth"
+      - "Selected emitter identity and movement"
+      - "Output authority card"
+      - "Head-tracking readiness / sync"
+      - "Profile request vs active"
+    advanced:
+      - "Lab diagnostics drawer"
+      - "Reactive field overlays"
+      - "Listening / parity evidence"
+      - "Simulation-driven motion experiments"
+      - "Temporal effect research lanes"
+  deliverables:
+    - refinement_report
+    - visual_dna_report
+    - tokens_json
+    - component_specs
+    - prototype_plan
+    - integration_notes
+    - prototype_board_html
+    - prototype_capture_png
+    - image_mockups
+    - scope_and_runtime_diagrams

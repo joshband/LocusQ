@@ -12,6 +12,9 @@
   "shared_config": {
     "mode": "bl020_confidence_masking_contract"
   },
+  "runtime_config": {
+    "enable_profiling": true
+  },
   "bl020_contract_checks": {
     "acceptance_ids": [
       {

@@ -2,7 +2,7 @@ Title: LocusQ + Companion Architecture
 Document Type: Architecture Specification
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # LocusQ + Companion Architecture
 
@@ -179,6 +179,23 @@ sequenceDiagram
 - `SceneGraph` shares state.
 - `RENDERER` decides final output behavior.
 - UI is an observer/controller, not a DSP authority.
+
+### 4.4 Operator-Surface Containment Rule
+
+LocusQ keeps one first-layer job per major surface:
+
+- plugin first layer = scene truth, emitter authoring, and render authority
+- companion first layer = device readiness, sync/center, and profile trust
+- `Lab` or collapsed drawers = parity evidence, deep telemetry, and reactive/simulation/temporal experiments
+
+Before adding any new top-level surface, experimental work must first answer:
+
+1. can this extend an existing card?
+2. can this appear as an overlay lens?
+3. can this live in the existing timeline?
+4. can this stay in `Lab`?
+
+If all four answers are `no`, the feature needs its own planning lane and explicit product justification before implementation.
 
 ## 5. Core Contracts (Scene, Snapshot, Head-Tracking)
 

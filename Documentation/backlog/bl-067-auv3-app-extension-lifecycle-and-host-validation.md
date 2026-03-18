@@ -2,13 +2,13 @@ Title: BL-067 AUv3 App-Extension Lifecycle and Host Validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-03
+Last Modified Date: 2026-03-17
 
 # BL-067 AUv3 App-Extension Lifecycle and Host Validation
 
 ## Plain-Language Summary
 
-BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: Open (execute evidence must report zero `TODO` rows; BL-073 truthfulness gate still applies for promotion). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-17 intake replay: contract `3/3` PASS, execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual host execution, and explicit extension-safe profile/SOFA access proof are still blocked). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with 
 | What is changing? | Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: Open (execute evidence must report zero `TODO` rows; BL-073 gate required for promotion). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (2026-03-17 intake replay: contract `3/3` PASS, execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual host execution, and extension-safe runtime access proof are still blocked). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -45,7 +45,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-067 |
 | Priority | P1 |
-| Status | Open (execute evidence must report zero `TODO` rows; BL-073 execute-mode gate required for promotion) |
+| Status | In Validation (2026-03-17 intake replay: contract `3/3` PASS, execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual host execution, and extension-safe runtime-access proof are still blocked) |
 | Track | A - Runtime Formats |
 | Effort | High / L |
 | Depends On | BL-048 |
@@ -63,6 +63,7 @@ Add production-ready AUv3 format support for LocusQ with deterministic extension
 - AUv3 build target and packaging pipeline are reproducible and code-signed for host execution.
 - Extension lifecycle transitions (cold start, reload, suspend/resume, state restore) complete without crashes or stale state.
 - Audio-thread invariants remain intact (no allocation/locks/blocking I/O in realtime callbacks).
+- Profile, SOFA, and related runtime resource access paths are validated as extension-safe and do not rely on standalone-style user-home or desktop-dialog assumptions inside AUv3 hosts.
 - AUv3-specific constraints degrade deterministically without host-name branching behavior.
 - AU/VST3/CLAP regression lanes remain green after AUv3 enablement.
 - Execute-mode QA evidence contains zero `TODO` rows (BL-073 scaffold-truthfulness gate).
@@ -72,7 +73,7 @@ Add production-ready AUv3 format support for LocusQ with deterministic extension
 | Slice | Description | Exit Criteria |
 |---|---|---|
 | A | AUv3 target wiring and build/packaging contracts | AUv3 target builds and launches in baseline host smoke lane |
-| B | Extension-safe runtime boundaries and lifecycle handling | lifecycle transition matrix passes with deterministic state restore |
+| B | Extension-safe runtime boundaries and lifecycle handling, including profile/SOFA/runtime resource access | lifecycle transition matrix passes with deterministic state restore and extension-safe file/resource assumptions are explicitly proven |
 | C | Cross-format parity and ship evidence packet | AUv3 + AU/VST3/CLAP parity matrix is green and evidence-complete |
 
 ## Validation Plan
@@ -89,8 +90,24 @@ Minimum evidence additions:
 - `host_matrix.tsv` (AUv3 host coverage and outcomes)
 - `lifecycle_transitions.tsv` (cold/warm/reload/suspend-resume results)
 - `parity_regression.tsv` (AUv3 vs AU/VST3/CLAP contract outcomes)
+- `sandbox_runtime_access.tsv` (profile/SOFA/runtime resource access outcomes under AUv3-safe assumptions)
 - `packaging_manifest.md` (targets, signing, packaging notes)
 - `run_summary.tsv` (replay run-level pass/fail and `TODO` row counts)
+
+## Validation Intake Snapshot (2026-03-17)
+
+- `bash -n scripts/qa-bl067-auv3-lifecycle-mac.sh` -> `PASS`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only --runs 3 --out-dir /Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract --build-root /Users/artbox/Documents/Repos/LocusQ-bl067-intake/build_bl067_auv3_lane_intake_20260317T191247Z_contract` -> `PASS`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --execute --runs 1 --out-dir /Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute --build-root /Users/artbox/Documents/Repos/LocusQ-bl067-intake/build_bl067_auv3_lane_intake_20260317T191247Z_execute` -> `PASS`
+- contract artifact root: `/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
+- execute artifact root: `/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute`
+- execute `TODO` rows: `0` (`/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute/run_summary.tsv`)
+- signing probe: `/Users/artbox/Documents/Repos/LocusQ-bl067-intake/TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute/signed_build_probe.log` shows Xcode can only sign for local execution; the AUv3 bundle and embedding app still report `Signature=adhoc`
+- `code blockers`: none observed in Slice A/B intake evidence
+- `signing blockers`: Apple-host-ready signing is still unmet (`Signature=adhoc`; execute capture has no TeamIdentifier)
+- `host-inventory blockers`: Logic Pro is present but inventory-only; GarageBand and MainStage are not installed
+- `runtime-access blockers`: the 2026-03-17 review identified unresolved AUv3-specific follow-up around user-home/app-data-style profile and SOFA access assumptions; explicit host evidence for extension-safe runtime access is still required
+- `recommendation`: move BL-067 to In Validation; do not promote until Apple signing, host-execution inventory, and extension-safe runtime-access blockers are cleared
 
 ## Replay Cadence Plan (Required)
 

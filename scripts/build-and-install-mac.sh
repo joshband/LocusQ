@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${LOCUSQ_BUILD_DIR:-$ROOT_DIR/build_local}"
 BUILD_CONFIG="${LOCUSQ_BUILD_CONFIG:-Release}"
 BUILD_JOBS="${LOCUSQ_BUILD_JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 8)}"
+CMAKE_POLICY_VERSION_MINIMUM="${LOCUSQ_CMAKE_POLICY_VERSION_MINIMUM:-3.5}"
 WITH_STANDALONE_INSTALL="${LOCUSQ_INSTALL_STANDALONE:-0}"
 STANDALONE_INSTALL_DIR="${LOCUSQ_STANDALONE_INSTALL_DIR:-}"
 ENABLE_CLAP="${LOCUSQ_ENABLE_CLAP:-0}"
@@ -12,6 +13,7 @@ INSTALL_CLAP="${LOCUSQ_INSTALL_CLAP:-$ENABLE_CLAP}"
 CLAP_FETCH="${LOCUSQ_CLAP_FETCH:-1}"
 CLAP_EXTENSIONS_DIR="${LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR:-}"
 ENABLE_HEAD_TRACKING="${LOCUSQ_ENABLE_HEAD_TRACKING:-1}"
+QA_HARNESS_DIR_OVERRIDE="${QA_HARNESS_DIR:-}"
 REFRESH_AU_CACHE="${LOCUSQ_REFRESH_AU_CACHE:-1}"
 REFRESH_REAPER_CACHE="${LOCUSQ_REFRESH_REAPER_CACHE:-1}"
 REAPER_AUTO_QUIT="${LOCUSQ_REAPER_AUTO_QUIT:-1}"
@@ -34,6 +36,7 @@ Environment overrides:
   LOCUSQ_BUILD_DIR            CMake build directory (default: build_local)
   LOCUSQ_BUILD_CONFIG         Build config (default: Release)
   LOCUSQ_BUILD_JOBS           Parallel jobs (default: hw.ncpu)
+  LOCUSQ_CMAKE_POLICY_VERSION_MINIMUM  CMake policy compatibility floor (default: 3.5)
   LOCUSQ_INSTALL_STANDALONE   If 1, also copy LocusQ.app to install dir
   LOCUSQ_STANDALONE_INSTALL_DIR  Standalone app install dir (default: /Applications if LocusQ.app exists there, else ~/Applications)
   LOCUSQ_ENABLE_CLAP          If 1, configure/build LocusQ_CLAP target (default: 0)
@@ -41,6 +44,7 @@ Environment overrides:
   LOCUSQ_CLAP_FETCH           If 1, allow CMake to fetch clap-juce-extensions when missing (default: 1)
   LOCUSQ_CLAP_JUCE_EXTENSIONS_DIR  Optional local clap-juce-extensions checkout path
   LOCUSQ_ENABLE_HEAD_TRACKING If 1, enable companion UDP receiver bridge (default: 1)
+  QA_HARNESS_DIR              Optional explicit audio-dsp-qa-harness checkout path
   LOCUSQ_REFRESH_AU_CACHE     If 1, refresh AU registrar cache (default: 1)
   LOCUSQ_REFRESH_REAPER_CACHE If 1, remove LocusQ entries from REAPER plugin caches (default: 1)
   LOCUSQ_REAPER_AUTO_QUIT     If 1, request REAPER quit before install (default: 1)
@@ -74,6 +78,13 @@ fi
 ENABLE_CLAP_CMAKE="$(to_cmake_bool "$ENABLE_CLAP")"
 CLAP_FETCH_CMAKE="$(to_cmake_bool "$CLAP_FETCH")"
 HEAD_TRACKING_CMAKE="$(to_cmake_bool "$ENABLE_HEAD_TRACKING")"
+
+if [[ -z "$QA_HARNESS_DIR_OVERRIDE" ]]; then
+  DEFAULT_QA_HARNESS_DIR="$ROOT_DIR/../audio-dsp-qa-harness"
+  if [[ -f "$DEFAULT_QA_HARNESS_DIR/cmake/qa_harness_integration.cmake" ]]; then
+    QA_HARNESS_DIR_OVERRIDE="$(cd "$DEFAULT_QA_HARNESS_DIR" && pwd)"
+  fi
+fi
 
 wait_for_reaper_exit() {
   local timeout_seconds="${1:-15}"
@@ -208,10 +219,12 @@ echo "root_dir: $ROOT_DIR"
 echo "build_dir: $BUILD_DIR"
 echo "build_config: $BUILD_CONFIG"
 echo "build_jobs: $BUILD_JOBS"
+echo "cmake_policy_version_minimum: $CMAKE_POLICY_VERSION_MINIMUM"
 echo "install_standalone: $WITH_STANDALONE_INSTALL"
 echo "standalone_install_dir: $STANDALONE_INSTALL_DIR"
 echo "enable_clap: $ENABLE_CLAP"
 echo "enable_head_tracking: $ENABLE_HEAD_TRACKING"
+echo "qa_harness_dir: ${QA_HARNESS_DIR_OVERRIDE:-<cmake-default>}"
 echo "install_clap: $INSTALL_CLAP"
 echo "clap_fetch: $CLAP_FETCH"
 echo "refresh_au_cache: $REFRESH_AU_CACHE"
@@ -223,6 +236,7 @@ echo
 
 CONFIGURE_ARGS=(
   -DCMAKE_BUILD_TYPE="$BUILD_CONFIG"
+  -DCMAKE_POLICY_VERSION_MINIMUM="$CMAKE_POLICY_VERSION_MINIMUM"
   -DLOCUSQ_ENABLE_CLAP="$ENABLE_CLAP_CMAKE"
   -DLOCUSQ_CLAP_FETCH="$CLAP_FETCH_CMAKE"
   -DLOCUS_HEAD_TRACKING="$HEAD_TRACKING_CMAKE"
@@ -230,6 +244,9 @@ CONFIGURE_ARGS=(
 )
 if [[ -n "$CLAP_EXTENSIONS_DIR" ]]; then
   CONFIGURE_ARGS+=(-DLOCUSQ_CLAP_JUCE_EXTENSIONS_DIR="$CLAP_EXTENSIONS_DIR")
+fi
+if [[ -n "$QA_HARNESS_DIR_OVERRIDE" ]]; then
+  CONFIGURE_ARGS+=(-DQA_HARNESS_DIR="$QA_HARNESS_DIR_OVERRIDE")
 fi
 
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR" "${CONFIGURE_ARGS[@]}"
