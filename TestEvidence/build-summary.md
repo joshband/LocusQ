@@ -5681,3 +5681,33 @@ LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac
 3. Owner disposition
 - W3-B implementation is complete and recorded as `partially tested`.
 - No new W3-B-specific failure signature was observed in the rebuilt standalone replay; the failure remains aligned with the separate W3-A / BL-080 validation blocker.
+
+## BL-068 Owner Promotion Review Addendum (UTC 2026-03-17)
+
+1. Intake integration
+- integrated the proven BL-068 temporal contract/mode-matrix/wiring/script patch from the clean intake worktree without broadening feature scope
+- localized T2 evidence bundles into the main workspace:
+  - `TestEvidence/bl068_temporal_effects_20260317T190255Z/`
+  - `TestEvidence/bl068_temporal_effects_20260317T190301Z/`
+
+2. Owner replay
+- owner packet: `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/`
+- contract-only replay: `./scripts/qa-bl068-temporal-effects-mac.sh --contract-only --runs 10 --out-dir TestEvidence/bl068_owner_sync_z1_20260317T191642Z/contract_runs`
+  - result: `PASS`
+  - zero `TODO` rows
+- execute replay: `./scripts/qa-bl068-temporal-effects-mac.sh --execute --runs 3 --out-dir TestEvidence/bl068_owner_sync_z1_20260317T191642Z/execute_runs`
+  - result: `PASS`
+  - compiled probe clean
+  - zero `TODO` rows
+
+3. Governance sync
+- runbook and backlog index advanced BL-068 to `Done-candidate`
+- `status.json`, validation trend, and backlog summary exports were refreshed in the same owner pass
+- docs/schema gates are expected to be captured in:
+  - `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/status_json_check.log`
+  - `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/backlog_summary_check.log`
+  - `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/docs_freshness.log`
+
+4. Owner disposition
+- BL-068 is recommended for `Done-candidate`.
+- no blocker was found in promotion review; next work is closeout/archive selection, not more temporal intake hardening.

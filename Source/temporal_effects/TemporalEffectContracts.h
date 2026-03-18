@@ -4,12 +4,15 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <string_view>
 
 namespace locusq::temporal
 {
 inline constexpr int kTemporalContractVersion = 1;
+inline constexpr double kTemporalMinimumSampleRate = 44100.0;
 inline constexpr double kTemporalReferenceSampleRate = 48000.0;
+inline constexpr double kTemporalMaximumSampleRate = 192000.0;
 inline constexpr int kTemporalMaxDelayMilliseconds = 8000;
 inline constexpr int kTemporalMaxLoopMilliseconds = 120000;
 
@@ -24,6 +27,18 @@ inline constexpr double kTemporalCpuBudgetPct44k1 = 8.0;
 inline constexpr int kTemporalLatencyBudgetSamples44k1 = 64;
 inline constexpr double kTemporalCpuBudgetPct192k = 18.0;
 inline constexpr int kTemporalLatencyBudgetSamples192k = 256;
+
+struct TemporalBudgetSnapshot
+{
+    double sampleRate = kTemporalReferenceSampleRate;
+    double cpuBudgetPct = kTemporalCpuBudgetPct44k1;
+    int latencyBudgetSamples = kTemporalLatencyBudgetSamples44k1;
+};
+
+inline constexpr std::array<TemporalBudgetSnapshot, 2> kTemporalBudgetProfiles {{
+    { kTemporalMinimumSampleRate, kTemporalCpuBudgetPct44k1, kTemporalLatencyBudgetSamples44k1 },
+    { kTemporalMaximumSampleRate, kTemporalCpuBudgetPct192k, kTemporalLatencyBudgetSamples192k }
+}};
 
 enum class TemporalMode : std::uint8_t
 {
@@ -53,6 +68,82 @@ inline constexpr std::string_view modeToId (TemporalMode mode) noexcept
     return "unknown";
 }
 
+inline double sanitizeTemporalSampleRate (double sampleRate) noexcept
+{
+    if (! std::isfinite (sampleRate) || sampleRate <= 0.0)
+        return kTemporalReferenceSampleRate;
+
+    return std::clamp (sampleRate,
+                       kTemporalMinimumSampleRate,
+                       kTemporalMaximumSampleRate);
+}
+
+inline std::int32_t clampDelayMilliseconds (double requestedMilliseconds) noexcept
+{
+    if (! std::isfinite (requestedMilliseconds) || requestedMilliseconds <= 0.0)
+        return 1;
+
+    return std::clamp (static_cast<std::int32_t> (std::lround (requestedMilliseconds)),
+                       1,
+                       kTemporalMaxDelayMilliseconds);
+}
+
+inline std::int32_t clampLoopMilliseconds (double requestedMilliseconds) noexcept
+{
+    if (! std::isfinite (requestedMilliseconds) || requestedMilliseconds <= 0.0)
+        return 1;
+
+    return std::clamp (static_cast<std::int32_t> (std::lround (requestedMilliseconds)),
+                       1,
+                       kTemporalMaxLoopMilliseconds);
+}
+
+inline std::uint32_t millisecondsToSamples (double milliseconds,
+                                            double sampleRate) noexcept
+{
+    if (! std::isfinite (milliseconds) || milliseconds <= 0.0)
+        return 0;
+
+    const auto boundedMilliseconds = std::max (0.0, milliseconds);
+    const auto boundedSampleRate = sanitizeTemporalSampleRate (sampleRate);
+    const auto sampleCount = boundedMilliseconds * 0.001 * boundedSampleRate;
+
+    return static_cast<std::uint32_t> (std::clamp (std::llround (sampleCount),
+                                                   0ll,
+                                                   static_cast<long long> (std::numeric_limits<std::uint32_t>::max())));
+}
+
+inline std::uint32_t maxDelaySamples (double sampleRate) noexcept
+{
+    return millisecondsToSamples (kTemporalMaxDelayMilliseconds, sampleRate);
+}
+
+inline std::uint32_t maxLoopSamples (double sampleRate) noexcept
+{
+    return millisecondsToSamples (kTemporalMaxLoopMilliseconds, sampleRate);
+}
+
+inline std::uint32_t automationSlewSamples (double sampleRate) noexcept
+{
+    return std::max<std::uint32_t> (1u,
+                                    millisecondsToSamples (kTemporalAutomationSlewMs,
+                                                           sampleRate));
+}
+
+inline std::uint32_t clickSafeRampSamples (double sampleRate) noexcept
+{
+    return std::max<std::uint32_t> (1u,
+                                    millisecondsToSamples (kTemporalClickSafeRampMs,
+                                                           sampleRate));
+}
+
+inline TemporalBudgetSnapshot budgetSnapshotForSampleRate (double sampleRate) noexcept
+{
+    return sanitizeTemporalSampleRate (sampleRate) <= kTemporalReferenceSampleRate
+        ? kTemporalBudgetProfiles.front()
+        : kTemporalBudgetProfiles.back();
+}
+
 inline float clampFeedbackCoefficient (float requestedCoefficient) noexcept
 {
     if (! std::isfinite (requestedCoefficient) || requestedCoefficient <= 0.0f)
@@ -74,6 +165,23 @@ inline float sanitizeAudioSample (float sample) noexcept
     return std::clamp (sample,
                        -kTemporalFiniteOutputGuardAbs,
                        kTemporalFiniteOutputGuardAbs);
+}
+
+struct TemporalSafetyEnvelope
+{
+    float clampedFeedback = 0.0f;
+    float sanitizedWetSample = 0.0f;
+    bool wetSampleWasFinite = true;
+};
+
+inline TemporalSafetyEnvelope evaluateTemporalSafetyEnvelope (float requestedFeedback,
+                                                              float wetSample) noexcept
+{
+    return {
+        clampFeedbackCoefficient (requestedFeedback),
+        sanitizeAudioSample (wetSample),
+        std::isfinite (wetSample)
+    };
 }
 
 struct TransportRecallSnapshot

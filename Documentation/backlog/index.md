@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-17 (BL-039/BL-053/BL-054/BL-055/BL-056/BL-058/BL-059 Done)
+Last Modified Date: 2026-03-17 (BL-039/BL-040/BL-053/BL-054/BL-055/BL-056/BL-058/BL-059 Done; BL-068 Done-candidate)
 
 # LocusQ Master Backlog Index
 
@@ -117,7 +117,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 8 | BL-037 | Emitter snapshot CPU budget | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and closeout/archive sync PASS) | F | BL-035 | — | [bl-037](done/bl-037-emitter-snapshot-cpu-budget.md) |
 | 9 | BL-038 | Calibration threading and telemetry | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity; closeout/archive sync PASS) | E | BL-026, BL-034 | — | [bl-038](done/bl-038-calibration-threading-and-telemetry.md) |
 | 10 | BL-039 | Parameter relay spec generation | P1 | **Done** (Z11 done promotion 2026-03-17; reused green owner lane evidence and archive sync complete; artifact `TestEvidence/bl039_owner_sync_z11_20260317T043154Z_7514/promotion_decision.md`) | B | BL-027, BL-032 | — | [bl-039](done/bl-039-parameter-relay-spec-generation.md) |
-| 11 | BL-040 | UI modularization and authority status UX | P1 | Done-candidate (Z10 owner D2 intake accepted; deterministic 100-run authority diagnostics, strict usage exits, and docs freshness are green) | B | BL-027, BL-039 | — | [bl-040](bl-040-ui-modularization-and-authority-status.md) |
+| 11 | BL-040 | UI modularization and authority status UX | P1 | **Done** (owner-verified done-promotion evidence complete 2026-03-17; 100-run authority diagnostics PASS, strict usage exits green, docs freshness green; evidence: `TestEvidence/bl040_done_promotion_20260317T180000Z/`) | B | BL-027, BL-039 | — | [bl-040](done/bl-040-ui-modularization-and-authority-status.md) |
 | 12 | BL-041 | Doppler v2 and VBAP geometry validation | P2 | **Done** (Z10 owner D2 intake accepted; deterministic 100/100 contract/execute parity, strict usage exits, docs freshness, and closeout/archive sync PASS) | E | BL-036 | — | [bl-041](done/bl-041-doppler-v2-and-vbap-geometry-validation.md) |
 | 13 | BL-042 | QA CI regression gates | P1 | **Done** (Z16c RT reconcile PASS; Z16P_r2c preflight PASS; Z18 owner done-promotion PASS) | G | BL-035, BL-036, BL-041, HX-06 | BL-030 | [bl-042](done/bl-042-qa-ci-regression-gates.md) |
 | 14 | BL-044 | Quality-tier seamless switching | P1 | **Done** (Z17 owner done-promotion PASS; deterministic e2e evidence localized and ownership-safe) | F | BL-043 (Done) | — | [bl-044](done/bl-044-quality-tier-seamless-switching.md) |
@@ -144,7 +144,7 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | In Validation (T1+T2 3/3 PASS 2026-03-17; fixture gate 45.5% ext improvement p<0.0001; blocked on ≥5 real participant sessions) | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
 | 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | Open (no promotion while any execute evidence row is `TODO`; BL-073 gate required) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
-| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Open (reprioritized from code-review risk packet; no promotion while any execute evidence row is `TODO`; BL-073 gate required) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
+| 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | Done-candidate (owner sync Z1 2026-03-17: contract-only 10/10 PASS, execute 3/3 PASS, zero TODO rows, compile-backed execute probe clean; packet `TestEvidence/bl068_owner_sync_z1_20260317T191642Z/promotion_decision.md`) | E | BL-050, BL-055 | — | [bl-068](bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 | 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
 | 41 | BL-071 | Calibration generation guard and error-state enforcement | P0 | **Done** (execute + T2 + T3 pass; owner promotion decision recorded; archive sync complete) | E | BL-056, BL-059 | BL-060 | [bl-071](done/bl-071-calibration-generation-guard-and-error-state-enforcement.md) |
