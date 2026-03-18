@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-03-18T23:20:00Z",
+  "last_modified": "2026-03-18T23:42:00Z",
   "notes": "2026-03-18 closeout sync: BL-080 and BL-089 through BL-094 are now formal Done surfaces. BL-080 moved to `Documentation/backlog/done/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md` after the rebuilt standalone production self-test passed with `UI-W3A-01` and `UI-W3A-02` (`TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json`). BL-089 through BL-092 trust-wave closeout is now formalized from existing owner packet `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md` plus the captured bundle `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; BL-093 and BL-094 are likewise formal Done from their recorded owner packets (`TestEvidence/bl093_owner_sync_z1_20260318T044057Z/`, `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/`). Active follow-on work remains BL-095 through BL-099, plus BL-067/BL-085/BL-060/BL-079 and the audio-dsp-qa-harness extraction set BL-081 through BL-088. Earlier review-follow-on and physics implementation notes remain preserved in git history.",
   "phase_history": [
     {
@@ -2456,6 +2456,9 @@
     "calibrate_redesign_execution_packet_20260318_status": "complete_not_tested_planning_packet",
     "calibrate_automation_headphone_personalization_research_20260318_report": "Documentation/reports/2026-03-18-calibrate-automation-and-headphone-personalization-research-packet.md",
     "calibrate_automation_headphone_personalization_research_20260318_status": "complete_not_tested_research_packet",
+    "bl101_calibrate_discovery_provenance_truthfulness_runbook": "Documentation/backlog/bl-101-calibrate-discovery-provenance-and-truthfulness.md",
+    "bl101_calibrate_discovery_provenance_truthfulness_plan": "Documentation/plans/2026-03-18-calibrate-discovery-provenance-execution-packet.md",
+    "bl101_calibrate_discovery_provenance_truthfulness_status": "open_2026-03-18_backlog_and_annex_spec_created_from_research_packet",
     "calibrate_wave1b_automation_summary_20260318_scope": "Source/ui/public/index.html;Source/ui/src/index.ts",
     "calibrate_wave1b_automation_summary_20260318_status": "complete_partially_tested_ui",
     "calibrate_wave1b_automation_summary_20260318_validation": "cd Source/ui && npm run typecheck && npm run build",
@@ -2495,5 +2498,9 @@
   "physics_shared_motion_containment_validation": "cmake --build build_local --target locusq_physics_runtime_collision_probe locusq_physics_runtime_attractor_probe locusq_physics_runtime_boundary_probe locusq_physics_tier_a_probe -j4; ./build_local/locusq_physics_runtime_collision_probe_artefacts/Release/locusq_physics_runtime_collision_probe; ./build_local/locusq_physics_runtime_attractor_probe_artefacts/Release/locusq_physics_runtime_attractor_probe; ./build_local/locusq_physics_runtime_boundary_probe_artefacts/Release/locusq_physics_runtime_boundary_probe; ./build_local/locusq_physics_tier_a_probe_artefacts/Release/locusq_physics_tier_a_probe",
   "physics_boids_runtime_integration_status": "pass_2026-03-18_flock_group_assignment_and_group_params_now_activate_shared_worker_mode",
   "physics_boids_runtime_integration_validation": "cmake -S . -B build_local; cmake --build build_local --target locusq_physics_runtime_boids_probe locusq_physics_runtime_attractor_probe locusq_physics_runtime_boundary_probe locusq_physics_runtime_collision_probe locusq_physics_tier_a_probe -j4; ./build_local/locusq_physics_runtime_boids_probe_artefacts/Release/locusq_physics_runtime_boids_probe; ./build_local/locusq_physics_runtime_attractor_probe_artefacts/Release/locusq_physics_runtime_attractor_probe; ./build_local/locusq_physics_runtime_boundary_probe_artefacts/Release/locusq_physics_runtime_boundary_probe; ./build_local/locusq_physics_runtime_collision_probe_artefacts/Release/locusq_physics_runtime_collision_probe; ./build_local/locusq_physics_tier_a_probe_artefacts/Release/locusq_physics_tier_a_probe",
-  "physics_daw_automation_build_evidence": "build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3"
+  "physics_interaction_runtime_integration_status": "pass_2026-03-18_emitter_publish_now_refreshes_shared_scene_flags_and_interaction_only_scenes_activate_worker_mode",
+  "physics_interaction_runtime_integration_validation": "cmake --build build_local --target locusq_physics_runtime_interaction_probe locusq_physics_runtime_boids_probe locusq_physics_runtime_attractor_probe locusq_physics_runtime_boundary_probe locusq_physics_runtime_collision_probe locusq_physics_tier_a_probe -j4; ./build_local/locusq_physics_runtime_interaction_probe_artefacts/Release/locusq_physics_runtime_interaction_probe; ./build_local/locusq_physics_runtime_boids_probe_artefacts/Release/locusq_physics_runtime_boids_probe; ./build_local/locusq_physics_runtime_attractor_probe_artefacts/Release/locusq_physics_runtime_attractor_probe; ./build_local/locusq_physics_runtime_boundary_probe_artefacts/Release/locusq_physics_runtime_boundary_probe; ./build_local/locusq_physics_runtime_collision_probe_artefacts/Release/locusq_physics_runtime_collision_probe; ./build_local/locusq_physics_tier_a_probe_artefacts/Release/locusq_physics_tier_a_probe",
+  "physics_daw_automation_build_evidence": "build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3",
+  "physics_daw_automation_p0_selftest_status": "pass_2026-03-18_standalone_production_selftest",
+  "physics_daw_automation_p0_selftest_evidence": "TestEvidence/locusq_production_p0_selftest_20260318T223926Z.json"
 }
