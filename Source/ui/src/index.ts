@@ -7917,11 +7917,18 @@ function getCalibrationMonitoringPathLabel(pathId) {
     return calibrationMonitoringPathLabels[id] || calibrationMonitoringPathLabels.speakers;
 }
 
-function getCalibrationTargetId(monitoringPathId = "") {
+function isHeadphoneCalibrationMonitoringPath(pathId = "") {
     const resolvedMonitoringPath = String(
-        monitoringPathId || getCalibrationMonitoringPathId()
+        pathId || getCalibrationMonitoringPathId()
     ).trim().toLowerCase();
-    return resolvedMonitoringPath === "speakers" ? "speaker_room" : "headphones";
+    return resolvedMonitoringPath === "steam_binaural"
+        || resolvedMonitoringPath === "virtual_binaural";
+}
+
+function getCalibrationTargetId(monitoringPathId = "") {
+    return isHeadphoneCalibrationMonitoringPath(monitoringPathId)
+        ? "headphones"
+        : "speaker_room";
 }
 
 function setCalibrationAutomationSource(field, sourceId) {
@@ -11635,13 +11642,12 @@ function initUIBindings() {
             }
 
             if (requestedTarget === "headphones") {
-                if (currentPath !== "speakers") {
+                if (isHeadphoneCalibrationMonitoringPath(currentPath)) {
                     calibrationLastHeadphoneMonitoringPath = currentPath;
                     applyCalibrationStatus();
                     return;
                 }
-                const desiredPath = calibrationMonitoringPathIds.includes(calibrationLastHeadphoneMonitoringPath)
-                    && calibrationLastHeadphoneMonitoringPath !== "speakers"
+                const desiredPath = isHeadphoneCalibrationMonitoringPath(calibrationLastHeadphoneMonitoringPath)
                     ? calibrationLastHeadphoneMonitoringPath
                     : "steam_binaural";
                 const desiredIndex = calibrationMonitoringPathIds.indexOf(desiredPath);
@@ -11650,7 +11656,7 @@ function initUIBindings() {
                 return;
             }
 
-            if (currentPath !== "speakers") {
+            if (isHeadphoneCalibrationMonitoringPath(currentPath)) {
                 calibrationLastHeadphoneMonitoringPath = currentPath;
                 monitoringSelect.selectedIndex = 0;
                 monitoringSelect.dispatchEvent(new Event("change", { bubbles: true }));
@@ -12825,7 +12831,7 @@ function initParameterListeners() {
     });
     comboStates.cal_monitoring_path.valueChangedEvent.addListener(() => {
         const pathId = getCalibrationMonitoringPathId();
-        if (pathId !== "speakers") {
+        if (isHeadphoneCalibrationMonitoringPath(pathId)) {
             calibrationLastHeadphoneMonitoringPath = pathId;
         }
         setCalibrationAutomationSource("monitoringPath", "manual_override");
