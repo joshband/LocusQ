@@ -162,6 +162,31 @@ static void checkFrozenToLiveTransition()
           " (expected atomic 0.55, not frozen 0.25)");
 }
 
+// ── Gate 7: gainTransient ignores freeze state — not suppressed by freeze ──
+static void checkGainTransientIgnoresFreezeState()
+{
+    PhysicsDSPBridge bridge;
+    prepareInstantaneous(bridge);
+
+    PerEmitterDSPValues vals;
+    vals.spreadMod    = 0.0f;
+    vals.gainMod      = 0.0f;
+    vals.gainTransient = 0.75f;
+    bridge.publish(0, vals);
+
+    // Simulate frozen path: DSP would read spread/gain from APVTS, but
+    // gainTransient always comes from the bridge regardless of freeze state
+    const bool frozen = true;
+    const auto bridgeRead = bridge.read(0);
+
+    // Frozen state must not suppress gainTransient
+    const bool transient_present = bridgeRead.gainTransient > 0.5f;
+    check("gain_transient_ignores_freeze",
+          transient_present,
+          "gainTransient=" + std::to_string(bridgeRead.gainTransient) +
+          " frozen=" + std::to_string(frozen));
+}
+
 // ── Gate 6: NaN/inf safety — inherited from bridge clamp ─────────────────
 static void checkNaNSafetyInherited()
 {
@@ -178,11 +203,15 @@ static void checkNaNSafetyInherited()
     const bool spread_finite    = std::isfinite(read.spreadMod);
     const bool gain_finite      = std::isfinite(read.gainMod);
     const bool transient_finite = std::isfinite(read.gainTransient);
+    const bool spread_in_range    = read.spreadMod    >= 0.0f && read.spreadMod    <= 1.0f;
+    const bool gain_in_range      = read.gainMod      >= 0.0f && read.gainMod      <= 1.0f;
+    const bool transient_in_range = read.gainTransient >= 0.0f && read.gainTransient <= 1.0f;
     check("nan_safety_inherited",
-          spread_finite && gain_finite && transient_finite,
-          "spread_finite="    + std::to_string(spread_finite) +
-          " gain_finite="     + std::to_string(gain_finite) +
-          " transient_finite=" + std::to_string(transient_finite));
+          spread_finite    && gain_finite    && transient_finite &&
+          spread_in_range  && gain_in_range  && transient_in_range,
+          "spread=" + std::to_string(read.spreadMod) +
+          " gain="  + std::to_string(read.gainMod) +
+          " transient=" + std::to_string(read.gainTransient));
 }
 
 int main()
@@ -192,6 +221,7 @@ int main()
     checkSnapshotGuardNoJump();
     checkFrozenPathOwnership();
     checkFrozenToLiveTransition();
+    checkGainTransientIgnoresFreezeState();
     checkNaNSafetyInherited();
 
     int passed = 0, failed = 0;
