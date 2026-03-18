@@ -13,6 +13,7 @@ Convert the 2026-03-18 CALIBRATE research packet into an execution-ready first w
 Primary goals:
 - make automation source-of-truth explicit
 - make CALIBRATE trust surfaces provable
+- separate provenance from freshness/override state
 - prepare the panel for wider topology/device support without overstating current capability
 
 Primary inputs:
@@ -34,9 +35,10 @@ Validation status: `not tested`
 
 1. Never present inferred or synthetic data as measured truth.
 2. Separate source-of-truth from display copy.
-3. Treat stale data as a first-class state.
-4. Prefer additive bridge/schema changes over disruptive rewrites.
-5. Build the QA lane alongside the truth contract, not after it.
+3. Separate provenance from freshness and override state.
+4. Treat stale data as a first-class state.
+5. Prefer additive bridge/schema changes over disruptive rewrites.
+6. Build the QA lane alongside the truth contract, not after it.
 
 ## Wave Plan
 
@@ -48,8 +50,8 @@ Define one explicit semantics model for CALIBRATE discovery and provenance.
 | Slice ID | Description | Touch Zones | Exit Criteria |
 |---|---|---|---|
 | `CAL-P1` | Define source enums (`host`, `scan`, `companion`, `profile`, `manual`) | docs + bridge contracts | enums and copy rules are frozen |
-| `CAL-P2` | Define provenance enums (`measured`, `detected`, `inferred`, `estimated`, `generic`, `unavailable`, `stale`) | docs + UI trust language | all CALIBRATE truth surfaces have allowed states |
-| `CAL-P3` | Define stale/age/manual-override rules | docs + UI trust language | every auto-populated field can express freshness and override state |
+| `CAL-P2` | Define provenance enums (`measured`, `detected`, `inferred`, `estimated`, `generic`, `unavailable`) | docs + UI trust language | all CALIBRATE truth surfaces have allowed evidence states |
+| `CAL-P3` | Define freshness/age/manual-override rules (`isStale`, `ageMs`, `staleAfterMs`, `manualOverride`) | docs + UI trust language | every auto-populated field can express freshness and override state |
 
 ### Wave 1B: Publish The Semantics
 

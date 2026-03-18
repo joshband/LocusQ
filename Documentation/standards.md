@@ -31,26 +31,21 @@ Every in-scope markdown file must include, in this order, at the top of file:
 Per `Documentation/adr/ADR-0021-smart-brevity-documentation-contract.md`, active documentation should optimize for fast scanning without losing truth.
 
 Authoring rules:
-1. Lead with the answer, decision, or outcome.
-2. Prefer short sentences with one main idea each.
-3. Prefer short paragraphs (`1-3` sentences).
-4. Prefer bullets, tables, and compact labels when they improve scanning.
-5. Use explicit nouns, file paths, dates, thresholds, and owners.
-6. Replace repeated global policy text with pointers to canonical docs.
-7. Remove filler, throat-clearing, and repeated caveats.
-8. Keep long narrative sections only when compression would hide important nuance.
+1. Lead with the answer.
+2. Keep sentences short and specific.
+3. Keep paragraphs short.
+4. Prefer bullets, tables, and labels over long narrative.
+5. Use explicit file paths, dates, thresholds, and owners.
+6. Point to canonical policy instead of repeating it.
+7. Remove filler.
+8. Keep long narrative only when compression would hide important nuance.
 
-Markdown visualization rules:
-1. Tables are the default rich-text/scannability tool.
+Formatting rules:
+1. Tables are the default scannability tool.
 2. Use Mermaid, screenshots, charts, SVGs, or HTML prototypes only when they clarify faster than prose.
-3. Keep visual semantics portable; do not rely on inline HTML/CSS color meaning.
-4. Link visuals to repo-local artifacts whenever possible.
-
-Machine-readability rules:
-1. Keep stable headings and section names.
-2. Prefer explicit labels over implied context.
-3. Keep structured companion artifacts (`json`, `csv`, `tsv`, `yaml`) compact and current.
-4. Do not bury critical decisions inside long narrative paragraphs when a table or short decision block would be clearer.
+3. Keep visual semantics portable; do not rely on inline color meaning.
+4. Keep stable headings and section names.
+5. Keep structured companions (`json`, `csv`, `tsv`, `yaml`) compact and current.
 
 ## Naming Conventions
 - Use lowercase kebab-case for new docs, except canonical legacy files already in use.
@@ -64,19 +59,14 @@ Machine-readability rules:
 - Execution runbooks: `Documentation/runbooks/`
 - Validation artifacts and run logs: `TestEvidence/`
 
-Testing folder rule:
-1. `Documentation/testing/README.md` is the classification index for the active testing-doc surface.
+Testing and evidence rules:
+1. `Documentation/testing/README.md` is the active testing-doc classification index.
 2. Keep reusable guides and stable harness contracts active in `Documentation/testing/`.
-3. Keep BL-specific QA docs active only while they add support value beyond backlog runbooks and `TestEvidence/`.
-4. Move one-off manual notes, superseded audits, and evidence-heavy packets to `Documentation/archive/<YYYY-MM-DD>-<slug>/testing/`.
-5. Do not let `Documentation/testing/` become a second backlog or status ledger.
-
-Test-evidence rule:
-1. `TestEvidence/README.md` is the classification index for evidence surfaces.
-2. Keep `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md` as the only always-canonical evidence docs.
-3. Prefer packet directories over loose top-level files for new evidence.
-4. Treat repeated debug support files as support artifacts, not active authority.
-5. Archive superseded evidence summaries and retired decision packets under `Documentation/archive/<YYYY-MM-DD>-<slug>/testevidence/`.
+3. Keep BL-specific QA docs active only while they add value beyond runbooks and `TestEvidence/`.
+4. `TestEvidence/README.md` is the evidence classification index.
+5. `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md` are the only always-canonical evidence docs.
+6. Prefer packet directories over loose top-level files.
+7. Archive one-off notes, heavy packets, and retired summaries under `Documentation/archive/<YYYY-MM-DD>-<slug>/`.
 
 ## Source-Of-Truth Tiering
 - Tier 0 canonical docs are listed in `Documentation/README.md` and are the only authority for status/closeout claims.
@@ -109,17 +99,10 @@ Applies to all remaining open backlog items and all future backlog items.
    - active/open runbooks (`Documentation/backlog/bl-*.md`, `Documentation/backlog/hx-*.md`) must satisfy the current runbook schema and cadence policy;
    - done runbooks (`Documentation/backlog/done/*.md`) must preserve closeout evidence while conforming to readability schema;
    - backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields but must preserve canonical runbook linkage.
-7. Per `ADR-0023`, backlog automation is draft-only by default:
-   - automation may run declared T1/T2/T3 commands,
-   - automation may assemble `TestEvidence/` packets and draft sync summaries,
-   - automation may not finalize status changes, `Done` transitions, or archive moves without owner confirmation unless an item is explicitly marked `owner_gated_auto`.
-8. Backlog automation contracts should declare:
-   - `automation_mode`,
-   - `automation_stage_cap`,
-   - `owner_required_for`,
-   - `heavy_wrapper`,
-   - `shared_files_risk`,
-   - `closeout_ready`.
+7. Per `ADR-0023`, backlog automation is draft-only by default.
+8. Automation may run declared T1/T2/T3 commands and assemble draft `TestEvidence/` packets or sync summaries.
+9. Automation may not finalize status changes, `Done` transitions, or archive moves without owner confirmation unless an item is explicitly marked `owner_gated_auto`.
+10. Automation contracts should declare `automation_mode`, `automation_stage_cap`, `owner_required_for`, `heavy_wrapper`, `shared_files_risk`, and `closeout_ready`.
 
 ## Backlog Plain-Language and Visual Clarity Standard
 
@@ -148,15 +131,13 @@ Validation:
 3. `./scripts/export-backlog-summaries.py --check`
 4. `./scripts/validate-docs-freshness.sh`
 
-Recommended scaffolding helper for new items:
-1. `./scripts/new-backlog-item.py --id BL-078 --title "Example Item" --priority P1 --track "Track E - R&D Expansion"`
-2. Authoring guidance and anti-duplication policy: `Documentation/backlog/runbook-authoring-guide.md`
-3. Refresh machine-readable backlog summaries after backlog changes: `./scripts/export-backlog-summaries.py`
-4. Summary schema authority: `Documentation/backlog/backlog-summary-schema.md`
-5. Auto-refresh hook (local): `.githooks/pre-commit` refreshes/stages summary artifacts when `Documentation/backlog/**` changes are staged.
-6. Draft automation runner: `scripts/backlog-auto-123.py`
-7. Draft automation guide: `Documentation/backlog/automation-draft-flow.md`
-8. Closeout diff prep runner: `scripts/backlog-closeout-draft.py`
+Key helpers:
+1. `./scripts/new-backlog-item.py`
+2. `Documentation/backlog/runbook-authoring-guide.md`
+3. `Documentation/backlog/backlog-summary-schema.md`
+4. `scripts/backlog-auto-123.py`
+5. `Documentation/backlog/automation-draft-flow.md`
+6. `scripts/backlog-closeout-draft.py`
 
 ## Portable Status-Rich Roadmap And Review Standard
 

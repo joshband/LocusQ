@@ -30,14 +30,13 @@ Do not edit those copies directly. After editing this file, sync both copies wit
 - Do not auto-advance to the next phase when a phase completes.
 - Backlog automation is draft-only unless explicitly approved: agents may run T1/T2/T3 lanes and draft packets or proposed status updates, but owner confirmation is required before promotion or archive transitions become authoritative.
 - When specialist intents are present, select the minimal specialist skill bundle from `SKILLS.md` / `Documentation/skill-selection-matrix.md` and announce order.
-- For repository-scale docs cleanup/de-bloat requests (including backlog/root/API-doc/code-comment hygiene), include `documentation-hygiene-expert`.
-- For git artifact hygiene requests (tracked ignored files, stale archives, history bloat, pre-commit/CI guardrails), include `documentation-hygiene-expert`.
-- For governance metadata, ADR/invariant traceability, and routing-contract sync, include `skill_docs` (pair with `documentation-hygiene-expert` when large cleanup passes are in scope).
-- For companion Apple platform API/capture/privacy intents (AirPods/CoreMotion/Vision, BL-057/BL-058), include `apple-spatial-companion-platform` in the specialist bundle.
-- For AUv3 format/lifecycle/app-extension intents, include `auv3-plugin-lifecycle`.
-- For temporal DSP intents (delay/echo/looper/frippertronics-style feedback evolution), include `temporal-effects-engineering`.
-- For complex simulation-driven audio+visual intents (fluid/crowd/flocking/herd), include `simulation-behavior-audio-visual` (plus `physics-reactive-audio` when DSP-thread behavior is in scope).
-- For realtime 2D/3D/4D information-visualization and high-quality plugin UI direction, include `realtime-dimensional-visualization`.
+- For repository-scale docs cleanup, git artifact hygiene, or backlog packet cleanup, include `documentation-hygiene-expert`.
+- For governance metadata, ADR traceability, and routing-contract sync, include `skill_docs` and pair it with `documentation-hygiene-expert` for larger cleanup passes.
+- For companion Apple platform API/capture/privacy intents, include `apple-spatial-companion-platform`.
+- For AUv3 intents, include `auv3-plugin-lifecycle`.
+- For temporal DSP intents, include `temporal-effects-engineering`.
+- For complex simulation-driven audio+visual intents, include `simulation-behavior-audio-visual` and add `physics-reactive-audio` when DSP-thread behavior is in scope.
+- For realtime information visualization and operator-facing UI direction, include `realtime-dimensional-visualization`.
 
 ## Required Load Sequence
 For phase execution, always load in this order:

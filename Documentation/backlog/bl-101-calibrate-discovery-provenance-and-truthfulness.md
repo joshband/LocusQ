@@ -8,14 +8,14 @@ Last Modified Date: 2026-03-18
 
 ## Plain-Language Summary
 
-BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating device discovery, topology inference, profile provenance, and verification truth into explicit contracts instead of implied status text. Current state: Open. This item is the direct follow-on from the 2026-03-18 CALIBRATE research packet and exists because the current panel can show useful status, but it still cannot prove all of its automation and verification claims end-to-end.
+BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Open. This item is the direct follow-on from the 2026-03-18 CALIBRATE research packet and exists because the current panel can show useful status, but it still cannot prove all of its automation and verification claims end-to-end.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
 | Who is this for? | Plugin operators, headphone users, speaker-calibration users, QA/release owners, and maintainers expanding layout/device support. |
-| What is changing? | `CALIBRATE` gains explicit discovery/provenance semantics, a truer automation contract, and dedicated QA for truthfulness across outputs, headphones, inputs, and verification surfaces. |
+| What is changing? | `CALIBRATE` gains explicit discovery, provenance, and freshness semantics, a truer automation contract, and dedicated QA for truthfulness across outputs, headphones, inputs, and verification surfaces. |
 | Why is this important? | Today `CALIBRATE` can over-compress discovery, routing, profile activation, and verification into one set of status surfaces, which makes it harder to trust and harder to scale to new headphone/speaker configurations. |
 | How will we deliver it? | Freeze the discovery/provenance contract first, then align bridge/UI payloads, then add CALIBRATE truthfulness QA, then use the new contract as the base for future automation and wider topology support. |
 | When is it done? | This item is done when CALIBRATE surfaces can distinguish host-derived, companion-derived, measured, estimated, generic, stale, and manual states without ambiguity and automated lanes prove those distinctions. |
@@ -46,7 +46,7 @@ BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating devi
 
 ## Objective
 
-Make `CALIBRATE` trustworthy and expandable by freezing one explicit contract for output discovery, input identification, topology inference, profile provenance, and verification truthfulness. BL-101 is complete only when `HEADPHONE DEVICE STATUS`, `AUTOMATION SUMMARY`, `CALIBRATION STATUS`, and `HEADPHONE VERIFY` can state what is detected, inferred, measured, estimated, generic, stale, or manually overridden without rewriting weaker evidence into stronger claims.
+Make `CALIBRATE` trustworthy and expandable by freezing one explicit contract for output discovery, input identification, topology inference, profile provenance, freshness, and verification truthfulness. BL-101 is complete only when `HEADPHONE DEVICE STATUS`, `AUTOMATION SUMMARY`, `CALIBRATION STATUS`, and `HEADPHONE VERIFY` can state what is detected, inferred, measured, estimated, generic, stale, or manually overridden without rewriting weaker evidence into stronger claims.
 
 ## Scope & Non-Scope
 
@@ -90,7 +90,7 @@ Primary supporting inputs:
 ## Acceptance IDs
 
 - `BL101-A1` Every auto-populated CALIBRATE field can identify its source as host, standalone scan, companion, persisted profile, or manual override.
-- `BL101-A2` CALIBRATE truth surfaces can identify provenance state as measured, detected, inferred, estimated, generic, unavailable, or stale where applicable.
+- `BL101-A2` CALIBRATE truth surfaces can identify provenance state as measured, detected, inferred, estimated, generic, or unavailable, with freshness/state overlays such as stale and manual override expressed separately and deterministically.
 - `BL101-A3` UI copy never upgrades a weaker evidence state into a stronger claim.
 - `BL101-A4` Save/load/export/import paths preserve provenance fields or explicitly mark when provenance is unavailable.
 - `BL101-A5` Automated QA exists for `HEADPHONE DEVICE STATUS`, `AUTOMATION SUMMARY`, `CALIBRATION STATUS`, and `HEADPHONE VERIFY` truth semantics.

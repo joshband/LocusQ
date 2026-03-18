@@ -38,6 +38,8 @@ Reduce active documentation surface area by moving superseded planning packets, 
 - `Documentation/reports/tracker-issues/2026-03-01-bl-075-*.md`
 - `Documentation/reports/2026-03-18-calibrate-review-and-redesign-spec.md` deep legacy redesign review preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/reports/2026-03-18-calibrate-review-and-redesign-spec-legacy.md`
+- `Documentation/reports/2026-03-18-calibrate-automation-and-headphone-personalization-research-packet.md` deep legacy research packet preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/reports/2026-03-18-calibrate-automation-and-headphone-personalization-research-packet-legacy.md`
 - `Documentation/reports/ui-ux-refinement-2026-03-17/component-specs.md` deep legacy component packet preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/reports/component-specs-2026-03-17-legacy.md`
 - `Documentation/reports/ui-ux-refinement-2026-03-17/prototype-plan.md` deep legacy prototype packet preserved as:
@@ -57,6 +59,8 @@ Reduce active documentation surface area by moving superseded planning packets, 
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-02-27-calibration-implementation-plan-legacy.md`
 - `Documentation/plans/2026-02-27-calibration-system-design.md` deep legacy calibration design preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-02-27-calibration-system-design-legacy.md`
+- `Documentation/plans/2026-03-18-calibrate-redesign-execution-packet.md` deep legacy redesign execution packet preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-03-18-calibrate-redesign-execution-packet-legacy.md`
 - `Documentation/plans/2026-02-23-master-backlog-implementation-plan.md` deep legacy migration script preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-02-23-master-backlog-implementation-plan-legacy.md`
 - `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` deep legacy visualization spec preserved as:
@@ -82,11 +86,19 @@ Reduce active documentation surface area by moving superseded planning packets, 
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-021-room-story-overlays-legacy.md`
 - `Documentation/backlog/bl-032-source-modularization.md` deep legacy runbook preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-032-source-modularization-legacy.md`
+- `Documentation/backlog/done/bl-038-calibration-threading-and-telemetry.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-038-calibration-threading-and-telemetry-legacy.md`
+- `Documentation/backlog/done/bl-039-parameter-relay-spec-generation.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-039-parameter-relay-spec-generation-legacy.md`
+- `Documentation/backlog/done/bl-040-ui-modularization-and-authority-status.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-040-ui-modularization-and-authority-status-legacy.md`
 
 ### Testing
 
 - `Documentation/testing/bl-025-emitter-resize-manual-qa-2026-02-23.md`
 - `Documentation/testing/hx-04-scenario-coverage-audit-2026-02-23.md`
+- `Documentation/testing/bl-023-resize-dpi-hardening-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-023-resize-dpi-hardening-qa-legacy.md`
 - `Documentation/testing/bl-030-release-governance-qa.md` deep legacy QA contract preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-030-release-governance-qa-legacy.md`
 - `Documentation/testing/bl-037-emitter-snapshot-cpu-budget-qa.md` deep legacy QA contract preserved as:
@@ -99,6 +111,22 @@ Reduce active documentation surface area by moving superseded planning packets, 
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-040-ui-modularization-and-authority-status-qa-legacy.md`
 - `Documentation/testing/bl-049-unit-test-framework-and-tracker-automation-qa.md` deep legacy QA contract preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-049-unit-test-framework-and-tracker-automation-qa-legacy.md`
+- `Documentation/testing/bl-023-resize-dpi-hardening-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-023-resize-dpi-hardening-qa-legacy.md`
+- `Documentation/testing/bl-020-confidence-masking-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-020-confidence-masking-qa-legacy.md`
+- `Documentation/testing/bl-021-room-story-overlays-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-021-room-story-overlays-qa-legacy.md`
+- `Documentation/testing/bl-048-cross-platform-shipping-hardening-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-048-cross-platform-shipping-hardening-qa-legacy.md`
+- `Documentation/testing/bl-036-dsp-finite-output-guardrails-qa.md` deeper legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-036-dsp-finite-output-guardrails-qa-legacy-v2.md`
+- `Documentation/testing/bl-041-doppler-v2-and-vbap-geometry-validation-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-041-doppler-v2-and-vbap-geometry-validation-qa-legacy.md`
+- `Documentation/testing/bl-046-sofa-hrtf-binaural-expansion-qa.md` deep legacy QA contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/bl-046-sofa-hrtf-binaural-expansion-qa-legacy.md`
+- `Documentation/testing/selftest-stability-contract.md` deep legacy selftest contract preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/selftest-stability-contract-legacy.md`
 
 ### Reviews
 
@@ -110,6 +138,11 @@ Reduce active documentation surface area by moving superseded planning packets, 
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/reviews/2026-03-01-code-review-backlog-reprioritization-legacy.md`
 - `Documentation/reviews/2026-03-17-qa-harness-opportunities-review.md` deep legacy review preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/reviews/2026-03-17-qa-harness-opportunities-review-legacy.md`
+
+### Runbooks
+
+- `Documentation/runbooks/backlog-execution-runbooks.md` deep legacy deprecated runbook bundle preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/runbooks/backlog-execution-runbooks-legacy.md`
 
 ### Test Evidence
 

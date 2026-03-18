@@ -27,7 +27,7 @@ One-off evidence packets move to `Documentation/archive/2026-03-18-doc-surface-c
 | `production-selftest-and-reaper-headless-smoke-guide.md` | canonical reusable guide | explains the two main validation lanes |
 | `reaper-manual-qa-session.md` | canonical reusable guide | manual host-session template for REAPER checks |
 | `selftest-abrt-triage.md` | canonical reusable guide | deterministic selftest ABRT diagnosis |
-| `selftest-stability-contract.md` | supporting contract | selftest output, retry, and lock taxonomy |
+| `selftest-stability-contract.md` | supporting contract | selftest output, retry, lock, launch, and grace/failure contract |
 | `pluginval-stability-contract.md` | supporting contract | RL-06 pluginval stability and taxonomy contract |
 | `bl-030-release-governance-qa.md` | BL-specific packet to keep active | release-governance replay and blocker taxonomy |
 | `bl-039-parameter-relay-spec-generation-qa.md` | BL-specific packet to keep active | parameter-relay contract authority and replay checks |
@@ -35,13 +35,13 @@ One-off evidence packets move to `Documentation/archive/2026-03-18-doc-surface-c
 | `bl-037-emitter-snapshot-cpu-budget-qa.md` | BL-specific packet to keep active | snapshot CPU budget and replay contract |
 | `bl-038-calibration-threading-and-telemetry-qa.md` | BL-specific packet to keep active | calibration threading and telemetry evidence |
 | `bl-049-unit-test-framework-and-tracker-automation-qa.md` | BL-specific packet to keep active | unit-test framework and tracker automation |
-| `bl-041-doppler-v2-and-vbap-geometry-validation-qa.md` | BL-specific packet to keep active | Doppler/VBAP geometry validation |
-| `bl-036-dsp-finite-output-guardrails-qa.md` | BL-specific packet to keep active | finite-output guardrail validation |
-| `bl-046-sofa-hrtf-binaural-expansion-qa.md` | BL-specific packet to keep active | SOFA/HRTF binaural expansion validation |
-| `bl-048-cross-platform-shipping-hardening-qa.md` | BL-specific packet to keep active | shipping-hardening replay and evidence |
-| `bl-023-resize-dpi-hardening-qa.md` | BL-specific packet to keep active | resize and DPI hardening evidence |
-| `bl-020-confidence-masking-qa.md` | BL-specific packet to keep active | confidence-masking validation |
-| `bl-021-room-story-overlays-qa.md` | BL-specific packet to keep active | room-story overlay validation |
+| `bl-041-doppler-v2-and-vbap-geometry-validation-qa.md` | BL-specific packet to keep active | compact Doppler/VBAP replay and parity contract |
+| `bl-036-dsp-finite-output-guardrails-qa.md` | BL-specific packet to keep active | compact finite-output guardrail and replay contract |
+| `bl-046-sofa-hrtf-binaural-expansion-qa.md` | BL-specific packet to keep active | compact SOFA/HRTF replay and fallback contract |
+| `bl-048-cross-platform-shipping-hardening-qa.md` | BL-specific packet to keep active | compact shipping-hardening replay and release-evidence contract |
+| `bl-023-resize-dpi-hardening-qa.md` | BL-specific packet to keep active | compact resize/DPI matrix and parity contract |
+| `bl-020-confidence-masking-qa.md` | BL-specific packet to keep active | compact confidence/masking replay and fallback contract |
+| `bl-021-room-story-overlays-qa.md` | BL-specific packet to keep active | compact room-story overlay replay and fallback contract |
 | `bl-044-quality-tier-seamless-switching-qa.md` | BL-specific packet to keep active | quality-tier switching validation |
 | `bl-029-audition-platform-qa.md` | BL-specific packet to keep active | audition platform validation |
 | `bl-042-qa-ci-regression-gates-qa.md` | BL-specific packet to keep active | QA/CI regression gate contract |
@@ -67,7 +67,7 @@ These packets were one-off evidence notes and now live in the archive set:
 
 ## Follow-Up Archive Candidates
 
-If we do another pass, the next strongest archive candidates are the largest BL-specific QA packets that duplicate runbook or `TestEvidence` truth:
+If we do another pass, the next strongest archive or compaction candidates are the largest BL-specific QA packets that still duplicate runbook or `TestEvidence` truth:
 
 - `bl-039-parameter-relay-spec-generation-qa.md`
 - `bl-030-release-governance-qa.md`
@@ -75,8 +75,8 @@ If we do another pass, the next strongest archive candidates are the largest BL-
 - `bl-037-emitter-snapshot-cpu-budget-qa.md`
 - `bl-038-calibration-threading-and-telemetry-qa.md`
 - `bl-049-unit-test-framework-and-tracker-automation-qa.md`
-- `bl-041-doppler-v2-and-vbap-geometry-validation-qa.md`
-- `bl-036-dsp-finite-output-guardrails-qa.md`
+- `bl-044-quality-tier-seamless-switching-qa.md`
+- `bl-029-audition-platform-qa.md`
 
 ## Note
 

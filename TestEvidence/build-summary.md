@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-19
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -43,9 +43,15 @@ Last Modified Date: 2026-03-18
 - 2026-03-18 containment refinement: coordinated multi-emitter collision mode now applies a weak worker-side rest-pose tether outside a deadzone, so shared scenes recenter instead of depending on user drag or wall hits to stay controlled.
 - 2026-03-18 boids refinement: flock-group assignment and per-group boids settings now reach `BoidsSystem` in the live processor path, and flock-enabled emitters can enter coordinated worker mode without needing an attractor or collision gate.
 - 2026-03-18 interaction refinement: emitter-mode publish now refreshes shared physics scene flags, and interaction-only scenes can enter coordinated worker mode without requiring a renderer instance or an attractor/collision/flock surrogate.
+- 2026-03-18 spring+turbulence refinement: spring and turbulence params now reach `SpringSystem` / `TurbulenceSystem` in the live processor path, and either feature can activate coordinated worker mode on its own.
+- 2026-03-18 collision probe hardening: the collision runtime lane now captures a pre-throw baseline and explicitly disables spring/turbulence in its scenario config, removing the weak-settle baseline jitter that had shown up in one replay.
+- 2026-03-19 runtime probe isolation hardening: the boids, interaction, and boundary lanes now disable unrelated coordinated features explicitly, and the boids lane captures its baseline before scoring convergence so replay numbers reflect the intended feature slice.
+- 2026-03-19 attractor and spring+turbulence probe hardening: those lanes now follow the same contract too, with explicit unrelated-feature disablement for attractor and baseline capture before live scoring for attractor, spring, and turbulence.
+- 2026-03-19 attractor settle-contract refinement: the attractor runtime lane now runs as an explicitly damped scenario and scores a settle window instead of a single terminal sample, removing the replay-to-replay end-state drift that showed up in the first repeated check.
 - New runtime lane: `locusq_physics_runtime_collision_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_boids_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_interaction_probe` PASS.
+- New runtime lane: `locusq_physics_runtime_spring_turbulence_probe` PASS.
 - Collision lane result:
   - `emitterIds=(0,1)`
   - `initialDistance=0.900`
@@ -57,16 +63,27 @@ Last Modified Date: 2026-03-18
 - Boids lane result:
   - `emitterIds=(0,1)`
   - `initialDistance=2.992`
-  - `minDistance=2.306`
+  - `minDistance=2.410`
   - `maxSpread=1.000`
 - Interaction lane result:
   - `emitterIds=(0,1)`
   - `initialDistance=0.726`
-  - `maxDistance=3.454`
-  - `maxAbsForce=5.682`
-  - `finalVx=(-1.802,1.668)`
+  - `maxDistance=3.162`
+  - `maxAbsForce=5.664`
+  - `finalVx=(-1.798,1.667)`
+- Spring+turbulence lane result:
+  - `spring baselineSpread=0.000`
+  - `spring baselineAbsForceX=0.000`
+  - `spring maxSpread=0.300`
+  - `spring maxAbsForceX=6.000`
+  - `spring maxDisp=1.919`
+  - `turbulence baselineSpread=0.000`
+  - `turbulence baselineAbsForceX=0.000`
+  - `turbulence maxSpread=0.090`
+  - `turbulence maxAbsForceX=1.179`
+  - `turbulence maxDisp=1.202`
 - Regression guard:
-  - `locusq_physics_runtime_attractor_probe` PASS with `attractorMaxSpread=0.880`, `attractorMaxDisp=2.967`
+  - `locusq_physics_runtime_attractor_probe` PASS with `baselineCaptured=1`, `baselineMaxSpread=0.000`, `attractorMaxSpread=0.880`, `attractorMaxDisp=2.235`, `settleMeanX~2.00`, `settleRangeX=0.605`
   - `locusq_physics_runtime_boundary_probe` PASS with `maxX=3.000`, `collisionMask=1`
   - `locusq_physics_tier_a_probe` PASS `15/15`
 - Follow-on refinement:
@@ -74,6 +91,11 @@ Last Modified Date: 2026-03-18
   - the collision lane now proves the runtime contract under `phys_drag=0.0`, so containment is no longer just a lucky probe preset.
   - the boids lane closes a bigger truth gap: flock controls are no longer UI-only for the production path.
   - the interaction lane closes the next truth gap: `rend_phys_interact` now activates shared-worker authority in emitter-only scenes instead of relying on renderer-mode state refresh.
+  - the spring+turbulence lane closes the remaining P3 production-path gap: those controls are no longer subsystem-only or piggybacking on another coordinated feature.
+  - the collision lane itself is now less brittle too: after probe hardening, three rebuilt reruns held the expected `initialDistance=0.900` baseline and stayed green.
+  - the boids, interaction, and boundary lanes are now less ambient-state-sensitive too: each scenario explicitly disables unrelated coordinated features before replay, and boids now captures its baseline before convergence scoring begins.
+  - the attractor and spring+turbulence lanes now follow that same rule, so the coordinated runtime suite has a more consistent baseline-and-isolation contract across all major feature slices.
+  - repeated replay is now stronger again: spring, turbulence, and the newly-damped attractor lane all held stable bounded outputs across three reruns, with the attractor lane now evaluated by settle-window mean/range instead of a single phase-sensitive terminal sample.
 
 ## Decision-Critical Evidence Pointers
 

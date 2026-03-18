@@ -8,23 +8,19 @@ Last Modified Date: 2026-03-18 (BL-080 and BL-089..BL-094 promoted to Done with 
 
 ## Purpose
 
-Single canonical backlog authority for priority, ordering, status, dependencies, and closeout criteria across all BL/HX work items. This file is a dashboard — detailed execution content lives in individual runbook docs alongside annex plan specs.
+Single canonical backlog authority for priority, ordering, status, dependencies, and closeout across all BL/HX work.
+This file is the dashboard.
+Detailed execution content lives in runbooks, plans, and evidence packets.
 
-## Canonical Contract
+## Canonical Rules
 
 1. This file is the single authority for backlog status, ordering, and priority.
-2. Open-item runbook docs (`Documentation/backlog/bl-XXX-*.md`) carry execution detail, agent prompts, and validation plans.
-3. Done-item runbooks are archived under `Documentation/backlog/done/` and linked from Closed Archive.
-4. Annex plan specs (`Documentation/plans/*.md`) carry deep architecture; they must not contain authoritative backlog state.
-5. Every open item must have a corresponding runbook doc with dependencies, agent mega-prompts, and exit criteria.
-6. Any status/priority change must update this file, the runbook's Status Ledger, and evidence surfaces in the same changeset.
-7. Intake process for new items uses `Documentation/backlog/_template-intake.md`.
-8. Owner promotion decisions should use `Documentation/backlog/_template-promotion-decision.md` inside the owner sync evidence bundle.
-9. Validation replay cadence policy defined in this file is default for all open and future backlog items unless a runbook documents a stricter owner-approved override.
+2. Open work lives in `Documentation/backlog/bl-*.md` or `hx-*.md`.
+3. Done work lives in `Documentation/backlog/done/`.
+4. Plans under `Documentation/plans/*.md` are supporting architecture, not backlog authority.
+5. Any status or priority change must update this file, the runbook `Status Ledger`, and the evidence surfaces in the same change set.
 
 ## Backlog Lifecycle Contract
-
-Applies to all remaining open items and all future backlog items.
 
 1. New work starts with `Documentation/backlog/_template-intake.md`.
 2. Promoted work uses `Documentation/backlog/_template-runbook.md` and must define replay cadence and ownership boundaries.
@@ -33,38 +29,12 @@ Applies to all remaining open items and all future backlog items.
 5. When an item becomes Done, move its runbook from `Documentation/backlog/` to `Documentation/backlog/done/` in the same change set as index/status/evidence sync.
 6. All worker and owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 7. Evidence for canonical promotions must be repo-local under `TestEvidence/` (not `/tmp` paths).
-8. Conformance scope:
-   - Active/open runbooks (`Documentation/backlog/bl-*.md`) must satisfy current lifecycle and replay-cadence contract.
-   - Done runbooks under `Documentation/backlog/done/` must preserve closeout evidence while satisfying lifecycle readability contract.
-   - Backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields and must link to their canonical runbook authority.
-9. Backlog readability contract applies to open + done runbooks:
-   - required headings: `Plain-Language Summary`, `6W Snapshot (Who/What/Why/How/When/Where)`, `Visual Aid Index`;
-   - visuals are required only when they improve clarity (tables first, optional mermaid/images/charts/screenshots when needed).
-10. New-item scaffolding helper:
-   - `./scripts/new-backlog-item.py --id BL-078 --title \"Example Item\" --priority P1 --track \"Track E - R&D Expansion\"`
-   - This script pre-fills metadata plus plain-language/6W scaffolding for intake and runbook docs.
-11. Runbook authoring and anti-duplication guidance:
-   - `Documentation/backlog/runbook-authoring-guide.md`
-12. Backlog anti-duplication validation:
-   - `./scripts/validate-backlog-redundancy.py`
-13. Machine-readable backlog summary export:
-   - `./scripts/export-backlog-summaries.py` writes:
-     - `Documentation/reports/data/backlog-summary.json`
-     - `Documentation/reports/data/backlog-summary.csv`
-14. Summary artifact freshness gate:
-   - `./scripts/export-backlog-summaries.py --check` (called by `./scripts/validate-docs-freshness.sh`)
-15. Summary schema authority:
-   - `Documentation/backlog/backlog-summary-schema.md`
-16. Pre-commit auto-refresh hook:
-   - `.githooks/pre-commit` refreshes and stages summary artifacts when `Documentation/backlog/**` changes are staged.
-17. Draft-only backlog automation:
-   - machine-readable contract: `Documentation/backlog/automation-contracts.json`
-   - operator guide: `Documentation/backlog/automation-draft-flow.md`
-   - runner: `scripts/backlog-auto-123.py`
-18. Default automation posture:
-   - run declared T1/T2/T3 checks,
-   - assemble compact `TestEvidence/` draft packets,
-   - stop at `DRAFT_READY` unless the item is explicitly configured for owner-gated automation.
+8. Required runbook headings: `Plain-Language Summary`, `6W Snapshot (Who/What/Why/How/When/Where)`, and `Visual Aid Index`.
+9. Authoring guide: `Documentation/backlog/runbook-authoring-guide.md`
+10. Summary schema: `Documentation/backlog/backlog-summary-schema.md`
+11. Draft automation contract: `Documentation/backlog/automation-contracts.json`
+12. Draft automation guide: `Documentation/backlog/automation-draft-flow.md`
+13. Draft automation runner: `scripts/backlog-auto-123.py`
 
 ## Layer Model
 
@@ -77,11 +47,7 @@ Applies to all remaining open items and all future backlog items.
 
 ## Global Replay Cadence Policy
 
-Applies to all remaining open backlog items and all new backlog items by default.
-
-### Purpose
-
-Preserve determinism guarantees while reducing rerun tax during active development.
+Default policy for open and future backlog items.
 
 ### Tiered Replay Contract
 
@@ -100,17 +66,13 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 3. Escalate to T3 once per promotion cycle; avoid repeated full T3 reruns unless code changed or owner requests.
 4. Reserve T4 for sentinel slices and post-fix confidence drills, not routine iteration.
 5. If a replay fails, run targeted diagnostics on the failing run index before repeating full multi-run sweeps.
-6. Heavy wrappers (>=20 binary launches per wrapper run) must use cost containment:
-   - debugging: single-run targeted repro;
-   - candidate check: 2 runs;
-   - promotion check: 3 runs unless owner requires broader coverage.
+6. Heavy wrappers (`>=20` binary launches per wrapper run) should use targeted debugging, `2` candidate runs, and `3` promotion runs unless the owner requires more.
 7. Per `ADR-0023`, replay automation may draft packets and sync summaries, but authoritative promotion remains owner-confirmed by default.
 
 ### Override Contract
 
-- Runbook-specific stricter cadence is allowed only when documented in that runbook's Validation Plan.
-- Owner prompts may temporarily raise cadence for deterministic tie-breaks; the reason must be recorded in `owner_decisions.md` or `lane_notes.md`.
-- Any cadence override must include a cost rationale and a rollback path to normal tiering.
+- Stricter item-specific cadence is allowed only when documented in that runbook.
+- Temporary overrides must record the reason in `owner_decisions.md` or `lane_notes.md`.
 
 ## UI/UX Prioritization Snapshot (2026-03-18)
 
