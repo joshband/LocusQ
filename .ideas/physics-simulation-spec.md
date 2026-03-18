@@ -16,7 +16,7 @@ Physics output is always **additive offset** on top of the composed rest pose. T
 ```
 APVTS base state + Timeline keyframe offset + Choreography Lab generative offset
 ```
-Physics sits on top of this three-part rest pose. This four-layer authority chain is a planned extension to ADR-0003; a new ADR must be recorded before Choreography Lab implementation begins. Until that ADR exists, physics continues to treat the Timeline keyframe rest pose as authoritative per ADR-0003.
+Physics sits on top of this three-part rest pose. This four-layer authority chain is defined in **ADR-0020** (`Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md`), which supersedes ADR-0003's three-layer model.
 
 ---
 
@@ -284,9 +284,9 @@ All physics-to-DSP mappings follow the `reactive-av` contract: normalize → opt
 
 ---
 
-## Pending ADR
+## ADR Status
 
-The four-layer authority chain (APVTS + Timeline + Choreography Lab + Physics) is a planned extension to ADR-0003. A new ADR must be recorded before Choreography Lab implementation begins, explicitly superseding ADR-0003's three-layer model and recording the rationale and any authority-conflict resolution rules.
+**Resolved.** `Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md` supersedes ADR-0003's three-layer model, records the four-layer chain rationale, authority-conflict resolution rules, and the colocated-tick arbitration decision.
 
 ---
 
