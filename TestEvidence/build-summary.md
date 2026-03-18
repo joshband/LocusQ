@@ -42,8 +42,10 @@ Last Modified Date: 2026-03-18
 - 2026-03-18 shared-runtime refinement: `PhysicsWorker` / `PhysicsDSPBridge` now run behind a process-wide shared runtime instead of per-processor ownership.
 - 2026-03-18 containment refinement: coordinated multi-emitter collision mode now applies a weak worker-side rest-pose tether outside a deadzone, so shared scenes recenter instead of depending on user drag or wall hits to stay controlled.
 - 2026-03-18 boids refinement: flock-group assignment and per-group boids settings now reach `BoidsSystem` in the live processor path, and flock-enabled emitters can enter coordinated worker mode without needing an attractor or collision gate.
+- 2026-03-18 interaction refinement: emitter-mode publish now refreshes shared physics scene flags, and interaction-only scenes can enter coordinated worker mode without requiring a renderer instance or an attractor/collision/flock surrogate.
 - New runtime lane: `locusq_physics_runtime_collision_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_boids_probe` PASS.
+- New runtime lane: `locusq_physics_runtime_interaction_probe` PASS.
 - Collision lane result:
   - `emitterIds=(0,1)`
   - `initialDistance=0.900`
@@ -57,6 +59,12 @@ Last Modified Date: 2026-03-18
   - `initialDistance=2.992`
   - `minDistance=2.306`
   - `maxSpread=1.000`
+- Interaction lane result:
+  - `emitterIds=(0,1)`
+  - `initialDistance=0.726`
+  - `maxDistance=3.454`
+  - `maxAbsForce=5.682`
+  - `finalVx=(-1.802,1.668)`
 - Regression guard:
   - `locusq_physics_runtime_attractor_probe` PASS with `attractorMaxSpread=0.880`, `attractorMaxDisp=2.967`
   - `locusq_physics_runtime_boundary_probe` PASS with `maxX=3.000`, `collisionMask=1`
@@ -65,6 +73,7 @@ Last Modified Date: 2026-03-18
   - collision-only coordinated mode now activates the shared worker directly; the bounded collision lane no longer depends on a dummy attractor source to enter coordinated ownership.
   - the collision lane now proves the runtime contract under `phys_drag=0.0`, so containment is no longer just a lucky probe preset.
   - the boids lane closes a bigger truth gap: flock controls are no longer UI-only for the production path.
+  - the interaction lane closes the next truth gap: `rend_phys_interact` now activates shared-worker authority in emitter-only scenes instead of relying on renderer-mode state refresh.
 
 ## Decision-Critical Evidence Pointers
 
