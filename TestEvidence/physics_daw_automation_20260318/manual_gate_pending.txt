@@ -1,6 +1,13 @@
-Manual DAW testing required (Logic + Reaper):
+Automated gate (headless Reaper):
+  scripts/reaper-phys-daw-auto-gate-mac.sh
+  Lua: qa/reaper/reascripts/LocusQ_PhysicsDAWAuto_Gate.lua
+  Gates: A=param_registration B=live_output C=snapshot_no_jump D=frozen_to_live
+  Status: written (not yet run against built plugin)
+
+Manual gate still required (Logic + Reaper — audible pop check only):
 - Enable physics on emitter 1
 - Arm automation recording on "Emitter 1 Physics Spread" lane
 - Play — confirm automation lane fills
-- Click FROZEN — confirm DSP uses recorded curve
+- Click FROZEN — listen for audible pop at transition (should be silent)
+- Click LIVE — confirm physics resumes
 - Document result here before ship
