@@ -1,0 +1,7 @@
+check	result	notes
+build_vst3	PASS	cmake --build build_local --target LocusQ_VST3; 0 errors; pre-existing sign-conversion warnings in SceneGraph.h/VBAPPanner.h only
+rt_non_allowlisted	0	grep for new/delete/malloc/mutex/lock()/throw in AttractorSystem.h, PhysicsDSPBridge.h, PhysicsWorker.h, PhysicsEngine.h — 0 hits
+attractor_force_injection	NOT_TESTED	orbital stabilization ±5% radius soak requires runtime harness (P7)
+soft_boundary_passthrough	NOT_TESTED	wall-never-cross adversarial soak requires runtime harness
+dsp_bridge_clamp	NOT_TESTED	fuzz input clamp verification requires runtime harness
+apvts_params	PARTIAL	ProcessorParameterLayout.cpp — 4 attractor slots × 6 params + boundary_mode + soft_boundary_depth registered; param IDs verified by code review
