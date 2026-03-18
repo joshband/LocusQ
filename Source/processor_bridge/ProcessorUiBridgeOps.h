@@ -671,6 +671,81 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     if (state == CalibrationEngine::State::Complete)
         status->setProperty ("estimatedRT60", estimatedRt60);
 
+    const auto makeBl101Descriptor = [] (const juce::String& source,
+                                         const juce::String& provenance,
+                                         const juce::String& detail,
+                                         bool manualOverride = false,
+                                         std::optional<double> ageMs = std::nullopt,
+                                         std::optional<double> staleAfterMs = std::nullopt)
+    {
+        juce::var descriptorVar (new juce::DynamicObject());
+        if (auto* descriptor = descriptorVar.getDynamicObject())
+        {
+            descriptor->setProperty ("source", source);
+            descriptor->setProperty ("provenance", provenance);
+            descriptor->setProperty ("detail", detail);
+            descriptor->setProperty ("manualOverride", manualOverride);
+
+            if (ageMs.has_value())
+                descriptor->setProperty ("ageMs", *ageMs);
+            if (staleAfterMs.has_value())
+                descriptor->setProperty ("staleAfterMs", *staleAfterMs);
+
+            const bool isStale = ageMs.has_value()
+                && staleAfterMs.has_value()
+                && std::isfinite (*ageMs)
+                && std::isfinite (*staleAfterMs)
+                && *staleAfterMs >= 0.0
+                && *ageMs >= *staleAfterMs;
+            descriptor->setProperty ("isStale", isStale);
+        }
+        return descriptorVar;
+    };
+
+    {
+        juce::var provenanceVar (new juce::DynamicObject());
+        if (auto* provenance = provenanceVar.getDynamicObject())
+        {
+            provenance->setProperty (
+                "topology",
+                makeBl101Descriptor ("runtime_state",
+                                     "inferred",
+                                     "Reflects the current CALIBRATE topology selection in runtime state."));
+            provenance->setProperty (
+                "monitoringPath",
+                makeBl101Descriptor ("runtime_state",
+                                     "inferred",
+                                     "Reflects the current CALIBRATE monitoring path in runtime state."));
+            provenance->setProperty (
+                "deviceProfile",
+                makeBl101Descriptor ("runtime_state",
+                                     "inferred",
+                                     "Reflects the current CALIBRATE device-profile selection in runtime state."));
+            provenance->setProperty (
+                "routing",
+                makeBl101Descriptor ("host_auto",
+                                     mappingValid ? "detected" : "inferred",
+                                     mappingDuplicateChannels
+                                         ? "Routing contains duplicate channels and requires operator correction."
+                                         : (mappingLimitedToFirst4
+                                             ? "Host output layout exposes only a limited writable calibration map."
+                                             : "Routing is derived from the current host output layout and writable-channel visibility.")));
+            provenance->setProperty (
+                "profile",
+                makeBl101Descriptor (roomProfile != nullptr && roomProfile->valid ? "runtime_active" : "unknown",
+                                     roomProfile != nullptr && roomProfile->valid ? "inferred" : "unavailable",
+                                     roomProfile != nullptr && roomProfile->valid
+                                         ? "A room profile is available to the runtime."
+                                         : "No active room profile is currently available."));
+            provenance->setProperty (
+                "headphoneVerify",
+                makeBl101Descriptor ("runtime_active",
+                                     "estimated",
+                                     "Current headphone verification metrics are runtime estimates unless stronger evidence is published by BL-099/BL-060 follow-on lanes."));
+        }
+        status->setProperty ("calAutomationProvenance", provenanceVar);
+    }
+
     // Companion headphone device status — cached by pollCompanionCalibrationProfileFromDisk().
     // Fields mirror the CalibrationProfile.json schema; verification scores are null until
     // Phase B (Task 17) writes them back.
@@ -683,6 +758,13 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
         hpDevice->setProperty ("hrtf_mode",        cachedCalibrationHrtfMode);
         hpDevice->setProperty ("tracking_enabled", cachedCalibrationTrackingEnabled);
         hpDevice->setProperty ("fir_latency_samples", cachedCalibrationFirLatency);
+        hpDevice->setProperty ("profile_source",   cachedCalibrationProfileSource);
+
+        const auto currentUtcMs = juce::Time::currentTimeMillis();
+        std::optional<double> profileAgeMs = std::nullopt;
+        constexpr double kProfileStaleAfterMs = 300000.0;
+        if (cachedCalibrationProfileUpdatedAtUtcMs > 0 && currentUtcMs >= cachedCalibrationProfileUpdatedAtUtcMs)
+            profileAgeMs = static_cast<double> (currentUtcMs - cachedCalibrationProfileUpdatedAtUtcMs);
 
         // Scores: use JSON null when not yet set (value -1 sentinel).
         if (cachedExternalizationScore >= 0.0f)
@@ -694,6 +776,23 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
             hpDevice->setProperty ("front_back_confusion_rate", cachedFrontBackConfusionRate);
         else
             hpDevice->setProperty ("front_back_confusion_rate", juce::var());
+
+        hpDevice->setProperty (
+            "provenance",
+            makeBl101Descriptor ("companion_profile",
+                                 cachedCalibrationHeadphoneProvenance,
+                                 "Device status comes from the latest companion CalibrationProfile.json handoff.",
+                                 false,
+                                 profileAgeMs,
+                                 kProfileStaleAfterMs));
+        hpDevice->setProperty (
+            "verification_provenance",
+            makeBl101Descriptor ("companion_profile",
+                                 cachedCalibrationVerificationProvenance,
+                                 "Verification fields loaded from CalibrationProfile.json remain weaker than direct measurement unless a stronger provenance source is published.",
+                                 false,
+                                 profileAgeMs,
+                                 kProfileStaleAfterMs));
 
         status->setProperty ("hpDeviceStatus", hpDeviceVar);
     }

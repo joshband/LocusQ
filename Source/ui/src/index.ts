@@ -479,6 +479,7 @@ const comboStates = {
 const nativeFunctions = {
     startCalibration: Juce.getNativeFunction("locusqStartCalibration"),
     abortCalibration: Juce.getNativeFunction("locusqAbortCalibration"),
+    getCalibrationStatus: Juce.getNativeFunction("locusqGetCalibrationStatus"),
     redetectCalibrationRouting: Juce.getNativeFunction("locusqRedetectCalibrationRouting"),
     listCalibrationProfiles: Juce.getNativeFunction("locusqListCalibrationProfiles"),
     saveCalibrationProfile: Juce.getNativeFunction("locusqSaveCalibrationProfile"),
@@ -4642,12 +4643,22 @@ let rendererResizeDiagnosticsExpanded = false;
 
 const calibrationAutomationSourceMeta = {
     host_auto: { label: "Host-Detected", chipClass: "remote" },
+    standalone_scan: { label: "Standalone Scan", chipClass: "remote" },
     loaded_profile: { label: "Profile-Loaded", chipClass: "local" },
     manual_override: { label: "Manual Override", chipClass: "warning" },
     companion_profile: { label: "Companion-Detected", chipClass: "remote" },
     runtime_active: { label: "Runtime Active", chipClass: "active" },
     runtime_state: { label: "Runtime", chipClass: "inactive" },
     unknown: { label: "Unknown", chipClass: "inactive" },
+};
+const calibrationProvenanceMeta = {
+    measured: { label: "Measured" },
+    detected: { label: "Detected" },
+    inferred: { label: "Inferred" },
+    estimated: { label: "Estimated" },
+    generic: { label: "Generic" },
+    unavailable: { label: "Unavailable" },
+    unknown: { label: "Unknown" },
 };
 
 const laneTrackMap = {
@@ -7953,6 +7964,66 @@ function getCalibrationAutomationSourceDescriptor(sourceId = "unknown") {
     return calibrationAutomationSourceMeta[resolvedSourceId];
 }
 
+function getCalibrationProvenanceDescriptor(provenanceId = "unknown") {
+    const resolvedId = calibrationProvenanceMeta[provenanceId] ? provenanceId : "unknown";
+    return calibrationProvenanceMeta[resolvedId];
+}
+
+function normalizeBl101Descriptor(descriptor, fallbackSource = "unknown", fallbackProvenance = "unknown") {
+    if (!descriptor || typeof descriptor !== "object") {
+        return {
+            source: fallbackSource,
+            provenance: fallbackProvenance,
+            detail: "",
+            manualOverride: false,
+            ageMs: null,
+            staleAfterMs: null,
+            isStale: false,
+        };
+    }
+
+    const source = String(descriptor.source || "").trim().toLowerCase() || fallbackSource;
+    const provenance = String(descriptor.provenance || "").trim().toLowerCase() || fallbackProvenance;
+    const ageRaw = Number(descriptor.ageMs);
+    const staleAfterRaw = Number(descriptor.staleAfterMs);
+    const ageMs = Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : null;
+    const staleAfterMs = Number.isFinite(staleAfterRaw) && staleAfterRaw >= 0 ? staleAfterRaw : null;
+    const isStale = descriptor.isStale === true
+        || (ageMs !== null && staleAfterMs !== null && ageMs >= staleAfterMs);
+
+    return {
+        source: calibrationAutomationSourceMeta[source] ? source : fallbackSource,
+        provenance: calibrationProvenanceMeta[provenance] ? provenance : fallbackProvenance,
+        detail: String(descriptor.detail || "").trim(),
+        manualOverride: descriptor.manualOverride === true,
+        ageMs,
+        staleAfterMs,
+        isStale,
+    };
+}
+
+function formatBl101Freshness(descriptor) {
+    if (!descriptor) return "No freshness guarantee";
+    if (descriptor.isStale) {
+        if (descriptor.ageMs !== null) return `Stale (${Math.round(descriptor.ageMs)} ms old)`;
+        return "Stale";
+    }
+    if (descriptor.ageMs !== null) return `Fresh (${Math.round(descriptor.ageMs)} ms old)`;
+    return "No freshness guarantee";
+}
+
+function appendBl101DescriptorToNote(note, descriptor) {
+    const normalized = normalizeBl101Descriptor(descriptor);
+    const parts = [];
+    if (String(note || "").trim()) parts.push(String(note).trim());
+    parts.push(`Trust: ${getCalibrationProvenanceDescriptor(normalized.provenance).label}.`);
+    if (normalized.manualOverride) parts.push("Manual override is active.");
+    const freshness = formatBl101Freshness(normalized);
+    if (freshness) parts.push(`${freshness}.`);
+    if (normalized.detail) parts.push(normalized.detail);
+    return parts.join(" ");
+}
+
 function setCalibrationTargetUi(targetId) {
     const resolvedTarget = targetId === "headphones" ? "headphones" : "speaker_room";
     const speakerTargetButton = document.getElementById("cal-target-speaker");
@@ -8069,6 +8140,9 @@ function setCalibrationAutomationSummaryRow(slot, { label = "", value = "", sour
 
 function updateCalibrationAutomationSummary(snapshot = calibrationState) {
     const status = snapshot || {};
+    const automationProvenance = status.calAutomationProvenance && typeof status.calAutomationProvenance === "object"
+        ? status.calAutomationProvenance
+        : {};
     const topologyId = String(
         status.topologyProfile
         || getCalibrationTopologyId(status.topologyProfileIndex)
@@ -8084,6 +8158,7 @@ function updateCalibrationAutomationSummary(snapshot = calibrationState) {
     const targetId = getCalibrationTargetId(monitoringPathId);
     const requiredChannels = Math.max(1, Number(status.requiredChannels) || getCalibrationRequiredChannels(topologyId));
     const writableChannels = Math.max(1, Number(status.writableChannels) || CALIBRATION_ROUTABLE_CHANNELS);
+    const mappingValid = !!status.mappingValid;
     const activeRouting = getCalibrationActiveRouting();
     const expectedAutoRouting = getCalibrationExpectedAutoRouting();
     const routeIsCustom = calibrationMappingEditedByUser
@@ -8120,7 +8195,7 @@ function updateCalibrationAutomationSummary(snapshot = calibrationState) {
         || sceneData.rendererHeadphoneCalibrationStage
         || ""
     ) || "unknown";
-    const profileReady = !!status.profileValid || !!status.complete;
+    const profileReady = !!status.profileReady || !!status.profileValid || !!status.complete;
     const hpDeviceStatus = status.hpDeviceStatus && typeof status.hpDeviceStatus === "object"
         ? status.hpDeviceStatus
         : {};
@@ -8147,22 +8222,38 @@ function updateCalibrationAutomationSummary(snapshot = calibrationState) {
     });
 
     if (targetId === "headphones") {
+        const deviceProfileDescriptor = normalizeBl101Descriptor(
+            automationProvenance.deviceProfile,
+            hpCompanionReady ? "companion_profile" : getCalibrationAutomationSource("deviceProfile", "unknown"),
+            hpCompanionReady ? "detected" : "unavailable"
+        );
         setCalibrationAutomationSummaryRow(2, {
             label: "Detected Device",
             value: hpCompanionReady ? hpDeviceName : "No companion device detected",
-            sourceId: hpCompanionReady ? "companion_profile" : "unknown",
-            note: hpCompanionReady
+            sourceId: deviceProfileDescriptor.source,
+            note: appendBl101DescriptorToNote(
+                hpCompanionReady
                 ? `Companion handoff reports EQ ${formatAuditionTokenLabel(hpEqMode)} · HRTF ${formatAuditionTokenLabel(hpHrtfMode)} · Tracking ${hpTracking}.`
                 : "Waiting for a companion CalibrationProfile.json handoff or a detected headphone device.",
+                deviceProfileDescriptor
+            ),
         });
 
+        const profileDescriptor = normalizeBl101Descriptor(
+            automationProvenance.profile,
+            hpCompanionReady ? "companion_profile" : getCalibrationAutomationSource("deviceProfile", "unknown"),
+            hpCompanionReady ? "inferred" : "unavailable"
+        );
         setCalibrationAutomationSummaryRow(3, {
             label: "Profile Handoff",
             value: `${getCalibrationDeviceProfileLabel(requestedHeadphoneProfile)} requested`,
-            sourceId: hpCompanionReady ? "companion_profile" : getCalibrationAutomationSource("deviceProfile", "unknown"),
-            note: hpCompanionReady
+            sourceId: profileDescriptor.source,
+            note: appendBl101DescriptorToNote(
+                hpCompanionReady
                 ? "The companion calibration profile has seeded the plugin headphone profile selection."
                 : "No companion-backed headphone profile has been handed to the plugin yet.",
+                profileDescriptor
+            ),
         });
     } else {
         const mappedChannels = Math.min(requiredChannels, writableChannels);
@@ -8178,24 +8269,38 @@ function updateCalibrationAutomationSummary(snapshot = calibrationState) {
             routingSourceId = "host_auto";
             routingNote = `Host output layout exposes ${mappedChannels}/${requiredChannels} writable calibration outputs.`;
         }
+        const routingDescriptor = normalizeBl101Descriptor(
+            automationProvenance.routing,
+            routingSourceId,
+            mappingValid ? "detected" : "inferred"
+        );
+        if (routeIsCustom) routingDescriptor.manualOverride = true;
 
         setCalibrationAutomationSummaryRow(2, {
             label: "Output Routing",
             value: activeRouting.join(" / "),
-            sourceId: routingSourceId,
-            note: routingNote,
+            sourceId: routingDescriptor.source,
+            note: appendBl101DescriptorToNote(routingNote, routingDescriptor),
         });
 
         const profileSourceId = profileReady
             ? (calibrationAutomationSources.lastLoadedProfileName ? "loaded_profile" : "runtime_active")
             : "unknown";
+        const profileDescriptor = normalizeBl101Descriptor(
+            automationProvenance.profile,
+            profileSourceId,
+            profileReady ? "inferred" : "unavailable"
+        );
         setCalibrationAutomationSummaryRow(3, {
             label: "Room Profile",
             value: profileReady ? "Room profile ready" : "No room profile loaded",
-            sourceId: profileSourceId,
-            note: profileReady
+            sourceId: profileDescriptor.source,
+            note: appendBl101DescriptorToNote(
+                profileReady
                 ? "Room correction is available from the current measurement or a loaded library profile."
                 : "Run a measurement or load a saved room profile to activate speaker correction.",
+                profileDescriptor
+            ),
         });
     }
 
@@ -8243,12 +8348,18 @@ function updateCalibrationAutomationSummary(snapshot = calibrationState) {
         runtimeSourceId = "manual_override";
         runtimeNote = "Custom routing remains active until you redetect or rewrite the map.";
     }
+    const runtimeDescriptor = normalizeBl101Descriptor(
+        automationProvenance.headphoneVerify,
+        runtimeSourceId,
+        targetId === "headphones" ? "estimated" : "inferred"
+    );
+    if (routeIsCustom) runtimeDescriptor.manualOverride = true;
 
     setCalibrationAutomationSummaryRow(4, {
         label: "Runtime Activation",
         value: runtimeValue,
-        sourceId: runtimeSourceId,
-        note: runtimeNote,
+        sourceId: runtimeDescriptor.source,
+        note: appendBl101DescriptorToNote(runtimeNote, runtimeDescriptor),
     });
 }
 
@@ -8932,6 +9043,7 @@ async function runProductionP0SelfTest() {
     const runBl011ScopeOnly = runBl011ClapSelfTest || productionP0SelfTestScope === "bl011";
     const runBl026ScopeOnly = productionP0SelfTestScope === "bl026";
     const runBl029ScopeOnly = productionP0SelfTestScope === "bl029";
+    const runBl101ScopeOnly = productionP0SelfTestScope === "bl101";
     const runBl011ClapDiagnosticsCheck = async () => {
         try {
             await waitForCondition("clap diagnostics snapshot", () => {
@@ -9228,6 +9340,227 @@ async function runProductionP0SelfTest() {
             switchMode(modeBefore === 0 ? "calibrate" : (modeBefore === 1 ? "emitter" : "renderer"));
         }
     };
+    const runBl101CalibrateTruthfulnessSelfTest = async () => {
+        const modeBefore = getChoiceIndex(comboStates.mode);
+        const monitoringBefore = getChoiceIndex(comboStates.cal_monitoring_path);
+        const deviceBefore = getChoiceIndex(comboStates.cal_device_profile);
+        const topologyBefore = getChoiceIndex(comboStates.cal_topology_profile);
+        const nativeSeqBeforeSynthetic = sceneTransportState.lastAcceptedSeq;
+        const topologyChoiceCount = calibrationTopologyIds.length;
+        const readText = (id) => String(document.getElementById(id)?.textContent || "").trim();
+        const expectIncludes = (checkId, actual, expected, label) => {
+            if (!String(actual || "").includes(expected)) {
+                failCheck(checkId, `${label} mismatch (expected substring "${expected}", got "${actual || "n/a"}")`);
+            }
+        };
+        const setSelectIndex = (select, comboState, index, choiceCount) => {
+            if (comboState && Number.isFinite(index) && Number.isFinite(choiceCount) && choiceCount > 0) {
+                setChoiceIndex(comboState, index, choiceCount);
+            }
+            if (select instanceof HTMLSelectElement) {
+                select.selectedIndex = Math.max(0, index);
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        };
+
+        try {
+            switchMode("calibrate");
+            setChoiceIndex(comboStates.mode, 0, 3);
+            await waitMs(180);
+
+            const calTopologySelect = document.getElementById("cal-topology");
+            const calMonitoringPathSelect = document.getElementById("cal-monitoring-path");
+            const calDeviceProfileSelect = document.getElementById("cal-device-profile");
+            if (!(calTopologySelect instanceof HTMLSelectElement)
+                || !(calMonitoringPathSelect instanceof HTMLSelectElement)
+                || !(calDeviceProfileSelect instanceof HTMLSelectElement)) {
+                failCheck("UI-P1-101A", "missing CALIBRATE controls required for BL-101 truthfulness scope");
+            }
+
+            const stereoTopologyIndex = getCalibrationTopologyIndex("stereo");
+            setSelectIndex(calTopologySelect, comboStates.cal_topology_profile, stereoTopologyIndex, topologyChoiceCount);
+            setSelectIndex(calMonitoringPathSelect, comboStates.cal_monitoring_path, 0, 4);
+            setSelectIndex(calDeviceProfileSelect, comboStates.cal_device_profile, 0, 5);
+            await waitMs(120);
+
+            const customSelect = document.getElementById("cal-spk1");
+            if (!(customSelect instanceof HTMLSelectElement)) {
+                failCheck("UI-P1-101A", "missing cal-spk1 routing control for BL-101 truthfulness scope");
+            }
+            customSelect.selectedIndex = Math.min(1, Math.max(0, customSelect.options.length - 1));
+            customSelect.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitMs(80);
+
+            const speakerSyntheticSeq = Math.max(
+                Number(sceneTransportState.lastAcceptedSeq) + 20,
+                Number(profileCoherenceState.lastCalibrationStatusSeq) + 20,
+                20
+            );
+            window.updateCalibrationStatus({
+                profileSyncSeq: speakerSyntheticSeq,
+                topologyProfileIndex: stereoTopologyIndex,
+                topologyProfile: "stereo",
+                monitoringPathIndex: 0,
+                monitoringPath: "speakers",
+                deviceProfileIndex: 0,
+                deviceProfile: "generic",
+                requiredChannels: 2,
+                writableChannels: 2,
+                mappingValid: true,
+                mappingLimitedToFirst4: false,
+                mappingDuplicateChannels: false,
+                running: false,
+                complete: false,
+                profileValid: true,
+                state: "idle",
+                message: "Synthetic speaker truthfulness snapshot",
+                speakerRouting: [2, 2, 3, 4],
+                calAutomationProvenance: {
+                    routing: {
+                        source: "manual_override",
+                        provenance: "detected",
+                        detail: "Custom routing is preserved until host auto-map is requested again.",
+                        manualOverride: true,
+                        ageMs: 240,
+                        staleAfterMs: 5000,
+                    },
+                    profile: {
+                        source: "loaded_profile",
+                        provenance: "measured",
+                        detail: "Room profile came from a previously measured and loaded speaker calibration.",
+                        ageMs: 120,
+                        staleAfterMs: 5000,
+                    },
+                    headphoneVerify: {
+                        source: "runtime_active",
+                        provenance: "inferred",
+                        detail: "Speaker-mode runtime activation is inferred from the active room profile state.",
+                        ageMs: 80,
+                        staleAfterMs: 5000,
+                    },
+                },
+            });
+            await waitMs(120);
+
+            if (readText("cal-auto-row2-source") !== "MANUAL OVERRIDE") {
+                failCheck("UI-P1-101A", `unexpected routing source chip (${readText("cal-auto-row2-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101A", readText("cal-auto-row2-note"), "Trust: Detected.", "routing note trust");
+            expectIncludes("UI-P1-101A", readText("cal-auto-row2-note"), "Manual override is active.", "routing note override");
+            if (readText("cal-auto-row3-source") !== "PROFILE-LOADED") {
+                failCheck("UI-P1-101A", `unexpected profile handoff source chip (${readText("cal-auto-row3-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101A", readText("cal-auto-row3-note"), "Trust: Measured.", "profile note trust");
+            if (readText("cal-state-chip") !== "Ready") {
+                failCheck("UI-P1-101A", `unexpected CALIBRATION STATUS chip (${readText("cal-state-chip") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101A", readText("calibration-dock-routing"), "Routing validated", "dock routing status");
+            recordCheck("UI-P1-101A", true, "speaker automation summary and calibration status truth surfaces reflect source/provenance/manual override");
+
+            setSelectIndex(calMonitoringPathSelect, comboStates.cal_monitoring_path, 2, 4);
+            setSelectIndex(calDeviceProfileSelect, comboStates.cal_device_profile, 1, 5);
+            await waitMs(120);
+
+            const headphoneSyntheticSeq = speakerSyntheticSeq + 1;
+            window.updateCalibrationStatus({
+                profileSyncSeq: headphoneSyntheticSeq,
+                topologyProfileIndex: stereoTopologyIndex,
+                topologyProfile: "stereo",
+                monitoringPathIndex: 2,
+                monitoringPath: "steam_binaural",
+                deviceProfileIndex: 1,
+                deviceProfile: "airpods_pro_2",
+                requiredChannels: 2,
+                writableChannels: 2,
+                mappingValid: true,
+                mappingLimitedToFirst4: false,
+                mappingDuplicateChannels: false,
+                running: false,
+                complete: false,
+                profileValid: false,
+                state: "idle",
+                message: "Synthetic headphone truthfulness snapshot",
+                headphoneCalibrationRequested: "steam_binaural",
+                headphoneCalibrationActive: "steam_binaural",
+                headphoneCalibrationStage: "direct",
+                headphoneVerificationRequestedProfileId: "airpods_pro_2",
+                headphoneVerificationActiveProfileId: "airpods_pro_2",
+                hpDeviceStatus: {
+                    device: "AirPods Pro 2",
+                    eq_mode: "peq",
+                    hrtf_mode: "sofa",
+                    tracking_enabled: true,
+                    fir_latency_samples: 128,
+                    externalization_score: 0.61,
+                    front_back_confusion_rate: 0.12,
+                    provenance: {
+                        source: "companion_profile",
+                        provenance: "detected",
+                        detail: "Companion profile handoff currently names the connected device.",
+                        ageMs: 6200,
+                        staleAfterMs: 5000,
+                    },
+                },
+                calAutomationProvenance: {
+                    deviceProfile: {
+                        source: "companion_profile",
+                        provenance: "detected",
+                        detail: "Companion identified the connected headphone device profile.",
+                        ageMs: 320,
+                        staleAfterMs: 5000,
+                    },
+                    profile: {
+                        source: "companion_profile",
+                        provenance: "estimated",
+                        detail: "Headphone profile handoff comes from companion-generated personalization data.",
+                        ageMs: 320,
+                        staleAfterMs: 5000,
+                    },
+                    headphoneVerify: {
+                        source: "runtime_active",
+                        provenance: "estimated",
+                        detail: "Verification remains estimated until BL-099 publishes measured evidence.",
+                        ageMs: 180,
+                        staleAfterMs: 5000,
+                    },
+                },
+            });
+            await waitMs(140);
+
+            if (readText("cal-hp-source") !== "Companion-Detected") {
+                failCheck("UI-P1-101B", `unexpected headphone device source (${readText("cal-hp-source") || "n/a"})`);
+            }
+            if (readText("cal-hp-provenance") !== "Detected") {
+                failCheck("UI-P1-101B", `unexpected headphone device trust label (${readText("cal-hp-provenance") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101B", readText("cal-hp-freshness"), "Stale", "headphone freshness");
+            expectIncludes("UI-P1-101B", readText("cal-auto-row2-note"), "Trust: Detected.", "detected device note trust");
+            expectIncludes("UI-P1-101B", readText("cal-auto-row3-note"), "Trust: Estimated.", "profile handoff note trust");
+            if (readText("cal-auto-row2-source") !== "COMPANION-DETECTED") {
+                failCheck("UI-P1-101B", `unexpected detected-device source chip (${readText("cal-auto-row2-source") || "n/a"})`);
+            }
+            recordCheck("UI-P1-101B", true, "headphone device status and automation summary expose source/provenance/freshness truthfully");
+
+            if (readText("cal-validation-profile-chip") !== "PASS") {
+                failCheck("UI-P1-101C", `unexpected headphone verify chip (${readText("cal-validation-profile-chip") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101C", readText("cal-validation-profile-detail"), "Requested steam_binaural/airpods_pro_2 is active.", "headphone verify detail");
+            if (readText("cal-auto-row4-source") !== "RUNTIME ACTIVE") {
+                failCheck("UI-P1-101C", `unexpected runtime activation source chip (${readText("cal-auto-row4-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101C", readText("cal-auto-row4-note"), "Trust: Estimated.", "runtime activation trust");
+            expectIncludes("UI-P1-101C", readText("cal-auto-row4-note"), "BL-099", "runtime activation provenance note");
+            expectIncludes("UI-P1-101C", readText("calibration-dock-profile"), "Requested steam_binaural/airpods_pro_2 is active.", "dock profile truth");
+            recordCheck("UI-P1-101C", true, "headphone verify and runtime activation surfaces preserve requested-vs-active and estimated truth language");
+        } finally {
+            sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
+            setChoiceIndex(comboStates.cal_monitoring_path, monitoringBefore, 4);
+            setChoiceIndex(comboStates.cal_device_profile, deviceBefore, 5);
+            setChoiceIndex(comboStates.cal_topology_profile, topologyBefore, topologyChoiceCount);
+            setChoiceIndex(comboStates.mode, modeBefore, 3);
+            switchMode(modeBefore === 0 ? "calibrate" : (modeBefore === 1 ? "emitter" : "renderer"));
+        }
+    };
 
     try {
         await waitForCondition("p0 self-test controls ready", () => {
@@ -9296,6 +9629,13 @@ async function runProductionP0SelfTest() {
 
         if (runBl029ScopeOnly) {
             await runBl029ReactiveUiSelfTest();
+            report.ok = true;
+            report.status = "pass";
+            return report;
+        }
+
+        if (runBl101ScopeOnly) {
+            await runBl101CalibrateTruthfulnessSelfTest();
             report.ok = true;
             report.status = "pass";
             return report;
@@ -9463,19 +9803,64 @@ async function runProductionP0SelfTest() {
         if (calAckLimited) calAckLimited.checked = false;
         await waitMs(100);
 
-        calStartButton.click();
-        await waitForConditionWithRetry(
-            "calibration start",
-            () => calibrationState.running || String(calStartButton.textContent || "").includes("ABORT"),
-            {
-                timeoutMs: 1800,
-                pollMs: 25,
-                maxAttempts: 4,
-                backoffMs: 120,
+        const calibrationStatusSummary = (nativeStatus = null) => {
+            const profileStatusText = String(document.getElementById("cal-profile-status")?.textContent || "").trim() || "n/a";
+            const stateChipText = String(document.getElementById("cal-state-chip")?.textContent || "").trim() || "n/a";
+            const startSeq = Number.isFinite(Number(calibrationState.startSeq)) ? Number(calibrationState.startSeq) : -1;
+            const startAck = calibrationState.startAck === undefined ? "unknown" : String(!!calibrationState.startAck);
+            const startCode = String(calibrationState.startCode || "n/a").trim() || "n/a";
+            const startMessage = String(calibrationState.startMessage || "n/a").trim() || "n/a";
+            const runtimeStateText = String(calibrationState.state || "n/a").trim() || "n/a";
+            const runtimeMessage = String(calibrationState.message || "n/a").trim() || "n/a";
+            let nativeSummary = "nativeStatus=n/a";
+            if (nativeStatus && typeof nativeStatus === "object") {
+                const nativeStartSeq = Number.isFinite(Number(nativeStatus.startSeq)) ? Number(nativeStatus.startSeq) : -1;
+                const nativeStartAck = nativeStatus.startAck === undefined ? "unknown" : String(!!nativeStatus.startAck);
+                const nativeStartCode = String(nativeStatus.startCode || "n/a").trim() || "n/a";
+                const nativeStateText = String(nativeStatus.state || "n/a").trim() || "n/a";
+                const nativeMessage = String(nativeStatus.message || "n/a").trim() || "n/a";
+                nativeSummary = `nativeStatus[startSeq=${nativeStartSeq} startAck=${nativeStartAck} startCode=${nativeStartCode} state=${nativeStateText} message="${nativeMessage}"]`;
             }
-        );
+            return `mode=${currentMode} startSeq=${startSeq} startAck=${startAck} startCode=${startCode} runtimeState=${runtimeStateText} stateChip=${stateChipText} profileStatus="${profileStatusText}" runtimeMessage="${runtimeMessage}" startMessage="${startMessage}" ${nativeSummary}`;
+        };
+        const startSeqBefore = Number.isFinite(Number(calibrationState.startSeq)) ? Number(calibrationState.startSeq) : 0;
+
+        calStartButton.click();
+        try {
+            await waitForConditionWithRetry(
+                "calibration start",
+                () => {
+                    if (calibrationState.running || String(calStartButton.textContent || "").includes("ABORT")) {
+                        return true;
+                    }
+
+                    const startSeq = Number.isFinite(Number(calibrationState.startSeq)) ? Number(calibrationState.startSeq) : 0;
+                    return startSeq > startSeqBefore && calibrationState.startAck === false;
+                },
+                {
+                    timeoutMs: 1800,
+                    pollMs: 25,
+                    maxAttempts: 4,
+                    backoffMs: 120,
+                }
+            );
+        } catch (error) {
+            let nativeStatus = null;
+            try {
+                nativeStatus = await callNative("locusqGetCalibrationStatus", nativeFunctions.getCalibrationStatus);
+            } catch (_) {
+                nativeStatus = null;
+            }
+            failCheck("UI-P1-026C", `${error.message}; ${calibrationStatusSummary(nativeStatus)}`);
+        }
         if (!calibrationState.running && !String(calStartButton.textContent || "").includes("ABORT")) {
-            failCheck("UI-P1-026C", "calibration did not enter running state");
+            let nativeStatus = null;
+            try {
+                nativeStatus = await callNative("locusqGetCalibrationStatus", nativeFunctions.getCalibrationStatus);
+            } catch (_) {
+                nativeStatus = null;
+            }
+            failCheck("UI-P1-026C", `calibration did not enter running state; ${calibrationStatusSummary(nativeStatus)}`);
         }
         calStartButton.click();
         await waitForConditionWithRetry(
@@ -15649,10 +16034,27 @@ function applyCalibrationStatus() {
     const hp = (typeof status.hpDeviceStatus === "object" && status.hpDeviceStatus !== null)
         ? status.hpDeviceStatus
         : null;
+    const hpStatusDescriptor = normalizeBl101Descriptor(
+        hp?.provenance,
+        hp ? "companion_profile" : "unknown",
+        hp ? "detected" : "unavailable"
+    );
 
     const hpDeviceEl = document.getElementById("cal-hp-device");
     if (hpDeviceEl) {
         hpDeviceEl.textContent = hp ? String(hp.device || "Unknown Device") : "Not connected";
+    }
+    const hpSourceEl = document.getElementById("cal-hp-source");
+    if (hpSourceEl) {
+        hpSourceEl.textContent = getCalibrationAutomationSourceDescriptor(hpStatusDescriptor.source).label;
+    }
+    const hpProvenanceEl = document.getElementById("cal-hp-provenance");
+    if (hpProvenanceEl) {
+        hpProvenanceEl.textContent = getCalibrationProvenanceDescriptor(hpStatusDescriptor.provenance).label;
+    }
+    const hpFreshnessEl = document.getElementById("cal-hp-freshness");
+    if (hpFreshnessEl) {
+        hpFreshnessEl.textContent = formatBl101Freshness(hpStatusDescriptor);
     }
 
     const hpEqModeEl = document.getElementById("cal-hp-eq-mode");
@@ -15698,6 +16100,7 @@ function applyCalibrationStatus() {
         topologyId,
         monitoringPathId,
         deviceProfileId,
+        calAutomationProvenance: status.calAutomationProvenance,
         routing,
         requiredChannels,
         writableChannels,
@@ -15705,6 +16108,10 @@ function applyCalibrationStatus() {
         mappingLimited,
         mappingDuplicateChannels,
         profileReady,
+        running,
+        state,
+        complete,
+        currentSpeaker,
         requestedHeadphoneMode,
         activeHeadphoneMode,
         requestedHeadphoneProfile,

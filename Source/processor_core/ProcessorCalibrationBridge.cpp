@@ -1213,9 +1213,13 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         cachedCalibrationEqMode = "off";
         cachedCalibrationHrtfMode = "default";
         cachedCalibrationSofaRef.clear();
+        cachedCalibrationProfileSource = "unknown";
+        cachedCalibrationHeadphoneProvenance = "unavailable";
+        cachedCalibrationVerificationProvenance = "unavailable";
         cachedCalibrationRequestedSofa = false;
         cachedCalibrationTrackingEnabled = false;
         cachedCalibrationFirLatency = 0;
+        cachedCalibrationProfileUpdatedAtUtcMs = 0;
         cachedExternalizationScore = -1.0f;
         cachedFrontBackConfusionRate = -1.0f;
         calibrationProfileTrackingEnabled.store (false, std::memory_order_relaxed);
@@ -1255,6 +1259,25 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     }
 
     auto* user = root->getProperty ("user").getDynamicObject();
+    auto* provenance = root->getProperty ("provenance").getDynamicObject();
+
+    const auto readProvenanceToken = [provenance] (const char* key, const juce::String& fallback) -> juce::String
+    {
+        if (provenance == nullptr)
+            return fallback;
+        const auto value = provenance->getProperty (key).toString().trim().toLowerCase();
+        return value.isNotEmpty() ? value : fallback;
+    };
+
+    const auto readOptionalUtcMs = [provenance] (const char* key, std::int64_t fallback) -> std::int64_t
+    {
+        if (provenance == nullptr)
+            return fallback;
+        const auto value = provenance->getProperty (key);
+        if (value.isInt() || value.isInt64() || value.isDouble())
+            return static_cast<std::int64_t> (static_cast<double> (value));
+        return fallback;
+    };
 
     auto modelId = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
     if (modelId.isEmpty())
@@ -1327,6 +1350,10 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         else
             cachedCalibrationDevice = "Unknown Device";
 
+        cachedCalibrationProfileSource = readProvenanceToken ("profile_source", "companion_estimated");
+        cachedCalibrationHeadphoneProvenance = readProvenanceToken (
+            "headphone_provenance",
+            (modelIdForCache == "generic" || modelIdForCache.isEmpty()) ? "generic" : "detected");
         cachedCalibrationEqMode = eqMode.isEmpty() ? "off" : eqMode;
         cachedCalibrationHrtfMode = spatialRenderer.isUsingSofaHrtf() ? "sofa" : "default";
 
@@ -1364,6 +1391,15 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
             if (fbVar.isDouble() || fbVar.isInt())
                 cachedFrontBackConfusionRate = static_cast<float> (static_cast<double> (fbVar));
         }
+
+        const bool verificationPresent = cachedExternalizationScore >= 0.0f
+            || cachedFrontBackConfusionRate >= 0.0f;
+        cachedCalibrationVerificationProvenance = readProvenanceToken (
+            "verification_provenance",
+            verificationPresent ? "estimated" : "unavailable");
+        cachedCalibrationProfileUpdatedAtUtcMs = readOptionalUtcMs (
+            "updated_at_utc_ms",
+            static_cast<std::int64_t> (modifiedMs));
     }
 
     companionCalibrationProfileLastModifiedMs = modifiedMs;

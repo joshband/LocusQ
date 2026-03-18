@@ -538,9 +538,13 @@ private:
     juce::String cachedCalibrationEqMode         = "off";
     juce::String cachedCalibrationHrtfMode       = "default";
     juce::String cachedCalibrationSofaRef;
+    juce::String cachedCalibrationProfileSource  = "unknown";
+    juce::String cachedCalibrationHeadphoneProvenance = "unavailable";
+    juce::String cachedCalibrationVerificationProvenance = "unavailable";
     bool         cachedCalibrationRequestedSofa  = false;
     bool         cachedCalibrationTrackingEnabled = false;
     int          cachedCalibrationFirLatency      = 0;
+    std::int64_t cachedCalibrationProfileUpdatedAtUtcMs = 0;
     float        cachedExternalizationScore       = -1.0f;  // -1 = not yet available
     float        cachedFrontBackConfusionRate     = -1.0f;  // -1 = not yet available
 
