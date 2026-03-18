@@ -1,0 +1,10 @@
+phase	spring-turbulence
+timestamp	2026-03-18T23:45:00Z
+probe	locusq_physics_runtime_spring_turbulence_probe
+result	PASS
+spring_max_spread	0.300
+spring_max_force_x	6.000
+spring_max_disp	1.919
+turbulence_max_spread	0.090
+turbulence_max_force_x	1.179
+turbulence_max_disp	1.202
