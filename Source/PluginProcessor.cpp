@@ -1548,6 +1548,13 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     initialiseDefaultKeyframeTimeline (keyframeTimelineState);
     publishKeyframeTimelinePlaybackState (keyframeTimelineState);
 
+    for (int i = 0; i < kPhysicsDAWSlotCount; ++i)
+    {
+        physGainModParams[i]   = apvts.getRawParameterValue ("phys_out_gain_mod_"   + juce::String (i));
+        physSpreadModParams[i] = apvts.getRawParameterValue ("phys_out_spread_mod_" + juce::String (i));
+        physFrozenParams[i]    = apvts.getRawParameterValue ("phys_frozen_"         + juce::String (i));
+    }
+
     // Register with scene graph based on initial mode
     // Mode registration happens in prepareToPlay once we know the context
 }
@@ -1646,6 +1653,11 @@ void LocusQAudioProcessor::releaseResources()
     modeTransitionInputSnapshotBuffer.clear();
     modeTransitionRendererScratchBuffer.clear();
     hasLastProcessedMode = false;
+}
+
+void LocusQAudioProcessor::handleAsyncUpdate()
+{
+    updateHostDisplay();
 }
 
 void LocusQAudioProcessor::captureModeTransitionInputSnapshot (const juce::AudioBuffer<float>& sourceBuffer,
@@ -2711,15 +2723,16 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     }
 
     physicsWorker.setSlotMassOverride (activeEmitterSlot, apvts.getRawParameterValue ("phys_mass_override")->load());
-    collisionSystem.setEnabled (physicsEnabled
-                                && apvts.getRawParameterValue ("phys_collide_emitters")->load() > 0.5f);
+    const bool collisionEnabled =
+        physicsEnabled && apvts.getRawParameterValue ("phys_collide_emitters")->load() > 0.5f;
+    collisionSystem.setEnabled (collisionEnabled);
     collisionSystem.setCollisionRadius (activeEmitterSlot,
                                         apvts.getRawParameterValue ("phys_collision_radius")->load());
     collisionSystem.setGainScale (apvts.getRawParameterValue ("phys_collision_gain_scale")->load());
     collisionSystem.setDecayRateHz (
         1000.0f / juce::jmax (1.0f, apvts.getRawParameterValue ("phys_collision_decay_ms")->load()));
 
-    const bool coordinatedWorkerActive = physicsEnabled && anyActiveAttractor;
+    const bool coordinatedWorkerActive = physicsEnabled && (anyActiveAttractor || collisionEnabled);
     physicsEngine.setStandaloneMode (! coordinatedWorkerActive);
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
     physicsWorker.setUpdateRateIndex (physicsRateIndex);
@@ -2844,8 +2857,8 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     {
         const int   slot = activeEmitterSlot;
 
-        // Bounds guard — DAW automation params cover slots 0..7 only
-        if (slot < 0 || slot >= 8)
+        // Bounds guard — DAW automation params cover slots 0..kPhysicsDAWSlotCount-1 only
+        if (slot < 0 || slot >= kPhysicsDAWSlotCount)
         {
             jassert (false);  // unexpected slot index from SceneGraph::registerEmitter()
             const auto fallback = physicsDspBridge.read (slot);
@@ -2854,49 +2867,39 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         }
         else
         {
-            juce::String ns (slot);
-
-            // Transition detection
-            const bool nowFrozen =
-                apvts.getRawParameterValue ("phys_frozen_" + ns)->load() > 0.5f;
-            const bool wasFrozen = lastFrozenState[slot];
+            const bool nowFrozen  = physFrozenParams[slot]->load() > 0.5f;
+            const bool wasFrozen  = lastFrozenState[slot];
+            const bool justFroze  = !wasFrozen && nowFrozen;
 
             const auto dspValues = physicsDspBridge.read (slot);  // single read per slot per block
 
-            if (!wasFrozen && nowFrozen)
-            {
-                // LIVE -> FROZEN: snapshot current atomic into APVTS at the precise
-                // freeze-effective block boundary (audio thread - no setValueNotifyingHost)
-                apvts.getRawParameterValue ("phys_out_spread_mod_" + ns)->store (dspValues.spreadMod);
-                apvts.getRawParameterValue ("phys_out_gain_mod_"   + ns)->store (dspValues.gainMod);
-
-                // Notify host that parameter state changed (UI refresh, automation lane)
-                juce::MessageManager::callAsync ([this] {
-                    updateHostDisplay();  // inherited from juce::AudioProcessor - RT-safe from callAsync
-                });
-            }
-
             lastFrozenState[slot] = nowFrozen;
 
-            float spreadDelta, gainDelta;
+            float spreadMod, gainMod;
             if (!nowFrozen)
             {
                 // Live path: mirror atomics to APVTS output params - DAW polls these for recording
-                apvts.getRawParameterValue ("phys_out_spread_mod_" + ns)->store (dspValues.spreadMod);
-                apvts.getRawParameterValue ("phys_out_gain_mod_"   + ns)->store (dspValues.gainMod);
-                spreadDelta = dspValues.spreadMod;  // same val as mirrored - not a second read
-                gainDelta   = dspValues.gainMod;
+                physSpreadModParams[slot]->store (dspValues.spreadMod);
+                physGainModParams[slot]->store   (dspValues.gainMod);
+                spreadMod = dspValues.spreadMod;
+                gainMod   = dspValues.gainMod;
             }
             else
             {
+                if (justFroze)
+                {
+                    // LIVE -> FROZEN: snapshot current values at the freeze-effective block boundary
+                    physSpreadModParams[slot]->store (dspValues.spreadMod);
+                    physGainModParams[slot]->store   (dspValues.gainMod);
+                    triggerAsyncUpdate();
+                }
                 // Frozen path: DAW playback owns the APVTS value; load() it for DSP
-                spreadDelta = apvts.getRawParameterValue ("phys_out_spread_mod_" + ns)->load();
-                gainDelta   = apvts.getRawParameterValue ("phys_out_gain_mod_"   + ns)->load();
-                // no store() - DAW owns the value; physics atomics still update silently
+                spreadMod = physSpreadModParams[slot]->load();
+                gainMod   = physGainModParams[slot]->load();
             }
 
-            data.spread       = juce::jlimit (0.0f, 1.0f, data.spread + spreadDelta);
-            data.gain         = juce::jlimit (0.0f, 1.0f, data.gain   + gainDelta);
+            data.spread       = juce::jlimit (0.0f, 1.0f, data.spread + spreadMod);
+            data.gain         = juce::jlimit (0.0f, 1.0f, data.gain   + gainMod);
             data.collisionEnergy = juce::jmax (data.collisionEnergy, dspValues.gainTransient);
             // gainTransient bypasses freeze state - one-shot bursts always flow through
         }

@@ -15,9 +15,8 @@
 #include "HeadTrackingBridge.h"
 #include "HeadPoseInterpolator.h"
 #include "CalibrationEngine.h"
-#include "PhysicsDSPBridge.h"
 #include "PhysicsEngine.h"
-#include "PhysicsWorker.h"
+#include "PhysicsSharedRuntime.h"
 #include "KeyframeTimeline.h"
 #include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/RegistrationLockFreeContract.h"
@@ -75,7 +74,8 @@ enum class RegistrationTransitionFallbackReason : int
  *
  * Phase 2.1: Foundation & Scene Graph
  */
-class LocusQAudioProcessor : public juce::AudioProcessor
+class LocusQAudioProcessor : public juce::AudioProcessor,
+                             public juce::AsyncUpdater
 #if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
                           , public clap_juce_extensions::clap_properties
                           , public clap_juce_extensions::clap_juce_audio_processor_capabilities
@@ -91,6 +91,7 @@ public:
     void releaseResources() override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void handleAsyncUpdate() override;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -375,12 +376,18 @@ private:
 
     //==============================================================================
     // Physics engine (Phase 2.4)
-    PhysicsDSPBridge physicsDspBridge;
-    PhysicsWorker physicsWorker;
+    PhysicsSharedRuntime& physicsSharedRuntime;
+    PhysicsDSPBridge& physicsDspBridge;
+    PhysicsWorker& physicsWorker;
     PhysicsEngine physicsEngine;
+    bool physicsSharedRuntimeAcquired = false;
     bool lastPhysThrowGate = false;
     bool lastPhysResetGate = false;
-    bool lastFrozenState[8] {};  // per-slot freeze transition detector; zero-initialised
+    static constexpr int kPhysicsDAWSlotCount = 8;
+    std::array<bool, kPhysicsDAWSlotCount> lastFrozenState {};
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physGainModParams  {};
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physSpreadModParams {};
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physFrozenParams    {};
 
     //==============================================================================
     // Keyframe animation timeline (Phase 2.6)
