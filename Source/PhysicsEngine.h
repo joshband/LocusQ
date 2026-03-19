@@ -489,6 +489,7 @@ private:
             {
                 const float ratio = depth / dist;
                 state.velocity.x += kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x1u);
             }
             if (state.position.x < -halfWidth)
             {
@@ -503,6 +504,7 @@ private:
             {
                 const float ratio = depth / dist;
                 state.velocity.x -= kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x1u);
             }
             if (state.position.x > halfWidth)
             {
@@ -517,6 +519,7 @@ private:
             {
                 const float ratio = depth / dist;
                 state.velocity.y += kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x2u);
             }
             if (state.position.y < 0.0f)
             {
@@ -531,6 +534,7 @@ private:
             {
                 const float ratio = depth / dist;
                 state.velocity.y -= kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x2u);
             }
             if (state.position.y > maxY)
             {
@@ -545,6 +549,7 @@ private:
             {
                 const float ratio = depth / dist;
                 state.velocity.z += kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x4u);
             }
             if (state.position.z < -halfDepth)
             {
@@ -559,6 +564,7 @@ private:
             {
                 const float ratio = depth / dist;
                 state.velocity.z -= kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x4u);
             }
             if (state.position.z > halfDepth)
             {

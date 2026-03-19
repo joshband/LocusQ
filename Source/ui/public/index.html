@@ -971,6 +971,23 @@
       border-top: none;
       padding-top: 2px;
     }
+    .cal-discovery-actions {
+      display: flex;
+      gap: 6px;
+      padding-top: 6px;
+      flex-wrap: wrap;
+    }
+    .cal-discovery-actions .btn-secondary {
+      padding: 4px 8px;
+      font-size: 10px;
+      letter-spacing: 0.8px;
+    }
+    .cal-discovery-action-note {
+      padding-top: 4px;
+      font-size: 10px;
+      line-height: 1.35;
+      color: var(--text-dim);
+    }
     .cal-automation-main {
       display: flex;
       align-items: center;
@@ -999,6 +1016,43 @@
       color: var(--text-dim);
       line-height: 1.35;
       word-break: break-word;
+    }
+    .cal-candidate-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .cal-candidate-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.03);
+      font-size: 9px;
+      line-height: 1;
+      color: var(--text-secondary);
+    }
+    .cal-candidate-pill.best {
+      border-color: rgba(179, 214, 111, 0.4);
+      background: rgba(179, 214, 111, 0.08);
+      color: var(--text-primary);
+    }
+    .cal-candidate-pill.selected {
+      border-color: rgba(106, 176, 255, 0.38);
+      background: rgba(106, 176, 255, 0.08);
+    }
+    .cal-candidate-pill.blocked {
+      border-color: rgba(255, 160, 122, 0.4);
+      background: rgba(255, 160, 122, 0.08);
+      color: var(--text-primary);
+    }
+    .cal-candidate-role {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
     }
     .cal-mapping-matrix {
       display: grid;
@@ -1137,6 +1191,25 @@
       justify-content: space-between;
       gap: 8px;
       padding-top: 4px;
+    }
+    .cal-reconcile-list {
+      display: grid;
+      gap: 6px;
+      padding-top: 6px;
+    }
+    .cal-reconcile-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .cal-reconcile-role {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+    .cal-reconcile-row .dropdown {
+      min-width: 150px;
     }
     .cal-ack-label {
       font-size: 10px;
@@ -2330,6 +2403,67 @@
             </div>
           </div>
 
+          <div class="cal-card" id="cal-card-discovery">
+            <div class="section">
+              <div class="section-header" id="cal-discovery-title">Discovery</div>
+              <div class="cal-automation-list">
+                <article class="cal-automation-row">
+                  <div class="cal-automation-row-header">
+                    <span class="cal-automation-label" id="cal-discovery-row1-label">Detected Outputs</span>
+                    <span class="status-chip" id="cal-discovery-row1-source">HOST-DETECTED</span>
+                  </div>
+                  <div class="cal-automation-value" id="cal-discovery-row1-value">Host main output awaiting channel visibility.</div>
+                  <div class="cal-automation-note" id="cal-discovery-row1-note">Output discovery is waiting for a usable host report.</div>
+                  <div class="cal-candidate-strip" id="cal-discovery-row1-candidates" aria-label="Output candidates"></div>
+                  <div class="cal-discovery-actions">
+                    <button class="btn-secondary" id="cal-discovery-apply-output-btn">USE BEST MAP</button>
+                  </div>
+                  <div class="cal-discovery-action-note" id="cal-discovery-apply-output-note">Best-map preview will appear when output discovery is available.</div>
+                  <div class="cal-reconcile-list" id="cal-discovery-apply-output-reconcile" hidden></div>
+                  <div class="cal-ack-row" id="cal-discovery-apply-output-ack-row" hidden>
+                    <label class="cal-ack-label" for="cal-discovery-apply-output-ack" id="cal-discovery-apply-output-ack-label">Acknowledge partial output map.</label>
+                    <input class="cal-ack-check" type="checkbox" id="cal-discovery-apply-output-ack" />
+                  </div>
+                </article>
+                <article class="cal-automation-row">
+                  <div class="cal-automation-row-header">
+                    <span class="cal-automation-label" id="cal-discovery-row2-label">Detected Inputs</span>
+                    <span class="status-chip" id="cal-discovery-row2-source">UNKNOWN</span>
+                  </div>
+                  <div class="cal-automation-value" id="cal-discovery-row2-value">Host main input awaiting channel visibility.</div>
+                  <div class="cal-automation-note" id="cal-discovery-row2-note">Input discovery currently relies on host input-bus visibility and the selected mic channel.</div>
+                  <div class="cal-candidate-strip" id="cal-discovery-row2-candidates" aria-label="Input candidates"></div>
+                </article>
+                <article class="cal-automation-row">
+                  <div class="cal-automation-row-header">
+                    <span class="cal-automation-label" id="cal-discovery-row3-label">Topology Candidate</span>
+                    <span class="status-chip" id="cal-discovery-row3-source">UNKNOWN</span>
+                  </div>
+                  <div class="cal-automation-value" id="cal-discovery-row3-value">No topology candidate available yet.</div>
+                  <div class="cal-automation-note" id="cal-discovery-row3-note">Topology discovery appears after output visibility is known.</div>
+                  <div class="cal-candidate-strip" id="cal-discovery-row3-candidates" aria-label="Topology candidates"></div>
+                  <div class="cal-discovery-actions">
+                    <button class="btn-secondary" id="cal-discovery-apply-topology-btn">USE BEST TOPOLOGY</button>
+                  </div>
+                  <div class="cal-discovery-action-note" id="cal-discovery-apply-topology-note">Best-topology preview will appear when topology discovery is available.</div>
+                  <div class="cal-reconcile-list" id="cal-discovery-apply-topology-reconcile" hidden></div>
+                  <div class="cal-ack-row" id="cal-discovery-apply-topology-ack-row" hidden>
+                    <label class="cal-ack-label" for="cal-discovery-apply-topology-ack" id="cal-discovery-apply-topology-ack-label">Acknowledge partial topology map.</label>
+                    <input class="cal-ack-check" type="checkbox" id="cal-discovery-apply-topology-ack" />
+                  </div>
+                </article>
+                <article class="cal-automation-row">
+                  <div class="cal-automation-row-header">
+                    <span class="cal-automation-label" id="cal-discovery-row4-label">Needs Confirmation</span>
+                    <span class="status-chip" id="cal-discovery-row4-source">READY</span>
+                  </div>
+                  <div class="cal-automation-value" id="cal-discovery-row4-value">No confirmation needed.</div>
+                  <div class="cal-automation-note" id="cal-discovery-row4-note">Auto-map and topology candidate are aligned.</div>
+                </article>
+              </div>
+            </div>
+          </div>
+
           <div class="cal-card" id="cal-card-setup">
             <div class="section">
               <div class="section-header" id="cal-setup-title">Speaker Setup</div>
@@ -3005,6 +3139,18 @@
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Score Status</span>
                       <span class="renderer-diagnostic-field-value mono" id="rend-hpver-score-status">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Score Provenance</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-score-provenance">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Compensation Label</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-comp-label">Unavailable</span>
+                    </div>
+                    <div class="renderer-diagnostic-field">
+                      <span class="renderer-diagnostic-field-label">Compensation Provenance</span>
+                      <span class="renderer-diagnostic-field-value mono" id="rend-hpver-comp-provenance">Unavailable</span>
                     </div>
                     <div class="renderer-diagnostic-field">
                       <span class="renderer-diagnostic-field-label">Scores (0..1)</span>

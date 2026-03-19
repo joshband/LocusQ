@@ -250,6 +250,18 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                              {
                                  completion (audioProcessor.redetectCalibrationRoutingFromUI());
                              })
+        .withNativeFunction ("locusqApplyBestCalibrationOutputMap",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.applyBestCalibrationOutputMapFromUI());
+                             })
+        .withNativeFunction ("locusqApplyBestCalibrationTopology",
+                             [&audioProcessor] (const juce::Array<juce::var>&,
+                                                juce::WebBrowserComponent::NativeFunctionCompletion completion)
+                             {
+                                 completion (audioProcessor.applyBestCalibrationTopologyFromUI());
+                             })
         .withNativeFunction ("locusqListCalibrationProfiles",
                              [&audioProcessor] (const juce::Array<juce::var>&,
                                                 juce::WebBrowserComponent::NativeFunctionCompletion completion)

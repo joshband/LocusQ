@@ -109,7 +109,7 @@ public:
         // --- Smooth (one-pole attack/release) ---
         s.spreadSmoothed     = onePoleSmoothStep (s.spreadSmoothed,     spreadCurved,    s.coefAttack, s.coefRelease);
         s.gainSmoothed       = onePoleSmoothStep (s.gainSmoothed,       gainCurved,      s.coefAttack, s.coefRelease);
-        s.transientSmoothed  = onePoleSmoothStep (s.transientSmoothed,  transientCurved, s.coefAttack, s.coefRelease);
+        s.transientSmoothed  = onePoleSmoothStep (s.transientSmoothed,  transientCurved, s.coefAttack, s.coefTransientRelease);
 
         // --- Clamp (finite-contract guard) ---
         PerEmitterDSPValues out;
@@ -163,8 +163,9 @@ private:
         float gainSmoothed      = 0.0f;
         float transientSmoothed = 0.0f;
 
-        float coefAttack  = 0.0f;
-        float coefRelease = 0.0f;
+        float coefAttack            = 0.0f;
+        float coefRelease           = 0.0f;
+        float coefTransientRelease  = 0.0f;
     };
 
     struct BridgeSlot
@@ -184,6 +185,8 @@ private:
         {
             s.coefAttack  = onePoleCoefficientFromTime (smoothCfg.attackSec,  period);
             s.coefRelease = onePoleCoefficientFromTime (smoothCfg.releaseSec, period);
+            s.coefTransientRelease = onePoleCoefficientFromTime (
+                1.0f / std::max (0.1f, smoothCfg.transientDecayHz), period);
         }
     }
 

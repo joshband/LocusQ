@@ -141,24 +141,12 @@ juce::File resolveCompanionCalibrationProfileFile()
     if (overrideProfileDir.isNotEmpty())
         return juce::File (overrideProfileDir).getChildFile ("CalibrationProfile.json");
 
-    const auto userAppDataDir = juce::File::getSpecialLocation (
-        juce::File::SpecialLocationType::userApplicationDataDirectory);
-    const auto userHomeDir = juce::File::getSpecialLocation (
-        juce::File::SpecialLocationType::userHomeDirectory);
+    const auto userDataDir = locusq::processor_bridge::getLocusQUserDataDirectory();
 
-    const std::array<juce::File, 4> candidates
+    const std::array<juce::File, 2> candidates
     {
-        userAppDataDir.getChildFile ("LocusQ").getChildFile ("CalibrationProfile.json"),
-        userAppDataDir.getChildFile ("Application Support")
-            .getChildFile ("LocusQ")
-            .getChildFile ("CalibrationProfile.json"),
-        userHomeDir.getChildFile ("Library")
-            .getChildFile ("Application Support")
-            .getChildFile ("LocusQ")
-            .getChildFile ("CalibrationProfile.json"),
-        userHomeDir.getChildFile ("Library")
-            .getChildFile ("LocusQ")
-            .getChildFile ("CalibrationProfile.json")
+        userDataDir.getChildFile ("CalibrationProfile.json"),
+        userDataDir.getChildFile ("Companion").getChildFile ("CalibrationProfile.json")
     };
 
     juce::File newestExisting;

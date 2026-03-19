@@ -1110,6 +1110,13 @@ struct HeadphoneVerificationSnapshot
     juce::String verificationScoreStatus {
         locusq::shared_contracts::headphone_verification::score_status::kUnavailable
     };
+    juce::String scoreProvenance {
+        locusq::shared_contracts::headphone_verification::provenance::kUnavailable
+    };
+    juce::String compensationLabel { "Generic baseline compensation" };
+    juce::String compensationProvenance {
+        locusq::shared_contracts::headphone_verification::provenance::kGeneric
+    };
     int chainLatencySamples = 0;
 };
 
@@ -1274,7 +1281,19 @@ HeadphoneVerificationSnapshot buildHeadphoneVerificationSnapshot (
         snapshot.fallbackTarget,
         snapshot.activeEngineId);
     snapshot.fallbackReasonText = fallbackReasonTextForCode (snapshot.fallbackReasonCode);
-    snapshot.verificationScoreStatus = scoreStatusFromStage (snapshot.verificationStage);
+
+    if (snapshot.verificationStage == stage::kUnavailable || snapshot.verificationStage == stage::kDisabled)
+    {
+        snapshot.scoreProvenance = provenance::kUnavailable;
+    }
+    else
+    {
+        snapshot.scoreProvenance = provenance::kEstimated;
+    }
+
+    snapshot.compensationLabel = "Generic baseline compensation";
+    snapshot.compensationProvenance = provenance::kGeneric;
+    snapshot.verificationScoreStatus = scoreStatusFromProvenance (snapshot.scoreProvenance);
 
     return snapshot;
 }
@@ -1552,7 +1571,105 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     {
         physGainModParams[i]   = apvts.getRawParameterValue ("phys_out_gain_mod_"   + juce::String (i));
         physSpreadModParams[i] = apvts.getRawParameterValue ("phys_out_spread_mod_" + juce::String (i));
+        physTransientParams[i] = apvts.getRawParameterValue ("phys_out_transient_"  + juce::String (i));
         physFrozenParams[i]    = apvts.getRawParameterValue ("phys_frozen_"         + juce::String (i));
+    }
+
+    auto rawParam = [this] (const char* paramId) -> std::atomic<float>*
+    {
+        return apvts.getRawParameterValue (paramId);
+    };
+
+    rendPhysRateParam = rawParam ("rend_phys_rate");
+    rendPhysPauseParam = rawParam ("rend_phys_pause");
+    rendPhysWallsParam = rawParam ("rend_phys_walls");
+    rendPhysInteractParam = rawParam ("rend_phys_interact");
+    posCoordModeParam = rawParam ("pos_coord_mode");
+    posAzimuthParam = rawParam ("pos_azimuth");
+    posElevationParam = rawParam ("pos_elevation");
+    posDistanceParam = rawParam ("pos_distance");
+    posXParam = rawParam ("pos_x");
+    posYParam = rawParam ("pos_y");
+    posZParam = rawParam ("pos_z");
+    sizeUniformParam = rawParam ("size_uniform");
+    sizeLinkParam = rawParam ("size_link");
+    sizeWidthParam = rawParam ("size_width");
+    sizeHeightParam = rawParam ("size_height");
+    sizeDepthParam = rawParam ("size_depth");
+    animEnableParam = rawParam ("anim_enable");
+    animModeParam = rawParam ("anim_mode");
+    animLoopParam = rawParam ("anim_loop");
+    animSpeedParam = rawParam ("anim_speed");
+    animSyncParam = rawParam ("anim_sync");
+    emitGainParam = rawParam ("emit_gain");
+    emitSpreadParam = rawParam ("emit_spread");
+    emitDirectivityParam = rawParam ("emit_directivity");
+    emitMuteParam = rawParam ("emit_mute");
+    emitSoloParam = rawParam ("emit_solo");
+    emitDirAzimuthParam = rawParam ("emit_dir_azimuth");
+    emitDirElevationParam = rawParam ("emit_dir_elevation");
+    physEnableParam = rawParam ("phys_enable");
+    physBoundaryModeParam = rawParam ("phys_boundary_mode");
+    physSoftBoundaryDepthParam = rawParam ("phys_soft_boundary_depth");
+    physFlockGroupParam = rawParam ("phys_flock_group");
+    physSpringEnableParam = rawParam ("phys_spring_enable");
+    physSpringKParam = rawParam ("phys_spring_k");
+    physSpringDampParam = rawParam ("phys_spring_damp");
+    physSpringAnchorModeParam = rawParam ("phys_spring_anchor_mode");
+    physSpringAnchorXParam = rawParam ("phys_spring_anchor_x");
+    physSpringAnchorYParam = rawParam ("phys_spring_anchor_y");
+    physSpringAnchorZParam = rawParam ("phys_spring_anchor_z");
+    physTurbulenceParam = rawParam ("phys_turbulence");
+    physTurbulenceRateParam = rawParam ("phys_turbulence_rate");
+    physAngEnableParam = rawParam ("phys_ang_enable");
+    physAngDragParam = rawParam ("phys_ang_drag");
+    physAngImpulseXParam = rawParam ("phys_ang_impulse_x");
+    physAngImpulseYParam = rawParam ("phys_ang_impulse_y");
+    physAngImpulseZParam = rawParam ("phys_ang_impulse_z");
+    physAngAttractorTorqueParam = rawParam ("phys_ang_attractor_torque");
+    physAngThrowParam = rawParam ("phys_ang_throw");
+    physAngResetParam = rawParam ("phys_ang_reset");
+    physMassOverrideParam = rawParam ("phys_mass_override");
+    physCollideEmittersParam = rawParam ("phys_collide_emitters");
+    physCollisionRadiusParam = rawParam ("phys_collision_radius");
+    physCollisionGainScaleParam = rawParam ("phys_collision_gain_scale");
+    physCollisionDecayMsParam = rawParam ("phys_collision_decay_ms");
+    physMassParam = rawParam ("phys_mass");
+    physDragParam = rawParam ("phys_drag");
+    physElasticityParam = rawParam ("phys_elasticity");
+    physFrictionParam = rawParam ("phys_friction");
+    physGravityParam = rawParam ("phys_gravity");
+    physGravityDirParam = rawParam ("phys_gravity_dir");
+    physThrowParam = rawParam ("phys_throw");
+    physVelXParam = rawParam ("phys_vel_x");
+    physVelYParam = rawParam ("phys_vel_y");
+    physVelZParam = rawParam ("phys_vel_z");
+    physResetParam = rawParam ("phys_reset");
+
+    for (int i = 0; i < kAttractorSlotCount; ++i)
+    {
+        const auto indexText = juce::String (i);
+        attractorActiveParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_active");
+        attractorPosXParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_pos_x");
+        attractorPosYParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_pos_y");
+        attractorPosZParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_pos_z");
+        attractorStrengthParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_strength");
+        attractorRadiusParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_radius");
+        attractorFalloffParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_falloff");
+        attractorOrbitStabilizeParams[i] = apvts.getRawParameterValue ("attractor_" + indexText + "_orbit_stabilize");
+    }
+
+    for (int i = 0; i < kFlockGroupCount; ++i)
+    {
+        const auto indexText = juce::String (i);
+        flockEnableParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_enable");
+        flockSepWeightParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_sep_weight");
+        flockAlignWeightParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_align_weight");
+        flockCohWeightParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_coh_weight");
+        flockSepRadiusParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_sep_radius");
+        flockAlignRadiusParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_align_radius");
+        flockCohRadiusParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_coh_radius");
+        flockMaxSpeedParams[i] = apvts.getRawParameterValue ("phys_flock_" + indexText + "_max_speed");
     }
 
     // Register with scene graph based on initial mode
@@ -2547,18 +2664,24 @@ std::optional<double> LocusQAudioProcessor::getTransportTimeSeconds() const
 //==============================================================================
 void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 {
+    const auto loadParam = [] (const std::atomic<float>* param) noexcept -> float
+    {
+        jassert (param != nullptr);
+        return param != nullptr ? param->load() : 0.0f;
+    };
+
     const int activeEmitterSlot = emitterSlotId;
     if (activeEmitterSlot < 0)
         return;
 
     sceneGraph.setPhysicsRateIndex (
-        static_cast<int> (apvts.getRawParameterValue ("rend_phys_rate")->load()));
+        static_cast<int> (loadParam (rendPhysRateParam)));
     sceneGraph.setPhysicsPaused (
-        apvts.getRawParameterValue ("rend_phys_pause")->load() > 0.5f);
+        loadParam (rendPhysPauseParam) > 0.5f);
     sceneGraph.setPhysicsWallCollisionEnabled (
-        apvts.getRawParameterValue ("rend_phys_walls")->load() > 0.5f);
+        loadParam (rendPhysWallsParam) > 0.5f);
     sceneGraph.setPhysicsInteractionEnabled (
-        apvts.getRawParameterValue ("rend_phys_interact")->load() > 0.5f);
+        loadParam (rendPhysInteractParam) > 0.5f);
 
     const auto existingData = sceneGraph.getSlot (activeEmitterSlot).read();
 
@@ -2567,18 +2690,18 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     std::memcpy (data.label, existingData.label, sizeof (data.label));
     data.label[sizeof (data.label) - 1] = '\0';
 
-    const auto coordMode = apvts.getRawParameterValue ("pos_coord_mode")->load();
-    float azimuthDeg = apvts.getRawParameterValue ("pos_azimuth")->load();
-    float elevationDeg = apvts.getRawParameterValue ("pos_elevation")->load();
-    float distance = apvts.getRawParameterValue ("pos_distance")->load();
-    float posX = apvts.getRawParameterValue ("pos_x")->load();
-    float posY = apvts.getRawParameterValue ("pos_y")->load();
-    float posZ = apvts.getRawParameterValue ("pos_z")->load();
-    float sizeUniform = apvts.getRawParameterValue ("size_uniform")->load();
+    const auto coordMode = loadParam (posCoordModeParam);
+    float azimuthDeg = loadParam (posAzimuthParam);
+    float elevationDeg = loadParam (posElevationParam);
+    float distance = loadParam (posDistanceParam);
+    float posX = loadParam (posXParam);
+    float posY = loadParam (posYParam);
+    float posZ = loadParam (posZParam);
+    float sizeUniform = loadParam (sizeUniformParam);
 
-    const bool animationEnabled = apvts.getRawParameterValue ("anim_enable")->load() > 0.5f;
+    const bool animationEnabled = loadParam (animEnableParam) > 0.5f;
     const bool internalAnimation = animationEnabled
-                               && static_cast<int> (apvts.getRawParameterValue ("anim_mode")->load()) == 1;
+                               && static_cast<int> (loadParam (animModeParam)) == 1;
 
     if (internalAnimation)
     {
@@ -2586,11 +2709,11 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         auto& keyframeTimeline =
             keyframeTimelineRtBuffers[static_cast<size_t> (keyframeTimelineRtReadIndex.load (std::memory_order_acquire))];
 
-        keyframeTimeline.setLooping (apvts.getRawParameterValue ("anim_loop")->load() > 0.5f);
-        keyframeTimeline.setPlaybackRate (apvts.getRawParameterValue ("anim_speed")->load());
+        keyframeTimeline.setLooping (loadParam (animLoopParam) > 0.5f);
+        keyframeTimeline.setPlaybackRate (loadParam (animSpeedParam));
 
         bool advancedFromTransport = false;
-        if (apvts.getRawParameterValue ("anim_sync")->load() > 0.5f)
+        if (loadParam (animSyncParam) > 0.5f)
         {
             if (const auto transportTimeSeconds = getTransportTimeSeconds())
             {
@@ -2654,7 +2777,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
     data.position = basePosition;
 
-    const bool linkedSize = apvts.getRawParameterValue ("size_link")->load() > 0.5f;
+    const bool linkedSize = loadParam (sizeLinkParam) > 0.5f;
     if (linkedSize)
     {
         const float clampedSize = juce::jlimit (0.01f, 20.0f, sizeUniform);
@@ -2662,26 +2785,26 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     }
     else
     {
-        data.size.x = apvts.getRawParameterValue ("size_width")->load();
-        data.size.y = apvts.getRawParameterValue ("size_height")->load();
-        data.size.z = apvts.getRawParameterValue ("size_depth")->load();
+        data.size.x = loadParam (sizeWidthParam);
+        data.size.y = loadParam (sizeHeightParam);
+        data.size.z = loadParam (sizeDepthParam);
     }
 
-    data.gain        = apvts.getRawParameterValue ("emit_gain")->load();
-    data.spread      = apvts.getRawParameterValue ("emit_spread")->load();
-    data.directivity = apvts.getRawParameterValue ("emit_directivity")->load();
-    data.muted       = apvts.getRawParameterValue ("emit_mute")->load() > 0.5f;
-    data.soloed      = apvts.getRawParameterValue ("emit_solo")->load() > 0.5f;
+    data.gain        = loadParam (emitGainParam);
+    data.spread      = loadParam (emitSpreadParam);
+    data.directivity = loadParam (emitDirectivityParam);
+    data.muted       = loadParam (emitMuteParam) > 0.5f;
+    data.soloed      = loadParam (emitSoloParam) > 0.5f;
 
-    const float aimAzimuth = apvts.getRawParameterValue ("emit_dir_azimuth")->load();
-    const float aimElevation = apvts.getRawParameterValue ("emit_dir_elevation")->load();
+    const float aimAzimuth = loadParam (emitDirAzimuthParam);
+    const float aimElevation = loadParam (emitDirElevationParam);
     const float aimAzimuthRad = aimAzimuth * juce::MathConstants<float>::pi / 180.0f;
     const float aimElevationRad = aimElevation * juce::MathConstants<float>::pi / 180.0f;
     data.directivityAim.x = std::cos (aimElevationRad) * std::sin (aimAzimuthRad);
     data.directivityAim.z = std::cos (aimElevationRad) * std::cos (aimAzimuthRad);
     data.directivityAim.y = std::sin (aimElevationRad);
 
-    const bool physicsEnabled = apvts.getRawParameterValue ("phys_enable")->load() > 0.5f;
+    const bool physicsEnabled = loadParam (physEnableParam) > 0.5f;
     data.physicsEnabled = physicsEnabled;
 
     const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();
@@ -2691,8 +2814,8 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     const auto boundaryMode = static_cast<PhysicsEngine::BoundaryMode> (juce::jlimit (
         0,
         2,
-        static_cast<int> (apvts.getRawParameterValue ("phys_boundary_mode")->load())));
-    const float softBoundaryDepth = apvts.getRawParameterValue ("phys_soft_boundary_depth")->load();
+        static_cast<int> (loadParam (physBoundaryModeParam))));
+    const float softBoundaryDepth = loadParam (physSoftBoundaryDepthParam);
     physicsEngine.setBoundaryMode (boundaryMode);
     physicsEngine.setSoftBoundaryDepth (softBoundaryDepth);
     physicsWorker.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled());
@@ -2708,90 +2831,111 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     auto& attractorSystem = physicsWorker.getAttractorSystem();
     auto& springSystem = physicsWorker.getSpringSystem();
     auto& turbulenceSystem = physicsWorker.getTurbulenceSystem();
+    auto& angularSystem = physicsWorker.getAngularSystem();
     auto& boidsSystem = physicsWorker.getBoidsSystem();
     auto& collisionSystem = physicsWorker.getCollisionSystem();
     bool anyActiveAttractor = false;
     for (int sourceIndex = 0; sourceIndex < kPhysicsAttractorSourceCount; ++sourceIndex)
     {
-        const auto sourceIndexText = juce::String (sourceIndex);
         auto& source = attractorSystem.source (sourceIndex);
-        const bool sourceActive =
-            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_active")->load() > 0.5f;
+        const bool sourceActive = loadParam (attractorActiveParams[static_cast<size_t> (sourceIndex)]) > 0.5f;
         source.setActive (sourceActive);
         source.setPosition ({
-            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_pos_x")->load(),
-            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_pos_y")->load(),
-            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_pos_z")->load()
+            loadParam (attractorPosXParams[static_cast<size_t> (sourceIndex)]),
+            loadParam (attractorPosYParams[static_cast<size_t> (sourceIndex)]),
+            loadParam (attractorPosZParams[static_cast<size_t> (sourceIndex)])
         });
-        source.setStrength (apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_strength")->load());
-        source.setRadius (apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_radius")->load());
+        source.setStrength (loadParam (attractorStrengthParams[static_cast<size_t> (sourceIndex)]));
+        source.setRadius (loadParam (attractorRadiusParams[static_cast<size_t> (sourceIndex)]));
         source.setFalloff (static_cast<AttractorFalloff> (juce::jlimit (
             0,
             2,
-            static_cast<int> (apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_falloff")->load()))));
+            static_cast<int> (loadParam (attractorFalloffParams[static_cast<size_t> (sourceIndex)])))));
         source.setOrbitStabilize (
-            apvts.getRawParameterValue ("attractor_" + sourceIndexText + "_orbit_stabilize")->load() > 0.5f);
+            loadParam (attractorOrbitStabilizeParams[static_cast<size_t> (sourceIndex)]) > 0.5f);
         anyActiveAttractor = anyActiveAttractor || sourceActive;
     }
 
     for (int groupIndex = 0; groupIndex < BoidsSystem::kMaxGroups; ++groupIndex)
     {
-        const auto groupIndexText = juce::String (groupIndex);
-        const bool groupEnabled =
-            apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_enable")->load() > 0.5f;
+        const auto groupSlot = static_cast<size_t> (groupIndex);
+        const bool groupEnabled = loadParam (flockEnableParams[groupSlot]) > 0.5f;
         boidsSystem.setGroupEnabled  (groupIndex, groupEnabled);
-        boidsSystem.setSepWeight     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_sep_weight")->load());
-        boidsSystem.setAlignWeight   (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_align_weight")->load());
-        boidsSystem.setCohWeight     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_coh_weight")->load());
-        boidsSystem.setSepRadius     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_sep_radius")->load());
-        boidsSystem.setAlignRadius   (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_align_radius")->load());
-        boidsSystem.setCohRadius     (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_coh_radius")->load());
-        boidsSystem.setMaxSpeed      (groupIndex, apvts.getRawParameterValue ("phys_flock_" + groupIndexText + "_max_speed")->load());
+        boidsSystem.setSepWeight     (groupIndex, loadParam (flockSepWeightParams[groupSlot]));
+        boidsSystem.setAlignWeight   (groupIndex, loadParam (flockAlignWeightParams[groupSlot]));
+        boidsSystem.setCohWeight     (groupIndex, loadParam (flockCohWeightParams[groupSlot]));
+        boidsSystem.setSepRadius     (groupIndex, loadParam (flockSepRadiusParams[groupSlot]));
+        boidsSystem.setAlignRadius   (groupIndex, loadParam (flockAlignRadiusParams[groupSlot]));
+        boidsSystem.setCohRadius     (groupIndex, loadParam (flockCohRadiusParams[groupSlot]));
+        boidsSystem.setMaxSpeed      (groupIndex, loadParam (flockMaxSpeedParams[groupSlot]));
     }
 
-    const int flockGroupChoice = static_cast<int> (std::lround (apvts.getRawParameterValue ("phys_flock_group")->load()));
+    const int flockGroupChoice = static_cast<int> (std::lround (loadParam (physFlockGroupParam)));
     const int flockGroupIndex = flockGroupChoice - 1;
     boidsSystem.setEmitterGroup (activeEmitterSlot, flockGroupIndex);
     const bool boidsEnabledForEmitter = flockGroupIndex >= 0 && flockGroupIndex < BoidsSystem::kMaxGroups
         && boidsSystem.isGroupEnabled (flockGroupIndex);
     const bool springEnabledForEmitter =
-        physicsEnabled && apvts.getRawParameterValue ("phys_spring_enable")->load() > 0.5f;
+        physicsEnabled && loadParam (physSpringEnableParam) > 0.5f;
     springSystem.setEnabled (springEnabledForEmitter);
-    springSystem.setStiffness (apvts.getRawParameterValue ("phys_spring_k")->load());
-    springSystem.setDamping (apvts.getRawParameterValue ("phys_spring_damp")->load());
+    springSystem.setStiffness (loadParam (physSpringKParam));
+    springSystem.setDamping (loadParam (physSpringDampParam));
     springSystem.setAnchorMode (static_cast<SpringAnchorMode> (juce::jlimit (
         0,
         1,
-        static_cast<int> (std::lround (apvts.getRawParameterValue ("phys_spring_anchor_mode")->load())))));
+        static_cast<int> (std::lround (loadParam (physSpringAnchorModeParam))))));
     springSystem.setAnchorPos ({
-        apvts.getRawParameterValue ("phys_spring_anchor_x")->load(),
-        apvts.getRawParameterValue ("phys_spring_anchor_y")->load(),
-        apvts.getRawParameterValue ("phys_spring_anchor_z")->load()
+        loadParam (physSpringAnchorXParam),
+        loadParam (physSpringAnchorYParam),
+        loadParam (physSpringAnchorZParam)
     });
     const float turbulenceAmount = physicsEnabled
-        ? apvts.getRawParameterValue ("phys_turbulence")->load()
+        ? loadParam (physTurbulenceParam)
         : 0.0f;
     turbulenceSystem.setAmplitude (turbulenceAmount);
-    turbulenceSystem.setRate (apvts.getRawParameterValue ("phys_turbulence_rate")->load());
+    turbulenceSystem.setRate (loadParam (physTurbulenceRateParam));
     const bool turbulenceEnabledForEmitter = turbulenceAmount > 1.0e-4f;
+    const bool angularEnabledForEmitter =
+        physicsEnabled && loadParam (physAngEnableParam) > 0.5f;
+    angularSystem.setEnabled (angularEnabledForEmitter);
+    angularSystem.setAngularDrag (loadParam (physAngDragParam));
+    angularSystem.setImpulseX (loadParam (physAngImpulseXParam));
+    angularSystem.setImpulseY (loadParam (physAngImpulseYParam));
+    angularSystem.setImpulseZ (loadParam (physAngImpulseZParam));
+    angularSystem.setAttractorTorque (loadParam (physAngAttractorTorqueParam));
+    const bool angThrowGate = loadParam (physAngThrowParam) > 0.5f;
+    if (angThrowGate && ! lastAngThrowGate)
+        angularSystem.requestThrow();
+    lastAngThrowGate = angThrowGate;
+
+    const bool angResetGate = loadParam (physAngResetParam) > 0.5f;
+    if (angResetGate && ! lastAngResetGate)
+        angularSystem.requestReset();
+    lastAngResetGate = angResetGate;
     const bool interactionEnabledForScene =
         physicsEnabled
         && sceneGraph.isPhysicsInteractionEnabled()
         && sceneGraph.getActiveEmitterCount() > 1;
 
-    physicsWorker.setSlotMassOverride (activeEmitterSlot, apvts.getRawParameterValue ("phys_mass_override")->load());
+    physicsWorker.setSlotMassOverride (activeEmitterSlot, loadParam (physMassOverrideParam));
     const bool collisionEnabled =
-        physicsEnabled && apvts.getRawParameterValue ("phys_collide_emitters")->load() > 0.5f;
+        physicsEnabled && loadParam (physCollideEmittersParam) > 0.5f;
     collisionSystem.setEnabled (collisionEnabled);
     collisionSystem.setCollisionRadius (activeEmitterSlot,
-                                        apvts.getRawParameterValue ("phys_collision_radius")->load());
-    collisionSystem.setGainScale (apvts.getRawParameterValue ("phys_collision_gain_scale")->load());
+                                        loadParam (physCollisionRadiusParam));
+    collisionSystem.setGainScale (loadParam (physCollisionGainScaleParam));
     collisionSystem.setDecayRateHz (
-        1000.0f / juce::jmax (1.0f, apvts.getRawParameterValue ("phys_collision_decay_ms")->load()));
+        1000.0f / juce::jmax (1.0f, loadParam (physCollisionDecayMsParam)));
+    {
+        PhysicsDSPBridge::SmoothConfig bridgeSmoothConfig;
+        bridgeSmoothConfig.transientDecayHz = collisionSystem.getDecayRateHz();
+        physicsDspBridge.setSmoothConfig (bridgeSmoothConfig);
+    }
 
     const bool coordinatedWorkerActive =
         physicsEnabled && (anyActiveAttractor || springEnabledForEmitter || turbulenceEnabledForEmitter
-                           || collisionEnabled || boidsEnabledForEmitter || interactionEnabledForScene);
+                           || angularEnabledForEmitter || collisionEnabled
+                           || boidsEnabledForEmitter || interactionEnabledForScene);
     physicsEngine.setStandaloneMode (! coordinatedWorkerActive);
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
     physicsWorker.setUpdateRateIndex (physicsRateIndex);
@@ -2816,12 +2960,12 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
     physicsEngine.setRestPosition (basePosition);
     physicsEngine.setPhysicsEnabled (physicsEnabled);
-    physicsEngine.setMass (apvts.getRawParameterValue ("phys_mass")->load());
-    physicsEngine.setDrag (apvts.getRawParameterValue ("phys_drag")->load());
-    physicsEngine.setElasticity (apvts.getRawParameterValue ("phys_elasticity")->load());
-    physicsEngine.setFriction (apvts.getRawParameterValue ("phys_friction")->load());
-    const float gravityMagnitude = apvts.getRawParameterValue ("phys_gravity")->load();
-    const int gravityDirection = static_cast<int> (apvts.getRawParameterValue ("phys_gravity_dir")->load());
+    physicsEngine.setMass (loadParam (physMassParam));
+    physicsEngine.setDrag (loadParam (physDragParam));
+    physicsEngine.setElasticity (loadParam (physElasticityParam));
+    physicsEngine.setFriction (loadParam (physFrictionParam));
+    const float gravityMagnitude = loadParam (physGravityParam);
+    const int gravityDirection = static_cast<int> (loadParam (physGravityDirParam));
     physicsWorker.setGravity (gravityMagnitude, gravityDirection);
     physicsEngine.setGravity (coordinatedWorkerActive ? 0.0f : gravityMagnitude,
                               coordinatedWorkerActive ? 0 : gravityDirection);
@@ -2840,14 +2984,14 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     physicsWorker.setSlotInteractionForce (activeEmitterSlot, interactionForce);
     physicsEngine.setInteractionForce (coordinatedWorkerActive ? Vec3 {} : interactionForce);
 
-    const bool throwGate = apvts.getRawParameterValue ("phys_throw")->load() > 0.5f;
+    const bool throwGate = loadParam (physThrowParam) > 0.5f;
     if (throwGate && ! lastPhysThrowGate)
     {
         const Vec3 throwVelocity
         {
-            apvts.getRawParameterValue ("phys_vel_x")->load(),
-            apvts.getRawParameterValue ("phys_vel_z")->load(), // Z in param = Y in 3D (height)
-            apvts.getRawParameterValue ("phys_vel_y")->load()
+            loadParam (physVelXParam),
+            loadParam (physVelZParam), // Z in param = Y in 3D (height)
+            loadParam (physVelYParam)
         };
         if (coordinatedWorkerActive)
             physicsWorker.requestThrow (activeEmitterSlot, throwVelocity);
@@ -2856,7 +3000,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     }
     lastPhysThrowGate = throwGate;
 
-    const bool resetGate = apvts.getRawParameterValue ("phys_reset")->load() > 0.5f;
+    const bool resetGate = loadParam (physResetParam) > 0.5f;
     if (resetGate && ! lastPhysResetGate)
     {
         if (coordinatedWorkerActive)
@@ -2878,6 +3022,10 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
                 + std::abs (workerState.velocity.x)
                 + std::abs (workerState.velocity.y)
                 + std::abs (workerState.velocity.z)) > 1.0e-5f;
+        const bool workerOwnsPublishedAim =
+            coordinatedWorkerActive
+            && angularEnabledForEmitter
+            && workerState.initialized;
 
         const auto physicsState = physicsEngine.getState();
         if (workerOwnsPublishedMotion)
@@ -2887,7 +3035,6 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             data.force = workerState.force;
             data.collisionMask = workerState.collisionMask;
             data.collisionEnergy = workerState.collisionEnergy;
-            data.directivityAim = workerState.directivityAim;
         }
         else if (physicsState.initialized)
         {
@@ -2903,6 +3050,9 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             data.collisionMask = 0;
             data.collisionEnergy = 0.0f;
         }
+
+        if (workerOwnsPublishedAim)
+            data.directivityAim = workerState.directivityAim;
     }
     else
     {
@@ -2934,6 +3084,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             const auto dspValues = physicsDspBridge.read (slot);  // single read per slot per block
 
             lastFrozenState[slot] = nowFrozen;
+            physTransientParams[slot]->store (dspValues.gainTransient);
 
             float spreadMod, gainMod;
             if (!nowFrozen)
