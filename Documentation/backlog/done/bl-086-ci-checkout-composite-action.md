@@ -2,7 +2,7 @@ Title: BL-086 CI Checkout Composite Action — audio-dsp-qa-harness
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-086 CI Checkout Composite Action — audio-dsp-qa-harness
 
@@ -34,7 +34,7 @@ BL-086 in plain terms: Publish a GitHub Actions composite action in `audio-dsp-q
 |---|---|
 | ID | BL-086 |
 | Priority | P1 |
-| Status | Open |
+| Status | Done |
 | Track | G - Tooling / Governance |
 | Effort | Small / S |
 | Depends On | — |

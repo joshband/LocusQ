@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-095, BL-096, BL-097, BL-098, BL-099, BL-100, BL-101 promoted to Done; active P1 open: BL-060 blocked, BL-067 blocked, BL-086 open)
+Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-086, BL-095, BL-096, BL-097, BL-098, BL-099, BL-100, BL-101 promoted to Done; active P1 blocked: BL-060, BL-067)
 
 # LocusQ Master Backlog Index
 
@@ -164,9 +164,9 @@ Immediate wave summary:
 | 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | **Done** (2026-03-19: VST3 host gate PASS — 215 params, all 20 group-boundary names, correct flat order; AU idx-1 offset is JUCE bypass-param convention) | F | BL-032 | — | [bl-079](done/bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
 | 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | **Done** (processor snapshot/file history, native undo/redo bridge, and WebView controls are live; rebuilt standalone production self-test PASSed with `UI-W3A-01` and `UI-W3A-02`; closeout sync complete 2026-03-18) | F | BL-070, BL-074 | — | [bl-080](done/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
 | 51 | BL-081 | Perceptual listening harness — upstream extraction to audio-dsp-qa-harness | P2 | Open | G | BL-060 | — | [bl-081](bl-081-perceptual-listening-harness-upstream-extraction.md) |
-| 52 | BL-082 | QA runner app library — upstream extraction to audio-dsp-qa-harness | P0 | Open | G | — | BL-083, BL-084, BL-085 | [bl-082](bl-082-qa-runner-app-library.md) |
-| 53 | BL-083 | Runtime-config contract enforcement — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-083](bl-083-runtime-config-contract.md) |
-| 54 | BL-084 | Profiling contract hardening — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-084](bl-084-profiling-contract-hardening.md) |
+| 52 | BL-082 | QA runner app library — upstream extraction to audio-dsp-qa-harness | P0 | In Validation (2026-03-19 local parity lane is green; LocusQ already uses thin `qa/main.cpp` + `BaseQARunner`; remaining work is cross-repo adoption + owner closeout) | G | — | BL-083, BL-084, BL-085 | [bl-082](bl-082-qa-runner-app-library.md) |
+| 53 | BL-083 | Runtime-config contract enforcement — audio-dsp-qa-harness ScenarioExecutor | P0 | In Validation (2026-03-19 upstream executor contract is present and local proof lane is green; remaining work is cross-repo verification + owner closeout) | G | — | — | [bl-083](bl-083-runtime-config-contract.md) |
+| 54 | BL-084 | Profiling contract hardening — audio-dsp-qa-harness ScenarioExecutor | P0 | In Validation (2026-03-19 shared runner now owns profiling attachment; LocusQ local workaround removed; remaining work is cross-repo audit + owner closeout) | G | — | — | [bl-084](bl-084-profiling-contract-hardening.md) |
 | 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | **Done** (2026-03-19) | G | BL-082 | — | [bl-085](done/bl-085-cmake-integration-module.md) |
 | 56 | BL-086 | CI checkout composite action — audio-dsp-qa-harness | P1 | Open | G | — | — | [bl-086](bl-086-ci-checkout-composite-action.md) |
 | 57 | BL-087 | Recursive scenario discovery — audio-dsp-qa-harness | P2 | Open (deferred) | G | — | — | [bl-087](bl-087-recursive-scenario-discovery.md) |

@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 109,
-    "open": 14,
-    "done": 95
+    "open": 13,
+    "done": 96
   },
   "items": [
     {
@@ -1569,7 +1569,7 @@
       "id": "BL-082",
       "title": "BL-082 QA Runner App Library \u2014 Upstream Extraction to audio-dsp-qa-harness",
       "state_bucket": "open",
-      "status": "Open",
+      "status": "In Validation",
       "priority": "P0",
       "track": "G - Tooling / Governance",
       "depends_on": "\u2014",
@@ -1580,7 +1580,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins (LocusQ 597 LOC, echoform 451 LOC, memory-echoes 527 LOC, monument-reverb 406 LOC) into a shared lib/qa_runner_app library in audio-dsp-qa-harness. Each plugin's qa/main.cpp becomes a thin adapter registration (~20\u201350 LOC). Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins into a shared lib/qa_runner_app library in audio-dsp-qa-harness so each plugin keeps only a thin adapter entrypoint. Current state: In Validation. LocusQ already has the extracted local shape: qa/main.cpp is a thin entrypoint, and qa/LocusQQARunner.cpp is BaseQARunner-backed. The remaining work is cross-repo adoption and owner closeout, not another large local refactor.",
       "objective": "Extract the four-plugin runner app pattern into audio-dsp-qa-harness/lib/qa_runner_app/ as a reusable C++ template library. The shared library owns:",
       "runbook_path": "Documentation/backlog/bl-082-qa-runner-app-library.md"
     },
@@ -1588,7 +1588,7 @@
       "id": "BL-083",
       "title": "BL-083 Runtime-Config Contract Enforcement \u2014 audio-dsp-qa-harness ScenarioExecutor",
       "state_bucket": "open",
-      "status": "Open",
+      "status": "In Validation",
       "priority": "P0",
       "track": "G - Tooling / Governance",
       "depends_on": "\u2014",
@@ -1599,7 +1599,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-083 in plain terms: Move applySuiteRuntimeConfig() (sample rate, block size, channel count, seed, output dir overrides) into ScenarioExecutor as an automatic, harness-owned step so all four plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-083 in plain terms: move applySuiteRuntimeConfig() into an automatic harness-owned path so all plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: In Validation. The core executor contract is already live upstream, and LocusQ no longer carries a bulky local workaround in qa/main.cpp. The remaining work is broader cross-repo verification and owner closeout, not another local executor rewrite.",
       "objective": "Make runtime-config application a first-class, automatic harness contract rather than an optional per-plugin step. Specifically:",
       "runbook_path": "Documentation/backlog/bl-083-runtime-config-contract.md"
     },
@@ -1607,7 +1607,7 @@
       "id": "BL-084",
       "title": "BL-084 Profiling Contract Hardening \u2014 audio-dsp-qa-harness ScenarioExecutor",
       "state_bucket": "open",
-      "status": "Open",
+      "status": "In Validation",
       "priority": "P0",
       "track": "G - Tooling / Governance",
       "depends_on": "\u2014",
@@ -1618,7 +1618,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-084 in plain terms: Make ScenarioExecutor enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains perf_* invariants but ExecutionConfig.enableProfiling is false so that false-green performance tests are eliminated. Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-084 in plain terms: Make ScenarioExecutor enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains perf_* invariants but ExecutionConfig.enableProfiling is false so that false-green performance tests are eliminated. Current state: In Validation. The shared harness now owns profiling attachment in qa_runner_app::BaseQARunner, and LocusQ no longer carries a local profiling-dispatch workaround in its QA runner. Remaining work is broader cross-repo audit/owner closeout, not the core contract implementation.",
       "objective": "Eliminate silent false-green performance tests by enforcing a profiling precondition contract inside ScenarioExecutor. The contract:",
       "runbook_path": "Documentation/backlog/bl-084-profiling-contract-hardening.md"
     },
@@ -1644,8 +1644,8 @@
     {
       "id": "BL-086",
       "title": "BL-086 CI Checkout Composite Action \u2014 audio-dsp-qa-harness",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "G - Tooling / Governance",
       "depends_on": "\u2014",
@@ -1658,7 +1658,7 @@
       "where": "",
       "plain_language_summary": "BL-086 in plain terms: Publish a GitHub Actions composite action in audio-dsp-qa-harness that standardizes private-repo checkout and auth token validation so all four plugins stop maintaining subtly different versions of the same YAML block. Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Author a composite GitHub Actions action that encapsulates:",
-      "runbook_path": "Documentation/backlog/bl-086-ci-checkout-composite-action.md"
+      "runbook_path": "Documentation/backlog/done/bl-086-ci-checkout-composite-action.md"
     },
     {
       "id": "BL-087",
