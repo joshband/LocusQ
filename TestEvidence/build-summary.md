@@ -238,3 +238,11 @@ The original long-form build summary is preserved in the archive copy above.
 Use this file for current governance snapshots and the archive file for full historical detail.
 
 [2026-03-19] C1 authority migration: dual-integration assertion added; 5 legacy paths confirmed zeroed for coordinated emitters (gravity, interaction, wall-collision, throw, reset); PhysicsEngine standalone guard added to suppress integration when worker owns authority; runtime probe build deps confirmed clean.
+[2026-03-19] C3 gate 1: phys_out_spread_mod_N registered for all 8 slots in ProcessorParameterLayout.cpp — VERIFIED (code review)
+[2026-03-19] C3 gate 2: phys_out_gain_mod_N registered for all 8 slots — VERIFIED (code review)
+[2026-03-19] C3 gate 3: phys_out_transient_N registered for all 8 slots — VERIFIED (code review)
+[2026-03-19] C3 gate 4: phys_frozen_N registered for all 8 slots — VERIFIED (code review)
+[2026-03-19] C3 gate 5: last_frozen_state[kPhysicsDAWSlotCount] array present in PluginProcessor.h — VERIFIED (code review)
+[2026-03-19] C3 gate 6: no setValueNotifyingHost in processBlock — VERIFIED (code review)
+[2026-03-19] C3 gate 7: AsyncUpdater::triggerAsyncUpdate in processBlock + handleAsyncUpdate on message thread — VERIFIED (code review)
+[2026-03-19] C3 gate 8: gainTransient written to phys_out_transient_N regardless of freeze state — VERIFIED (code review)
