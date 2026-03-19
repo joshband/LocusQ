@@ -112,6 +112,9 @@ void LocusQAudioProcessor::syncSceneGraphRegistrationForMode (LocusQMode mode)
             return RegistrationContractOutcome::Noop;
 
         const int slotToRelease = emitterSlotId;
+        physicsWorker.unregisterEngine (slotToRelease);
+        physicsWorker.deactivateSlot (slotToRelease);
+        physicsDspBridge.publishZero (slotToRelease);
         sceneGraph.unregisterEmitter (slotToRelease);
         const bool stillActive = sceneGraph.isSlotActive (slotToRelease);
         emitterSlotId = -1;

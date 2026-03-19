@@ -39,12 +39,12 @@ This file is reference-only. Canonical backlog state now lives in `Documentation
 | BL-025 | `Documentation/plans/bl-025-emitter-uiux-v2-spec-2026-02-22.md` |
 | BL-026 | `Documentation/plans/bl-026-calibrate-uiux-v2-spec-2026-02-23.md`; `Documentation/plans/bl-026-calibrate-v1-v2-uiux-comparison-2026-02-23.md` |
 | BL-027 | `Documentation/plans/bl-027-renderer-uiux-v2-spec-2026-02-23.md` |
-| BL-028 | `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-24.md` |
+| BL-028 | `Documentation/plans/bl-028-spatial-output-matrix-spec-2026-02-25.md` |
 | BL-029 | `Documentation/plans/bl-029-dsp-visualization-and-tooling-spec-2026-02-24.md` |
 | BL-031 | `Documentation/plans/bl-031-tempo-locked-visual-token-scheduler-spec-2026-02-24.md` |
 
 ## Extraction Coverage From Full Review Plan
-Source: `Documentation/plans/2026-02-20-full-project-review.md`
+Source: `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-02-20-full-project-review.md`
 
 | Review Bundle | Backlog Landing |
 |---|---|
@@ -111,7 +111,7 @@ Source: `Documentation/plans/2026-02-20-full-project-review.md`
 ## Runbook References
 - Primary execution surface: `Documentation/backlog/index.md` plus the matching runbook in `Documentation/backlog/`
 - Annex specs: see Material Preservation Map above.
-- Historical extraction source: `Documentation/plans/2026-02-20-full-project-review.md`
+- Historical extraction source: `Documentation/archive/2026-03-18-doc-surface-consolidation/plans/2026-02-20-full-project-review.md`
 
 ## Closed Archive
 | ID | Summary | Status |

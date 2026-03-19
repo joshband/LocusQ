@@ -8,6 +8,12 @@
 
 namespace locusq::processor_bridge
 {
+inline juce::File getLocusQUserDataDirectory()
+{
+    return juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
+        .getChildFile ("LocusQ");
+}
+
 inline juce::String sanitisePresetName (const juce::String& presetName)
 {
     juce::String cleaned;
@@ -196,9 +202,7 @@ inline juce::String sanitiseEmitterLabel (const juce::String& label, int maxChar
 
 inline juce::File getUserDataSubdirectory (const juce::String& leafName)
 {
-    return juce::File::getSpecialLocation (juce::File::SpecialLocationType::userApplicationDataDirectory)
-        .getChildFile ("LocusQ")
-        .getChildFile (leafName);
+    return getLocusQUserDataDirectory().getChildFile (leafName);
 }
 
 template <typename SanitiseNameFn>
@@ -249,4 +253,3 @@ inline bool writeJsonToFile (const juce::File& file, const juce::var& payload)
     return file.replaceWithText (juce::JSON::toString (payload, true));
 }
 } // namespace locusq::processor_bridge
-

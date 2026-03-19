@@ -2,7 +2,7 @@ Title: LocusQ Scene State Contract
 Document Type: Interface Contract
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # Scene State Contract
 
@@ -376,6 +376,147 @@ Rules:
 | `BL034-A1-AC-003` | Additive publication + bounded-domain rules (`18..21`) present |
 | `BL034-A1-AC-004` | Downstream machine-checkable artifact schema documented in BL-034 runbook |
 | `BL034-A1-AC-005` | `./scripts/validate-docs-freshness.sh` passes for this slice |
+
+### BL-101 CALIBRATE Discovery and Provenance Contract (Wave 1A)
+
+Scope:
+applies to CALIBRATE-facing runtime payloads, automation summary surfaces, profile handoff copy, and saved profile metadata where those surfaces claim detected, inferred, measured, or active state.
+
+#### Canonical Source Enum (Normative)
+
+Use source to answer "where did this value come from?" Source does not imply evidence strength.
+
+| Token | Meaning |
+|---|---|
+| `host_auto` | Derived from host bus/layout or host-visible routing state |
+| `standalone_scan` | Derived from standalone device/channel enumeration |
+| `companion_profile` | Derived from companion-side `CalibrationProfile.json` handoff or companion runtime state |
+| `loaded_profile` | Derived from a previously saved/imported calibration profile |
+| `runtime_state` | Derived from live plugin runtime state |
+| `runtime_active` | Derived from currently active resolved runtime state rather than requested state |
+| `manual_override` | Explicitly chosen or overwritten by the operator |
+| `unknown` | Source not known, unavailable, or not yet migrated to BL-101 semantics |
+
+#### Canonical Provenance Enum (Normative)
+
+Use provenance to answer "how strong is the evidence behind this value?" Provenance does not imply freshness.
+
+| Token | Meaning |
+|---|---|
+| `measured` | Backed by direct measurement or validated listening evidence |
+| `detected` | Directly detected from runtime/device/host state |
+| `inferred` | Derived from other known state using deterministic logic |
+| `estimated` | Heuristic/model-based value that is weaker than direct measurement |
+| `generic` | Bundled baseline/reference/default behavior with no personalized or device-specific evidence |
+| `unavailable` | No trustworthy provenance available |
+
+#### Freshness and Override Overlay (Normative)
+
+Freshness and override are separate overlays on top of source and provenance.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `ageMs` | float or integer | Age of the published value in milliseconds |
+| `staleAfterMs` | float or integer | Threshold after which the value must be considered stale |
+| `isStale` | bool | `true` only when value exceeded freshness budget |
+| `manualOverride` | bool | `true` only when operator-selected state differs from the last auto/profile-resolved value |
+| `detail` | string | Optional plain-language note explaining fallback, uncertainty, or override context |
+
+Rules:
+
+22. Source and provenance must be published independently; consumers must not infer one from the other.
+23. `source == "companion_profile"` or `source == "loaded_profile"` must not imply `provenance == "measured"`.
+24. `manualOverride == true` must not rewrite source/provenance into a stronger claim; it is an overlay on the published value.
+25. `isStale == true` requires finite `ageMs`, finite `staleAfterMs`, and `ageMs >= staleAfterMs`.
+26. UI may collapse freshness into a visible `STALE` chip or warning state, but it must preserve the underlying source and provenance semantics internally.
+27. When BL-101 additive fields are absent, consumers must preserve legacy behavior and treat source/provenance as `unknown` rather than invent stronger semantics.
+
+#### Additive CALIBRATE Provenance Payload (Planned, Backward-Compatible)
+
+CALIBRATE payloads may publish an additive object:
+
+- `calAutomationProvenance`
+
+If present, it contains child objects for:
+
+- `topology`
+- `monitoringPath`
+- `deviceProfile`
+- `routing`
+- `input`
+- `profile`
+- `headphoneDevice`
+- `headphoneVerify`
+
+Each child object uses the same descriptor shape:
+
+```json
+{
+  "source": "host_auto",
+  "provenance": "detected",
+  "ageMs": 12,
+  "staleAfterMs": 500,
+  "isStale": false,
+  "manualOverride": false,
+  "detail": "Derived from current host output layout."
+}
+```
+
+Compatibility rule:
+- consumers that do not implement BL-101 must ignore `calAutomationProvenance` with no behavior change
+- consumers that do implement BL-101 must treat missing child descriptors as `source=unknown`, `provenance=unknown/unavailable`, and no freshness guarantee
+
+#### Additive CALIBRATE DiscoveryGraph Payload (Wave A, Backward-Compatible)
+
+CALIBRATE payloads may also publish an additive object:
+
+- `discoveryGraph`
+
+If present, it contains:
+
+- `schema` (string; current value `locusq-calibrate-discovery-graph-v1`)
+- `outputCandidates` (array)
+- `inputCandidates` (array)
+- `topologyCandidates` (array)
+- `needsConfirmation` (array of plain-language strings)
+- `summary` (object)
+
+Minimum candidate shape:
+
+```json
+{
+  "id": "host_main_output",
+  "kind": "output",
+  "label": "Host Main Output",
+  "rank": 1,
+  "confidence": 0.92,
+  "needsConfirmation": false,
+  "descriptor": {
+    "source": "host_auto",
+    "provenance": "detected",
+    "ageMs": 12,
+    "staleAfterMs": 500,
+    "isStale": false,
+    "manualOverride": false,
+    "detail": "Host output layout reports visible and writable channels."
+  }
+}
+```
+
+Additional additive fields may include:
+
+- output candidate metadata such as `layout`, `channelCount`, `writableChannels`
+- output/topology role preview metadata such as `roleAssignments`, `roleAssignmentProvenance`, `roleAssignmentDetail`, `roleIntentMappedCount`, `roleIntentTotalCount`, `roleIntentBlockedCount`, `roleIntentComplete`
+- input candidate metadata such as `channelCount`, `selectedMicChannel`, `selectedMicVisible`, `recommendedMicChannel`, `reasonCodes`, `confirmationPrompt`, `blockedBy`
+- topology candidate metadata such as `requiredChannels`, `selected`
+- summary fields such as `outputHeadline`, `inputHeadline`, `topologyHeadline`, `ambiguityHeadline`
+
+Rules:
+
+28. `discoveryGraph` is informational and additive; consumers must ignore unknown fields safely.
+29. `confidence` is a ranking aid, not proof of measurement or detection strength.
+30. `needsConfirmation == true` must not rewrite `descriptor.source` or `descriptor.provenance`; ambiguity remains an overlay.
+31. Missing `discoveryGraph` must preserve legacy CALIBRATE behavior with no contract break.
 
 ### Audition Resolver Examples
 

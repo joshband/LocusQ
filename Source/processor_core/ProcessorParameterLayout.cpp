@@ -230,6 +230,115 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "phys_reset", 1 }, "Reset Position", false));
 
+    // --- Spring oscillator (P3) ---
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "phys_spring_enable", 1 }, "Spring Enable", false));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_spring_k", 1 }, "Spring Stiffness",
+        juce::NormalisableRange<float> (0.5f, 500.0f, 0.1f, 0.35f), 10.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_spring_damp", 1 }, "Spring Damping",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.3f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "phys_spring_anchor_mode", 1 }, "Spring Anchor",
+        juce::StringArray { "Rest Pose", "Fixed Point" }, 0));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_spring_anchor_x", 1 }, "Spring Anchor X",
+        juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_spring_anchor_y", 1 }, "Spring Anchor Y",
+        juce::NormalisableRange<float> (0.0f, 10.0f, 0.01f), 1.2f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_spring_anchor_z", 1 }, "Spring Anchor Z",
+        juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+    // --- Turbulence (P3) ---
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_turbulence", 1 }, "Turbulence",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_turbulence_rate", 1 }, "Turbulence Rate",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.1f, 0.4f), 2.0f));
+
+    // --- Angular physics (P4) ---
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "phys_ang_enable", 1 }, "Angular Enable", false));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_ang_drag", 1 }, "Angular Drag",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.3f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_ang_impulse_x", 1 }, "Angular Impulse X",
+        juce::NormalisableRange<float> (-20.0f, 20.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_ang_impulse_y", 1 }, "Angular Impulse Y",
+        juce::NormalisableRange<float> (-20.0f, 20.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_ang_impulse_z", 1 }, "Angular Impulse Z",
+        juce::NormalisableRange<float> (-20.0f, 20.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "phys_ang_throw", 1 }, "Angular Throw", false));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "phys_ang_reset", 1 }, "Angular Reset", false));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_ang_attractor_torque", 1 }, "Attractor Torque",
+        juce::NormalisableRange<float> (0.0f, 50.0f, 0.1f), 5.0f));
+
+    // --- Boids group assignment (P5) ---
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "phys_flock_group", 1 }, "Flock Group",
+        juce::StringArray { "None", "Group 1", "Group 2", "Group 3", "Group 4" }, 0));
+
+    // --- Collision radius and mass override (P6) ---
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_collision_radius", 1 }, "Collision Radius",
+        juce::NormalisableRange<float> (0.05f, 5.0f, 0.01f), 0.3f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_mass_override", 1 }, "Mass Override",
+        juce::NormalisableRange<float> (0.0f, 10.0f, 0.01f), 0.0f));
+
+    // ===== Emitter Physics: DAW Output Mirrors + Freeze (per slot, 8 slots) =====
+    // These are the first per-slot parameters in emitterPhysicsGroup.
+    // Existing params above (phys_enable, phys_mass, etc.) are single-instance (shared).
+    for (int n = 0; n < 8; ++n)
+    {
+        const juce::String ns (n);
+        const juce::String label = "Emitter " + juce::String (n + 1);
+
+        addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_out_spread_mod_" + ns, 1 },
+            label + " Physics Spread",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+        addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_out_gain_mod_" + ns, 1 },
+            label + " Physics Gain",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+        addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_out_transient_" + ns, 1 },
+            label + " Physics Transient",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+        addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+            juce::ParameterID { "phys_frozen_" + ns, 1 },
+            label + " Physics Freeze", false));
+    }
+
     // ==================== EMITTER: ANIMATION ====================
     addParameter (emitterAnimationGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "anim_enable", 1 }, "Animation Enable", false));
@@ -404,6 +513,121 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     addParameter (rendererPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "rend_phys_pause", 1 }, "Pause Physics", false));
 
+    // --- Boundary mode (P2) ---
+    addParameter (rendererPhysicsGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "phys_boundary_mode", 1 }, "Boundary Mode",
+        juce::StringArray { "Hard", "Soft", "Passthrough" }, 0));
+
+    addParameter (rendererPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_soft_boundary_depth", 1 }, "Soft Boundary Depth",
+        juce::NormalisableRange<float> (0.1f, 5.0f, 0.01f), 0.5f));
+
+    // --- Inter-emitter collision globals (P6) ---
+    addParameter (rendererPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "phys_collide_emitters", 1 }, "Collide Emitters", false));
+
+    addParameter (rendererPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_collision_gain_scale", 1 }, "Collision Gain Scale",
+        juce::NormalisableRange<float> (0.0f, 10.0f, 0.01f), 1.0f));
+
+    addParameter (rendererPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_collision_decay_ms", 1 }, "Collision Decay ms",
+        juce::NormalisableRange<float> (1.0f, 500.0f, 0.5f), 50.0f));
+
+    // ==================== RENDERER: SCENE PHYSICS (Attractors — P2) ====================
+    auto scenePhysicsGroup = makeGroup ("scene_physics", "Scene Physics");
+
+    // 4 attractor/repulsor slots
+    for (int n = 0; n < 4; ++n)
+    {
+        const juce::String ns (n);
+        const juce::String label = "Attractor " + juce::String (n + 1);
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+            juce::ParameterID { "attractor_" + ns + "_active", 1 },
+            label + " Active", false));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "attractor_" + ns + "_pos_x", 1 },
+            label + " X",
+            juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "attractor_" + ns + "_pos_y", 1 },
+            label + " Y",
+            juce::NormalisableRange<float> (0.0f, 10.0f, 0.01f), 1.2f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "attractor_" + ns + "_pos_z", 1 },
+            label + " Z",
+            juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "attractor_" + ns + "_strength", 1 },
+            label + " Strength",
+            juce::NormalisableRange<float> (-100.0f, 100.0f, 0.1f), 10.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterChoice> (
+            juce::ParameterID { "attractor_" + ns + "_falloff", 1 },
+            label + " Falloff",
+            juce::StringArray { "1/r", "1/r\u00B2", "Constant" }, 1));  // default 1/r²
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "attractor_" + ns + "_radius", 1 },
+            label + " Radius",
+            juce::NormalisableRange<float> (0.1f, 20.0f, 0.01f, 0.5f), 5.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+            juce::ParameterID { "attractor_" + ns + "_orbit_stabilize", 1 },
+            label + " Orbit Stabilize", false));
+    }
+
+    // ==================== SCENE PHYSICS: BOIDS GROUPS (P5) ====================
+    for (int n = 0; n < 4; ++n)
+    {
+        const juce::String ns (n);
+        const juce::String label = "Flock " + juce::String (n + 1);
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterBool> (
+            juce::ParameterID { "phys_flock_" + ns + "_enable", 1 },
+            label + " Enable", false));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_sep_weight", 1 },
+            label + " Sep Weight",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_align_weight", 1 },
+            label + " Align Weight",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_coh_weight", 1 },
+            label + " Coh Weight",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_sep_radius", 1 },
+            label + " Sep Radius",
+            juce::NormalisableRange<float> (0.1f, 20.0f, 0.01f, 0.5f), 1.5f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_align_radius", 1 },
+            label + " Align Radius",
+            juce::NormalisableRange<float> (0.1f, 20.0f, 0.01f, 0.5f), 3.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_coh_radius", 1 },
+            label + " Coh Radius",
+            juce::NormalisableRange<float> (0.1f, 50.0f, 0.01f, 0.5f), 5.0f));
+
+        addParameter (scenePhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_flock_" + ns + "_max_speed", 1 },
+            label + " Max Speed",
+            juce::NormalisableRange<float> (0.1f, 50.0f, 0.1f, 0.5f), 5.0f));
+    }
+
     // ==================== RENDERER: VISUALIZATION ====================
     addParameter (rendererVisualizationGroup, std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID { "rend_viz_mode", 1 }, "View Mode",
@@ -444,6 +668,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     rendererGroup->addChild (std::move (rendererRoomGroup));
     rendererGroup->addChild (std::move (rendererPhysicsGroup));
     rendererGroup->addChild (std::move (rendererVisualizationGroup));
+    rendererGroup->addChild (std::move (scenePhysicsGroup));
 
     layout.add (std::move (globalGroup));
     layout.add (std::move (calibrationGroup));

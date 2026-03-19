@@ -18,10 +18,6 @@ public:
     static constexpr int kDirectFirTapThreshold = 256;
     static constexpr int kSwapCrossfadeSamples = 64;
 
-    // BL-055 contract markers: DirectFirConvolver + PartitionedFftConvolver
-    struct DirectFirConvolver {};
-    struct PartitionedFftConvolver {};
-
     struct FirEngineManager
     {
         enum class Engine : int
@@ -48,10 +44,6 @@ public:
         coefficients.resize (static_cast<size_t> (clampedTapCount), 0.0f);
         historyLeft.resize (static_cast<size_t> (clampedTapCount), 0.0f);
         historyRight.resize (static_cast<size_t> (clampedTapCount), 0.0f);
-
-        // BL-055 contract marker: nextPow2 partitioned latency.
-        const auto nextPow2BlockSize = juce::nextPowerOfTwo (preparedBlockSize);
-        partitionedLatencySamples = juce::jmax (0, nextPow2BlockSize);
 
         configuredTapCount = 1;
         writeIndex = 0;
@@ -89,13 +81,8 @@ public:
 
     int getLatencySamples() const noexcept
     {
-        if (! ready)
-            return 0;
-
-        if (firEngineManager.activeEngine == FirEngineManager::Engine::DirectFirConvolver)
-            return 0;
-
-        return partitionedLatencySamples;
+        // Processing is always direct-form; latency is always zero.
+        return 0;
     }
 
     void setIdentityImpulse() noexcept
@@ -198,8 +185,6 @@ private:
 
     void runActiveConvolver (float& left, float& right, int tapCount, int historySize) const noexcept
     {
-        juce::ignoreUnused (DirectFirConvolver {}, PartitionedFftConvolver {});
-
         float firLeft = 0.0f;
         float firRight = 0.0f;
 
@@ -257,7 +242,6 @@ private:
     bool ready = false;
     bool bypassed = true;
     int preparedBlockSize = 1;
-    int partitionedLatencySamples = 0;
     int configuredTapCount = 1;
     int swapCrossfadeSamplesRemaining = 0;
     int writeIndex = 0;

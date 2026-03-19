@@ -1,0 +1,13 @@
+CHECK dsp_bridge_clamp_nan : PASS | spread=0.000000 gain=0.000000 transient=0.000000
+CHECK dsp_bridge_clamp_inf : PASS | spread=0.000000 gain=0.000000 transient=0.000000
+CHECK dsp_bridge_boundary_values : PASS | all 64 slots finite and in range after 0/1 boundary publish
+CHECK spring_frequency_accuracy : PASS | k=25.000000 m=1.000000 omega_analytical=5.000000 freq_analytical=0.795775 freq_measured=0.800167 zero_crossings=32 error_pct=0.551911
+CHECK turbulence_bounded : PASS | amplitude=1.0 mass=10.000000 theoretical_max=98.000000 observed_max=11.067713
+CHECK angular_aim_no_nan : PASS | 5000 ticks, 4 emitters, adversarial impulses — aim always finite unit vector
+CHECK angular_aim_sweep_cardioid : PASS | start=(-0.006545,-0.999979) end=(-1.000000,-0.000018) dot_product=0.006563 expected_dot=0.000000 tolerance=0.100000
+CHECK boids_determinism_3_runs : PASS | r1=(0.187500,0.187500,0.000000) r2=(0.187500,0.187500,0.000000) r3=(0.187500,0.187500,0.000000)
+CHECK collision_determinism_3_runs : PASS | impA_x r1=-1.700000 r2=-1.700000 r3=-1.700000 energyA r1=0.003400 r2=0.003400 r3=0.003400
+CHECK collision_finite_safe : PASS | 100 rapid collisions — energy always in [0..1], final_speed=1.800000
+CHECK worker_tick_rate_240hz : PASS | elapsed_ms=505.027625 ticks_observed=122.000000 ticks_expected=121.206630 ratio=1.006546
+CHECK worker_stall_guard : PASS | ticks_before=14 ticks_during=38 loop_alive=1 pos_held=1 pos_before=(0.000000,1.000000) pos_during=(0.000000,1.000000)
+SUMMARY physics_tier_a_probe : 12/12 checks passed

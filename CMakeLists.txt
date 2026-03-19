@@ -5,6 +5,13 @@
 cmake_minimum_required(VERSION 3.22)
 project(LocusQ VERSION 1.0.0 LANGUAGES C CXX)
 
+# Newer CMake releases error on some transitive dependencies unless the
+# compatibility policy floor is made explicit for the full configure graph.
+if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING
+        "Minimum policy compatibility version propagated to transitive CMake projects")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -180,6 +187,10 @@ if(LOCUSQ_NPM_EXECUTABLE)
         VERBATIM
     )
 
+    add_custom_target(locusq_webui_deps
+        DEPENDS "${LOCUSQ_WEBUI_DEPS_STAMP}"
+    )
+
     add_custom_command(
         OUTPUT "${LOCUSQ_WEBUI_BUNDLE}"
         COMMAND "${LOCUSQ_NPM_EXECUTABLE}" run build
@@ -196,13 +207,16 @@ if(LOCUSQ_NPM_EXECUTABLE)
     add_custom_target(locusq_webui_bundle
         DEPENDS "${LOCUSQ_WEBUI_BUNDLE}"
     )
+    add_dependencies(locusq_webui_bundle locusq_webui_deps)
 
     add_custom_target(locusq_webui_typecheck
         COMMAND "${LOCUSQ_NPM_EXECUTABLE}" run typecheck
         WORKING_DIRECTORY "${LOCUSQ_WEBUI_WORKSPACE}"
+        DEPENDS "${LOCUSQ_WEBUI_DEPS_STAMP}"
         COMMENT "Type-checking LocusQ WebView UI sources"
         VERBATIM
     )
+    add_dependencies(locusq_webui_typecheck locusq_webui_deps)
 elseif(NOT EXISTS "${LOCUSQ_WEBUI_BUNDLE}")
     message(FATAL_ERROR
         "LocusQ: npm was not found and the generated WebView bundle is missing at "
@@ -211,6 +225,16 @@ else()
     message(WARNING
         "LocusQ: npm not found; using the existing generated WebView bundle at "
         "${LOCUSQ_WEBUI_BUNDLE}")
+endif()
+
+enable_testing()
+
+if(TARGET locusq_webui_typecheck)
+    add_test(
+        NAME locusq_webui_typecheck
+        COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target locusq_webui_typecheck
+    )
+    set_tests_properties(locusq_webui_typecheck PROPERTIES LABELS "locusq_webui")
 endif()
 
 # POC and incremental stage assets — only included when LOCUSQ_UI_POC is ON.
@@ -798,4 +822,1613 @@ if(BUILD_LOCUSQ_QA)
     )
 
     message(STATUS "LocusQ QA: Target 'locusq_physics_probe' created")
+
+    # ── Physics runtime integration probe (shared worker -> scene spread) ─────
+    juce_add_console_app(locusq_physics_runtime_attractor_probe PRODUCT_NAME "LocusQ Physics Runtime Attractor Probe")
+    juce_generate_juce_header(locusq_physics_runtime_attractor_probe)
+
+    target_sources(locusq_physics_runtime_attractor_probe
+        PRIVATE
+            qa/physics_runtime_attractor_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_attractor_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_attractor_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_attractor_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_attractor_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_attractor_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_attractor_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_attractor_probe' created")
+
+    # ── Physics runtime integration probe (worker-owned boundary response) ────
+    juce_add_console_app(locusq_physics_runtime_boundary_probe PRODUCT_NAME "LocusQ Physics Runtime Boundary Probe")
+    juce_generate_juce_header(locusq_physics_runtime_boundary_probe)
+
+    target_sources(locusq_physics_runtime_boundary_probe
+        PRIVATE
+            qa/physics_runtime_boundary_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_boundary_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_boundary_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_boundary_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_boundary_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_boundary_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_boundary_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_boundary_probe' created")
+
+    # ── Physics runtime integration probe (soft-boundary response) ──────────
+    juce_add_console_app(locusq_physics_runtime_soft_boundary_probe PRODUCT_NAME "LocusQ Physics Runtime Soft Boundary Probe")
+    juce_generate_juce_header(locusq_physics_runtime_soft_boundary_probe)
+
+    target_sources(locusq_physics_runtime_soft_boundary_probe
+        PRIVATE
+            qa/physics_runtime_soft_boundary_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_soft_boundary_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_soft_boundary_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_soft_boundary_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_soft_boundary_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_soft_boundary_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_soft_boundary_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_soft_boundary_probe' created")
+
+    # ── Physics runtime integration probe (shared-worker emitter collision) ───
+    juce_add_console_app(locusq_physics_runtime_collision_probe PRODUCT_NAME "LocusQ Physics Runtime Collision Probe")
+    juce_generate_juce_header(locusq_physics_runtime_collision_probe)
+
+    target_sources(locusq_physics_runtime_collision_probe
+        PRIVATE
+            qa/physics_runtime_collision_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_collision_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_collision_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_collision_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_collision_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_collision_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_collision_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_collision_probe' created")
+
+    # ── Physics runtime integration probe (worker-owned boids response) ──────
+    juce_add_console_app(locusq_physics_runtime_boids_probe PRODUCT_NAME "LocusQ Physics Runtime Boids Probe")
+    juce_generate_juce_header(locusq_physics_runtime_boids_probe)
+
+    target_sources(locusq_physics_runtime_boids_probe
+        PRIVATE
+            qa/physics_runtime_boids_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_boids_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_boids_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_boids_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_boids_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_boids_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_boids_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_boids_probe' created")
+
+    # ── Physics runtime integration probe (worker-owned interaction response) ─
+    juce_add_console_app(locusq_physics_runtime_interaction_probe PRODUCT_NAME "LocusQ Physics Runtime Interaction Probe")
+    juce_generate_juce_header(locusq_physics_runtime_interaction_probe)
+
+    target_sources(locusq_physics_runtime_interaction_probe
+        PRIVATE
+            qa/physics_runtime_interaction_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_interaction_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_interaction_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_interaction_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_interaction_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_interaction_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_interaction_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_interaction_probe' created")
+
+    # ── Physics runtime integration probe (worker-owned spring+turbulence) ───
+    juce_add_console_app(locusq_physics_runtime_spring_turbulence_probe PRODUCT_NAME "LocusQ Physics Runtime Spring Turbulence Probe")
+    juce_generate_juce_header(locusq_physics_runtime_spring_turbulence_probe)
+
+    target_sources(locusq_physics_runtime_spring_turbulence_probe
+        PRIVATE
+            qa/physics_runtime_spring_turbulence_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_spring_turbulence_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_spring_turbulence_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_spring_turbulence_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_spring_turbulence_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_spring_turbulence_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_spring_turbulence_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_spring_turbulence_probe' created")
+
+    # ── Physics runtime integration probe (angular/directivity ownership) ───
+    juce_add_console_app(locusq_physics_runtime_angular_probe PRODUCT_NAME "LocusQ Physics Runtime Angular Probe")
+    juce_generate_juce_header(locusq_physics_runtime_angular_probe)
+
+    target_sources(locusq_physics_runtime_angular_probe
+        PRIVATE
+            qa/physics_runtime_angular_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_angular_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_angular_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_angular_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_angular_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_angular_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_angular_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_angular_probe' created")
+
+    # ── Physics runtime integration probe (attractor orbit stabilization) ───
+    juce_add_console_app(locusq_physics_runtime_orbit_probe PRODUCT_NAME "LocusQ Physics Runtime Orbit Probe")
+    juce_generate_juce_header(locusq_physics_runtime_orbit_probe)
+
+    target_sources(locusq_physics_runtime_orbit_probe
+        PRIVATE
+            qa/physics_runtime_orbit_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_orbit_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_orbit_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_orbit_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_orbit_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_orbit_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_orbit_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_orbit_probe' created")
+
+    # ── Physics runtime integration probe (per-emitter mass override) ───────
+    juce_add_console_app(locusq_physics_runtime_mass_override_probe PRODUCT_NAME "LocusQ Physics Runtime Mass Override Probe")
+    juce_generate_juce_header(locusq_physics_runtime_mass_override_probe)
+
+    target_sources(locusq_physics_runtime_mass_override_probe
+        PRIVATE
+            qa/physics_runtime_mass_override_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_mass_override_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_mass_override_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_mass_override_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_mass_override_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_mass_override_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_mass_override_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_mass_override_probe' created")
+
+    # ── Physics runtime integration probe (attractor crossing transient) ────
+    juce_add_console_app(locusq_physics_runtime_attractor_crossing_probe PRODUCT_NAME "LocusQ Physics Runtime Attractor Crossing Probe")
+    juce_generate_juce_header(locusq_physics_runtime_attractor_crossing_probe)
+
+    target_sources(locusq_physics_runtime_attractor_crossing_probe
+        PRIVATE
+            qa/physics_runtime_attractor_crossing_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_attractor_crossing_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_attractor_crossing_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_attractor_crossing_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_attractor_crossing_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_attractor_crossing_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_attractor_crossing_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_attractor_crossing_probe' created")
+
+    # ── Physics runtime integration probe (collision transient controls) ────
+    juce_add_console_app(locusq_physics_runtime_collision_transient_probe PRODUCT_NAME "LocusQ Physics Runtime Collision Transient Probe")
+    juce_generate_juce_header(locusq_physics_runtime_collision_transient_probe)
+
+    target_sources(locusq_physics_runtime_collision_transient_probe
+        PRIVATE
+            qa/physics_runtime_collision_transient_probe_main.cpp
+            Source/PluginProcessor.cpp
+            Source/processor_core/ProcessorAuthoringHistory.cpp
+            Source/processor_core/ProcessorParameterLayout.cpp
+            Source/processor_core/ProcessorSceneRegistration.cpp
+            Source/processor_core/ProcessorPresetManager.cpp
+            Source/processor_core/ProcessorCalibrationBridge.cpp
+            Source/processor_core/ProcessorStateSerializer.cpp
+            Source/SceneGraph.h
+            Source/VBAPPanner.h
+            Source/DistanceAttenuator.h
+            Source/AirAbsorption.h
+            Source/SpatialRenderer.cpp
+            Source/SpatialRenderer.h
+            Source/spatial_renderer/SpatialAuditionControl.cpp
+            Source/spatial_renderer/SpatialAuditionSupport.cpp
+            Source/spatial_renderer/SpatialAuditionSignalGenerator.cpp
+            Source/spatial_renderer/SpatialAuditionRender.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp
+            Source/spatial_renderer/SpatialHeadphoneProfileSupport.cpp
+            Source/spatial_renderer/SpatialOutputRoutingStage.cpp
+            Source/spatial_renderer/SpatialSteamAudioBackend.cpp
+            Source/DopplerProcessor.h
+            Source/DirectivityFilter.h
+            Source/SpreadProcessor.h
+            Source/EarlyReflections.h
+            Source/FDNReverb.h
+            Source/HeadTrackingBridge.h
+            Source/PhysicsEngine.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_physics_runtime_collision_transient_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO)
+        if(EXISTS "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include/phonon.h")
+            target_include_directories(locusq_physics_runtime_collision_transient_probe PRIVATE "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include")
+        else()
+            message(FATAL_ERROR
+                "LOCUSQ_ENABLE_STEAM_AUDIO=ON but phonon.h was not found at "
+                "${LOCUSQ_STEAM_AUDIO_SDK_ROOT}/include for locusq_physics_runtime_collision_transient_probe. "
+                "Install the pinned dependency with ./scripts/install-steam-audio-sdk.sh")
+        endif()
+    endif()
+
+    target_compile_definitions(locusq_physics_runtime_collision_transient_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
+            LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
+            LOCUS_HEAD_TRACKING=$<IF:$<BOOL:${LOCUS_HEAD_TRACKING}>,1,0>
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+            JucePlugin_Name="LocusQ"
+            JucePlugin_Manufacturer="Noizefield"
+            JucePlugin_ManufacturerCode=0x4e666c64
+            JucePlugin_PluginCode=0x4c635164
+            JucePlugin_IsSynth=0
+            JucePlugin_WantsMidiInput=0
+            JucePlugin_ProducesMidiOutput=0
+            JucePlugin_IsMidiEffect=0
+            JucePlugin_EditorRequiresKeyboardFocus=0
+            JucePlugin_Version=0.0.0
+            JucePlugin_VersionCode=0x00000
+            JucePlugin_VersionString="0.0.0"
+            JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+            JucePlugin_VSTCategory=kPlugCategEffect
+            JucePlugin_Vst3Category="Fx|Spatial"
+            JucePlugin_AUMainType=kAudioUnitType_Effect
+            JucePlugin_AUSubType=JucePlugin_PluginCode
+            JucePlugin_AUExportPrefix=LocusQAU
+            JucePlugin_AUExportPrefixQuoted="LocusQAU"
+            JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+            JucePlugin_CFBundleIdentifier=com.noizefield.LocusQ
+            JucePlugin_MaxNumInputChannels=2
+            JucePlugin_MaxNumOutputChannels=4
+            JucePlugin_PreferredChannelConfigurations={1,1},{2,2}
+    )
+
+    if(LOCUSQ_ENABLE_STEAM_AUDIO AND LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED)
+        target_compile_definitions(locusq_physics_runtime_collision_transient_probe
+            PRIVATE
+                LOCUSQ_STEAM_AUDIO_DEFAULT_LIB_PATH="${LOCUSQ_STEAM_AUDIO_RUNTIME_LIB_ESCAPED}"
+        )
+    endif()
+
+    target_link_libraries(locusq_physics_runtime_collision_transient_probe
+        PRIVATE
+            juce::juce_audio_basics
+            juce::juce_audio_devices
+            juce::juce_audio_formats
+            juce::juce_audio_processors
+            juce::juce_audio_utils
+            juce::juce_core
+            juce::juce_data_structures
+            juce::juce_dsp
+            juce::juce_events
+            juce::juce_graphics
+            juce::juce_gui_basics
+            juce::juce_gui_extra
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_runtime_collision_transient_probe' created")
+
+    # ── Physics Tier A acceptance probe (P1–P6 acceptance gates) ─────────────
+    juce_add_console_app(locusq_physics_tier_a_probe PRODUCT_NAME "LocusQ Physics Tier A Probe")
+    juce_generate_juce_header(locusq_physics_tier_a_probe)
+
+    target_sources(locusq_physics_tier_a_probe
+        PRIVATE
+            qa/physics_tier_a_probe_main.cpp
+            Source/SceneGraph.h
+            Source/PhysicsEngine.h
+            Source/PhysicsDSPBridge.h
+            Source/PhysicsWorker.h
+            Source/AttractorSystem.h
+            Source/SpringSystem.h
+            Source/TurbulenceSystem.h
+            Source/AngularPhysicsSystem.h
+            Source/BoidsSystem.h
+            Source/CollisionSystem.h
+    )
+
+    target_include_directories(locusq_physics_tier_a_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    target_compile_definitions(locusq_physics_tier_a_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+    )
+
+    target_link_libraries(locusq_physics_tier_a_probe
+        PRIVATE
+            juce::juce_core
+            juce::juce_events
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_tier_a_probe' created")
+
+    # ── Physics DAW Automation acceptance probe (live/frozen path gates) ──────
+    juce_add_console_app(locusq_physics_daw_automation_probe PRODUCT_NAME "LocusQ Physics DAW Automation Probe")
+    juce_generate_juce_header(locusq_physics_daw_automation_probe)
+
+    target_sources(locusq_physics_daw_automation_probe
+        PRIVATE
+            qa/physics_daw_automation_probe_main.cpp
+            Source/SceneGraph.h
+            Source/PhysicsDSPBridge.h
+    )
+
+    target_include_directories(locusq_physics_daw_automation_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    target_compile_definitions(locusq_physics_daw_automation_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+    )
+
+    target_link_libraries(locusq_physics_daw_automation_probe
+        PRIVATE
+            juce::juce_core
+            juce::juce_events
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_physics_daw_automation_probe' created")
+
+    # ── BL-095 FIR truthfulness objective probe ───────────────────────────────
+    juce_add_console_app(locusq_fir_truthfulness_probe PRODUCT_NAME "LocusQ FIR Truthfulness Probe")
+    juce_generate_juce_header(locusq_fir_truthfulness_probe)
+
+    target_sources(locusq_fir_truthfulness_probe
+        PRIVATE
+            qa/fir_truthfulness_probe_main.cpp
+            Source/headphone_dsp/HeadphoneFirHook.h
+            Source/headphone_dsp/HeadphoneCalibrationChain.h
+            Source/headphone_core/HeadphoneCalibrationChainState.h
+    )
+
+    target_include_directories(locusq_fir_truthfulness_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    target_compile_definitions(locusq_fir_truthfulness_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+    )
+
+    target_link_libraries(locusq_fir_truthfulness_probe
+        PRIVATE
+            juce::juce_core
+            juce::juce_events
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_fir_truthfulness_probe' created")
+
+    # ── ctest registration ────────────────────────────────────────────────────
+    # Register the three lightweight probes (no PluginProcessor / Steam Audio
+    # dependency) so `ctest --test-dir <build>` provides real plugin-side signal
+    # from a clean local checkout.  Heavy integration probes (bl018, runtime_*)
+    # are built by BUILD_LOCUSQ_QA but not auto-registered with ctest because
+    # they depend on runtime libraries that may not be present everywhere.
+    enable_testing()
+
+    add_test(
+        NAME locusq_physics_probe
+        COMMAND locusq_physics_probe
+    )
+    set_tests_properties(locusq_physics_probe PROPERTIES LABELS "locusq_probe")
+
+    add_test(
+        NAME locusq_physics_tier_a_probe
+        COMMAND locusq_physics_tier_a_probe
+    )
+    set_tests_properties(locusq_physics_tier_a_probe PROPERTIES LABELS "locusq_probe")
+
+    add_test(
+        NAME locusq_physics_daw_automation_probe
+        COMMAND locusq_physics_daw_automation_probe
+    )
+    set_tests_properties(locusq_physics_daw_automation_probe PROPERTIES LABELS "locusq_probe")
+
+    add_test(
+        NAME locusq_fir_truthfulness_probe
+        COMMAND locusq_fir_truthfulness_probe
+    )
+    set_tests_properties(locusq_fir_truthfulness_probe PROPERTIES LABELS "locusq_probe")
+
+    message(STATUS "LocusQ QA: ctest targets registered: locusq_physics_probe, locusq_physics_tier_a_probe, locusq_physics_daw_automation_probe, locusq_fir_truthfulness_probe")
 endif()

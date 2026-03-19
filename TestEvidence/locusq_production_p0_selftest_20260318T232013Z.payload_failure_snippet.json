@@ -1,0 +1,162 @@
+{
+  "reasonCode": "failing_check_assertion",
+  "failingCheck": "UI-P1-026C",
+  "summary": {
+    "status": "fail",
+    "ok": false,
+    "error": "UI-P1-026C: calibration start failed after 4 attempts (timeout=1800ms, poll=25ms, backoffBase=120ms): calibration start [attempt 4/4] timed out after 1800ms (elapsed=1814ms, polls=71); mode=calibrate startSeq=0 startAck=false startCode=none runtimeState=idle stateChip=Ready profileStatus=\"Calibration run started.\" runtimeMessage=\"Idle - press Start to begin calibration\" startMessage=\"n/a\""
+  },
+  "failingCheckDetails": "calibration start failed after 4 attempts (timeout=1800ms, poll=25ms, backoffBase=120ms): calibration start [attempt 4/4] timed out after 1800ms (elapsed=1814ms, polls=71); mode=calibrate startSeq=0 startAck=false startCode=none runtimeState=idle stateChip=Ready profileStatus=\"Calibration run started.\" runtimeMessage=\"Idle - press Start to begin calibration\" startMessage=\"n/a\"",
+  "checks": [
+    {
+      "pass": true,
+      "id": "UI-P1-026A",
+      "details": "topology rows mono=1 stereo=2 quad=4 verified; legacy alias sync both directions"
+    },
+    {
+      "pass": true,
+      "details": "custom-map protection verified (auto=1/2/1/2 custom=2/2/1/2 postAck=2/2/1/2)",
+      "id": "UI-P1-026B"
+    },
+    {
+      "id": "UI-P1-026C",
+      "details": "calibration start failed after 4 attempts (timeout=1800ms, poll=25ms, backoffBase=120ms): calibration start [attempt 4/4] timed out after 1800ms (elapsed=1814ms, polls=71); mode=calibrate startSeq=0 startAck=false startCode=none runtimeState=idle stateChip=Ready profileStatus=\"Calibration run started.\" runtimeMessage=\"Idle - press Start to begin calibration\" startMessage=\"n/a\"",
+      "pass": false
+    },
+    {
+      "id": "failure",
+      "details": "UI-P1-026C: calibration start failed after 4 attempts (timeout=1800ms, poll=25ms, backoffBase=120ms): calibration start [attempt 4/4] timed out after 1800ms (elapsed=1814ms, polls=71); mode=calibrate startSeq=0 startAck=false startCode=none runtimeState=idle stateChip=Ready profileStatus=\"Calibration run started.\" runtimeMessage=\"Idle - press Start to begin calibration\" startMessage=\"n/a\"",
+      "pass": false
+    }
+  ],
+  "timing": [
+    {
+      "result": "pass",
+      "label": "p0 self-test controls ready",
+      "elapsedMs": 1.0,
+      "polls": 1.0,
+      "timeoutMs": 8000.0,
+      "pollMs": 40.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 30.0,
+      "label": "steam diagnostics baseline",
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "label": "clap diagnostics baseline",
+      "pollMs": 30.0,
+      "polls": 1.0,
+      "timeoutMs": 3000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "label": "calibrate topology stereo rows",
+      "timeoutMs": 2000.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy config follows stereo topology"
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "label": "calibrate topology quad rows",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "pollMs": 25.0
+    },
+    {
+      "result": "pass",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy config follows quad topology"
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "calibrate topology mono rows"
+    },
+    {
+      "result": "pass",
+      "label": "legacy config follows mono topology",
+      "elapsedMs": 0.0,
+      "pollMs": 25.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy mono maps topology quad"
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "elapsedMs": 0.0,
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "label": "legacy stereo maps topology stereo"
+    },
+    {
+      "result": "pass",
+      "pollMs": 25.0,
+      "label": "calibrate topology 7.4.2 dynamic rows",
+      "polls": 1.0,
+      "timeoutMs": 2000.0,
+      "elapsedMs": 0.0
+    },
+    {
+      "result": "timeout",
+      "label": "calibration start [attempt 1/4]",
+      "pollMs": 25.0,
+      "polls": 71.0,
+      "timeoutMs": 1800.0,
+      "elapsedMs": 1817.0
+    },
+    {
+      "result": "backoff",
+      "label": "calibration start [retry-backoff 1/4]",
+      "pollMs": 25.0,
+      "polls": 0.0,
+      "elapsedMs": 120.0,
+      "timeoutMs": 1800.0
+    },
+    {
+      "result": "timeout",
+      "pollMs": 25.0,
+      "label": "calibration start [attempt 2/4]",
+      "polls": 71.0,
+      "timeoutMs": 1800.0,
+      "elapsedMs": 1811.0
+    },
+    {
+      "result": "backoff",
+      "label": "calibration start [retry-backoff 2/4]",
+      "elapsedMs": 240.0,
+      "pollMs": 25.0,
+      "polls": 0.0,
+      "timeoutMs": 1800.0
+    }
+  ]
+}

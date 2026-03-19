@@ -2,29 +2,25 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-18 (BL-089..BL-092 advanced to Done-candidate with owner sync packet and fresh trust-wave captures; BL-080 advanced to Done-candidate after standalone selftest recovery; BL-095..BL-099 added/refined after review follow-up; BL-055/BL-067/BL-072/BL-089/BL-097 refined; UI/UX trust-wave execution packet linked)
+Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-095, BL-098 promoted to Done; active open set: BL-099, BL-100, BL-101)
 
 # LocusQ Master Backlog Index
 
 ## Purpose
 
-Single canonical backlog authority for priority, ordering, status, dependencies, and closeout criteria across all BL/HX work items. This file is a dashboard — detailed execution content lives in individual runbook docs alongside annex plan specs.
+Single canonical backlog authority for priority, ordering, status, dependencies, and closeout across all BL/HX work.
+This file is the dashboard.
+Detailed execution content lives in runbooks, plans, and evidence packets.
 
-## Canonical Contract
+## Canonical Rules
 
 1. This file is the single authority for backlog status, ordering, and priority.
-2. Open-item runbook docs (`Documentation/backlog/bl-XXX-*.md`) carry execution detail, agent prompts, and validation plans.
-3. Done-item runbooks are archived under `Documentation/backlog/done/` and linked from Closed Archive.
-4. Annex plan specs (`Documentation/plans/*.md`) carry deep architecture; they must not contain authoritative backlog state.
-5. Every open item must have a corresponding runbook doc with dependencies, agent mega-prompts, and exit criteria.
-6. Any status/priority change must update this file, the runbook's Status Ledger, and evidence surfaces in the same changeset.
-7. Intake process for new items uses `Documentation/backlog/_template-intake.md`.
-8. Owner promotion decisions should use `Documentation/backlog/_template-promotion-decision.md` inside the owner sync evidence bundle.
-9. Validation replay cadence policy defined in this file is default for all open and future backlog items unless a runbook documents a stricter owner-approved override.
+2. Open work lives in `Documentation/backlog/bl-*.md` or `hx-*.md`.
+3. Done work lives in `Documentation/backlog/done/`.
+4. Plans under `Documentation/plans/*.md` are supporting architecture, not backlog authority.
+5. Any status or priority change must update this file, the runbook `Status Ledger`, and the evidence surfaces in the same change set.
 
 ## Backlog Lifecycle Contract
-
-Applies to all remaining open items and all future backlog items.
 
 1. New work starts with `Documentation/backlog/_template-intake.md`.
 2. Promoted work uses `Documentation/backlog/_template-runbook.md` and must define replay cadence and ownership boundaries.
@@ -33,30 +29,12 @@ Applies to all remaining open items and all future backlog items.
 5. When an item becomes Done, move its runbook from `Documentation/backlog/` to `Documentation/backlog/done/` in the same change set as index/status/evidence sync.
 6. All worker and owner handoffs must explicitly report `SHARED_FILES_TOUCHED: no|yes`.
 7. Evidence for canonical promotions must be repo-local under `TestEvidence/` (not `/tmp` paths).
-8. Conformance scope:
-   - Active/open runbooks (`Documentation/backlog/bl-*.md`) must satisfy current lifecycle and replay-cadence contract.
-   - Done runbooks under `Documentation/backlog/done/` must preserve closeout evidence while satisfying lifecycle readability contract.
-   - Backlog support ledgers (`Document Type: Backlog Support`) are exempt from runbook schema fields and must link to their canonical runbook authority.
-9. Backlog readability contract applies to open + done runbooks:
-   - required headings: `Plain-Language Summary`, `6W Snapshot (Who/What/Why/How/When/Where)`, `Visual Aid Index`;
-   - visuals are required only when they improve clarity (tables first, optional mermaid/images/charts/screenshots when needed).
-10. New-item scaffolding helper:
-   - `./scripts/new-backlog-item.py --id BL-078 --title \"Example Item\" --priority P1 --track \"Track E - R&D Expansion\"`
-   - This script pre-fills metadata plus plain-language/6W scaffolding for intake and runbook docs.
-11. Runbook authoring and anti-duplication guidance:
-   - `Documentation/backlog/runbook-authoring-guide.md`
-12. Backlog anti-duplication validation:
-   - `./scripts/validate-backlog-redundancy.py`
-13. Machine-readable backlog summary export:
-   - `./scripts/export-backlog-summaries.py` writes:
-     - `Documentation/reports/data/backlog-summary.json`
-     - `Documentation/reports/data/backlog-summary.csv`
-14. Summary artifact freshness gate:
-   - `./scripts/export-backlog-summaries.py --check` (called by `./scripts/validate-docs-freshness.sh`)
-15. Summary schema authority:
-   - `Documentation/backlog/backlog-summary-schema.md`
-16. Pre-commit auto-refresh hook:
-   - `.githooks/pre-commit` refreshes and stages summary artifacts when `Documentation/backlog/**` changes are staged.
+8. Required runbook headings: `Plain-Language Summary`, `6W Snapshot (Who/What/Why/How/When/Where)`, and `Visual Aid Index`.
+9. Authoring guide: `Documentation/backlog/runbook-authoring-guide.md`
+10. Summary schema: `Documentation/backlog/backlog-summary-schema.md`
+11. Draft automation contract: `Documentation/backlog/automation-contracts.json`
+12. Draft automation guide: `Documentation/backlog/automation-draft-flow.md`
+13. Draft automation runner: `scripts/backlog-auto-123.py`
 
 ## Layer Model
 
@@ -69,11 +47,7 @@ Applies to all remaining open items and all future backlog items.
 
 ## Global Replay Cadence Policy
 
-Applies to all remaining open backlog items and all new backlog items by default.
-
-### Purpose
-
-Preserve determinism guarantees while reducing rerun tax during active development.
+Default policy for open and future backlog items.
 
 ### Tiered Replay Contract
 
@@ -92,16 +66,13 @@ Preserve determinism guarantees while reducing rerun tax during active developme
 3. Escalate to T3 once per promotion cycle; avoid repeated full T3 reruns unless code changed or owner requests.
 4. Reserve T4 for sentinel slices and post-fix confidence drills, not routine iteration.
 5. If a replay fails, run targeted diagnostics on the failing run index before repeating full multi-run sweeps.
-6. Heavy wrappers (>=20 binary launches per wrapper run) must use cost containment:
-   - debugging: single-run targeted repro;
-   - candidate check: 2 runs;
-   - promotion check: 3 runs unless owner requires broader coverage.
+6. Heavy wrappers (`>=20` binary launches per wrapper run) should use targeted debugging, `2` candidate runs, and `3` promotion runs unless the owner requires more.
+7. Per `ADR-0023`, replay automation may draft packets and sync summaries, but authoritative promotion remains owner-confirmed by default.
 
 ### Override Contract
 
-- Runbook-specific stricter cadence is allowed only when documented in that runbook's Validation Plan.
-- Owner prompts may temporarily raise cadence for deterministic tie-breaks; the reason must be recorded in `owner_decisions.md` or `lane_notes.md`.
-- Any cadence override must include a cost rationale and a rollback path to normal tiering.
+- Stricter item-specific cadence is allowed only when documented in that runbook.
+- Temporary overrides must record the reason in `owner_decisions.md` or `lane_notes.md`.
 
 ## UI/UX Prioritization Snapshot (2026-03-18)
 
@@ -121,9 +92,9 @@ Derived from:
 
 Execution note:
 - BL-091, BL-090, and BL-089 remain one coordinated P1 trust wave.
-- BL-091, BL-090, BL-089, and BL-092 are now `Done-candidate` with owner sync packet `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md` and fresh captures under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`.
-- BL-093 is now `Done-candidate` with validation bundle `TestEvidence/bl093_visual_token_polish_20260318T042850Z/summary.md` and owner sync packet `TestEvidence/bl093_owner_sync_z1_20260318T044057Z/promotion_decision.md`.
-- BL-094 is now `Done-candidate` with containment bundle `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/summary.md` and owner sync packet `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/promotion_decision.md`.
+- BL-091, BL-090, BL-089, and BL-092 are now `Done` from trust-wave owner sync packet `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md` plus final closeout sync on 2026-03-18.
+- BL-093 is now `Done` with validation bundle `TestEvidence/bl093_visual_token_polish_20260318T042850Z/summary.md`, owner sync packet `TestEvidence/bl093_owner_sync_z1_20260318T044057Z/promotion_decision.md`, and final closeout sync on 2026-03-18.
+- BL-094 is now `Done` with containment bundle `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/summary.md`, owner sync packet `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/promotion_decision.md`, and final closeout sync on 2026-03-18.
 
 ### Trust Wave Execution Packet (2026-03-17)
 
@@ -146,7 +117,7 @@ Immediate wave summary:
 | 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Validation (C4 mode parity + exit semantics packets are green; owner promotion review pending) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | **Done** (A2 runtime/UI hardening complete; T3 heavy-wrapper equivalent replay PASS; strict usage exits and mode parity confirmed) | C | BL-025 | — | [bl-023](done/bl-023-resize-dpi-hardening.md) |
-| 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (F1 done-promotion PASS, but 2026-03-05 hold recheck still fails `BL032-G-001`: `Source/PluginProcessor.cpp` `3653 > 3600`; RT audit PASS) | F | — | — | [bl-032](bl-032-source-modularization.md) |
+| 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | Done-candidate (current branch hold recheck PASS; owner promotion packet pending) | F | — | — | [bl-032](bl-032-source-modularization.md) |
 | 6 | BL-035 | RT lock-free registration | P0 | **Done** (owner heavy-wrapper equivalent cadence replay PASS: T2 `2/2`, T3 `3/3`; closeout/archive sync PASS) | F | HX-02, BL-032 | — | [bl-035](done/bl-035-rt-lock-free-registration.md) |
 | 7 | BL-036 | DSP finite output guardrails | P0 | **Done** (contract-lane D2 evidence archived honestly on 2026-03-05; remaining runtime implementation slices A2/B2/C1 split into BL-078) | F | BL-035 | — | [bl-036](done/bl-036-dsp-finite-output-guardrails.md) |
 | 8 | BL-037 | Emitter snapshot CPU budget | P1 | **Done** (Z10 owner D2 intake accepted; deterministic 100-run replay, strict usage semantics, and closeout/archive sync PASS) | F | BL-035 | — | [bl-037](done/bl-037-emitter-snapshot-cpu-budget.md) |
@@ -178,7 +149,7 @@ Immediate wave summary:
 | 34 | BL-059 | CalibrationProfile integration handoff | P0 | **Done** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 deps PASS; BL-056 Done gate met; formal Done 2026-03-17) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](done/bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | In Validation (T1+T2 3/3 PASS 2026-03-17; fixture gate 45.5% ext improvement p<0.0001; blocked on ≥5 real participant sessions) | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
-| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | In Validation (2026-03-17 intake: contract `3/3` PASS; execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual execution, and extension-safe runtime-access proof remain blocked) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
+| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | In Validation (2026-03-19 local runtime-access contract replay PASS for profile fallback, custom SOFA fallback, and calibration dialog defaults; Apple signing and real host execution still blocked) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
 | 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | **Done** (owner sync Z1 2026-03-17: contract-only 10/10 PASS, execute 3/3 PASS, zero TODO rows, compile-backed execute probe clean; archive sync complete 2026-03-17) | E | BL-050, BL-055 | — | [bl-068](done/bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 | 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |
@@ -190,27 +161,28 @@ Immediate wave summary:
 | 46 | BL-076 | SpatialRenderer decomposition and boundary guardrails | P1 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; `Source/SpatialRenderer.cpp` `662` LOC; closeout/archive sync complete) | F | BL-050, BL-069, BL-070 | — | [bl-076](done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md) |
 | 47 | BL-077 | Unified visual capture and replay harness | P0 | **Done** (contract + execute + live execute + T2 + T3 evidence PASS; closeout/archive sync complete) | D | BL-049 (Done), BL-073 | BL-058, BL-059, BL-060, BL-067, BL-068, BL-074 | [bl-077](done/bl-077-unified-visual-capture-and-replay-harness.md) |
 | 48 | BL-078 | Runtime finite-output enforcement and diagnostics | P0 | **Done** (A2/B2/C1/D1 green; owner sync Z1 packet `TestEvidence/bl078_owner_sync_z1_20260317T202724Z/promotion_decision.md`; archive sync complete 2026-03-17) | F | BL-036 | — | [bl-078](done/bl-078-runtime-finite-output-enforcement-and-diagnostics.md) |
-| 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | In Validation (W1-D implementation landed locally: `Source/processor_core/ProcessorParameterLayout.cpp` now exposes grouped host hierarchy while preserving all `90` parameter IDs and flattened order; build + parity checks PASS, promotion follow-up pending in a clean checkout) | F | BL-032 | — | [bl-079](bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
-| 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | Done-candidate (processor snapshot/file history, native undo/redo bridge, and WebView controls are live; rebuilt standalone production self-test now PASSes with both `UI-W3A-01` and `UI-W3A-02` recorded in `TestEvidence/locusq_production_p0_selftest_20260318T022435Z.json`; remaining work is owner promotion/closeout sync) | F | BL-070, BL-074 | — | [bl-080](bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
+| 49 | BL-079 | APVTS parameter grouping and host hierarchy | P2 | **Done** (2026-03-19: VST3 host gate PASS — 215 params, all 20 group-boundary names, correct flat order; AU idx-1 offset is JUCE bypass-param convention) | F | BL-032 | — | [bl-079](done/bl-079-apvts-parameter-grouping-and-host-hierarchy.md) |
+| 50 | BL-080 | Authoring undo/redo for timeline and preset operations | P3 | **Done** (processor snapshot/file history, native undo/redo bridge, and WebView controls are live; rebuilt standalone production self-test PASSed with `UI-W3A-01` and `UI-W3A-02`; closeout sync complete 2026-03-18) | F | BL-070, BL-074 | — | [bl-080](done/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md) |
 | 51 | BL-081 | Perceptual listening harness — upstream extraction to audio-dsp-qa-harness | P2 | Open | G | BL-060 | — | [bl-081](bl-081-perceptual-listening-harness-upstream-extraction.md) |
 | 52 | BL-082 | QA runner app library — upstream extraction to audio-dsp-qa-harness | P0 | Open | G | — | BL-083, BL-084, BL-085 | [bl-082](bl-082-qa-runner-app-library.md) |
 | 53 | BL-083 | Runtime-config contract enforcement — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-083](bl-083-runtime-config-contract.md) |
 | 54 | BL-084 | Profiling contract hardening — audio-dsp-qa-harness ScenarioExecutor | P0 | Open | G | — | — | [bl-084](bl-084-profiling-contract-hardening.md) |
-| 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | In Validation (upstream commit `17f2992` publishes `qa_harness_integration.cmake` + `cmake/MIGRATION.md`; local upstream build/test/install and LocusQ configure/build/smoke replay PASS) | G | BL-082 | — | [bl-085](bl-085-cmake-integration-module.md) |
+| 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | **Done** (2026-03-19) | G | BL-082 | — | [bl-085](done/bl-085-cmake-integration-module.md) |
 | 56 | BL-086 | CI checkout composite action — audio-dsp-qa-harness | P1 | Open | G | — | — | [bl-086](bl-086-ci-checkout-composite-action.md) |
 | 57 | BL-087 | Recursive scenario discovery — audio-dsp-qa-harness | P2 | Open (deferred) | G | — | — | [bl-087](bl-087-recursive-scenario-discovery.md) |
 | 58 | BL-088 | HostRunner plugin backends (VST3/AU) — audio-dsp-qa-harness | P2 | Open (deferred; after BL-082/083/084) | G | BL-082, BL-083, BL-084 | — | [bl-088](bl-088-hostrunner-plugin-backends.md) |
-| 59 | BL-089 | Render trust contract and requested-vs-active language | P1 | Done-candidate (shared copy contract is live across plugin + companion; trust-wave evidence bundle captured at `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`; remaining work is only formal archive/closeout while BL-095/BL-099 continue independently) | B | BL-040, BL-053, BL-058, BL-095, BL-099 | BL-090, BL-091, BL-092 | [bl-089](bl-089-render-trust-contract-and-requested-active-language.md) |
-| 60 | BL-090 | Plugin authority-first shell and renderer hierarchy | P1 | Done-candidate (compressed header, authority-first `RENDERER`, and collapsed `Lab` drawer are live; standalone + browser-preview captures are bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`) | C | BL-089, BL-040, BL-027, BL-074 | BL-093 | [bl-090](bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md) |
-| 61 | BL-091 | Companion Focus/Lab trust flow | P1 | Done-candidate (`Focus` default, readiness ladder, synthetic-mode disclosure, and `Lab` containment are live; `Focus` + `Lab` captures are bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`) | C | BL-089, BL-045, BL-058, BL-072 | BL-093 | [bl-091](bl-091-companion-focus-lab-trust-flow.md) |
-| 62 | BL-092 | Cross-format capability messaging parity | P2 | Done-candidate (preview/degraded/AUv3-aware messaging is live; representative browser-preview + native captures are bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded at `TestEvidence/ui_ux_trust_wave_owner_sync_z1_20260318T040618Z/promotion_decision.md`) | A | BL-067, BL-074, BL-089 | — | [bl-092](bl-092-cross-format-capability-messaging-parity.md) |
-| 63 | BL-093 | Visual DNA token adoption and polish | P2 | Done-candidate (token drift is reconciled in the live plugin + companion shells; browser-preview, native standalone, and native companion captures are bundled under `TestEvidence/bl093_visual_token_polish_20260318T042850Z/`; owner sync packet recorded at `TestEvidence/bl093_owner_sync_z1_20260318T044057Z/promotion_decision.md`) | C | BL-089, BL-090, BL-091 | — | [bl-093](bl-093-visual-dna-token-adoption-and-polish.md) |
-| 64 | BL-094 | Reactive/simulation/temporal lab containment | P2 | Done-candidate (guardrail now exists in backlog docs, architecture, and the live `EMITTER` motion shell; containment captures are bundled under `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/`; owner sync packet recorded at `TestEvidence/bl094_owner_sync_z1_20260318T045927Z/promotion_decision.md`) | E | BL-090, BL-091 | future reactive/simulation/temporal expansion lanes | [bl-094](bl-094-reactive-simulation-temporal-lab-containment.md) |
-| 65 | BL-095 | Partitioned FIR truthfulness recovery and objective validation | P0 | Open | E | BL-050, BL-055, BL-073 | — | [bl-095](bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md) |
+| 59 | BL-089 | Render trust contract and requested-vs-active language | P1 | **Done** (shared copy contract is live across plugin + companion; trust-wave evidence bundle captured at `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded; closeout sync complete 2026-03-18 while BL-095/BL-099 continue independently) | B | BL-040, BL-053, BL-058, BL-095, BL-099 | BL-090, BL-091, BL-092 | [bl-089](done/bl-089-render-trust-contract-and-requested-active-language.md) |
+| 60 | BL-090 | Plugin authority-first shell and renderer hierarchy | P1 | **Done** (compressed header, authority-first `RENDERER`, and collapsed `Lab` drawer are live; representative captures remain bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; closeout sync complete 2026-03-18) | C | BL-089, BL-040, BL-027, BL-074 | BL-093 | [bl-090](done/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md) |
+| 61 | BL-091 | Companion Focus/Lab trust flow | P1 | **Done** (`Focus` default, readiness ladder, synthetic-mode disclosure, and `Lab` containment are live; representative captures remain bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; closeout sync complete 2026-03-18) | C | BL-089, BL-045, BL-058, BL-072 | BL-093 | [bl-091](done/bl-091-companion-focus-lab-trust-flow.md) |
+| 62 | BL-092 | Cross-format capability messaging parity | P2 | **Done** (preview/degraded/AUv3-aware messaging is live; representative browser-preview and native captures remain bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; closeout sync complete 2026-03-18) | A | BL-067, BL-074, BL-089 | — | [bl-092](done/bl-092-cross-format-capability-messaging-parity.md) |
+| 63 | BL-093 | Visual DNA token adoption and polish | P2 | **Done** (token drift is reconciled in the live plugin + companion shells; browser-preview, native standalone, and native companion captures remain bundled under `TestEvidence/bl093_visual_token_polish_20260318T042850Z/`; closeout sync complete 2026-03-18) | C | BL-089, BL-090, BL-091 | — | [bl-093](done/bl-093-visual-dna-token-adoption-and-polish.md) |
+| 64 | BL-094 | Reactive/simulation/temporal lab containment | P2 | **Done** (guardrail now exists in backlog docs, architecture, and the live `EMITTER` motion shell; containment captures remain bundled under `TestEvidence/bl094_motion_lab_containment_20260318T045654Z/`; closeout sync complete 2026-03-18) | E | BL-090, BL-091 | future reactive/simulation/temporal expansion lanes | [bl-094](done/bl-094-reactive-simulation-temporal-lab-containment.md) |
+| 65 | BL-095 | Partitioned FIR truthfulness recovery and objective validation | P0 | **Done** (2026-03-19) | E | BL-050, BL-055, BL-073 | — | [bl-095](done/bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md) |
 | 66 | BL-096 | Companion executable/core protocol reunification | P1 | Open | E | BL-045, BL-072 | — | [bl-096](bl-096-companion-executable-core-protocol-reunification.md) |
 | 67 | BL-097 | Editor bridge cadence tiering and calibration reload isolation | P1 | Open | B | HX-05, BL-059, BL-074 | — | [bl-097](bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md) |
-| 68 | BL-098 | Local validation lane restoration and clean-build completeness | P1 | Open | G | BL-042 | — | [bl-098](bl-098-local-validation-lane-restoration-and-clean-build-completeness.md) |
+| 68 | BL-098 | Local validation lane restoration and clean-build completeness | P1 | Done (2026-03-19) | G | BL-042 | — | [bl-098](done/bl-098-local-validation-lane-restoration-and-clean-build-completeness.md) |
 | 69 | BL-099 | Headphone verification truthfulness and compensation provenance | P1 | Open | E | BL-034, BL-057 | BL-089 | [bl-099](bl-099-headphone-verification-truthfulness-and-compensation-provenance.md) |
+| 70 | BL-101 | CALIBRATE discovery, provenance, and truthfulness | P1 | Open | E | BL-026, BL-038, BL-059, BL-099 | future CALIBRATE capability-expansion lanes | [bl-101](bl-101-calibrate-discovery-provenance-and-truthfulness.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 

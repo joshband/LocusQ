@@ -1,0 +1,9 @@
+check	result	notes
+build_vst3	PASS	cmake --build build_local --target LocusQ_VST3; 0 errors; pre-existing sign-conversion/shadow warnings in SceneGraph.h/VBAPPanner.h/PhysicsEngine.h only
+rt_non_allowlisted	0	grep for new/delete/malloc/mutex/lock()/throw in BoidsSystem.h — 0 hits
+cpu_headroom_64emitters	NOT_TESTED	4 active groups × 64 emitters worker budget requires runtime soak harness (P7)
+determinism_centroid_tick100	NOT_TESTED	3 independent runs from same seed requires runtime harness (P7)
+apvts_params	PARTIAL	phys_flock_group (emitter-level) + 4×group phys_flock_{0-3}_{enable/sep_weight/align_weight/coh_weight/sep_radius/align_radius/coh_radius/max_speed} registered; IDs verified by code review
+dsp_flock_density	PARTIAL	boidsSystem.getFlockDensity(i) wired into totalSpread sum in PhysicsWorker::tick(); runtime range validation deferred to P7
+dsp_breakup_event	PARTIAL	consumeBreakupEvent() called per tick (event consumed, not lost); gain-dip DSP wiring deferred to P7 (gainTransient only supports [0..1])
+snapshot_consistency	PARTIAL	two-pass tick design (snapshot pre-pass → force pass) verified by code review; runtime determinism test deferred to P7

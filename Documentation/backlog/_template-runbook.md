@@ -8,239 +8,142 @@ Last Modified Date: [YYYY-MM-DD]
 
 ## Plain-Language Summary
 
-[1-3 non-technical sentences that explain the change, user/operator impact, and why this work is needed now.]
+[1-3 short sentences. Say what is changing, why it matters, and the current state.]
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
-| Who is this for? | [Users/operators/QA/release owners/coding agents] |
-| What is changing? | [Simple plain-language statement] |
-| Why is this important? | [Risk/value rationale] |
-| How will we deliver it? | [High-level implementation + validation approach] |
-| When is it done? | [Clear outcome/gate in plain language] |
+| Who is this for? | [Users / operators / QA / release owners / agents] |
+| What is changing? | [Simple statement] |
+| Why is this important? | [Risk or value reason] |
+| How will we deliver it? | [High-level implementation + validation plan] |
+| When is it done? | [Plain-language gate] |
 | Where is the source of truth? | [Runbook path + evidence path] |
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding.
+Use visuals only when they improve clarity.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Status legend + progress snapshot | Makes done/active/next work easy to scan without color dependencies. | `## Status Legend`, `## Progress Snapshot` |
-| Status table | Fast state scan for humans and agents | `## Status Ledger` |
-| Dependency/implementation table | Clarifies sequencing and ownership | `## Implementation Slices` |
-| Mermaid diagram (optional) | Clarifies flow/decision logic when text is dense | `## Flow Diagram` |
-| Screenshot/chart (optional) | Clarifies UI/operator outcomes or metrics | `TestEvidence/...` linked in evidence sections |
-
-## Status Legend
-
-- `[DONE]` completed slice or milestone; use `~~strikethrough~~` on the item name when appropriate.
-- `[ACTIVE]` current focus with meaningful remaining work.
-- `[NEXT]` next recommended slice after the active one.
-- `[QUEUED]` planned but not current focus.
-- `[DEFERRED]` intentionally postponed.
-- `[BLOCKED]` waiting on dependency or failing gate.
-- Use portable markdown only: no HTML/CSS color.
-- If exact time or tokens were not logged, use `not logged` or `n/a`.
+| Status ledger | Fast state scan | `## Status Ledger` |
+| Progress snapshot | Shows current, next, and blocked work | `## Progress Snapshot` |
+| Slice table | Clarifies sequencing and ownership | `## Implementation Slices` |
+| Diagram (optional) | Clarifies flow when tables are not enough | Adjacent to the relevant section |
 
 ## Status Ledger
 
 | Field | Value |
 |---|---|
-| Priority | [P1/P2] |
-| Status | [In Planning / In Progress / In Validation / Done] |
-| Owner Track | [Track X — Name] |
-| Depends On | [BL-YYY, BL-ZZZ] |
-| Blocks | [BL-AAA] |
-| Annex Spec | `[Documentation/plans/bl-XXX-....md]` |
-| Default Replay Tier | [T0/T1/T2/T3/T4 per `Documentation/backlog/index.md`] |
+| Priority | [P0/P1/P2/P3] |
+| Status | [Open / In Planning / In Implementation / In Validation / Done-candidate / Done] |
+| Owner Track | [Track X - Name] |
+| Depends On | [BL-XXX or —] |
+| Blocks | [BL-YYY or —] |
+| Annex Spec | `Documentation/plans/...` or `n/a` |
+| Default Replay Tier | [T0/T1/T2/T3/T4] |
 | Heavy Lane Budget | [Standard / High-cost wrapper] |
+
+## Automation Contract
+
+Draft-only by default.
+
+| Field | Value |
+|---|---|
+| Automation Mode | `draft_only` unless owner-approved otherwise |
+| Stage Cap | `T1` / `T2` / `T3` |
+| Owner Approval Required For | `Done`, archive move, status/index transition |
+| Runner Output | `DRAFT_READY`, `BLOCKED`, `MANUAL_ONLY` |
 
 ## Progress Snapshot
 
-| Item | Status | Priority | Estimate | Actual / Time | Tokens | Updated | Where | Remaining |
-|---|---|---|---|---|---|---|---|---|
-| [Current slice name] | `[ACTIVE]` | [P0/P1/P2] | [Small/Medium/Large] | [exact date or `not logged`] | [`n/a` or explicit token count] | [YYYY-MM-DD] | `Source/...` | [what remains] |
-| [Completed slice] | `[DONE]` | [P0/P1/P2] | [Small/Medium/Large] | [exact date or `not logged`] | [`n/a` or explicit token count] | [YYYY-MM-DD] | `Source/...` | none |
-| [Next slice] | `[NEXT]` | [P0/P1/P2] | [Small/Medium/Large] | not started | `n/a` | [YYYY-MM-DD] | `Source/...` | [why it is next] |
-
-## Effort Estimate
-
-| Slice | Complexity | Scope | Notes |
-|---|---|---|---|
-| A | [Low/Med/High] | [S/M/L/XL] | [FILL] |
-| B | [Low/Med/High] | [S/M/L/XL] | [FILL] |
+| Item | Status | Updated | Where | Remaining |
+|---|---|---|---|---|
+| [Current slice] | `[ACTIVE]` | [YYYY-MM-DD] | `Source/...` | [what remains] |
+| [Completed slice] | `[DONE]` | [YYYY-MM-DD] | `Source/...` | none |
+| [Next slice] | `[NEXT]` | [YYYY-MM-DD] | `Source/...` | [why it is next] |
 
 ## Objective
 
-[One paragraph: what this item achieves, why it matters, what success looks like.]
+[Short description of the intended outcome and success condition.]
 
-## Scope & Non-Scope
+## Scope
 
-**In scope:**
-- [FILL]
+### In scope
 
-**Out of scope:**
-- [FILL]
+- [scope item]
+- [scope item]
+
+### Out of scope
+
+- [out-of-scope item]
+- [out-of-scope item]
 
 ## Architecture Context
 
-[Brief summary of relevant architecture decisions, invariants, and ADR links.]
-
-- Invariants: `Documentation/invariants.md` — [relevant categories]
-- ADRs: [ADR-XXXX links]
-- Architecture: `.ideas/architecture.md` — [relevant subsystems]
+- Invariants: `Documentation/invariants.md` - [relevant area]
+- ADRs: [ADR-XXXX or `n/a`]
+- Architecture: `.ideas/architecture.md` - [relevant subsystem]
 
 ## Implementation Slices
 
 | Slice | Description | Files | Entry Gate | Exit Criteria |
 |---|---|---|---|---|
-| A | [FILL] | `Source/...` | [dependency done] | [self-test lane passes] |
-| B | [FILL] | `Source/...` | Slice A done | [FILL] |
-
-## Agent Mega-Prompt
-
-### Slice A — Skill-Aware Prompt
-
-```
-/impl BL-XXX Slice A: [INSTRUCTION]
-Load: $[skill1], $[skill2]
-
-Objective: [FILL]
-
-Constraints:
-- No heap allocation, locks, or blocking I/O in processBlock()
-- Parameter reads must be RT-safe
-- [additional constraints]
-
-Validation:
-- [exact commands to run]
-- [expected output patterns]
-
-Evidence:
-- Write results to TestEvidence/bl_XXX_<timestamp>/
-- Update TestEvidence/validation-trend.md
-```
-
-### Slice A — Standalone Fallback Prompt
-
-```
-You are implementing BL-XXX Slice A for LocusQ, a JUCE-based spatial audio plugin
-(VST3/AU/CLAP) with a WebView UI using Three.js.
-
-PROJECT CONTEXT:
-- Repository: LocusQ
-- Architecture: Three-mode plugin (EMITTER/RENDERER/CALIBRATE) with shared lock-free
-  SceneGraph singleton, WebView UI via juce::WebBrowserComponent
-- Key files: Source/PluginProcessor.cpp (APVTS, DSP dispatch, scene snapshot pub/sub),
-  Source/PluginEditor.cpp (WebView shell, native bridge), Source/ui/public/js/index.js
-  (UI runtime), Source/SpatialRenderer.h (spatial DSP chain)
-- RT safety invariant: No heap allocation, locks, or blocking I/O in processBlock()
-- Scene graph invariant: Lock-free inter-instance state exchange, sequence-safe snapshots
-
-TASK:
-[step-by-step implementation instructions]
-
-FILES TO MODIFY:
-[exact file paths with current-state summary]
-
-CONSTRAINTS:
-[RT safety, threading, framework rules]
-
-VALIDATION:
-[exact commands with expected output]
-
-EVIDENCE:
-[artifact paths and required fields]
-
-REFERENCE DOCS:
-- Architecture: .ideas/architecture.md
-- Parameters: .ideas/parameter-spec.md
-- Invariants: Documentation/invariants.md
-- Annex spec: [path]
-- Scene contract: Documentation/scene-state-contract.md
-```
+| A | [slice summary] | `Source/...` | [gate] | [exit signal] |
+| B | [slice summary] | `Source/...` | [gate] | [exit signal] |
 
 ## Validation Plan
 
 | Lane ID | Type | Command | Pass Criteria |
 |---|---|---|---|
-| [UI-PX-XXXA] | Automated | `[command]` | Exit 0, no FAIL lines |
-| [Manual-XX] | Manual | [Steps 1-N] | Checklist all checked |
+| [LANE-1] | Automated | `[command]` | [pass rule] |
+| [LANE-2] | Manual | [steps] | [pass rule] |
 
-## Replay Cadence Plan (Required)
+## Replay Cadence
 
 Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
 
-| Stage | Tier | Runs | Command Pattern | Evidence |
-|---|---|---|---|---|
-| Dev loop | [T0/T1] | [1/3] | `[qa lane command]` | `validation_matrix.tsv`, run logs |
-| Candidate intake | [T2] | [5 or justified alternative] | `[qa lane command]` | replay summary + taxonomy |
-| Promotion | [T3] | [10 or owner-approved alternative] | `[qa lane command]` | owner packet evidence |
+| Stage | Tier | Runs | Evidence |
+|---|---|---|---|
+| Dev loop | [T0/T1] | [1/3] | `validation_matrix.tsv` and logs |
+| Candidate | [T2] | [5 or approved alternative] | replay summary + taxonomy |
+| Promotion | [T3] | [10 or approved alternative] | owner packet evidence |
 
-### Cost/Flake Policy
-
-- Heavy wrappers (>=20 binary launches per wrapper run) must avoid repeated full-sweep reruns.
-- On failure, diagnose failing run(s) first; do not blindly repeat full multi-run sweeps.
-- Any cadence override must be documented in `lane_notes.md` or owner decision artifacts.
-
-## Risks & Mitigations
+## Risks
 
 | Risk | Impact | Likelihood | Mitigation |
 |---|---|---|---|
-| [FILL] | [High/Med/Low] | [High/Med/Low] | [FILL] |
+| [risk] | [High/Med/Low] | [High/Med/Low] | [mitigation] |
 
-## Failure & Rollback Paths
+## Evidence Bundle
 
-- If validation lane [X] fails: [diagnostic steps], [recovery action]
-- If dependency assumption breaks: escalate to [BL-YYY] owner, document blocker in status notes
-- If RT safety violation detected: revert change, audit with `$skill_troubleshooting`
-
-## Evidence Bundle Contract
-
-| Artifact | Path | Required Fields |
+| Artifact | Path | Notes |
 |---|---|---|
-| Self-test JSON | `TestEvidence/blXXX_<slug>_<timestamp>.json` | timestamp, pass_count, fail_count, lane_id |
-| Validation trend entry | `TestEvidence/validation-trend.md` | date, lane, result, notes |
-| Build summary update | `TestEvidence/build-summary.md` | date, build_type, result |
+| `status.tsv` | `TestEvidence/...` | machine-readable packet status |
+| `validation_matrix.tsv` | `TestEvidence/...` | per-command results |
+| `promotion_decision.md` | `TestEvidence/...` | owner packet when applicable |
 
 ## Closeout Checklist
 
-- [ ] All implementation slices complete
-- [ ] All validation lanes pass
-- [ ] Evidence bundle captured at designated paths
-- [ ] Plain-language summary + 6W snapshot updated to match final behavior
-- [ ] Visual aid index updated and any diagrams/screenshots linked when they add clarity
-- [ ] Status legend + progress snapshot updated with current done/active/next state
-- [ ] `status.json` updated with current state and evidence notes
-- [ ] `Documentation/backlog/index.md` dashboard row updated
-- [ ] `TestEvidence/build-summary.md` snapshot updated
-- [ ] `TestEvidence/validation-trend.md` trend entry added
-- [ ] `README.md` and `CHANGELOG.md` updated (for Done transitions)
+- [ ] Slices complete
+- [ ] Validation lanes pass
+- [ ] Evidence captured under `TestEvidence/...`
+- [ ] Runbook summary and 6W stay current
+- [ ] `Documentation/backlog/index.md` updated when state changes
+- [ ] `status.json` updated when state changes
+- [ ] `TestEvidence/build-summary.md` updated when required
+- [ ] `TestEvidence/validation-trend.md` updated when required
 - [ ] `./scripts/validate-docs-freshness.sh` passes
-- [ ] Replay cadence policy and any overrides are documented with rationale
 
-## Owner Promotion Packet (Orchestrator Reuse)
+## Owner Sync Handoff
 
-When moving from `In Validation` toward `Done-candidate`, create an owner sync evidence bundle:
+Use the canonical owner packet under:
 - `TestEvidence/<bl_or_hx>_owner_sync_<slice>_<timestamp>/`
 
-Required owner packet files:
+Required files:
 - `status.tsv`
 - `validation_matrix.tsv`
-- `owner_decisions.md`
-- `handoff_resolution.md`
-- `promotion_decision.md` (use `Documentation/backlog/_template-promotion-decision.md`)
-
-Return contract for owner sync handoff:
-```
-HANDOFF_READY
-TASK: <BL/HX Owner Sync Slice>
-RESULT: PASS|FAIL
-DECISION: <In Validation|Done-candidate|Blocked>
-FILES_TOUCHED: ...
-VALIDATION: ...
-ARTIFACTS: ...
-BLOCKERS: ...
-```
+- `promotion_decision.md`
+- `owner_decisions.md` when coordination risk is not low
+- `handoff_resolution.md` when coordination risk is not low

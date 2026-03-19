@@ -28,7 +28,7 @@ The Timeline occupies the second layer of the four-layer authority chain:
 ```
 APVTS base state (DAW automation)
   + Timeline rest pose (when anim_enable=true)
-    + Choreography Lab generative offset   ← pending ADR (see choreography-lab-spec.md §Pending ADR)
+    + Choreography Lab generative offset   ← ADR-0020 (see Documentation/adr/ADR-0020-...)
       + Physics additive offset
         = Final EmitterSlot position → DSP renderer
 ```

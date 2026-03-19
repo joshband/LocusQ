@@ -1,276 +1,55 @@
----
 Title: HX-02 Registration Lock and Memory-Order Audit
-Document Type: Backlog Runbook
+Document Type: Backlog Done Runbook
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-02
----
+Last Modified Date: 2026-03-18
 
-# HX-02: Registration Lock and Memory-Order Audit
+# HX-02 Registration Lock and Memory-Order Audit
+
+## Status
+Done. Owner replay confirmed Slice D gate stability on 2026-02-25.
 
 ## Plain-Language Summary
-
-HX-02 in plain terms: Audit and fix all registration lock and memory-order contract expectations in SceneGraph, SharedPtrAtomicContract, and any shared state paths. Current state: Done (2026-02-25 owner replay confirms Slice D gate stability). For technical detail, see `## Objective` and `## Validation Plan`.
+HX-02 audited and fixed registration-lock and memory-order expectations in `SceneGraph`, `SharedPtrAtomicContract`, and related shared-state paths. The key result is a documented and evidence-backed atomic-ordering baseline for later RT hardening work.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
-
-| Question | Plain-language answer |
+| Question | Answer |
 |---|---|
-| Who is this for? | Plugin users, operators, QA/release owners, and coding agents/scripts that need one reliable source of truth. |
-| What is changing? | HX-02: Registration Lock and Memory-Order Audit |
-| Why is this important? | Audit and fix all registration lock and memory-order contract expectations in SceneGraph, SharedPtrAtomicContract, and any shared state paths. |
-| How will we deliver it? | Use the implementation slices and validation plan in this runbook to deliver incrementally and verify each slice before promotion. |
-| When is it done? | This item is complete when promotion gates, evidence sync, and backlog/index status updates are all recorded as done. |
-| Where is the source of truth? | Runbook: `Documentation/backlog/done/hx-02-registration-lock.md` plus repo-local evidence under `TestEvidence/...`. |
+| What | Registration lock and memory-order audit. |
+| Why | Prevents race conditions and incorrect atomic ordering from hiding inside shared-state code. |
+| Who | Runtime maintainers, QA, and later registration/RT lanes. |
+| When | Done on 2026-02-25. |
+| Where | [`Documentation/backlog/done/hx-02-registration-lock.md`](/Users/artbox/Documents/Repos/LocusQ/Documentation/backlog/done/hx-02-registration-lock.md) and `TestEvidence/...`. |
+| How | Static audit, fixes, and owner replay-backed regression validation. |
 
 ## Visual Aid Index
-
-Use visuals only when they materially improve understanding.
-
-| Visual Aid | Why it helps | Where to find it |
+| Type | Purpose | Source |
 |---|---|---|
-| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
-| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
-| Implementation slices | Clarifies execution sequence and ownership. | `## Implementation Slices` |
-| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
+| Table | Final result and evidence map | This runbook |
+| Audit detail | Full slice and contract history | Archived legacy copy |
 
-## Status Ledger
+## Core Outcome
+- Atomic ordering expectations were audited and clarified.
+- Registration and shared-state race risks were addressed.
+- The result became a dependency input for later RT and lock-free registration work.
 
-| Field | Value |
+## Key Gates
+- Static audit completed.
+- Violations were fixed where found.
+- Owner replay confirmed the final gate stability.
+
+## Evidence Pointers
+| Signal | Path |
 |---|---|
-| Priority | P1 |
-| Status | Done (2026-02-25 owner replay confirms Slice D gate stability) |
-| Owner Track | Track F — Hardening |
-| Depends On | BL-016 (Done) |
-| Blocks | — |
-| Annex Spec | (inline — references SceneGraph and SharedPtrAtomicContract) |
+| Evidence family | `TestEvidence/hx02_*` |
+| Historical closeout detail | archived legacy copy |
 
-## Effort Estimate
-
-| Slice | Complexity | Scope | Notes |
-|---|---|---|---|
-| A | Med | M | Static analysis of atomic ordering |
-| B | Med | M | Fix any violations found |
-| C | Low | S | Regression validation |
-
-## Objective
-
-Audit and fix all registration lock and memory-order contract expectations in SceneGraph, SharedPtrAtomicContract, and any shared state paths. Ensure all atomic operations use correct memory ordering (acquire/release/seq_cst as appropriate) and that registration (emitter slot claiming) is free of race conditions.
-
-## Scope & Non-Scope
-
-**In scope:**
-- SceneGraph.h atomic ordering audit (double-buffer swap, slot registration, snapshot publication)
-- SharedPtrAtomicContract.h audit (atomic load/store patterns)
-- PluginProcessor.cpp shared state paths (scene publication, parameter reads)
-- Any other atomic usage across Source/
-
-**Out of scope:**
-- New features or API changes
-- Performance optimization of atomic operations
-- Lock-free algorithm redesign
-
-## Architecture Context
-
-- SceneGraph: lock-free singleton with double-buffered EmitterSlot array (`Source/SceneGraph.h`)
-- SharedPtrAtomicContract: atomic shared_ptr wrappers from HX-01 (`Source/SharedPtrAtomicContract.h`)
-- Scene snapshot publication: PluginProcessor.cpp publishes from processBlock to UI via atomic snapshot
-- Invariants: Scene Graph (lock-free exchange), Audio Thread (RT safety)
-- BL-016 transport contract provides the baseline for sequence-safe snapshot transport
-
-## Implementation Slices
-
-| Slice | Description | Files | Entry Gate | Exit Criteria |
-|---|---|---|---|---|
-| A | Static analysis of all atomic usage | `Source/SceneGraph.h`, `Source/SharedPtrAtomicContract.h`, `Source/PluginProcessor.cpp` | BL-016 done | Audit document with findings |
-| B | Fix violations | Files from audit | Audit complete | All violations fixed |
-| C | Regression validation | `tests/`, `TestEvidence/` | Fixes applied | Smoke + acceptance pass |
-
-## Agent Mega-Prompt
-
-### Slice A — Skill-Aware Prompt
-
-```
-/impl HX-02 Slice A: Atomic ordering static audit
-Load: $skill_impl, $skill_testing, $juce-webview-runtime
-
-Objective: Audit every atomic operation in the LocusQ codebase for correct memory ordering.
-
-Audit checklist per atomic operation:
-1. Is the ordering correct? (acquire for loads, release for stores, seq_cst only when needed)
-2. Is there a corresponding acquire for every release? (paired ordering)
-3. Are there any relaxed operations that should be stronger?
-4. Are compare_exchange operations using correct success/failure orderings?
-5. Is the registration (slot claiming) path in SceneGraph free of ABA problems?
-6. Does the double-buffer swap use correct acquire/release fencing?
-
-Files to audit:
-- Source/SceneGraph.h — all atomic members and operations
-- Source/SharedPtrAtomicContract.h — atomic shared_ptr load/store
-- Source/PluginProcessor.cpp — scene snapshot publication, parameter reads
-- Source/SpatialRenderer.h — any atomic state
-- Any other files with std::atomic usage
-
-Output: Structured audit document listing each atomic operation, its current ordering,
-whether it's correct, and recommended fix if not.
-
-Evidence:
-- TestEvidence/hx02_registration_audit_<timestamp>/atomic_audit.md
-```
-
-### Slice A — Standalone Fallback Prompt
-
-```
-You are auditing HX-02 for LocusQ, a JUCE spatial audio plugin.
-
-PROJECT CONTEXT:
-- SceneGraph (Source/SceneGraph.h): Lock-free singleton with double-buffered EmitterSlot array.
-  Uses atomic operations for slot registration, buffer swapping, and snapshot publication.
-- SharedPtrAtomicContract (Source/SharedPtrAtomicContract.h): Atomic shared_ptr wrappers
-  created in HX-01 migration.
-- PluginProcessor (Source/PluginProcessor.cpp): Publishes scene snapshots from processBlock
-  (audio thread) consumed on message thread. Uses atomic parameter reads.
-- RT safety invariant: processBlock must be lock-free, allocation-free.
-
-TASK:
-1. Search all Source/ files for std::atomic usage:
-   grep -rn "std::atomic\|atomic_\|memory_order\|fetch_add\|compare_exchange\|load(\|store(" Source/
-2. For each atomic operation found, document:
-   - File and line number
-   - Variable name and type
-   - Operation (load/store/fetch_add/compare_exchange/etc.)
-   - Current memory ordering
-   - Whether ordering is correct (with reasoning)
-   - Recommended fix if incorrect
-3. Check for paired acquire/release patterns
-4. Check for ABA problems in slot registration
-5. Write audit report to TestEvidence/hx02_registration_audit_<timestamp>/atomic_audit.md
-
-CONSTRAINTS:
-- Do not modify any source code in this slice — audit only
-- Be conservative: flag anything that could be wrong, even if uncertain
-
-EVIDENCE:
-- TestEvidence/hx02_registration_audit_<timestamp>/atomic_audit.md
-```
-
-### Slice B — Skill-Aware Prompt
-
-```
-/impl HX-02 Slice B: Fix atomic ordering violations
-Load: $skill_impl, $juce-webview-runtime
-
-Objective: Fix all violations identified in the Slice A audit.
-
-Constraints:
-- Minimize changes — fix ordering only, do not refactor algorithms
-- Each fix must preserve the lock-free guarantee
-- Test each fix individually before combining
-- No performance regressions (atomic ordering upgrades are generally free on x86, but verify on ARM)
-
-Validation:
-- Build succeeds with no warnings
-- Smoke suite passes
-- No behavioral changes visible in UI
-
-Evidence:
-- TestEvidence/hx02_registration_audit_<timestamp>/fixes_applied.md
-```
-
-### Slice C — Skill-Aware Prompt
-
-```
-/test HX-02 Slice C: Regression validation after atomic fixes
-Load: $skill_test, $skill_testing
-
-Objective: Full regression validation after atomic ordering fixes.
-
-Validation:
-- ctest --test-dir build --output-on-failure
-- Production self-test lane
-- REAPER headless render smoke (if available)
-- Multi-instance stability check (HX-03 regression guard)
-
-Evidence:
-- TestEvidence/hx02_registration_audit_<timestamp>/regression.log
-- TestEvidence/hx02_registration_audit_<timestamp>/status.tsv
-```
-
-## Validation Plan
-
-| Lane ID | Type | Command | Pass Criteria |
-|---|---|---|---|
-| HX-02-audit | Manual | Code review | All atomics documented and assessed |
-| HX-02-fixes | Automated | Build + smoke | Zero warnings, smoke passes |
-| HX-02-regression | Automated | ctest + self-test + REAPER smoke | All lanes pass |
-| HX-02-freshness | Automated | `./scripts/validate-docs-freshness.sh` | Exit 0 |
-
-## Risks & Mitigations
-
-| Risk | Impact | Likelihood | Mitigation |
-|---|---|---|---|
-| Fixing ordering introduces subtle behavioral change | High | Med | Test each fix individually, compare output |
-| ARM vs x86 ordering semantics differ | Med | Low | Test on ARM Mac (Apple Silicon) specifically |
-| Missing paired acquire/release hard to detect | High | Med | Systematic audit with checklist |
-
-## Failure & Rollback Paths
-
-- If fix introduces regression: revert individual fix, isolate to specific atomic operation
-- If multi-instance stability regresses: check SceneGraph registration path specifically
-- If performance regresses on ARM: profile atomic operations, consider relaxed where provably safe
-
-## Evidence Bundle Contract
-
-| Artifact | Path | Required Fields |
+## Milestone Snapshot
+| Milestone | Result | Note |
 |---|---|---|
-| Audit report | `TestEvidence/hx02_registration_audit_<timestamp>/atomic_audit.md` | file, line, operation, ordering, assessment |
-| Fixes summary | `TestEvidence/hx02_registration_audit_<timestamp>/fixes_applied.md` | file, line, before, after, rationale |
-| Regression log | `TestEvidence/hx02_registration_audit_<timestamp>/regression.log` | test output |
-| Status TSV | `TestEvidence/hx02_registration_audit_<timestamp>/status.tsv` | lane, result, timestamp |
+| Slice A | Done | Atomic-order audit completed. |
+| Slice B | Done | Violations fixed. |
+| Slice D | Done | Owner replay confirmed stable closeout. |
 
-## Owner Validation Snapshot (2026-02-24)
-
-| Slice | Status | Evidence |
-|---|---|---|
-| Slice A | Complete (audit produced actionable findings) | `TestEvidence/hx02_registration_audit_20260224_144643/atomic_audit.md`, `TestEvidence/hx02_registration_audit_20260224_144643/status.tsv` |
-| Slice B | Complete (fixes implemented and validated) | `TestEvidence/hx02_registration_audit_20260224T195130Z/status.tsv`, `TestEvidence/hx02_registration_audit_20260224T195130Z/fixes_applied.md` |
-| Slice C | Complete (regression lane pass) | `TestEvidence/hx02_slice_c_20260224T200311Z/status.tsv` |
-
-## Promotion Verifier + Owner Replay Snapshot (2026-02-25)
-
-- Worker packet: `TestEvidence/hx02_done_promotion_20260225T163521Z/`
-- Worker decision: `DO NOT PROMOTE` from that run only
-- Worker gate results:
-  - `build`: PASS
-  - `qa_smoke`: PASS
-  - `rt_audit`: PASS
-  - `selftest_hx02`: FAIL (`terminal_failure_reason=app_exited_before_result`, `app_signal_name=ABRT`, metadata `TestEvidence/locusq_production_p0_selftest_20260225T163542Z.meta.json`)
-  - `docs_freshness`: PASS
-
-- Owner replay bundle: `TestEvidence/owner_hx02_done_replay_20260225T165720Z/`
-- Owner replay results:
-  - `LOCUSQ_UI_SELFTEST_SCOPE=hx02 ./scripts/standalone-ui-selftest-production-p0-mac.sh` x3 => PASS (3/3)
-  - `./scripts/validate-docs-freshness.sh` => PASS
-- Owner authoritative disposition: worker ABRT treated as transient flake; HX-02 promoted to **Done** on current branch after stable owner replay.
-
-## Closeout Checklist
-
-- [x] All atomic operations audited and documented
-- [x] All violations fixed
-- [x] Regression suite passes (ctest, self-test, host smoke)
-- [x] No multi-instance stability regressions
-- [x] Evidence captured at designated paths
-- [x] status.json updated
-- [x] Documentation/backlog/index.md row updated
-- [x] TestEvidence surfaces updated
-- [x] ./scripts/validate-docs-freshness.sh passes
-
-
-## Governance Retrofit (2026-02-28)
-
-Canonical lifecycle/evidence rules are defined in:
-- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
-- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
-
-This runbook should list only item-specific exceptions or additions.
-
+## Archive Note
+Full historical material is preserved at [`hx-02-registration-lock-legacy.md`](/Users/artbox/Documents/Repos/LocusQ/Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/hx-02-registration-lock-legacy.md).

@@ -99,8 +99,8 @@ run_logged() {
   if "${cmd[@]}" >"$log_path" 2>&1; then
     :
   else
-    status="FAIL"
     exit_code=$?
+    status="FAIL"
   fi
   log_step "$step" "$status" "$exit_code" "$log_path"
   log_matrix "$step" "${cmd[*]}" "$status" "$exit_code" "$log_path"

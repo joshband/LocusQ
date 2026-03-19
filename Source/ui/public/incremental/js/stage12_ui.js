@@ -3950,11 +3950,13 @@
           radius: state.orbit.radius,
         };
       },
+      getCamera() { return state.camera; },
     };
   }
 
   const viewportShell = dom.viewportCanvas ? dom.viewportCanvas.parentElement : null;
   const sceneApp = createSceneApp(dom.viewportCanvas, viewportShell);
+  window.__locusq_sceneApp = sceneApp;
 
   dom.viewButtons.forEach(button => {
     button.addEventListener("click", () => {
@@ -4540,6 +4542,10 @@
     updateViewportInfo(sceneApp);
     updateRendererSceneStatus();
     updateEmitterParityStatus();
+    window.__locusq_latestScene = runtime.latestScene;
+    if (window.__locusq_onSceneUpdate && runtime.latestScene) {
+      window.__locusq_onSceneUpdate(runtime.latestScene);
+    }
   };
 
   function applyCalibrationStatus(status) {

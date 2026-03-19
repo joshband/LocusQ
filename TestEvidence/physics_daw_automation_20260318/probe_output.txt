@@ -1,0 +1,8 @@
+CHECK live_path_round_trip : PASS | spreadMod=0.420000 gainMod=0.170000
+CHECK gain_transient_separate : PASS | gainTransient=0.750000 gainMod=0.000000
+CHECK snapshot_guard_no_jump : PASS | spread_delta=0.000000 gain_delta=0.000000
+CHECK frozen_path_uses_apvts : PASS | spreadDelta=0.250000 atomicValue=0.900000
+CHECK frozen_to_live_transition : PASS | spreadDelta=0.550000 (expected atomic 0.55, not frozen 0.25)
+CHECK gain_transient_ignores_freeze : PASS | gainTransient=0.750000 frozen=1
+CHECK nan_safety_inherited : PASS | spread=0.000000 gain=0.000000 transient=0.000000
+SUMMARY physics_daw_automation_probe : 7/7 checks passed

@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-19
 
 # Changelog
 
@@ -38,6 +38,10 @@ Operational snapshot:
 
 ### Changed
 
+- BL-080 and BL-089 through BL-094 are now fully closed out:
+  - runbook/archive paths, backlog authority, and evidence summaries are synchronized.
+  - BL-080 moved into `Documentation/backlog/done/`.
+  - BL-089 through BL-094 now read as formal Done in the master backlog index.
 - BL-076 advanced through the W0-B header/body split: `Source/SpatialRenderer.cpp` now owns the out-of-line renderer implementation, `Source/SpatialRenderer.h` is reduced to a bounded declaration surface, and refreshed contract/execute guardrail evidence is recorded for 2026-03-06.
 - BL-036 was archived to `Documentation/backlog/done/` after an explicit scope split moved its remaining runtime implementation work into new follow-on BL-078.
 - BL-041 was archived to `Documentation/backlog/done/` after its BL-036 dependency cleared; contract/execute parity evidence and closeout sync remain green.
@@ -68,6 +72,7 @@ Operational snapshot:
 
 ### Recent Done Promotions
 
+- BL-080, BL-089, BL-090, BL-091, BL-092, BL-093, and BL-094 moved to `Done` with closeout sync on 2026-03-18.
 - BL-036, BL-037, and BL-041 moved to `Done` with runbook archive/index/status/evidence sync.
 - BL-035, BL-038, and BL-051 moved to `Done` with runbook archive/index/status/evidence sync.
 - BL-050, BL-069, and BL-070 moved to `Done` with runbook archive/index/status/evidence sync.

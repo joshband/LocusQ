@@ -2,7 +2,7 @@ Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # CLAUDE.md
 
@@ -37,41 +37,20 @@ If directives conflict, preserve build/test stability, phase discipline, and sta
 - Routing order:
   1. Phase workflow skill.
   2. Minimal specialist skills required by the task.
-- Specialist routing defaults:
-  - WebView runtime/bridge/host interop issues -> `juce-webview-runtime`.
-  - Audio-reactive or physics-reactive visualization behavior -> `reactive-av`.
-  - Realtime 2D/3D/4D information visualization and beautiful operator-facing UI direction -> `realtime-dimensional-visualization`.
-  - Complex simulation-driven audio+visual behavior (fluid/crowd/flocking/herd) -> `simulation-behavior-audio-visual`.
-  - Physics/simulation to DSP/audio behavior -> `physics-reactive-audio`.
-  - Delay/echo/looper/frippertronics-style temporal DSP work -> `temporal-effects-engineering`.
-  - AUv3 format lifecycle, app-extension boundaries, and AUv3 host-validation lanes -> `auv3-plugin-lifecycle`.
-  - CLAP format integration/migration and host/CI validation lanes -> `clap-plugin-lifecycle`.
-  - Steam Audio C API runtime loading/lifecycle/fallback work -> `steam-audio-capi`.
-  - Spatial audio layout/ambisonic/binaural architecture and QA -> `spatial-audio-engineering`.
-  - SDLC documentation cleanup/de-bloat/freshness remediation with ADR alignment -> `documentation-hygiene-expert` (pair `skill_docs` for governance sync).
-  - Git artifact hygiene (tracked ignored paths, stale archives, history-bloat audits, pre-commit/CI guards) -> `documentation-hygiene-expert`.
-  - Documentation governance metadata, ADR/invariant traceability, and root routing-contract parity -> `skill_docs`.
-  - API documentation cleanup or stale code-comment hygiene -> `documentation-hygiene-expert` (pair `skill_impl` when behavior-level edits are required).
-  - Companion readiness/sync/axis runtime diagnostics -> `headtracking-companion-runtime`.
-  - AirPods companion Apple API/capture/privacy contract work (BL-057/BL-058) -> `apple-spatial-companion-platform`.
-  - HRTF/FIR/interpolation parity and crossfade validation -> `hrtf-rendering-validation-lab`.
-  - Blind listening protocol and statistical gate decisions -> `perceptual-listening-harness`.
-  - 3D scene/render architecture and performance -> `threejs`.
-  - Unresolved failures and diagnostics -> `skill_troubleshooting`.
+- Specialist routing defaults are canonical in `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
+- Short routing guide:
+  - UI/runtime -> `juce-webview-runtime`, `threejs`, `reactive-av`, `realtime-dimensional-visualization`
+  - DSP/simulation -> `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
+  - format/spatial -> `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
+  - docs/governance -> `documentation-hygiene-expert`, `skill_docs`
+  - companion/calibration -> `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
+  - fallback -> `skill_troubleshooting`
 - If multiple skills apply, declare selected skills and execution order in the response.
 - Reference matrix: `Documentation/skill-selection-matrix.md`.
 
 ## Skill Catalog Scope
-Claude must consider the full repo skill catalog:
-- `skill_dream`, `skill_plan`, `skill_design`, `skill_impl`, `skill_test`, `skill_ship`
-- `skill_docs`, `skill_debug`, `skill_testing`, `skill_troubleshooting`
-- `documentation-hygiene-expert`
-- `juce-webview-windows`, `juce-webview-runtime`
-- `threejs`, `reactive-av`, `realtime-dimensional-visualization`, `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
-- `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
-- `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
-
-Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
+Claude must consider the full repo skill catalog, not only the short list above.
+Canonical paths and triggers: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 
 ## Phase Discipline
 - Enforce one phase at a time.
@@ -79,6 +58,9 @@ Canonical paths and trigger guidance: `SKILLS.md` and `Documentation/skill-selec
 - Update `status.json` as phase state changes.
 - Do not auto-advance to the next phase.
 - Stop after completing the requested command output.
+
+## Backlog Automation
+- Backlog automation is draft-only unless the user explicitly approves a promotion flow: scripts may run T1/T2/T3 lanes and prepare packets or proposed status updates, but owner confirmation is required before promotion or archive transitions become authoritative.
 
 ## Framework Discipline
 `ui_framework` in `status.json` is binding:

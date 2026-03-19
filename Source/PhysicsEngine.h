@@ -69,6 +69,32 @@ public:
     }
 
     //==========================================================================
+    /** Wall boundary behaviour. */
+    enum class BoundaryMode : int { Hard = 0, Soft = 1, Passthrough = 2 };
+
+    void setBoundaryMode    (BoundaryMode m) { boundaryMode.store(static_cast<int>(m), std::memory_order_release); }
+    void setSoftBoundaryDepth(float d)       { softBoundaryDepth.store(juce::jmax(0.01f, d), std::memory_order_release); }
+
+    /**
+     * Additional force injected by PhysicsWorker for coordinated features
+     * (attractors, boids, spring, turbulence). Accumulated with interactionForce
+     * inside step() — does not replace it.
+     */
+    void setCoordinatedForce(const Vec3& force)
+    {
+        coordinatedForceX.store(force.x, std::memory_order_release);
+        coordinatedForceY.store(force.y, std::memory_order_release);
+        coordinatedForceZ.store(force.z, std::memory_order_release);
+    }
+
+    /** When true, this engine runs in standalone per-emitter mode.
+     *  When false, position/velocity authority belongs to PhysicsWorker
+     *  (coordinated features: boids, attractors, inter-emitter collisions).
+     *  Defaults to true; set to false before the PhysicsWorker activates
+     *  the corresponding slot. */
+    void setStandaloneMode (bool standalone)           { standaloneMode.store (standalone, std::memory_order_release); }
+    bool isStandaloneMode() const                      { return standaloneMode.load (std::memory_order_acquire); }
+
     void setPhysicsEnabled (bool enabled)              { bodyEnabled.store (enabled, std::memory_order_release); notify(); }
     void setPaused (bool paused)                       { simulationPaused.store (paused, std::memory_order_release); notify(); }
     void setWallCollisionEnabled (bool enabled)        { wallCollisionEnabled.store (enabled, std::memory_order_release); }
@@ -114,6 +140,25 @@ public:
         resetSequence.fetch_add (1, std::memory_order_acq_rel);
         notify();
     }
+
+    /**
+     * Apply a one-shot velocity impulse from inter-emitter collision resolution.
+     * Called by PhysicsWorker after CollisionSystem::resolve() (P6).
+     * Consumed once in the next step() tick, analogous to requestThrow().
+     */
+    void applyCollisionImpulse (const Vec3& impulse)
+    {
+        collisionImpulseX.store (impulse.x, std::memory_order_release);
+        collisionImpulseY.store (impulse.y, std::memory_order_release);
+        collisionImpulseZ.store (impulse.z, std::memory_order_release);
+        collisionImpulseSeq.fetch_add (1, std::memory_order_acq_rel);
+    }
+
+    float getMass()        const { return mass.load (std::memory_order_acquire); }
+    float getDrag()        const { return drag.load (std::memory_order_acquire); }
+    float getElasticity()  const { return elasticity.load (std::memory_order_acquire); }
+    float getGravityMagnitude() const { return gravityMagnitude.load (std::memory_order_acquire); }
+    int getGravityDirection() const { return gravityDirection.load (std::memory_order_acquire); }
 
     PhysicsState getState() const
     {
@@ -240,6 +285,16 @@ private:
             state.velocity.z += throwVelocityZ.load (std::memory_order_acquire);
         }
 
+        // P6: Consume one-shot collision impulse from CollisionSystem::resolve()
+        const auto latestCollisionSeq = collisionImpulseSeq.load (std::memory_order_acquire);
+        if (latestCollisionSeq != handledCollisionSeq)
+        {
+            handledCollisionSeq = latestCollisionSeq;
+            state.velocity.x += collisionImpulseX.load (std::memory_order_acquire);
+            state.velocity.y += collisionImpulseY.load (std::memory_order_acquire);
+            state.velocity.z += collisionImpulseZ.load (std::memory_order_acquire);
+        }
+
         if (simulationPaused.load (std::memory_order_acquire))
         {
             state.force = {};
@@ -261,20 +316,25 @@ private:
             interactionForceY.load (std::memory_order_acquire),
             interactionForceZ.load (std::memory_order_acquire)
         };
+        const Vec3 coordinatedForce = standaloneMode.load (std::memory_order_acquire)
+            ? Vec3 {}
+            : Vec3 {
+                coordinatedForceX.load (std::memory_order_acquire),
+                coordinatedForceY.load (std::memory_order_acquire),
+                coordinatedForceZ.load (std::memory_order_acquire)
+            };
         const float inverseMass = 1.0f / juce::jmax (0.01f, currentMass);
-        state.force.x = gravity.x + interactionForce.x;
-        state.force.y = gravity.y + interactionForce.y;
-        state.force.z = gravity.z + interactionForce.z;
+
+        // Combined force: gravity + host interaction + PhysicsWorker coordinated force
+        state.force.x = gravity.x + interactionForce.x + coordinatedForce.x;
+        state.force.y = gravity.y + interactionForce.y + coordinatedForce.y;
+        state.force.z = gravity.z + interactionForce.z + coordinatedForce.z;
         state.collisionMask = 0;
         state.collisionEnergy = 0.0f;
 
-        state.velocity.x += gravity.x * inverseMass * dt;
-        state.velocity.y += gravity.y * inverseMass * dt;
-        state.velocity.z += gravity.z * inverseMass * dt;
-
-        state.velocity.x += interactionForce.x * inverseMass * dt;
-        state.velocity.y += interactionForce.y * inverseMass * dt;
-        state.velocity.z += interactionForce.z * inverseMass * dt;
+        state.velocity.x += state.force.x * inverseMass * dt;
+        state.velocity.y += state.force.y * inverseMass * dt;
+        state.velocity.z += state.force.z * inverseMass * dt;
 
         const float dragFactor = juce::jlimit (0.0f, 1.0f, 1.0f - currentDrag * dt);
         state.velocity.x *= dragFactor;
@@ -286,7 +346,16 @@ private:
         state.position.z += state.velocity.z * dt;
 
         if (wallCollisionEnabled.load (std::memory_order_acquire))
-            resolveCollisions (state, currentElasticity, currentFriction, dt);
+        {
+            const auto mode = static_cast<BoundaryMode> (
+                boundaryMode.load (std::memory_order_acquire));
+
+            if (mode == BoundaryMode::Hard)
+                resolveCollisions (state, currentElasticity, currentFriction, dt);
+            else if (mode == BoundaryMode::Soft)
+                resolveSoftBoundary (state, currentMass, dt);
+            // BoundaryMode::Passthrough — no collision response
+        }
 
         writeState (state);
     }
@@ -371,6 +440,142 @@ private:
         }
     }
 
+    /**
+     * Soft boundary: apply 1/(d²) repulsive acceleration within softBoundaryDepth.
+     * Emitter decelerates and curves away; hard position clamp at surface as safety net.
+     *
+     * Acceleration at boundary edge (d = depth):  kSoftBase = 20.0 m/s²  (~2g)
+     * Acceleration formula: a = kSoftBase * (depth / d)²
+     * As d → 0 the acceleration diverges, ensuring emitter never penetrates.
+     */
+    void resolveSoftBoundary (PhysicsState& state, float mass, float dt)
+    {
+        const float halfWidth = roomWidth.load (std::memory_order_acquire) * 0.5f;
+        const float halfDepth = roomDepth.load (std::memory_order_acquire) * 0.5f;
+        const float maxY      = roomHeight.load (std::memory_order_acquire);
+        const float depth     = softBoundaryDepth.load (std::memory_order_acquire);
+        const float epsilon   = depth * 0.01f;  // minimum distance, prevents div/0
+        static constexpr float kSoftBase = 20.0f; // m/s² at boundary edge
+
+        (void) mass; // acceleration is mass-independent (F = m*a → a = F/m, k already in m/s²)
+
+        auto applyWallRepulsion = [&](float pos, float wallSurface, float sign, float& vel)
+        {
+            // sign = +1 means "push toward +" (positive-side wall pushes emitter in -x)
+            // actual: dist = |wallSurface - pos|, push direction = sign
+            const float dist = std::max (std::abs (wallSurface - pos), epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                const float acc = kSoftBase * ratio * ratio;
+                vel += sign * acc * dt;
+            }
+            // Safety clamp: ensure emitter never crosses wall surface
+            if (sign > 0.0f && pos < wallSurface)
+            {
+                state.position.x = (vel == state.velocity.x) ? wallSurface + epsilon : state.position.x;
+                vel = std::max (vel, 0.0f);
+            }
+            else if (sign < 0.0f && pos > wallSurface)
+            {
+                vel = std::min (vel, 0.0f);
+            }
+        };
+
+        // -X wall (push in +X direction): surface at -halfWidth
+        {
+            const float dist = std::max (state.position.x - (-halfWidth), epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                state.velocity.x += kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x1u);
+            }
+            if (state.position.x < -halfWidth)
+            {
+                state.position.x = -halfWidth + epsilon;
+                if (state.velocity.x < 0.0f) state.velocity.x = 0.0f;
+            }
+        }
+        // +X wall (push in -X direction): surface at +halfWidth
+        {
+            const float dist = std::max (halfWidth - state.position.x, epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                state.velocity.x -= kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x1u);
+            }
+            if (state.position.x > halfWidth)
+            {
+                state.position.x = halfWidth - epsilon;
+                if (state.velocity.x > 0.0f) state.velocity.x = 0.0f;
+            }
+        }
+        // Floor (Y=0, push in +Y direction)
+        {
+            const float dist = std::max (state.position.y - 0.0f, epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                state.velocity.y += kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x2u);
+            }
+            if (state.position.y < 0.0f)
+            {
+                state.position.y = epsilon;
+                if (state.velocity.y < 0.0f) state.velocity.y = 0.0f;
+            }
+        }
+        // Ceiling (Y=maxY, push in -Y direction)
+        {
+            const float dist = std::max (maxY - state.position.y, epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                state.velocity.y -= kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x2u);
+            }
+            if (state.position.y > maxY)
+            {
+                state.position.y = maxY - epsilon;
+                if (state.velocity.y > 0.0f) state.velocity.y = 0.0f;
+            }
+        }
+        // -Z wall (push in +Z direction)
+        {
+            const float dist = std::max (state.position.z - (-halfDepth), epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                state.velocity.z += kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x4u);
+            }
+            if (state.position.z < -halfDepth)
+            {
+                state.position.z = -halfDepth + epsilon;
+                if (state.velocity.z < 0.0f) state.velocity.z = 0.0f;
+            }
+        }
+        // +Z wall (push in -Z direction)
+        {
+            const float dist = std::max (halfDepth - state.position.z, epsilon);
+            if (dist < depth)
+            {
+                const float ratio = depth / dist;
+                state.velocity.z -= kSoftBase * ratio * ratio * dt;
+                state.collisionMask = static_cast<std::uint8_t> (state.collisionMask | 0x4u);
+            }
+            if (state.position.z > halfDepth)
+            {
+                state.position.z = halfDepth - epsilon;
+                if (state.velocity.z > 0.0f) state.velocity.z = 0.0f;
+            }
+        }
+
+        (void) applyWallRepulsion; // helper defined but dispatch done inline above
+    }
+
     static void applySurfaceFriction (float& tangentA, float& tangentB, float frictionAmount, float dt)
     {
         const float friction = juce::jlimit (0.0f, 1.0f, frictionAmount);
@@ -438,7 +643,13 @@ private:
     std::atomic<bool> simulationPaused { false };
     std::atomic<bool> wallCollisionEnabled { true };
 
-    std::atomic<bool> bodyEnabled { false };
+    std::atomic<bool>  standaloneMode    { true };
+    std::atomic<bool>  bodyEnabled       { false };
+    std::atomic<int>   boundaryMode      { static_cast<int>(BoundaryMode::Hard) };
+    std::atomic<float> softBoundaryDepth { 0.5f };
+    std::atomic<float> coordinatedForceX { 0.0f };
+    std::atomic<float> coordinatedForceY { 0.0f };
+    std::atomic<float> coordinatedForceZ { 0.0f };
     std::atomic<float> mass { 1.0f };
     std::atomic<float> drag { 0.5f };
     std::atomic<float> elasticity { 0.7f };
@@ -464,8 +675,15 @@ private:
     std::atomic<uint32_t> throwSequence { 0 };
     std::atomic<uint32_t> resetSequence { 0 };
 
-    uint32_t handledThrowSequence = 0;
-    uint32_t handledResetSequence = 0;
+    // P6: one-shot collision impulse from CollisionSystem::resolve()
+    std::atomic<float>    collisionImpulseX   { 0.0f };
+    std::atomic<float>    collisionImpulseY   { 0.0f };
+    std::atomic<float>    collisionImpulseZ   { 0.0f };
+    std::atomic<uint32_t> collisionImpulseSeq { 0 };
+
+    uint32_t handledThrowSequence     = 0;
+    uint32_t handledResetSequence     = 0;
+    uint32_t handledCollisionSeq      = 0;
     Vec3 previousRestPosition {};
     bool restPositionInitialized = false;
 };

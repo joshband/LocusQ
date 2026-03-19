@@ -2,7 +2,7 @@ Title: LocusQ CalibrationProfile JSON Schema v1
 Document Type: Schema Reference
 Author: APC Codex
 Created Date: 2026-02-27
-Last Modified Date: 2026-02-27
+Last Modified Date: 2026-03-18
 
 # CalibrationProfile JSON Schema v1
 
@@ -21,6 +21,7 @@ Location: `~/Library/Application Support/LocusQ/CalibrationProfile.json`
 | `headphone` | object | Headphone model and EQ config |
 | `tracking` | object | Head-tracking settings |
 | `verification` | object | Listening test scores (optional fields) |
+| `provenance` | object? | Optional additive BL-101 metadata describing profile source, evidence strength, and freshness expectations |
 
 ## `user` object
 
@@ -56,6 +57,28 @@ Location: `~/Library/Application Support/LocusQ/CalibrationProfile.json`
 | `front_back_confusion_rate` | float? | 0.0-1.0 (lower is better) |
 | `localization_accuracy` | float? | 0.0-1.0 |
 | `preference_score` | float? | 0.0-1.0 participant preference aggregate |
+
+## `provenance` object (optional additive BL-101 extension)
+
+This object is optional and additive. Consumers must preserve or ignore unknown fields safely.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `profile_source` | string | How this profile entered the system: `"bundled_measured"`, `"companion_estimated"`, `"user_imported"`, `"manual_authored"`, `"runtime_generated"`, `"unknown"` |
+| `subject_provenance` | string | Evidence strength for the `user` section: `"measured"`, `"detected"`, `"inferred"`, `"estimated"`, `"generic"`, `"unavailable"` |
+| `headphone_provenance` | string | Evidence strength for the `headphone` section: same enum domain as `subject_provenance` |
+| `verification_provenance` | string | Evidence strength for the `verification` section: same enum domain as `subject_provenance` |
+| `generated_at_utc_ms` | integer? | UTC milliseconds when the profile or provenance block was generated |
+| `updated_at_utc_ms` | integer? | UTC milliseconds when the profile or provenance block was last updated |
+| `stale_after_ms` | integer? | Optional freshness budget for external/device-derived metadata before UI should warn that it may be stale |
+| `manual_overrides` | array of strings? | Optional list of profile areas manually overridden after auto/imported population, e.g. `["headphone.hp_eq_mode"]` |
+
+Rules:
+
+1. `profile_source` must not be interpreted as evidence strength. Use the `*_provenance` fields for that.
+2. Missing `provenance` object means no BL-101 guarantees are available; consumers must treat provenance as unknown/unavailable rather than measured.
+3. Saved/exported profiles should preserve `provenance` fields when available.
+4. Imported profiles that omit provenance must not be upgraded into measured truth by consumers.
 
 ## Example
 

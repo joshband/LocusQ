@@ -141,24 +141,12 @@ juce::File resolveCompanionCalibrationProfileFile()
     if (overrideProfileDir.isNotEmpty())
         return juce::File (overrideProfileDir).getChildFile ("CalibrationProfile.json");
 
-    const auto userAppDataDir = juce::File::getSpecialLocation (
-        juce::File::SpecialLocationType::userApplicationDataDirectory);
-    const auto userHomeDir = juce::File::getSpecialLocation (
-        juce::File::SpecialLocationType::userHomeDirectory);
+    const auto userDataDir = locusq::processor_bridge::getLocusQUserDataDirectory();
 
-    const std::array<juce::File, 4> candidates
+    const std::array<juce::File, 2> candidates
     {
-        userAppDataDir.getChildFile ("LocusQ").getChildFile ("CalibrationProfile.json"),
-        userAppDataDir.getChildFile ("Application Support")
-            .getChildFile ("LocusQ")
-            .getChildFile ("CalibrationProfile.json"),
-        userHomeDir.getChildFile ("Library")
-            .getChildFile ("Application Support")
-            .getChildFile ("LocusQ")
-            .getChildFile ("CalibrationProfile.json"),
-        userHomeDir.getChildFile ("Library")
-            .getChildFile ("LocusQ")
-            .getChildFile ("CalibrationProfile.json")
+        userDataDir.getChildFile ("CalibrationProfile.json"),
+        userDataDir.getChildFile ("Companion").getChildFile ("CalibrationProfile.json")
     };
 
     juce::File newestExisting;
@@ -211,7 +199,129 @@ struct CalibrationProfilePayloadMetadata
     juce::String monitoringPathId { calibrationMonitoringPathIdForIndex (0) };
     juce::String deviceProfileId { calibrationDeviceProfileIdForIndex (0) };
     juce::var validationSummary;
+    juce::var discoveryReconciliation;
+    juce::var intentSummary;
 };
+
+CalibrationProfilePayloadMetadata extractCalibrationProfilePayloadMetadata (const juce::var& payload,
+                                                                           const juce::String& fallbackName);
+
+juce::String calibrationTopologySummaryLabel (const juce::String& topologyId)
+{
+    const auto normalized = topologyId.trim().toLowerCase();
+    if (normalized == "mono") return "Mono";
+    if (normalized == "stereo") return "Stereo";
+    if (normalized == "quad") return "Quad";
+    if (normalized == "surround_51") return "5.1";
+    if (normalized == "surround_71") return "7.1";
+    if (normalized == "surround_7_1_2") return "7.1.2";
+    if (normalized == "surround_7_4_2") return "7.4.2";
+    if (normalized == "hoa") return "HOA";
+    if (normalized == "ambisonic") return "Ambisonic";
+    if (normalized == "binaural") return "Binaural";
+    return topologyId;
+}
+
+juce::String calibrationMonitoringSummaryLabel (const juce::String& monitoringPathId)
+{
+    const auto normalized = monitoringPathId.trim().toLowerCase();
+    if (normalized == "speakers") return "Speakers";
+    if (normalized == "stereo_downmix") return "Stereo Downmix";
+    if (normalized == "steam_binaural") return "Steam Binaural";
+    if (normalized == "virtual_binaural") return "Virtual Binaural";
+    return monitoringPathId;
+}
+
+juce::String calibrationReconciliationPolicyLabel (const juce::String& policyId)
+{
+    const auto normalized = policyId.trim().toLowerCase();
+    if (normalized == "defer") return "Defer Role";
+    if (normalized == "fold_front_pair") return "Fold To Front Pair";
+    if (normalized == "manual_reroute_later") return "Manual Reroute Later";
+    return policyId;
+}
+
+juce::String buildCalibrationIntentSegment (const juce::var& source, const juce::String& label)
+{
+    auto* object = source.getDynamicObject();
+    if (object == nullptr)
+        return {};
+
+    juce::StringArray pairs;
+    for (const auto& property : object->getProperties())
+    {
+        const auto role = property.name.toString().trim().toUpperCase();
+        const auto policy = calibrationReconciliationPolicyLabel (property.value.toString());
+        if (role.isNotEmpty() && policy.isNotEmpty())
+            pairs.add (role + "=" + policy);
+    }
+
+    if (pairs.isEmpty())
+        return {};
+
+    return label + ": " + pairs.joinIntoString ("; ") + ".";
+}
+
+juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
+                                                const juce::String& monitoringPathId,
+                                                const juce::var& validationSummary,
+                                                const juce::var& discoveryReconciliation)
+{
+    juce::var summaryVar (new juce::DynamicObject());
+    auto* summary = summaryVar.getDynamicObject();
+
+    const auto tupleLabel = calibrationTopologySummaryLabel (topologyId)
+                            + " · "
+                            + calibrationMonitoringSummaryLabel (monitoringPathId);
+    summary->setProperty ("tupleLabel", tupleLabel);
+
+    const auto profileReady = validationSummary.getDynamicObject() != nullptr
+                              && static_cast<bool> (validationSummary.getProperty ("profileValid"));
+    summary->setProperty ("profileStateLabel", profileReady ? "Profile marked ready." : "Profile metadata available.");
+
+    juce::String bestMapSummary;
+    juce::String bestTopologySummary;
+    if (auto* reconciliation = discoveryReconciliation.getDynamicObject())
+    {
+        bestMapSummary = buildCalibrationIntentSegment (reconciliation->getProperty ("output"), "Best Map");
+        bestTopologySummary = buildCalibrationIntentSegment (reconciliation->getProperty ("topology"), "Best Topology");
+    }
+
+    if (bestMapSummary.isNotEmpty())
+        summary->setProperty ("bestMapSummary", bestMapSummary);
+    if (bestTopologySummary.isNotEmpty())
+        summary->setProperty ("bestTopologySummary", bestTopologySummary);
+
+    juce::StringArray parts;
+    parts.add (tupleLabel);
+    parts.add (profileReady ? "Profile marked ready." : "Profile metadata available.");
+    if (bestMapSummary.isNotEmpty())
+        parts.add (bestMapSummary);
+    if (bestTopologySummary.isNotEmpty())
+        parts.add (bestTopologySummary);
+    if (bestMapSummary.isEmpty() && bestTopologySummary.isEmpty())
+        parts.add ("No saved role reconciliation notes for this profile.");
+    summary->setProperty ("plainText", parts.joinIntoString (" "));
+    return summaryVar;
+}
+
+void ensureCalibrationProfileIntentSummary (juce::var& payload,
+                                            const juce::String& fallbackName)
+{
+    auto* profile = payload.getDynamicObject();
+    if (profile == nullptr)
+        return;
+
+    if (profile->hasProperty ("intentSummary"))
+        return;
+
+    const auto metadata = extractCalibrationProfilePayloadMetadata (payload, fallbackName);
+    profile->setProperty ("intentSummary",
+                          buildCalibrationProfileIntentSummary (metadata.topologyId,
+                                                                metadata.monitoringPathId,
+                                                                metadata.validationSummary,
+                                                                metadata.discoveryReconciliation));
+}
 
 CalibrationProfilePayloadMetadata extractCalibrationProfilePayloadMetadata (const juce::var& payload,
                                                                            const juce::String& fallbackName)
@@ -248,10 +358,20 @@ CalibrationProfilePayloadMetadata extractCalibrationProfilePayloadMetadata (cons
 
         if (profile->hasProperty ("validationSummary"))
             metadata.validationSummary = profile->getProperty ("validationSummary");
+        if (profile->hasProperty ("discoveryReconciliation"))
+            metadata.discoveryReconciliation = profile->getProperty ("discoveryReconciliation");
+        if (profile->hasProperty ("intentSummary"))
+            metadata.intentSummary = profile->getProperty ("intentSummary");
     }
 
     if (metadata.name.isEmpty())
         metadata.name = fallbackName;
+
+    if (metadata.intentSummary.isVoid())
+        metadata.intentSummary = buildCalibrationProfileIntentSummary (metadata.topologyId,
+                                                                      metadata.monitoringPathId,
+                                                                      metadata.validationSummary,
+                                                                      metadata.discoveryReconciliation);
 
     return metadata;
 }
@@ -333,6 +453,10 @@ void populateCalibrationProfileResponse (juce::DynamicObject& result,
     result.setProperty ("profileTupleKey", metadata.topologyId + "::" + metadata.monitoringPathId);
     if (! metadata.validationSummary.isVoid())
         result.setProperty ("validationSummary", metadata.validationSummary);
+    if (! metadata.discoveryReconciliation.isVoid())
+        result.setProperty ("discoveryReconciliation", metadata.discoveryReconciliation);
+    if (! metadata.intentSummary.isVoid())
+        result.setProperty ("intentSummary", metadata.intentSummary);
 }
 } // namespace
 
@@ -601,7 +725,8 @@ void LocusQAudioProcessor::migrateSnapshotLayoutIfNeeded (const juce::ValueTree&
 }
 
 juce::var LocusQAudioProcessor::buildCalibrationProfileState (const juce::String& profileName,
-                                                              const juce::var& validationSummary) const
+                                                              const juce::var& validationSummary,
+                                                              const juce::var& discoveryReconciliation) const
 {
     juce::var profileVar (new juce::DynamicObject());
     auto* profile = profileVar.getDynamicObject();
@@ -649,6 +774,13 @@ juce::var LocusQAudioProcessor::buildCalibrationProfileState (const juce::String
 
     if (! validationSummary.isVoid())
         profile->setProperty ("validationSummary", validationSummary);
+    if (! discoveryReconciliation.isVoid())
+        profile->setProperty ("discoveryReconciliation", discoveryReconciliation);
+    profile->setProperty ("intentSummary",
+                          buildCalibrationProfileIntentSummary (context->getProperty ("topologyProfile").toString(),
+                                                                context->getProperty ("monitoringPath").toString(),
+                                                                validationSummary,
+                                                                discoveryReconciliation));
 
     return profileVar;
 }
@@ -735,6 +867,8 @@ juce::var LocusQAudioProcessor::listCalibrationProfilesFromUI() const
         juce::String monitoringPathId = calibrationMonitoringPathIdForIndex (0);
         juce::String deviceProfileId = calibrationDeviceProfileIdForIndex (0);
         juce::var validationSummary;
+        juce::var discoveryReconciliation;
+        juce::var intentSummary;
 
         if (const auto payload = readJsonFromFile (file))
         {
@@ -755,6 +889,10 @@ juce::var LocusQAudioProcessor::listCalibrationProfilesFromUI() const
 
                 if (profile->hasProperty ("validationSummary"))
                     validationSummary = profile->getProperty ("validationSummary");
+                if (profile->hasProperty ("discoveryReconciliation"))
+                    discoveryReconciliation = profile->getProperty ("discoveryReconciliation");
+                if (profile->hasProperty ("intentSummary"))
+                    intentSummary = profile->getProperty ("intentSummary");
             }
         }
 
@@ -768,6 +906,16 @@ juce::var LocusQAudioProcessor::listCalibrationProfilesFromUI() const
         entry->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
         if (! validationSummary.isVoid())
             entry->setProperty ("validationSummary", validationSummary);
+        if (! discoveryReconciliation.isVoid())
+            entry->setProperty ("discoveryReconciliation", discoveryReconciliation);
+        if (! intentSummary.isVoid())
+            entry->setProperty ("intentSummary", intentSummary);
+        else
+            entry->setProperty ("intentSummary",
+                                buildCalibrationProfileIntentSummary (topologyId,
+                                                                      monitoringPathId,
+                                                                      validationSummary,
+                                                                      discoveryReconciliation));
         profiles.add (entryVar);
     }
 
@@ -778,12 +926,15 @@ juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& o
 {
     juce::String requestedName;
     juce::var validationSummary;
+    juce::var discoveryReconciliation;
     if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
     {
         if (optionsObject->hasProperty ("name"))
             requestedName = optionsObject->getProperty ("name").toString();
         if (optionsObject->hasProperty ("validationSummary"))
             validationSummary = optionsObject->getProperty ("validationSummary");
+        if (optionsObject->hasProperty ("discoveryReconciliation"))
+            discoveryReconciliation = optionsObject->getProperty ("discoveryReconciliation");
     }
 
     const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
@@ -801,7 +952,7 @@ juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& o
     auto profileDir = getCalibrationProfileDirectory();
     profileDir.createDirectory();
     const auto profileFile = profileDir.getChildFile (safeName + ".json");
-    const auto payload = buildCalibrationProfileState (requestedName, validationSummary);
+    const auto payload = buildCalibrationProfileState (requestedName, validationSummary, discoveryReconciliation);
 
     juce::var response (new juce::DynamicObject());
     auto* result = response.getDynamicObject();
@@ -823,6 +974,8 @@ juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& o
     result->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
     if (! validationSummary.isVoid())
         result->setProperty ("validationSummary", validationSummary);
+    if (! discoveryReconciliation.isVoid())
+        result->setProperty ("discoveryReconciliation", discoveryReconciliation);
     return response;
 }
 
@@ -934,6 +1087,8 @@ juce::var LocusQAudioProcessor::loadCalibrationProfileFromUI (const juce::var& o
 
         if (profile->hasProperty ("validationSummary"))
             result->setProperty ("validationSummary", profile->getProperty ("validationSummary"));
+        if (profile->hasProperty ("discoveryReconciliation"))
+            result->setProperty ("discoveryReconciliation", profile->getProperty ("discoveryReconciliation"));
     }
 
     return response;
@@ -981,7 +1136,7 @@ juce::var LocusQAudioProcessor::renameCalibrationProfileFromUI (const juce::var&
         return response;
     }
 
-    const auto payload = readJsonFromFile (sourceFile);
+    auto payload = readJsonFromFile (sourceFile);
     if (! payload.has_value())
     {
         result->setProperty ("ok", false);
@@ -1077,6 +1232,8 @@ juce::var LocusQAudioProcessor::exportCalibrationProfileFromUI (const juce::var&
         return response;
     }
 
+    ensureCalibrationProfileIntentSummary (*payload, sourceFile.getFileNameWithoutExtension());
+
     auto destinationFile = juce::File (destinationPath);
     if (! destinationFile.hasFileExtension ("json"))
         destinationFile = destinationFile.withFileExtension (".json");
@@ -1129,7 +1286,7 @@ juce::var LocusQAudioProcessor::importCalibrationProfileFromUI (const juce::var&
         return response;
     }
 
-    const auto payload = readJsonFromFile (sourceFile);
+    auto payload = readJsonFromFile (sourceFile);
     if (! payload.has_value())
     {
         result->setProperty ("ok", false);
@@ -1143,6 +1300,8 @@ juce::var LocusQAudioProcessor::importCalibrationProfileFromUI (const juce::var&
         result->setProperty ("message", "Calibration profile payload is not compatible.");
         return response;
     }
+
+    ensureCalibrationProfileIntentSummary (*payload, sourceFile.getFileNameWithoutExtension());
 
     auto profileDirectory = getCalibrationProfileDirectory();
     if (! profileDirectory.exists() && ! profileDirectory.createDirectory())
@@ -1213,9 +1372,13 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         cachedCalibrationEqMode = "off";
         cachedCalibrationHrtfMode = "default";
         cachedCalibrationSofaRef.clear();
+        cachedCalibrationProfileSource = "unknown";
+        cachedCalibrationHeadphoneProvenance = "unavailable";
+        cachedCalibrationVerificationProvenance = "unavailable";
         cachedCalibrationRequestedSofa = false;
         cachedCalibrationTrackingEnabled = false;
         cachedCalibrationFirLatency = 0;
+        cachedCalibrationProfileUpdatedAtUtcMs = 0;
         cachedExternalizationScore = -1.0f;
         cachedFrontBackConfusionRate = -1.0f;
         calibrationProfileTrackingEnabled.store (false, std::memory_order_relaxed);
@@ -1255,6 +1418,25 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     }
 
     auto* user = root->getProperty ("user").getDynamicObject();
+    auto* provenance = root->getProperty ("provenance").getDynamicObject();
+
+    const auto readProvenanceToken = [provenance] (const char* key, const juce::String& fallback) -> juce::String
+    {
+        if (provenance == nullptr)
+            return fallback;
+        const auto value = provenance->getProperty (key).toString().trim().toLowerCase();
+        return value.isNotEmpty() ? value : fallback;
+    };
+
+    const auto readOptionalUtcMs = [provenance] (const char* key, std::int64_t fallback) -> std::int64_t
+    {
+        if (provenance == nullptr)
+            return fallback;
+        const auto value = provenance->getProperty (key);
+        if (value.isInt() || value.isInt64() || value.isDouble())
+            return static_cast<std::int64_t> (static_cast<double> (value));
+        return fallback;
+    };
 
     auto modelId = headphone->getProperty ("hp_model_id").toString().trim().toLowerCase();
     if (modelId.isEmpty())
@@ -1327,6 +1509,10 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
         else
             cachedCalibrationDevice = "Unknown Device";
 
+        cachedCalibrationProfileSource = readProvenanceToken ("profile_source", "companion_estimated");
+        cachedCalibrationHeadphoneProvenance = readProvenanceToken (
+            "headphone_provenance",
+            (modelIdForCache == "generic" || modelIdForCache.isEmpty()) ? "generic" : "detected");
         cachedCalibrationEqMode = eqMode.isEmpty() ? "off" : eqMode;
         cachedCalibrationHrtfMode = spatialRenderer.isUsingSofaHrtf() ? "sofa" : "default";
 
@@ -1364,6 +1550,15 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
             if (fbVar.isDouble() || fbVar.isInt())
                 cachedFrontBackConfusionRate = static_cast<float> (static_cast<double> (fbVar));
         }
+
+        const bool verificationPresent = cachedExternalizationScore >= 0.0f
+            || cachedFrontBackConfusionRate >= 0.0f;
+        cachedCalibrationVerificationProvenance = readProvenanceToken (
+            "verification_provenance",
+            verificationPresent ? "estimated" : "unavailable");
+        cachedCalibrationProfileUpdatedAtUtcMs = readOptionalUtcMs (
+            "updated_at_utc_ms",
+            static_cast<std::int64_t> (modifiedMs));
     }
 
     companionCalibrationProfileLastModifiedMs = modifiedMs;

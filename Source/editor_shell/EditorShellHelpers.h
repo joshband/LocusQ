@@ -12,10 +12,12 @@ inline void pushSceneAndCalibrationUpdate (juce::WebBrowserComponent& webView,
     script.preallocateBytes (
         sceneJson.getNumBytesAsUTF8()
         + calibrationJson.getNumBytesAsUTF8()
-        + 160);
+        + 384);
     script = "(()=>{const __scene=" + sceneJson + ";const __cal=" + calibrationJson
-           + ";if(typeof updateSceneState==='function')updateSceneState(__scene);"
-             "if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(__cal);})();";
+           + ";try{if(typeof updateSceneState==='function')updateSceneState(__scene);}"
+             "catch(e){console.error('LocusQ scene update failed', e);}"
+             "try{if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(__cal);}"
+             "catch(e){console.error('LocusQ calibration update failed', e);}})();";
     webView.evaluateJavascript (script);
 }
 

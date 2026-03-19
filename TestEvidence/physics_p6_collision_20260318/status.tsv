@@ -1,0 +1,10 @@
+check	result	notes
+build_vst3	PASS	cmake --build build_local --target LocusQ_VST3; 0 errors; pre-existing shadow/sign-conversion warnings in PhysicsEngine.h/CalibrationEngine.h/PluginEditor.cpp only
+rt_non_allowlisted	0	grep for new/delete/malloc/mutex/lock()/throw in CollisionSystem.h — 0 hits
+determinism_3runs	NOT_TESTED	identical initial conditions → identical impulses requires runtime harness (P7)
+cpu_headroom_64emitters	NOT_TESTED	O(n²) at 64 emitters requires runtime soak harness (P7)
+finite_safe_rapid_collision	NOT_TESTED	no energy blow-up under rapid collisions requires runtime harness (P7)
+apvts_params	PARTIAL	phys_collision_radius + phys_mass_override (emitter), phys_collide_emitters + phys_collision_gain_scale + phys_collision_decay_ms (renderer) registered; IDs verified by code review
+dsp_collision_energy	PARTIAL	collisionSystem.getCollisionEnergy(i) wired into gainTransient in PhysicsWorker::tick() as max(crossed, energy); runtime range validation deferred to P7
+impulse_engine_push	PARTIAL	applyCollisionImpulse() consumed in PhysicsEngine::step() via sequence counter (same as requestThrow pattern); runtime verification deferred to P7
+mass_override	PARTIAL	per-slot massOverride atomic in EmitterSlot; used in collision pre-pass; runtime heterogeneous-mass test deferred to P7

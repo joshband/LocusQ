@@ -2,7 +2,7 @@ Title: LocusQ ADR Index
 Document Type: ADR Index
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # Architecture Decision Records Index
 
@@ -34,6 +34,10 @@ deterministic during implementation, review, and closeout work.
 | `ADR-0017` | AUv3 App-Extension Boundary and Lifecycle Contract | Accepted | AUv3 extension boundary and cross-format parity contract |
 | `ADR-0018` | Temporal Effects Realtime Architecture Contract | Accepted | delay/echo/looper safety and deterministic temporal DSP contract |
 | `ADR-0019` | Custom SOFA Profile Readiness and Fallback Contract | Accepted | capability-gated custom-SOFA activation and deterministic fallback |
+| `ADR-0020` | Four-Layer Authority Chain and Choreography Worker Arbitration | Accepted | orchestration authority chain and worker arbitration |
+| `ADR-0021` | Smart Brevity Documentation Contract | Accepted | concise, scannable, machine-friendly documentation style |
+| `ADR-0022` | Current-Only Generated Artifacts and Decision-Grade Evidence | Accepted | active artifact minimization and evidence lifecycle discipline |
+| `ADR-0023` | Draft-Only Backlog T1-T3 Automation | Accepted | safe automation of replay cadence and packet drafting without blind promotion |
 
 ## Usage Notes
 

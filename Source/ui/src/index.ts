@@ -297,6 +297,104 @@ const sliderStates = {
     rend_master_gain: Juce.getSliderState("rend_master_gain"),
     rend_viz_trail_len: Juce.getSliderState("rend_viz_trail_len"),
     rend_viz_diag_mix: Juce.getSliderState("rend_viz_diag_mix"),
+    // P3 — Spring oscillator
+    phys_spring_k:            Juce.getSliderState("phys_spring_k"),
+    phys_spring_damp:         Juce.getSliderState("phys_spring_damp"),
+    phys_spring_anchor_x:     Juce.getSliderState("phys_spring_anchor_x"),
+    phys_spring_anchor_y:     Juce.getSliderState("phys_spring_anchor_y"),
+    phys_spring_anchor_z:     Juce.getSliderState("phys_spring_anchor_z"),
+    // P3 — Turbulence
+    phys_turbulence:          Juce.getSliderState("phys_turbulence"),
+    phys_turbulence_rate:     Juce.getSliderState("phys_turbulence_rate"),
+    // P4 — Angular physics
+    phys_ang_drag:            Juce.getSliderState("phys_ang_drag"),
+    phys_ang_impulse_x:       Juce.getSliderState("phys_ang_impulse_x"),
+    phys_ang_impulse_y:       Juce.getSliderState("phys_ang_impulse_y"),
+    phys_ang_impulse_z:       Juce.getSliderState("phys_ang_impulse_z"),
+    phys_ang_attractor_torque: Juce.getSliderState("phys_ang_attractor_torque"),
+    // P6 — emitter
+    phys_collision_radius:    Juce.getSliderState("phys_collision_radius"),
+    phys_mass_override:       Juce.getSliderState("phys_mass_override"),
+    // P2 — boundary
+    phys_soft_boundary_depth: Juce.getSliderState("phys_soft_boundary_depth"),
+    // P6 — renderer
+    phys_collision_gain_scale: Juce.getSliderState("phys_collision_gain_scale"),
+    phys_collision_decay_ms:   Juce.getSliderState("phys_collision_decay_ms"),
+    // P2 — Attractors ×4
+    attractor_0_pos_x:  Juce.getSliderState("attractor_0_pos_x"),
+    attractor_0_pos_y:  Juce.getSliderState("attractor_0_pos_y"),
+    attractor_0_pos_z:  Juce.getSliderState("attractor_0_pos_z"),
+    attractor_0_strength: Juce.getSliderState("attractor_0_strength"),
+    attractor_0_radius: Juce.getSliderState("attractor_0_radius"),
+    attractor_1_pos_x:  Juce.getSliderState("attractor_1_pos_x"),
+    attractor_1_pos_y:  Juce.getSliderState("attractor_1_pos_y"),
+    attractor_1_pos_z:  Juce.getSliderState("attractor_1_pos_z"),
+    attractor_1_strength: Juce.getSliderState("attractor_1_strength"),
+    attractor_1_radius: Juce.getSliderState("attractor_1_radius"),
+    attractor_2_pos_x:  Juce.getSliderState("attractor_2_pos_x"),
+    attractor_2_pos_y:  Juce.getSliderState("attractor_2_pos_y"),
+    attractor_2_pos_z:  Juce.getSliderState("attractor_2_pos_z"),
+    attractor_2_strength: Juce.getSliderState("attractor_2_strength"),
+    attractor_2_radius: Juce.getSliderState("attractor_2_radius"),
+    attractor_3_pos_x:  Juce.getSliderState("attractor_3_pos_x"),
+    attractor_3_pos_y:  Juce.getSliderState("attractor_3_pos_y"),
+    attractor_3_pos_z:  Juce.getSliderState("attractor_3_pos_z"),
+    attractor_3_strength: Juce.getSliderState("attractor_3_strength"),
+    attractor_3_radius: Juce.getSliderState("attractor_3_radius"),
+    // P5 — Boids groups ×4
+    phys_flock_0_sep_weight:   Juce.getSliderState("phys_flock_0_sep_weight"),
+    phys_flock_0_align_weight: Juce.getSliderState("phys_flock_0_align_weight"),
+    phys_flock_0_coh_weight:   Juce.getSliderState("phys_flock_0_coh_weight"),
+    phys_flock_0_sep_radius:   Juce.getSliderState("phys_flock_0_sep_radius"),
+    phys_flock_0_align_radius: Juce.getSliderState("phys_flock_0_align_radius"),
+    phys_flock_0_coh_radius:   Juce.getSliderState("phys_flock_0_coh_radius"),
+    phys_flock_0_max_speed:    Juce.getSliderState("phys_flock_0_max_speed"),
+    phys_flock_1_sep_weight:   Juce.getSliderState("phys_flock_1_sep_weight"),
+    phys_flock_1_align_weight: Juce.getSliderState("phys_flock_1_align_weight"),
+    phys_flock_1_coh_weight:   Juce.getSliderState("phys_flock_1_coh_weight"),
+    phys_flock_1_sep_radius:   Juce.getSliderState("phys_flock_1_sep_radius"),
+    phys_flock_1_align_radius: Juce.getSliderState("phys_flock_1_align_radius"),
+    phys_flock_1_coh_radius:   Juce.getSliderState("phys_flock_1_coh_radius"),
+    phys_flock_1_max_speed:    Juce.getSliderState("phys_flock_1_max_speed"),
+    phys_flock_2_sep_weight:   Juce.getSliderState("phys_flock_2_sep_weight"),
+    phys_flock_2_align_weight: Juce.getSliderState("phys_flock_2_align_weight"),
+    phys_flock_2_coh_weight:   Juce.getSliderState("phys_flock_2_coh_weight"),
+    phys_flock_2_sep_radius:   Juce.getSliderState("phys_flock_2_sep_radius"),
+    phys_flock_2_align_radius: Juce.getSliderState("phys_flock_2_align_radius"),
+    phys_flock_2_coh_radius:   Juce.getSliderState("phys_flock_2_coh_radius"),
+    phys_flock_2_max_speed:    Juce.getSliderState("phys_flock_2_max_speed"),
+    phys_flock_3_sep_weight:   Juce.getSliderState("phys_flock_3_sep_weight"),
+    phys_flock_3_align_weight: Juce.getSliderState("phys_flock_3_align_weight"),
+    phys_flock_3_coh_weight:   Juce.getSliderState("phys_flock_3_coh_weight"),
+    phys_flock_3_sep_radius:   Juce.getSliderState("phys_flock_3_sep_radius"),
+    phys_flock_3_align_radius: Juce.getSliderState("phys_flock_3_align_radius"),
+    phys_flock_3_coh_radius:   Juce.getSliderState("phys_flock_3_coh_radius"),
+    phys_flock_3_max_speed:    Juce.getSliderState("phys_flock_3_max_speed"),
+    // Physics DAW output mirrors (read-only display / atmosphere hook)
+    phys_out_spread_mod_0: Juce.getSliderState("phys_out_spread_mod_0"),
+    phys_out_spread_mod_1: Juce.getSliderState("phys_out_spread_mod_1"),
+    phys_out_spread_mod_2: Juce.getSliderState("phys_out_spread_mod_2"),
+    phys_out_spread_mod_3: Juce.getSliderState("phys_out_spread_mod_3"),
+    phys_out_spread_mod_4: Juce.getSliderState("phys_out_spread_mod_4"),
+    phys_out_spread_mod_5: Juce.getSliderState("phys_out_spread_mod_5"),
+    phys_out_spread_mod_6: Juce.getSliderState("phys_out_spread_mod_6"),
+    phys_out_spread_mod_7: Juce.getSliderState("phys_out_spread_mod_7"),
+    phys_out_gain_mod_0:   Juce.getSliderState("phys_out_gain_mod_0"),
+    phys_out_gain_mod_1:   Juce.getSliderState("phys_out_gain_mod_1"),
+    phys_out_gain_mod_2:   Juce.getSliderState("phys_out_gain_mod_2"),
+    phys_out_gain_mod_3:   Juce.getSliderState("phys_out_gain_mod_3"),
+    phys_out_gain_mod_4:   Juce.getSliderState("phys_out_gain_mod_4"),
+    phys_out_gain_mod_5:   Juce.getSliderState("phys_out_gain_mod_5"),
+    phys_out_gain_mod_6:   Juce.getSliderState("phys_out_gain_mod_6"),
+    phys_out_gain_mod_7:   Juce.getSliderState("phys_out_gain_mod_7"),
+    phys_out_transient_0:  Juce.getSliderState("phys_out_transient_0"),
+    phys_out_transient_1:  Juce.getSliderState("phys_out_transient_1"),
+    phys_out_transient_2:  Juce.getSliderState("phys_out_transient_2"),
+    phys_out_transient_3:  Juce.getSliderState("phys_out_transient_3"),
+    phys_out_transient_4:  Juce.getSliderState("phys_out_transient_4"),
+    phys_out_transient_5:  Juce.getSliderState("phys_out_transient_5"),
+    phys_out_transient_6:  Juce.getSliderState("phys_out_transient_6"),
+    phys_out_transient_7:  Juce.getSliderState("phys_out_transient_7"),
 };
 
 const toggleStates = {
@@ -321,6 +419,37 @@ const toggleStates = {
     rend_viz_vectors: Juce.getToggleState("rend_viz_vectors"),
     rend_viz_physics_lens: Juce.getToggleState("rend_viz_physics_lens"),
     rend_audition_enable: Juce.getToggleState("rend_audition_enable"),
+    // P3 — Spring
+    phys_spring_enable:  Juce.getToggleState("phys_spring_enable"),
+    // P4 — Angular physics
+    phys_ang_enable:     Juce.getToggleState("phys_ang_enable"),
+    phys_ang_throw:      Juce.getToggleState("phys_ang_throw"),
+    phys_ang_reset:      Juce.getToggleState("phys_ang_reset"),
+    // P6 — Collision global
+    phys_collide_emitters: Juce.getToggleState("phys_collide_emitters"),
+    // P2 — Attractors ×4
+    attractor_0_active:          Juce.getToggleState("attractor_0_active"),
+    attractor_0_orbit_stabilize: Juce.getToggleState("attractor_0_orbit_stabilize"),
+    attractor_1_active:          Juce.getToggleState("attractor_1_active"),
+    attractor_1_orbit_stabilize: Juce.getToggleState("attractor_1_orbit_stabilize"),
+    attractor_2_active:          Juce.getToggleState("attractor_2_active"),
+    attractor_2_orbit_stabilize: Juce.getToggleState("attractor_2_orbit_stabilize"),
+    attractor_3_active:          Juce.getToggleState("attractor_3_active"),
+    attractor_3_orbit_stabilize: Juce.getToggleState("attractor_3_orbit_stabilize"),
+    // P5 — Boids groups ×4
+    phys_flock_0_enable: Juce.getToggleState("phys_flock_0_enable"),
+    phys_flock_1_enable: Juce.getToggleState("phys_flock_1_enable"),
+    phys_flock_2_enable: Juce.getToggleState("phys_flock_2_enable"),
+    phys_flock_3_enable: Juce.getToggleState("phys_flock_3_enable"),
+    // Physics freeze toggles — per emitter slot
+    phys_frozen_0: Juce.getToggleState("phys_frozen_0"),
+    phys_frozen_1: Juce.getToggleState("phys_frozen_1"),
+    phys_frozen_2: Juce.getToggleState("phys_frozen_2"),
+    phys_frozen_3: Juce.getToggleState("phys_frozen_3"),
+    phys_frozen_4: Juce.getToggleState("phys_frozen_4"),
+    phys_frozen_5: Juce.getToggleState("phys_frozen_5"),
+    phys_frozen_6: Juce.getToggleState("phys_frozen_6"),
+    phys_frozen_7: Juce.getToggleState("phys_frozen_7"),
 };
 
 const comboStates = {
@@ -342,12 +471,26 @@ const comboStates = {
     rend_audition_level: Juce.getComboBoxState("rend_audition_level"),
     rend_phys_rate: Juce.getComboBoxState("rend_phys_rate"),
     rend_viz_mode: Juce.getComboBoxState("rend_viz_mode"),
+    // P3 — Spring anchor mode
+    phys_spring_anchor_mode: Juce.getComboBoxState("phys_spring_anchor_mode"),
+    // P5 — Boids group assignment (emitter)
+    phys_flock_group:        Juce.getComboBoxState("phys_flock_group"),
+    // P2 — Boundary mode
+    phys_boundary_mode:      Juce.getComboBoxState("phys_boundary_mode"),
+    // P2 — Attractor falloff ×4
+    attractor_0_falloff:     Juce.getComboBoxState("attractor_0_falloff"),
+    attractor_1_falloff:     Juce.getComboBoxState("attractor_1_falloff"),
+    attractor_2_falloff:     Juce.getComboBoxState("attractor_2_falloff"),
+    attractor_3_falloff:     Juce.getComboBoxState("attractor_3_falloff"),
 };
 
 const nativeFunctions = {
     startCalibration: Juce.getNativeFunction("locusqStartCalibration"),
     abortCalibration: Juce.getNativeFunction("locusqAbortCalibration"),
+    getCalibrationStatus: Juce.getNativeFunction("locusqGetCalibrationStatus"),
     redetectCalibrationRouting: Juce.getNativeFunction("locusqRedetectCalibrationRouting"),
+    applyBestCalibrationOutputMap: Juce.getNativeFunction("locusqApplyBestCalibrationOutputMap"),
+    applyBestCalibrationTopology: Juce.getNativeFunction("locusqApplyBestCalibrationTopology"),
     listCalibrationProfiles: Juce.getNativeFunction("locusqListCalibrationProfiles"),
     saveCalibrationProfile: Juce.getNativeFunction("locusqSaveCalibrationProfile"),
     loadCalibrationProfile: Juce.getNativeFunction("locusqLoadCalibrationProfile"),
@@ -4184,6 +4327,9 @@ const auditionAuthorityState = {
 };
 let selectedEmitterId = -1;
 let localEmitterId = -1;
+// Callback registered by the freeze-toggle wiring block to refresh the
+// LIVE/FROZEN button whenever the selected emitter slot changes.
+let onEmitterSelectionChangedForFreeze = null;
 let sceneEmitterLookup = new Map();
 let emitterAuthoringLocked = false;
 const railScrollByMode = { calibrate: 0, emitter: 0, renderer: 0 };
@@ -4408,6 +4554,7 @@ const calibrationDeviceProfileLabels = {
     sony_wh1000xm5: "Sony WH-1000XM5",
     custom_sofa: "Custom SOFA",
 };
+let calibrationLastHeadphoneMonitoringPath = "steam_binaural";
 const rendererSpatialProfileAliasDictionary = {
     auto: { label: "Auto", aliases: ["auto", "default"] },
     stereo_2_0: { label: "Stereo 2.0", aliases: ["stereo_2_0", "stereo"] },
@@ -4487,7 +4634,36 @@ let calibrationState = {
 let calibrationProfileEntries = [];
 let calibrationMappingEditedByUser = false;
 let calibrationLastAutoRouting = [1, 2, 3, 4];
+const calibrationDiscoveryReconciliationOptions = [
+    { id: "review", label: "Review First" },
+    { id: "defer", label: "Defer Role" },
+    { id: "fold_front_pair", label: "Fold To Front Pair" },
+    { id: "manual_reroute_later", label: "Manual Reroute Later" },
+];
+let calibrationDiscoveryReconciliation = {
+    output: {},
+    topology: {},
+};
+let calibrationAutomationSources = {
+    topology: "runtime_state",
+    monitoringPath: "runtime_state",
+    deviceProfile: "runtime_state",
+    routing: "runtime_state",
+    lastLoadedProfileName: "",
+    lastLoadedProfilePath: "",
+};
 let calibrationLegacyAliasSyncInFlight = false;
+
+function parseCalibrationProfileDatasetJson(value) {
+    const text = String(value || "").trim();
+    if (!text) return undefined;
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        console.warn("LocusQ: failed to parse calibration profile dataset JSON", error);
+        return undefined;
+    }
+}
 let calibrationLegacyAliasSyncSource = "";
 const calibrationMappingRowEntries = [];
 let rendererSteamDiagnosticsExpanded = false;
@@ -4495,6 +4671,26 @@ let rendererAmbiDiagnosticsExpanded = false;
 let rendererHeadphoneVerificationDiagnosticsExpanded = false;
 let rendererAuthorityDiagnosticsExpanded = false;
 let rendererResizeDiagnosticsExpanded = false;
+
+const calibrationAutomationSourceMeta = {
+    host_auto: { label: "Host-Detected", chipClass: "remote" },
+    standalone_scan: { label: "Standalone Scan", chipClass: "remote" },
+    loaded_profile: { label: "Profile-Loaded", chipClass: "local" },
+    manual_override: { label: "Manual Override", chipClass: "warning" },
+    companion_profile: { label: "Companion-Detected", chipClass: "remote" },
+    runtime_active: { label: "Runtime Active", chipClass: "active" },
+    runtime_state: { label: "Runtime", chipClass: "inactive" },
+    unknown: { label: "Unknown", chipClass: "inactive" },
+};
+const calibrationProvenanceMeta = {
+    measured: { label: "Measured" },
+    detected: { label: "Detected" },
+    inferred: { label: "Inferred" },
+    estimated: { label: "Estimated" },
+    generic: { label: "Generic" },
+    unavailable: { label: "Unavailable" },
+    unknown: { label: "Unknown" },
+};
 
 const laneTrackMap = {
     azimuth: "pos_azimuth",
@@ -4888,6 +5084,9 @@ let listenerGroup, listenerHeadRig, listenerEnergyRing, listenerAimArrow, listen
 let auditionEmitterMesh, auditionEmitterRing;
 let auditionCloudPoints, auditionCloudLines;
 let azArc, elArc, distRing;
+// P7 overlay objects (read-only, no DSP/scene state mutation)
+const attractorRingMeshes = [];   // 4 rings — one per attractor slot
+const flockCentroidSpheres = [];  // 4 spheres — one per boids group
 let spherical = { theta: Math.PI / 4, phi: Math.PI / 4, radius: 8 };
 let activeViewportView = "perspective";
 let orbitTarget;
@@ -5885,6 +6084,7 @@ function setSelectedEmitter(emitterId, options = {}) {
     updateSelectionRingFromState();
     updateEmitterAuthorityUI();
     syncSceneListSelectionState(options.focusSceneItem ? emitterId : null);
+    if (onEmitterSelectionChangedForFreeze) onEmitterSelectionChangedForFreeze();
     if (options.announce) {
         announceAccessibility(`${getEmitterAccessibleName(emitterId)} selected`);
     }
@@ -6296,6 +6496,9 @@ function hasRendererHeadphoneVerificationPayload(data) {
         || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationConfidence")
         || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationStage")
         || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationScoreStatus")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationScoreProvenance")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationCompensationLabel")
+        || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationCompensationProvenance")
         || Object.prototype.hasOwnProperty.call(data, "rendererHeadphoneVerificationLatencySamples");
 }
 
@@ -7430,6 +7633,9 @@ function updateRendererPanelShell(data = sceneData) {
     const hpVerificationFallbackReasonText = String(payload.rendererHeadphoneVerificationFallbackReasonText || "").trim();
     const hpVerificationStageToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationStage || "") || "unavailable";
     const hpVerificationScoreStatusToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationScoreStatus || "");
+    const hpVerificationScoreProvenanceToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationScoreProvenance || hpVerificationScoreStatusToken) || "unavailable";
+    const hpVerificationCompensationLabel = String(payload.rendererHeadphoneVerificationCompensationLabel || "").trim();
+    const hpVerificationCompensationProvenanceToken = normalizeAuditionToken(payload.rendererHeadphoneVerificationCompensationProvenance || "") || "unavailable";
     const hpVerificationLatencyRaw = Number(payload.rendererHeadphoneVerificationLatencySamples);
     const hpVerificationLatencyText = Number.isFinite(hpVerificationLatencyRaw) && hpVerificationLatencyRaw >= 0
         ? String(Math.round(hpVerificationLatencyRaw))
@@ -7443,12 +7649,18 @@ function updateRendererPanelShell(data = sceneData) {
     let hpScoreChipLabel = "UNAVAILABLE";
     let hpScoreChipStateClass = "neutral";
     if (hpVerificationPayloadPresent) {
-        if (!hpVerificationScoreStatusToken) {
+        if (["unavailable"].includes(hpVerificationScoreProvenanceToken) || ["unavailable"].includes(hpVerificationScoreStatusToken)) {
             hpScoreChipLabel = "UNAVAILABLE";
             hpScoreChipStateClass = "neutral";
-        } else if (["pass", "ok", "stable", "verified", "ready"].includes(hpVerificationScoreStatusToken)) {
-            hpScoreChipLabel = "PASS";
+        } else if (["measured"].includes(hpVerificationScoreProvenanceToken)) {
+            hpScoreChipLabel = "MEASURED";
             hpScoreChipStateClass = "ok";
+        } else if (["estimated", "generic"].includes(hpVerificationScoreProvenanceToken)) {
+            hpScoreChipLabel = hpVerificationScoreProvenanceToken.toUpperCase();
+            hpScoreChipStateClass = "warning";
+        } else if (!hpVerificationScoreStatusToken) {
+            hpScoreChipLabel = "UNAVAILABLE";
+            hpScoreChipStateClass = "neutral";
         } else if (["warn", "warning", "degraded", "fallback", "review", "unstable"].includes(hpVerificationScoreStatusToken)) {
             hpScoreChipLabel = "WARN";
             hpScoreChipStateClass = "warning";
@@ -7466,6 +7678,8 @@ function updateRendererPanelShell(data = sceneData) {
     const hpVerificationScoreStatusLabel = hpVerificationScoreStatusToken
         ? formatAuditionTokenLabel(hpVerificationScoreStatusToken)
         : "Unavailable";
+    const hpVerificationScoreProvenanceLabel = formatAuditionTokenLabel(hpVerificationScoreProvenanceToken);
+    const hpVerificationCompensationProvenanceLabel = formatAuditionTokenLabel(hpVerificationCompensationProvenanceToken);
     const hpVerificationFallbackReasonLabel = hpVerificationFallbackReasonText.length > 0
         ? hpVerificationFallbackReasonText
         : formatAuditionTokenLabel(hpVerificationFallbackReasonCodeToken || hpProfileFallbackReasonToken);
@@ -7474,8 +7688,13 @@ function updateRendererPanelShell(data = sceneData) {
     const hpCalibrationRouteText = `${formatAuditionTokenLabel(hpCalibrationRequested)} -> ${formatAuditionTokenLabel(hpCalibrationActive)}`;
     const hpCalibrationEngineText = `${formatAuditionTokenLabel(hpCalibrationEngineRequested)} -> ${formatAuditionTokenLabel(hpCalibrationEngineActive)}`;
     const hpCalibrationFallbackDetail = `ready=${hpCalibrationFallbackReady ? "yes" : "no"} · ${formatAuditionTokenLabel(hpCalibrationFallbackReasonToken)}${hpCalibrationFallbackReasonCode ? ` (${hpCalibrationFallbackReasonCode})` : ""}`;
-    const hpScoreSummaryText = `FB ${formatUnitIntervalMetric(hpFrontBackMetric)} · EL ${formatUnitIntervalMetric(hpElevationMetric)} · EXT ${formatUnitIntervalMetric(hpExternalizationMetric)}`;
-    const hpConfidenceText = hpConfidenceMetric.present
+    const hpVerificationEvidenceAvailable = hpVerificationPayloadPresent
+        && !["unavailable"].includes(hpVerificationScoreProvenanceToken)
+        && !["unavailable"].includes(hpVerificationScoreStatusToken);
+    const hpScoreSummaryText = hpVerificationEvidenceAvailable
+        ? `FB ${formatUnitIntervalMetric(hpFrontBackMetric)} · EL ${formatUnitIntervalMetric(hpElevationMetric)} · EXT ${formatUnitIntervalMetric(hpExternalizationMetric)}`
+        : "FB n/a · EL n/a · EXT n/a";
+    const hpConfidenceText = hpVerificationEvidenceAvailable && hpConfidenceMetric.present
         ? `${hpConfidenceMetric.value.toFixed(3)} (${Math.round(hpConfidenceMetric.value * 100)}%)`
         : "n/a";
 
@@ -7499,17 +7718,23 @@ function updateRendererPanelShell(data = sceneData) {
         setRendererText("rend-hpver-schema", "n/a");
         setRendererText("rend-hpver-stage", "n/a");
         setRendererText("rend-hpver-score-status", "n/a");
+        setRendererText("rend-hpver-score-provenance", "n/a");
+        setRendererText("rend-hpver-comp-label", "n/a");
+        setRendererText("rend-hpver-comp-provenance", "n/a");
         setRendererText("rend-hpver-scores", "FB n/a · EL n/a · EXT n/a");
         setRendererText("rend-hpver-confidence", "n/a");
         setRendererText("rend-hpver-latency", "n/a");
     } else if (!hpVerificationPayloadPresent) {
         setRendererChipState("rend-hpver-chip", "UNAVAILABLE", "neutral");
         setRendererText("rend-hpver-detail", "Awaiting headphone verification diagnostics payload.");
+        setRendererText("rend-hpver-score-provenance", "n/a");
+        setRendererText("rend-hpver-comp-label", "n/a");
+        setRendererText("rend-hpver-comp-provenance", "n/a");
     } else {
         setRendererChipState("rend-hpver-chip", hpScoreChipLabel, hpScoreChipStateClass);
         setRendererText(
             "rend-hpver-detail",
-            `stage=${hpVerificationStageLabel} · score=${hpVerificationScoreStatusLabel} · fallback=${hpVerificationFallbackReasonLabel}${hpVerificationFallbackTargetToken !== "none" ? ` -> ${hpVerificationFallbackTargetLabel}` : ""}`
+            `stage=${hpVerificationStageLabel} · evidence=${hpVerificationScoreProvenanceLabel} · compensation=${hpVerificationCompensationProvenanceLabel}${hpVerificationCompensationLabel ? ` (${hpVerificationCompensationLabel})` : ""} · fallback=${hpVerificationFallbackReasonLabel}${hpVerificationFallbackTargetToken !== "none" ? ` -> ${hpVerificationFallbackTargetLabel}` : ""}`
         );
         setRendererText("rend-hpver-catalog", hpCatalogVersion || "Unavailable");
         setRendererText("rend-hpver-profile-route", hpProfileRouteText);
@@ -7523,6 +7748,9 @@ function updateRendererPanelShell(data = sceneData) {
         setRendererText("rend-hpver-schema", hpVerificationSchema || hpCalibrationSchema || "Unavailable");
         setRendererText("rend-hpver-stage", hpVerificationStageLabel);
         setRendererText("rend-hpver-score-status", hpVerificationScoreStatusLabel);
+        setRendererText("rend-hpver-score-provenance", hpVerificationScoreProvenanceLabel);
+        setRendererText("rend-hpver-comp-label", hpVerificationCompensationLabel || "Unavailable");
+        setRendererText("rend-hpver-comp-provenance", hpVerificationCompensationProvenanceLabel);
         setRendererText("rend-hpver-scores", hpScoreSummaryText);
         setRendererText("rend-hpver-confidence", hpConfidenceText);
         setRendererText("rend-hpver-latency", hpVerificationLatencyText);
@@ -7757,6 +7985,1075 @@ function getCalibrationTopologyLabel(topologyId, shortLabel = false) {
 function getCalibrationMonitoringPathLabel(pathId) {
     const id = String(pathId || "").trim().toLowerCase();
     return calibrationMonitoringPathLabels[id] || calibrationMonitoringPathLabels.speakers;
+}
+
+function isHeadphoneCalibrationMonitoringPath(pathId = "") {
+    const resolvedMonitoringPath = String(
+        pathId || getCalibrationMonitoringPathId()
+    ).trim().toLowerCase();
+    return resolvedMonitoringPath === "steam_binaural"
+        || resolvedMonitoringPath === "virtual_binaural";
+}
+
+function getCalibrationTargetId(monitoringPathId = "") {
+    return isHeadphoneCalibrationMonitoringPath(monitoringPathId)
+        ? "headphones"
+        : "speaker_room";
+}
+
+function setCalibrationAutomationSource(field, sourceId) {
+    if (!Object.prototype.hasOwnProperty.call(calibrationAutomationSources, field)) return;
+    calibrationAutomationSources[field] = calibrationAutomationSourceMeta[sourceId]
+        ? sourceId
+        : "unknown";
+}
+
+function getCalibrationAutomationSource(field, fallback = "unknown") {
+    const sourceId = String(calibrationAutomationSources[field] || "").trim().toLowerCase();
+    return calibrationAutomationSourceMeta[sourceId] ? sourceId : fallback;
+}
+
+function setCalibrationAutomationProfileContext(name = "", path = "") {
+    calibrationAutomationSources.lastLoadedProfileName = String(name || "").trim();
+    calibrationAutomationSources.lastLoadedProfilePath = String(path || "").trim();
+}
+
+function getCalibrationAutomationSourceDescriptor(sourceId = "unknown") {
+    const resolvedSourceId = calibrationAutomationSourceMeta[sourceId] ? sourceId : "unknown";
+    return calibrationAutomationSourceMeta[resolvedSourceId];
+}
+
+function getCalibrationProvenanceDescriptor(provenanceId = "unknown") {
+    const resolvedId = calibrationProvenanceMeta[provenanceId] ? provenanceId : "unknown";
+    return calibrationProvenanceMeta[resolvedId];
+}
+
+function normalizeBl101Descriptor(descriptor, fallbackSource = "unknown", fallbackProvenance = "unknown") {
+    if (!descriptor || typeof descriptor !== "object") {
+        return {
+            source: fallbackSource,
+            provenance: fallbackProvenance,
+            detail: "",
+            manualOverride: false,
+            ageMs: null,
+            staleAfterMs: null,
+            isStale: false,
+        };
+    }
+
+    const source = String(descriptor.source || "").trim().toLowerCase() || fallbackSource;
+    const provenance = String(descriptor.provenance || "").trim().toLowerCase() || fallbackProvenance;
+    const ageRaw = Number(descriptor.ageMs);
+    const staleAfterRaw = Number(descriptor.staleAfterMs);
+    const ageMs = Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : null;
+    const staleAfterMs = Number.isFinite(staleAfterRaw) && staleAfterRaw >= 0 ? staleAfterRaw : null;
+    const isStale = descriptor.isStale === true
+        || (ageMs !== null && staleAfterMs !== null && ageMs >= staleAfterMs);
+
+    return {
+        source: calibrationAutomationSourceMeta[source] ? source : fallbackSource,
+        provenance: calibrationProvenanceMeta[provenance] ? provenance : fallbackProvenance,
+        detail: String(descriptor.detail || "").trim(),
+        manualOverride: descriptor.manualOverride === true,
+        ageMs,
+        staleAfterMs,
+        isStale,
+    };
+}
+
+function formatBl101Freshness(descriptor) {
+    if (!descriptor) return "No freshness guarantee";
+    if (descriptor.isStale) {
+        if (descriptor.ageMs !== null) return `Stale (${Math.round(descriptor.ageMs)} ms old)`;
+        return "Stale";
+    }
+    if (descriptor.ageMs !== null) return `Fresh (${Math.round(descriptor.ageMs)} ms old)`;
+    return "No freshness guarantee";
+}
+
+function appendBl101DescriptorToNote(note, descriptor) {
+    const normalized = normalizeBl101Descriptor(descriptor);
+    const parts = [];
+    if (String(note || "").trim()) parts.push(String(note).trim());
+    parts.push(`Trust: ${getCalibrationProvenanceDescriptor(normalized.provenance).label}.`);
+    if (normalized.manualOverride) parts.push("Manual override is active.");
+    const freshness = formatBl101Freshness(normalized);
+    if (freshness) parts.push(`${freshness}.`);
+    if (normalized.detail) parts.push(normalized.detail);
+    return parts.join(" ");
+}
+
+function setCalibrationTargetUi(targetId) {
+    const resolvedTarget = targetId === "headphones" ? "headphones" : "speaker_room";
+    const speakerTargetButton = document.getElementById("cal-target-speaker");
+    const headphoneTargetButton = document.getElementById("cal-target-headphone");
+    const targetNote = document.getElementById("cal-target-note");
+    const setupTitle = document.getElementById("cal-setup-title");
+    const runTitle = document.getElementById("cal-run-title");
+    const deviceProfileLabel = document.getElementById("cal-device-profile-label");
+    const automationCard = document.getElementById("cal-card-automation");
+    const mappingCard = document.getElementById("cal-card-mapping");
+    const headphoneStatusCard = document.getElementById("cal-card-headphone-status");
+    const runCard = document.getElementById("cal-card-run");
+    const libraryCard = document.getElementById("cal-card-library");
+    const topologyRow = document.getElementById("cal-topology-row");
+    const micRow = document.getElementById("cal-mic-row");
+    const statusRows = document.getElementById("cal-status");
+    const topologyChip = document.getElementById("cal-chip-topology");
+    const mappingChip = document.getElementById("cal-chip-mapping");
+    const mapCard = document.getElementById("cal-diagnostic-map-card");
+    const phaseCard = document.getElementById("cal-diagnostic-phase-card");
+    const delayCard = document.getElementById("cal-diagnostic-delay-card");
+
+    [
+        [speakerTargetButton, resolvedTarget === "speaker_room"],
+        [headphoneTargetButton, resolvedTarget === "headphones"],
+    ].forEach(([button, active]) => {
+        if (!(button instanceof HTMLButtonElement)) return;
+        button.classList.toggle("active", !!active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+        button.tabIndex = active ? 0 : -1;
+    });
+
+    if (targetNote) {
+        targetNote.textContent = resolvedTarget === "headphones"
+            ? "Review detected device, confirm the active profile, and verify headphone playback."
+            : "Measure speakers, verify routing, and save a room profile.";
+    }
+    if (setupTitle) {
+        setupTitle.textContent = resolvedTarget === "headphones"
+            ? "Headphone Personalization"
+            : "Speaker Setup";
+    }
+    if (runTitle) {
+        runTitle.textContent = resolvedTarget === "headphones"
+            ? "Headphone Verify"
+            : "Measure and Verify";
+    }
+    if (deviceProfileLabel) {
+        deviceProfileLabel.textContent = resolvedTarget === "headphones"
+            ? "Headphone Profile"
+            : "Device Profile";
+    }
+    if (automationCard) {
+        automationCard.style.order = "2";
+    }
+    if (mappingCard) {
+        mappingCard.classList.toggle("hidden-card", resolvedTarget !== "speaker_room");
+        mappingCard.style.order = "3";
+    }
+    if (headphoneStatusCard) {
+        headphoneStatusCard.classList.toggle("hidden-card", resolvedTarget !== "headphones");
+        headphoneStatusCard.style.order = resolvedTarget === "headphones" ? "3" : "5";
+    }
+    if (runCard) {
+        runCard.style.order = "4";
+    }
+    if (libraryCard) {
+        libraryCard.style.order = "5";
+    }
+    if (topologyRow) {
+        topologyRow.style.display = resolvedTarget === "speaker_room" ? "flex" : "none";
+    }
+    if (micRow) {
+        micRow.style.display = resolvedTarget === "speaker_room" ? "flex" : "none";
+    }
+    if (statusRows) {
+        statusRows.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+    if (topologyChip) {
+        topologyChip.style.display = resolvedTarget === "speaker_room" ? "inline-flex" : "none";
+    }
+    if (mappingChip) {
+        mappingChip.style.display = resolvedTarget === "speaker_room" ? "inline-flex" : "none";
+    }
+    if (mapCard) {
+        mapCard.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+    if (phaseCard) {
+        phaseCard.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+    if (delayCard) {
+        delayCard.style.display = resolvedTarget === "speaker_room" ? "block" : "none";
+    }
+}
+
+function setCalibrationAutomationSummaryChip(chipId, sourceId) {
+    const chip = document.getElementById(chipId);
+    if (!chip) return;
+    const descriptor = getCalibrationAutomationSourceDescriptor(sourceId);
+    chip.className = "status-chip";
+    if (descriptor.chipClass) chip.classList.add(descriptor.chipClass);
+    chip.textContent = String(descriptor.label || "Unknown").toUpperCase();
+}
+
+function setCalibrationAutomationSummaryRow(slot, { label = "", value = "", sourceId = "unknown", note = "" }) {
+    const labelEl = document.getElementById(`cal-auto-row${slot}-label`);
+    const valueEl = document.getElementById(`cal-auto-row${slot}-value`);
+    const noteEl = document.getElementById(`cal-auto-row${slot}-note`);
+    if (labelEl) labelEl.textContent = label;
+    if (valueEl) valueEl.textContent = value;
+    if (noteEl) noteEl.textContent = note;
+    setCalibrationAutomationSummaryChip(`cal-auto-row${slot}-source`, sourceId);
+}
+
+function setCalibrationDiscoverySummaryRow(
+    slot,
+    { label = "", value = "", note = "", sourceId = "unknown", chipLabel = "", chipClass = "" }
+) {
+    const labelEl = document.getElementById(`cal-discovery-row${slot}-label`);
+    const valueEl = document.getElementById(`cal-discovery-row${slot}-value`);
+    const noteEl = document.getElementById(`cal-discovery-row${slot}-note`);
+    const chipEl = document.getElementById(`cal-discovery-row${slot}-source`);
+    if (labelEl) labelEl.textContent = label;
+    if (valueEl) valueEl.textContent = value;
+    if (noteEl) noteEl.textContent = note;
+    if (!chipEl) return;
+
+    if (chipLabel) {
+        chipEl.className = "status-chip";
+        if (chipClass) chipEl.classList.add(chipClass);
+        chipEl.textContent = chipLabel.toUpperCase();
+        return;
+    }
+
+    setCalibrationAutomationSummaryChip(`cal-discovery-row${slot}-source`, sourceId);
+}
+
+function renderCalibrationInputCandidates(candidates = []) {
+    renderCalibrationCandidateStrip("cal-discovery-row2-candidates", candidates, (candidate) => {
+        const micChannel = Number(candidate?.candidateMicChannel ?? candidate?.selectedMicChannel);
+        return Number.isFinite(micChannel) && micChannel >= 1
+            ? `Mic ${micChannel}`
+            : String(candidate?.label || "Input");
+    }, (candidate) => candidate?.candidateVisible === false);
+}
+
+function renderCalibrationCandidateStrip(containerId, candidates = [], labelResolver, blockedResolver = () => false) {
+    const strip = document.getElementById(containerId);
+    if (!strip) return;
+    strip.innerHTML = "";
+
+    const sortedCandidates = (Array.isArray(candidates) ? candidates : [])
+        .slice()
+        .sort((a, b) => (Number(a?.rank) || 999) - (Number(b?.rank) || 999))
+        .slice(0, 4);
+
+    sortedCandidates.forEach((candidate) => {
+        const pill = document.createElement("span");
+        pill.className = "cal-candidate-pill";
+        const isBest = (Number(candidate?.rank) || 999) === 1;
+        const isSelected = candidate?.selected === true;
+        const isBlocked = !!blockedResolver(candidate);
+        if (isBest) pill.classList.add("best");
+        if (isSelected) pill.classList.add("selected");
+        if (isBlocked) pill.classList.add("blocked");
+
+        const label = document.createElement("span");
+        label.textContent = labelResolver(candidate);
+        pill.appendChild(label);
+
+        const role = document.createElement("span");
+        role.className = "cal-candidate-role";
+        role.textContent = isBlocked ? "Blocked" : (isBest ? "Best" : (isSelected ? "Selected" : "Alt"));
+        pill.appendChild(role);
+
+        strip.appendChild(pill);
+    });
+}
+
+function updateCalibrationDiscoverySummary(snapshot = calibrationState) {
+    const status = snapshot || {};
+    const discoveryGraph = status.discoveryGraph && typeof status.discoveryGraph === "object"
+        ? status.discoveryGraph
+        : {};
+    const outputCandidates = Array.isArray(discoveryGraph.outputCandidates)
+        ? discoveryGraph.outputCandidates
+        : [];
+    const inputCandidates = Array.isArray(discoveryGraph.inputCandidates)
+        ? discoveryGraph.inputCandidates
+        : [];
+    const topologyCandidates = Array.isArray(discoveryGraph.topologyCandidates)
+        ? discoveryGraph.topologyCandidates
+        : [];
+    const confirmationItems = Array.isArray(discoveryGraph.needsConfirmation)
+        ? discoveryGraph.needsConfirmation
+        : [];
+    const summary = discoveryGraph.summary && typeof discoveryGraph.summary === "object"
+        ? discoveryGraph.summary
+        : {};
+    const formatReasonCodes = (reasonCodes = []) => {
+        const labels = [];
+        reasonCodes.forEach((reasonCode) => {
+            const id = String(reasonCode || "").trim().toLowerCase();
+            if (!id) return;
+            if (id === "host_input_unavailable") labels.push("Host input visibility is unavailable.");
+            else if (id === "selected_mic_out_of_range") labels.push("Selected mic is outside the visible host input width.");
+            else if (id === "single_input_visible") labels.push("Only one host input channel is visible, so that input is the current best measurement candidate.");
+            else if (id === "selected_mic_addressable") labels.push("Selected mic is addressable in the current host input width.");
+            else if (id === "host_input_visible") labels.push("Host input visibility is available.");
+        });
+        return labels.join(" ");
+    };
+
+    const firstOutput = outputCandidates[0] || null;
+    const outputDescriptor = normalizeBl101Descriptor(
+        firstOutput?.descriptor,
+        "unknown",
+        "unavailable"
+    );
+    const outputValue = String(summary.outputHeadline || "").trim()
+        || (firstOutput
+            ? `${firstOutput.label || "Host Output"} · ${Number(firstOutput.channelCount) || 0} visible / ${Number(firstOutput.writableChannels) || 0} writable`
+            : "Host main output awaiting channel visibility.");
+    const outputNoteBase = firstOutput
+        ? `Layout ${String(firstOutput.layout || "unknown").trim() || "unknown"} is the current best output candidate.`
+        : "Output discovery is waiting for a usable host report.";
+    setCalibrationDiscoverySummaryRow(1, {
+        label: "Detected Outputs",
+        value: outputValue,
+        note: appendBl101DescriptorToNote(outputNoteBase, outputDescriptor),
+        sourceId: outputDescriptor.source,
+    });
+    renderCalibrationCandidateStrip("cal-discovery-row1-candidates", outputCandidates, (candidate) => {
+        const writable = Number(candidate?.writableChannels);
+        return `${String(candidate?.label || "Output")} · ${Number(candidate?.channelCount) || 0}ch${Number.isFinite(writable) && writable > 0 ? `/${writable} writable` : ""}`;
+    }, (candidate) => Number(candidate?.writableChannels) > 0 && Number(candidate?.channelCount) > Number(candidate?.writableChannels));
+
+    const firstInput = inputCandidates[0] || null;
+    const inputDescriptor = normalizeBl101Descriptor(
+        firstInput?.descriptor,
+        "unknown",
+        "unavailable"
+    );
+    const selectedMicChannel = Number(firstInput?.selectedMicChannel);
+    const selectedMicLabel = Number.isFinite(selectedMicChannel) && selectedMicChannel >= 1
+        ? `Mic ${selectedMicChannel}`
+        : "Mic selection unavailable";
+    const inputValue = String(summary.inputHeadline || "").trim()
+        || (firstInput
+            ? `${firstInput.label || "Host Input"} · ${Number(firstInput.channelCount) || 0} visible · ${selectedMicLabel}`
+            : "Host main input awaiting channel visibility.");
+    const recommendedMicChannel = Number(firstInput?.recommendedMicChannel);
+    const recommendedMicLabel = Number.isFinite(recommendedMicChannel) && recommendedMicChannel >= 1
+        ? `Recommended mic: ${recommendedMicChannel}.`
+        : "";
+    const inputReasonCodesNote = formatReasonCodes(firstInput?.reasonCodes);
+    const inputConfirmationPrompt = String(firstInput?.confirmationPrompt || "").trim();
+    const inputNoteBase = firstInput
+        ? ((firstInput.selectedMicVisible === false)
+            ? "Selected mic channel is outside the currently visible host input width."
+            : "Input discovery currently reflects host input-bus visibility plus the selected mic channel.")
+        : "Input discovery currently relies on host input-bus visibility and the selected mic channel.";
+    const inputNote = [inputNoteBase, recommendedMicLabel, inputReasonCodesNote, inputConfirmationPrompt]
+        .filter(Boolean)
+        .join(" ");
+    setCalibrationDiscoverySummaryRow(2, {
+        label: "Detected Inputs",
+        value: inputValue,
+        note: appendBl101DescriptorToNote(inputNote, inputDescriptor),
+        sourceId: inputDescriptor.source,
+    });
+    renderCalibrationInputCandidates(inputCandidates);
+
+    const bestTopologyCandidate = topologyCandidates
+        .slice()
+        .sort((a, b) => (Number(a?.rank) || 999) - (Number(b?.rank) || 999))[0] || null;
+    const topologyDescriptor = normalizeBl101Descriptor(
+        bestTopologyCandidate?.descriptor,
+        "unknown",
+        "unavailable"
+    );
+    const topologyValue = String(summary.topologyHeadline || "").trim()
+        || (bestTopologyCandidate
+            ? `${bestTopologyCandidate.label || bestTopologyCandidate.id || "Unknown"} · ${Number(bestTopologyCandidate.requiredChannels) || 0} required / ${Number(bestTopologyCandidate.writableChannels) || 0} writable`
+            : "No topology candidate available yet.");
+    const topologyNoteBase = bestTopologyCandidate
+        ? (bestTopologyCandidate.selected
+            ? "Current selection matches the strongest topology candidate."
+            : "Best topology candidate differs from the current selection.")
+        : "Topology discovery appears after output visibility is known.";
+    setCalibrationDiscoverySummaryRow(3, {
+        label: "Topology Candidate",
+        value: topologyValue,
+        note: appendBl101DescriptorToNote(topologyNoteBase, topologyDescriptor),
+        sourceId: topologyDescriptor.source,
+    });
+    renderCalibrationCandidateStrip("cal-discovery-row3-candidates", topologyCandidates, (candidate) => {
+        return String(candidate?.label || candidate?.id || "Topology");
+    }, (candidate) => Number(candidate?.requiredChannels) > Number(candidate?.writableChannels));
+
+    const hasRealConfirmation = confirmationItems.some(item => !String(item || "").toLowerCase().includes("no confirmation needed"));
+    const confirmationValue = hasRealConfirmation
+        ? `${confirmationItems.length} confirmation item(s)`
+        : "No confirmation needed";
+    const confirmationNote = String(summary.ambiguityHeadline || "").trim()
+        || (hasRealConfirmation
+            ? confirmationItems.join(" ")
+            : "Auto-map and topology candidate are aligned.");
+    setCalibrationDiscoverySummaryRow(4, {
+        label: "Needs Confirmation",
+        value: confirmationValue,
+        note: confirmationNote,
+        chipLabel: hasRealConfirmation ? "Review" : "Ready",
+        chipClass: hasRealConfirmation ? "warning" : "local",
+    });
+    updateCalibrationDiscoveryActionButtons({
+        outputCandidates,
+        topologyCandidates,
+    });
+}
+
+function getCalibrationDiscoveryRoleKey(label = "") {
+    return String(label || "").trim().toLowerCase();
+}
+
+function getCalibrationDiscoveryReconciliationBucket(kind = "output") {
+    const normalizedKind = kind === "topology" ? "topology" : "output";
+    if (!calibrationDiscoveryReconciliation[normalizedKind] || typeof calibrationDiscoveryReconciliation[normalizedKind] !== "object") {
+        calibrationDiscoveryReconciliation[normalizedKind] = {};
+    }
+    return calibrationDiscoveryReconciliation[normalizedKind];
+}
+
+function getCalibrationDiscoveryUnmappedRoles(candidate) {
+    const assignments = Array.isArray(candidate?.roleAssignments) ? candidate.roleAssignments : [];
+    return assignments
+        .filter((assignment) => {
+            const outputChannel = Number(assignment?.outputChannel) || 0;
+            return assignment?.mapped === false || assignment?.blocked === true || outputChannel <= 0;
+        })
+        .map((assignment) => String(assignment?.label || "").trim())
+        .filter(Boolean);
+}
+
+function trimCalibrationDiscoveryReconciliation(kind, activeRoles = []) {
+    const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
+    const allowedKeys = new Set((Array.isArray(activeRoles) ? activeRoles : []).map(getCalibrationDiscoveryRoleKey));
+    Object.keys(bucket).forEach((roleKey) => {
+        if (!allowedKeys.has(roleKey)) delete bucket[roleKey];
+    });
+}
+
+function getCalibrationDiscoveryReconciliationSummary(kind, activeRoles = []) {
+    const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
+    const resolved = (Array.isArray(activeRoles) ? activeRoles : [])
+        .map((role) => {
+            const roleKey = getCalibrationDiscoveryRoleKey(role);
+            const policyId = String(bucket[roleKey] || "").trim().toLowerCase();
+            if (!policyId || policyId === "review") return "";
+            const policyLabel = calibrationDiscoveryReconciliationOptions.find((option) => option.id === policyId)?.label || policyId;
+            return `${role}=${policyLabel}`;
+        })
+        .filter(Boolean);
+    return resolved.length > 0 ? `Reconciliation: ${resolved.join("; ")}.` : "";
+}
+
+function buildCalibrationDiscoveryReconciliationPayload() {
+    const buildBucketPayload = (kind) => {
+        const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
+        const payload = {};
+        Object.entries(bucket).forEach(([roleKey, policyId]) => {
+            const normalizedPolicyId = String(policyId || "").trim().toLowerCase();
+            if (!normalizedPolicyId || normalizedPolicyId === "review") return;
+            payload[roleKey] = normalizedPolicyId;
+        });
+        return payload;
+    };
+
+    const output = buildBucketPayload("output");
+    const topology = buildBucketPayload("topology");
+    if (Object.keys(output).length === 0 && Object.keys(topology).length === 0) return undefined;
+    return {
+        output,
+        topology,
+    };
+}
+
+function applyCalibrationDiscoveryReconciliationPayload(payload) {
+    const nextState = {
+        output: {},
+        topology: {},
+    };
+    if (payload && typeof payload === "object") {
+        ["output", "topology"].forEach((kind) => {
+            const source = payload[kind];
+            if (!source || typeof source !== "object") return;
+            Object.entries(source).forEach(([roleKey, policyId]) => {
+                const normalizedRoleKey = getCalibrationDiscoveryRoleKey(roleKey);
+                const normalizedPolicyId = String(policyId || "").trim().toLowerCase();
+                if (!normalizedRoleKey || !normalizedPolicyId || normalizedPolicyId === "review") return;
+                nextState[kind][normalizedRoleKey] = normalizedPolicyId;
+            });
+        });
+    }
+    calibrationDiscoveryReconciliation = nextState;
+}
+
+function calibrationDiscoveryReconciliationComplete(kind, activeRoles = []) {
+    const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
+    return (Array.isArray(activeRoles) ? activeRoles : []).every((role) => {
+        const roleKey = getCalibrationDiscoveryRoleKey(role);
+        const policyId = String(bucket[roleKey] || "").trim().toLowerCase();
+        return policyId && policyId !== "review";
+    });
+}
+
+function updateCalibrationDiscoveryActionButtons({ outputCandidates = [], topologyCandidates = [] } = {}) {
+    const renderReconciliationControls = (containerId, kind, activeRoles) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const roles = Array.isArray(activeRoles) ? activeRoles : [];
+        trimCalibrationDiscoveryReconciliation(kind, roles);
+        container.innerHTML = "";
+        container.hidden = roles.length === 0;
+        if (roles.length === 0) return;
+
+        const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
+        roles.forEach((role) => {
+            const row = document.createElement("div");
+            row.className = "cal-reconcile-row";
+
+            const roleLabel = document.createElement("span");
+            roleLabel.className = "cal-reconcile-role";
+            roleLabel.textContent = `${role} remains unmapped`;
+            row.appendChild(roleLabel);
+
+            const select = document.createElement("select");
+            select.className = "dropdown";
+            calibrationDiscoveryReconciliationOptions.forEach((option) => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option.id;
+                optionElement.textContent = option.label;
+                select.appendChild(optionElement);
+            });
+            const roleKey = getCalibrationDiscoveryRoleKey(role);
+            select.value = String(bucket[roleKey] || "review");
+            select.addEventListener("change", () => {
+                bucket[roleKey] = select.value;
+                updateCalibrationDiscoverySummary();
+            });
+            row.appendChild(select);
+            container.appendChild(row);
+        });
+    };
+    const formatRoutePreview = (topologyId, routing) => {
+        const resolvedTopology = resolveCalibrationTopologyId(topologyId || getCalibrationTopologyId(), DEFAULT_CALIBRATION_TOPOLOGY_ID);
+        const labels = Array.isArray(calibrationTopologyChannelLabels[resolvedTopology])
+            ? calibrationTopologyChannelLabels[resolvedTopology]
+            : calibrationTopologyChannelLabels[DEFAULT_CALIBRATION_TOPOLOGY_ID];
+        const normalizedRouting = normaliseCalibrationRouting(routing || [], CALIBRATION_ROUTABLE_CHANNELS);
+        return normalizedRouting
+            .slice(0, Math.min(labels.length, CALIBRATION_ROUTABLE_CHANNELS))
+            .map((outputChannel, idx) => `${labels[idx] || `Ch ${idx + 1}`}->${outputChannel}`)
+            .join(", ");
+    };
+    const getCandidateExpectedRouting = (candidate, fallbackRouting) => {
+        const assignments = Array.isArray(candidate?.roleAssignments) ? candidate.roleAssignments : [];
+        if (assignments.length > 0) {
+            const candidateRouting = [];
+            assignments.forEach((assignment) => {
+                const outputChannel = Number(assignment?.outputChannel) || 0;
+                if (assignment?.mapped === false || assignment?.blocked === true || outputChannel <= 0) return;
+                if (candidateRouting.length < CALIBRATION_ROUTABLE_CHANNELS) candidateRouting.push(outputChannel);
+            });
+            if (candidateRouting.length > 0) {
+                return normaliseCalibrationRouting(candidateRouting, CALIBRATION_ROUTABLE_CHANNELS);
+            }
+        }
+        return normaliseCalibrationRouting(fallbackRouting || [], CALIBRATION_ROUTABLE_CHANNELS);
+    };
+    const formatCandidateRolePreview = (candidate, fallbackTopologyId, fallbackRouting) => {
+        const assignments = Array.isArray(candidate?.roleAssignments) ? candidate.roleAssignments : [];
+        if (assignments.length > 0) {
+            return assignments
+                .map((assignment) => {
+                    const outputChannel = Number(assignment?.outputChannel) || 0;
+                    const mapped = assignment?.mapped !== false && outputChannel >= 1;
+                    return `${String(assignment?.label || "Ch")}->${mapped ? outputChannel : "unmapped"}`;
+                })
+                .join(", ");
+        }
+        return formatRoutePreview(fallbackTopologyId, fallbackRouting);
+    };
+    const formatCandidateRoleProvenance = (candidate, fallback = "inferred") => {
+        const value = String(candidate?.roleAssignmentProvenance || fallback).trim().toLowerCase() || fallback;
+        return calibrationProvenanceMeta[value]?.label || value;
+    };
+    const formatCandidateRoleCoverage = (candidate) => {
+        const mappedCount = Number(candidate?.roleIntentMappedCount);
+        const totalCount = Number(candidate?.roleIntentTotalCount);
+        if (!Number.isFinite(totalCount) || totalCount <= 0) return "";
+        const safeMappedCount = Number.isFinite(mappedCount) ? Math.max(0, mappedCount) : 0;
+        return `Intent coverage: ${safeMappedCount}/${totalCount} roles addressable.`;
+    };
+    const formatCandidateRoleDetail = (candidate) => {
+        const detail = String(candidate?.roleAssignmentDetail || "").trim();
+        return detail ? `${detail}` : "";
+    };
+
+    const outputButton = document.getElementById("cal-discovery-apply-output-btn");
+    const outputNote = document.getElementById("cal-discovery-apply-output-note");
+    const outputAckRow = document.getElementById("cal-discovery-apply-output-ack-row");
+    const unmappedOutputRoles = getCalibrationDiscoveryUnmappedRoles(Array.isArray(outputCandidates) && outputCandidates.length > 0 ? outputCandidates[0] : null);
+    renderReconciliationControls("cal-discovery-apply-output-reconcile", "output", unmappedOutputRoles);
+    if (outputButton instanceof HTMLButtonElement) {
+        const hasCandidate = Array.isArray(outputCandidates) && outputCandidates.length > 0;
+        const bestOutputCandidate = hasCandidate ? outputCandidates[0] : null;
+        const currentTopologyId = getCalibrationTopologyId();
+        const currentRouting = getCalibrationRoutingFromControls();
+        const expectedAutoRouting = getCalibrationExpectedAutoRouting();
+        const candidateExpectedRouting = getCandidateExpectedRouting(bestOutputCandidate, expectedAutoRouting);
+        const mapAlreadyActive = compareCalibrationRouting(currentRouting, candidateExpectedRouting, CALIBRATION_ROUTABLE_CHANNELS)
+            && !calibrationMappingEditedByUser;
+        const outputPoliciesReady = calibrationDiscoveryReconciliationComplete("output", unmappedOutputRoles);
+        outputButton.disabled = calibrationState.running || !hasCandidate || mapAlreadyActive || (unmappedOutputRoles.length > 0 && !outputPoliciesReady);
+        outputButton.textContent = mapAlreadyActive ? "BEST MAP ACTIVE" : "USE BEST MAP";
+        if (outputNote) {
+            outputNote.textContent = hasCandidate
+                ? [
+                    `${mapAlreadyActive ? "Best map active" : "Best map preview"}: ${formatCandidateRolePreview(bestOutputCandidate, currentTopologyId, candidateExpectedRouting)}.`,
+                    `Role guess: ${formatCandidateRoleProvenance(bestOutputCandidate)}.`,
+                    formatCandidateRoleCoverage(bestOutputCandidate),
+                    unmappedOutputRoles.length > 0 && !outputPoliciesReady ? `Choose a reconciliation policy for ${unmappedOutputRoles.join(", ")} before applying this partial map.` : "",
+                    getCalibrationDiscoveryReconciliationSummary("output", unmappedOutputRoles),
+                    `Preserves ${getCalibrationTopologyLabel(currentTopologyId, true)}.`,
+                    formatCandidateRoleDetail(bestOutputCandidate),
+                ].filter(Boolean).join(" ")
+                : "Best-map preview will appear when output discovery is available.";
+        }
+        if (outputAckRow) outputAckRow.hidden = true;
+    }
+
+    const topologyButton = document.getElementById("cal-discovery-apply-topology-btn");
+    const topologyNote = document.getElementById("cal-discovery-apply-topology-note");
+    const topologyAckRow = document.getElementById("cal-discovery-apply-topology-ack-row");
+    const bestTopologyCandidateForControls = (Array.isArray(topologyCandidates) ? topologyCandidates : [])
+        .slice()
+        .sort((a, b) => (Number(a?.rank) || 999) - (Number(b?.rank) || 999))[0] || null;
+    const unmappedTopologyRoles = getCalibrationDiscoveryUnmappedRoles(bestTopologyCandidateForControls);
+    renderReconciliationControls("cal-discovery-apply-topology-reconcile", "topology", unmappedTopologyRoles);
+    if (topologyButton instanceof HTMLButtonElement) {
+        const bestTopology = (Array.isArray(topologyCandidates) ? topologyCandidates : [])
+            .slice()
+            .sort((a, b) => (Number(a?.rank) || 999) - (Number(b?.rank) || 999))[0] || null;
+        const bestTopologyId = resolveCalibrationTopologyId(bestTopology?.id || "", "");
+        const currentTopologyId = getCalibrationTopologyId();
+        const topologyAlreadyActive = !!bestTopologyId && bestTopologyId === currentTopologyId;
+        const topologyPoliciesReady = calibrationDiscoveryReconciliationComplete("topology", unmappedTopologyRoles);
+        topologyButton.disabled = calibrationState.running || !bestTopologyId || topologyAlreadyActive || (unmappedTopologyRoles.length > 0 && !topologyPoliciesReady);
+        topologyButton.textContent = topologyAlreadyActive ? "BEST TOPOLOGY ACTIVE" : "USE BEST TOPOLOGY";
+        if (topologyNote) {
+            topologyNote.textContent = bestTopologyId
+                ? [
+                    `${topologyAlreadyActive ? "Best topology active" : "Best topology preview"}: ${getCalibrationTopologyLabel(bestTopologyId, true)} with ${formatCandidateRolePreview(bestTopology, bestTopologyId, getCalibrationExpectedAutoRouting())}.`,
+                    `Role guess: ${formatCandidateRoleProvenance(bestTopology)}.`,
+                    formatCandidateRoleCoverage(bestTopology),
+                    unmappedTopologyRoles.length > 0 && !topologyPoliciesReady ? `Choose a reconciliation policy for ${unmappedTopologyRoles.join(", ")} before applying this topology.` : "",
+                    getCalibrationDiscoveryReconciliationSummary("topology", unmappedTopologyRoles),
+                    formatCandidateRoleDetail(bestTopology),
+                ].filter(Boolean).join(" ")
+                : "Best-topology preview will appear when topology discovery is available.";
+        }
+        if (topologyAckRow) topologyAckRow.hidden = true;
+    }
+}
+
+async function refreshCalibrationStatusFromNative() {
+    try {
+        const status = await callNative("locusqGetCalibrationStatus", nativeFunctions.getCalibrationStatus);
+        if (status && typeof status === "object") {
+            calibrationState = {
+                ...calibrationState,
+                ...status,
+            };
+        }
+    } catch (error) {
+        console.error("Failed to refresh calibration status:", error);
+    }
+}
+
+function applyCalibrationDiscoveryResultToControls(result, options = {}) {
+    const updateTopologySource = options.updateTopologySource !== false;
+    const updateRoutingSource = options.updateRoutingSource !== false;
+    const routing = normaliseCalibrationRouting(result?.routing || [], CALIBRATION_ROUTABLE_CHANNELS);
+    const previousRouting = normaliseCalibrationRouting(result?.previousRouting || routing, CALIBRATION_ROUTABLE_CHANNELS);
+
+    const topologyProfileIndex = Number(result?.topologyProfileIndex);
+    if (Number.isFinite(topologyProfileIndex) && topologyProfileIndex >= 0) {
+        setChoiceIndex(comboStates.cal_topology_profile, topologyProfileIndex, calibrationTopologyIds.length);
+        const topologySelect = document.getElementById("cal-topology");
+        if (topologySelect instanceof HTMLSelectElement) {
+            topologySelect.selectedIndex = clamp(topologyProfileIndex, 0, Math.max(0, topologySelect.options.length - 1));
+        }
+        syncLegacyConfigAliasFromTopology(getCalibrationTopologyId(topologyProfileIndex));
+    }
+
+    const speakerConfigIndex = Number(result?.speakerConfigIndex);
+    if (Number.isFinite(speakerConfigIndex) && speakerConfigIndex >= 0) {
+        setChoiceIndex(comboStates.cal_spk_config, speakerConfigIndex, 2);
+        const configSelect = document.getElementById("cal-config");
+        if (configSelect instanceof HTMLSelectElement) {
+            configSelect.selectedIndex = clamp(speakerConfigIndex, 0, Math.max(0, configSelect.options.length - 1));
+        }
+    }
+
+    ensureCalibrationMappingRows()
+        .map(entry => entry.select)
+        .filter(select => !!select)
+        .slice(0, CALIBRATION_ROUTABLE_CHANNELS)
+        .forEach((select, idx) => {
+            if (!(select instanceof HTMLSelectElement)) return;
+            select.selectedIndex = clamp((routing[idx] || 1) - 1, 0, Math.max(0, select.options.length - 1));
+        });
+
+    calibrationState = {
+        ...calibrationState,
+        topologyProfileIndex: Number(result?.topologyProfileIndex ?? calibrationState.topologyProfileIndex),
+        topologyProfile: String(result?.topologyProfile || calibrationState.topologyProfile),
+        monitoringPathIndex: Number(result?.monitoringPathIndex ?? calibrationState.monitoringPathIndex),
+        monitoringPath: String(result?.monitoringPath || calibrationState.monitoringPath),
+        deviceProfileIndex: Number(result?.deviceProfileIndex ?? calibrationState.deviceProfileIndex),
+        deviceProfile: String(result?.deviceProfile || calibrationState.deviceProfile),
+        requiredChannels: Number(result?.requiredChannels ?? calibrationState.requiredChannels),
+        writableChannels: Number(result?.writableChannels ?? calibrationState.writableChannels),
+        mappingLimitedToFirst4: !!result?.mappingLimitedToFirst4,
+        speakerRouting: routing.slice(0, CALIBRATION_ROUTABLE_CHANNELS),
+    };
+    calibrationLastAutoRouting = routing.slice(0, CALIBRATION_ROUTABLE_CHANNELS);
+    calibrationMappingEditedByUser = false;
+    if (updateTopologySource) setCalibrationAutomationSource("topology", "host_auto");
+    if (updateRoutingSource) setCalibrationAutomationSource("routing", "host_auto");
+
+    return {
+        routing,
+        previousRouting,
+    };
+}
+
+async function runCalibrationApplyBestOutputMap() {
+    if (calibrationState.running) {
+        setCalibrationProfileStatus("Stop calibration before applying the best output map.", true);
+        return false;
+    }
+
+    const outputCandidate = Array.isArray(calibrationState?.discoveryGraph?.outputCandidates)
+        ? calibrationState.discoveryGraph.outputCandidates[0]
+        : null;
+    const unmappedOutputRoles = getCalibrationDiscoveryUnmappedRoles(outputCandidate);
+    if (unmappedOutputRoles.length > 0 && !calibrationDiscoveryReconciliationComplete("output", unmappedOutputRoles)) {
+        setCalibrationProfileStatus(`Choose a reconciliation policy for ${unmappedOutputRoles.join(", ")} before applying the partial output map.`, true);
+        return false;
+    }
+
+    try {
+        const result = await callNative(
+            "locusqApplyBestCalibrationOutputMap",
+            nativeFunctions.applyBestCalibrationOutputMap
+        );
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Best output map apply failed.", true);
+            return false;
+        }
+
+        const { routing, previousRouting } = applyCalibrationDiscoveryResultToControls(result, {
+            updateTopologySource: false,
+            updateRoutingSource: true,
+        });
+        await refreshCalibrationStatusFromNative();
+        const changed = result.changed !== undefined
+            ? !!result.changed
+            : !compareCalibrationRouting(previousRouting, routing, CALIBRATION_ROUTABLE_CHANNELS);
+        const reconciliationSummary = getCalibrationDiscoveryReconciliationSummary("output", unmappedOutputRoles);
+        setCalibrationProfileStatus(
+            changed
+                ? [`Applied best output map (${previousRouting.join("/")} -> ${routing.join("/")}).`, reconciliationSummary].filter(Boolean).join(" ")
+                : (result?.message || "Best output map is already active.")
+        );
+        applyCalibrationStatus();
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Best output map apply failed.", true);
+        console.error("Failed to apply best output map:", error);
+        return false;
+    }
+}
+
+async function runCalibrationApplyBestTopology() {
+    if (calibrationState.running) {
+        setCalibrationProfileStatus("Stop calibration before applying the best topology.", true);
+        return false;
+    }
+
+    const topologyCandidates = Array.isArray(calibrationState?.discoveryGraph?.topologyCandidates)
+        ? calibrationState.discoveryGraph.topologyCandidates
+        : [];
+    const bestTopologyCandidate = topologyCandidates
+        .slice()
+        .sort((a, b) => (Number(a?.rank) || 999) - (Number(b?.rank) || 999))[0] || null;
+    const unmappedTopologyRoles = getCalibrationDiscoveryUnmappedRoles(bestTopologyCandidate);
+    if (unmappedTopologyRoles.length > 0 && !calibrationDiscoveryReconciliationComplete("topology", unmappedTopologyRoles)) {
+        setCalibrationProfileStatus(`Choose a reconciliation policy for ${unmappedTopologyRoles.join(", ")} before applying the partial topology.`, true);
+        return false;
+    }
+
+    try {
+        const result = await callNative(
+            "locusqApplyBestCalibrationTopology",
+            nativeFunctions.applyBestCalibrationTopology
+        );
+        if (!result?.ok) {
+            setCalibrationProfileStatus(result?.message || "Best topology apply failed.", true);
+            return false;
+        }
+
+        const { routing, previousRouting } = applyCalibrationDiscoveryResultToControls(result, {
+            updateTopologySource: true,
+            updateRoutingSource: true,
+        });
+        await refreshCalibrationStatusFromNative();
+        const changed = result.changed !== undefined
+            ? !!result.changed
+            : !compareCalibrationRouting(previousRouting, routing, CALIBRATION_ROUTABLE_CHANNELS);
+        const topologyLabel = getCalibrationTopologyLabel(result?.topologyProfile || getCalibrationTopologyId(), true);
+        const reconciliationSummary = getCalibrationDiscoveryReconciliationSummary("topology", unmappedTopologyRoles);
+        setCalibrationProfileStatus(
+            changed
+                ? [`Applied best topology (${topologyLabel}) and aligned output map to ${routing.join("/")}.`, reconciliationSummary].filter(Boolean).join(" ")
+                : (result?.message || "Best topology is already active.")
+        );
+        applyCalibrationStatus();
+        return true;
+    } catch (error) {
+        setCalibrationProfileStatus("Best topology apply failed.", true);
+        console.error("Failed to apply best topology:", error);
+        return false;
+    }
+}
+
+function updateCalibrationAutomationSummary(snapshot = calibrationState) {
+    const status = snapshot || {};
+    const automationProvenance = status.calAutomationProvenance && typeof status.calAutomationProvenance === "object"
+        ? status.calAutomationProvenance
+        : {};
+    const topologyId = String(
+        status.topologyProfile
+        || getCalibrationTopologyId(status.topologyProfileIndex)
+    ).trim().toLowerCase() || DEFAULT_CALIBRATION_TOPOLOGY_ID;
+    const monitoringPathId = String(
+        status.monitoringPath
+        || getCalibrationMonitoringPathId(status.monitoringPathIndex)
+    ).trim().toLowerCase() || "speakers";
+    const deviceProfileId = String(
+        status.deviceProfile
+        || getCalibrationDeviceProfileId(status.deviceProfileIndex)
+    ).trim().toLowerCase() || "generic";
+    const targetId = getCalibrationTargetId(monitoringPathId);
+    const requiredChannels = Math.max(1, Number(status.requiredChannels) || getCalibrationRequiredChannels(topologyId));
+    const writableChannels = Math.max(1, Number(status.writableChannels) || CALIBRATION_ROUTABLE_CHANNELS);
+    const mappingValid = !!status.mappingValid;
+    const activeRouting = getCalibrationActiveRouting();
+    const expectedAutoRouting = getCalibrationExpectedAutoRouting();
+    const routeIsCustom = calibrationMappingEditedByUser
+        || !compareCalibrationRouting(activeRouting, expectedAutoRouting, CALIBRATION_ROUTABLE_CHANNELS);
+    const runtimeContext = getRuntimeSurfaceContext(sceneData);
+    const hpPayloadPresent = hasRendererHeadphoneVerificationPayload(sceneData);
+    const inferredRequestedHeadphoneMode = (monitoringPathId === "steam_binaural" || monitoringPathId === "virtual_binaural")
+        ? "steam_binaural"
+        : "stereo_downmix";
+    const requestedHeadphoneMode = normalizeAuditionToken(
+        status.headphoneCalibrationRequested
+        || sceneData.rendererHeadphoneCalibrationRequested
+        || inferredRequestedHeadphoneMode
+    ) || inferredRequestedHeadphoneMode;
+    const activeHeadphoneMode = normalizeAuditionToken(
+        status.headphoneCalibrationActive
+        || sceneData.rendererHeadphoneCalibrationActive
+        || sceneData.rendererHeadphoneModeActive
+        || requestedHeadphoneMode
+    ) || requestedHeadphoneMode;
+    const requestedHeadphoneProfile = normalizeAuditionToken(
+        status.headphoneVerificationRequestedProfileId
+        || sceneData.rendererHeadphoneVerificationRequestedProfileId
+        || deviceProfileId
+    ) || deviceProfileId;
+    const activeHeadphoneProfile = normalizeAuditionToken(
+        status.headphoneVerificationActiveProfileId
+        || sceneData.rendererHeadphoneVerificationActiveProfileId
+        || sceneData.rendererHeadphoneProfileActive
+        || requestedHeadphoneProfile
+    ) || requestedHeadphoneProfile;
+    const headphoneCalibrationStage = normalizeAuditionToken(
+        status.headphoneCalibrationStage
+        || sceneData.rendererHeadphoneCalibrationStage
+        || ""
+    ) || "unknown";
+    const profileReady = !!status.profileReady || !!status.profileValid || !!status.complete;
+    const hpDeviceStatus = status.hpDeviceStatus && typeof status.hpDeviceStatus === "object"
+        ? status.hpDeviceStatus
+        : {};
+    const hpDeviceName = String(hpDeviceStatus.device || "").trim();
+    const hpEqMode = String(hpDeviceStatus.eq_mode || "off").trim() || "off";
+    const hpHrtfMode = String(hpDeviceStatus.hrtf_mode || "default").trim() || "default";
+    const hpTracking = hpDeviceStatus.tracking_enabled === true ? "ON" : "OFF";
+    const hpCompanionReady = hpDeviceName !== ""
+        && hpDeviceName.toLowerCase() !== "unknown"
+        && hpDeviceName.toLowerCase() !== "not connected";
+
+    const selectionSourceId = targetId === "headphones"
+        ? getCalibrationAutomationSource("deviceProfile", "manual_override")
+        : getCalibrationAutomationSource("topology", "runtime_state");
+    setCalibrationAutomationSummaryRow(1, {
+        label: "Selection",
+        value: targetId === "headphones"
+            ? `${getCalibrationMonitoringPathLabel(monitoringPathId)} · ${getCalibrationDeviceProfileLabel(deviceProfileId)}`
+            : `${getCalibrationTopologyLabel(topologyId, true)} · ${getCalibrationMonitoringPathLabel(monitoringPathId)}`,
+        sourceId: selectionSourceId,
+        note: targetId === "headphones"
+            ? "Current requested headphone path and profile from the panel controls."
+            : "Current speaker-room target and monitoring path from the panel controls.",
+    });
+
+    if (targetId === "headphones") {
+        const deviceProfileDescriptor = normalizeBl101Descriptor(
+            automationProvenance.deviceProfile,
+            hpCompanionReady ? "companion_profile" : getCalibrationAutomationSource("deviceProfile", "unknown"),
+            hpCompanionReady ? "detected" : "unavailable"
+        );
+        setCalibrationAutomationSummaryRow(2, {
+            label: "Detected Device",
+            value: hpCompanionReady ? hpDeviceName : "No companion device detected",
+            sourceId: deviceProfileDescriptor.source,
+            note: appendBl101DescriptorToNote(
+                hpCompanionReady
+                ? `Companion handoff reports EQ ${formatAuditionTokenLabel(hpEqMode)} · HRTF ${formatAuditionTokenLabel(hpHrtfMode)} · Tracking ${hpTracking}.`
+                : "Waiting for a companion CalibrationProfile.json handoff or a detected headphone device.",
+                deviceProfileDescriptor
+            ),
+        });
+
+        const profileDescriptor = normalizeBl101Descriptor(
+            automationProvenance.profile,
+            hpCompanionReady ? "companion_profile" : getCalibrationAutomationSource("deviceProfile", "unknown"),
+            hpCompanionReady ? "inferred" : "unavailable"
+        );
+        setCalibrationAutomationSummaryRow(3, {
+            label: "Profile Handoff",
+            value: `${getCalibrationDeviceProfileLabel(requestedHeadphoneProfile)} requested`,
+            sourceId: profileDescriptor.source,
+            note: appendBl101DescriptorToNote(
+                hpCompanionReady
+                ? "The companion calibration profile has seeded the plugin headphone profile selection."
+                : "No companion-backed headphone profile has been handed to the plugin yet.",
+                profileDescriptor
+            ),
+        });
+    } else {
+        const mappedChannels = Math.min(requiredChannels, writableChannels);
+        let routingSourceId = getCalibrationAutomationSource("routing", "runtime_state");
+        let routingNote = "Derived from the current host output layout.";
+        if (status.mappingDuplicateChannels) {
+            routingSourceId = "manual_override";
+            routingNote = "Custom routing contains duplicate output channels and must be corrected.";
+        } else if (routeIsCustom) {
+            routingSourceId = "manual_override";
+            routingNote = `Custom routing overrides the host auto-map (${expectedAutoRouting.join(" / ")}).`;
+        } else if (requiredChannels > writableChannels || status.mappingLimitedToFirst4) {
+            routingSourceId = "host_auto";
+            routingNote = `Host output layout exposes ${mappedChannels}/${requiredChannels} writable calibration outputs.`;
+        }
+        const routingDescriptor = normalizeBl101Descriptor(
+            automationProvenance.routing,
+            routingSourceId,
+            mappingValid ? "detected" : "inferred"
+        );
+        if (routeIsCustom) routingDescriptor.manualOverride = true;
+
+        setCalibrationAutomationSummaryRow(2, {
+            label: "Output Routing",
+            value: activeRouting.join(" / "),
+            sourceId: routingDescriptor.source,
+            note: appendBl101DescriptorToNote(routingNote, routingDescriptor),
+        });
+
+        const profileSourceId = profileReady
+            ? (calibrationAutomationSources.lastLoadedProfileName ? "loaded_profile" : "runtime_active")
+            : "unknown";
+        const profileDescriptor = normalizeBl101Descriptor(
+            automationProvenance.profile,
+            profileSourceId,
+            profileReady ? "inferred" : "unavailable"
+        );
+        setCalibrationAutomationSummaryRow(3, {
+            label: "Room Profile",
+            value: profileReady ? "Room profile ready" : "No room profile loaded",
+            sourceId: profileDescriptor.source,
+            note: appendBl101DescriptorToNote(
+                profileReady
+                ? "Room correction is available from the current measurement or a loaded library profile."
+                : "Run a measurement or load a saved room profile to activate speaker correction.",
+                profileDescriptor
+            ),
+        });
+    }
+
+    let runtimeSourceId = "runtime_state";
+    let runtimeValue = "Idle";
+    let runtimeNote = "Runtime activation state is waiting for the next calibration action.";
+    if (runtimeState.nativeBridgeDegraded) {
+        runtimeValue = "Bridge degraded";
+        runtimeSourceId = "runtime_active";
+        runtimeNote = "Native bridge degradation can leave automation values stale until the runtime recovers.";
+    } else if (runtimeState.startupHydrationInProgress) {
+        runtimeValue = "Startup hydration";
+        runtimeSourceId = "runtime_state";
+        runtimeNote = "Bridge-backed calibration state is still hydrating.";
+    } else if (runtimeContext.isBrowserPreview) {
+        runtimeValue = "Browser preview shell";
+        runtimeSourceId = "runtime_state";
+        runtimeNote = "Automation is shown from preview state rather than a live plugin session.";
+    } else if (!runtimeContext.liveSession) {
+        runtimeValue = `Waiting for ${runtimeContext.label}`;
+        runtimeSourceId = "runtime_state";
+        runtimeNote = "A live plugin runtime session has not published calibration telemetry yet.";
+    } else if (targetId === "headphones") {
+        const activeLabel = `${formatAuditionTokenLabel(activeHeadphoneMode)} · ${getCalibrationDeviceProfileLabel(activeHeadphoneProfile)}`;
+        runtimeSourceId = "runtime_active";
+        if (requestedHeadphoneMode === activeHeadphoneMode && requestedHeadphoneProfile === activeHeadphoneProfile) {
+            runtimeValue = activeLabel;
+            runtimeNote = hpPayloadPresent
+                ? "Requested headphone path and profile are active in the runtime."
+                : "Requested path appears active, but headphone verification telemetry has not fully arrived yet.";
+        } else {
+            runtimeValue = activeLabel;
+            runtimeNote = `Runtime is using ${activeLabel} while the panel requests ${formatAuditionTokenLabel(requestedHeadphoneMode)} · ${getCalibrationDeviceProfileLabel(requestedHeadphoneProfile)} (${formatAuditionTokenLabel(headphoneCalibrationStage)}).`;
+        }
+    } else if (status.running) {
+        runtimeValue = `Speaker ${Math.max(1, Number(status.currentSpeaker) || 1)}/${Math.max(1, requiredChannels)} in progress`;
+        runtimeSourceId = "runtime_active";
+        runtimeNote = "Calibration is actively measuring the current speaker response.";
+    } else if (profileReady) {
+        runtimeValue = "Speaker correction ready";
+        runtimeSourceId = "runtime_active";
+        runtimeNote = "A room profile is active and available for speaker monitoring.";
+    } else if (routeIsCustom) {
+        runtimeValue = "Manual map preserved";
+        runtimeSourceId = "manual_override";
+        runtimeNote = "Custom routing remains active until you redetect or rewrite the map.";
+    }
+    const runtimeDescriptor = normalizeBl101Descriptor(
+        automationProvenance.headphoneVerify,
+        runtimeSourceId,
+        targetId === "headphones" ? "estimated" : "inferred"
+    );
+    if (routeIsCustom) runtimeDescriptor.manualOverride = true;
+
+    setCalibrationAutomationSummaryRow(4, {
+        label: "Runtime Activation",
+        value: runtimeValue,
+        sourceId: runtimeDescriptor.source,
+        note: appendBl101DescriptorToNote(runtimeNote, runtimeDescriptor),
+    });
 }
 
 function getCalibrationDeviceProfileLabel(profileId) {
@@ -8044,6 +9341,72 @@ function setCalibrationProfileStatus(message, isError = false, toastOnError = tr
     }
 }
 
+function setCalibrationProfileSummary(message) {
+    const summary = document.getElementById("cal-profile-summary");
+    if (!summary) return;
+    summary.innerHTML = String(message || "");
+}
+
+function buildCalibrationProfileReconciliationSummary(discoveryReconciliation) {
+    if (!discoveryReconciliation || typeof discoveryReconciliation !== "object") return "";
+    const segments = [];
+    ["output", "topology"].forEach((kind) => {
+        const source = discoveryReconciliation?.[kind];
+        if (!source || typeof source !== "object") return;
+        const resolved = Object.entries(source)
+            .map(([roleKey, policyId]) => {
+                const role = String(roleKey || "").trim().toUpperCase();
+                const normalizedPolicyId = String(policyId || "").trim().toLowerCase();
+                if (!role || !normalizedPolicyId || normalizedPolicyId === "review") return "";
+                const policyLabel = calibrationDiscoveryReconciliationOptions.find((option) => option.id === normalizedPolicyId)?.label || normalizedPolicyId;
+                return `${role}=${policyLabel}`;
+            })
+            .filter(Boolean);
+        if (resolved.length > 0) {
+            segments.push(`<strong>${kind === "topology" ? "Best Topology" : "Best Map"}</strong>: ${resolved.join("; ")}.`);
+        }
+    });
+    return segments.join(" ");
+}
+
+function updateCalibrationProfileSummary(entry = null, overrideDiscoveryReconciliation = undefined) {
+    const resolvedEntry = entry || getSelectedCalibrationProfileEntry();
+    if (!resolvedEntry) {
+        setCalibrationProfileSummary("Saved profile summaries will appear here, including deferred, folded, or manually rerouted speaker roles.");
+        return;
+    }
+
+    const intentSummary = resolvedEntry?.intentSummary && typeof resolvedEntry.intentSummary === "object"
+        ? resolvedEntry.intentSummary
+        : undefined;
+    const intentPlainText = String(intentSummary?.plainText || "").trim();
+    if (intentPlainText && overrideDiscoveryReconciliation === undefined) {
+        setCalibrationProfileSummary(intentPlainText);
+        return;
+    }
+
+    const topologyLabel = getCalibrationTopologyLabel(resolvedEntry.topologyProfile, true);
+    const monitoringLabel = getCalibrationMonitoringPathLabel(resolvedEntry.monitoringPath);
+    const validationSummary = resolvedEntry?.validationSummary && typeof resolvedEntry.validationSummary === "object"
+        ? resolvedEntry.validationSummary
+        : undefined;
+    const profileReady = !!validationSummary?.profileValid;
+    const discoveryReconciliation = overrideDiscoveryReconciliation !== undefined
+        ? overrideDiscoveryReconciliation
+        : resolvedEntry?.discoveryReconciliation;
+    const reconciliationSummary = buildCalibrationProfileReconciliationSummary(discoveryReconciliation);
+    const summaryParts = [
+        `<strong>${topologyLabel} · ${monitoringLabel}</strong>`,
+        profileReady ? "Profile marked ready." : "Profile metadata available.",
+    ];
+    if (reconciliationSummary) {
+        summaryParts.push(reconciliationSummary);
+    } else {
+        summaryParts.push("No saved role reconciliation notes for this profile.");
+    }
+    setCalibrationProfileSummary(summaryParts.join(" "));
+}
+
 function getCalibrationProfileNameInputValue() {
     const input = document.getElementById("cal-profile-name");
     if (!input) return "";
@@ -8138,6 +9501,9 @@ function getSelectedCalibrationProfileEntry() {
         monitoringPath: String(option.dataset.monitoringPath || ""),
         deviceProfile: String(option.dataset.deviceProfile || ""),
         profileTupleKey: String(option.dataset.profileTupleKey || ""),
+        validationSummary: parseCalibrationProfileDatasetJson(option.dataset.validationSummary),
+        discoveryReconciliation: parseCalibrationProfileDatasetJson(option.dataset.discoveryReconciliation),
+        intentSummary: parseCalibrationProfileDatasetJson(option.dataset.intentSummary),
     };
 }
 
@@ -8439,6 +9805,9 @@ async function runProductionP0SelfTest() {
     const runBl011ScopeOnly = runBl011ClapSelfTest || productionP0SelfTestScope === "bl011";
     const runBl026ScopeOnly = productionP0SelfTestScope === "bl026";
     const runBl029ScopeOnly = productionP0SelfTestScope === "bl029";
+    const runBl099ScopeOnly = productionP0SelfTestScope === "bl099";
+    const runBl101ScopeOnly = productionP0SelfTestScope === "bl101";
+    const runBl102ScopeOnly = productionP0SelfTestScope === "bl102";
     const runBl011ClapDiagnosticsCheck = async () => {
         try {
             await waitForCondition("clap diagnostics snapshot", () => {
@@ -8735,6 +10104,1149 @@ async function runProductionP0SelfTest() {
             switchMode(modeBefore === 0 ? "calibrate" : (modeBefore === 1 ? "emitter" : "renderer"));
         }
     };
+    const runBl101CalibrateTruthfulnessSelfTest = async () => {
+        const modeBefore = getChoiceIndex(comboStates.mode);
+        const monitoringBefore = getChoiceIndex(comboStates.cal_monitoring_path);
+        const deviceBefore = getChoiceIndex(comboStates.cal_device_profile);
+        const topologyBefore = getChoiceIndex(comboStates.cal_topology_profile);
+        const nativeSeqBeforeSynthetic = sceneTransportState.lastAcceptedSeq;
+        const topologyChoiceCount = calibrationTopologyIds.length;
+        const readText = (id) => String(document.getElementById(id)?.textContent || "").trim();
+        const expectIncludes = (checkId, actual, expected, label) => {
+            if (!String(actual || "").includes(expected)) {
+                failCheck(checkId, `${label} mismatch (expected substring "${expected}", got "${actual || "n/a"}")`);
+            }
+        };
+        const setSelectIndex = (select, comboState, index, choiceCount) => {
+            if (comboState && Number.isFinite(index) && Number.isFinite(choiceCount) && choiceCount > 0) {
+                setChoiceIndex(comboState, index, choiceCount);
+            }
+            if (select instanceof HTMLSelectElement) {
+                select.selectedIndex = Math.max(0, index);
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        };
+
+        try {
+            switchMode("calibrate");
+            setChoiceIndex(comboStates.mode, 0, 3);
+            await waitMs(180);
+
+            const calTopologySelect = document.getElementById("cal-topology");
+            const calMonitoringPathSelect = document.getElementById("cal-monitoring-path");
+            const calDeviceProfileSelect = document.getElementById("cal-device-profile");
+            if (!(calTopologySelect instanceof HTMLSelectElement)
+                || !(calMonitoringPathSelect instanceof HTMLSelectElement)
+                || !(calDeviceProfileSelect instanceof HTMLSelectElement)) {
+                failCheck("UI-P1-101A", "missing CALIBRATE controls required for BL-101 truthfulness scope");
+            }
+
+            const stereoTopologyIndex = getCalibrationTopologyIndex("stereo");
+            setSelectIndex(calTopologySelect, comboStates.cal_topology_profile, stereoTopologyIndex, topologyChoiceCount);
+            setSelectIndex(calMonitoringPathSelect, comboStates.cal_monitoring_path, 0, 4);
+            setSelectIndex(calDeviceProfileSelect, comboStates.cal_device_profile, 0, 5);
+            await waitMs(120);
+
+            const customSelect = document.getElementById("cal-spk1");
+            if (!(customSelect instanceof HTMLSelectElement)) {
+                failCheck("UI-P1-101A", "missing cal-spk1 routing control for BL-101 truthfulness scope");
+            }
+            customSelect.selectedIndex = Math.min(1, Math.max(0, customSelect.options.length - 1));
+            customSelect.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitMs(80);
+
+            const speakerSyntheticSeq = Math.max(
+                Number(sceneTransportState.lastAcceptedSeq) + 20,
+                Number(profileCoherenceState.lastCalibrationStatusSeq) + 20,
+                20
+            );
+            window.updateCalibrationStatus({
+                profileSyncSeq: speakerSyntheticSeq,
+                topologyProfileIndex: stereoTopologyIndex,
+                topologyProfile: "stereo",
+                monitoringPathIndex: 0,
+                monitoringPath: "speakers",
+                deviceProfileIndex: 0,
+                deviceProfile: "generic",
+                requiredChannels: 2,
+                writableChannels: 2,
+                mappingValid: true,
+                mappingLimitedToFirst4: false,
+                mappingDuplicateChannels: false,
+                running: false,
+                complete: false,
+                profileValid: true,
+                state: "idle",
+                message: "Synthetic speaker truthfulness snapshot",
+                speakerRouting: [2, 2, 3, 4],
+                calAutomationProvenance: {
+                    routing: {
+                        source: "manual_override",
+                        provenance: "detected",
+                        detail: "Custom routing is preserved until host auto-map is requested again.",
+                        manualOverride: true,
+                        ageMs: 240,
+                        staleAfterMs: 5000,
+                    },
+                    profile: {
+                        source: "loaded_profile",
+                        provenance: "measured",
+                        detail: "Room profile came from a previously measured and loaded speaker calibration.",
+                        ageMs: 120,
+                        staleAfterMs: 5000,
+                    },
+                    headphoneVerify: {
+                        source: "runtime_active",
+                        provenance: "inferred",
+                        detail: "Speaker-mode runtime activation is inferred from the active room profile state.",
+                        ageMs: 80,
+                        staleAfterMs: 5000,
+                    },
+                },
+            });
+            await waitMs(120);
+
+            if (readText("cal-auto-row2-source") !== "MANUAL OVERRIDE") {
+                failCheck("UI-P1-101A", `unexpected routing source chip (${readText("cal-auto-row2-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101A", readText("cal-auto-row2-note"), "Trust: Detected.", "routing note trust");
+            expectIncludes("UI-P1-101A", readText("cal-auto-row2-note"), "Manual override is active.", "routing note override");
+            if (readText("cal-auto-row3-source") !== "PROFILE-LOADED") {
+                failCheck("UI-P1-101A", `unexpected profile handoff source chip (${readText("cal-auto-row3-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101A", readText("cal-auto-row3-note"), "Trust: Measured.", "profile note trust");
+            if (readText("cal-state-chip") !== "Ready") {
+                failCheck("UI-P1-101A", `unexpected CALIBRATION STATUS chip (${readText("cal-state-chip") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101A", readText("calibration-dock-routing"), "Routing validated", "dock routing status");
+            recordCheck("UI-P1-101A", true, "speaker automation summary and calibration status truth surfaces reflect source/provenance/manual override");
+
+            setSelectIndex(calMonitoringPathSelect, comboStates.cal_monitoring_path, 2, 4);
+            setSelectIndex(calDeviceProfileSelect, comboStates.cal_device_profile, 1, 5);
+            await waitMs(120);
+
+            const headphoneSyntheticSeq = speakerSyntheticSeq + 1;
+            window.updateCalibrationStatus({
+                profileSyncSeq: headphoneSyntheticSeq,
+                topologyProfileIndex: stereoTopologyIndex,
+                topologyProfile: "stereo",
+                monitoringPathIndex: 2,
+                monitoringPath: "steam_binaural",
+                deviceProfileIndex: 1,
+                deviceProfile: "airpods_pro_2",
+                requiredChannels: 2,
+                writableChannels: 2,
+                mappingValid: true,
+                mappingLimitedToFirst4: false,
+                mappingDuplicateChannels: false,
+                running: false,
+                complete: false,
+                profileValid: false,
+                state: "idle",
+                message: "Synthetic headphone truthfulness snapshot",
+                headphoneCalibrationRequested: "steam_binaural",
+                headphoneCalibrationActive: "steam_binaural",
+                headphoneCalibrationStage: "direct",
+                headphoneVerificationRequestedProfileId: "airpods_pro_2",
+                headphoneVerificationActiveProfileId: "airpods_pro_2",
+                hpDeviceStatus: {
+                    device: "AirPods Pro 2",
+                    eq_mode: "peq",
+                    hrtf_mode: "sofa",
+                    tracking_enabled: true,
+                    fir_latency_samples: 128,
+                    externalization_score: 0.61,
+                    front_back_confusion_rate: 0.12,
+                    provenance: {
+                        source: "companion_profile",
+                        provenance: "detected",
+                        detail: "Companion profile handoff currently names the connected device.",
+                        ageMs: 6200,
+                        staleAfterMs: 5000,
+                    },
+                },
+                calAutomationProvenance: {
+                    deviceProfile: {
+                        source: "companion_profile",
+                        provenance: "detected",
+                        detail: "Companion identified the connected headphone device profile.",
+                        ageMs: 320,
+                        staleAfterMs: 5000,
+                    },
+                    profile: {
+                        source: "companion_profile",
+                        provenance: "estimated",
+                        detail: "Headphone profile handoff comes from companion-generated personalization data.",
+                        ageMs: 320,
+                        staleAfterMs: 5000,
+                    },
+                    headphoneVerify: {
+                        source: "runtime_active",
+                        provenance: "estimated",
+                        detail: "Verification remains estimated until BL-099 publishes measured evidence.",
+                        ageMs: 180,
+                        staleAfterMs: 5000,
+                    },
+                },
+            });
+            await waitMs(140);
+
+            if (readText("cal-hp-source") !== "Companion-Detected") {
+                failCheck("UI-P1-101B", `unexpected headphone device source (${readText("cal-hp-source") || "n/a"})`);
+            }
+            if (readText("cal-hp-provenance") !== "Detected") {
+                failCheck("UI-P1-101B", `unexpected headphone device trust label (${readText("cal-hp-provenance") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101B", readText("cal-hp-freshness"), "Stale", "headphone freshness");
+            expectIncludes("UI-P1-101B", readText("cal-auto-row2-note"), "Trust: Detected.", "detected device note trust");
+            expectIncludes("UI-P1-101B", readText("cal-auto-row3-note"), "Trust: Estimated.", "profile handoff note trust");
+            if (readText("cal-auto-row2-source") !== "COMPANION-DETECTED") {
+                failCheck("UI-P1-101B", `unexpected detected-device source chip (${readText("cal-auto-row2-source") || "n/a"})`);
+            }
+            recordCheck("UI-P1-101B", true, "headphone device status and automation summary expose source/provenance/freshness truthfully");
+
+            if (readText("cal-validation-profile-chip") !== "PASS") {
+                failCheck("UI-P1-101C", `unexpected headphone verify chip (${readText("cal-validation-profile-chip") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101C", readText("cal-validation-profile-detail"), "Requested steam_binaural/airpods_pro_2 is active.", "headphone verify detail");
+            if (readText("cal-auto-row4-source") !== "RUNTIME ACTIVE") {
+                failCheck("UI-P1-101C", `unexpected runtime activation source chip (${readText("cal-auto-row4-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-101C", readText("cal-auto-row4-note"), "Trust: Estimated.", "runtime activation trust");
+            expectIncludes("UI-P1-101C", readText("cal-auto-row4-note"), "BL-099", "runtime activation provenance note");
+            expectIncludes("UI-P1-101C", readText("calibration-dock-profile"), "Requested steam_binaural/airpods_pro_2 is active.", "dock profile truth");
+            recordCheck("UI-P1-101C", true, "headphone verify and runtime activation surfaces preserve requested-vs-active and estimated truth language");
+        } finally {
+            sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
+            setChoiceIndex(comboStates.cal_monitoring_path, monitoringBefore, 4);
+            setChoiceIndex(comboStates.cal_device_profile, deviceBefore, 5);
+            setChoiceIndex(comboStates.cal_topology_profile, topologyBefore, topologyChoiceCount);
+            setChoiceIndex(comboStates.mode, modeBefore, 3);
+            switchMode(modeBefore === 0 ? "calibrate" : (modeBefore === 1 ? "emitter" : "renderer"));
+        }
+    };
+    const runBl102DiscoveryGraphSelfTest = async () => {
+        const modeBefore = getChoiceIndex(comboStates.mode);
+        const nativeSeqBeforeSynthetic = sceneTransportState.lastAcceptedSeq;
+        const topologyBefore = getChoiceIndex(comboStates.cal_topology_profile);
+        const legacyConfigBefore = getChoiceIndex(comboStates.cal_spk_config);
+        const routingBefore = getCalibrationRoutingFromControls();
+        const mappingEditedBefore = calibrationMappingEditedByUser;
+        const applyBestOutputBefore = nativeFunctions.applyBestCalibrationOutputMap;
+        const applyBestTopologyBefore = nativeFunctions.applyBestCalibrationTopology;
+        const saveCalibrationProfileBefore = nativeFunctions.saveCalibrationProfile;
+        const loadCalibrationProfileBefore = nativeFunctions.loadCalibrationProfile;
+        const getCalibrationStatusBefore = nativeFunctions.getCalibrationStatus;
+        const readText = (id) => String(document.getElementById(id)?.textContent || "").trim();
+        const expectIncludes = (checkId, actual, expected, label) => {
+            if (!String(actual || "").includes(expected)) {
+                failCheck(checkId, `${label} mismatch (expected substring "${expected}", got "${actual || "n/a"}")`);
+            }
+        };
+
+        try {
+            switchMode("calibrate");
+            setChoiceIndex(comboStates.mode, 0, 3);
+            await waitMs(180);
+            const calTopologySelect = document.getElementById("cal-topology");
+            const topologyStereoIndex = getCalibrationTopologyIndex("stereo");
+            const topologyQuadIndex = getCalibrationTopologyIndex("quad");
+            const topologySurround51Index = getCalibrationTopologyIndex("surround_51");
+
+            const seqBase = Math.max(
+                Number(sceneTransportState.lastAcceptedSeq) + 30,
+                Number(profileCoherenceState.lastCalibrationStatusSeq) + 30,
+                30
+            );
+            const emitDiscoveryStatus = (seqOffset, overrides = {}) => {
+                window.updateCalibrationStatus({
+                    profileSyncSeq: seqBase + seqOffset,
+                    topologyProfileIndex: getCalibrationTopologyIndex("stereo"),
+                    topologyProfile: "stereo",
+                    monitoringPathIndex: 0,
+                    monitoringPath: "speakers",
+                    deviceProfileIndex: 0,
+                    deviceProfile: "generic",
+                    requiredChannels: 2,
+                    writableChannels: 2,
+                    mappingValid: true,
+                    mappingLimitedToFirst4: false,
+                    mappingDuplicateChannels: false,
+                    running: false,
+                    complete: false,
+                    profileValid: false,
+                    state: "idle",
+                    message: "Synthetic BL-102 discovery snapshot",
+                    discoveryGraph: {
+                        schema: "locusq-calibrate-discovery-graph-v1",
+                        outputCandidates: [{
+                            id: "host_writable_output",
+                            kind: "output",
+                            label: "Writable Calibration Routes",
+                            layout: "L R",
+                            channelCount: 2,
+                            writableChannels: 2,
+                            rank: 1,
+                            confidence: 0.92,
+                            selected: true,
+                            candidateVisible: true,
+                            needsConfirmation: false,
+                            descriptor: {
+                                source: "host_auto",
+                                provenance: "detected",
+                                detail: "Current writable calibration routes are the strongest output candidate for measurement.",
+                                ageMs: 48,
+                                staleAfterMs: 5000,
+                            },
+                            roleAssignments: [
+                                { label: "L", outputChannel: 1, provenance: "inferred" },
+                                { label: "R", outputChannel: 2, provenance: "inferred" },
+                            ],
+                            roleAssignmentProvenance: "inferred",
+                            roleAssignmentDetail: "Role guesses preserve the current topology selection and follow the best writable calibration map.",
+                            roleIntentMappedCount: 2,
+                            roleIntentTotalCount: 2,
+                            roleIntentBlockedCount: 0,
+                            roleIntentComplete: true,
+                        }, {
+                            id: "host_main_output",
+                            kind: "output",
+                            label: "Host Main Output",
+                            layout: "L R",
+                            channelCount: 2,
+                            writableChannels: 2,
+                            rank: 2,
+                            confidence: 0.70,
+                            selected: false,
+                            candidateVisible: true,
+                            needsConfirmation: false,
+                            descriptor: {
+                                source: "host_auto",
+                                provenance: "detected",
+                                detail: "Host output layout matches the writable calibration routes.",
+                                ageMs: 50,
+                                staleAfterMs: 5000,
+                            },
+                            roleAssignments: [
+                                { label: "L", outputChannel: 1, provenance: "detected" },
+                                { label: "R", outputChannel: 2, provenance: "detected" },
+                            ],
+                            roleAssignmentProvenance: "detected",
+                            roleAssignmentDetail: "Role guesses come directly from the host output layout token order.",
+                            roleIntentMappedCount: 2,
+                            roleIntentTotalCount: 2,
+                            roleIntentBlockedCount: 0,
+                            roleIntentComplete: true,
+                        }],
+                        inputCandidates: [{
+                            id: "host_main_input",
+                            kind: "input",
+                            label: "Host Input CH 1",
+                            channelCount: 2,
+                            candidateMicChannel: 1,
+                            selected: true,
+                            selectedMicChannel: 1,
+                            selectedMicVisible: true,
+                            candidateVisible: true,
+                            recommendedMicChannel: 1,
+                            rank: 1,
+                            confidence: 0.78,
+                            needsConfirmation: false,
+                            reasonCodes: ["selected_mic_addressable", "host_input_visible"],
+                            confirmationPrompt: "",
+                            blockedBy: [],
+                            descriptor: {
+                                source: "host_auto",
+                                provenance: "detected",
+                                detail: "Host input bus reports 2 visible channels; selected mic channel 1 is addressable.",
+                                ageMs: 52,
+                                staleAfterMs: 5000,
+                            },
+                        }, {
+                            id: "host_input_ch_2",
+                            kind: "input",
+                            label: "Host Input CH 2",
+                            channelCount: 2,
+                            candidateMicChannel: 2,
+                            selected: false,
+                            selectedMicChannel: 1,
+                            selectedMicVisible: true,
+                            candidateVisible: true,
+                            recommendedMicChannel: 1,
+                            rank: 12,
+                            confidence: 0.64,
+                            needsConfirmation: false,
+                            reasonCodes: ["alternate_visible_input", "host_input_visible"],
+                            confirmationPrompt: "",
+                            blockedBy: [],
+                            descriptor: {
+                                source: "host_auto",
+                                provenance: "detected",
+                                detail: "Host input bus reports 2 visible channels; mic channel 2 is available as an alternate measurement input.",
+                                ageMs: 54,
+                                staleAfterMs: 5000,
+                            },
+                        }],
+                        topologyCandidates: [{
+                            id: "stereo",
+                            kind: "topology_candidate",
+                            label: "Stereo",
+                            requiredChannels: 2,
+                            writableChannels: 2,
+                            rank: 1,
+                            confidence: 0.88,
+                            selected: true,
+                            needsConfirmation: false,
+                            descriptor: {
+                                source: "host_auto",
+                                provenance: "detected",
+                                detail: "Auto-map suggests Stereo from the current host output width.",
+                                ageMs: 44,
+                                staleAfterMs: 5000,
+                            },
+                            roleAssignments: [
+                                { label: "L", outputChannel: 1, provenance: "inferred" },
+                                { label: "R", outputChannel: 2, provenance: "inferred" },
+                            ],
+                            roleAssignmentProvenance: "inferred",
+                            roleAssignmentDetail: "Role guesses are inferred from the best topology candidate and current writable calibration map.",
+                            roleIntentMappedCount: 2,
+                            roleIntentTotalCount: 2,
+                            roleIntentBlockedCount: 0,
+                            roleIntentComplete: true,
+                        }],
+                        needsConfirmation: ["No confirmation needed. Auto-map and topology candidate are aligned."],
+                        summary: {
+                            outputHeadline: "Host main output · 2 visible / 2 writable",
+                            inputHeadline: "Host main input · 2 visible · Mic 1 selected",
+                            topologyHeadline: "Best candidate: Stereo",
+                            ambiguityHeadline: "No ambiguity detected.",
+                        },
+                    },
+                    ...overrides,
+                });
+            };
+
+            emitDiscoveryStatus(1);
+            await waitMs(120);
+
+            if (readText("cal-discovery-row1-source") !== "HOST-DETECTED") {
+                failCheck("UI-P1-102A", `unexpected output discovery source (${readText("cal-discovery-row1-source") || "n/a"})`);
+            }
+            if (readText("cal-discovery-row2-source") !== "HOST-DETECTED") {
+                failCheck("UI-P1-102A", `unexpected input discovery source (${readText("cal-discovery-row2-source") || "n/a"})`);
+            }
+            if (readText("cal-discovery-row3-source") !== "HOST-DETECTED") {
+                failCheck("UI-P1-102A", `unexpected topology discovery source (${readText("cal-discovery-row3-source") || "n/a"})`);
+            }
+            if (readText("cal-discovery-row4-source") !== "READY") {
+                failCheck("UI-P1-102A", `unexpected confirmation chip (${readText("cal-discovery-row4-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-102A", readText("cal-discovery-row1-note"), "Trust: Detected.", "output discovery trust");
+            expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row1-candidates")?.textContent || ""), "Writable Calibration Routes", "output best candidate strip");
+            expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row1-candidates")?.textContent || ""), "Host Main Output", "output alternate candidate strip");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-apply-output-note"), "Best map preview: L->1, R->2.", "output action preview");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-apply-output-note"), "Role guess: Inferred.", "output action role trust");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-row2-value"), "Mic 1 selected", "input headline");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-row2-note"), "Recommended mic: 1.", "recommended mic");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-row2-note"), "Selected mic is addressable", "addressable reason");
+            expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row2-candidates")?.textContent || ""), "Mic 1Best", "best candidate strip");
+            expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row2-candidates")?.textContent || ""), "Mic 2Alt", "alternate candidate strip");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-row3-value"), "Best candidate: Stereo", "topology headline");
+            expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row3-candidates")?.textContent || ""), "StereoBest", "topology best strip");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-row4-note"), "No ambiguity detected.", "ready ambiguity note");
+            recordCheck("UI-P1-102A", true, "discovery summary exposes aligned output/input/topology candidates with ready confirmation state");
+
+            if (calTopologySelect instanceof HTMLSelectElement) {
+                calTopologySelect.selectedIndex = topologyQuadIndex;
+            }
+            setChoiceIndex(comboStates.cal_topology_profile, topologyQuadIndex, calibrationTopologyIds.length);
+            syncLegacyConfigAliasFromTopology("quad");
+            calibrationMappingEditedByUser = true;
+            ensureCalibrationMappingRows()
+                .map(entry => entry.select)
+                .filter(select => !!select)
+                .slice(0, CALIBRATION_ROUTABLE_CHANNELS)
+                .forEach((select, idx) => {
+                    if (!(select instanceof HTMLSelectElement)) return;
+                    const desired = [2, 2, 3, 4][idx] || 1;
+                    select.selectedIndex = clamp(desired - 1, 0, Math.max(0, select.options.length - 1));
+                });
+
+            emitDiscoveryStatus(2, {
+                discoveryGraph: {
+                    schema: "locusq-calibrate-discovery-graph-v1",
+                    outputCandidates: [{
+                        id: "host_writable_output",
+                        kind: "output",
+                        label: "Writable Calibration Routes",
+                        layout: "L R",
+                        channelCount: 2,
+                        writableChannels: 2,
+                        rank: 1,
+                        confidence: 0.92,
+                        selected: true,
+                        candidateVisible: true,
+                        needsConfirmation: false,
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "detected",
+                            detail: "Current writable calibration routes are the strongest output candidate for measurement.",
+                            ageMs: 64,
+                            staleAfterMs: 5000,
+                        },
+                            roleAssignments: [
+                                { label: "FL", outputChannel: 1, provenance: "generic" },
+                                { label: "FR", outputChannel: 2, provenance: "generic" },
+                                { label: "RL", outputChannel: 1, provenance: "generic" },
+                                { label: "RR", outputChannel: 2, provenance: "generic" },
+                            ],
+                        roleAssignmentProvenance: "generic",
+                        roleAssignmentDetail: "Role guesses preserve the current topology selection but collapse onto the limited writable calibration map.",
+                        roleIntentMappedCount: 4,
+                        roleIntentTotalCount: 4,
+                        roleIntentBlockedCount: 0,
+                        roleIntentComplete: true,
+                    }, {
+                        id: "host_main_output",
+                        kind: "output",
+                        label: "Host Main Output",
+                        layout: "L R C Lfe Ls Rs",
+                        channelCount: 6,
+                        writableChannels: 2,
+                        rank: 2,
+                        confidence: 0.70,
+                        selected: false,
+                        candidateVisible: true,
+                        needsConfirmation: true,
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "inferred",
+                            detail: "Host output layout exposes more visible channels than the current writable calibration map.",
+                            ageMs: 64,
+                            staleAfterMs: 5000,
+                        },
+                        roleAssignments: [
+                            { label: "L", outputChannel: 1, provenance: "detected" },
+                            { label: "R", outputChannel: 2, provenance: "detected" },
+                            { label: "C", outputChannel: 3, provenance: "detected" },
+                            { label: "Lfe", outputChannel: 4, provenance: "detected" },
+                        ],
+                        roleAssignmentProvenance: "detected",
+                        roleAssignmentDetail: "Role guesses come directly from the host output layout token order.",
+                        roleIntentMappedCount: 4,
+                        roleIntentTotalCount: 4,
+                        roleIntentBlockedCount: 0,
+                        roleIntentComplete: true,
+                    }],
+                    inputCandidates: [{
+                        id: "host_input_ch_1",
+                        kind: "input",
+                        label: "Host Input CH 1",
+                        channelCount: 1,
+                        candidateMicChannel: 1,
+                        selected: false,
+                        selectedMicChannel: 3,
+                        selectedMicVisible: false,
+                        candidateVisible: true,
+                        recommendedMicChannel: 1,
+                        rank: 1,
+                        confidence: 0.82,
+                        needsConfirmation: true,
+                        reasonCodes: ["auto_ranked_best", "single_input_visible", "host_input_visible"],
+                        confirmationPrompt: "",
+                        blockedBy: [],
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "detected",
+                            detail: "Host input bus reports 1 visible channel; mic channel 1 is the current best measurement input.",
+                            ageMs: 70,
+                            staleAfterMs: 5000,
+                        },
+                    }, {
+                        id: "host_input_ch_3",
+                        kind: "input",
+                        label: "Host Input CH 3",
+                        channelCount: 1,
+                        candidateMicChannel: 3,
+                        selected: true,
+                        selectedMicChannel: 3,
+                        selectedMicVisible: false,
+                        candidateVisible: false,
+                        recommendedMicChannel: 1,
+                        rank: 99,
+                        confidence: 0.52,
+                        needsConfirmation: true,
+                        reasonCodes: ["selected_mic_out_of_range", "single_input_visible"],
+                        confirmationPrompt: "Choose a mic channel that is visible in the current host input width.",
+                        blockedBy: ["selected_mic_visibility"],
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "inferred",
+                            detail: "Host input bus reports 1 visible channel, but selected mic channel 3 falls outside that width.",
+                                ageMs: 72,
+                                staleAfterMs: 5000,
+                            },
+                        }],
+                    topologyCandidates: [{
+                        id: "stereo",
+                        kind: "topology_candidate",
+                        label: "Stereo",
+                        requiredChannels: 2,
+                        writableChannels: 2,
+                        rank: 1,
+                        confidence: 0.88,
+                        selected: false,
+                        needsConfirmation: true,
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "detected",
+                            detail: "Auto-map suggests Stereo from the current host output width.",
+                            ageMs: 62,
+                            staleAfterMs: 5000,
+                        },
+                        roleAssignments: [
+                            { label: "L", outputChannel: 1, provenance: "inferred" },
+                            { label: "R", outputChannel: 2, provenance: "inferred" },
+                        ],
+                        roleAssignmentProvenance: "inferred",
+                        roleAssignmentDetail: "Role guesses are inferred from the best topology candidate and current writable calibration map.",
+                        roleIntentMappedCount: 2,
+                        roleIntentTotalCount: 2,
+                        roleIntentBlockedCount: 0,
+                        roleIntentComplete: true,
+                    }, {
+                        id: "quad",
+                        kind: "topology_candidate",
+                        label: "Quad",
+                        requiredChannels: 4,
+                        writableChannels: 2,
+                        rank: 2,
+                        confidence: 0.55,
+                        selected: true,
+                        needsConfirmation: true,
+                        descriptor: {
+                            source: "manual_override",
+                            provenance: "inferred",
+                            detail: "Current topology selection differs from the latest host-derived topology candidate.",
+                            manualOverride: true,
+                            ageMs: 62,
+                            staleAfterMs: 5000,
+                        },
+                        roleAssignments: [
+                            { label: "FL", outputChannel: 1, provenance: "generic" },
+                            { label: "FR", outputChannel: 2, provenance: "generic" },
+                            { label: "RL", outputChannel: 1, provenance: "generic" },
+                            { label: "RR", outputChannel: 2, provenance: "generic" },
+                        ],
+                        roleAssignmentProvenance: "generic",
+                        roleAssignmentDetail: "Role guesses preserve the manual topology selection, but the current writable calibration map cannot represent every role yet.",
+                        roleIntentMappedCount: 4,
+                        roleIntentTotalCount: 4,
+                        roleIntentBlockedCount: 0,
+                        roleIntentComplete: true,
+                    }],
+                    needsConfirmation: [
+                        "Selected mic channel is outside the visible host input width; choose an addressable input before measuring.",
+                        "Confirm whether CALIBRATE should follow the host-derived topology or keep the manual selection.",
+                    ],
+                    summary: {
+                        outputHeadline: "Host main output · 2 visible / 2 writable",
+                        inputHeadline: "Host main input · 1 visible · Mic 3 needs review",
+                        topologyHeadline: "Best candidate: Stereo",
+                        ambiguityHeadline: "2 confirmation item(s) require review.",
+                    },
+                },
+            });
+            await waitMs(120);
+
+            if (readText("cal-discovery-row4-source") !== "REVIEW") {
+                failCheck("UI-P1-102B", `unexpected review chip (${readText("cal-discovery-row4-source") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-102B", readText("cal-discovery-row2-note"), "Trust: Detected.", "input review trust");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-row2-note"), "Only one host input channel is visible", "input review note");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-row2-note"), "Only one host input channel is visible", "single input reason");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row2-candidates")?.textContent || ""), "Mic 1Best", "best review candidate strip");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row2-candidates")?.textContent || ""), "Mic 3Blocked", "blocked review candidate strip");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row1-candidates")?.textContent || ""), "Host Main Output · 6ch/2 writable", "output review candidate label");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row1-candidates")?.textContent || ""), "Blocked", "output review blocked role");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-apply-output-note"), "Preserves Quad.", "output action preserve preview");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-apply-output-note"), "Role guess: Generic.", "output action generic role trust");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row3-candidates")?.textContent || ""), "StereoBest", "topology review best strip");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row3-candidates")?.textContent || ""), "Quad", "topology review divergent candidate label");
+            expectIncludes("UI-P1-102B", String(document.getElementById("cal-discovery-row3-candidates")?.textContent || ""), "Blocked", "topology review blocked role");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-apply-topology-note"), "Best topology preview: Stereo with L->1, R->2.", "topology action preview");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-apply-topology-note"), "Role guess: Inferred.", "topology action role trust");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-row4-value"), "2 confirmation item(s)", "review count");
+            expectIncludes("UI-P1-102B", readText("cal-discovery-row4-note"), "2 confirmation item(s) require review.", "review summary");
+            recordCheck("UI-P1-102B", true, "discovery summary escalates review state when input visibility and topology confirmation diverge");
+
+            nativeFunctions.applyBestCalibrationOutputMap = async () => ({
+                ok: true,
+                action: "apply_best_output_map",
+                changed: true,
+                speakerConfigIndex: 0,
+                previousSpeakerConfigIndex: 0,
+                topologyProfileIndex: topologyQuadIndex,
+                previousTopologyProfileIndex: topologyQuadIndex,
+                topologyProfile: "quad",
+                monitoringPathIndex: 0,
+                monitoringPath: "speakers",
+                deviceProfileIndex: 0,
+                deviceProfile: "generic",
+                requiredChannels: 4,
+                writableChannels: 2,
+                effectiveWritableChannels: 2,
+                mappingLimitedToFirst4: true,
+                previousRouting: [2, 2, 3, 4],
+                routing: [1, 2, 1, 2],
+                message: "Applied best output map from current writable calibration routes.",
+            });
+            nativeFunctions.applyBestCalibrationTopology = async () => ({
+                ok: true,
+                action: "apply_best_topology",
+                changed: true,
+                speakerConfigIndex: 1,
+                previousSpeakerConfigIndex: 0,
+                topologyProfileIndex: topologyStereoIndex,
+                previousTopologyProfileIndex: topologyQuadIndex,
+                topologyProfile: "stereo",
+                monitoringPathIndex: 0,
+                monitoringPath: "speakers",
+                deviceProfileIndex: 0,
+                deviceProfile: "generic",
+                requiredChannels: 2,
+                writableChannels: 2,
+                effectiveWritableChannels: 2,
+                mappingLimitedToFirst4: false,
+                previousRouting: [1, 2, 1, 2],
+                routing: [1, 2, 1, 2],
+                message: "Applied best topology and aligned the host-derived output map.",
+            });
+            nativeFunctions.getCalibrationStatus = async () => ({
+                ...calibrationState,
+            });
+
+            const applyOutputButton = document.getElementById("cal-discovery-apply-output-btn");
+            if (!(applyOutputButton instanceof HTMLButtonElement)) {
+                failCheck("UI-P1-102C", "missing apply-best-output button");
+            } else {
+                applyOutputButton.click();
+                await waitMs(140);
+                expectIncludes("UI-P1-102C", readText("cal-profile-status"), "Applied best output map", "apply-best-output status");
+                expectIncludes("UI-P1-102C", getCalibrationRoutingFromControls().join("/"), "1/2/1/2", "apply-best-output routing");
+                if (getCalibrationTopologyId() !== "quad") {
+                    failCheck("UI-P1-102C", `apply-best-output changed topology unexpectedly (${getCalibrationTopologyId() || "n/a"})`);
+                }
+                recordCheck("UI-P1-102C", true, "apply-best-output action preserves topology while aligning output map to writable host routes");
+            }
+
+            const applyTopologyButton = document.getElementById("cal-discovery-apply-topology-btn");
+            if (!(applyTopologyButton instanceof HTMLButtonElement)) {
+                failCheck("UI-P1-102D", "missing apply-best-topology button");
+            } else {
+                applyTopologyButton.click();
+                await waitMs(140);
+                expectIncludes("UI-P1-102D", readText("cal-profile-status"), "Applied best topology", "apply-best-topology status");
+                if (getCalibrationTopologyId() !== "stereo") {
+                    failCheck("UI-P1-102D", `apply-best-topology did not update topology (${getCalibrationTopologyId() || "n/a"})`);
+                }
+                expectIncludes("UI-P1-102D", getCalibrationRoutingFromControls().join("/"), "1/2/1/2", "apply-best-topology routing");
+                recordCheck("UI-P1-102D", true, "apply-best-topology action adopts the strongest host-derived topology and aligned map");
+            }
+
+            let savedDiscoveryReconciliation = undefined;
+            nativeFunctions.saveCalibrationProfile = async (_options = {}) => {
+                savedDiscoveryReconciliation = _options?.discoveryReconciliation;
+                return {
+                    ok: true,
+                    name: String(_options?.name || "Discovery_Reconcile_Test"),
+                    path: "/tmp/Discovery_Reconcile_Test.json",
+                    topologyProfile: "surround_51",
+                    monitoringPath: "speakers",
+                    deviceProfile: "generic",
+                    profileTupleKey: "surround_51::speakers",
+                    discoveryReconciliation: savedDiscoveryReconciliation,
+                };
+            };
+            nativeFunctions.loadCalibrationProfile = async () => ({
+                ok: true,
+                name: "Discovery_Reconcile_Test",
+                path: "/tmp/Discovery_Reconcile_Test.json",
+                topologyProfile: "surround_51",
+                monitoringPath: "speakers",
+                deviceProfile: "generic",
+                profileTupleKey: "surround_51::speakers",
+                discoveryReconciliation: savedDiscoveryReconciliation,
+            });
+
+            if (calTopologySelect instanceof HTMLSelectElement) {
+                calTopologySelect.selectedIndex = topologySurround51Index;
+            }
+            setChoiceIndex(comboStates.cal_topology_profile, topologySurround51Index, calibrationTopologyIds.length);
+            syncLegacyConfigAliasFromTopology("surround_51");
+            calibrationMappingEditedByUser = false;
+
+            emitDiscoveryStatus(3, {
+                topologyProfileIndex: topologySurround51Index,
+                topologyProfile: "surround_51",
+                requiredChannels: 6,
+                writableChannels: 4,
+                mappingLimitedToFirst4: true,
+                discoveryGraph: {
+                    schema: "locusq-calibrate-discovery-graph-v1",
+                    outputCandidates: [{
+                        id: "host_writable_output",
+                        kind: "output",
+                        label: "Writable Calibration Routes",
+                        layout: "L R C Lfe Ls Rs",
+                        channelCount: 4,
+                        writableChannels: 4,
+                        rank: 1,
+                        confidence: 0.92,
+                        selected: true,
+                        candidateVisible: true,
+                        needsConfirmation: true,
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "detected",
+                            detail: "Current writable calibration routes are the strongest output candidate for measurement.",
+                            ageMs: 80,
+                            staleAfterMs: 5000,
+                        },
+                        roleAssignments: [
+                            { label: "L", outputChannel: 1, provenance: "generic", mapped: true, blocked: false },
+                            { label: "R", outputChannel: 2, provenance: "generic", mapped: true, blocked: false },
+                            { label: "C", outputChannel: 3, provenance: "generic", mapped: true, blocked: false },
+                            { label: "LFE", outputChannel: 4, provenance: "generic", mapped: true, blocked: false },
+                            { label: "Ls", outputChannel: 0, provenance: "generic", mapped: false, blocked: true, blockedReason: "limited_writable_map" },
+                            { label: "Rs", outputChannel: 0, provenance: "generic", mapped: false, blocked: true, blockedReason: "limited_writable_map" },
+                        ],
+                        roleAssignmentProvenance: "generic",
+                        roleAssignmentDetail: "Role guesses preserve the current topology selection but collapse onto the limited writable calibration map.",
+                        roleIntentMappedCount: 4,
+                        roleIntentTotalCount: 6,
+                        roleIntentBlockedCount: 2,
+                        roleIntentComplete: false,
+                    }],
+                    inputCandidates: [{
+                        id: "host_input_ch_1",
+                        kind: "input",
+                        label: "Host Input CH 1",
+                        channelCount: 2,
+                        candidateMicChannel: 1,
+                        selected: true,
+                        selectedMicChannel: 1,
+                        selectedMicVisible: true,
+                        candidateVisible: true,
+                        recommendedMicChannel: 1,
+                        rank: 1,
+                        confidence: 0.80,
+                        needsConfirmation: false,
+                        reasonCodes: ["selected_mic_addressable", "host_input_visible"],
+                        confirmationPrompt: "",
+                        blockedBy: [],
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "detected",
+                            detail: "Host input bus reports 2 visible channels; selected mic channel 1 is addressable.",
+                            ageMs: 82,
+                            staleAfterMs: 5000,
+                        },
+                    }],
+                    topologyCandidates: [{
+                        id: "surround_51",
+                        kind: "topology_candidate",
+                        label: "5.1",
+                        requiredChannels: 6,
+                        writableChannels: 4,
+                        rank: 1,
+                        confidence: 0.88,
+                        selected: true,
+                        needsConfirmation: true,
+                        descriptor: {
+                            source: "host_auto",
+                            provenance: "detected",
+                            detail: "Auto-map suggests 5.1 from the current host output width.",
+                            ageMs: 78,
+                            staleAfterMs: 5000,
+                        },
+                        roleAssignments: [
+                            { label: "L", outputChannel: 1, provenance: "generic", mapped: true, blocked: false },
+                            { label: "R", outputChannel: 2, provenance: "generic", mapped: true, blocked: false },
+                            { label: "C", outputChannel: 3, provenance: "generic", mapped: true, blocked: false },
+                            { label: "LFE", outputChannel: 4, provenance: "generic", mapped: true, blocked: false },
+                            { label: "Ls", outputChannel: 0, provenance: "generic", mapped: false, blocked: true, blockedReason: "limited_writable_map" },
+                            { label: "Rs", outputChannel: 0, provenance: "generic", mapped: false, blocked: true, blockedReason: "limited_writable_map" },
+                        ],
+                        roleAssignmentProvenance: "generic",
+                        roleAssignmentDetail: "Role guesses follow the best topology candidate, but the current writable calibration map cannot represent every role yet.",
+                        roleIntentMappedCount: 4,
+                        roleIntentTotalCount: 6,
+                        roleIntentBlockedCount: 2,
+                        roleIntentComplete: false,
+                    }],
+                    needsConfirmation: [
+                        "Confirm limited mapping or choose a topology that fits writable outputs.",
+                    ],
+                    summary: {
+                        outputHeadline: "Writable calibration routes · 4 visible / 4 writable",
+                        inputHeadline: "Host main input · 2 visible · Mic 1 selected",
+                        topologyHeadline: "Best candidate: 5.1",
+                        ambiguityHeadline: "1 confirmation item(s) require review.",
+                    },
+                },
+            });
+            await waitMs(120);
+
+            const outputReconcileList = document.getElementById("cal-discovery-apply-output-reconcile");
+            const topologyReconcileList = document.getElementById("cal-discovery-apply-topology-reconcile");
+            const wideApplyOutputButton = document.getElementById("cal-discovery-apply-output-btn");
+            const wideApplyTopologyButton = document.getElementById("cal-discovery-apply-topology-btn");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-output-note"), "L->1, R->2, C->3, LFE->4, Ls->unmapped, Rs->unmapped.", "wide output role intent");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-output-note"), "Intent coverage: 4/6 roles addressable.", "wide output coverage");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-output-note"), "Choose a reconciliation policy for Ls, Rs before applying this partial map.", "wide output reconciliation warning");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-topology-note"), "Best topology active: 5.1 with L->1, R->2, C->3, LFE->4, Ls->unmapped, Rs->unmapped.", "wide topology role intent");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-topology-note"), "Role guess: Generic.", "wide topology role trust");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-topology-note"), "Intent coverage: 4/6 roles addressable.", "wide topology coverage");
+            if (outputReconcileList?.hidden !== false) {
+                failCheck("UI-P1-102E", "output reconciliation list should be visible");
+            }
+            if (topologyReconcileList?.hidden !== false) {
+                failCheck("UI-P1-102E", "topology reconciliation list should be visible");
+            }
+            expectIncludes("UI-P1-102E", String(outputReconcileList?.textContent || ""), "Ls remains unmapped", "output reconciliation row");
+            expectIncludes("UI-P1-102E", String(outputReconcileList?.textContent || ""), "Rs remains unmapped", "output reconciliation row");
+            expectIncludes("UI-P1-102E", String(topologyReconcileList?.textContent || ""), "Ls remains unmapped", "topology reconciliation row");
+            if (wideApplyOutputButton instanceof HTMLButtonElement && !wideApplyOutputButton.disabled) {
+                failCheck("UI-P1-102E", "apply-best-output should require reconciliation policies before enabling");
+            }
+            if (wideApplyTopologyButton instanceof HTMLButtonElement && wideApplyTopologyButton.textContent?.trim() !== "BEST TOPOLOGY ACTIVE") {
+                failCheck("UI-P1-102E", `unexpected wide topology button label (${wideApplyTopologyButton.textContent?.trim() || "n/a"})`);
+            }
+
+            const outputReconcileSelects = Array.from(document.querySelectorAll("#cal-discovery-apply-output-reconcile select"));
+            const topologyReconcileSelects = Array.from(document.querySelectorAll("#cal-discovery-apply-topology-reconcile select"));
+            if (outputReconcileSelects.length < 2) {
+                failCheck("UI-P1-102E", `expected output reconciliation selects for unmapped roles (${outputReconcileSelects.length})`);
+            }
+            if (topologyReconcileSelects.length < 2) {
+                failCheck("UI-P1-102E", `expected topology reconciliation selects for unmapped roles (${topologyReconcileSelects.length})`);
+            }
+            let liveOutputReconcileSelects = Array.from(document.querySelectorAll("#cal-discovery-apply-output-reconcile select"));
+            let outputSelect = liveOutputReconcileSelects[0];
+            if (outputSelect instanceof HTMLSelectElement) {
+                outputSelect.value = "defer";
+                outputSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                await waitMs(20);
+            }
+            liveOutputReconcileSelects = Array.from(document.querySelectorAll("#cal-discovery-apply-output-reconcile select"));
+            outputSelect = liveOutputReconcileSelects[1];
+            if (outputSelect instanceof HTMLSelectElement) {
+                outputSelect.value = "manual_reroute_later";
+                outputSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                await waitMs(20);
+            }
+            let liveTopologyReconcileSelects = Array.from(document.querySelectorAll("#cal-discovery-apply-topology-reconcile select"));
+            let topologySelectForReconcile = liveTopologyReconcileSelects[0];
+            if (topologySelectForReconcile instanceof HTMLSelectElement) {
+                topologySelectForReconcile.value = "fold_front_pair";
+                topologySelectForReconcile.dispatchEvent(new Event("change", { bubbles: true }));
+                await waitMs(20);
+            }
+            liveTopologyReconcileSelects = Array.from(document.querySelectorAll("#cal-discovery-apply-topology-reconcile select"));
+            topologySelectForReconcile = liveTopologyReconcileSelects[1];
+            if (topologySelectForReconcile instanceof HTMLSelectElement) {
+                topologySelectForReconcile.value = "defer";
+                topologySelectForReconcile.dispatchEvent(new Event("change", { bubbles: true }));
+                await waitMs(20);
+            }
+            if (wideApplyOutputButton instanceof HTMLButtonElement && wideApplyOutputButton.disabled) {
+                failCheck("UI-P1-102E", "apply-best-output should enable after resolving output reconciliation");
+            }
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-output-note"), "Reconciliation: Ls=Defer Role; Rs=Manual Reroute Later.", "output reconciliation summary");
+            expectIncludes("UI-P1-102E", readText("cal-discovery-apply-topology-note"), "Reconciliation: Ls=Fold To Front Pair; Rs=Defer Role.", "topology reconciliation summary");
+            recordCheck("UI-P1-102E", true, "discovery previews retain complete 5.1 speaker-role intent even when only four writable calibration routes are currently addressable");
+
+            const calProfileNameInput = document.getElementById("cal-profile-name");
+            const calProfileSelect = document.getElementById("cal-profile-select");
+            if (calProfileNameInput instanceof HTMLInputElement) {
+                calProfileNameInput.value = "Discovery_Reconcile_Test";
+            }
+            const profileSaved = await saveCalibrationProfile();
+            if (!profileSaved) {
+                failCheck("UI-P1-102F", "calibration profile save with discovery reconciliation failed");
+            }
+            if (!savedDiscoveryReconciliation?.output?.ls || !savedDiscoveryReconciliation?.topology?.rs) {
+                failCheck("UI-P1-102F", "discovery reconciliation payload was not sent during profile save");
+            }
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Map", "saved profile summary shows output reconciliation");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "LS=Defer Role; RS=Manual Reroute Later.", "saved profile summary output roles");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Topology", "saved profile summary shows topology reconciliation");
+            applyCalibrationDiscoveryReconciliationPayload({});
+            updateCalibrationDiscoverySummary();
+            expectIncludes("UI-P1-102F", readText("cal-discovery-apply-output-note"), "Choose a reconciliation policy for Ls, Rs before applying this partial map.", "reconciliation cleared state");
+            if (calProfileSelect instanceof HTMLSelectElement) {
+                calProfileSelect.innerHTML = "";
+                const option = document.createElement("option");
+                option.value = "/tmp/Discovery_Reconcile_Test.json";
+                option.textContent = "Discovery_Reconcile_Test";
+                option.dataset.profilePath = "/tmp/Discovery_Reconcile_Test.json";
+                option.dataset.profileName = "Discovery_Reconcile_Test";
+                option.dataset.topologyProfile = "surround_51";
+                option.dataset.monitoringPath = "speakers";
+                option.dataset.profileTupleKey = "surround_51::speakers";
+                calProfileSelect.appendChild(option);
+                calProfileSelect.value = option.value;
+            }
+            const profileLoaded = await loadCalibrationProfile();
+            if (!profileLoaded) {
+                failCheck("UI-P1-102F", "calibration profile load with discovery reconciliation failed");
+            }
+            expectIncludes("UI-P1-102F", readText("cal-discovery-apply-output-note"), "Reconciliation: Ls=Defer Role; Rs=Manual Reroute Later.", "loaded output reconciliation");
+            expectIncludes("UI-P1-102F", readText("cal-discovery-apply-topology-note"), "Reconciliation: Ls=Fold To Front Pair; Rs=Defer Role.", "loaded topology reconciliation");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "5.1 · Speakers", "loaded profile summary tuple");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Topology: LS=Fold To Front Pair; RS=Defer Role.", "loaded profile summary topology roles");
+            recordCheck("UI-P1-102F", true, "discovery reconciliation policies persist through calibration profile save/load roundtrip");
+        } finally {
+            nativeFunctions.applyBestCalibrationOutputMap = applyBestOutputBefore;
+            nativeFunctions.applyBestCalibrationTopology = applyBestTopologyBefore;
+            nativeFunctions.saveCalibrationProfile = saveCalibrationProfileBefore;
+            nativeFunctions.loadCalibrationProfile = loadCalibrationProfileBefore;
+            nativeFunctions.getCalibrationStatus = getCalibrationStatusBefore;
+            sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
+            setChoiceIndex(comboStates.cal_topology_profile, topologyBefore, calibrationTopologyIds.length);
+            setChoiceIndex(comboStates.cal_spk_config, legacyConfigBefore, 2);
+            const topologySelect = document.getElementById("cal-topology");
+            if (topologySelect instanceof HTMLSelectElement) {
+                topologySelect.selectedIndex = clamp(topologyBefore, 0, Math.max(0, topologySelect.options.length - 1));
+            }
+            const configSelect = document.getElementById("cal-config");
+            if (configSelect instanceof HTMLSelectElement) {
+                configSelect.selectedIndex = clamp(legacyConfigBefore, 0, Math.max(0, configSelect.options.length - 1));
+            }
+            ensureCalibrationMappingRows()
+                .map(entry => entry.select)
+                .filter(select => !!select)
+                .slice(0, CALIBRATION_ROUTABLE_CHANNELS)
+                .forEach((select, idx) => {
+                    if (!(select instanceof HTMLSelectElement)) return;
+                    select.selectedIndex = clamp((routingBefore[idx] || 1) - 1, 0, Math.max(0, select.options.length - 1));
+                });
+            calibrationMappingEditedByUser = mappingEditedBefore;
+            setChoiceIndex(comboStates.mode, modeBefore, 3);
+            switchMode(modeBefore === 0 ? "calibrate" : (modeBefore === 1 ? "emitter" : "renderer"));
+        }
+    };
+    const runBl099HeadphoneTruthfulnessSelfTest = async () => {
+        const modeBefore = getChoiceIndex(comboStates.mode);
+        const nativeSeqBeforeSynthetic = sceneTransportState.lastAcceptedSeq;
+        const readText = (id) => String(document.getElementById(id)?.textContent || "").trim();
+        const expectIncludes = (checkId, actual, expected, label) => {
+            if (!String(actual || "").includes(expected)) {
+                failCheck(checkId, `${label} mismatch (expected substring "${expected}", got "${actual || "n/a"}")`);
+            }
+        };
+
+        try {
+            switchMode("renderer");
+            setChoiceIndex(comboStates.mode, 2, 3);
+            await waitMs(180);
+
+            const seqBase = Math.max(sceneTransportState.lastAcceptedSeq + 60, 60);
+            const emitSyntheticSnapshot = (seqOffset, overrides) => {
+                const payload = {
+                    ...(sceneData || {}),
+                    snapshotSeq: seqBase + seqOffset,
+                    snapshotSchema: sceneTransportState.schema,
+                    rendererHeadphoneProfileCatalogVersion: "bl099-synthetic-v1",
+                    rendererHeadphoneProfileFallbackReason: "none",
+                    rendererHeadphoneProfileFallbackTarget: "none",
+                    rendererHeadphoneCalibrationSchema: "locusq-headphone-calibration-contract-v1",
+                    rendererHeadphoneCalibrationRequested: "steam_binaural",
+                    rendererHeadphoneCalibrationActive: "steam_binaural",
+                    rendererHeadphoneCalibrationStage: "direct",
+                    rendererHeadphoneCalibrationFallbackReady: true,
+                    rendererHeadphoneCalibrationFallbackReason: "none",
+                    rendererHeadphoneCalibrationEngineRequested: "fir",
+                    rendererHeadphoneCalibrationEngineActive: "fir",
+                    rendererHeadphoneVerificationSchema: "locusq-headphone-verification-contract-v1",
+                    rendererHeadphoneVerificationProfileId: "airpods_pro_2",
+                    rendererHeadphoneVerificationRequestedProfileId: "airpods_pro_2",
+                    rendererHeadphoneVerificationActiveProfileId: "airpods_pro_2",
+                    rendererHeadphoneVerificationFallbackReasonCode: "none",
+                    rendererHeadphoneVerificationFallbackTarget: "none",
+                    rendererHeadphoneVerificationFallbackReasonText: "Requested calibration engine active.",
+                    rendererHeadphoneVerificationFrontBackScore: 0.0,
+                    rendererHeadphoneVerificationElevationScore: 0.0,
+                    rendererHeadphoneVerificationExternalizationScore: 0.0,
+                    rendererHeadphoneVerificationConfidence: 0.0,
+                    rendererHeadphoneVerificationStage: "verified",
+                    rendererHeadphoneVerificationScoreStatus: "unavailable",
+                    rendererHeadphoneVerificationScoreProvenance: "unavailable",
+                    rendererHeadphoneVerificationCompensationLabel: "Generic baseline compensation",
+                    rendererHeadphoneVerificationCompensationProvenance: "generic",
+                    rendererHeadphoneVerificationLatencySamples: 128,
+                    ...overrides,
+                };
+                window.updateSceneState(payload);
+            };
+
+            emitSyntheticSnapshot(1, {});
+            await waitMs(140);
+
+            if (readText("rend-hpver-chip") !== "UNAVAILABLE") {
+                failCheck("UI-P1-099A", `unexpected headphone verification chip (${readText("rend-hpver-chip") || "n/a"})`);
+            }
+            if (readText("rend-hpver-score-status") !== "Unavailable") {
+                failCheck("UI-P1-099A", `unexpected score status label (${readText("rend-hpver-score-status") || "n/a"})`);
+            }
+            if (readText("rend-hpver-score-provenance") !== "Unavailable") {
+                failCheck("UI-P1-099A", `unexpected score provenance label (${readText("rend-hpver-score-provenance") || "n/a"})`);
+            }
+            if (readText("rend-hpver-comp-label") !== "Generic baseline compensation") {
+                failCheck("UI-P1-099A", `unexpected compensation label (${readText("rend-hpver-comp-label") || "n/a"})`);
+            }
+            if (readText("rend-hpver-comp-provenance") !== "Generic") {
+                failCheck("UI-P1-099A", `unexpected compensation provenance (${readText("rend-hpver-comp-provenance") || "n/a"})`);
+            }
+            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "stage=Verified", "verification detail stage");
+            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "evidence=Unavailable", "verification detail evidence");
+            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "compensation=Generic", "verification detail compensation provenance");
+            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "Generic baseline compensation", "verification detail compensation label");
+            if (readText("rend-hpver-scores") !== "FB n/a · EL n/a · EXT n/a") {
+                failCheck("UI-P1-099A", `unexpected score summary (${readText("rend-hpver-scores") || "n/a"})`);
+            }
+            if (readText("rend-hpver-confidence") !== "n/a") {
+                failCheck("UI-P1-099A", `unexpected confidence summary (${readText("rend-hpver-confidence") || "n/a"})`);
+            }
+            recordCheck("UI-P1-099A", true, "headphone verification keeps runtime stage while withholding synthetic evidence values");
+
+            emitSyntheticSnapshot(2, {
+                rendererHeadphoneVerificationStage: "unavailable",
+                rendererHeadphoneVerificationScoreStatus: "unavailable",
+                rendererHeadphoneVerificationScoreProvenance: "unavailable",
+                rendererHeadphoneVerificationFallbackReasonCode: "dsp_not_prepared",
+                rendererHeadphoneVerificationFallbackReasonText: "Calibration DSP chain is not prepared.",
+            });
+            await waitMs(140);
+
+            if (readText("rend-hpver-chip") !== "UNAVAILABLE") {
+                failCheck("UI-P1-099B", `unexpected unavailable chip (${readText("rend-hpver-chip") || "n/a"})`);
+            }
+            if (readText("rend-hpver-score-status") !== "Unavailable") {
+                failCheck("UI-P1-099B", `unexpected unavailable score status (${readText("rend-hpver-score-status") || "n/a"})`);
+            }
+            if (readText("rend-hpver-score-provenance") !== "Unavailable") {
+                failCheck("UI-P1-099B", `unexpected unavailable score provenance (${readText("rend-hpver-score-provenance") || "n/a"})`);
+            }
+            recordCheck("UI-P1-099B", true, "headphone verification falls back to unavailable when no trustworthy evidence is present");
+        } finally {
+            sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
+            setChoiceIndex(comboStates.mode, modeBefore, 3);
+            switchMode(modeBefore === 0 ? "calibrate" : (modeBefore === 1 ? "emitter" : "renderer"));
+        }
+    };
 
     try {
         await waitForCondition("p0 self-test controls ready", () => {
@@ -8803,6 +11315,27 @@ async function runProductionP0SelfTest() {
 
         if (runBl029ScopeOnly) {
             await runBl029ReactiveUiSelfTest();
+            report.ok = true;
+            report.status = "pass";
+            return report;
+        }
+
+        if (runBl099ScopeOnly) {
+            await runBl099HeadphoneTruthfulnessSelfTest();
+            report.ok = true;
+            report.status = "pass";
+            return report;
+        }
+
+        if (runBl101ScopeOnly) {
+            await runBl101CalibrateTruthfulnessSelfTest();
+            report.ok = true;
+            report.status = "pass";
+            return report;
+        }
+
+        if (runBl102ScopeOnly) {
+            await runBl102DiscoveryGraphSelfTest();
             report.ok = true;
             report.status = "pass";
             return report;
@@ -8970,19 +11503,64 @@ async function runProductionP0SelfTest() {
         if (calAckLimited) calAckLimited.checked = false;
         await waitMs(100);
 
-        calStartButton.click();
-        await waitForConditionWithRetry(
-            "calibration start",
-            () => calibrationState.running || String(calStartButton.textContent || "").includes("ABORT"),
-            {
-                timeoutMs: 1800,
-                pollMs: 25,
-                maxAttempts: 4,
-                backoffMs: 120,
+        const calibrationStatusSummary = (nativeStatus = null) => {
+            const profileStatusText = String(document.getElementById("cal-profile-status")?.textContent || "").trim() || "n/a";
+            const stateChipText = String(document.getElementById("cal-state-chip")?.textContent || "").trim() || "n/a";
+            const startSeq = Number.isFinite(Number(calibrationState.startSeq)) ? Number(calibrationState.startSeq) : -1;
+            const startAck = calibrationState.startAck === undefined ? "unknown" : String(!!calibrationState.startAck);
+            const startCode = String(calibrationState.startCode || "n/a").trim() || "n/a";
+            const startMessage = String(calibrationState.startMessage || "n/a").trim() || "n/a";
+            const runtimeStateText = String(calibrationState.state || "n/a").trim() || "n/a";
+            const runtimeMessage = String(calibrationState.message || "n/a").trim() || "n/a";
+            let nativeSummary = "nativeStatus=n/a";
+            if (nativeStatus && typeof nativeStatus === "object") {
+                const nativeStartSeq = Number.isFinite(Number(nativeStatus.startSeq)) ? Number(nativeStatus.startSeq) : -1;
+                const nativeStartAck = nativeStatus.startAck === undefined ? "unknown" : String(!!nativeStatus.startAck);
+                const nativeStartCode = String(nativeStatus.startCode || "n/a").trim() || "n/a";
+                const nativeStateText = String(nativeStatus.state || "n/a").trim() || "n/a";
+                const nativeMessage = String(nativeStatus.message || "n/a").trim() || "n/a";
+                nativeSummary = `nativeStatus[startSeq=${nativeStartSeq} startAck=${nativeStartAck} startCode=${nativeStartCode} state=${nativeStateText} message="${nativeMessage}"]`;
             }
-        );
+            return `mode=${currentMode} startSeq=${startSeq} startAck=${startAck} startCode=${startCode} runtimeState=${runtimeStateText} stateChip=${stateChipText} profileStatus="${profileStatusText}" runtimeMessage="${runtimeMessage}" startMessage="${startMessage}" ${nativeSummary}`;
+        };
+        const startSeqBefore = Number.isFinite(Number(calibrationState.startSeq)) ? Number(calibrationState.startSeq) : 0;
+
+        calStartButton.click();
+        try {
+            await waitForConditionWithRetry(
+                "calibration start",
+                () => {
+                    if (calibrationState.running || String(calStartButton.textContent || "").includes("ABORT")) {
+                        return true;
+                    }
+
+                    const startSeq = Number.isFinite(Number(calibrationState.startSeq)) ? Number(calibrationState.startSeq) : 0;
+                    return startSeq > startSeqBefore && calibrationState.startAck === false;
+                },
+                {
+                    timeoutMs: 1800,
+                    pollMs: 25,
+                    maxAttempts: 4,
+                    backoffMs: 120,
+                }
+            );
+        } catch (error) {
+            let nativeStatus = null;
+            try {
+                nativeStatus = await callNative("locusqGetCalibrationStatus", nativeFunctions.getCalibrationStatus);
+            } catch (_) {
+                nativeStatus = null;
+            }
+            failCheck("UI-P1-026C", `${error.message}; ${calibrationStatusSummary(nativeStatus)}`);
+        }
         if (!calibrationState.running && !String(calStartButton.textContent || "").includes("ABORT")) {
-            failCheck("UI-P1-026C", "calibration did not enter running state");
+            let nativeStatus = null;
+            try {
+                nativeStatus = await callNative("locusqGetCalibrationStatus", nativeFunctions.getCalibrationStatus);
+            } catch (_) {
+                nativeStatus = null;
+            }
+            failCheck("UI-P1-026C", `calibration did not enter running state; ${calibrationStatusSummary(nativeStatus)}`);
         }
         calStartButton.click();
         await waitForConditionWithRetry(
@@ -10731,6 +13309,42 @@ function initThreeJS() {
     selectionRing.visible = false;
     threeScene.add(selectionRing);
 
+    // P7 — Attractor field radius rings (read-only overlay — no DSP mutation)
+    // Colors: warm attract = gold, cool repel = cyan; updated each frame from relay values
+    const attractorRingColors = [0xD4A847, 0x7AAFC9, 0xA85CC2, 0x4DCC70];
+    for (let n = 0; n < 4; ++n) {
+        const ringOuterR = 0.06;
+        const ringGeoA = new THREE.RingGeometry(1.0 - ringOuterR, 1.0, 48);
+        const ringMatA = new THREE.MeshBasicMaterial({
+            color: attractorRingColors[n],
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.28,
+        });
+        const attractorRing = new THREE.Mesh(ringGeoA, ringMatA);
+        attractorRing.rotation.x = -Math.PI / 2;
+        attractorRing.visible = false;
+        threeScene.add(attractorRing);
+        attractorRingMeshes[n] = attractorRing;
+    }
+
+    // P7 — Flock centroid spheres (read-only overlay — computed from scene snapshot emitter positions)
+    const flockCentroidColors = [0xD4A847, 0x7AAFC9, 0xA85CC2, 0x4DCC70];
+    for (let n = 0; n < 4; ++n) {
+        const centroidSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 10, 7),
+            new THREE.MeshBasicMaterial({
+                color: flockCentroidColors[n],
+                transparent: true,
+                opacity: 0.55,
+                wireframe: true,
+            })
+        );
+        centroidSphere.visible = false;
+        threeScene.add(centroidSphere);
+        flockCentroidSpheres[n] = centroidSphere;
+    }
+
     // Lane highlight geometry
     const azArcPts = [];
     for (let i = 0; i <= 64; i++) {
@@ -11065,6 +13679,7 @@ function initUIBindings() {
         select.addEventListener("change", () => {
             if (isElementControlLocked(select)) return;
             calibrationMappingEditedByUser = true;
+            setCalibrationAutomationSource("routing", "manual_override");
             applyCalibrationStatus();
         });
     });
@@ -11100,11 +13715,76 @@ function initUIBindings() {
         });
     });
 
+    document.querySelectorAll("[data-cal-target]").forEach(button => {
+        button.addEventListener("click", () => {
+            if (isElementControlLocked(button)) return;
+            const requestedTarget = String(button.getAttribute("data-cal-target") || "speaker_room");
+            const currentPath = getCalibrationMonitoringPathId();
+            const monitoringSelect = document.getElementById("cal-monitoring-path");
+            if (!(monitoringSelect instanceof HTMLSelectElement)) {
+                applyCalibrationStatus();
+                return;
+            }
+
+            if (requestedTarget === "headphones") {
+                if (isHeadphoneCalibrationMonitoringPath(currentPath)) {
+                    calibrationLastHeadphoneMonitoringPath = currentPath;
+                    applyCalibrationStatus();
+                    return;
+                }
+                const desiredPath = isHeadphoneCalibrationMonitoringPath(calibrationLastHeadphoneMonitoringPath)
+                    ? calibrationLastHeadphoneMonitoringPath
+                    : "steam_binaural";
+                const desiredIndex = calibrationMonitoringPathIds.indexOf(desiredPath);
+                monitoringSelect.selectedIndex = Math.max(0, desiredIndex);
+                monitoringSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                return;
+            }
+
+            if (isHeadphoneCalibrationMonitoringPath(currentPath)) {
+                calibrationLastHeadphoneMonitoringPath = currentPath;
+                monitoringSelect.selectedIndex = 0;
+                monitoringSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                return;
+            }
+
+            applyCalibrationStatus();
+        });
+    });
+
     const calRedetectButton = document.getElementById("cal-redetect-btn");
     if (calRedetectButton) {
         calRedetectButton.addEventListener("click", async () => {
             if (isElementControlLocked(calRedetectButton)) return;
             await runCalibrationRedetect();
+        });
+    }
+
+    const calDiscoveryApplyOutputButton = document.getElementById("cal-discovery-apply-output-btn");
+    if (calDiscoveryApplyOutputButton) {
+        calDiscoveryApplyOutputButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calDiscoveryApplyOutputButton)) return;
+            await runCalibrationApplyBestOutputMap();
+        });
+    }
+    const calDiscoveryApplyOutputAck = document.getElementById("cal-discovery-apply-output-ack");
+    if (calDiscoveryApplyOutputAck instanceof HTMLInputElement) {
+        calDiscoveryApplyOutputAck.addEventListener("change", () => {
+            updateCalibrationDiscoverySummary();
+        });
+    }
+
+    const calDiscoveryApplyTopologyButton = document.getElementById("cal-discovery-apply-topology-btn");
+    if (calDiscoveryApplyTopologyButton) {
+        calDiscoveryApplyTopologyButton.addEventListener("click", async () => {
+            if (isElementControlLocked(calDiscoveryApplyTopologyButton)) return;
+            await runCalibrationApplyBestTopology();
+        });
+    }
+    const calDiscoveryApplyTopologyAck = document.getElementById("cal-discovery-apply-topology-ack");
+    if (calDiscoveryApplyTopologyAck instanceof HTMLInputElement) {
+        calDiscoveryApplyTopologyAck.addEventListener("change", () => {
+            updateCalibrationDiscoverySummary();
         });
     }
 
@@ -11124,6 +13804,7 @@ function initUIBindings() {
             if (selected?.name) {
                 setCalibrationProfileNameInputValue(selected.name);
             }
+            updateCalibrationProfileSummary(selected);
         });
     }
 
@@ -11325,6 +14006,167 @@ function initUIBindings() {
             if (isElementControlLocked(resetButton)) return;
             pulseToggleParameter(toggleStates.phys_reset);
         });
+    }
+
+    // ===== P3 — Spring oscillator bindings =====
+    const springEnableToggle = document.getElementById("toggle-spring-enable");
+    if (springEnableToggle) {
+        bindControlActivate(springEnableToggle, () => {
+            toggleStateAndClass("toggle-spring-enable", toggleStates.phys_spring_enable);
+        });
+    }
+    bindValueStepper("val-spring-k",       sliderStates.phys_spring_k,        { step: 1.0, min: 0.5, max: 500.0, roundDigits: 1 });
+    bindValueStepper("val-spring-damp",    sliderStates.phys_spring_damp,      { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindSelectToComboState("sel-spring-anchor", comboStates.phys_spring_anchor_mode);
+    bindValueStepper("val-spring-anc-x",   sliderStates.phys_spring_anchor_x,  { step: 0.1, min: -25.0, max: 25.0, roundDigits: 2 });
+    bindValueStepper("val-spring-anc-y",   sliderStates.phys_spring_anchor_y,  { step: 0.1, min: 0.0, max: 10.0, roundDigits: 2 });
+    bindValueStepper("val-spring-anc-z",   sliderStates.phys_spring_anchor_z,  { step: 0.1, min: -25.0, max: 25.0, roundDigits: 2 });
+    bindValueStepper("val-turbulence",     sliderStates.phys_turbulence,       { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindValueStepper("val-turbulence-rate",sliderStates.phys_turbulence_rate,  { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+
+    // ===== P4 — Angular physics bindings =====
+    const angEnableToggle = document.getElementById("toggle-ang-enable");
+    if (angEnableToggle) {
+        bindControlActivate(angEnableToggle, () => {
+            toggleStateAndClass("toggle-ang-enable", toggleStates.phys_ang_enable);
+        });
+    }
+    bindValueStepper("val-ang-drag",       sliderStates.phys_ang_drag,          { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+    bindValueStepper("val-ang-imp-x",      sliderStates.phys_ang_impulse_x,     { step: 1.0, min: -20.0, max: 20.0, roundDigits: 1 });
+    bindValueStepper("val-ang-imp-y",      sliderStates.phys_ang_impulse_y,     { step: 1.0, min: -20.0, max: 20.0, roundDigits: 1 });
+    bindValueStepper("val-ang-imp-z",      sliderStates.phys_ang_impulse_z,     { step: 1.0, min: -20.0, max: 20.0, roundDigits: 1 });
+    bindValueStepper("val-ang-torque",     sliderStates.phys_ang_attractor_torque, { step: 1.0, min: 0.0, max: 50.0, roundDigits: 1 });
+    const angThrowButton = document.getElementById("btn-ang-throw");
+    if (angThrowButton) {
+        angThrowButton.addEventListener("click", () => {
+            if (isElementControlLocked(angThrowButton)) return;
+            pulseToggleParameter(toggleStates.phys_ang_throw);
+        });
+    }
+    const angResetButton = document.getElementById("btn-ang-reset");
+    if (angResetButton) {
+        angResetButton.addEventListener("click", () => {
+            if (isElementControlLocked(angResetButton)) return;
+            pulseToggleParameter(toggleStates.phys_ang_reset);
+        });
+    }
+
+    // ===== P5/P6 — Flock group, collision radius, mass override (emitter) =====
+    bindSelectToComboState("sel-flock-group", comboStates.phys_flock_group);
+    bindValueStepper("val-collision-radius", sliderStates.phys_collision_radius, { step: 0.05, min: 0.05, max: 5.0, roundDigits: 2 });
+    bindValueStepper("val-mass-override",    sliderStates.phys_mass_override,    { step: 0.1, min: 0.0, max: 10.0, roundDigits: 2 });
+
+    // ===== P2 — Boundary mode (renderer) =====
+    bindSelectToComboState("rend-boundary-mode", comboStates.phys_boundary_mode);
+    bindValueStepper("val-soft-boundary-depth", sliderStates.phys_soft_boundary_depth, { step: 0.1, min: 0.1, max: 5.0, roundDigits: 2 });
+
+    // ===== P6 — Collision globals (renderer) =====
+    const collideToggle = document.getElementById("toggle-collide-emitters");
+    if (collideToggle) {
+        bindControlActivate(collideToggle, () => {
+            toggleStateAndClass("toggle-collide-emitters", toggleStates.phys_collide_emitters);
+        });
+    }
+    bindValueStepper("val-collision-gain-scale", sliderStates.phys_collision_gain_scale, { step: 0.1, min: 0.0, max: 10.0, roundDigits: 2 });
+    bindValueStepper("val-collision-decay-ms",   sliderStates.phys_collision_decay_ms,   { step: 5.0, min: 1.0, max: 500.0, roundDigits: 0 });
+
+    // ===== P2 — Attractor strip bindings (renderer) =====
+    for (let n = 0; n < 4; ++n) {
+        const ns = String(n);
+        const activeToggle = document.getElementById(`toggle-attr-${ns}-active`);
+        if (activeToggle) {
+            bindControlActivate(activeToggle, () => {
+                toggleStateAndClass(`toggle-attr-${ns}-active`, toggleStates[`attractor_${ns}_active`]);
+            });
+        }
+        const orbitToggle = document.getElementById(`toggle-attr-${ns}-orbit`);
+        if (orbitToggle) {
+            bindControlActivate(orbitToggle, () => {
+                toggleStateAndClass(`toggle-attr-${ns}-orbit`, toggleStates[`attractor_${ns}_orbit_stabilize`]);
+            });
+        }
+        bindSelectToComboState(`sel-attr-${ns}-falloff`, comboStates[`attractor_${ns}_falloff`]);
+        bindValueStepper(`val-attr-${ns}-pos-x`,   sliderStates[`attractor_${ns}_pos_x`],  { step: 0.5, min: -25.0, max: 25.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-pos-y`,   sliderStates[`attractor_${ns}_pos_y`],  { step: 0.1, min: 0.0, max: 10.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-pos-z`,   sliderStates[`attractor_${ns}_pos_z`],  { step: 0.5, min: -25.0, max: 25.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-strength`,sliderStates[`attractor_${ns}_strength`],{ step: 5.0, min: -100.0, max: 100.0, roundDigits: 1 });
+        bindValueStepper(`val-attr-${ns}-radius`,  sliderStates[`attractor_${ns}_radius`], { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+    }
+
+    // ===== P5 — Boids group strip bindings (renderer) =====
+    for (let n = 0; n < 4; ++n) {
+        const ns = String(n);
+        const enableToggle = document.getElementById(`toggle-flock-${ns}-enable`);
+        if (enableToggle) {
+            bindControlActivate(enableToggle, () => {
+                toggleStateAndClass(`toggle-flock-${ns}-enable`, toggleStates[`phys_flock_${ns}_enable`]);
+            });
+        }
+        bindValueStepper(`val-flock-${ns}-sep-w`,   sliderStates[`phys_flock_${ns}_sep_weight`],   { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+        bindValueStepper(`val-flock-${ns}-align-w`, sliderStates[`phys_flock_${ns}_align_weight`], { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+        bindValueStepper(`val-flock-${ns}-coh-w`,   sliderStates[`phys_flock_${ns}_coh_weight`],   { step: 0.05, min: 0.0, max: 1.0, roundDigits: 2 });
+        bindValueStepper(`val-flock-${ns}-sep-r`,   sliderStates[`phys_flock_${ns}_sep_radius`],   { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+        bindValueStepper(`val-flock-${ns}-align-r`, sliderStates[`phys_flock_${ns}_align_radius`], { step: 0.5, min: 0.1, max: 20.0, roundDigits: 1 });
+        bindValueStepper(`val-flock-${ns}-coh-r`,   sliderStates[`phys_flock_${ns}_coh_radius`],   { step: 0.5, min: 0.1, max: 50.0, roundDigits: 1 });
+        bindValueStepper(`val-flock-${ns}-speed`,   sliderStates[`phys_flock_${ns}_max_speed`],    { step: 1.0, min: 0.1, max: 50.0, roundDigits: 1 });
+    }
+
+    // ===== Physics freeze toggles — LIVE/FROZEN per emitter slot =====
+    // Single-panel architecture: one button reflects the currently selected emitter slot.
+    // All 8 host-side value-changed events update the button when the active slot changes.
+    const physFreezeBtn = document.getElementById("phys-freeze-btn");
+    function syncFreezeButton() {
+        if (!physFreezeBtn) return;
+        const slotIndex = Number.isInteger(selectedEmitterId) && selectedEmitterId >= 0 ? selectedEmitterId : 0;
+        const stateKey = `phys_frozen_${slotIndex}`;
+        const state = toggleStates[stateKey];
+        if (!state) return;
+        const frozen = state.value > 0.5;
+        physFreezeBtn.textContent = frozen ? 'FROZEN' : 'LIVE';
+        physFreezeBtn.classList.toggle('physics-frozen', frozen);
+        physFreezeBtn.classList.toggle('physics-live', !frozen);
+    }
+    // Wire host automation callbacks for all 8 slots
+    for (let n = 0; n < 8; n++) {
+        const state = toggleStates[`phys_frozen_${n}`];
+        if (state && state.valueChangedEvent) {
+            state.valueChangedEvent.addListener(() => {
+                // Only refresh the button if this is the currently selected slot
+                const activeSlot = Number.isInteger(selectedEmitterId) && selectedEmitterId >= 0 ? selectedEmitterId : 0;
+                if (activeSlot === n) syncFreezeButton();
+            });
+        }
+    }
+    // Register callback so setSelectedEmitter can refresh the button on slot change
+    onEmitterSelectionChangedForFreeze = syncFreezeButton;
+    // Send to host on click
+    if (physFreezeBtn) {
+        physFreezeBtn.addEventListener('click', () => {
+            const slotIndex = Number.isInteger(selectedEmitterId) && selectedEmitterId >= 0 ? selectedEmitterId : 0;
+            const state = toggleStates[`phys_frozen_${slotIndex}`];
+            if (!state) return;
+            const currentlyFrozen = state.value > 0.5;
+            setToggleValue(state, currentlyFrozen ? 0.0 : 1.0);
+            syncFreezeButton();
+        });
+        syncFreezeButton();
+    }
+
+    // ===== DAW output panel — per-slot freeze toggles (toggle-phys-frozen-N) =====
+    for (let n = 0; n < 8; ++n) {
+        const ns = String(n);
+        const frozenToggle = document.getElementById(`toggle-phys-frozen-${ns}`);
+        if (frozenToggle) {
+            bindControlActivate(frozenToggle, () => {
+                toggleStateAndClass(`toggle-phys-frozen-${ns}`, toggleStates[`phys_frozen_${ns}`]);
+                const label = document.getElementById(`val-phys-freeze-label-${ns}`);
+                if (label) {
+                    const frozen = !!getToggleValue(toggleStates[`phys_frozen_${ns}`]);
+                    label.textContent = frozen ? "FROZEN" : "LIVE";
+                    label.style.color = frozen ? "var(--signal-warn)" : "var(--text-dim)";
+                }
+            });
+        }
     }
 
     // Physics advanced disclosure
@@ -12064,6 +14906,26 @@ function initParameterListeners() {
         setToggleClass("emitter-quick-physics-lens", !!toggleStates.rend_viz_physics_lens.getValue());
     });
 
+    // ===== DAW output panel — freeze toggle + gain/spread read-only display listeners =====
+    for (let n = 0; n < 8; ++n) {
+        const ns = String(n);
+        toggleStates[`phys_frozen_${ns}`].valueChangedEvent.addListener(() => {
+            const frozen = !!toggleStates[`phys_frozen_${ns}`].getValue();
+            setToggleClass(`toggle-phys-frozen-${ns}`, frozen);
+            const label = document.getElementById(`val-phys-freeze-label-${ns}`);
+            if (label) {
+                label.textContent = frozen ? "FROZEN" : "LIVE";
+                label.style.color = frozen ? "var(--signal-warn)" : "var(--text-dim)";
+            }
+        });
+        sliderStates[`phys_out_gain_mod_${ns}`].valueChangedEvent.addListener(() => {
+            updateValueDisplay(`val-phys-out-gain-${ns}`, sliderStates[`phys_out_gain_mod_${ns}`].getScaledValue().toFixed(2), "");
+        });
+        sliderStates[`phys_out_spread_mod_${ns}`].valueChangedEvent.addListener(() => {
+            updateValueDisplay(`val-phys-out-spread-${ns}`, sliderStates[`phys_out_spread_mod_${ns}`].getScaledValue().toFixed(2), "");
+        });
+    }
+
     comboStates.rend_viz_mode.valueChangedEvent.addListener(updateViewMode);
     comboStates.cal_spk_config.valueChangedEvent.addListener(() => {
         if (calibrationLegacyAliasSyncSource === "topology") {
@@ -12077,13 +14939,20 @@ function initParameterListeners() {
             applyCalibrationStatus();
             return;
         }
+        setCalibrationAutomationSource("topology", "manual_override");
         syncLegacyConfigAliasFromTopology(getCalibrationTopologyId(getChoiceIndex(comboStates.cal_topology_profile)));
         applyCalibrationStatus();
     });
     comboStates.cal_monitoring_path.valueChangedEvent.addListener(() => {
+        const pathId = getCalibrationMonitoringPathId();
+        if (isHeadphoneCalibrationMonitoringPath(pathId)) {
+            calibrationLastHeadphoneMonitoringPath = pathId;
+        }
+        setCalibrationAutomationSource("monitoringPath", "manual_override");
         applyCalibrationStatus();
     });
     comboStates.cal_device_profile.valueChangedEvent.addListener(() => {
+        setCalibrationAutomationSource("deviceProfile", "manual_override");
         applyCalibrationStatus();
     });
     comboStates.cal_test_type.valueChangedEvent.addListener(() => {
@@ -13842,8 +16711,21 @@ window.updateCalibrationStatus = function(status) {
         ...status,
     };
 
+    if (status.topologyProfile !== undefined && getCalibrationAutomationSource("topology") === "runtime_state") {
+        setCalibrationAutomationSource("topology", "runtime_state");
+    }
+    if (status.monitoringPath !== undefined && getCalibrationAutomationSource("monitoringPath") === "runtime_state") {
+        setCalibrationAutomationSource("monitoringPath", "runtime_state");
+    }
+    if (status.deviceProfile !== undefined && getCalibrationAutomationSource("deviceProfile") === "runtime_state") {
+        setCalibrationAutomationSource("deviceProfile", "runtime_state");
+    }
+
     if (Array.isArray(status.routing)) {
         calibrationLastAutoRouting = normaliseCalibrationRouting(status.routing, CALIBRATION_ROUTABLE_CHANNELS);
+        if (getCalibrationAutomationSource("routing") === "runtime_state") {
+            setCalibrationAutomationSource("routing", "runtime_state");
+        }
     }
 
     applyCalibrationStatus();
@@ -13891,6 +16773,7 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
         emptyOption.value = "";
         select.appendChild(emptyOption);
         setCalibrationProfileStatus("No calibration profiles saved yet.");
+        updateCalibrationProfileSummary(null);
         return;
     }
 
@@ -13908,6 +16791,7 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
         } else {
             setCalibrationProfileStatus(`No profiles for ${tupleLabel}.`);
         }
+        updateCalibrationProfileSummary(null);
         return;
     }
 
@@ -13924,6 +16808,15 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
         option.dataset.monitoringPath = monitoringPathId;
         option.dataset.deviceProfile = deviceProfileId;
         option.dataset.profileTupleKey = String(entry?.profileTupleKey || buildCalibrationProfileTupleKey({ topologyProfile: topologyId, monitoringPath: monitoringPathId }));
+        if (entry?.validationSummary && typeof entry.validationSummary === "object") {
+            option.dataset.validationSummary = JSON.stringify(entry.validationSummary);
+        }
+        if (entry?.discoveryReconciliation && typeof entry.discoveryReconciliation === "object") {
+            option.dataset.discoveryReconciliation = JSON.stringify(entry.discoveryReconciliation);
+        }
+        if (entry?.intentSummary && typeof entry.intentSummary === "object") {
+            option.dataset.intentSummary = JSON.stringify(entry.intentSummary);
+        }
         select.appendChild(option);
     });
 
@@ -13943,6 +16836,7 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
     }
     const tupleLabel = `${getCalibrationTopologyLabel(activeTuple.topologyProfile, true)} / ${getCalibrationMonitoringPathLabel(activeTuple.monitoringPath)}`;
     setCalibrationProfileStatus(`${tupleEntries.length} calibration profile(s) available for ${tupleLabel}.`);
+    updateCalibrationProfileSummary(selected);
 }
 
 async function saveCalibrationProfile() {
@@ -13961,6 +16855,7 @@ async function saveCalibrationProfile() {
                 topologyProfile: activeTuple.topologyProfile,
                 monitoringPath: activeTuple.monitoringPath,
                 validationSummary: buildCalibrationValidationSummaryPayload(),
+                discoveryReconciliation: buildCalibrationDiscoveryReconciliationPayload(),
             }
         );
         if (!result?.ok) {
@@ -13968,8 +16863,18 @@ async function saveCalibrationProfile() {
             return false;
         }
 
+        const savedEntry = {
+            name: result?.name || profileName,
+            path: result?.path || "",
+            topologyProfile: result?.topologyProfile || activeTuple.topologyProfile,
+            monitoringPath: result?.monitoringPath || activeTuple.monitoringPath,
+            validationSummary: result?.validationSummary || buildCalibrationValidationSummaryPayload(),
+            discoveryReconciliation: result?.discoveryReconciliation,
+            intentSummary: result?.intentSummary,
+        };
         setCalibrationProfileStatus(`Saved profile: ${result.name || profileName}`);
         await refreshCalibrationProfileList(result?.path || "", activeTuple);
+        updateCalibrationProfileSummary(getSelectedCalibrationProfileEntry() || savedEntry, result?.discoveryReconciliation);
         return true;
     } catch (error) {
         setCalibrationProfileStatus("Calibration profile save failed.", true);
@@ -14001,11 +16906,28 @@ async function loadCalibrationProfile() {
         calibrationMappingEditedByUser = false;
         const ackRedetect = document.getElementById("cal-ack-redetect-check");
         if (ackRedetect) ackRedetect.checked = false;
+        applyCalibrationDiscoveryReconciliationPayload(result?.discoveryReconciliation);
 
+        const loadedEntry = {
+            ...selected,
+            name: result?.name || selected.name || "",
+            path: result?.path || selected.path || "",
+            topologyProfile: result?.topologyProfile || activeTuple.topologyProfile,
+            monitoringPath: result?.monitoringPath || activeTuple.monitoringPath,
+            validationSummary: result?.validationSummary,
+            discoveryReconciliation: result?.discoveryReconciliation,
+            intentSummary: result?.intentSummary,
+        };
         setCalibrationProfileNameInputValue(result?.name || selected.name || "");
         setCalibrationProfileStatus(`Loaded profile: ${result?.name || selected.name || "profile"}`);
+        setCalibrationAutomationProfileContext(result?.name || selected.name || "", result?.path || selected.path || "");
+        setCalibrationAutomationSource("topology", "loaded_profile");
+        setCalibrationAutomationSource("monitoringPath", "loaded_profile");
+        setCalibrationAutomationSource("deviceProfile", "loaded_profile");
+        setCalibrationAutomationSource("routing", "loaded_profile");
         const resolvedTuple = buildCalibrationProfileTuple(result?.topologyProfile || activeTuple.topologyProfile, result?.monitoringPath || activeTuple.monitoringPath);
         await refreshCalibrationProfileList(result?.path || selected.path, resolvedTuple);
+        updateCalibrationProfileSummary(getSelectedCalibrationProfileEntry() || loadedEntry, result?.discoveryReconciliation);
         applyCalibrationStatus();
         return true;
     } catch (error) {
@@ -14208,6 +17130,8 @@ async function runCalibrationRedetect() {
         };
         calibrationLastAutoRouting = routing.slice(0, CALIBRATION_ROUTABLE_CHANNELS);
         calibrationMappingEditedByUser = false;
+        setCalibrationAutomationSource("topology", "host_auto");
+        setCalibrationAutomationSource("routing", "host_auto");
         if (ackRedetect) ackRedetect.checked = false;
         const changed = result.changed !== undefined
             ? !!result.changed
@@ -14314,6 +17238,7 @@ function updateCalibrationStatusDock(snapshot = {}) {
 
     const {
         topologyId = DEFAULT_CALIBRATION_TOPOLOGY_ID,
+        targetId = "speaker_room",
         monitoringPathId = "speakers",
         deviceProfileId = "generic",
         requiredChannels = 2,
@@ -14411,7 +17336,9 @@ function updateCalibrationStatusDock(snapshot = {}) {
             const percentText = phaseLabel === "Analyzing IR"
                 ? ""
                 : ` · ${Math.max(0, Math.min(100, Math.round(phasePercent * 100)))}%`;
-            progress.textContent = `Speaker ${Math.max(1, currentSpeaker)}/${Math.max(1, requiredChannels)} · ${phaseLabel}${percentText}`;
+            progress.textContent = targetId === "headphones"
+                ? `Headphone verify · ${phaseLabel}${percentText}`
+                : `Speaker ${Math.max(1, currentSpeaker)}/${Math.max(1, requiredChannels)} · ${phaseLabel}${percentText}`;
         } else if (complete) {
             progress.textContent = `Complete · ${message}`;
         } else if (profileReady) {
@@ -14446,6 +17373,7 @@ function applyCalibrationStatus() {
         || status.monitoringPath
         || getCalibrationMonitoringPathId(status.monitoringPathIndex)
     );
+    const targetId = getCalibrationTargetId(monitoringPathId);
     const deviceProfileId = String(
         sceneData?.calCurrentDeviceProfileId
         || status.deviceProfile
@@ -14476,9 +17404,13 @@ function applyCalibrationStatus() {
     const startButton = document.getElementById("cal-start-btn");
     if (startButton) {
         if (running) startButton.textContent = "ABORT";
+        else if (targetId === "headphones" && complete) startButton.textContent = "VERIFY AGAIN";
+        else if (targetId === "headphones") startButton.textContent = "RUN VERIFY";
         else if (complete) startButton.textContent = "MEASURE AGAIN";
         else startButton.textContent = "START MEASURE";
     }
+
+    setCalibrationTargetUi(targetId);
 
     const stateChip = document.getElementById("cal-state-chip");
     if (stateChip) {
@@ -14826,7 +17758,7 @@ function applyCalibrationStatus() {
     const viewportInfo = document.getElementById("viewport-info");
     if (viewportInfo && currentMode === "calibrate") {
         viewportInfo.textContent = "Calibrate Mode \u00B7 "
-            + getCalibrationTopologyLabel(topologyId, true)
+            + (targetId === "headphones" ? "Headphones" : getCalibrationTopologyLabel(topologyId, true))
             + " \u00B7 "
             + getCalibrationMonitoringPathLabel(monitoringPathId)
             + " \u00B7 "
@@ -14835,6 +17767,7 @@ function applyCalibrationStatus() {
 
     updateCalibrationStatusDock({
         state,
+        targetId,
         topologyId,
         monitoringPathId,
         deviceProfileId,
@@ -14865,10 +17798,27 @@ function applyCalibrationStatus() {
     const hp = (typeof status.hpDeviceStatus === "object" && status.hpDeviceStatus !== null)
         ? status.hpDeviceStatus
         : null;
+    const hpStatusDescriptor = normalizeBl101Descriptor(
+        hp?.provenance,
+        hp ? "companion_profile" : "unknown",
+        hp ? "detected" : "unavailable"
+    );
 
     const hpDeviceEl = document.getElementById("cal-hp-device");
     if (hpDeviceEl) {
         hpDeviceEl.textContent = hp ? String(hp.device || "Unknown Device") : "Not connected";
+    }
+    const hpSourceEl = document.getElementById("cal-hp-source");
+    if (hpSourceEl) {
+        hpSourceEl.textContent = getCalibrationAutomationSourceDescriptor(hpStatusDescriptor.source).label;
+    }
+    const hpProvenanceEl = document.getElementById("cal-hp-provenance");
+    if (hpProvenanceEl) {
+        hpProvenanceEl.textContent = getCalibrationProvenanceDescriptor(hpStatusDescriptor.provenance).label;
+    }
+    const hpFreshnessEl = document.getElementById("cal-hp-freshness");
+    if (hpFreshnessEl) {
+        hpFreshnessEl.textContent = formatBl101Freshness(hpStatusDescriptor);
     }
 
     const hpEqModeEl = document.getElementById("cal-hp-eq-mode");
@@ -14908,6 +17858,31 @@ function applyCalibrationStatus() {
         const lat = hp ? Number(hp.fir_latency_samples || 0) : 0;
         hpFirLatEl.textContent = lat > 0 ? `${lat} smp` : "0 smp";
     }
+
+    updateCalibrationAutomationSummary({
+        targetId,
+        topologyId,
+        monitoringPathId,
+        deviceProfileId,
+        calAutomationProvenance: status.calAutomationProvenance,
+        routing,
+        requiredChannels,
+        writableChannels,
+        mappingValid,
+        mappingLimited,
+        mappingDuplicateChannels,
+        profileReady,
+        running,
+        state,
+        complete,
+        currentSpeaker,
+        requestedHeadphoneMode,
+        activeHeadphoneMode,
+        requestedHeadphoneProfile,
+        activeHeadphoneProfile,
+        hpDeviceStatus: hp,
+    });
+    updateCalibrationDiscoverySummary(status);
 
     applyHeaderTrustBadge();
 }
@@ -15767,6 +18742,74 @@ function animate() {
     if (azArc) azArc.material.opacity = highlightCurrent.azimuth;
     if (distRing) distRing.material.opacity = highlightCurrent.distance;
     if (elArc) elArc.material.opacity = highlightCurrent.elevation;
+
+    // P7 — Attractor field radius rings (read-only, no DSP mutation)
+    // Driven by APVTS relay values already in sliderStates/toggleStates.
+    const inRendererMode = currentMode === "renderer";
+    const physicsLensOn = physicsLensEnabled;
+    const attractorSlots = [
+        { active: toggleStates.attractor_0_active, px: sliderStates.attractor_0_pos_x, py: sliderStates.attractor_0_pos_y, pz: sliderStates.attractor_0_pos_z, strength: sliderStates.attractor_0_strength, radius: sliderStates.attractor_0_radius },
+        { active: toggleStates.attractor_1_active, px: sliderStates.attractor_1_pos_x, py: sliderStates.attractor_1_pos_y, pz: sliderStates.attractor_1_pos_z, strength: sliderStates.attractor_1_strength, radius: sliderStates.attractor_1_radius },
+        { active: toggleStates.attractor_2_active, px: sliderStates.attractor_2_pos_x, py: sliderStates.attractor_2_pos_y, pz: sliderStates.attractor_2_pos_z, strength: sliderStates.attractor_2_strength, radius: sliderStates.attractor_2_radius },
+        { active: toggleStates.attractor_3_active, px: sliderStates.attractor_3_pos_x, py: sliderStates.attractor_3_pos_y, pz: sliderStates.attractor_3_pos_z, strength: sliderStates.attractor_3_strength, radius: sliderStates.attractor_3_radius },
+    ];
+    for (let n = 0; n < 4; ++n) {
+        const ring = attractorRingMeshes[n];
+        if (!ring) continue;
+        const slot = attractorSlots[n];
+        const isActive = inRendererMode && physicsLensOn && !!getToggleValue(slot.active);
+        ring.visible = isActive;
+        if (isActive) {
+            const px = slot.px ? slot.px.getScaledValue() : 0.0;
+            const py = slot.py ? slot.py.getScaledValue() : 1.2;
+            const pz = slot.pz ? slot.pz.getScaledValue() : 0.0;
+            const radius = Math.max(0.1, slot.radius ? slot.radius.getScaledValue() : 1.0);
+            const strength = slot.strength ? slot.strength.getScaledValue() : 0.0;
+            ring.position.set(px, Math.max(0.02, py - 0.05), pz);
+            ring.scale.set(radius, radius, 1.0);
+            // Color: warm (gold) for attract, cool (cyan) for repel
+            const isRepulsor = strength < 0;
+            if (ring.material) {
+                ring.material.color.setHex(isRepulsor ? 0x35D9FF : 0xD4A847);
+                ring.material.opacity = 0.28 + 0.12 * Math.sin(animTime * 2.5 + n);
+            }
+        }
+    }
+
+    // P7 — Flock centroid spheres (read-only, computed from scene snapshot emitter positions)
+    const flockEnables = [toggleStates.phys_flock_0_enable, toggleStates.phys_flock_1_enable, toggleStates.phys_flock_2_enable, toggleStates.phys_flock_3_enable];
+    if (inRendererMode && physicsLensOn && sceneEmitterLookup.size > 0) {
+        for (let n = 0; n < 4; ++n) {
+            const sphere = flockCentroidSpheres[n];
+            if (!sphere) continue;
+            const flockEnabled = !!getToggleValue(flockEnables[n]);
+            if (!flockEnabled) { sphere.visible = false; continue; }
+            // Compute centroid from emitters whose flock_group matches this slot (group index n+1 in choices)
+            let cx = 0, cy = 0, cz = 0, count = 0;
+            for (const [, em] of sceneEmitterLookup) {
+                // flockGroup field in scene snapshot: 0 = None, 1..4 = groups
+                const emFlockGroup = Number(em.flockGroup ?? em.flock_group) || 0;
+                if (emFlockGroup === n + 1) {
+                    const t = emitterVisualTargets.get(em.id);
+                    if (t) { cx += t.x; cy += t.y; cz += t.z; count++; }
+                }
+            }
+            if (count > 0) {
+                sphere.position.set(cx / count, cy / count, cz / count);
+                sphere.visible = true;
+                if (sphere.material) {
+                    sphere.material.opacity = 0.45 + 0.15 * Math.sin(animTime * 3.0 + n);
+                }
+            } else {
+                sphere.visible = false;
+            }
+        }
+    } else {
+        for (let n = 0; n < 4; ++n) {
+            const sphere = flockCentroidSpheres[n];
+            if (sphere) sphere.visible = false;
+        }
+    }
 
     if (rendererGL && threeScene && camera) {
         rendererGL.render(threeScene, camera);

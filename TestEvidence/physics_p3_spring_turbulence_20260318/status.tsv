@@ -1,0 +1,7 @@
+check	result	notes
+build_vst3	PASS	cmake --build build_local --target LocusQ_VST3; 0 errors; pre-existing sign-conversion warnings in SceneGraph.h/VBAPPanner.h only
+rt_non_allowlisted	0	grep for new/delete/malloc/mutex/lock()/throw in SpringSystem.h and TurbulenceSystem.h — 0 hits
+spring_freq_accuracy	NOT_TESTED	omega=sqrt(k/m) within 2% requires runtime soak harness (P7)
+turbulence_bound	NOT_TESTED	max impulse=turbulence*mass*9.8 boundary-value test requires runtime harness
+apvts_params	PARTIAL	phys_spring_enable/k/damp/anchor_mode/anchor_x/y/z + phys_turbulence/turbulence_rate registered in emitterPhysicsGroup; IDs verified by code review
+dsp_spread_sum	PARTIAL	attractorSpread+springSpread+turbSpread clamped to [0..1] in PhysicsWorker::tick(); logic verified by code review; runtime fuzz pending

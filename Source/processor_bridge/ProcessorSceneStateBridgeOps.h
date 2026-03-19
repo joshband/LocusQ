@@ -1035,6 +1035,9 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
             0.0f);
     publishedVerification.verificationStage.set (rendererHeadphoneVerification.verificationStage);
     publishedVerification.verificationScoreStatus.set (rendererHeadphoneVerification.verificationScoreStatus);
+    publishedVerification.scoreProvenance.set (rendererHeadphoneVerification.scoreProvenance);
+    publishedVerification.compensationLabel.set (rendererHeadphoneVerification.compensationLabel);
+    publishedVerification.compensationProvenance.set (rendererHeadphoneVerification.compensationProvenance);
     publishedVerification.chainLatencySamples =
         locusq::shared_contracts::headphone_verification::sanitizeLatencySamples (
             rendererHeadphoneVerification.chainLatencySamples);
@@ -1335,6 +1338,12 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
               + escapeJsonString (rendererHeadphoneVerification.verificationStage) + "\""
           + ",\"rendererHeadphoneVerificationScoreStatus\":\""
               + escapeJsonString (rendererHeadphoneVerification.verificationScoreStatus) + "\""
+          + ",\"rendererHeadphoneVerificationScoreProvenance\":\""
+              + escapeJsonString (rendererHeadphoneVerification.scoreProvenance) + "\""
+          + ",\"rendererHeadphoneVerificationCompensationLabel\":\""
+              + escapeJsonString (rendererHeadphoneVerification.compensationLabel) + "\""
+          + ",\"rendererHeadphoneVerificationCompensationProvenance\":\""
+              + escapeJsonString (rendererHeadphoneVerification.compensationProvenance) + "\""
           + ",\"rendererHeadphoneVerificationLatencySamples\":"
               + juce::String (rendererHeadphoneVerification.chainLatencySamples)
           + ",\"headphoneVerification\":{\"schema\":\""
@@ -1363,6 +1372,12 @@ juce::String LocusQAudioProcessor::getSceneStateJSON()
               + escapeJsonString (rendererHeadphoneVerification.verificationStage) + "\""
               + ",\"verificationScoreStatus\":\""
               + escapeJsonString (rendererHeadphoneVerification.verificationScoreStatus) + "\""
+              + ",\"scoreProvenance\":\""
+              + escapeJsonString (rendererHeadphoneVerification.scoreProvenance) + "\""
+              + ",\"compensationLabel\":\""
+              + escapeJsonString (rendererHeadphoneVerification.compensationLabel) + "\""
+              + ",\"compensationProvenance\":\""
+              + escapeJsonString (rendererHeadphoneVerification.compensationProvenance) + "\""
               + ",\"latencySamples\":" + juce::String (rendererHeadphoneVerification.chainLatencySamples)
               + "}"
           + ",\"rendererAuditionEnabled\":" + juce::String (rendererAuditionEnabled ? "true" : "false")

@@ -2,7 +2,7 @@ Title: LocusQ Parameter Specification
 Document Type: Parameter Specification
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-02-20
+Last Modified Date: 2026-03-18
 
 # LocusQ - Parameter Specification
 
@@ -100,6 +100,46 @@ Last Modified Date: 2026-02-20
 | `phys_throw` | Throw Trigger | Bool | Off / Trigger | Off | — | Momentary: applies initial velocity and starts sim |
 | `phys_reset` | Reset Position | Bool | Off / Trigger | Off | — | Momentary: returns object to keyframed/manual position |
 
+### Emitter — Spring Oscillator (P3)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_spring_enable` | Spring Enable | Bool | On / Off | Off | — | Per-emitter spring tether enable |
+| `phys_spring_k` | Spring Stiffness | Float | 0.5 – 500.0 | 10.0 | N/m | Stiffness; controls oscillation frequency ω = √(k/m) |
+| `phys_spring_damp` | Spring Damping | Float | 0.0 – 1.0 | 0.3 | — | 0 = undamped, 1 = critically damped |
+| `phys_spring_anchor_mode` | Spring Anchor Mode | Enum | Rest Pose / Fixed Point | Rest Pose | — | Anchor reference: rest_pose or fixed_point |
+| `phys_spring_anchor_x` | Spring Anchor X | Float | -25.0 – 25.0 | 0.0 | meters | Fixed-point anchor X (used when mode = Fixed Point) |
+| `phys_spring_anchor_y` | Spring Anchor Y | Float | 0.0 – 10.0 | 1.2 | meters | Fixed-point anchor Y |
+| `phys_spring_anchor_z` | Spring Anchor Z | Float | -25.0 – 25.0 | 0.0 | meters | Fixed-point anchor Z |
+
+### Emitter — Turbulence (P3)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_turbulence` | Turbulence | Float | 0.0 – 1.0 | 0.0 | — | Stochastic force intensity; max impulse = turbulence × mass × 9.8 |
+| `phys_turbulence_rate` | Turbulence Rate | Float | 0.1 – 20.0 | 2.0 | Hz | One-pole smoother cutoff for coherent stochastic drift |
+
+### Emitter — Angular Physics (P4)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_ang_enable` | Angular Enable | Bool | On / Off | Off | — | Enable angular physics (drives directivityAim) |
+| `phys_ang_drag` | Angular Drag | Float | 0.0 – 1.0 | 0.3 | — | Angular velocity decay per tick |
+| `phys_ang_impulse_x` | Angular Impulse X | Float | -20.0 – 20.0 | 0.0 | — | Angular impulse X component |
+| `phys_ang_impulse_y` | Angular Impulse Y | Float | -20.0 – 20.0 | 0.0 | — | Angular impulse Y component |
+| `phys_ang_impulse_z` | Angular Impulse Z | Float | -20.0 – 20.0 | 0.0 | — | Angular impulse Z component |
+| `phys_ang_throw` | Angular Throw | Bool | Off / Trigger | Off | — | One-shot: apply angular impulse |
+| `phys_ang_reset` | Angular Reset | Bool | Off / Trigger | Off | — | One-shot: zero angular velocity and restore default aim |
+| `phys_ang_attractor_torque` | Attractor Torque | Float | 0.0 – 50.0 | 5.0 | — | Torque magnitude pulling aim toward nearest active attractor |
+
+### Emitter — Per-Emitter Collision / Mass (P5–P6)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_flock_group` | Flock Group | Enum | None / Group 1 / Group 2 / Group 3 / Group 4 | None | — | Boids group assignment for inter-emitter flocking rules |
+| `phys_collision_radius` | Collision Radius | Float | 0.05 – 5.0 | 0.3 | meters | Per-emitter collision sphere radius (used when phys_collide_emitters is On) |
+| `phys_mass_override` | Mass Override | Float | 0.0 – 10.0 | 0.0 | kg | Per-emitter mass override; 0 = use global phys_mass default |
+
 ### Keyframe / Animation
 
 | ID | Name | Type | Range | Default | Unit | Notes |
@@ -167,6 +207,47 @@ Last Modified Date: 2026-02-20
 | `rend_phys_interact` | Object Interaction | Bool | On / Off | Off | — | Enables global soft inter-emitter interaction force for physics-enabled emitters |
 | `rend_phys_pause` | Pause Physics | Bool | On / Off | Off | — | Freeze all physics simulation |
 
+### Renderer — Attractors (×4 slots, N = 0..3)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `attractor_N_active` | Attractor N Active | Bool | On / Off | Off | — | Per-slot active flag; N ∈ {0,1,2,3} |
+| `attractor_N_pos_x` | Attractor N X | Float | -25.0 – 25.0 | 0.0 | meters | Force-source X position; N ∈ {0,1,2,3} |
+| `attractor_N_pos_y` | Attractor N Y | Float | 0.0 – 10.0 | 1.2 | meters | Force-source Y position (height) |
+| `attractor_N_pos_z` | Attractor N Z | Float | -25.0 – 25.0 | 0.0 | meters | Force-source Z position |
+| `attractor_N_strength` | Attractor N Strength | Float | -100.0 – 100.0 | 10.0 | — | Signed force magnitude; positive = attract, negative = repel |
+| `attractor_N_falloff` | Attractor N Falloff | Enum | 1/r / 1/r² / Constant | 1/r² | — | Force falloff mode |
+| `attractor_N_radius` | Attractor N Radius | Float | 0.1 – 20.0 | 5.0 | meters | Hard influence cutoff radius |
+| `attractor_N_orbit_stabilize` | Attractor N Orbit Stabilize | Bool | On / Off | Off | — | Injects tangential correction force to maintain constant orbital radius |
+
+### Renderer — Boids Groups (×4 groups, G = 0..3)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_flock_G_enable` | Flock G Enable | Bool | On / Off | Off | — | Per-group active flag; G ∈ {0,1,2,3} |
+| `phys_flock_G_sep_weight` | Flock G Sep Weight | Float | 0.0 – 1.0 | 1.0 | — | Separation rule weight |
+| `phys_flock_G_align_weight` | Flock G Align Weight | Float | 0.0 – 1.0 | 0.5 | — | Alignment rule weight |
+| `phys_flock_G_coh_weight` | Flock G Coh Weight | Float | 0.0 – 1.0 | 0.5 | — | Cohesion rule weight |
+| `phys_flock_G_sep_radius` | Flock G Sep Radius | Float | 0.1 – 20.0 | 1.5 | meters | Separation influence radius |
+| `phys_flock_G_align_radius` | Flock G Align Radius | Float | 0.1 – 20.0 | 3.0 | meters | Alignment influence radius |
+| `phys_flock_G_coh_radius` | Flock G Coh Radius | Float | 0.1 – 50.0 | 5.0 | meters | Cohesion influence radius |
+| `phys_flock_G_max_speed` | Flock G Max Speed | Float | 0.1 – 50.0 | 5.0 | m/s | Per-emitter speed cap within group |
+
+### Renderer — Collision Globals
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_collide_emitters` | Collide Emitters | Bool | On / Off | Off | — | Global enable for O(n²) inter-emitter collision pass |
+| `phys_collision_gain_scale` | Collision Gain Scale | Float | 0.0 – 10.0 | 1.0 | — | Peak dB scale for collision gain transient envelope |
+| `phys_collision_decay_ms` | Collision Decay ms | Float | 1.0 – 500.0 | 50.0 | ms | Exponential decay of collision gain burst |
+
+### Renderer — Boundary
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_boundary_mode` | Boundary Mode | Enum | Hard / Soft / Passthrough | Hard | — | Wall behavior: hard reflect, soft repulsion field, or passthrough |
+| `phys_soft_boundary_depth` | Soft Boundary Depth | Float | 0.1 – 5.0 | 0.5 | meters | Influence depth for soft-boundary repulsive force field |
+
 ### Visualization
 
 | ID | Name | Type | Range | Default | Unit | Notes |
@@ -190,9 +271,9 @@ Last Modified Date: 2026-02-20
 |:-----|:---------------|
 | Global | 3 |
 | Calibrate | 9 + profile outputs |
-| Emitter | 35 |
-| Renderer | 29 |
-| **Total Unique** | **~76** |
+| Emitter | 55 (+20: Spring ×7, Turbulence ×2, Angular ×8, Flock group + Collision radius + Mass override ×3; +24: Physics DAW Automation phys_out_spread_mod_N + phys_out_gain_mod_N + phys_frozen_N × 8 slots) = 99 |
+| Renderer | 98 (+69: Attractors ×32, Boids Groups ×32, Collision globals ×3, Boundary ×2) |
+| **Total Unique** | **~165** (+89 Tier A physics simulation params P2–P6; +24 Physics DAW Automation output/freeze params) |
 
 ---
 
@@ -210,12 +291,29 @@ Last Modified Date: 2026-02-20
 
 1. **Automation:** All Float/Enum/Bool parameters are DAW-automatable except those marked [internal].
 2. **Coordinate sync:** When `pos_coord_mode` is Spherical, Cartesian values are derived (and vice versa). Only the primary set is automatable.
-3. **Authority precedence (ADR-0003):** DAW/APVTS base state is authoritative; when enabled, internal timeline defines rest pose for animated tracks; physics applies additive offset on top of that rest pose.
+3. **Authority precedence (ADR-0020):** DAW/APVTS base state is authoritative; internal timeline defines rest pose for animated tracks; Choreography Lab adds generative offset; physics applies additive offset on top of the composed three-layer rest pose. ADR-0020 supersedes ADR-0003's three-layer model with this four-layer authority chain.
 4. **Inter-instance routing (ADR-0002):** Emitter metadata is canonical shared state in `SceneGraph`; v1 renderer path may consume ephemeral same-block emitter audio pointers as fast path.
 5. **Room Profile dependency:** Emitter and Renderer modes will show a warning and pass audio through unprocessed if no Room Profile is loaded.
 6. **AI scope gate (ADR-0004):** AI orchestration is deferred from v1 critical path and planned only for post-v1 phases.
-7. **Future expansion:** Flocking, swarm, fluid dynamics, and material properties will add parameters in v2. The parameter ID scheme leaves room for `phys_flock_*`, `phys_fluid_*`, `phys_mat_*` prefixes.
+7. **Parameter namespaces:** `phys_flock_*` (Boids/flocking) and `phys_ang_*` (angular physics) prefixes are now active in Tier A. `phys_fluid_*`, `phys_mat_*`, `phys_field_*`, `phys_preset_*` remain reserved for Tier B.
 8. **Device compatibility contract (Stage 14 planning):** laptop speakers and headphones are first-class runtime targets through existing stereo output layout support; future personalized binaural/HRTF remains post-v1.
+
+---
+
+## Physics DAW Automation Mirror Parameters (8 slots × 4, N = 0..7)
+
+Physics output parameters exposed as DAW-automatable APVTS floats. These mirror per-slot physics runtime state into the DAW automation lane so hosts can read, record, and replay physics-driven modulation.
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `phys_out_gain_mod_N` | Physics Gain Mod N | Float | 0.0–1.0 | 0.0 | — | Physics gain modulation mirror for slot N. Tracks real-time physics output when live; holds last-live snapshot when frozen. DAW-automatable. N ∈ {0..7} |
+| `phys_out_spread_mod_N` | Physics Spread Mod N | Float | 0.0–1.0 | 0.0 | — | Physics spread modulation mirror for slot N. Same freeze/live behavior as gain mod. DAW-automatable. N ∈ {0..7} |
+| `phys_out_transient_N` | Physics Transient N | Float | 0.0–1.0 | 0.0 | — | Physics one-shot transient mirror for slot N. Tracks live `gainTransient` bursts directly and intentionally bypasses freeze snapshotting so hosts can observe transient events in real time. DAW-automatable. N ∈ {0..7} |
+| `phys_frozen_N` | Physics Frozen N | Bool | 0.0/1.0 | 0.0 | — | Freeze gate for physics slot N. When 1, `phys_out_gain_mod_N` and `phys_out_spread_mod_N` hold their last-live snapshot. `gainTransient` is excluded from the snapshot. DAW-automatable. N ∈ {0..7} |
+
+Total: 32 parameters (8 gain mod + 8 spread mod + 8 transient mirrors + 8 freeze gates).
+
+**Authority chain (ADR-0020):** These parameters sit at the DAW/APVTS layer. Physics computes the live value; the freeze gate governs whether the gain/spread mirrors advance or hold. `phys_out_transient_N` mirrors `gainTransient` directly and intentionally bypasses freeze snapshots to prevent static transient artifacts while still giving hosts a real transient-observation lane.
 
 ---
 

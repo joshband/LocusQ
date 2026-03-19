@@ -16,7 +16,20 @@ Physics output is always **additive offset** on top of the composed rest pose. T
 ```
 APVTS base state + Timeline keyframe offset + Choreography Lab generative offset
 ```
-Physics sits on top of this three-part rest pose. This four-layer authority chain is a planned extension to ADR-0003; a new ADR must be recorded before Choreography Lab implementation begins. Until that ADR exists, physics continues to treat the Timeline keyframe rest pose as authoritative per ADR-0003.
+Physics sits on top of this three-part rest pose. This four-layer authority chain is defined in **ADR-0020** (`Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md`), which supersedes ADR-0003's three-layer model.
+
+## Current Implementation Posture
+
+This document remains the target architecture/specification, not a statement that the full shared-worker runtime path is already authoritative in the shipping plugin.
+
+As of 2026-03-18:
+- Tier A parameter registration, traceability, UI relay wiring, and a standalone subsystem probe exist.
+- New subsystem headers (`PhysicsWorker`, `PhysicsDSPBridge`, attractor/spring/turbulence/angular/boids/collision systems) exist.
+- The production plugin runtime still centers on the legacy per-emitter `PhysicsEngine` path in `PluginProcessor`.
+
+Interpretation rule:
+- Treat this spec as the intended contract for runtime integration work.
+- Treat runtime-completion claims as invalid unless confirmed in Tier 0 status/evidence surfaces and the real processor path.
 
 ---
 
@@ -284,15 +297,15 @@ All physics-to-DSP mappings follow the `reactive-av` contract: normalize → opt
 
 ---
 
-## Pending ADR
+## ADR Status
 
-The four-layer authority chain (APVTS + Timeline + Choreography Lab + Physics) is a planned extension to ADR-0003. A new ADR must be recorded before Choreography Lab implementation begins, explicitly superseding ADR-0003's three-layer model and recording the rationale and any authority-conflict resolution rules.
+**Resolved.** `Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md` supersedes ADR-0003's three-layer model, records the four-layer chain rationale, authority-conflict resolution rules, and the colocated-tick arbitration decision.
 
 ---
 
 ## Validation Status
 
-Not tested — spec only.
+`partially tested` — the spec has isolated subsystem evidence behind parts of Tier A, but the full production-runtime architecture described here is not yet the authoritative plugin path.
 
 **Tier A acceptance gates:**
 - Worker thread CPU headroom: all Tier A features enabled simultaneously at 64 emitters, measured at 240Hz rate

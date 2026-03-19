@@ -293,6 +293,105 @@ juce::var LocusQAudioProcessor::redetectCalibrationRoutingFromUI()
     return resultVar;
 }
 
+juce::var LocusQAudioProcessor::applyBestCalibrationOutputMapFromUI()
+{
+    const auto snapshotOutputChannels = getSnapshotOutputChannels();
+    const auto layoutOutputChannels = static_cast<int> (getBusesLayout().getMainOutputChannelSet().size());
+    const auto previousSpeakerConfig = getCurrentCalibrationSpeakerConfigIndex();
+    const auto previousTopologyProfile = getCurrentCalibrationTopologyProfileIndex();
+    const auto previousRouting = getCurrentCalibrationSpeakerRouting();
+    const auto effectiveWritableChannels = resolveCalibrationWritableChannels (
+        snapshotOutputChannels,
+        layoutOutputChannels,
+        lastAutoDetectedOutputChannels,
+        previousRouting);
+
+    const auto clampedOutputChannels = juce::jlimit (1, 16, effectiveWritableChannels);
+    std::array<int, SpatialRenderer::NUM_SPEAKERS> autoRouting { 1, 2, 3, 4 };
+
+    if (clampedOutputChannels == 1)
+        autoRouting = { 1, 1, 1, 1 };
+    else if (clampedOutputChannels == 2)
+        autoRouting = { 1, 2, 1, 2 };
+    else if (clampedOutputChannels == 3)
+        autoRouting = { 1, 2, 3, 3 };
+
+    setIntegerParameterValueNotifyingHost ("cal_spk1_out", autoRouting[0]);
+    setIntegerParameterValueNotifyingHost ("cal_spk2_out", autoRouting[1]);
+    setIntegerParameterValueNotifyingHost ("cal_spk3_out", autoRouting[2]);
+    setIntegerParameterValueNotifyingHost ("cal_spk4_out", autoRouting[3]);
+
+    juce::var resultVar (new juce::DynamicObject());
+    auto* result = resultVar.getDynamicObject();
+    if (result == nullptr)
+        return resultVar;
+
+    result->setProperty ("ok", true);
+    result->setProperty ("action", "apply_best_output_map");
+    result->setProperty ("outputChannels", effectiveWritableChannels);
+    result->setProperty ("snapshotOutputChannels", snapshotOutputChannels);
+    result->setProperty ("layoutOutputChannels", layoutOutputChannels);
+    result->setProperty ("effectiveWritableChannels", effectiveWritableChannels);
+    const auto topologyProfile = getCurrentCalibrationTopologyProfileIndex();
+    const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
+    const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
+    const auto speakerConfig = getCurrentCalibrationSpeakerConfigIndex();
+    const auto requiredChannels = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
+    const auto writableChannels = resolveCalibrationWritableChannels (
+        snapshotOutputChannels,
+        layoutOutputChannels,
+        lastAutoDetectedOutputChannels,
+        getCurrentCalibrationSpeakerRouting());
+    result->setProperty ("speakerConfigIndex", speakerConfig);
+    result->setProperty ("previousSpeakerConfigIndex", previousSpeakerConfig);
+    result->setProperty ("topologyProfileIndex", topologyProfile);
+    result->setProperty ("previousTopologyProfileIndex", previousTopologyProfile);
+    result->setProperty ("topologyProfile", calibrationTopologyIdForIndex (topologyProfile));
+    result->setProperty ("monitoringPathIndex", monitoringPath);
+    result->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPath));
+    result->setProperty ("deviceProfileIndex", deviceProfile);
+    result->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfile));
+    result->setProperty ("requiredChannels", requiredChannels);
+    result->setProperty ("writableChannels", writableChannels);
+    result->setProperty ("mappingLimitedToFirst4", requiredChannels > writableChannels);
+
+    juce::Array<juce::var> routing;
+    const auto map = getCurrentCalibrationSpeakerRouting();
+    for (const auto channel : map)
+        routing.add (juce::jlimit (1, 8, channel));
+    result->setProperty ("routing", juce::var (routing));
+
+    juce::Array<juce::var> previousRoutingVar;
+    for (const auto channel : previousRouting)
+        previousRoutingVar.add (juce::jlimit (1, 8, channel));
+    result->setProperty ("previousRouting", juce::var (previousRoutingVar));
+
+    const bool changed = map != previousRouting;
+    result->setProperty ("changed", changed);
+    result->setProperty (
+        "message",
+        changed
+            ? "Applied best output map from current writable calibration routes."
+            : "Best output map is already active.");
+
+    return resultVar;
+}
+
+juce::var LocusQAudioProcessor::applyBestCalibrationTopologyFromUI()
+{
+    auto resultVar = redetectCalibrationRoutingFromUI();
+    if (auto* result = resultVar.getDynamicObject())
+    {
+        result->setProperty ("action", "apply_best_topology");
+        result->setProperty (
+            "message",
+            static_cast<bool> (result->getProperty ("changed"))
+                ? "Applied best topology and aligned the host-derived output map."
+                : "Best topology and host-derived output map are already active.");
+    }
+    return resultVar;
+}
+
 juce::var LocusQAudioProcessor::getCalibrationStatus() const
 {
     auto progress = calibrationEngine.getProgress();
@@ -302,6 +401,8 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     const auto monitoringPath = getCurrentCalibrationMonitoringPathIndex();
     const auto deviceProfile = getCurrentCalibrationDeviceProfileIndex();
     const auto outputChannels = getMainBusNumOutputChannels();
+    const auto snapshotOutputChannels = getSnapshotOutputChannels();
+    const auto layoutOutputChannels = static_cast<int> (getBusesLayout().getMainOutputChannelSet().size());
     const bool rendererSteamAudioAvailable = spatialRenderer.isSteamAudioAvailable();
     const juce::String rendererSteamAudioInitStage {
         SpatialRenderer::steamAudioInitStageToString (spatialRenderer.getSteamAudioInitStageIndex())
@@ -403,6 +504,12 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                 publishedVerification.verificationStage.toString();
             headphoneVerification.verificationScoreStatus =
                 publishedVerification.verificationScoreStatus.toString();
+            headphoneVerification.scoreProvenance =
+                publishedVerification.scoreProvenance.toString();
+            headphoneVerification.compensationLabel =
+                publishedVerification.compensationLabel.toString();
+            headphoneVerification.compensationProvenance =
+                publishedVerification.compensationProvenance.toString();
             headphoneVerification.chainLatencySamples =
                 locusq::shared_contracts::headphone_verification::sanitizeLatencySamples (
                     publishedVerification.chainLatencySamples);
@@ -437,8 +544,14 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
         locusq::shared_contracts::headphone_verification::sanitizeVerificationStage (
             headphoneVerification.verificationStage);
     headphoneVerification.verificationScoreStatus =
-        locusq::shared_contracts::headphone_verification::scoreStatusFromStage (
-            headphoneVerification.verificationStage);
+        locusq::shared_contracts::headphone_verification::scoreStatusFromProvenance (
+            headphoneVerification.scoreProvenance);
+    headphoneVerification.scoreProvenance =
+        locusq::shared_contracts::headphone_verification::sanitizeProvenance (
+            headphoneVerification.scoreProvenance);
+    headphoneVerification.compensationProvenance =
+        locusq::shared_contracts::headphone_verification::sanitizeProvenance (
+            headphoneVerification.compensationProvenance);
     headphoneVerification.frontBackScore =
         locusq::shared_contracts::headphone_verification::sanitizeScore (
             headphoneVerification.frontBackScore,
@@ -586,6 +699,9 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
         locusq::shared_contracts::headphone_verification::sanitizeScore (headphoneVerification.confidence, 0.0f));
     status->setProperty ("headphoneVerificationStage", headphoneVerification.verificationStage);
     status->setProperty ("headphoneVerificationScoreStatus", headphoneVerification.verificationScoreStatus);
+    status->setProperty ("headphoneVerificationScoreProvenance", headphoneVerification.scoreProvenance);
+    status->setProperty ("headphoneVerificationCompensationLabel", headphoneVerification.compensationLabel);
+    status->setProperty ("headphoneVerificationCompensationProvenance", headphoneVerification.compensationProvenance);
     status->setProperty (
         "headphoneVerificationLatencySamples",
         locusq::shared_contracts::headphone_verification::sanitizeLatencySamples (
@@ -595,6 +711,13 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     status->setProperty ("mappingLimitedToFirst4", mappingLimitedToFirst4);
     status->setProperty ("mappingDuplicateChannels", mappingDuplicateChannels);
     status->setProperty ("mappingValid", mappingValid);
+    const auto layoutInputChannels = static_cast<int> (getBusesLayout().getMainInputChannelSet().size());
+    const bool hostInputVisible = layoutInputChannels > 0;
+    const int selectedMicChannel = juce::jlimit (
+        1,
+        8,
+        static_cast<int> (apvts.getRawParameterValue ("cal_mic_channel")->load()));
+    const bool selectedMicVisible = hostInputVisible && selectedMicChannel <= layoutInputChannels;
 
     juce::var headphoneCalibrationVar (new juce::DynamicObject());
     if (auto* headphoneContract = headphoneCalibrationVar.getDynamicObject())
@@ -671,6 +794,552 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     if (state == CalibrationEngine::State::Complete)
         status->setProperty ("estimatedRT60", estimatedRt60);
 
+    const auto makeBl101Descriptor = [] (const juce::String& source,
+                                         const juce::String& provenance,
+                                         const juce::String& detail,
+                                         bool manualOverride = false,
+                                         std::optional<double> ageMs = std::nullopt,
+                                         std::optional<double> staleAfterMs = std::nullopt)
+    {
+        juce::var descriptorVar (new juce::DynamicObject());
+        if (auto* descriptor = descriptorVar.getDynamicObject())
+        {
+            descriptor->setProperty ("source", source);
+            descriptor->setProperty ("provenance", provenance);
+            descriptor->setProperty ("detail", detail);
+            descriptor->setProperty ("manualOverride", manualOverride);
+
+            if (ageMs.has_value())
+                descriptor->setProperty ("ageMs", *ageMs);
+            if (staleAfterMs.has_value())
+                descriptor->setProperty ("staleAfterMs", *staleAfterMs);
+
+            const bool isStale = ageMs.has_value()
+                && staleAfterMs.has_value()
+                && std::isfinite (*ageMs)
+                && std::isfinite (*staleAfterMs)
+                && *staleAfterMs >= 0.0
+                && *ageMs >= *staleAfterMs;
+            descriptor->setProperty ("isStale", isStale);
+        }
+        return descriptorVar;
+    };
+
+    {
+        juce::var provenanceVar (new juce::DynamicObject());
+        if (auto* provenance = provenanceVar.getDynamicObject())
+        {
+            provenance->setProperty (
+                "topology",
+                makeBl101Descriptor ("runtime_state",
+                                     "inferred",
+                                     "Reflects the current CALIBRATE topology selection in runtime state."));
+            provenance->setProperty (
+                "monitoringPath",
+                makeBl101Descriptor ("runtime_state",
+                                     "inferred",
+                                     "Reflects the current CALIBRATE monitoring path in runtime state."));
+            provenance->setProperty (
+                "deviceProfile",
+                makeBl101Descriptor ("runtime_state",
+                                     "inferred",
+                                     "Reflects the current CALIBRATE device-profile selection in runtime state."));
+            provenance->setProperty (
+                "routing",
+                makeBl101Descriptor ("host_auto",
+                                     mappingValid ? "detected" : "inferred",
+                                     mappingDuplicateChannels
+                                         ? "Routing contains duplicate channels and requires operator correction."
+                                         : (mappingLimitedToFirst4
+                                             ? "Host output layout exposes only a limited writable calibration map."
+                                             : "Routing is derived from the current host output layout and writable-channel visibility.")));
+            provenance->setProperty (
+                "profile",
+                makeBl101Descriptor (roomProfile != nullptr && roomProfile->valid ? "runtime_active" : "unknown",
+                                     roomProfile != nullptr && roomProfile->valid ? "inferred" : "unavailable",
+                                     roomProfile != nullptr && roomProfile->valid
+                                         ? "A room profile is available to the runtime."
+                                         : "No active room profile is currently available."));
+            provenance->setProperty (
+                "headphoneVerify",
+                makeBl101Descriptor ("runtime_active",
+                                     "estimated",
+                                     "Current headphone verification metrics are runtime estimates unless stronger evidence is published by BL-099/BL-060 follow-on lanes."));
+        }
+        status->setProperty ("calAutomationProvenance", provenanceVar);
+    }
+
+    {
+        juce::var discoveryGraphVar (new juce::DynamicObject());
+        if (auto* discoveryGraph = discoveryGraphVar.getDynamicObject())
+        {
+            discoveryGraph->setProperty ("schema", "locusq-calibrate-discovery-graph-v1");
+
+            const auto topologyLabelForId = [] (const juce::String& topologyId)
+            {
+                const auto normalized = topologyId.trim().toLowerCase();
+                if (normalized == "mono") return juce::String ("Mono");
+                if (normalized == "stereo") return juce::String ("Stereo");
+                if (normalized == "quad") return juce::String ("Quad");
+                if (normalized == "surround_51") return juce::String ("5.1");
+                if (normalized == "surround_71") return juce::String ("7.1");
+                if (normalized == "surround_712") return juce::String ("7.1.2");
+                if (normalized == "surround_742") return juce::String ("7.4.2 / Atmos-style");
+                if (normalized == "binaural") return juce::String ("Binaural / Headphone");
+                if (normalized == "ambisonic_1st") return juce::String ("Ambisonic 1st Order");
+                if (normalized == "ambisonic_3rd") return juce::String ("Ambisonic 3rd Order");
+                if (normalized == "downmix_stereo") return juce::String ("Multichannel -> Stereo Downmix");
+                return topologyId;
+            };
+            const auto topologyRolesForId = [] (const juce::String& topologyId)
+            {
+                const auto normalized = topologyId.trim().toLowerCase();
+                if (normalized == "mono") return juce::StringArray { "Main" };
+                if (normalized == "stereo") return juce::StringArray { "L", "R" };
+                if (normalized == "quad") return juce::StringArray { "FL", "FR", "RL", "RR" };
+                if (normalized == "surround_51") return juce::StringArray { "L", "R", "C", "LFE", "Ls", "Rs" };
+                if (normalized == "surround_71") return juce::StringArray { "L", "R", "C", "LFE", "Ls", "Rs", "Lrs", "Rrs" };
+                if (normalized == "surround_712") return juce::StringArray { "L", "R", "C", "LFE", "Ls", "Rs", "Lrs", "Rrs", "TopL", "TopR" };
+                if (normalized == "surround_742") return juce::StringArray { "L", "R", "C", "LFE1", "LFE2", "Ls", "Rs", "Lrs", "Rrs", "TopFL", "TopFR", "TopRL", "TopRR" };
+                if (normalized == "binaural") return juce::StringArray { "Left", "Right" };
+                if (normalized == "ambisonic_1st") return juce::StringArray { "W", "X", "Y", "Z" };
+                if (normalized == "ambisonic_3rd")
+                {
+                    juce::StringArray labels;
+                    for (int acn = 0; acn < 16; ++acn)
+                        labels.add ("ACN" + juce::String (acn));
+                    return labels;
+                }
+                if (normalized == "downmix_stereo") return juce::StringArray { "Downmix L", "Downmix R" };
+                return juce::StringArray { "Ch 1", "Ch 2", "Ch 3", "Ch 4" };
+            };
+            const auto splitLayoutTokens = [] (const juce::String& layoutText)
+            {
+                juce::StringArray tokens;
+                tokens.addTokens (layoutText, " ", "");
+                tokens.removeEmptyStrings();
+                return tokens;
+            };
+            const auto autoRoutingForWritableChannels = [] (int writableChannelCount)
+            {
+                const auto clampedOutputChannels = juce::jlimit (1, 16, writableChannelCount);
+                std::array<int, SpatialRenderer::NUM_SPEAKERS> autoRouting { 1, 2, 3, 4 };
+
+                if (clampedOutputChannels == 1)
+                    autoRouting = { 1, 1, 1, 1 };
+                else if (clampedOutputChannels == 2)
+                    autoRouting = { 1, 2, 1, 2 };
+                else if (clampedOutputChannels == 3)
+                    autoRouting = { 1, 2, 3, 3 };
+
+                return autoRouting;
+            };
+            const auto addRoleAssignments = [&] (juce::DynamicObject* candidate,
+                                                 const juce::StringArray& labels,
+                                                 int mappedAssignments,
+                                                 auto&& outputChannelResolver,
+                                                 const juce::String& provenance,
+                                                 const juce::String& detail,
+                                                 const juce::String& blockedReason)
+            {
+                if (candidate == nullptr)
+                    return;
+
+                juce::Array<juce::var> assignments;
+                const auto assignmentCount = static_cast<int> (labels.size());
+                int mappedCount = 0;
+                for (int index = 0; index < assignmentCount; ++index)
+                {
+                    juce::var assignmentVar (new juce::DynamicObject());
+                    if (auto* assignment = assignmentVar.getDynamicObject())
+                    {
+                        const bool isMapped = index < mappedAssignments;
+                        const int outputChannel = isMapped ? juce::jmax (0, outputChannelResolver (index)) : 0;
+                        assignment->setProperty ("label", labels[index]);
+                        assignment->setProperty ("outputChannel", outputChannel);
+                        assignment->setProperty ("mapped", isMapped && outputChannel > 0);
+                        assignment->setProperty ("blocked", ! isMapped || outputChannel <= 0);
+                        assignment->setProperty ("blockedReason", ! isMapped || outputChannel <= 0 ? blockedReason : juce::String());
+                        assignment->setProperty ("provenance", provenance);
+                        assignment->setProperty ("detail", detail);
+                    }
+                    if (const auto* assignment = assignmentVar.getDynamicObject())
+                        if (static_cast<bool> (assignment->getProperty ("mapped")))
+                            ++mappedCount;
+                    assignments.add (assignmentVar);
+                }
+
+                candidate->setProperty ("roleAssignments", juce::var (assignments));
+                candidate->setProperty ("roleAssignmentProvenance", provenance);
+                candidate->setProperty ("roleAssignmentDetail", detail);
+                candidate->setProperty ("roleIntentMappedCount", mappedCount);
+                candidate->setProperty ("roleIntentTotalCount", assignmentCount);
+                candidate->setProperty ("roleIntentBlockedCount", juce::jmax (0, assignmentCount - mappedCount));
+                candidate->setProperty ("roleIntentComplete", mappedCount >= assignmentCount);
+            };
+
+            const auto snapshotOutputLayout = outputLayoutToString (getBusesLayout().getMainOutputChannelSet());
+            const auto snapshotOutputRoles = splitLayoutTokens (snapshotOutputLayout);
+            const auto autoTopologyId = calibrationTopologyIdForIndex (lastAutoDetectedTopologyProfile);
+            const auto selectedTopologyId = calibrationTopologyIdForIndex (topologyProfile);
+            const bool hostOutputVisible = snapshotOutputChannels > 0 || layoutOutputChannels > 0;
+            const bool topologyMismatch = selectedTopologyId != autoTopologyId;
+            const bool limitedCandidate = requiredChannels > writableChannels;
+            const auto currentAutoRouting = autoRoutingForWritableChannels (writableChannels);
+
+            juce::Array<juce::var> outputCandidates;
+            {
+                auto addOutputCandidate = [&] (const juce::String& id,
+                                               const juce::String& label,
+                                               int channelCount,
+                                               int candidateWritableChannels,
+                                               int rank,
+                                               double confidence,
+                                               const juce::String& detail,
+                                               const juce::String& provenance,
+                                               bool manualOverride = false)
+                {
+                    juce::var candidateVar (new juce::DynamicObject());
+                    if (auto* candidate = candidateVar.getDynamicObject())
+                    {
+                        candidate->setProperty ("id", id);
+                        candidate->setProperty ("kind", "output");
+                        candidate->setProperty ("label", label);
+                        candidate->setProperty ("layout", snapshotOutputLayout);
+                        candidate->setProperty ("channelCount", channelCount);
+                        candidate->setProperty ("layoutChannelCount", layoutOutputChannels);
+                        candidate->setProperty ("writableChannels", candidateWritableChannels);
+                        candidate->setProperty ("rank", rank);
+                        candidate->setProperty ("confidence", confidence);
+                        candidate->setProperty ("selected", rank == 1);
+                        candidate->setProperty ("candidateVisible", channelCount > 0);
+                        candidate->setProperty ("needsConfirmation", mappingDuplicateChannels || candidateWritableChannels < channelCount);
+                        candidate->setProperty (
+                            "descriptor",
+                            makeBl101Descriptor ("host_auto",
+                                                 provenance,
+                                                 detail,
+                                                 manualOverride));
+                        if (id == "host_writable_output")
+                        {
+                            const auto topologyRoles = topologyRolesForId (selectedTopologyId);
+                            const auto requiredRoleCount = getRequiredCalibrationChannelsForTopologyIndex (topologyProfile);
+                            addRoleAssignments (candidate,
+                                                topologyRoles,
+                                                juce::jmin (requiredRoleCount, SpatialRenderer::NUM_SPEAKERS),
+                                                [&] (int index)
+                                                {
+                                                    return juce::jlimit (1, 8, currentAutoRouting[static_cast<size_t> (index)]);
+                                                },
+                                                limitedCandidate ? "generic" : "inferred",
+                                                limitedCandidate
+                                                    ? "Role guesses preserve the current topology selection but collapse onto the limited writable calibration map."
+                                                    : "Role guesses preserve the current topology selection and follow the best writable calibration map.",
+                                                "limited_writable_map");
+                        }
+                        else if (id == "host_main_output")
+                        {
+                            auto fallbackOutputLabels = snapshotOutputRoles;
+                            if (fallbackOutputLabels.isEmpty())
+                            {
+                                for (int channelIndex = 1; channelIndex <= juce::jmax (1, channelCount); ++channelIndex)
+                                    fallbackOutputLabels.add ("Out " + juce::String (channelIndex));
+                            }
+                            addRoleAssignments (candidate,
+                                                fallbackOutputLabels,
+                                                channelCount,
+                                                [] (int index) { return index + 1; },
+                                                snapshotOutputRoles.isEmpty() ? "generic" : "detected",
+                                                snapshotOutputRoles.isEmpty()
+                                                    ? "Host output layout did not expose named speaker roles, so generic output channels are shown."
+                                                    : "Role guesses come directly from the host output layout token order.",
+                                                "host_output_unmapped");
+                        }
+                    }
+                    outputCandidates.add (candidateVar);
+                };
+
+                if (! hostOutputVisible)
+                {
+                    addOutputCandidate ("host_main_output",
+                                        "Host Main Output",
+                                        0,
+                                        0,
+                                        1,
+                                        0.15,
+                                        "Host output layout has not published usable channel visibility yet.",
+                                        "unavailable");
+                }
+                else
+                {
+                    addOutputCandidate ("host_writable_output",
+                                        "Writable Calibration Routes",
+                                        writableChannels,
+                                        writableChannels,
+                                        1,
+                                        0.92,
+                                        "Current writable calibration routes are the strongest output candidate for measurement.",
+                                        "detected");
+
+                    if (snapshotOutputChannels != writableChannels || layoutOutputChannels != writableChannels)
+                    {
+                        addOutputCandidate ("host_main_output",
+                                            "Host Main Output",
+                                            snapshotOutputChannels,
+                                            writableChannels,
+                                            2,
+                                            0.70,
+                                            "Host output layout exposes more visible channels than the current writable calibration map.",
+                                            "inferred");
+                    }
+                }
+            }
+            discoveryGraph->setProperty ("outputCandidates", juce::var (outputCandidates));
+
+            juce::Array<juce::var> inputCandidates;
+            {
+                auto addInputCandidate = [&] (int candidateMicChannel,
+                                              int rank,
+                                              bool candidateSelected,
+                                              bool candidateVisible,
+                                              double confidence,
+                                              const juce::StringArray& reasonCodeValues,
+                                              const juce::StringArray& blockedByValues,
+                                              const juce::String& confirmationPrompt,
+                                              const juce::String& detail,
+                                              const juce::String& provenance)
+                {
+                    juce::var candidateVar (new juce::DynamicObject());
+                    if (auto* candidate = candidateVar.getDynamicObject())
+                    {
+                        juce::Array<juce::var> reasonCodes;
+                        juce::Array<juce::var> blockedBy;
+                        for (const auto& reason : reasonCodeValues)
+                            reasonCodes.add (reason);
+                        for (const auto& blocked : blockedByValues)
+                            blockedBy.add (blocked);
+
+                        candidate->setProperty ("id", "host_input_ch_" + juce::String (candidateMicChannel));
+                        candidate->setProperty ("kind", "input");
+                        candidate->setProperty ("label", "Host Input CH " + juce::String (candidateMicChannel));
+                        candidate->setProperty ("channelCount", layoutInputChannels);
+                        candidate->setProperty ("candidateMicChannel", candidateMicChannel);
+                        candidate->setProperty ("selectedMicChannel", selectedMicChannel);
+                        candidate->setProperty ("selected", candidateSelected);
+                        candidate->setProperty ("selectedMicVisible", selectedMicVisible);
+                        candidate->setProperty ("candidateVisible", candidateVisible);
+                        candidate->setProperty ("recommendedMicChannel", hostInputVisible ? 1 : 0);
+                        candidate->setProperty ("rank", rank);
+                        candidate->setProperty ("confidence", confidence);
+                        candidate->setProperty ("needsConfirmation", ! candidateVisible || ! selectedMicVisible);
+                        candidate->setProperty ("reasonCodes", juce::var (reasonCodes));
+                        candidate->setProperty ("confirmationPrompt", confirmationPrompt);
+                        candidate->setProperty ("blockedBy", juce::var (blockedBy));
+                        candidate->setProperty (
+                            "descriptor",
+                            makeBl101Descriptor ("host_auto",
+                                                 provenance,
+                                                 detail,
+                                                 candidateSelected && candidateMicChannel != 1));
+                    }
+                    inputCandidates.add (candidateVar);
+                };
+
+                if (! hostInputVisible)
+                {
+                    addInputCandidate (selectedMicChannel,
+                                       1,
+                                       true,
+                                       false,
+                                       0.10,
+                                       { "host_input_unavailable" },
+                                       { "host_input_visibility" },
+                                       "Wait for the host to expose an input bus before trusting mic discovery.",
+                                       "Host input bus has not published usable channel visibility yet.",
+                                       "unavailable");
+                }
+                else
+                {
+                    for (int micChannel = 1; micChannel <= layoutInputChannels; ++micChannel)
+                    {
+                        const bool candidateSelected = micChannel == selectedMicChannel;
+                        juce::StringArray reasonCodes;
+                        if (micChannel == 1)
+                            reasonCodes.add ("auto_ranked_best");
+                        if (candidateSelected)
+                            reasonCodes.add ("selected_mic_addressable");
+                        else
+                            reasonCodes.add ("alternate_visible_input");
+                        if (layoutInputChannels == 1)
+                            reasonCodes.add ("single_input_visible");
+                        reasonCodes.add ("host_input_visible");
+
+                        const auto detail = candidateSelected
+                            ? ("Host input bus reports "
+                                + juce::String (layoutInputChannels)
+                                + " visible channel(s); selected mic channel "
+                                + juce::String (selectedMicChannel)
+                                + " is currently addressable.")
+                            : ("Host input bus reports "
+                                + juce::String (layoutInputChannels)
+                                + " visible channel(s); mic channel "
+                                + juce::String (micChannel)
+                                + " is available as an alternate measurement input.");
+
+                        addInputCandidate (micChannel,
+                                           micChannel == 1 ? 1 : (candidateSelected ? 2 : 10 + micChannel),
+                                           candidateSelected,
+                                           true,
+                                           micChannel == 1 ? 0.82 : (candidateSelected ? 0.78 : 0.64),
+                                           reasonCodes,
+                                           {},
+                                           juce::String(),
+                                           detail,
+                                           "detected");
+                    }
+
+                    if (! selectedMicVisible)
+                    {
+                        addInputCandidate (selectedMicChannel,
+                                           99,
+                                           true,
+                                           false,
+                                           0.52,
+                                           { "selected_mic_out_of_range" },
+                                           { "selected_mic_visibility" },
+                                           "Choose a mic channel that is visible in the current host input width.",
+                                           "Selected mic channel falls outside the currently visible host input width.",
+                                           "inferred");
+                    }
+                }
+            }
+            discoveryGraph->setProperty ("inputCandidates", juce::var (inputCandidates));
+
+            juce::Array<juce::var> topologyCandidates;
+            {
+                juce::var autoCandidateVar (new juce::DynamicObject());
+                if (auto* candidate = autoCandidateVar.getDynamicObject())
+                {
+                    candidate->setProperty ("id", autoTopologyId);
+                    candidate->setProperty ("kind", "topology_candidate");
+                    candidate->setProperty ("label", topologyLabelForId (autoTopologyId));
+                    candidate->setProperty ("requiredChannels", getRequiredCalibrationChannelsForTopologyIndex (lastAutoDetectedTopologyProfile));
+                    candidate->setProperty ("writableChannels", writableChannels);
+                    candidate->setProperty ("rank", 1);
+                    candidate->setProperty ("confidence", hostOutputVisible ? 0.88 : 0.20);
+                    candidate->setProperty ("selected", autoTopologyId == selectedTopologyId);
+                    candidate->setProperty ("needsConfirmation", topologyMismatch || limitedCandidate);
+                    candidate->setProperty (
+                        "descriptor",
+                        makeBl101Descriptor ("host_auto",
+                                             hostOutputVisible ? "detected" : "unavailable",
+                                             hostOutputVisible
+                                                 ? ("Auto-map suggests "
+                                                     + topologyLabelForId (autoTopologyId)
+                                                     + " from the current host output width.")
+                                                 : "Auto topology candidate is waiting for a usable host output report."));
+                    addRoleAssignments (candidate,
+                                        topologyRolesForId (autoTopologyId),
+                                        juce::jmin (getRequiredCalibrationChannelsForTopologyIndex (lastAutoDetectedTopologyProfile),
+                                                    SpatialRenderer::NUM_SPEAKERS),
+                                        [&] (int index)
+                                        {
+                                            return juce::jlimit (1, 8, currentAutoRouting[static_cast<size_t> (index)]);
+                                        },
+                                        getRequiredCalibrationChannelsForTopologyIndex (lastAutoDetectedTopologyProfile) > writableChannels ? "generic" : "inferred",
+                                        getRequiredCalibrationChannelsForTopologyIndex (lastAutoDetectedTopologyProfile) > writableChannels
+                                            ? "Role guesses follow the best topology candidate, but the current writable calibration map cannot represent every role yet."
+                                            : "Role guesses are inferred from the best topology candidate and current writable calibration map.",
+                                        "limited_writable_map");
+                }
+                topologyCandidates.add (autoCandidateVar);
+            }
+            if (selectedTopologyId != autoTopologyId)
+            {
+                juce::var selectedCandidateVar (new juce::DynamicObject());
+                if (auto* candidate = selectedCandidateVar.getDynamicObject())
+                {
+                    candidate->setProperty ("id", selectedTopologyId);
+                    candidate->setProperty ("kind", "topology_candidate");
+                    candidate->setProperty ("label", topologyLabelForId (selectedTopologyId));
+                    candidate->setProperty ("requiredChannels", requiredChannels);
+                    candidate->setProperty ("writableChannels", writableChannels);
+                    candidate->setProperty ("rank", 2);
+                    candidate->setProperty ("confidence", 0.55);
+                    candidate->setProperty ("selected", true);
+                    candidate->setProperty ("needsConfirmation", true);
+                    candidate->setProperty (
+                        "descriptor",
+                        makeBl101Descriptor ("manual_override",
+                                             "inferred",
+                                             "Current topology selection differs from the latest host-derived topology candidate.",
+                                             true));
+                    addRoleAssignments (candidate,
+                                        topologyRolesForId (selectedTopologyId),
+                                        juce::jmin (requiredChannels, SpatialRenderer::NUM_SPEAKERS),
+                                        [&] (int index)
+                                        {
+                                            return juce::jlimit (1, 8, currentAutoRouting[static_cast<size_t> (index)]);
+                                        },
+                                        requiredChannels > writableChannels ? "generic" : "inferred",
+                                        requiredChannels > writableChannels
+                                            ? "Role guesses preserve the manual topology selection, but the current writable calibration map cannot represent every role yet."
+                                            : "Role guesses preserve the manual topology selection and follow the best writable calibration map.",
+                                        "limited_writable_map");
+                }
+                topologyCandidates.add (selectedCandidateVar);
+            }
+            discoveryGraph->setProperty ("topologyCandidates", juce::var (topologyCandidates));
+
+            juce::Array<juce::var> confirmationItems;
+            const bool hasBlockingConfirmation = mappingDuplicateChannels || limitedCandidate || topologyMismatch;
+            if (mappingDuplicateChannels)
+                confirmationItems.add ("Resolve duplicate output routing before trusting auto-map.");
+            if (limitedCandidate)
+                confirmationItems.add ("Confirm limited mapping or choose a topology that fits writable outputs.");
+            if (topologyMismatch)
+                confirmationItems.add ("Confirm whether CALIBRATE should follow the host-derived topology or keep the manual selection.");
+            if (hostInputVisible && ! selectedMicVisible)
+                confirmationItems.add ("Selected mic channel is outside the visible host input width; choose an addressable input before measuring.");
+            if (confirmationItems.isEmpty())
+                confirmationItems.add ("No confirmation needed. Auto-map and topology candidate are aligned.");
+            discoveryGraph->setProperty ("needsConfirmation", juce::var (confirmationItems));
+
+            juce::var summaryVar (new juce::DynamicObject());
+            if (auto* summary = summaryVar.getDynamicObject())
+            {
+                summary->setProperty (
+                    "outputHeadline",
+                    hostOutputVisible
+                        ? ("Host main output · "
+                            + juce::String (snapshotOutputChannels)
+                            + " visible / "
+                            + juce::String (writableChannels)
+                            + " writable")
+                        : "Host main output awaiting channel visibility");
+                summary->setProperty (
+                    "inputHeadline",
+                    hostInputVisible
+                        ? ("Host main input · "
+                            + juce::String (layoutInputChannels)
+                            + " visible · Mic "
+                            + juce::String (selectedMicChannel)
+                            + (selectedMicVisible ? " selected" : " needs review"))
+                        : "Host main input awaiting channel visibility");
+                summary->setProperty (
+                    "topologyHeadline",
+                    "Best candidate: " + topologyLabelForId (autoTopologyId));
+                summary->setProperty (
+                    "ambiguityHeadline",
+                    ! hasBlockingConfirmation
+                        ? "No ambiguity detected."
+                        : (juce::String (confirmationItems.size()) + " confirmation item(s) require review."));
+            }
+            discoveryGraph->setProperty ("summary", summaryVar);
+        }
+        status->setProperty ("discoveryGraph", discoveryGraphVar);
+    }
+
     // Companion headphone device status — cached by pollCompanionCalibrationProfileFromDisk().
     // Fields mirror the CalibrationProfile.json schema; verification scores are null until
     // Phase B (Task 17) writes them back.
@@ -683,6 +1352,13 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
         hpDevice->setProperty ("hrtf_mode",        cachedCalibrationHrtfMode);
         hpDevice->setProperty ("tracking_enabled", cachedCalibrationTrackingEnabled);
         hpDevice->setProperty ("fir_latency_samples", cachedCalibrationFirLatency);
+        hpDevice->setProperty ("profile_source",   cachedCalibrationProfileSource);
+
+        const auto currentUtcMs = juce::Time::currentTimeMillis();
+        std::optional<double> profileAgeMs = std::nullopt;
+        constexpr double kProfileStaleAfterMs = 300000.0;
+        if (cachedCalibrationProfileUpdatedAtUtcMs > 0 && currentUtcMs >= cachedCalibrationProfileUpdatedAtUtcMs)
+            profileAgeMs = static_cast<double> (currentUtcMs - cachedCalibrationProfileUpdatedAtUtcMs);
 
         // Scores: use JSON null when not yet set (value -1 sentinel).
         if (cachedExternalizationScore >= 0.0f)
@@ -694,6 +1370,23 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
             hpDevice->setProperty ("front_back_confusion_rate", cachedFrontBackConfusionRate);
         else
             hpDevice->setProperty ("front_back_confusion_rate", juce::var());
+
+        hpDevice->setProperty (
+            "provenance",
+            makeBl101Descriptor ("companion_profile",
+                                 cachedCalibrationHeadphoneProvenance,
+                                 "Device status comes from the latest companion CalibrationProfile.json handoff.",
+                                 false,
+                                 profileAgeMs,
+                                 kProfileStaleAfterMs));
+        hpDevice->setProperty (
+            "verification_provenance",
+            makeBl101Descriptor ("companion_profile",
+                                 cachedCalibrationVerificationProvenance,
+                                 "Verification fields loaded from CalibrationProfile.json remain weaker than direct measurement unless a stronger provenance source is published.",
+                                 false,
+                                 profileAgeMs,
+                                 kProfileStaleAfterMs));
 
         status->setProperty ("hpDeviceStatus", hpDeviceVar);
     }

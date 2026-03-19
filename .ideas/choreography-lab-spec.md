@@ -36,7 +36,7 @@ APVTS base state (DAW automation)
         = Final EmitterSlot position → DSP renderer
 ```
 
-**ADR requirement:** This four-layer chain is a planned extension to ADR-0003, which currently defines three layers. A new ADR must be recorded before Choreography Lab implementation begins. Until that ADR is written and merged, the Timeline keyframe rest pose remains authoritative per existing ADR-0003, and Choreography Lab output must not be written to production EmitterSlots.
+**ADR-0020:** This four-layer chain extends ADR-0003's three-layer model. See `Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md`. Choreography Lab output may now write to production `EmitterSlot` instances per ADR-0020 guardrails.
 
 ### Graduation Path
 
@@ -238,21 +238,24 @@ All overlays are visual-only layers and must never mutate DSP or scene canonical
 
 ---
 
-## Threading Contract
+## Threading Contract (ADR-0020)
 
-- ChoreographyWorker runs on a dedicated worker thread (or shares `PhysicsWorker` thread at lower priority — architecture decision deferred to ADR).
-- Audio thread writes block data to lock-free bounded ring buffer during `processBlock` — non-blocking, no allocation.
-- ChoreographyWorker reads ring buffer, computes features, computes positions.
-- ChoreographyWorker writes `EmitterSlot` fields via atomic pointer swap (same contract as PhysicsWorker).
+ChoreographyWorker is a **logical module colocated in the PhysicsWorker tick** — no new OS thread. Per ADR-0020 §3:
+
+- ChoreographyWorker.compute() runs at the start of each PhysicsWorker tick, before physics integration.
+- Outputs a per-emitter `ChoreographyOffset` struct (position, spread_delta, gain_delta, velocity) consumed immediately by the PhysicsWorker to compose the rest pose.
+- The single `EmitterSlot` atomic pointer swap per tick (ADR-0002) remains exclusively owned by PhysicsWorker.
+- Audio thread writes per-block data to the lock-free bounded `AudioRingBuffer` during `processBlock` — non-blocking, no allocation.
+- ChoreographyWorker reads `AudioRingBuffer` on the worker thread — non-blocking consumer side.
 - Beat-sync reads DAW transport position atomically — no DAW callback on audio thread.
 - Leader/follower history ring buffer pre-allocated at startup — no runtime allocation.
 - No choreography logic on audio thread.
 
 ---
 
-## Pending ADR
+## ADR Status
 
-The four-layer authority chain (APVTS + Timeline + Choreography Lab + Physics) extends ADR-0003. A new ADR is required before Choreography Lab output may write to production `EmitterSlot` instances. The ADR must record: the rationale for the four-layer chain, authority conflict resolution rules (what happens when two layers write to the same field in the same tick), and whether ChoreographyWorker and PhysicsWorker share a thread or run independently.
+**Resolved.** `Documentation/adr/ADR-0020-four-layer-authority-chain-and-choreography-worker-arbitration.md` records the four-layer chain rationale, authority conflict resolution rules (same-field, same-tick ordering), and the colocated-tick worker arbitration decision. Choreography Lab implementation may proceed per ADR-0020 guardrails.
 
 ---
 

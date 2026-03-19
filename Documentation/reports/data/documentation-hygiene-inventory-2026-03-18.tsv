@@ -1,0 +1,14 @@
+path	topic	owner	last_reviewed_date	label	action	notes
+Documentation/README.md	documentation-tiering	docs-governance (temporary; needs-owner)	2026-03-18	canonical	keep	Canonical tier map is useful; avoid adding more review snapshots here.
+Documentation/backlog	backlog-execution	lane-owners + docs-governance	2026-03-18	canonical	keep-and-compact	Healthy structure; reduce repeated status/evidence prose inside runbooks.
+Documentation/backlog/done	done-runbook-history	docs-governance (temporary; needs-owner)	2026-03-18	archive	selective-maintenance	Major compaction wave complete; only selective future trims should remain.
+Documentation/plans	active-specs	lane-owners (temporary; needs-owner)	2026-03-18	supporting	deduplicate-and-archive	Multiple vintages and mock variants create competing plan surfaces.
+Documentation/reports	active-report-packets	docs-governance (temporary; needs-owner)	2026-03-18	supporting	trim-active-set	Keep only currently referenced unresolved packets outside archive.
+Documentation/reports/data	machine-readable-exports	docs-governance	2026-03-18	generated	keep-current-only	Backlog summary exports were stale until refreshed in this pass.
+Documentation/reports/visuals	report-visual-assets	docs-governance (temporary; needs-owner)	2026-03-18	generated	archive-unreferenced	Mix of active and historical visuals should be split by live reference status.
+Documentation/testing	qa-guides-and-bl-packets	testing-owner (temporary; needs-owner)	2026-03-18	supporting	classify-and-reduce	Reusable guides should stay; BL-specific QA narratives often duplicate runbooks or evidence packets.
+Documentation/reviews	code-and-design-reviews	docs-governance (temporary; needs-owner)	2026-03-18	supporting	archive-after-distillation	Keep latest unresolved reviews active; archive the rest after backlog/ADR extraction.
+Documentation/research	research-index-and-reference	research-owner (temporary; needs-owner)	2026-03-18	supporting	keep-current	Research index now matches the active methodology plus curated prototype-reference surface.
+Documentation/Calibration POC	calibration-prototype-research	research-owner (temporary; needs-owner)	2026-03-18	reference	keep-curated	Prototype code and retained references stay active; exploratory duplicates moved to archive on 2026-03-18.
+Documentation/runbooks	legacy-runbook-guides	docs-governance (temporary; needs-owner)	2026-03-18	delete-candidate	convert-to-pointers-or-archive	Mostly superseded by `Documentation/backlog/` templates and runbooks.
+Documentation/archive	archived-doc-bundles	docs-governance	2026-03-18	archive	strengthen-manifest	Archive destination is right; manifest and replacement tracking need tightening.

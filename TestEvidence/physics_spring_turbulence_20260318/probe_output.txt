@@ -1,0 +1,1 @@
+physics_runtime_spring_turbulence_probe: PASS | spring{emitterId=0 baselineCaptured=1 baselineSpread=0.000 baselineAbsForceX=0.000 maxSpread=0.300 maxAbsForceX=6.000 maxDisp=1.919 finalPos=(-0.169,1.200,-0.000)} turbulence{emitterId=0 baselineCaptured=1 baselineSpread=0.000 baselineAbsForceX=0.000 maxSpread=0.090 maxAbsForceX=1.179 maxDisp=1.202 finalPos=(0.125,1.185,0.058)}

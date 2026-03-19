@@ -2,106 +2,110 @@ Title: BL-XXX Promotion Decision Template
 Document Type: Backlog Template
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-18
 
-# BL-XXX Promotion Decision (`Slice Z*` Owner Sync)
+# BL-XXX Promotion Decision
 
-Use this template for owner-authoritative promotion packets under:
+Use this file inside:
 - `TestEvidence/<bl_or_hx>_owner_sync_<slice>_<timestamp>/promotion_decision.md`
 
-## Plain-Language Decision Summary
+## Plain-Language Summary
 
-- What changed: [Plain-language summary]
-- Why this decision: [Plain-language rationale]
-- Decision in simple terms: [promote/hold/block and why]
+- What changed: [short summary]
+- Why this decision: [short rationale]
+- Decision: [promote / hold / block]
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
-| Who is impacted by this decision? | [Users/operators/QA/release owners] |
-| What was reviewed? | [Implementation + validation slices] |
-| Why this outcome? | [Key evidence/risk rationale] |
-| How was confidence established? | [Replay/gate/evidence summary] |
-| When can this be revisited? | [Trigger/date/next review condition] |
+| Who is impacted? | [Users / operators / QA / release owners] |
+| What was reviewed? | [Slices or evidence set] |
+| Why this outcome? | [Risk and evidence summary] |
+| How was confidence established? | [Replay, gates, review] |
+| When can this be revisited? | [Trigger or date] |
 | Where is the evidence? | [`TestEvidence/<packet>/...`] |
 
 ## Visual Aid Index
 
-Use visuals only when they improve understanding.
+Use visuals only when they improve clarity.
 
 | Visual Aid | Why it helps | Where to find it |
 |---|---|---|
-| Gate matrix table | Fast PASS/FAIL scan | `## Required Gate Matrix` |
-| Determinism table | Confidence in replay stability | `## Determinism / Reliability Checks` |
-| Mermaid decision flow (optional) | Clarifies promotion/no-go reasoning | `## Decision Flow` |
-| Screenshot/chart (optional) | Clarifies UI/metric evidence | `TestEvidence/...` linked path |
+| Gate matrix | Fast PASS/FAIL scan | `## Gate Matrix` |
+| Reliability table | Shows replay confidence | `## Reliability Checks` |
+| Diagram (optional) | Clarifies a tricky no-go path | Adjacent to the relevant section |
 
 ## Decision
-- Result: `PASS | FAIL`
-- Decision: `Done-candidate | In Validation | Blocked`
+
+| Field | Value |
+|---|---|
+| Result | `PASS` / `FAIL` |
+| Decision | `Done-candidate` / `In Validation` / `Blocked` |
+| Automation Mode | `draft_only` |
+| Owner Required For | `Done`, archive move, status/index sync |
 
 ## Scope Reviewed
-- [List the implementation/validation slices reconciled in this owner sync.]
 
-## Required Gate Matrix
+- [Slice or evidence set 1]
+- [Slice or evidence set 2]
 
-| Gate | Command | Expected | Actual | Status | Evidence |
-|---|---|---|---|---|---|
-| Build | `cmake --build ...` | PASS | [PASS/FAIL] | [PASS/FAIL] | `build.log` |
-| Smoke suite | `locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` | PASS | [PASS/FAIL] | [PASS/FAIL] | `qa_smoke.log` |
-| Item lane replay | `[qa lane command]` | PASS | [PASS/FAIL] | [PASS/FAIL] | `validation_matrix.tsv` |
-| Contract lane(s) | `[qa contract command]` | PASS | [PASS/FAIL] | [PASS/FAIL] | `[lane log]` |
-| RT safety | `./scripts/rt-safety-audit.sh --print-summary --output .../rt_audit.tsv` | `non_allowlisted=0` | `[value]` | [PASS/FAIL] | `rt_audit.tsv` |
-| Replay cadence compliance | `runbook replay tier + run budget check` | PASS | [PASS/FAIL] | [PASS/FAIL] | `owner_decisions.md` |
-| Ownership safety | `SHARED_FILES_TOUCHED marker + ownership delta check` | `no` | `[no/yes]` | [PASS/FAIL] | `handoff_resolution.md` |
-| Evidence localization | `promotion evidence path check` | `TestEvidence/...` only | [PASS/FAIL] | [PASS/FAIL] | `handoff_resolution.md` |
-| Status schema | `jq empty status.json` | PASS | [PASS/FAIL] | [PASS/FAIL] | `status_json_check.log` |
-| Docs freshness | `./scripts/validate-docs-freshness.sh` | PASS | [PASS/FAIL] | [PASS/FAIL] | `docs_freshness.log` |
+## Gate Matrix
 
-## Determinism / Reliability Checks
+| Gate | Expected | Actual | Status | Evidence |
+|---|---|---|---|---|
+| Build | PASS | [PASS/FAIL] | [PASS/FAIL] | `build.log` |
+| Smoke | PASS | [PASS/FAIL] | [PASS/FAIL] | `qa_smoke.log` |
+| Item lane | PASS | [PASS/FAIL] | [PASS/FAIL] | `validation_matrix.tsv` |
+| RT safety | `non_allowlisted=0` | [value] | [PASS/FAIL] | `rt_audit.tsv` |
+| Docs freshness | PASS | [PASS/FAIL] | [PASS/FAIL] | `docs_freshness.log` |
+| Status schema | PASS | [PASS/FAIL] | [PASS/FAIL] | `status_json_check.log` |
+| Ownership safety | `SHARED_FILES_TOUCHED=no` or justified | [value] | [PASS/FAIL] | `handoff_resolution.md` |
+
+## Reliability Checks
 
 | Check | Expected | Actual | Status | Evidence |
 |---|---|---|---|---|
-| Replay run count | [N] | [N] | [PASS/FAIL] | `validation_matrix.tsv` |
-| Replay outcomes | all PASS | [summary] | [PASS/FAIL] | `validation_matrix.tsv` |
-| Hash/parity stability (if applicable) | stable | [stable/drift] | [PASS/FAIL] | `replay_hashes.tsv` |
+| Replay count | [N] | [N] | [PASS/FAIL] | `validation_matrix.tsv` |
+| Replay outcome | all PASS | [summary] | [PASS/FAIL] | `validation_matrix.tsv` |
+| Hash/parity stability | stable | [stable/drift] | [PASS/FAIL] | `replay_hashes.tsv` |
 
-## Contract Consistency
+## Consistency Checks
 
 | Surface | Expected | Status | Notes |
 |---|---|---|---|
-| `Documentation/backlog/bl-XXX-*.md` | status + acceptance mapping current | [PASS/FAIL] | [notes] |
-| `Documentation/backlog/index.md` | row status aligned | [PASS/FAIL] | [notes] |
-| `Documentation/implementation-traceability.md` | acceptance/evidence mapping updated | [PASS/FAIL] | [notes] |
-| `status.json` | evidence keys + notes aligned | [PASS/FAIL] | [notes] |
-| `TestEvidence/build-summary.md` | snapshot updated | [PASS/FAIL] | [notes] |
-| `TestEvidence/validation-trend.md` | trend entries appended | [PASS/FAIL] | [notes] |
+| Runbook | current | [PASS/FAIL] | [notes] |
+| Backlog index | aligned | [PASS/FAIL] | [notes] |
+| `status.json` | aligned | [PASS/FAIL] | [notes] |
+| `TestEvidence/build-summary.md` | updated | [PASS/FAIL] | [notes] |
+| `TestEvidence/validation-trend.md` | updated | [PASS/FAIL] | [notes] |
 
-## Done Transition Readiness (Required if proposing Done)
+## Done Readiness
+
+Fill this only if proposing `Done`.
 
 | Check | Expected | Status | Notes |
 |---|---|---|---|
-| Closeout template applied | `Documentation/backlog/_template-closeout.md` structure used | [PASS/FAIL] | [notes] |
-| Runbook move planned | `Documentation/backlog/done/bl-XXX-*.md` target path explicit | [PASS/FAIL] | [notes] |
-| Index row ready | row state/status/path updated for Done | [PASS/FAIL] | [notes] |
+| Closeout template applied | yes | [PASS/FAIL] | [notes] |
+| Runbook move planned | yes | [PASS/FAIL] | [notes] |
+| Index row ready | yes | [PASS/FAIL] | [notes] |
 
-## Blockers (if any)
-- [blocker 1]
-- [blocker 2]
+## Blockers
 
-## Recommendation Rule
-- `Done-candidate` only if all required gates pass and no blockers remain.
-- `In Validation` if implementation is complete but promotion gates/evidence are still converging.
-- `Blocked` if any hard gate fails (build/smoke/lane/RT/docs freshness/status schema).
+- [Blocker or `none`]
+
+## Recommendation
+
+- `Done-candidate` only if all required gates pass and no blocker remains.
+- `In Validation` if implementation is done but promotion confidence is still converging.
+- `Blocked` if any hard gate is red.
 
 ## Evidence Index
+
 - `status.tsv`
 - `validation_matrix.tsv`
-- `qa_lane.log`
 - `build.log`
 - `qa_smoke.log`
-- `qa_bl009.log` (or equivalent lane log)
 - `rt_audit.tsv`
 - `docs_freshness.log`
 - `owner_decisions.md`

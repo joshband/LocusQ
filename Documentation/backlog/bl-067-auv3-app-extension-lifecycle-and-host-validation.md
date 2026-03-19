@@ -2,13 +2,13 @@ Title: BL-067 AUv3 App-Extension Lifecycle and Host Validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-01
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-067 AUv3 App-Extension Lifecycle and Host Validation
 
 ## Plain-Language Summary
 
-BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-17 intake replay: contract `3/3` PASS, execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual host execution, and explicit extension-safe profile/SOFA access proof are still blocked). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-19 local runtime-access hardening replay: profile fallback, custom SOFA fallback, and calibration dialog defaults now pass the contract lane; Apple signing and real host execution are still blocked). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with 
 | What is changing? | Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (2026-03-17 intake replay: contract `3/3` PASS, execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual host execution, and extension-safe runtime access proof are still blocked). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (2026-03-19 local runtime-access hardening replay: profile/SOFA fallback and calibration dialog checks PASS; Apple signing and host execution still blocked). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -45,7 +45,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-067 |
 | Priority | P1 |
-| Status | In Validation (2026-03-17 intake replay: contract `3/3` PASS, execute `1/1` PASS with zero `TODO` rows; Apple signing, host inventory/manual host execution, and extension-safe runtime-access proof are still blocked) |
+| Status | In Validation (2026-03-19 runtime-access contract replay PASS for profile fallback, custom SOFA fallback, and calibration dialog defaults; Apple signing and real host execution remain blocked) |
 | Track | A - Runtime Formats |
 | Effort | High / L |
 | Depends On | BL-048 |
@@ -106,8 +106,24 @@ Minimum evidence additions:
 - `code blockers`: none observed in Slice A/B intake evidence
 - `signing blockers`: Apple-host-ready signing is still unmet (`Signature=adhoc`; execute capture has no TeamIdentifier)
 - `host-inventory blockers`: Logic Pro is present but inventory-only; GarageBand and MainStage are not installed
-- `runtime-access blockers`: the 2026-03-17 review identified unresolved AUv3-specific follow-up around user-home/app-data-style profile and SOFA access assumptions; explicit host evidence for extension-safe runtime access is still required
+- `runtime-access blockers`: the 2026-03-17 review identified unresolved AUv3-specific follow-up around user-home/app-data-style profile and SOFA access assumptions; explicit host evidence for extension-safe runtime access was still required
 - `recommendation`: move BL-067 to In Validation; do not promote until Apple signing, host-execution inventory, and extension-safe runtime-access blockers are cleared
+
+## Runtime-Access Hardening Snapshot (2026-03-19)
+
+- `cmake --build build_local --config Release --target LocusQ_Standalone -j8` -> `PASS`
+- `bash -n scripts/qa-bl067-auv3-lifecycle-mac.sh` -> `PASS`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only --runs 1 --out-dir TestEvidence/bl067_runtime_access_20260319T035500Z --build-root build_bl067_runtime_access_20260319T035500Z` -> `PASS`
+- new contract artifact: `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
+- source-level result:
+  - companion calibration-profile fallback now uses the LocusQ user-data directory only
+  - custom SOFA fallback now uses the LocusQ user-data directory only
+  - calibration import/export dialogs now default to the LocusQ calibration-profile directory
+  - env overrides for explicit profile injection remain available
+- remaining blockers:
+  - Apple host-ready signing is still blocked
+  - real AUv3 host execution is still blocked by missing host inventory/coverage
+  - this slice proves the local runtime-access contract, not final AUv3 promotion readiness
 
 ## Replay Cadence Plan (Required)
 

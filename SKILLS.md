@@ -2,7 +2,7 @@ Title: APC Skills Index
 Document Type: Skill Index
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-01
+Last Modified Date: 2026-03-18
 
 # SKILLS.md
 
@@ -33,8 +33,8 @@ For any phase execution:
 ## Specialist Skills
 | Skill | File | Use When |
 |---|---|---|
-| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation governance: metadata compliance, ADR hygiene, traceability upkeep, archive-tier policy, and root-doc sync discipline |
-| `documentation-hygiene-expert` | `.codex/skills/documentation-hygiene-expert/SKILL.md` | SDLC-aware documentation cleanup plus git artifact hygiene: deduplicate bloated docs, enforce freshness ownership/cadence, consolidate canonical sources, align behavior claims to ADRs, and guard against tracked ignored/archive/build artifacts |
+| `skill_docs` | `.codex/skills/docs/SKILL.md` | Documentation governance: metadata compliance, ADR hygiene, traceability upkeep, archive-tier policy, root-doc sync discipline, and owner-confirmed promotion handoff for draft automation |
+| `documentation-hygiene-expert` | `.codex/skills/documentation-hygiene-expert/SKILL.md` | SDLC-aware documentation cleanup plus git artifact hygiene: deduplicate bloated docs, enforce freshness ownership/cadence, consolidate canonical sources, align behavior claims to ADRs, guard against tracked ignored/archive/build artifacts, and draft T1/T2/T3 backlog packets without auto-promotion |
 | `juce-webview-windows` | `.codex/skills/skill_design_webview/SKILL.md` | WebView implementation details or WebView crash/order hardening |
 | `juce-webview-runtime` | `.codex/skills/juce-webview-runtime/SKILL.md` | Host/runtime interop, WebView bridge timeouts, callback ordering, UI click/hit-target anomalies, startup hydration issues |
 | `skill_testing` | `.codex/skills/skill_testing/SKILL.md` | Detailed harness-first testing and plugin validation workflows |
@@ -100,24 +100,13 @@ When specialist intent is present, auto-load the matching specialist skill(s):
 - Blind listening protocol, stats gating, and reproducibility work -> `perceptual-listening-harness`
 - Broad unresolved failures -> `skill_troubleshooting`
 
-If multiple specialist intents apply, compose skills in this order:
-1. `juce-webview-runtime`
-2. `reactive-av`
-3. `realtime-dimensional-visualization`
-4. `simulation-behavior-audio-visual`
-5. `physics-reactive-audio`
-6. `temporal-effects-engineering`
-7. `auv3-plugin-lifecycle`
-8. `clap-plugin-lifecycle`
-9. `steam-audio-capi`
-10. `spatial-audio-engineering`
-11. `documentation-hygiene-expert`
-12. `headtracking-companion-runtime`
-13. `apple-spatial-companion-platform`
-14. `hrtf-rendering-validation-lab`
-15. `perceptual-listening-harness`
-16. `threejs`
-17. `skill_troubleshooting`
+If multiple specialist intents apply, use this bundle order:
+1. UI/runtime: `juce-webview-runtime`, `threejs`, `reactive-av`, `realtime-dimensional-visualization`
+2. DSP/simulation: `simulation-behavior-audio-visual`, `physics-reactive-audio`, `temporal-effects-engineering`
+3. format/spatial: `auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `steam-audio-capi`, `spatial-audio-engineering`
+4. docs/governance: `documentation-hygiene-expert`, then `skill_docs`
+5. companion/calibration: `headtracking-companion-runtime`, `apple-spatial-companion-platform`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`
+6. fallback: `skill_troubleshooting`
 
 When both documentation skills are required, run:
 1. `documentation-hygiene-expert` (cleanup/consolidation and freshness remediation)
@@ -128,6 +117,7 @@ Canonical matrix and examples: `Documentation/skill-selection-matrix.md`.
 ## Documentation Skill Ownership Map
 | Task Pattern | Primary Skill | Secondary Skill(s) |
 |---|---|---|
+| Draft-only T1/T2/T3 backlog automation, packet drafting, and proposed status diffs | `documentation-hygiene-expert` | `skill_docs` |
 | Backlog index/runbook cleanup and stale authority claims (`Documentation/backlog/index.md`, `Documentation/backlog/done/*`) | `documentation-hygiene-expert` | `skill_docs` |
 | `ARCHITECTURE.md` and behavior-doc drift cleanup | `documentation-hygiene-expert` | `skill_docs`, optionally `skill_plan` |
 | Root docs content freshness (`README.md`, `CHANGELOG.md`) | `documentation-hygiene-expert` | `skill_docs` |

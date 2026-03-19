@@ -16,6 +16,7 @@
 #include "HeadPoseInterpolator.h"
 #include "CalibrationEngine.h"
 #include "PhysicsEngine.h"
+#include "PhysicsSharedRuntime.h"
 #include "KeyframeTimeline.h"
 #include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/RegistrationLockFreeContract.h"
@@ -73,7 +74,8 @@ enum class RegistrationTransitionFallbackReason : int
  *
  * Phase 2.1: Foundation & Scene Graph
  */
-class LocusQAudioProcessor : public juce::AudioProcessor
+class LocusQAudioProcessor : public juce::AudioProcessor,
+                             public juce::AsyncUpdater
 #if LOCUSQ_CLAP_PROPERTIES_AVAILABLE
                           , public clap_juce_extensions::clap_properties
                           , public clap_juce_extensions::clap_juce_audio_processor_capabilities
@@ -89,6 +91,7 @@ public:
     void releaseResources() override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void handleAsyncUpdate() override;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -119,6 +122,9 @@ public:
     // Current operating mode
     LocusQMode getCurrentMode() const;
     int getEmitterSlotId() const { return emitterSlotId; }
+#if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+    PerEmitterDSPValues getPhysicsDspValuesForTesting (int slot) const { return physicsDspBridge.read (slot); }
+#endif
     void primeRendererStateFromCurrentParameters();
 
     // Scene graph JSON for WebView (called from editor timer)
@@ -130,6 +136,8 @@ public:
     bool startCalibrationFromUI (const juce::var& options);
     void abortCalibrationFromUI();
     juce::var redetectCalibrationRoutingFromUI();
+    juce::var applyBestCalibrationOutputMapFromUI();
+    juce::var applyBestCalibrationTopologyFromUI();
     juce::var getCalibrationStatus() const;
     juce::var listCalibrationProfilesFromUI() const;
     juce::var saveCalibrationProfileFromUI (const juce::var& options);
@@ -214,6 +222,9 @@ private:
         float confidence = 0.0f;
         FixedUtf8Text<64> verificationStage;
         FixedUtf8Text<64> verificationScoreStatus;
+        FixedUtf8Text<64> scoreProvenance;
+        FixedUtf8Text<96> compensationLabel;
+        FixedUtf8Text<64> compensationProvenance;
         int chainLatencySamples = 0;
         bool valid = false;
     };
@@ -373,9 +384,110 @@ private:
 
     //==============================================================================
     // Physics engine (Phase 2.4)
+    PhysicsSharedRuntime& physicsSharedRuntime;
+    PhysicsDSPBridge& physicsDspBridge;
+    PhysicsWorker& physicsWorker;
     PhysicsEngine physicsEngine;
+    bool physicsSharedRuntimeAcquired = false;
     bool lastPhysThrowGate = false;
     bool lastPhysResetGate = false;
+    bool lastAngThrowGate = false;
+    bool lastAngResetGate = false;
+    static constexpr int kPhysicsDAWSlotCount = 8;
+    static constexpr int kAttractorSlotCount = 4;
+    static constexpr int kFlockGroupCount = 4;
+    static constexpr float kPhysicsHostMirrorNotifyEpsilon = 0.0005f;
+    std::array<bool, kPhysicsDAWSlotCount> lastFrozenState {};
+    int lastPhysicsRateIndex = -1; // guards per-block physicsDspBridge.prepare() calls
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physGainModParams  {};
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physSpreadModParams {};
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physTransientParams {};
+    std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physFrozenParams    {};
+    std::array<juce::RangedAudioParameter*, kPhysicsDAWSlotCount> physTransientNotifyTargets {};
+    std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPending {};
+    std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPublished {};
+    std::array<std::atomic<bool>, kPhysicsDAWSlotCount> physTransientHostDirty {};
+    std::atomic<float>* rendPhysRateParam = nullptr;
+    std::atomic<float>* rendPhysPauseParam = nullptr;
+    std::atomic<float>* rendPhysWallsParam = nullptr;
+    std::atomic<float>* rendPhysInteractParam = nullptr;
+    std::atomic<float>* posCoordModeParam = nullptr;
+    std::atomic<float>* posAzimuthParam = nullptr;
+    std::atomic<float>* posElevationParam = nullptr;
+    std::atomic<float>* posDistanceParam = nullptr;
+    std::atomic<float>* posXParam = nullptr;
+    std::atomic<float>* posYParam = nullptr;
+    std::atomic<float>* posZParam = nullptr;
+    std::atomic<float>* sizeUniformParam = nullptr;
+    std::atomic<float>* sizeLinkParam = nullptr;
+    std::atomic<float>* sizeWidthParam = nullptr;
+    std::atomic<float>* sizeHeightParam = nullptr;
+    std::atomic<float>* sizeDepthParam = nullptr;
+    std::atomic<float>* animEnableParam = nullptr;
+    std::atomic<float>* animModeParam = nullptr;
+    std::atomic<float>* animLoopParam = nullptr;
+    std::atomic<float>* animSpeedParam = nullptr;
+    std::atomic<float>* animSyncParam = nullptr;
+    std::atomic<float>* emitGainParam = nullptr;
+    std::atomic<float>* emitSpreadParam = nullptr;
+    std::atomic<float>* emitDirectivityParam = nullptr;
+    std::atomic<float>* emitMuteParam = nullptr;
+    std::atomic<float>* emitSoloParam = nullptr;
+    std::atomic<float>* emitDirAzimuthParam = nullptr;
+    std::atomic<float>* emitDirElevationParam = nullptr;
+    std::atomic<float>* physEnableParam = nullptr;
+    std::atomic<float>* physBoundaryModeParam = nullptr;
+    std::atomic<float>* physSoftBoundaryDepthParam = nullptr;
+    std::atomic<float>* physFlockGroupParam = nullptr;
+    std::atomic<float>* physSpringEnableParam = nullptr;
+    std::atomic<float>* physSpringKParam = nullptr;
+    std::atomic<float>* physSpringDampParam = nullptr;
+    std::atomic<float>* physSpringAnchorModeParam = nullptr;
+    std::atomic<float>* physSpringAnchorXParam = nullptr;
+    std::atomic<float>* physSpringAnchorYParam = nullptr;
+    std::atomic<float>* physSpringAnchorZParam = nullptr;
+    std::atomic<float>* physTurbulenceParam = nullptr;
+    std::atomic<float>* physTurbulenceRateParam = nullptr;
+    std::atomic<float>* physAngEnableParam = nullptr;
+    std::atomic<float>* physAngDragParam = nullptr;
+    std::atomic<float>* physAngImpulseXParam = nullptr;
+    std::atomic<float>* physAngImpulseYParam = nullptr;
+    std::atomic<float>* physAngImpulseZParam = nullptr;
+    std::atomic<float>* physAngAttractorTorqueParam = nullptr;
+    std::atomic<float>* physAngThrowParam = nullptr;
+    std::atomic<float>* physAngResetParam = nullptr;
+    std::atomic<float>* physMassOverrideParam = nullptr;
+    std::atomic<float>* physCollideEmittersParam = nullptr;
+    std::atomic<float>* physCollisionRadiusParam = nullptr;
+    std::atomic<float>* physCollisionGainScaleParam = nullptr;
+    std::atomic<float>* physCollisionDecayMsParam = nullptr;
+    std::atomic<float>* physMassParam = nullptr;
+    std::atomic<float>* physDragParam = nullptr;
+    std::atomic<float>* physElasticityParam = nullptr;
+    std::atomic<float>* physFrictionParam = nullptr;
+    std::atomic<float>* physGravityParam = nullptr;
+    std::atomic<float>* physGravityDirParam = nullptr;
+    std::atomic<float>* physThrowParam = nullptr;
+    std::atomic<float>* physVelXParam = nullptr;
+    std::atomic<float>* physVelYParam = nullptr;
+    std::atomic<float>* physVelZParam = nullptr;
+    std::atomic<float>* physResetParam = nullptr;
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorActiveParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorPosXParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorPosYParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorPosZParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorStrengthParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorRadiusParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorFalloffParams {};
+    std::array<std::atomic<float>*, kAttractorSlotCount> attractorOrbitStabilizeParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockEnableParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockSepWeightParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockAlignWeightParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockCohWeightParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockSepRadiusParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockAlignRadiusParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockCohRadiusParams {};
+    std::array<std::atomic<float>*, kFlockGroupCount> flockMaxSpeedParams {};
 
     //==============================================================================
     // Keyframe animation timeline (Phase 2.6)
@@ -434,7 +546,8 @@ private:
     juce::var captureEmitterParameterState() const;
     bool applyEmitterParameterState (const juce::var& parametersState);
     juce::var buildCalibrationProfileState (const juce::String& profileName,
-                                            const juce::var& validationSummary) const;
+                                            const juce::var& validationSummary,
+                                            const juce::var& discoveryReconciliation = {}) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
     bool applyCalibrationProfileState (const juce::var& profileState);
     static juce::String keyframeCurveToString (KeyframeCurve curve);
@@ -526,9 +639,13 @@ private:
     juce::String cachedCalibrationEqMode         = "off";
     juce::String cachedCalibrationHrtfMode       = "default";
     juce::String cachedCalibrationSofaRef;
+    juce::String cachedCalibrationProfileSource  = "unknown";
+    juce::String cachedCalibrationHeadphoneProvenance = "unavailable";
+    juce::String cachedCalibrationVerificationProvenance = "unavailable";
     bool         cachedCalibrationRequestedSofa  = false;
     bool         cachedCalibrationTrackingEnabled = false;
     int          cachedCalibrationFirLatency      = 0;
+    std::int64_t cachedCalibrationProfileUpdatedAtUtcMs = 0;
     float        cachedExternalizationScore       = -1.0f;  // -1 = not yet available
     float        cachedFrontBackConfusionRate     = -1.0f;  // -1 = not yet available
 

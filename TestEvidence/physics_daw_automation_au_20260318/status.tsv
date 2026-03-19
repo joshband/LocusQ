@@ -1,0 +1,7 @@
+phase	AU-pluginval
+timestamp	2026-03-18T23:29:19Z
+probe	pluginval --strictness-level 5
+format	AudioUnit
+result	PASS
+test_sections	19
+failed	0

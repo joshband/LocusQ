@@ -2,7 +2,7 @@ Title: LocusQ Research Index
 Document Type: Research Index
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-02-28
+Last Modified Date: 2026-03-18
 
 # LocusQ Research Index
 
@@ -12,8 +12,32 @@ Keep active research discoverable while moving superseded historical research to
 ## Active Research (Current)
 1. `Documentation/research/locusq-headtracking-binaural-methodology-2026-02-28.md` (canonical methodology for BL-053..BL-060 execution planning)
 2. `Documentation/research/Claude Research - Building a head-tracked spatial audio DAW plugin with AirPods Pro 2.md`
-3. `Documentation/research/LocusQ Headphone Calibration Research Outline.md`
-4. `Documentation/research/Headphone Calibration for 3D Audio.pdf`
+3. `Documentation/research/ChatGPT Research - AirPods.md`
+4. `Documentation/research/Gemini Research - Advanced Methodologies for Real-Time Spatial Audio Visualization and Head Tracking Integration.pdf`
+
+## Active Research Prototype Surface
+
+`Documentation/Calibration POC/` is retained as a curated research prototype surface, not as product status authority.
+
+Use it for:
+- offline SOFA/HRTF prototype tooling,
+- a small retained set of calibration-reference notes,
+- prototype evaluation scripts consumed by BL-060 style evidence lanes.
+
+Do not use it for:
+- backlog status authority,
+- release-readiness claims,
+- implementation truth that should live in ADRs, runbooks, or canonical specs.
+
+Retained active references:
+- `Documentation/Calibration POC/LocusQ Headphone Calibration Research Outline.md`
+- `Documentation/Calibration POC/HRTF and Personalized Headphone Calibration.md`
+- `Documentation/Calibration POC/locusq_spatial_audio_spec.md`
+- `Documentation/Calibration POC/Headphone Calibration for 3D Audio.pdf`
+- `Documentation/Calibration POC/locusq_spatial_prototype/`
+
+Exploratory duplicates were moved to:
+- `Documentation/archive/2026-03-18-doc-surface-consolidation/calibration-poc/`
 
 ## Archived Research (Legacy)
 Legacy research moved on 2026-02-25:
