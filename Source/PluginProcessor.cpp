@@ -3,6 +3,7 @@
 #include "processor_core/ProcessorParameterReaders.h"
 #include "processor_bridge/ProcessorBridgeUtilities.h"
 #include "shared_contracts/BridgeStatusContract.h"
+#include "shared_contracts/CalibrationRegistry.h"
 #include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/HeadphoneCalibrationContract.h"
 #include "shared_contracts/HeadphoneVerificationContract.h"
@@ -731,42 +732,10 @@ constexpr std::array<const char*, 4> kChoreographyPackIds
     "rise_fall"
 };
 
-constexpr std::array<const char*, 11> kCalibrationTopologyIds
-{
-    "mono",
-    "stereo",
-    "quad",
-    "surround_51",
-    "surround_71",
-    "surround_712",
-    "surround_742",
-    "binaural",
-    "ambisonic_1st",
-    "ambisonic_3rd",
-    "downmix_stereo"
-};
-
-constexpr std::array<int, 11> kCalibrationTopologyRequiredChannels
-{
-    1, 2, 4, 6, 8, 10, 13, 2, 4, 16, 2
-};
-
-constexpr std::array<const char*, 4> kCalibrationMonitoringPathIds
-{
-    "speakers",
-    "stereo_downmix",
-    "steam_binaural",
-    "virtual_binaural"
-};
-
-constexpr std::array<const char*, 5> kCalibrationDeviceProfileIds
-{
-    "generic",
-    "airpods_pro_2",
-    "airpods_pro_3",
-    "sony_wh1000xm5",
-    "custom_sofa"
-};
+constexpr auto& kCalibrationTopologyIds = locusq::shared_contracts::calibration_registry::kTopologyIds;
+constexpr auto& kCalibrationTopologyRequiredChannels = locusq::shared_contracts::calibration_registry::kTopologyRequiredChannels;
+constexpr auto& kCalibrationMonitoringPathIds = locusq::shared_contracts::calibration_registry::kMonitoringPathIds;
+constexpr auto& kCalibrationDeviceProfileIds = locusq::shared_contracts::calibration_registry::kDeviceProfileIds;
 
 constexpr std::array<const char*, 13> kRendererAuditionSignalIds
 {
@@ -2607,6 +2576,34 @@ bool LocusQAudioProcessor::copyPublishedHeadphoneDiagnosticsSnapshot (
     return false;
 }
 
+#if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+void LocusQAudioProcessor::publishBoidsHostDebugSnapshot (const BoidsHostDebugSnapshot& snapshot) noexcept
+{
+    publishedBoidsHostDebugState.seq.fetch_add (1, std::memory_order_acq_rel);
+    publishedBoidsHostDebugState.snapshot = snapshot;
+    publishedBoidsHostDebugState.seq.fetch_add (1, std::memory_order_release);
+}
+
+bool LocusQAudioProcessor::copyPublishedBoidsHostDebugSnapshot (BoidsHostDebugSnapshot& snapshot) const noexcept
+{
+    constexpr int kMaxReadAttempts = 3;
+    for (int attempt = 0; attempt < kMaxReadAttempts; ++attempt)
+    {
+        const auto seqBefore = publishedBoidsHostDebugState.seq.load (std::memory_order_acquire);
+        if ((seqBefore & 1u) != 0u)
+            continue;
+
+        snapshot = publishedBoidsHostDebugState.snapshot;
+
+        const auto seqAfter = publishedBoidsHostDebugState.seq.load (std::memory_order_acquire);
+        if (seqBefore == seqAfter && (seqAfter & 1u) == 0u)
+            return true;
+    }
+
+    return false;
+}
+#endif
+
 std::optional<double> LocusQAudioProcessor::getTransportTimeSeconds() const
 {
     if (auto* playHead = getPlayHead())
@@ -3146,6 +3143,36 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             // gainTransient bypasses freeze state - one-shot bursts always flow through
         }
     }
+
+#if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+    {
+        BoidsHostDebugSnapshot boidsDebugSnapshot;
+        boidsDebugSnapshot.sampleSeq = physicsWorker.getTickCount();
+        boidsDebugSnapshot.emitterSlot = activeEmitterSlot;
+        boidsDebugSnapshot.flockGroupIndex = flockGroupIndex;
+        boidsDebugSnapshot.activeEmitterCount = sceneGraph.getActiveEmitterCount();
+        boidsDebugSnapshot.physicsEnabled = physicsEnabled;
+        boidsDebugSnapshot.coordinatedWorkerActive = coordinatedWorkerActive;
+        boidsDebugSnapshot.boidsEnabledForEmitter = boidsEnabledForEmitter;
+        boidsDebugSnapshot.workerSlotActive = physicsWorker.isSlotActive (activeEmitterSlot);
+        boidsDebugSnapshot.workerBoidsActive = boidsSystem.isInActiveGroup (activeEmitterSlot);
+        boidsDebugSnapshot.workerBoidsDensity = boidsSystem.getFlockDensity (activeEmitterSlot);
+
+        if (activeEmitterSlot >= 0 && activeEmitterSlot < kPhysicsDAWSlotCount)
+        {
+            const auto bridgeValues = physicsDspBridge.read (activeEmitterSlot);
+            boidsDebugSnapshot.bridgeSpreadMod = bridgeValues.spreadMod;
+            boidsDebugSnapshot.apvtsSpreadMirror = physSpreadModParams[activeEmitterSlot] != nullptr
+                ? physSpreadModParams[activeEmitterSlot]->load()
+                : 0.0f;
+            boidsDebugSnapshot.pendingHostSpread = physSpreadHostPending[activeEmitterSlot].load (std::memory_order_acquire);
+            boidsDebugSnapshot.publishedHostSpread = physSpreadHostPublished[activeEmitterSlot].load (std::memory_order_acquire);
+        }
+
+        boidsDebugSnapshot.sceneSpread = data.spread;
+        publishBoidsHostDebugSnapshot (boidsDebugSnapshot);
+    }
+#endif
 
     data.colorIndex = static_cast<uint8_t> (juce::jlimit (
         0,

@@ -14,7 +14,7 @@ GATE_SCRIPT="$ROOT_DIR/qa/reaper/reascripts/LocusQ_PhysicsBoidsSpread_Gate.lua"
 REQUIRE_LOCUSQ="${LQ_REAPER_REQUIRE_LOCUSQ:-1}"
 GATE_TIMEOUT_SEC="${LQ_GATE_TIMEOUT_SEC:-120}"
 GATE_POLL_INTERVAL_SEC="${LQ_GATE_POLL_INTERVAL_SEC:-2}"
-PROJECT_FILE="${LQ_REAPER_PROJECT_FILE:-$HOME/Documents/REAPER Media/LocusQ-Loaded-Track1.RPP}"
+SOURCE_PROJECT_FILE="${LQ_REAPER_SOURCE_PROJECT_FILE:-$HOME/Documents/REAPER Media/LocusQ-Loaded-Track1.RPP}"
 BLACKHOLE_DEVICE="${LQ_BLACKHOLE_DEVICE:-BlackHole 16ch}"
 REAPER_INI="$HOME/Library/Application Support/REAPER/reaper.ini"
 
@@ -28,8 +28,8 @@ if [[ ! -f "$GATE_SCRIPT" ]]; then
   exit 2
 fi
 
-if [[ -n "$PROJECT_FILE" && ! -f "$PROJECT_FILE" ]]; then
-  echo "ERROR: Project file not found: $PROJECT_FILE" >&2
+if [[ -n "$SOURCE_PROJECT_FILE" && ! -f "$SOURCE_PROJECT_FILE" ]]; then
+  echo "ERROR: Source project file not found: $SOURCE_PROJECT_FILE" >&2
   exit 2
 fi
 
@@ -45,6 +45,9 @@ LOG_FILE="$RUN_DIR/run.log"
 GATE_STATUS="$RUN_DIR/status.json"
 REAPER_LOG="$RUN_DIR/reaper.log"
 INI_BAK="$RUN_DIR/reaper.ini.gate_bak"
+PROJECT_FILE="$RUN_DIR/LocusQ-DuplicateLive-SourceCopy.RPP"
+
+cp "$SOURCE_PROJECT_FILE" "$PROJECT_FILE"
 
 cp "$REAPER_INI" "$INI_BAK"
 
@@ -73,6 +76,7 @@ PYSCRIPT
 echo "timestamp=$TIMESTAMP" | tee "$LOG_FILE"
 echo "reaper_bin=$REAPER_BIN" | tee -a "$LOG_FILE"
 echo "gate_script=$GATE_SCRIPT" | tee -a "$LOG_FILE"
+echo "source_project_file=$SOURCE_PROJECT_FILE" | tee -a "$LOG_FILE"
 echo "project_file=$PROJECT_FILE" | tee -a "$LOG_FILE"
 echo "blackhole_device=$BLACKHOLE_DEVICE" | tee -a "$LOG_FILE"
 echo "run_dir=$RUN_DIR" | tee -a "$LOG_FILE"
@@ -90,6 +94,7 @@ echo "launching reaper: ${REAPER_CMD[*]}" | tee -a "$LOG_FILE"
 
 env \
   LQ_REAPER_NONINTERACTIVE=1 \
+  LQ_REAPER_RESET_TRACKS=1 \
   LQ_REAPER_STATUS_JSON="$GATE_STATUS" \
   LQ_REAPER_REQUIRE_LOCUSQ="$REQUIRE_LOCUSQ" \
   LQ_REAPER_PROJECT_FILE="$PROJECT_FILE" \

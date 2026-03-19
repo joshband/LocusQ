@@ -2523,10 +2523,11 @@
           <div class="cal-card" id="cal-card-setup">
             <div class="section">
               <div class="section-header" id="cal-setup-title">Speaker Setup</div>
-              <div class="control-row" id="cal-topology-row"><span class="control-label">Topology</span><select class="dropdown wide" id="cal-topology"><option>Mono</option><option selected>Stereo</option><option>Quad</option><option>5.1</option><option>7.1</option><option>7.1.2</option><option>7.4.2 / Atmos-style</option><option>Binaural / Headphone</option><option>Ambisonic 1st Order</option><option>Ambisonic 3rd Order</option><option>Multichannel -&gt; Stereo Downmix</option></select></div>
-              <div class="control-row" id="cal-monitoring-row"><span class="control-label">Monitoring Path</span><select class="dropdown wide" id="cal-monitoring-path"><option selected>Speakers</option><option>Stereo Downmix</option><option>Steam Binaural</option><option>Virtual Binaural</option></select></div>
-              <div class="control-row" id="cal-device-profile-row"><span class="control-label" id="cal-device-profile-label">Device Profile</span><select class="dropdown wide" id="cal-device-profile"><option selected>Generic</option><option>AirPods Pro 2</option><option>AirPods Pro 3</option><option>Sony WH-1000XM5</option><option>Custom SOFA</option></select></div>
+              <div class="control-row" id="cal-topology-row"><span class="control-label">Topology</span><select class="dropdown wide" id="cal-topology"><option selected>Loading registry...</option></select></div>
+              <div class="control-row" id="cal-monitoring-row"><span class="control-label">Monitoring Path</span><select class="dropdown wide" id="cal-monitoring-path"><option selected>Loading registry...</option></select></div>
+              <div class="control-row" id="cal-device-profile-row"><span class="control-label" id="cal-device-profile-label">Device Profile</span><select class="dropdown wide" id="cal-device-profile"><option selected>Loading registry...</option></select></div>
               <div class="control-row" id="cal-mic-row"><span class="control-label">Mic Channel</span><select class="dropdown" id="cal-mic"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
+              <div class="cal-profile-status" id="cal-setup-registry-note">Registry-backed setup guidance will appear here when the active topology and monitoring path are known.</div>
             </div>
           </div>
 
@@ -2632,6 +2633,8 @@
             <div class="section">
               <div class="section-header" id="cal-headphone-status-title">Headphone Device Status</div>
               <div class="control-row"><span class="control-label">Active Device</span><span class="control-value mono" id="cal-hp-device">Not connected</span></div>
+              <div class="control-row"><span class="control-label">Device Family</span><span class="control-value mono" id="cal-hp-family">Unknown</span></div>
+              <div class="control-row"><span class="control-label">Profile Capabilities</span><span class="control-value mono" id="cal-hp-capabilities">Unknown</span></div>
               <div class="control-row"><span class="control-label">Data Source</span><span class="control-value mono" id="cal-hp-source">Unknown</span></div>
               <div class="control-row"><span class="control-label">Data Trust</span><span class="control-value mono" id="cal-hp-provenance">Unavailable</span></div>
               <div class="control-row"><span class="control-label">Freshness</span><span class="control-value mono" id="cal-hp-freshness">No freshness guarantee</span></div>
@@ -2641,6 +2644,7 @@
               <div class="control-row"><span class="control-label">FIR Latency</span><span class="control-value mono" id="cal-hp-fir-latency">0 smp</span></div>
               <div class="control-row"><span class="control-label">Externalization</span><span class="control-value mono" id="cal-hp-extern-score">--</span></div>
               <div class="control-row"><span class="control-label">Front/Back Score</span><span class="control-value mono" id="cal-hp-frontback-score">--</span></div>
+              <div class="cal-profile-status" id="cal-hp-capability-note">Registry capability notes will appear here when the active device family is known.</div>
             </div>
           </div>
         </div>

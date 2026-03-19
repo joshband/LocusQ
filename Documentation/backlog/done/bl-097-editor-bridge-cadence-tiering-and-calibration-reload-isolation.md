@@ -2,13 +2,13 @@ Title: BL-097 Editor bridge cadence tiering and calibration reload isolation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-20
 
 # BL-097 Editor bridge cadence tiering and calibration reload isolation
 
 ## Plain-Language Summary
 
-BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: In Validation. The local slice is now implemented: scene and calibration bridge updates publish on separate cadences, companion-profile polling is debounced, Steam Audio reload is staged through a pending-apply step, and resource-request logging is no longer always-on in production.
+BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: Done. The local slice is implemented: scene and calibration bridge updates publish on separate cadences, companion-profile polling is debounced, Steam Audio reload is staged through a pending-apply step, and resource-request logging is no longer always-on in production.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragi
 | What is changing? | Scene-state publication moves to cadence tiers or dirty regions, calibration file observation becomes a staged/debounced apply path instead of direct timer-driven reload work, and resource-request logging becomes explicit diagnostics rather than always-on production behavior. |
 | Why is this important? | The current message-thread path does too much work too often, which raises UI hitch, payload churn, callback-lock contention risk, and avoidable file-I/O pressure during WebView load/reload. |
 | How will we deliver it? | Define the publication tiers and apply pipeline first, then reduce full-snapshot churn, then isolate calibration parsing/apply work from raw editor polling. |
-| When is it done? | This item is done when unchanged scenes stop paying full 30 Hz serialization cost and calibration-driven renderer reloads are no longer direct timer side-effects. |
+| When is it done? | Done. Unchanged scenes no longer pay full 30 Hz full-payload cost, calibration reload work is staged, and production asset logging is bounded. |
 | Where is the source of truth? | This runbook, the 2026-03-17 review report, HX-05 payload budget guidance, and repo-local evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index

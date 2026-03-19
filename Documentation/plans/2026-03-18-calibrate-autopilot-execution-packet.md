@@ -235,7 +235,7 @@ Truthfulness dependencies:
 
 Future automation lanes to add:
 - `qa-bl102-discovery-graph-mac.sh`
-- `qa-bl103-topology-registry-mac.sh`
+- `qa-bl103-calibration-registry-mac.sh`
 - `qa-bl104-headphone-personalization-flow-mac.sh`
 - `qa-bl105-calibration-analysis-reports-mac.sh`
 

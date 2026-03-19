@@ -123,7 +123,27 @@ public:
     LocusQMode getCurrentMode() const;
     int getEmitterSlotId() const { return emitterSlotId; }
 #if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+    struct BoidsHostDebugSnapshot
+    {
+        std::uint64_t sampleSeq = 0;
+        int emitterSlot = -1;
+        int flockGroupIndex = -1;
+        int activeEmitterCount = 0;
+        bool physicsEnabled = false;
+        bool coordinatedWorkerActive = false;
+        bool boidsEnabledForEmitter = false;
+        bool workerSlotActive = false;
+        bool workerBoidsActive = false;
+        float workerBoidsDensity = 0.0f;
+        float bridgeSpreadMod = 0.0f;
+        float apvtsSpreadMirror = 0.0f;
+        float pendingHostSpread = 0.0f;
+        float publishedHostSpread = 0.0f;
+        float sceneSpread = 0.0f;
+    };
+
     PerEmitterDSPValues getPhysicsDspValuesForTesting (int slot) const { return physicsDspBridge.read (slot); }
+    bool copyPublishedBoidsHostDebugSnapshot (BoidsHostDebugSnapshot& snapshot) const noexcept;
 #endif
     void primeRendererStateFromCurrentParameters();
 
@@ -263,6 +283,14 @@ private:
         std::atomic<std::uint32_t> finiteGuardrailsLimiterClampCount { 0 };
         std::atomic<std::uint32_t> finiteGuardrailsHardClampCount { 0 };
     };
+
+#if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+    struct PublishedBoidsHostDebugState
+    {
+        std::atomic<std::uint32_t> seq { 0 };
+        BoidsHostDebugSnapshot snapshot;
+    };
+#endif
 
     struct ClapRuntimeDiagnostics
     {
@@ -613,8 +641,14 @@ private:
                                              const PublishedHeadphoneVerificationDiagnostics& verification) noexcept;
     bool copyPublishedHeadphoneDiagnosticsSnapshot (PublishedHeadphoneCalibrationDiagnostics& calibration,
                                                     PublishedHeadphoneVerificationDiagnostics& verification) const noexcept;
+#if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+    void publishBoidsHostDebugSnapshot (const BoidsHostDebugSnapshot& snapshot) noexcept;
+#endif
     mutable PublishedConfidenceMaskingDiagnostics publishedConfidenceMaskingDiagnostics;
     mutable PublishedFiniteGuardrailDiagnostics publishedFiniteGuardrailDiagnostics;
+#if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
+    mutable PublishedBoidsHostDebugState publishedBoidsHostDebugState;
+#endif
 
     //==============================================================================
     // Sample rate tracking

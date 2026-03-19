@@ -174,22 +174,8 @@ bool LocusQAudioProcessor::startCalibrationFromUI (const juce::var& options)
     setIntegerParameterValueNotifyingHost ("rend_headphone_mode", headphoneModeIndex);
     setIntegerParameterValueNotifyingHost ("rend_headphone_profile", deviceProfile);
 
-    int rendererSpatialProfileIndex = 0;
-    switch (topologyProfile)
-    {
-        case 0: rendererSpatialProfileIndex = 1; break; // stereo safe
-        case 1: rendererSpatialProfileIndex = 1; break; // stereo 2.0
-        case 2: rendererSpatialProfileIndex = 2; break; // quad 4.0
-        case 3: rendererSpatialProfileIndex = 3; break; // surround 5.2.1
-        case 4: rendererSpatialProfileIndex = 4; break; // surround 7.2.1 (7.1)
-        case 5: rendererSpatialProfileIndex = 4; break; // surround 7.2.1 (7.1.2 alias target)
-        case 6: rendererSpatialProfileIndex = 5; break; // surround 7.4.2
-        case 7: rendererSpatialProfileIndex = 9; break; // binaural virtual 3D stereo
-        case 8: rendererSpatialProfileIndex = 6; break; // ambisonic FOA
-        case 9: rendererSpatialProfileIndex = 7; break; // ambisonic HOA
-        case 10: rendererSpatialProfileIndex = 9; break; // downmix target
-        default: break;
-    }
+    const int rendererSpatialProfileIndex =
+        locusq::shared_contracts::calibration_registry::topologyRendererSpatialProfileIndexForIndex (topologyProfile);
     setIntegerParameterValueNotifyingHost ("rend_spatial_profile", rendererSpatialProfileIndex);
 
     if (auto* param = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("cal_mic_channel")))
@@ -645,6 +631,108 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     juce::var statusVar (new juce::DynamicObject());
     auto* status = statusVar.getDynamicObject();
 
+    auto buildCalibrationRegistryCatalog = []() -> juce::var
+    {
+        juce::var catalogVar (new juce::DynamicObject());
+        auto* catalog = catalogVar.getDynamicObject();
+        if (catalog == nullptr)
+            return catalogVar;
+
+        juce::Array<juce::var> topologies;
+        topologies.ensureStorageAllocated (static_cast<int> (locusq::shared_contracts::calibration_registry::kTopologyCatalog.size()));
+        for (const auto& entry : locusq::shared_contracts::calibration_registry::kTopologyCatalog)
+        {
+            juce::var topologyVar (new juce::DynamicObject());
+            if (auto* topology = topologyVar.getDynamicObject())
+            {
+                topology->setProperty ("id", entry.id);
+                topology->setProperty ("label", entry.label);
+                topology->setProperty ("shortLabel", entry.shortLabel);
+                topology->setProperty ("requiredChannels", entry.requiredChannels);
+                topology->setProperty ("headphoneTarget", entry.headphoneTarget);
+                topology->setProperty ("rendererSpatialProfileIndex", entry.rendererSpatialProfileIndex);
+                topology->setProperty ("legacySpeakerConfigIndex", entry.legacySpeakerConfigIndex);
+                topology->setProperty ("capabilityNote", entry.capabilityNote);
+
+                juce::Array<juce::var> previewSpeakerPositions;
+                for (int previewIndex = 0; previewIndex < entry.previewSpeakerPositionCount; ++previewIndex)
+                {
+                    const auto base = previewIndex * 3;
+                    juce::var previewVar (new juce::DynamicObject());
+                    if (auto* preview = previewVar.getDynamicObject())
+                    {
+                        preview->setProperty ("x", entry.previewSpeakerPositions[static_cast<size_t> (base)]);
+                        preview->setProperty ("y", entry.previewSpeakerPositions[static_cast<size_t> (base + 1)]);
+                        preview->setProperty ("z", entry.previewSpeakerPositions[static_cast<size_t> (base + 2)]);
+                    }
+                    previewSpeakerPositions.add (previewVar);
+                }
+                topology->setProperty ("previewSpeakerPositions", previewSpeakerPositions);
+
+                juce::Array<juce::var> roleLabels;
+                for (int roleIndex = 0; roleIndex < entry.roleLabelCount; ++roleIndex)
+                    roleLabels.add (entry.roleLabels[static_cast<size_t> (roleIndex)]);
+                topology->setProperty ("roleLabels", roleLabels);
+
+                juce::Array<juce::var> aliases;
+                for (int aliasIndex = 0; aliasIndex < entry.aliasCount; ++aliasIndex)
+                    aliases.add (entry.aliases[static_cast<size_t> (aliasIndex)]);
+                topology->setProperty ("aliases", aliases);
+            }
+            topologies.add (topologyVar);
+        }
+        catalog->setProperty ("topologies", topologies);
+
+        juce::Array<juce::var> monitoringPaths;
+        monitoringPaths.ensureStorageAllocated (static_cast<int> (locusq::shared_contracts::calibration_registry::kMonitoringPathCatalog.size()));
+        for (const auto& entry : locusq::shared_contracts::calibration_registry::kMonitoringPathCatalog)
+        {
+            juce::var pathVar (new juce::DynamicObject());
+            if (auto* path = pathVar.getDynamicObject())
+            {
+                path->setProperty ("id", entry.id);
+                path->setProperty ("label", entry.label);
+                path->setProperty ("targetId", entry.targetId);
+                path->setProperty ("headphoneTarget", entry.headphoneTarget);
+                path->setProperty ("capabilityNote", entry.capabilityNote);
+
+                juce::Array<juce::var> aliases;
+                for (int aliasIndex = 0; aliasIndex < entry.aliasCount; ++aliasIndex)
+                    aliases.add (entry.aliases[static_cast<size_t> (aliasIndex)]);
+                path->setProperty ("aliases", aliases);
+            }
+            monitoringPaths.add (pathVar);
+        }
+        catalog->setProperty ("monitoringPaths", monitoringPaths);
+
+        juce::Array<juce::var> deviceProfiles;
+        deviceProfiles.ensureStorageAllocated (static_cast<int> (locusq::shared_contracts::calibration_registry::kDeviceProfileCatalog.size()));
+        for (const auto& entry : locusq::shared_contracts::calibration_registry::kDeviceProfileCatalog)
+        {
+            juce::var profileVar (new juce::DynamicObject());
+            if (auto* profile = profileVar.getDynamicObject())
+            {
+                profile->setProperty ("id", entry.id);
+                profile->setProperty ("label", entry.label);
+                profile->setProperty ("family", entry.family);
+                profile->setProperty ("familyLabel", entry.familyLabel);
+                profile->setProperty ("companionProfileCapable", entry.companionProfileCapable);
+                profile->setProperty ("personalizedHrtfCapable", entry.personalizedHrtfCapable);
+                profile->setProperty ("headTrackingCapable", entry.headTrackingCapable);
+                profile->setProperty ("capabilityNote", entry.capabilityNote);
+
+                juce::Array<juce::var> aliases;
+                for (int aliasIndex = 0; aliasIndex < entry.aliasCount; ++aliasIndex)
+                    aliases.add (entry.aliases[static_cast<size_t> (aliasIndex)]);
+                profile->setProperty ("aliases", aliases);
+            }
+            deviceProfiles.add (profileVar);
+        }
+        catalog->setProperty ("deviceProfiles", deviceProfiles);
+        catalog->setProperty ("version", "bl103-waveA-v1");
+        return catalogVar;
+    };
+
     status->setProperty ("state", toCalibrationStateString (state));
     status->setProperty ("stateCode", static_cast<int> (state));
     status->setProperty ("running", running);
@@ -668,6 +756,7 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
     status->setProperty ("monitoringPath", calibrationMonitoringPathIdForIndex (monitoringPath));
     status->setProperty ("deviceProfileIndex", deviceProfile);
     status->setProperty ("deviceProfile", calibrationDeviceProfileIdForIndex (deviceProfile));
+    status->setProperty ("registryCatalog", buildCalibrationRegistryCatalog());
     status->setProperty ("headphoneCalibrationSchema", locusq::shared_contracts::headphone_calibration::kSchemaV1);
     status->setProperty ("headphoneCalibrationRequested", headphoneCalibration.requested);
     status->setProperty ("headphoneCalibrationActive", headphoneCalibration.active);
@@ -938,9 +1027,12 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                                                  const juce::StringArray& labels,
                                                  int mappedAssignments,
                                                  auto&& outputChannelResolver,
+                                                 auto&& preferredOutputResolver,
                                                  const juce::String& provenance,
                                                  const juce::String& detail,
-                                                 const juce::String& blockedReason)
+                                                 const juce::String& blockedReason,
+                                                 const juce::String& preferredOutputProvenance,
+                                                 const juce::String& preferredOutputDetail)
             {
                 if (candidate == nullptr)
                     return;
@@ -955,6 +1047,7 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                     {
                         const bool isMapped = index < mappedAssignments;
                         const int outputChannel = isMapped ? juce::jmax (0, outputChannelResolver (index)) : 0;
+                        const int preferredOutputChannel = juce::jmax (0, preferredOutputResolver (labels[index], index));
                         assignment->setProperty ("label", labels[index]);
                         assignment->setProperty ("outputChannel", outputChannel);
                         assignment->setProperty ("mapped", isMapped && outputChannel > 0);
@@ -962,6 +1055,9 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                         assignment->setProperty ("blockedReason", ! isMapped || outputChannel <= 0 ? blockedReason : juce::String());
                         assignment->setProperty ("provenance", provenance);
                         assignment->setProperty ("detail", detail);
+                        assignment->setProperty ("preferredOutputChannel", preferredOutputChannel);
+                        assignment->setProperty ("preferredOutputProvenance", preferredOutputChannel > 0 ? preferredOutputProvenance : juce::String());
+                        assignment->setProperty ("preferredOutputDetail", preferredOutputChannel > 0 ? preferredOutputDetail : juce::String());
                     }
                     if (const auto* assignment = assignmentVar.getDynamicObject())
                         if (static_cast<bool> (assignment->getProperty ("mapped")))
@@ -980,6 +1076,21 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
 
             const auto snapshotOutputLayout = outputLayoutToString (getBusesLayout().getMainOutputChannelSet());
             const auto snapshotOutputRoles = splitLayoutTokens (snapshotOutputLayout);
+            const auto findPreferredOutputChannelForRole = [&] (const juce::String& roleLabel, int fallbackIndex)
+            {
+                const auto normalizedRole = roleLabel.trim().toLowerCase();
+                for (int roleIndex = 0; roleIndex < snapshotOutputRoles.size(); ++roleIndex)
+                {
+                    if (snapshotOutputRoles[roleIndex].trim().toLowerCase() == normalizedRole)
+                        return roleIndex + 1;
+                }
+
+                if (snapshotOutputChannels > 0 && fallbackIndex >= 0 && fallbackIndex < snapshotOutputChannels)
+                    return fallbackIndex + 1;
+                if (layoutOutputChannels > 0 && fallbackIndex >= 0 && fallbackIndex < layoutOutputChannels)
+                    return fallbackIndex + 1;
+                return 0;
+            };
             const auto autoTopologyId = calibrationTopologyIdForIndex (lastAutoDetectedTopologyProfile);
             const auto selectedTopologyId = calibrationTopologyIdForIndex (topologyProfile);
             const bool hostOutputVisible = snapshotOutputChannels > 0 || layoutOutputChannels > 0;
@@ -1031,11 +1142,19 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                                                 {
                                                     return juce::jlimit (1, 8, currentAutoRouting[static_cast<size_t> (index)]);
                                                 },
+                                                [&] (const juce::String& roleLabel, int index)
+                                                {
+                                                    return findPreferredOutputChannelForRole (roleLabel, index);
+                                                },
                                                 limitedCandidate ? "generic" : "inferred",
                                                 limitedCandidate
                                                     ? "Role guesses preserve the current topology selection but collapse onto the limited writable calibration map."
                                                     : "Role guesses preserve the current topology selection and follow the best writable calibration map.",
-                                                "limited_writable_map");
+                                                "limited_writable_map",
+                                                snapshotOutputRoles.isEmpty() ? "inferred" : "detected",
+                                                snapshotOutputRoles.isEmpty()
+                                                    ? "Preferred reroute target is inferred from host output width order."
+                                                    : "Preferred reroute target comes from the host output role layout.");
                         }
                         else if (id == "host_main_output")
                         {
@@ -1049,11 +1168,16 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                                                 fallbackOutputLabels,
                                                 channelCount,
                                                 [] (int index) { return index + 1; },
+                                                [] (const juce::String&, int index) { return index + 1; },
                                                 snapshotOutputRoles.isEmpty() ? "generic" : "detected",
                                                 snapshotOutputRoles.isEmpty()
                                                     ? "Host output layout did not expose named speaker roles, so generic output channels are shown."
                                                     : "Role guesses come directly from the host output layout token order.",
-                                                "host_output_unmapped");
+                                                "host_output_unmapped",
+                                                snapshotOutputRoles.isEmpty() ? "inferred" : "detected",
+                                                snapshotOutputRoles.isEmpty()
+                                                    ? "Preferred reroute target follows generic host output ordering."
+                                                    : "Preferred reroute target comes directly from the host output layout.");
                         }
                     }
                     outputCandidates.add (candidateVar);
@@ -1246,11 +1370,19 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                                         {
                                             return juce::jlimit (1, 8, currentAutoRouting[static_cast<size_t> (index)]);
                                         },
+                                        [&] (const juce::String& roleLabel, int index)
+                                        {
+                                            return findPreferredOutputChannelForRole (roleLabel, index);
+                                        },
                                         getRequiredCalibrationChannelsForTopologyIndex (lastAutoDetectedTopologyProfile) > writableChannels ? "generic" : "inferred",
                                         getRequiredCalibrationChannelsForTopologyIndex (lastAutoDetectedTopologyProfile) > writableChannels
                                             ? "Role guesses follow the best topology candidate, but the current writable calibration map cannot represent every role yet."
                                             : "Role guesses are inferred from the best topology candidate and current writable calibration map.",
-                                        "limited_writable_map");
+                                        "limited_writable_map",
+                                        snapshotOutputRoles.isEmpty() ? "inferred" : "detected",
+                                        snapshotOutputRoles.isEmpty()
+                                            ? "Preferred reroute target is inferred from host output width order."
+                                            : "Preferred reroute target comes from the host output role layout.");
                 }
                 topologyCandidates.add (autoCandidateVar);
             }
@@ -1281,11 +1413,19 @@ juce::var LocusQAudioProcessor::getCalibrationStatus() const
                                         {
                                             return juce::jlimit (1, 8, currentAutoRouting[static_cast<size_t> (index)]);
                                         },
+                                        [&] (const juce::String& roleLabel, int index)
+                                        {
+                                            return findPreferredOutputChannelForRole (roleLabel, index);
+                                        },
                                         requiredChannels > writableChannels ? "generic" : "inferred",
                                         requiredChannels > writableChannels
                                             ? "Role guesses preserve the manual topology selection, but the current writable calibration map cannot represent every role yet."
                                             : "Role guesses preserve the manual topology selection and follow the best writable calibration map.",
-                                        "limited_writable_map");
+                                        "limited_writable_map",
+                                        snapshotOutputRoles.isEmpty() ? "inferred" : "detected",
+                                        snapshotOutputRoles.isEmpty()
+                                            ? "Preferred reroute target is inferred from host output width order."
+                                            : "Preferred reroute target comes from the host output role layout.");
                 }
                 topologyCandidates.add (selectedCandidateVar);
             }

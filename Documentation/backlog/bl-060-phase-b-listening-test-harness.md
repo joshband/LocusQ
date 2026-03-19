@@ -2,7 +2,7 @@ Title: BL-060 Phase B Listening Test Harness + Evaluation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-28
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-20
 
 # BL-060 Phase B Listening Test Harness + Evaluation
 
@@ -79,6 +79,15 @@ QA harness script: `scripts/qa-bl060-phase-b-listening-test-mac.sh`.
 Analysis script: `scripts/bl060-analyze-results.py`.
 Evidence schema: `TestEvidence/bl060_*/status.tsv`.
 
+## Participant Ops Snapshot (2026-03-19)
+
+- operator packet: `TestEvidence/bl060_participant_ops_packet_20260319T204346Z/`
+- session checklist: `TestEvidence/bl060_participant_ops_packet_20260319T204346Z/participant_checklist.md`
+- participant matrix: `TestEvidence/bl060_participant_ops_packet_20260319T204346Z/session_matrix.tsv`
+- current blocker: real participant sessions are still missing; harness and analysis tooling are not the blocker
+- bootstrap script: `scripts/bl060-bootstrap-real-session-packet.py`
+- seeded real-session packet: `TestEvidence/bl060_phase_b_listening_real_20260319T205201Z/`
+
 Required analysis artifacts:
 - `trial_log.csv`
 - `metrics_summary.tsv`
@@ -117,4 +126,3 @@ Canonical lifecycle/evidence rules are defined in:
 - `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
 
 This runbook should list only item-specific exceptions or additions.
-

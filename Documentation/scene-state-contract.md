@@ -510,6 +510,7 @@ Additional additive fields may include:
 - input candidate metadata such as `channelCount`, `selectedMicChannel`, `selectedMicVisible`, `recommendedMicChannel`, `reasonCodes`, `confirmationPrompt`, `blockedBy`
 - topology candidate metadata such as `requiredChannels`, `selected`
 - summary fields such as `outputHeadline`, `inputHeadline`, `topologyHeadline`, `ambiguityHeadline`
+- registry metadata such as `registryCatalog.topologies[]`, `registryCatalog.monitoringPaths[]`, and `registryCatalog.deviceProfiles[]` with additive labels, aliases, capability notes, role-label templates, preview geometry, device-family labels, and broad capability flags
 
 Rules:
 
@@ -517,6 +518,8 @@ Rules:
 29. `confidence` is a ranking aid, not proof of measurement or detection strength.
 30. `needsConfirmation == true` must not rewrite `descriptor.source` or `descriptor.provenance`; ambiguity remains an overlay.
 31. Missing `discoveryGraph` must preserve legacy CALIBRATE behavior with no contract break.
+32. Missing `registryCatalog` must preserve legacy CALIBRATE label and routing behavior with no contract break.
+33. `registryCatalog` is descriptive metadata only; it must not silently mutate active runtime selection unless the user takes an explicit apply action.
 
 ### Audition Resolver Examples
 

@@ -136,8 +136,9 @@ inline juce::File getUiSelfTestResultFile()
             return juce::File (configuredPath);
     }
 
-    return juce::File::getSpecialLocation (juce::File::tempDirectory)
-        .getChildFile ("locusq_incremental_ui_selftest_result.json");
+    auto diagnosticsDirectory = locusq::processor_bridge::getUserDataSubdirectory ("Diagnostics");
+    diagnosticsDirectory.createDirectory();
+    return diagnosticsDirectory.getChildFile ("locusq_incremental_ui_selftest_result.json");
 }
 
 inline juce::File getCalibrationProfileDialogDirectory()
@@ -336,9 +337,12 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                                          }
 
                                          completion (audioProcessor.exportCalibrationProfileFromUI (
-                                             cloneOptionsWithProperty (optionsFromUi,
-                                                                       "destinationPath",
-                                                                       chosenFile.getFullPathName())));
+                                             cloneOptionsWithProperty (
+                                                 cloneOptionsWithProperty (optionsFromUi,
+                                                                           "destinationPath",
+                                                                           chosenFile.getFullPathName()),
+                                                 "nativeDialogApproved",
+                                                 true)));
                                      });
                              })
         .withNativeFunction ("locusqImportCalibrationProfile",
@@ -365,9 +369,12 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                                          }
 
                                          completion (audioProcessor.importCalibrationProfileFromUI (
-                                             cloneOptionsWithProperty (optionsFromUi,
-                                                                       "sourcePath",
-                                                                       chosenFile.getFullPathName())));
+                                             cloneOptionsWithProperty (
+                                                 cloneOptionsWithProperty (optionsFromUi,
+                                                                           "sourcePath",
+                                                                           chosenFile.getFullPathName()),
+                                                 "nativeDialogApproved",
+                                                 true)));
                                      });
                              })
         .withNativeFunction ("locusqGetKeyframeTimeline",

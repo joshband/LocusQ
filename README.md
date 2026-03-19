@@ -2,7 +2,7 @@ Title: LocusQ
 Document Type: Repository README
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-20
 
 # LocusQ
 
@@ -41,9 +41,9 @@ This mode model is described in more detail in [ARCHITECTURE.md](ARCHITECTURE.md
 ## Backlog Snapshot
 
 - Canonical backlog authority lives in [Documentation/backlog/index.md](Documentation/backlog/index.md).
-- Latest done-transition sync on `2026-03-05`: `BL-036`, `BL-037`, and `BL-041` were archived under [Documentation/backlog/done/](Documentation/backlog/done).
-- Current hardening follow-on: `BL-078` is open to carry processor-side finite-output enforcement, additive diagnostics, and runtime fuzz/soak replay that were intentionally split out of `BL-036`.
-- Current promotion blocker: `BL-032` remains `Done-candidate` because `BL032-G-001` still fails on the `2026-03-05` hold recheck (`Source/PluginProcessor.cpp` measured `3653 > 3600` while the RT audit stayed green).
+- Latest done-transition sync on `2026-03-20`: `BL-032` source modularization is now `Done` — PluginProcessor/PluginEditor decomposed into `processor_core`, `processor_bridge`, `shared_contracts`, `editor_shell`, `editor_webview` modules; guardrails 13/13 PASS (PluginProcessor.cpp 3248 ≤ 3600, RT audit non_allowlisted=0).
+- `BL-078` carries processor-side finite-output enforcement and additive diagnostics split from `BL-036` (Done).
+- `BL-036`, `BL-037`, and `BL-041` were previously archived under [Documentation/backlog/done/](Documentation/backlog/done) on `2026-03-05`.
 
 For the full decision trail, start with [TestEvidence/build-summary.md](TestEvidence/build-summary.md) and [TestEvidence/validation-trend.md](TestEvidence/validation-trend.md).
 

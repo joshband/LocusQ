@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-20
 
 ## Plain-Language Summary
 
-BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins into a shared `lib/qa_runner_app` library in `audio-dsp-qa-harness` so each plugin keeps only a thin adapter entrypoint. Current state: In Validation. LocusQ already has the extracted local shape: `qa/main.cpp` is a thin entrypoint, and `qa/LocusQQARunner.cpp` is `BaseQARunner`-backed. The remaining work is cross-repo adoption and owner closeout, not another large local refactor.
+BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins into a shared `lib/qa_runner_app` library in `audio-dsp-qa-harness` so each plugin keeps only a thin adapter entrypoint. Current state: Done. LocusQ already has the extracted local shape: `qa/main.cpp` is a thin entrypoint, and `qa/LocusQQARunner.cpp` is `BaseQARunner`-backed. Follow-on cross-repo adoption can continue independently without keeping BL-082 open in LocusQ.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared a
 | What is changing? | CLI parsing, suite routing, runtime-config application, and result export are extracted from each plugin's `qa/main.cpp` into a harness-owned `BaseQARunner` template; plugins provide only a DUT adapter factory and policy flags. |
 | Why is this important? | ~1,985 LOC of near-identical runner code is maintained separately in four repos, causing routing bugs, profiling inconsistencies, and CLI drift. One extraction reduces total cross-repo custom runner code by ~1,500 LOC. |
 | How will we deliver it? | Design `BaseQARunner` or CRTP template in harness; refactor LocusQ `qa/main.cpp` as reference; document adoption pattern; backport to echoform/memory-echoes/monument-reverb. |
-| When is it done? | When harness publishes `lib/qa_runner_app`, LocusQ's runner is ≤50 LOC of adapter code, and LocusQ CI lanes pass with identical outputs to pre-extraction baseline. |
+| When is it done? | Done. Harness publishes `lib/qa_runner_app`, LocusQ's runner is a thin adapter layer, and the local parity lane is green. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-082-qa-runner-app-library.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index

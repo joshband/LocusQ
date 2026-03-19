@@ -2,7 +2,7 @@ Title: BL-032 Source Modularization of PluginProcessor/PluginEditor
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-02-25
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-20
 
 # BL-032: Source Modularization of PluginProcessor/PluginEditor
 
@@ -39,13 +39,13 @@ Use visuals only when they materially improve understanding.
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | **Done** (2026-03-19: guardrails 13/13 PASS; PluginProcessor.cpp 3395 ≤ 3600; RT audit non_allowlisted=0; module split live) |
+| Status | **Done** (2026-03-20: guardrails 13/13 PASS; PluginProcessor.cpp 3248 ≤ 3600; RT audit non_allowlisted=0; module split live) |
 | Owner Track | Track F - Hardening |
 | Depends On | — |
 | Blocks | — |
 | Active Blocker | — |
-| Latest Evidence | `TestEvidence/bl032_structure_guardrails_20260319T210942Z/status.tsv` |
-| Latest Guardrail Result | `PASS` (`Source/PluginProcessor.cpp` `3395 <= 3600`; 13/13 guards) |
+| Latest Evidence | `TestEvidence/bl032_structure_guardrails_20260319T211527Z/status.tsv` |
+| Latest Guardrail Result | `PASS` (`Source/PluginProcessor.cpp` `3248 <= 3600`; 13/13 guards) |
 | Latest RT Result | `PASS` (`non_allowlisted=0`) |
 | Default Replay Tier | T1 |
 | Heavy Lane Budget | Standard |
@@ -126,8 +126,8 @@ Reduce maintenance and merge risk by decomposing `Source/PluginProcessor.cpp` an
 - [x] Required module directories exist.
 - [x] RT audit is green on the latest hold packet.
 - [x] `BL032-G-001` line-count guardrail passes on the current branch.
-- [ ] Final owner promotion packet is refreshed after the guardrail passes.
-- [ ] `Documentation/backlog/index.md`, `status.json`, and summary exports are synced in the same closeout change set.
+- [x] Final owner promotion packet is refreshed after the guardrail passes.
+- [x] `Documentation/backlog/index.md`, `status.json`, and summary exports are synced in the same closeout change set.
 
 ## Archive Note
 

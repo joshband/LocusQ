@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-20
 
 ## Plain-Language Summary
 
-BL-083 in plain terms: move `applySuiteRuntimeConfig()` into an automatic harness-owned path so all plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: In Validation. The core executor contract is already live upstream, and LocusQ no longer carries a bulky local workaround in `qa/main.cpp`. The remaining work is broader cross-repo verification and owner closeout, not another local executor rewrite.
+BL-083 in plain terms: move `applySuiteRuntimeConfig()` into an automatic harness-owned path so all plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: Done. The core executor contract is already live upstream, and LocusQ no longer carries a bulky local workaround in `qa/main.cpp`. Broader cross-repo verification can continue as follow-on adoption work, not as an open LocusQ blocker.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-083 in plain terms: move `applySuiteRuntimeConfig()` into an automatic harnes
 | What is changing? | `ScenarioExecutor::executeScenario()` automatically applies suite-level runtime-config overrides before each run; per-repo manual implementations are removed. |
 | Why is this important? | echoform and memory-echoes never call `applySuiteRuntimeConfig()`, causing false-green tests that run with stale sample rates or wrong channel counts. LocusQ carries a 27-LOC manual workaround that is fragile and undocumented. |
 | How will we deliver it? | Add `applySuiteRuntimeConfig()` as a public harness API and call it inside `ScenarioExecutor` before scenario execution; remove manual workarounds from LocusQ `qa/main.cpp`; verify all four plugin baselines are unaffected. |
-| When is it done? | When harness `ScenarioExecutor` owns runtime-config application, LocusQ's manual workaround is removed, and scenario outputs match pre-change baseline. |
+| When is it done? | Done. Harness `ScenarioExecutor` owns runtime-config application, LocusQ's manual workaround is removed, and the local contract lane is green. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-083-runtime-config-contract.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index

@@ -103,8 +103,9 @@ void LocusQAudioProcessorEditor::timerCallback()
         {
             runtimeProbeDone = true;
 
-            const auto probeFile = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                .getChildFile ("locusq_webview_runtime_probe.json");
+            auto diagnosticsDirectory = locusq::processor_bridge::getUserDataSubdirectory ("Diagnostics");
+            diagnosticsDirectory.createDirectory();
+            const auto probeFile = diagnosticsDirectory.getChildFile ("locusq_webview_runtime_probe.json");
 
             const auto probeScript = locusq::editor_shell::getRuntimeProbeScript();
 

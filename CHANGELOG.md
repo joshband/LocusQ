@@ -16,7 +16,7 @@ Operational snapshot:
 
 ### Changed
 
-- BL-032: Source modularization complete — PluginProcessor/PluginEditor decomposed into `processor_core`, `processor_bridge`, `shared_contracts`, `editor_shell`, `editor_webview` modules; guardrails 13/13 PASS (PluginProcessor.cpp 3395 ≤ 3600 LOC, RT audit non_allowlisted=0)
+- BL-032: Source modularization complete — PluginProcessor/PluginEditor decomposed into `processor_core`, `processor_bridge`, `shared_contracts`, `editor_shell`, `editor_webview` modules; LOC guardrails and RT audit green (PluginProcessor.cpp 3248 ≤ 3600 LOC, RT audit non_allowlisted=0)
 
 ### Added
 

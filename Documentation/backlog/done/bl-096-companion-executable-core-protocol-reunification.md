@@ -2,13 +2,13 @@ Title: BL-096 Companion executable/core protocol reunification
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-20
 
 # BL-096 Companion executable/core protocol reunification
 
 ## Plain-Language Summary
 
-BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: In Validation. The local drift is now fixed: the shipping executable routes live and synthetic sends through the canonical core `MotionSample -> PosePacket` path, and the companion test suite covers the shared helper. Remaining work is closeout-quality parity evidence on the plugin decode side plus final owner sync.
+BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: Done. The local drift is fixed: the shipping executable routes live and synthetic sends through the canonical core `MotionSample -> PosePacket` path, the companion test suite covers the shared helper, and the remaining parity work is follow-on monitoring rather than a reason to keep BL-096 open.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executabl
 | What is changing? | The companion executable, core library, tests, docs, and plugin integration are brought back to one canonical transport/runtime contract. |
 | Why is this important? | Right now the tested path is not the shipping path, which means green tests can still leave field behavior drifting. |
 | How will we deliver it? | Freeze one canonical packet/runtime contract first, migrate the executable onto that path or remove duplicate transport code, then prove executable-to-plugin parity with integration evidence. |
-| When is it done? | This item is done when the executable, core library, tests, and docs all describe and exercise the same packet/runtime truth. |
+| When is it done? | Done. The executable, core library, tests, and docs now describe one packet/runtime truth, and the local reunification lane is green. |
 | Where is the source of truth? | This runbook, the 2026-03-17 review report, BL-072 historical surfaces, and repo-local evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index

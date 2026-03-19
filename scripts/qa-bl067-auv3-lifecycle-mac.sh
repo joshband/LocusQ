@@ -541,6 +541,34 @@ run_single() {
     record "$status_tsv" "BL067-R4-calibration_dialog_defaults" "FAIL" "Calibration import/export dialogs still default to desktop-style documents paths" "$webview_runtime_file"
   fi
 
+  if rg -q 'nativeDialogApproved' "$webview_runtime_file" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "external_path_native_approval\tsource_scan\tPASS\tnone\tNative import/export bridge tags chooser-approved external paths explicitly"
+    record "$status_tsv" "BL067-R5-external_path_native_approval" "PASS" "Native import/export bridge tags chooser-approved external paths explicitly" "$webview_runtime_file"
+  else
+    append_row "$sandbox_runtime_access_tsv" "external_path_native_approval\tsource_scan\tFAIL\tmissing_native_path_approval\tNative import/export bridge is missing explicit chooser approval tagging"
+    record "$status_tsv" "BL067-R5-external_path_native_approval" "FAIL" "Native import/export bridge is missing explicit chooser approval tagging" "$webview_runtime_file"
+  fi
+
+  if rg -q 'optionHasTruthyFlag' "$calibration_bridge_file" 2>/dev/null \
+     && rg -q 'requires native dialog approval' "$calibration_bridge_file" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "external_path_boundary_guard\tsource_scan\tPASS\tnone\tProcessor-side calibration import/export rejects external paths unless native dialog approval is present"
+    record "$status_tsv" "BL067-R6-external_path_boundary_guard" "PASS" "Processor-side calibration import/export rejects external paths unless native dialog approval is present" "$calibration_bridge_file"
+  else
+    append_row "$sandbox_runtime_access_tsv" "external_path_boundary_guard\tsource_scan\tFAIL\tmissing_external_path_guard\tProcessor-side calibration import/export still trusts external paths without explicit approval"
+    record "$status_tsv" "BL067-R6-external_path_boundary_guard" "FAIL" "Processor-side calibration import/export still trusts external paths without explicit approval" "$calibration_bridge_file"
+  fi
+
+  if rg -q 'locusq_incremental_ui_selftest_result.json' "$webview_runtime_file" 2>/dev/null \
+     && rg -q 'getUserDataSubdirectory \("Diagnostics"\)' "$webview_runtime_file" 2>/dev/null \
+     && rg -q 'locusq_webview_runtime_probe.json' "$ROOT_DIR/Source/PluginEditor.cpp" 2>/dev/null \
+     && rg -q 'getUserDataSubdirectory \("Diagnostics"\)' "$ROOT_DIR/Source/PluginEditor.cpp" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "diagnostics_directory_contract\tsource_scan\tPASS\tnone\tWebView self-test and runtime probe artifacts use the LocusQ diagnostics directory instead of temp storage"
+    record "$status_tsv" "BL067-R7-diagnostics_directory_contract" "PASS" "WebView self-test and runtime probe artifacts use the LocusQ diagnostics directory instead of temp storage" "$ROOT_DIR/Source/PluginEditor.cpp"
+  else
+    append_row "$sandbox_runtime_access_tsv" "diagnostics_directory_contract\tsource_scan\tFAIL\ttemp_diagnostics_path_detected\tWebView self-test or runtime probe artifacts still depend on temp-directory storage"
+    record "$status_tsv" "BL067-R7-diagnostics_directory_contract" "FAIL" "WebView self-test or runtime probe artifacts still depend on temp-directory storage" "$ROOT_DIR/Source/PluginEditor.cpp"
+  fi
+
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H1-logic_pro" "Logic Pro" "/Applications/Logic Pro.app"
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H2-garageband" "GarageBand" "/Applications/GarageBand.app"
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H3-mainstage" "MainStage" "/Applications/MainStage.app"

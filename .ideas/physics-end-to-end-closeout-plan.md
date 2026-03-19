@@ -167,3 +167,17 @@ The following are out of scope for this closeout. Do not implement until Tier A 
 ## Validation Status
 
 `not tested` — plan only. Status updates per phase as evidence is logged.
+
+## Planning Amendment (2026-03-19)
+
+The original `Phase C2 / Lane H2` boids host lane was scoped as part of the general physics closeout. Current evidence shows that was too broad. The controlled processor/debug lanes are green, while the REAPER duplicate-track host lane remains specifically blocked. Treat that as a **proposed net-new backlog intake** rather than burying it inside the umbrella closeout plan.
+
+Current routing recommendation:
+- keep `C2` as the umbrella host-proof goal
+- continue `H1` and transient-style host lanes under the main closeout
+- split the boids-specific REAPER multi-instance blocker into the draft intake at `Documentation/plans/2026-03-19-physics-host-visible-coordinated-lanes-intake-draft.md`
+
+Why:
+- it has a distinct replay-cost profile
+- it likely needs temporary diagnostics and possibly screenshot/robotic evidence
+- no currently open canonical BL cleanly owns this boundary

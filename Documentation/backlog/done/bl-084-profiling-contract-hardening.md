@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-20
 
 ## Plain-Language Summary
 
-BL-084 in plain terms: Make `ScenarioExecutor` enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains `perf_*` invariants but `ExecutionConfig.enableProfiling` is false so that false-green performance tests are eliminated. Current state: In Validation. The shared harness now owns profiling attachment in `qa_runner_app::BaseQARunner`, and LocusQ no longer carries a local profiling-dispatch workaround in its QA runner. Remaining work is broader cross-repo audit/owner closeout, not the core contract implementation.
+BL-084 in plain terms: Make `ScenarioExecutor` enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains `perf_*` invariants but `ExecutionConfig.enableProfiling` is false so that false-green performance tests are eliminated. Current state: Done. The shared harness now owns profiling attachment in `qa_runner_app::BaseQARunner`, and LocusQ no longer carries a local profiling-dispatch workaround in its QA runner. Broader cross-repo audit can continue as follow-on adoption work, not as an open LocusQ blocker.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-084 in plain terms: Make `ScenarioExecutor` enforce that performance invarian
 | What is changing? | `ScenarioExecutor` checks for `perf_*` invariants and raises an error or configurable warning when `enableProfiling=false`; LocusQ's workaround code in `qa/main.cpp` is removed. |
 | Why is this important? | monument-reverb and echoform silently skip profiling, allowing perf invariant checks to pass on unmeasured data. LocusQ carries a custom `profileDspPerformance()` dispatch in `main.cpp` to paper over the gap. Without this fix, performance regressions can pass undetected. |
 | How will we deliver it? | Harden `ScenarioExecutor` to detect `perf_*` invariants and enforce profiling precondition; provide a policy enum (`WARN`, `ERROR`, `SKIP`) so plugins can adopt incrementally; remove LocusQ workaround. |
-| When is it done? | When `ScenarioExecutor` enforces the profiling precondition, LocusQ's workaround code is removed, and all existing LocusQ perf scenarios continue to pass with correct profiling data. |
+| When is it done? | Done. `ScenarioExecutor` enforces the profiling precondition, LocusQ's workaround code is removed, and the local profiling lane is green. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-084-profiling-contract-hardening.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index

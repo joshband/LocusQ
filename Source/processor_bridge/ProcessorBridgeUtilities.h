@@ -205,10 +205,39 @@ inline juce::File getUserDataSubdirectory (const juce::String& leafName)
     return getLocusQUserDataDirectory().getChildFile (leafName);
 }
 
+inline bool isWithinDirectory (const juce::File& candidate, const juce::File& directory)
+{
+    return candidate == directory || candidate.isAChildOf (directory);
+}
+
+inline bool optionHasTruthyFlag (const juce::var& options,
+                                 std::initializer_list<const char*> propertyNames)
+{
+    if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
+    {
+        for (const auto* propertyName : propertyNames)
+        {
+            if (! optionsObject->hasProperty (propertyName))
+                continue;
+
+            const auto value = optionsObject->getProperty (propertyName);
+            if (value.isBool() && static_cast<bool> (value))
+                return true;
+
+            const auto text = value.toString().trim().toLowerCase();
+            if (text == "1" || text == "true" || text == "yes" || text == "on")
+                return true;
+        }
+    }
+
+    return false;
+}
+
 template <typename SanitiseNameFn>
 inline juce::File resolveNamedJsonFileFromOptions (const juce::var& options,
                                                    const juce::File& baseDirectory,
-                                                   SanitiseNameFn&& sanitiseName)
+                                                   SanitiseNameFn&& sanitiseName,
+                                                   bool allowExplicitPath = true)
 {
     juce::String payloadPath;
     juce::String payloadName;
@@ -224,7 +253,7 @@ inline juce::File resolveNamedJsonFileFromOptions (const juce::var& options,
             payloadFileName = optionsObject->getProperty ("file").toString().trim();
     }
 
-    if (payloadPath.isNotEmpty())
+    if (allowExplicitPath && payloadPath.isNotEmpty())
         return juce::File (payloadPath);
 
     if (payloadFileName.isNotEmpty())

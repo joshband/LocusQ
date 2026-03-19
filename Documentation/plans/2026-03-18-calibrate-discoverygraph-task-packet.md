@@ -150,7 +150,7 @@ Primary deliverables:
 
 Likely write set:
 - `scripts/qa-bl102-discovery-graph-mac.sh`
-- `scripts/qa-bl103-topology-registry-mac.sh`
+- `scripts/qa-bl103-calibration-registry-mac.sh`
 - `Source/ui/src/index.ts`
 - `status.json`
 
@@ -267,8 +267,8 @@ Truth checks:
 New checks to add:
 - `./scripts/qa-bl102-discovery-graph-mac.sh --contract-only`
 - `./scripts/qa-bl102-discovery-graph-mac.sh --execute --runs 3`
-- `./scripts/qa-bl103-topology-registry-mac.sh --contract-only`
-- `./scripts/qa-bl103-topology-registry-mac.sh --execute --runs 3`
+- `./scripts/qa-bl103-calibration-registry-mac.sh --contract-only`
+- `./scripts/qa-bl103-calibration-registry-mac.sh --execute --runs 3`
 
 ## Exit Criteria
 

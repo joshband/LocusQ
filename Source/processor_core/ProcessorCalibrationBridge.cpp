@@ -1,5 +1,6 @@
 #include "../PluginProcessor.h"
 #include "../processor_bridge/ProcessorBridgeUtilities.h"
+#include "../shared_contracts/CalibrationRegistry.h"
 #include "ProcessorConstants.h"
 #include "ProcessorParameterReaders.h"
 
@@ -11,42 +12,10 @@ namespace
 {
 constexpr const char* kCalibrationProfileSchemaV1 = "locusq-calibration-profile-v1";
 
-constexpr std::array<const char*, 11> kCalibrationTopologyIds
-{
-    "mono",
-    "stereo",
-    "quad",
-    "surround_51",
-    "surround_71",
-    "surround_712",
-    "surround_742",
-    "binaural",
-    "ambisonic_1st",
-    "ambisonic_3rd",
-    "downmix_stereo"
-};
-
-constexpr std::array<int, 11> kCalibrationTopologyRequiredChannels
-{
-    1, 2, 4, 6, 8, 10, 13, 2, 4, 16, 2
-};
-
-constexpr std::array<const char*, 4> kCalibrationMonitoringPathIds
-{
-    "speakers",
-    "stereo_downmix",
-    "steam_binaural",
-    "virtual_binaural"
-};
-
-constexpr std::array<const char*, 5> kCalibrationDeviceProfileIds
-{
-    "generic",
-    "airpods_pro_2",
-    "airpods_pro_3",
-    "sony_wh1000xm5",
-    "custom_sofa"
-};
+constexpr auto& kCalibrationTopologyIds = locusq::shared_contracts::calibration_registry::kTopologyIds;
+constexpr auto& kCalibrationTopologyRequiredChannels = locusq::shared_contracts::calibration_registry::kTopologyRequiredChannels;
+constexpr auto& kCalibrationMonitoringPathIds = locusq::shared_contracts::calibration_registry::kMonitoringPathIds;
+constexpr auto& kCalibrationDeviceProfileIds = locusq::shared_contracts::calibration_registry::kDeviceProfileIds;
 
 constexpr std::array<const char*, 11> kCalibrationProfileParameterIds
 {
@@ -102,8 +71,7 @@ int calibrationRequiredChannelsForTopologyIndex (int index)
 
 int legacySpeakerConfigForTopologyIndex (int topologyIndex)
 {
-    const auto requiredChannels = calibrationRequiredChannelsForTopologyIndex (topologyIndex);
-    return requiredChannels <= 2 ? 1 : 0;
+    return locusq::shared_contracts::calibration_registry::topologyLegacySpeakerConfigForIndex (topologyIndex);
 }
 
 int topologyProfileForOutputChannels (int outputChannels)
@@ -627,7 +595,8 @@ juce::File LocusQAudioProcessor::resolveCalibrationProfileFileFromOptions (const
     return locusq::processor_bridge::resolveNamedJsonFileFromOptions (
         options,
         getCalibrationProfileDirectory(),
-        [] (const juce::String& name) { return locusq::processor_bridge::sanitisePresetName (name); });
+        [] (const juce::String& name) { return locusq::processor_bridge::sanitisePresetName (name); },
+        false);
 }
 
 std::array<int, SpatialRenderer::NUM_SPEAKERS> LocusQAudioProcessor::getCurrentCalibrationSpeakerRouting() const
@@ -952,22 +921,8 @@ bool LocusQAudioProcessor::applyCalibrationProfileState (const juce::var& profil
     setIntegerParameterValueNotifyingHost ("rend_headphone_mode", (monitoringPath == 2 || monitoringPath == 3) ? 1 : 0);
     setIntegerParameterValueNotifyingHost ("rend_headphone_profile", deviceProfile);
 
-    int rendererSpatialProfileIndex = 0;
-    switch (topologyIndex)
-    {
-        case 0: rendererSpatialProfileIndex = 1; break;
-        case 1: rendererSpatialProfileIndex = 1; break;
-        case 2: rendererSpatialProfileIndex = 2; break;
-        case 3: rendererSpatialProfileIndex = 3; break;
-        case 4: rendererSpatialProfileIndex = 4; break;
-        case 5: rendererSpatialProfileIndex = 4; break;
-        case 6: rendererSpatialProfileIndex = 5; break;
-        case 7: rendererSpatialProfileIndex = 9; break;
-        case 8: rendererSpatialProfileIndex = 6; break;
-        case 9: rendererSpatialProfileIndex = 7; break;
-        case 10: rendererSpatialProfileIndex = 9; break;
-        default: break;
-    }
+    const int rendererSpatialProfileIndex =
+        locusq::shared_contracts::calibration_registry::topologyRendererSpatialProfileIndexForIndex (topologyIndex);
     setIntegerParameterValueNotifyingHost ("rend_spatial_profile", rendererSpatialProfileIndex);
 
     return true;
@@ -1329,6 +1284,10 @@ juce::var LocusQAudioProcessor::exportCalibrationProfileFromUI (const juce::var&
 {
     const auto sourceFile = resolveCalibrationProfileFileFromOptions (options);
     const auto destinationPath = getOptionString (options, { "destinationPath", "exportPath" });
+    const auto profileDirectory = getCalibrationProfileDirectory();
+    const bool nativeDialogApproved = locusq::processor_bridge::optionHasTruthyFlag (
+        options,
+        { "nativeDialogApproved", "nativeFileDialogApproved" });
 
     juce::var response (new juce::DynamicObject());
     auto* result = response.getDynamicObject();
@@ -1368,6 +1327,15 @@ juce::var LocusQAudioProcessor::exportCalibrationProfileFromUI (const juce::var&
     if (! destinationFile.hasFileExtension ("json"))
         destinationFile = destinationFile.withFileExtension (".json");
 
+    if (! nativeDialogApproved
+        && ! locusq::processor_bridge::isWithinDirectory (destinationFile, profileDirectory))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message",
+                             "Calibration profile export outside the LocusQ profile directory requires native dialog approval.");
+        return response;
+    }
+
     const auto parentDirectory = destinationFile.getParentDirectory();
     if (parentDirectory != juce::File() && ! parentDirectory.exists() && ! parentDirectory.createDirectory())
     {
@@ -1398,6 +1366,10 @@ juce::var LocusQAudioProcessor::importCalibrationProfileFromUI (const juce::var&
 {
     const auto sourcePath = getOptionString (options, { "sourcePath", "path", "importPath" });
     const auto sourceFile = juce::File (sourcePath);
+    const auto profileDirectory = getCalibrationProfileDirectory();
+    const bool nativeDialogApproved = locusq::processor_bridge::optionHasTruthyFlag (
+        options,
+        { "nativeDialogApproved", "nativeFileDialogApproved" });
 
     juce::var response (new juce::DynamicObject());
     auto* result = response.getDynamicObject();
@@ -1413,6 +1385,15 @@ juce::var LocusQAudioProcessor::importCalibrationProfileFromUI (const juce::var&
     {
         result->setProperty ("ok", false);
         result->setProperty ("message", "Calibration profile import file not found.");
+        return response;
+    }
+
+    if (! nativeDialogApproved
+        && ! locusq::processor_bridge::isWithinDirectory (sourceFile, profileDirectory))
+    {
+        result->setProperty ("ok", false);
+        result->setProperty ("message",
+                             "Calibration profile import outside the LocusQ profile directory requires native dialog approval.");
         return response;
     }
 
@@ -1433,7 +1414,6 @@ juce::var LocusQAudioProcessor::importCalibrationProfileFromUI (const juce::var&
 
     ensureCalibrationProfileIntentSummary (*payload, sourceFile.getFileNameWithoutExtension());
 
-    auto profileDirectory = getCalibrationProfileDirectory();
     if (! profileDirectory.exists() && ! profileDirectory.createDirectory())
     {
         result->setProperty ("ok", false);

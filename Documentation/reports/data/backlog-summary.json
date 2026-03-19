@@ -619,7 +619,7 @@
       "id": "BL-032",
       "title": "BL-032: Source Modularization of PluginProcessor/PluginEditor",
       "state_bucket": "done",
-      "status": "**Done** (2026-03-19: guardrails 13/13 PASS; PluginProcessor.cpp 3395 \u2264 3600; RT audit non_allowlisted=0; module split live)",
+      "status": "**Done** (2026-03-20: guardrails 13/13 PASS; PluginProcessor.cpp 3248 \u2264 3600; RT audit non_allowlisted=0; module split live)",
       "priority": "P2",
       "track": "",
       "depends_on": "\u2014",
