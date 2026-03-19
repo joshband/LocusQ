@@ -219,6 +219,29 @@ local function tick()
       end
     end
 
+    -- Dump first 30 param names for diagnostics if any are missed
+    if not all_found then
+      local n_params = reaper.TrackFX_GetNumParams(locusq_track, locusq_fxidx)
+      local sample = {}
+      for i = 0, math.min(n_params - 1, 29) do
+        local _, nm = reaper.TrackFX_GetParamName(locusq_track, locusq_fxidx, i, "")
+        sample[#sample + 1] = i .. "=" .. nm
+      end
+      write_status({
+        status             = "fail",
+        error              = "One or more required params not found — check display name registration",
+        error_code         = "param_registration_fail",
+        gate_a_param_reg   = false,
+        gate_b_live_output = false,
+        gate_c_no_jump     = false,
+        gate_d_live_resume = false,
+        param_count        = n_params,
+        param_sample       = table.concat(sample, "|"),
+      })
+      reaper.defer(function() reaper.Main_OnCommand(40004, 0) end)
+      return
+    end
+
     gate_a_pass = all_found
     if not all_found then
       fatal("One or more required params not found — check display name registration",
@@ -328,9 +351,12 @@ end
 log("LocusQ PhysicsDAWAuto Gate starting")
 log("STATUS_JSON=" .. STATUS_JSON)
 
--- If no project is loaded, create a minimal one with a track for LocusQ.
--- The gate expects LocusQ to already be loaded as an FX; if not it uses
--- auto-bootstrap mode where it creates the track/FX setup first.
+-- Always create a fresh project so we don't pick up stale FX from a
+-- previously opened project.  Command 40023 = "New project".
+reaper.Main_OnCommand(40023, 0)
+log("New project created")
+
+-- Create a minimal project with a track for the freshly-installed LocusQ.
 if reaper.CountTracks(0) == 0 then
   log("No tracks found — auto-inserting LocusQ track")
   reaper.InsertTrackAtIndex(0, true)
