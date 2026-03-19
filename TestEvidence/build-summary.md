@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-19T01:30:00Z
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -20,6 +20,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T01:30:00Z | BL-098 local validation lane restored | PASS | `Done-candidate` |
 | 2026-03-18T23:20:00Z | BL-080 and BL-089..BL-094 closeout sync | PASS | `Done` |
 | 2026-03-18T22:19:06Z | BL-089 closeout draft | PASS | `DRAFT_READY` |
 | 2026-03-18T22:18:40Z | BL-080 closeout draft | PASS | `DRAFT_READY` |
@@ -48,6 +49,12 @@ Last Modified Date: 2026-03-19
 - 2026-03-19 runtime probe isolation hardening: the boids, interaction, and boundary lanes now disable unrelated coordinated features explicitly, and the boids lane captures its baseline before scoring convergence so replay numbers reflect the intended feature slice.
 - 2026-03-19 attractor and spring+turbulence probe hardening: those lanes now follow the same contract too, with explicit unrelated-feature disablement for attractor and baseline capture before live scoring for attractor, spring, and turbulence.
 - 2026-03-19 attractor settle-contract refinement: the attractor runtime lane now runs as an explicitly damped scenario and scores a settle window instead of a single terminal sample, removing the replay-to-replay end-state drift that showed up in the first repeated check.
+- 2026-03-19 boundary and collision settle-contract refinement: those lanes now score bounded replay windows too, so rebound/containment behavior is validated by settle-window mean/range instead of one terminal sample.
+- 2026-03-19 boids and interaction settle-contract refinement: the remaining multi-emitter behavior lanes now score bounded settle windows too, so cohesion/repulsion scenes are replay-stable by the same contract as attractor, boundary, and collision.
+- 2026-03-19 spring+turbulence settle-contract refinement: the final continuously excited lane now also scores bounded late-window behavior, so every major coordinated runtime probe in this suite uses a replay-stable windowed contract.
+- 2026-03-19 implementation-plan framing sync: the repo now explicitly distinguishes broad production-path coordinated-runtime validation from the still-incomplete full Tier A migration and final host-level completion claim.
+- 2026-03-19 remaining-work sync: the implementation plan now carries an explicit four-part blocker list for any future "Tier A complete" claim: finish authority migration, publish a control-by-control proof matrix, add a host-level acceptance lane, and reconcile the spec/traceability surface.
+- 2026-03-19 proof-matrix sync: the implementation plan now classifies Tier A families as `runtime-proven`, `partially proven`, or `not yet production-proven`, which makes the remaining gaps concrete instead of generic.
 - New runtime lane: `locusq_physics_runtime_collision_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_boids_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_interaction_probe` PASS.
@@ -56,20 +63,26 @@ Last Modified Date: 2026-03-19
   - `emitterIds=(0,1)`
   - `initialDistance=0.900`
   - `minDistance=0.636`
-  - `finalDistance=3.686`
+  - `finalDistance=3.724`
   - `maxAbsX=2.046`
   - `maxCollisionEnergy=0.0136`
+  - `settleMeanDistance=3.802`
+  - `settleRangeDistance=0.159`
   - `finalVx=(0.568,-0.568)`
 - Boids lane result:
   - `emitterIds=(0,1)`
   - `initialDistance=2.992`
   - `minDistance=2.410`
+  - `settleMeanDistance=2.464`
+  - `settleRangeDistance=0.096`
   - `maxSpread=1.000`
 - Interaction lane result:
   - `emitterIds=(0,1)`
-  - `initialDistance=0.726`
-  - `maxDistance=3.162`
-  - `maxAbsForce=5.664`
+  - `initialDistance=0.732`
+  - `maxDistance=3.186`
+  - `maxAbsForce=5.641`
+  - `settleMeanDistance=3.030`
+  - `settleRangeDistance=0.289`
   - `finalVx=(-1.798,1.667)`
 - Spring+turbulence lane result:
   - `spring baselineSpread=0.000`
@@ -77,14 +90,18 @@ Last Modified Date: 2026-03-19
   - `spring maxSpread=0.300`
   - `spring maxAbsForceX=6.000`
   - `spring maxDisp=1.919`
+  - `spring settleMeanX≈0.03`
+  - `spring settleRangeX=0.300`
   - `turbulence baselineSpread=0.000`
   - `turbulence baselineAbsForceX=0.000`
   - `turbulence maxSpread=0.090`
   - `turbulence maxAbsForceX=1.179`
   - `turbulence maxDisp=1.202`
+  - `turbulence settleMeanX≈0.107`
+  - `turbulence settleRangeX=0.020`
 - Regression guard:
   - `locusq_physics_runtime_attractor_probe` PASS with `baselineCaptured=1`, `baselineMaxSpread=0.000`, `attractorMaxSpread=0.880`, `attractorMaxDisp=2.235`, `settleMeanX~2.00`, `settleRangeX=0.605`
-  - `locusq_physics_runtime_boundary_probe` PASS with `maxX=3.000`, `collisionMask=1`
+  - `locusq_physics_runtime_boundary_probe` PASS with `maxX=3.000`, `collisionMask=1`, `settleMeanX≈1.36`, `settleRangeX=0.350`
   - `locusq_physics_tier_a_probe` PASS `15/15`
 - Follow-on refinement:
   - collision-only coordinated mode now activates the shared worker directly; the bounded collision lane no longer depends on a dummy attractor source to enter coordinated ownership.
@@ -96,6 +113,9 @@ Last Modified Date: 2026-03-19
   - the boids, interaction, and boundary lanes are now less ambient-state-sensitive too: each scenario explicitly disables unrelated coordinated features before replay, and boids now captures its baseline before convergence scoring begins.
   - the attractor and spring+turbulence lanes now follow that same rule, so the coordinated runtime suite has a more consistent baseline-and-isolation contract across all major feature slices.
   - repeated replay is now stronger again: spring, turbulence, and the newly-damped attractor lane all held stable bounded outputs across three reruns, with the attractor lane now evaluated by settle-window mean/range instead of a single phase-sensitive terminal sample.
+  - boundary and collision now follow that bounded-window style too, and both lanes held stable replay windows across three reruns instead of depending on raw final positions/distances.
+  - boids and interaction now follow that same bounded-window style too, so the whole coordinated runtime suite now uses replay-stable settle-window contracts instead of mixed terminal-snapshot heuristics.
+  - spring and turbulence now join that same contract too, which closes the last major gap in runtime-probe consistency across the coordinated physics suite.
 
 ## Decision-Critical Evidence Pointers
 

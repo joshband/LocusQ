@@ -200,6 +200,7 @@ if(LOCUSQ_NPM_EXECUTABLE)
     add_custom_target(locusq_webui_typecheck
         COMMAND "${LOCUSQ_NPM_EXECUTABLE}" run typecheck
         WORKING_DIRECTORY "${LOCUSQ_WEBUI_WORKSPACE}"
+        DEPENDS "${LOCUSQ_WEBUI_DEPS_STAMP}"
         COMMENT "Type-checking LocusQ WebView UI sources"
         VERBATIM
     )
@@ -1608,4 +1609,32 @@ if(BUILD_LOCUSQ_QA)
     )
 
     message(STATUS "LocusQ QA: Target 'locusq_physics_daw_automation_probe' created")
+
+    # ── ctest registration ────────────────────────────────────────────────────
+    # Register the three lightweight probes (no PluginProcessor / Steam Audio
+    # dependency) so `ctest --test-dir <build>` provides real plugin-side signal
+    # from a clean local checkout.  Heavy integration probes (bl018, runtime_*)
+    # are built by BUILD_LOCUSQ_QA but not auto-registered with ctest because
+    # they depend on runtime libraries that may not be present everywhere.
+    enable_testing()
+
+    add_test(
+        NAME locusq_physics_probe
+        COMMAND locusq_physics_probe
+    )
+    set_tests_properties(locusq_physics_probe PROPERTIES LABELS "locusq_probe")
+
+    add_test(
+        NAME locusq_physics_tier_a_probe
+        COMMAND locusq_physics_tier_a_probe
+    )
+    set_tests_properties(locusq_physics_tier_a_probe PROPERTIES LABELS "locusq_probe")
+
+    add_test(
+        NAME locusq_physics_daw_automation_probe
+        COMMAND locusq_physics_daw_automation_probe
+    )
+    set_tests_properties(locusq_physics_daw_automation_probe PROPERTIES LABELS "locusq_probe")
+
+    message(STATUS "LocusQ QA: ctest targets registered: locusq_physics_probe, locusq_physics_tier_a_probe, locusq_physics_daw_automation_probe")
 endif()
