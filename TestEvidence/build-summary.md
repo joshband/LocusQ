@@ -10,6 +10,9 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T19:19:29Z | BL-100 desktop operator runner — contract 22/22 + execute 3/3 | PASS | `Done` |
+| 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `In Validation` |
+| 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `In Validation` |
 | 2026-03-19T04:47:44Z | REAPER attractor-crossing transient host gate | PASS | `In Validation` |
 | 2026-03-19T04:36:49Z | BL-099 headphone truthfulness lane | PASS | `Done-candidate` |
 | 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
@@ -31,6 +34,8 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `In Validation` |
+| 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `In Validation` |
 | 2026-03-19T04:47:44Z | REAPER attractor-crossing transient host gate | PASS | `In Validation` |
 | 2026-03-19T04:36:49Z | BL-099 headphone truthfulness lane | PASS | `Done-candidate` |
 | 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
@@ -208,6 +213,19 @@ Last Modified Date: 2026-03-19
   - `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute`
+- BL-096:
+  - `TestEvidence/bl096_companion_runtime_reunification_20260319T045834Z/status.tsv`
+  - `TestEvidence/bl096_companion_runtime_reunification_20260319T045834Z/summary.md`
+- BL-100:
+  - `TestEvidence/bl100_desktop_operator_20260319T191929Z/status.tsv`
+  - `TestEvidence/bl100_desktop_operator_20260319T191929Z/summary.md`
+  - `UPSTREAM_HARNESS_COMMIT: 6cea7b95ad34959cd4ce5f7c86eb9bdd88565730`
+- BL-097:
+  - `TestEvidence/bl097_editor_bridge_cadence_20260319T045626Z/status.tsv`
+  - `TestEvidence/bl097_editor_bridge_cadence_20260319T045626Z/summary.md`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T045626Z.json`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T045636Z.json`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T045642Z.json`
 - Physics runtime refinement:
   - `qa/physics_runtime_orbit_probe_main.cpp`
   - `qa/physics_runtime_mass_override_probe_main.cpp`

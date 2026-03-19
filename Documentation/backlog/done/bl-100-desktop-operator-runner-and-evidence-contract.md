@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-19
 
 ## Plain-Language Summary
 
-BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can launch apps, drive mouse and keyboard actions, capture screenshots or video, and emit machine-readable evidence so plugin repos stop hand-rolling fragile UI automation scripts. Current state: Draft only; not yet indexed into the canonical backlog. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can launch apps, drive mouse and keyboard actions, capture screenshots or video, and emit machine-readable evidence so plugin repos stop hand-rolling fragile UI automation scripts. Done 2026-03-19: harness desktop operator module committed at `6cea7b95`, 50/50 ctest PASS, contract 22/22 + execute lane 3/3. Indexed into canonical backlog. For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
