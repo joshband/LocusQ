@@ -18,6 +18,7 @@ inline HeadphoneCompensationConfig makeHeadphoneCompensationConfig (
     int profileIndex,
     double currentSampleRate) noexcept
 {
+    static_cast<void> (profileIndex);
     constexpr float pi = 3.14159265358979323846f;
     constexpr float lowCutoffHz = 700.0f;
     const float sampleRate = std::max (1.0f, static_cast<float> (currentSampleRate));
@@ -27,32 +28,11 @@ inline HeadphoneCompensationConfig makeHeadphoneCompensationConfig (
         1.0f - std::exp (-2.0f * pi * lowCutoffHz / sampleRate),
         1.0e-4f,
         1.0f);
-
-    switch (profileIndex)
-    {
-        case 1: // AirPods Pro 2
-        case 2: // AirPods Pro 3
-            config.lowGain = 0.98f;
-            config.highGain = 1.03f;
-            config.crossfeed = 0.015f;
-            break;
-        case 3: // Sony WH-1000XM5
-            config.lowGain = 1.04f;
-            config.highGain = 0.97f;
-            config.crossfeed = 0.020f;
-            break;
-        case 4: // Custom SOFA
-            config.lowGain = 1.00f;
-            config.highGain = 1.00f;
-            config.crossfeed = 0.010f;
-            break;
-        case 0: // Generic
-        default:
-            config.lowGain = 1.00f;
-            config.highGain = 1.00f;
-            config.crossfeed = 0.0f;
-            break;
-    }
+    // BL-099: keep runtime compensation generic until device-specific coefficients
+    // are backed by documented measurement provenance.
+    config.lowGain = 1.00f;
+    config.highGain = 1.00f;
+    config.crossfeed = 0.0f;
 
     return config;
 }

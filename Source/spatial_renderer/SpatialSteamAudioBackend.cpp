@@ -1,4 +1,5 @@
 #include "../SpatialRenderer.h"
+#include "../processor_bridge/ProcessorBridgeUtilities.h"
 
 bool SpatialRenderer::isSteamAudioAvailable() const noexcept
 {
@@ -283,18 +284,12 @@ void SpatialRenderer::initialiseSteamAudioRuntimeIfEnabled()
         }
         else
         {
-            const auto userAppDataDir = juce::File::getSpecialLocation (
-                juce::File::SpecialLocationType::userApplicationDataDirectory);
-            const auto userHomeDir = juce::File::getSpecialLocation (
-                juce::File::SpecialLocationType::userHomeDirectory);
+            const auto userDataDir = locusq::processor_bridge::getLocusQUserDataDirectory();
 
-            const std::array<juce::File, 3> candidates
+            const std::array<juce::File, 2> candidates
             {
-                userAppDataDir.getChildFile ("LocusQ").getChildFile ("sofa").getChildFile (requestedSofaRefRelativePath),
-                userHomeDir.getChildFile ("Library").getChildFile ("Application Support")
-                    .getChildFile ("LocusQ").getChildFile ("sofa").getChildFile (requestedSofaRefRelativePath),
-                userHomeDir.getChildFile ("Library").getChildFile ("LocusQ")
-                    .getChildFile ("sofa").getChildFile (requestedSofaRefRelativePath)
+                userDataDir.getChildFile ("sofa").getChildFile (requestedSofaRefRelativePath),
+                userDataDir.getChildFile ("SOFA").getChildFile (requestedSofaRefRelativePath)
             };
 
             for (const auto& candidate : candidates)

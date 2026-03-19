@@ -329,6 +329,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             label + " Physics Gain",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
 
+        addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+            juce::ParameterID { "phys_out_transient_" + ns, 1 },
+            label + " Physics Transient",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
         addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterBool> (
             juce::ParameterID { "phys_frozen_" + ns, 1 },
             label + " Physics Freeze", false));

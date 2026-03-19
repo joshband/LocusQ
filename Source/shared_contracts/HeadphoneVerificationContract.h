@@ -26,6 +26,9 @@ inline constexpr const char* kConfidence = "confidence";
 inline constexpr const char* kVerificationStage = "verificationStage";
 inline constexpr const char* kLatencySamples = "latencySamples";
 inline constexpr const char* kVerificationScoreStatus = "verificationScoreStatus";
+inline constexpr const char* kScoreProvenance = "scoreProvenance";
+inline constexpr const char* kCompensationLabel = "compensationLabel";
+inline constexpr const char* kCompensationProvenance = "compensationProvenance";
 } // namespace fields
 
 namespace engine
@@ -65,10 +68,18 @@ inline constexpr const char* kFir = "fir";
 namespace score_status
 {
 inline constexpr const char* kUnavailable = "unavailable";
-inline constexpr const char* kInitializing = "initializing";
-inline constexpr const char* kFallback = "fallback";
-inline constexpr const char* kVerified = "verified";
+inline constexpr const char* kMeasured = "measured";
+inline constexpr const char* kEstimated = "estimated";
+inline constexpr const char* kGeneric = "generic";
 } // namespace score_status
+
+namespace provenance
+{
+inline constexpr const char* kMeasured = "measured";
+inline constexpr const char* kEstimated = "estimated";
+inline constexpr const char* kGeneric = "generic";
+inline constexpr const char* kUnavailable = "unavailable";
+} // namespace provenance
 
 inline float sanitizeScore (float rawScore, float fallback = 0.0f) noexcept
 {
@@ -196,16 +207,41 @@ inline const char* sanitizeVerificationStage (juce::String verificationStage) no
     return stage::kUnavailable;
 }
 
+inline const char* sanitizeProvenance (juce::String provenanceToken) noexcept
+{
+    provenanceToken = provenanceToken.trim().toLowerCase();
+
+    if (provenanceToken == provenance::kMeasured)
+        return provenance::kMeasured;
+    if (provenanceToken == provenance::kEstimated)
+        return provenance::kEstimated;
+    if (provenanceToken == provenance::kGeneric)
+        return provenance::kGeneric;
+    if (provenanceToken == provenance::kUnavailable)
+        return provenance::kUnavailable;
+
+    return provenance::kUnavailable;
+}
+
 inline const char* scoreStatusFromStage (juce::String verificationStage) noexcept
 {
     const auto sanitizedStage = sanitizeVerificationStage (verificationStage);
+    if (sanitizedStage == stage::kUnavailable || sanitizedStage == stage::kDisabled)
+        return score_status::kUnavailable;
 
-    if (sanitizedStage == stage::kVerified)
-        return score_status::kVerified;
-    if (sanitizedStage == stage::kFallback)
-        return score_status::kFallback;
-    if (sanitizedStage == stage::kInitializing)
-        return score_status::kInitializing;
+    return score_status::kEstimated;
+}
+
+inline const char* scoreStatusFromProvenance (juce::String provenanceToken) noexcept
+{
+    const auto sanitized = sanitizeProvenance (provenanceToken);
+
+    if (sanitized == provenance::kMeasured)
+        return score_status::kMeasured;
+    if (sanitized == provenance::kGeneric)
+        return score_status::kGeneric;
+    if (sanitized == provenance::kEstimated)
+        return score_status::kEstimated;
 
     return score_status::kUnavailable;
 }
