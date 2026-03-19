@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-086, BL-095, BL-096, BL-097, BL-098, BL-099, BL-100, BL-101 promoted to Done; active P1 blocked: BL-060, BL-067)
+Last Modified Date: 2026-03-20 (BL-082, BL-083, BL-084 promoted to Done; total 99/109 Done; active P1 blocked: BL-060, BL-067)
 
 # LocusQ Master Backlog Index
 
@@ -149,7 +149,7 @@ Immediate wave summary:
 | 34 | BL-059 | CalibrationProfile integration handoff | P0 | **Done** (Z1 owner sync 2026-03-16: execute smoke 11/11 PASS; BL-053/BL-055 deps PASS; BL-056 Done gate met; formal Done 2026-03-17) | E | BL-052, BL-053, BL-054, BL-055, BL-056, BL-057, BL-058 | BL-060 | [bl-059](done/bl-059-calibration-profile-integration-handoff.md) |
 | 35 | BL-060 | Phase B listening test harness + evaluation | P1 | In Validation (T1+T2 3/3 PASS 2026-03-17; fixture gate 45.5% ext improvement p<0.0001; blocked on ≥5 real participant sessions) | E | BL-059 | BL-061 (conditional) | [bl-060](bl-060-phase-b-listening-test-harness.md) |
 | 36 | BL-061 | HRTF interpolation + crossfade (Phase C, conditional) | P2 | Open (conditional on BL-060 gate pass) | E | BL-060 gate pass | — | [bl-061](bl-061-hrtf-interpolation-crossfade.md) |
-| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | In Validation (2026-03-19 local runtime-access contract replay PASS for profile fallback, custom SOFA fallback, and calibration dialog defaults; Apple signing and real host execution still blocked) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
+| 37 | BL-067 | AUv3 app-extension lifecycle and host validation | P1 | In Validation (2026-03-19 runtime-access contract replay PASS for profile fallback, custom SOFA fallback, calibration dialog defaults, explicit external-path guards, and diagnostics-directory defaults; Apple signing and real host execution still blocked) | A | BL-048 (Done) | — | [bl-067](bl-067-auv3-app-extension-lifecycle-and-host-validation.md) |
 | 38 | BL-068 | Temporal effects core (delay/echo/looper/frippertronics) | P1 | **Done** (owner sync Z1 2026-03-17: contract-only 10/10 PASS, execute 3/3 PASS, zero TODO rows, compile-backed execute probe clean; archive sync complete 2026-03-17) | E | BL-050, BL-055 | — | [bl-068](done/bl-068-temporal-effects-delay-echo-looper-frippertronics.md) |
 | 39 | BL-069 | RT-safe headphone preset pipeline and failure backoff | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-069](done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md) |
 | 40 | BL-070 | Coherent audio snapshot and telemetry seqlock contract | P0 | **Done** (owner T2 `5/5` + T3 `10/10` execute replay PASS; closeout sync complete) | F | BL-050 | — | [bl-070](done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md) |

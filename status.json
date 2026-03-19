@@ -5,8 +5,8 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-03-19T19:40:00Z",
-  "notes": "2026-03-19 Full P1 sweep: BL-079, BL-085, BL-086, BL-095, BL-096, BL-097, BL-098, BL-099, BL-100, BL-101 all Done. Active P1 blocked: BL-060 (real-participants), BL-067 (signing). BL-102 execute lane PASS.",
+  "last_modified": "2026-03-20",
+  "notes": "BL-082 BL-083 BL-084 Done \u2014 QA runner app library, runtime-config contract, profiling contract all closed 2026-03-20",
   "bl086_ci_composite_action_status": "done_2026-03-19_harness_commit_9bb2ec8_contract_11of11_execute_3of3",
   "bl086_ci_composite_action_harness_commit": "9bb2ec8",
   "bl086_ci_composite_action_script": "scripts/qa-bl086-ci-composite-action-mac.sh",
@@ -18,7 +18,8 @@
   "bl100_desktop_operator_result": "50/50 PASS including desktop_operator_test, desktop_operator_integration_test, qa_runner_app_test, test_suite_test",
   "bl079_validation_recheck_status": "2026-03-19_vst3_host_gate_pass_au_host_gate_pass_done",
   "bl085_validation_recheck_status": "2026-03-19_configure_build_smoke_pass_done_candidate_closeout_sync_pending",
-  "bl067_runtime_access_status": "2026-03-19_contract_pass_profile_custom_sofa_and_dialog_defaults_use_locusq_user_data_surface_host_execution_and_signing_pending",
+  "bl067_runtime_access_status": "2026-03-19_contract_pass_profile_custom_sofa_dialog_defaults_external_path_guards_and_diagnostics_defaults_use_locusq_user_data_surface_host_execution_and_signing_pending",
+  "bl067_runtime_access_artifact": "TestEvidence/bl067_runtime_access_20260319T061200Z/status.tsv",
   "phase_history": [
     {
       "phase": "ideation",
@@ -2643,7 +2644,7 @@
   "physics_attractor_spread_host_status": "pass_2026-03-19_reaper_gate_now_proves_quiet_baseline_visible_attractor_spread_and_decay",
   "physics_attractor_spread_host_validation": "cmake --build build_local --target LocusQ -j4; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-attractor-spread-gate-mac.sh",
   "physics_boids_spread_host_status": "fail_2026-03-19_reaper_dual_instance_gate_registers_clean_baseline_but_no_host_visible_spread_after_boids_enable",
-  "physics_boids_spread_host_validation": "./scripts/reaper-phys-boids-spread-gate-mac.sh; ./scripts/reaper-phys-boids-spread-gate-mac.sh",
+  "physics_boids_spread_host_validation": "./scripts/reaper-phys-boids-spread-gate-mac.sh; ./scripts/reaper-phys-boids-spread-gate-mac.sh; ./build_local/locusq_physics_runtime_boids_probe_artefacts/Release/locusq_physics_runtime_boids_probe",
   "physics_attractor_crossing_host_status": "pass_2026-03-19_reaper_gate_now_proves_quiet_baseline_visible_crossing_burst_and_decay",
   "physics_attractor_crossing_host_validation": "./scripts/reaper-phys-attractor-crossing-gate-mac.sh",
   "physics_collision_transient_runtime_status": "pass_2026-03-19_dedicated_runtime_probe_now_proves_collision_gain_scale_and_decay_shape_in_bridge_and_scene_state",
@@ -2652,5 +2653,11 @@
   "physics_collision_transient_host_validation": "./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh",
   "physics_daw_automation_build_evidence": "build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3",
   "physics_daw_automation_p0_selftest_status": "pass_2026-03-18_standalone_production_selftest",
-  "physics_daw_automation_p0_selftest_evidence": "TestEvidence/locusq_production_p0_selftest_20260318T223926Z.json"
+  "physics_daw_automation_p0_selftest_evidence": "TestEvidence/locusq_production_p0_selftest_20260318T223926Z.json",
+  "bl082_runner_app_library_status": "Done",
+  "bl082_runner_app_library_evidence": "TestEvidence/bl082_*/status.tsv \u2014 contract+execute PASS 2026-03-20",
+  "bl083_runtime_config_contract_status": "Done",
+  "bl083_runtime_config_contract_evidence": "TestEvidence/bl083_*/status.tsv \u2014 contract+execute PASS 2026-03-20",
+  "bl084_profiling_contract_status": "Done",
+  "bl084_profiling_contract_evidence": "TestEvidence/bl084_*/status.tsv \u2014 contract+execute PASS 2026-03-20"
 }
