@@ -8,48 +8,56 @@ Last Modified Date: 2026-03-18
 
 ## Purpose
 
-Define the role of `Documentation/Calibration POC/` so it stays useful without acting like a shadow product-spec or shadow backlog system.
+Keep `Documentation/Calibration POC/` as a small research-prototype surface.
+Do not let it behave like a shadow spec system.
 
 ## Classification
 
-This folder is a Tier 2 research prototype surface.
+This folder is Tier 2.
 
-It is:
-- allowed to contain exploratory notes, prototype scripts, and reference PDFs,
-- valid as supporting input for calibration and listening-methodology work,
-- intentionally non-authoritative for backlog status, release state, and implementation completion claims.
+Use it for:
+- retained calibration research notes,
+- prototype code and tools,
+- external reference material.
 
-It is not:
-- a source of backlog truth,
-- a replacement for ADRs,
-- a replacement for `Documentation/backlog/index.md`,
-- a replacement for current implementation specs under `Documentation/plans/`,
-- or a replacement for decision-grade evidence under `TestEvidence/`.
+Do not use it for:
+- backlog truth,
+- release or completion claims,
+- current implementation authority,
+- ADR replacement,
+- decision-grade evidence.
 
-## Subsections
+## Kept Active
 
-- research notes and reference writeups:
-  - `LocusQ Headphone Calibration Research Outline.md`
-  - `HRTF and Personalized Headphone Calibration.md`
-  - `LocusQ Spatial Audio Personalization Engineering Task Breakdown (Tickets, Acceptance Criteria, Sequencing).md`
-  - `LocusQ Spatial Personalization Phase-Gated Execution Plan (Hard Technical Milestones).md`
-  - `locusq_spatial_audio_spec.md`
-- prototype contracts and constraints:
-  - `Core JUCE real-time rules (non-negotiable).md`
-  - `DSP_REALTIME_SPATIAL_CONSTRAINTS.md`
-  - `DSP_SPATIAL_INVARIANTS_CONTRACT.md`
-- prototype tooling:
-  - `locusq_spatial_prototype/`
-- external reference PDF:
-  - `Headphone Calibration for 3D Audio.pdf`
+### Research References
+
+- `LocusQ Headphone Calibration Research Outline.md`
+- `HRTF and Personalized Headphone Calibration.md`
+- `locusq_spatial_audio_spec.md`
+- `Headphone Calibration for 3D Audio.pdf`
+
+### Prototype Tooling
+
+- `locusq_spatial_prototype/`
+
+## Archived On 2026-03-18
+
+The following notes were moved to:
+`Documentation/archive/2026-03-18-doc-surface-consolidation/calibration-poc/`
+
+- `Core JUCE real-time rules (non-negotiable).md`
+- `DSP_REALTIME_SPATIAL_CONSTRAINTS.md`
+- `DSP_SPATIAL_INVARIANTS_CONTRACT.md`
+- `LocusQ Spatial Audio Personalization Engineering Task Breakdown (Tickets, Acceptance Criteria, Sequencing).md`
+- `LocusQ Spatial Personalization Phase-Gated Execution Plan (Hard Technical Milestones).md`
+- `OFA HRIR loading + nearest-direction selection + binaural convolution + optional WH‑1000XM5 PEQ.md`
+
+Reason:
+These files were useful during prototype exploration, but they were unreferenced from active docs and duplicated material now better represented in plans, research docs, invariants, or archived history.
 
 ## Usage Rules
 
-1. If a prototype idea becomes implementation truth, promote it into:
-   - `Documentation/plans/`,
-   - `Documentation/invariants.md`,
-   - `Documentation/adr/`,
-   - or backlog/TestEvidence surfaces as appropriate.
-2. Keep filenames stable when scripts or evidence lanes depend on them.
-3. Do not store large raw datasets or zip bundles here.
-4. Archive superseded notes once their content has been distilled into canonical specs or ADRs.
+1. Promote real implementation truth into `Documentation/plans/`, `Documentation/adr/`, `Documentation/invariants.md`, backlog docs, or `TestEvidence/`.
+2. Keep prototype code paths stable when active research docs depend on them.
+3. Do not add raw datasets, zip bundles, or long execution diaries here.
+4. Archive superseded notes once their useful parts are distilled into canonical docs.
