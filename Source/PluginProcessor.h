@@ -541,7 +541,8 @@ private:
     juce::var captureEmitterParameterState() const;
     bool applyEmitterParameterState (const juce::var& parametersState);
     juce::var buildCalibrationProfileState (const juce::String& profileName,
-                                            const juce::var& validationSummary) const;
+                                            const juce::var& validationSummary,
+                                            const juce::var& discoveryReconciliation = {}) const;
     bool applyEmitterPresetLocked (const juce::var& presetState);
     bool applyCalibrationProfileState (const juce::var& profileState);
     static juce::String keyframeCurveToString (KeyframeCurve curve);

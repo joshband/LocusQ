@@ -6,10 +6,10 @@
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
   "last_modified": "2026-03-19T04:25:00Z",
-  "notes": "2026-03-19 Closeout batch: BL-085 Done (CMake integration PASS), BL-095 Done (FIR truthfulness all slices PASS), BL-098 Done (Reaper DAW auto-gate PASS). BL-079 Done-candidate pending host-view verification in AU/VST3 host. Active open items: BL-079 (verification pending), BL-099..BL-101.",
+  "notes": "2026-03-19 Closeout batch: BL-085 Done (CMake integration PASS), BL-095 Done (FIR truthfulness all slices PASS), BL-098 Done (Reaper DAW auto-gate PASS). BL-079 Done-candidate pending host-view verification in AU/VST3 host. BL-067 local runtime-access contract now also covers calibration dialog defaults via `TestEvidence/bl067_runtime_access_20260319T035500Z/`; Apple signing and real host execution remain blocked. Active open items: BL-079 (verification pending), BL-099..BL-101.",
   "bl079_validation_recheck_status": "2026-03-19_clean_configure_build_smoke_pass_host_view_pending",
   "bl085_validation_recheck_status": "2026-03-19_configure_build_smoke_pass_done_candidate_closeout_sync_pending",
-  "bl067_runtime_access_status": "2026-03-19_contract_pass_profile_and_custom_sofa_fallbacks_use_locusq_user_data_directory_host_execution_and_signing_pending",
+  "bl067_runtime_access_status": "2026-03-19_contract_pass_profile_custom_sofa_and_dialog_defaults_use_locusq_user_data_surface_host_execution_and_signing_pending",
   "phase_history": [
     {
       "phase": "ideation",
