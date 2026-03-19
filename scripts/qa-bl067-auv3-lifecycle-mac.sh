@@ -327,6 +327,7 @@ run_single() {
   local processor_header="${ROOT_DIR}/Source/PluginProcessor.h"
   local calibration_bridge_file="${ROOT_DIR}/Source/processor_core/ProcessorCalibrationBridge.cpp"
   local steam_backend_file="${ROOT_DIR}/Source/spatial_renderer/SpatialSteamAudioBackend.cpp"
+  local webview_runtime_file="${ROOT_DIR}/Source/editor_webview/EditorWebViewRuntime.h"
   local juce_dir
   local xcode_project
   local generated_auv3_info_plist
@@ -529,6 +530,15 @@ run_single() {
   else
     append_row "$sandbox_runtime_access_tsv" "custom_sofa_path\tsource_scan\tFAIL\tdesktop_path_fallback_detected\tCustom SOFA fallback still depends on desktop-style path assumptions"
     record "$status_tsv" "BL067-R3-custom_sofa_runtime_access" "FAIL" "Custom SOFA fallback still depends on desktop-style path assumptions" "$steam_backend_file"
+  fi
+
+  if rg -q 'getCalibrationProfileDialogDirectory' "$webview_runtime_file" 2>/dev/null \
+     && ! rg -q 'userDocumentsDirectory' "$webview_runtime_file" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "calibration_dialog_defaults\tsource_scan\tPASS\tnone\tCalibration import/export dialogs default to the LocusQ calibration-profile directory"
+    record "$status_tsv" "BL067-R4-calibration_dialog_defaults" "PASS" "Calibration import/export dialogs default to the LocusQ calibration-profile directory" "$webview_runtime_file"
+  else
+    append_row "$sandbox_runtime_access_tsv" "calibration_dialog_defaults\tsource_scan\tFAIL\tdesktop_documents_default_detected\tCalibration import/export dialogs still default to desktop-style documents paths"
+    record "$status_tsv" "BL067-R4-calibration_dialog_defaults" "FAIL" "Calibration import/export dialogs still default to desktop-style documents paths" "$webview_runtime_file"
   fi
 
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H1-logic_pro" "Logic Pro" "/Applications/Logic Pro.app"

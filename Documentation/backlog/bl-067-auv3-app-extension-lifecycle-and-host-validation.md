@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-19
 
 ## Plain-Language Summary
 
-BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-19 local runtime-access hardening replay: contract `1/1` PASS for profile/SOFA fallback paths; Apple signing and real host execution are still blocked). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-19 local runtime-access hardening replay: profile fallback, custom SOFA fallback, and calibration dialog defaults now pass the contract lane; Apple signing and real host execution are still blocked). For technical detail, see `## Objective` and `## Validation Plan`.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -18,7 +18,7 @@ BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with 
 | What is changing? | Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. |
 | Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
 | How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
-| When is it done? | Current state: In Validation (2026-03-19 local runtime-access hardening replay: profile/SOFA fallback checks PASS; Apple signing and host execution still blocked). This item is done when required acceptance checks pass and promotion evidence is complete. |
+| When is it done? | Current state: In Validation (2026-03-19 local runtime-access hardening replay: profile/SOFA fallback and calibration dialog checks PASS; Apple signing and host execution still blocked). This item is done when required acceptance checks pass and promotion evidence is complete. |
 | Where is the source of truth? | Runbook `Documentation/backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
 
 
@@ -45,7 +45,7 @@ Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backl
 |---|---|
 | ID | BL-067 |
 | Priority | P1 |
-| Status | In Validation (2026-03-19 runtime-access contract replay PASS for profile/SOFA fallback paths; Apple signing and real host execution remain blocked) |
+| Status | In Validation (2026-03-19 runtime-access contract replay PASS for profile fallback, custom SOFA fallback, and calibration dialog defaults; Apple signing and real host execution remain blocked) |
 | Track | A - Runtime Formats |
 | Effort | High / L |
 | Depends On | BL-048 |
@@ -113,11 +113,12 @@ Minimum evidence additions:
 
 - `cmake --build build_local --config Release --target LocusQ_Standalone -j8` -> `PASS`
 - `bash -n scripts/qa-bl067-auv3-lifecycle-mac.sh` -> `PASS`
-- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only --runs 1 --out-dir TestEvidence/bl067_runtime_access_20260319T034500Z --build-root build_bl067_runtime_access_20260319T034500Z` -> `PASS`
-- new contract artifact: `TestEvidence/bl067_runtime_access_20260319T034500Z/sandbox_runtime_access.tsv`
+- `./scripts/qa-bl067-auv3-lifecycle-mac.sh --contract-only --runs 1 --out-dir TestEvidence/bl067_runtime_access_20260319T035500Z --build-root build_bl067_runtime_access_20260319T035500Z` -> `PASS`
+- new contract artifact: `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
 - source-level result:
   - companion calibration-profile fallback now uses the LocusQ user-data directory only
   - custom SOFA fallback now uses the LocusQ user-data directory only
+  - calibration import/export dialogs now default to the LocusQ calibration-profile directory
   - env overrides for explicit profile injection remain available
 - remaining blockers:
   - Apple host-ready signing is still blocked
