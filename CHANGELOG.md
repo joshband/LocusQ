@@ -16,11 +16,20 @@ Operational snapshot:
 
 ### Added
 
+- BL-088: HostRunner live VST3 integration test — `#ifdef LOCUSQ_HOST_RUNNER_LIVE` test case and CMake option added to `audio-dsp-qa-harness`; QA script contract 6/6 + execute 2/2 + live 13/13 PASS against real `LocusQ.vst3`
 - BL-020: Confidence/masking overlay contract — deterministic combinedConfidence formula, fallback codes, and degradation policy confirmed; QA lane 3/3 PASS
 - BL-021: Room-story overlay contract — five modes, degraded/stale-hold states, additive composite policy confirmed; QA lane 3/3 PASS
 
 ### Changed
 
+- BL-106 is now fully closed out:
+  - runbook moved into `Documentation/backlog/done/`.
+  - canonical wrapper packet recorded at `TestEvidence/bl106_validation_20260319T223047Z/`.
+  - backlog authority, status, and evidence summaries are synchronized.
+- BL-102 is now fully closed out:
+  - runbook moved into `Documentation/backlog/done/`.
+  - backlog authority, status, and evidence summaries are synchronized.
+  - owner sync packet recorded at `TestEvidence/bl102_owner_sync_z1_20260319T215518Z/`.
 - BL-032: Source modularization complete — PluginProcessor/PluginEditor decomposed into `processor_core`, `processor_bridge`, `shared_contracts`, `editor_shell`, `editor_webview` modules; LOC guardrails and RT audit green (PluginProcessor.cpp 3248 ≤ 3600 LOC, RT audit non_allowlisted=0)
 
 ### Added
@@ -81,6 +90,7 @@ Operational snapshot:
 
 ### Recent Done Promotions
 
+- BL-102 moved to `Done` with owner sync packet `TestEvidence/bl102_owner_sync_z1_20260319T215518Z/` and closeout sync on 2026-03-20.
 - BL-080, BL-089, BL-090, BL-091, BL-092, BL-093, and BL-094 moved to `Done` with closeout sync on 2026-03-18.
 - BL-036, BL-037, and BL-041 moved to `Done` with runbook archive/index/status/evidence sync.
 - BL-035, BL-038, and BL-051 moved to `Done` with runbook archive/index/status/evidence sync.

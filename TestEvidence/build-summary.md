@@ -10,6 +10,13 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T23:05:50Z | BL-111 post-fix standalone rerun | PASS_WITH_WARNING | `Smoke lane shows renderer/emitter/timeline proof; selftest aborted before result` |
+| 2026-03-19T22:59:39Z | BL-111 three-mode UI consistency fix slice B | PASS | `UI shell fixes landed; capture rerun still needed` |
+| 2026-03-20T02:20:00Z | BL-111 three-mode UI consistency audit slice A | PASS | `Defect matrix captured; implementation next` |
+| 2026-03-20T02:05:00Z | Three-mode UI consistency audit planning sync | PASS | `Audit packet + BL-111 Open` |
+| 2026-03-19T22:41:54Z | Visualization foundation backlog sync | PASS | `Planning packet + BL-107..BL-110 Open` |
+| 2026-03-19T22:32:35Z | BL-088 HostRunner backends — contract 6/6 + execute 2/2 + live 13/13 PASS | PASS | `Done` |
+| 2026-03-19T22:30:47Z | BL-106 physics DAW automation closeout wrapper | PASS | `Done` |
 | 2026-03-19T21:26:32Z | BL-021 room-story overlays — contract 3/3 PASS | PASS | `Done` |
 | 2026-03-19T21:23:42Z | BL-020 confidence/masking overlay — contract 3/3 PASS | PASS | `Done` |
 | 2026-03-19T21:09:42Z | BL-032 source modularization — guardrails 13/13 PASS | PASS | `Done` |
@@ -19,6 +26,7 @@ Last Modified Date: 2026-03-20
 | 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `Done` |
 | 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `Done` |
 | 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `Done` |
+| 2026-03-19T21:50:56Z | BL-088 HostRunner backends — contract 6/6 PASS; execute 1/1 PASS (mock/live-guarded) | PASS | `In Validation` |
 | 2026-03-19T19:20:00Z | REAPER attractor-spread host gate | PASS | `In Validation` |
 | 2026-03-19T19:19:29Z | BL-100 desktop operator runner — contract 22/22 + execute 3/3 | PASS | `Done` |
 | 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `Done` |
@@ -32,6 +40,7 @@ Last Modified Date: 2026-03-20
 | 2026-03-19T03:58:11Z | Reaper Physics DAW Auto Gate — upgraded with BlackHole 16ch audio device, diagnostic logging, all 4 gates | PASS | `Done` |
 | 2026-03-19T01:40:38Z | Reaper Physics DAW Auto Gate — all 4 gates (A param-reg, B live-spread, C no-jump, D live-resume) | PASS | `Done` |
 
+- BL-106 note: canonical packet `TestEvidence/bl106_validation_20260319T223047Z/` passed; the REAPER DAW auto sub-lane used the wrapper's bounded retry-once policy after a prior dry run briefly hit a borderline Gate C delta (`0.013`) before the rerun passed.
 - Canonical trend/history surfaces:
   - [TestEvidence/build-summary.md](/Users/artbox/Documents/Repos/LocusQ/TestEvidence/build-summary.md)
   - [TestEvidence/validation-trend.md](/Users/artbox/Documents/Repos/LocusQ/TestEvidence/validation-trend.md)
@@ -44,11 +53,19 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T23:05:50Z | BL-111 post-fix standalone rerun | PASS_WITH_WARNING | `Smoke lane shows renderer/emitter/timeline proof; selftest aborted before result` |
+| 2026-03-19T22:59:39Z | BL-111 three-mode UI consistency fix slice B | PASS | `UI shell fixes landed; capture rerun still needed` |
+| 2026-03-20T02:20:00Z | BL-111 three-mode UI consistency audit slice A | PASS | `Defect matrix captured; implementation next` |
+| 2026-03-20T02:05:00Z | Three-mode UI consistency audit planning sync | PASS | `Audit packet + BL-111 Open` |
+| 2026-03-19T22:41:54Z | Visualization foundation backlog sync | PASS | `Planning packet + BL-107..BL-110 Open` |
+| 2026-03-19T22:32:35Z | BL-088 HostRunner backends — contract 6/6 + execute 2/2 + live 13/13 PASS | PASS | `Done` |
+| 2026-03-19T22:30:47Z | BL-106 physics DAW automation closeout wrapper | PASS | `Done` |
 | 2026-03-19T20:52:01Z | BL-060 real-session packet bootstrap | PASS | `In Validation` |
 | 2026-03-19T06:12:00Z | BL-067 runtime boundary tightening contract replay | PASS | `In Validation` |
 | 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `Done` |
 | 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `Done` |
 | 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `Done` |
+| 2026-03-19T21:50:56Z | BL-088 HostRunner backends — contract 6/6 PASS; execute 1/1 PASS (mock/live-guarded) | PASS | `In Validation` |
 | 2026-03-19T19:20:00Z | REAPER attractor-spread host gate | PASS | `In Validation` |
 | 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `Done` |
 | 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `Done` |
@@ -104,7 +121,8 @@ Last Modified Date: 2026-03-20
 - 2026-03-19 attractor-spread host refinement: `phys_out_spread_mod_0` now has a real host-visible observation path, and REAPER can see the attractor-off baseline, attractor-on spread rise, and attractor-off decay instead of only a sentinel write.
 - 2026-03-19 attractor-crossing host refinement: the DAW-visible transient mirror now has a real REAPER acceptance lane for single-emitter radius crossing, so this transient family is no longer processor-only evidence.
 - 2026-03-19 boids host refinement: the new REAPER boids-spread lane is a useful failing repro, not a green claim. Dual-instance setup and baseline are good, but host-visible spread remains dark after boids enable; the runtime boids probe still passes on the same build, so the blocker is now narrowed to the host/shared-lifecycle boundary.
-- 2026-03-19 boids host debug refinement correction: after fixing the debug probe to service `handleAsyncUpdate()` explicitly, the controlled two-instance processor lane is fully green (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `pending=1.000`, `published=1.000`, `scene=1.000`). That means the spread host-mirror publication path itself is not the live blocker. The real remaining gap is REAPER-specific: the instrumented boids host gate applies `Emitter`, `Group 1`, and `On` on both instances during the active window, yet still observes `active_peak_spread=0.000`.
+- 2026-03-19 boids host debug refinement correction: after fixing the debug probe to service `handleAsyncUpdate()` explicitly, the controlled two-instance processor lane is fully green (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `pending=1.000`, `published=1.000`, `scene=1.000`). That removed the false theory that the spread host-mirror publication path was broken.
+- 2026-03-19 boids host closeout refinement: the remaining REAPER-only failure turned out to be in the host gate, not the runtime. The Lua gate had been writing skewed boids params with plain linear normalization, which silently shrank flock radii to `0.12`, `0.86`, and `1.35` instead of the intended `0.75`, `4.0`, and `8.0`. After switching those writes to a skew-aware mapping, both the duplicate-live and prepared-dual REAPER boids lanes now pass with `active_peak_spread=1.000`, non-zero neighbor counts, and visible decay.
 - 2026-03-19 collision transient refinement: `phys_collision_decay_ms` now reaches `PhysicsDSPBridge` transient smoothing for real, and the new production-path collision transient lane proves both peak-scale and decay-shape responsiveness instead of inferring them from generic collision motion.
 - 2026-03-19 collision transient replay hardening: three immediate reruns stayed green, and the gain/delay separation held within a stable band instead of collapsing to a one-run coincidence.
 - 2026-03-19 angular runtime refinement: the processor now routes angular APVTS controls into `PhysicsWorker`, angular-only scenes can activate coordinated worker ownership, and a new runtime probe proves worker-owned `directivityAim` throw/reset behavior in the production path.
@@ -285,9 +303,10 @@ Last Modified Date: 2026-03-20
   - `locusq_physics_runtime_collision_transient_probe`: PASS across 3 reruns with `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, and `decayLateDeltaBridge=0.065..0.146`; the production path now proves that collision gain scale changes burst size and collision decay ms changes burst persistence
   - `reaper-phys-attractor-spread-gate-mac.sh`: PASS; REAPER now proves a quiet attractor-off baseline, a visible attractor-on spread rise, and decay back to quiet after disable on `Emitter 1 Physics Spread` (`baseline_peak_spread=0.000`, `active_peak_spread=0.880`, `off_mean_spread=0.000`, `gate_b_quiet_baseline=true`, `gate_c_attractor_visible=true`, `gate_d_decay_observed=true`)
   - `reaper-phys-attractor-crossing-gate-mac.sh`: PASS; REAPER now proves quiet baseline plus a visible attractor-crossing burst and decay on `Emitter 1 Physics Transient` (`baseline_peak_transient=0.000`, `peak_transient=0.967`, `late_mean=0.002158`, `decay_ratio=0.002232`, `gate_b_quiet_baseline=true`, `gate_c_crossing_visible=true`, `gate_d_decay_observed=true`)
-  - `reaper-phys-boids-spread-gate-mac.sh`: FAIL twice; REAPER sees both plugin instances and a quiet baseline, but no host-visible spread after boids enable (`baseline_peak_spread=0.000`, `active_peak_spread=0.000`), while the rebuilt runtime boids probe still passes with `maxSpread=1.000`, so this is now the concrete host blocker for boids
-  - `scripts/make-reaper-two-instance-project.py` + `reaper-phys-boids-spread-prepared-gate-mac.sh`: implemented BL-102 Phase 2 prepared-session comparison lane; generated a two-instance `.RPP` from the standard one-instance source and proved the same failure in `prepared_dual` mode (`baseline_peak_spread=0.000`, `active_peak_spread=0.000`), so live track duplication is not the primary cause
-  - REAPER reset hardening: both boids wrappers now launch per-run project copies/generated projects, verify the active project path inside Lua, and reset the track count to the expected shape before testing; both lanes still fail after that hardening, so stale last-project/session state is no longer the leading explanation
+  - `reaper-phys-boids-spread-gate-mac.sh`: PASS after the REAPER Lua gate switched the skewed flock controls to skew-aware writes; REAPER now proves a quiet baseline, visible boids spread, and visible decay in the duplicate-live lane (`baseline_peak_spread=0.000`, `active_peak_spread=1.000`, `gate_c_boids_visible=true`, `gate_d_decay_observed=true`; evidence: `TestEvidence/reaper_phys_boids_spread_gate_20260319_215054Z/status.json`)
+  - `scripts/make-reaper-two-instance-project.py` + `reaper-phys-boids-spread-prepared-gate-mac.sh`: PASS after the same skew-aware gate fix; the prepared-dual lane now matches the runtime and controlled-debug truth instead of failing with zero spread (`baseline_peak_spread=0.000`, `active_peak_spread=1.000`, `gate_c_boids_visible=true`, `gate_d_decay_observed=true`; evidence: `TestEvidence/reaper_phys_boids_spread_prepared_gate_20260319_215032Z/status.json`)
+  - REAPER reset hardening remains valid background protection: both boids wrappers still launch per-run project copies/generated projects, verify the active project path inside Lua, and reset the track count before testing, but that hardening was not the root fix; the decisive fix was correcting skewed boids parameter writes in the Lua gate
+  - BL-102 owner-sync packet is now ready at `TestEvidence/bl102_owner_sync_z1_20260319T215518Z/`; fresh current-tree reruns inside that packet keep runtime boids, controlled host-debug, prepared-dual REAPER, duplicate-live REAPER, status schema, backlog checks, and docs freshness all green
   - `reaper-phys-collision-transient-gate-mac.sh`: PASS after the host-friendly transient observation envelope landed; REAPER now proves burst visibility plus both control responses in-host (`low_peak_transient=0.026`, `high_peak_transient=0.260`, `short_late_mean=0.001824`, `long_late_mean=0.131882`, `gate_b_gain_scale=true`, `gate_c_decay=true`, `gate_d_visible=true`)
 
 ## Evidence Hygiene Notes

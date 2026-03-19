@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-20 (BL-102 added as Open; total 99/110 Done; active P1 blocked: BL-060, BL-067, BL-102)
+Last Modified Date: 2026-03-20 (BL-106 moved to Done; BL-107..BL-116 added as Open; total 104/121 Done; active P1 blocked: BL-060, BL-067)
 
 # LocusQ Master Backlog Index
 
@@ -170,7 +170,7 @@ Immediate wave summary:
 | 55 | BL-085 | CMake integration module — audio-dsp-qa-harness | P1 | **Done** (2026-03-19) | G | BL-082 | — | [bl-085](done/bl-085-cmake-integration-module.md) |
 | 56 | BL-086 | CI checkout composite action — audio-dsp-qa-harness | P1 | **Done** (2026-03-19: shared checkout action is live upstream, LocusQ workflow uses it, token-missing path is validated, and workflow configure steps now consume `harness-path`) | G | — | — | [bl-086](done/bl-086-ci-checkout-composite-action.md) |
 | 57 | BL-087 | Recursive scenario discovery — audio-dsp-qa-harness | P2 | Open (deferred) | G | — | — | [bl-087](bl-087-recursive-scenario-discovery.md) |
-| 58 | BL-088 | HostRunner plugin backends (VST3/AU) — audio-dsp-qa-harness | P2 | Open (deferred; after BL-082/083/084) | G | BL-082, BL-083, BL-084 | — | [bl-088](bl-088-hostrunner-plugin-backends.md) |
+| 58 | BL-088 | HostRunner plugin backends (VST3/AU) — audio-dsp-qa-harness | P2 | **Done** (2026-03-19: live VST3 test guard + CMake option added to harness; QA script contract 6/6 PASS, execute 2/2 PASS) | G | BL-082 (Done), BL-083 (Done), BL-084 (Done) | — | [bl-088](done/bl-088-hostrunner-plugin-backends.md) |
 | 59 | BL-089 | Render trust contract and requested-vs-active language | P1 | **Done** (shared copy contract is live across plugin + companion; trust-wave evidence bundle captured at `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; owner sync packet recorded; closeout sync complete 2026-03-18 while BL-095/BL-099 continue independently) | B | BL-040, BL-053, BL-058, BL-095, BL-099 | BL-090, BL-091, BL-092 | [bl-089](done/bl-089-render-trust-contract-and-requested-active-language.md) |
 | 60 | BL-090 | Plugin authority-first shell and renderer hierarchy | P1 | **Done** (compressed header, authority-first `RENDERER`, and collapsed `Lab` drawer are live; representative captures remain bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; closeout sync complete 2026-03-18) | C | BL-089, BL-040, BL-027, BL-074 | BL-093 | [bl-090](done/bl-090-plugin-authority-first-shell-and-renderer-hierarchy.md) |
 | 61 | BL-091 | Companion Focus/Lab trust flow | P1 | **Done** (`Focus` default, readiness ladder, synthetic-mode disclosure, and `Lab` containment are live; representative captures remain bundled under `TestEvidence/ui_ux_trust_wave_validation_20260318T023805Z/`; closeout sync complete 2026-03-18) | C | BL-089, BL-045, BL-058, BL-072 | BL-093 | [bl-091](done/bl-091-companion-focus-lab-trust-flow.md) |
@@ -184,7 +184,18 @@ Immediate wave summary:
 | 69 | BL-099 | Headphone verification truthfulness and compensation provenance | P1 | **Done** (2026-03-19) | E | BL-034, BL-057 | BL-089 | [bl-099](done/bl-099-headphone-verification-truthfulness-and-compensation-provenance.md) |
 | 70 | BL-100 | Desktop operator runner and evidence contract — audio-dsp-qa-harness | P1 | **Done** (2026-03-19: harness 50/50 ctest PASS; contract 22/22 + execute 3/3; upstream commit 6cea7b95) | G | BL-082, BL-083, BL-084, BL-085 | downstream standalone/companion/desktop-host robotic QA adoption lanes | [bl-100](done/bl-100-desktop-operator-runner-and-evidence-contract.md) |
 | 71 | BL-101 | CALIBRATE discovery, provenance, and truthfulness | P1 | **Done** (2026-03-19) | E | BL-026, BL-038, BL-059, BL-099 | future CALIBRATE capability-expansion lanes | [bl-101](done/bl-101-calibrate-discovery-provenance-and-truthfulness.md) |
-| 72 | BL-102 | Physics host-visible coordinated lanes and REAPER multi-instance boids truthfulness | P1 | Open | E | BL-024 (Done), HX-03 (Done), BL-100 (Done) | physics closeout host-proof claims for coordinated boids behavior | [bl-102](bl-102-physics-host-visible-coordinated-lanes-and-reaper-multi-instance-boids-truthfulness.md) |
+| 72 | BL-102 | Physics host-visible coordinated lanes and REAPER multi-instance boids truthfulness | P1 | **Done** (2026-03-19 owner sync Z1 packet green; REAPER duplicate-live and prepared-dual boids host lanes now pass after skew-aware gate fix; closeout sync complete 2026-03-20) | E | BL-024 (Done), HX-03 (Done), BL-100 (Done) | physics closeout host-proof claims for coordinated boids behavior | [bl-102](done/bl-102-physics-host-visible-coordinated-lanes-and-reaper-multi-instance-boids-truthfulness.md) |
+| 73 | BL-106 | Physics DAW automation verification and closeout | P2 | **Done** (2026-03-20 canonical wrapper packet green; backlog/status/evidence sync complete; prior borderline REAPER Gate C dry run retained as caution evidence, not authoritative packet result) | E | BL-102 (Done), BL-098 (Done) | — | [bl-106](done/bl-106-physics-daw-automation-verification-and-closeout.md) |
+| 74 | BL-107 | Visualization foundation productionization | P2 | Open | C | BL-029 (Done), BL-093 (Done), BL-094 (Done), BL-097 (Done) | BL-108, BL-109, BL-110 | [bl-107](bl-107-visualization-foundation-productionization.md) |
+| 75 | BL-108 | Physics-reactive atmosphere and state ring | P2 | Open | E | BL-107, BL-102 (Done), BL-106 (Done) | BL-110 | [bl-108](bl-108-physics-reactive-atmosphere-and-state-ring.md) |
+| 76 | BL-109 | Choreography-reactive atmosphere and timeline state ring | P2 | Open | E | BL-107, BL-094 (Done) | — | [bl-109](bl-109-choreography-reactive-atmosphere-and-timeline-state-ring.md) |
+| 77 | BL-110 | Cross-instance ghost emitters and IPC trust contract | P3 | Open | E | BL-107, BL-102 (Done) | — | [bl-110](bl-110-cross-instance-ghost-emitters-and-ipc-trust-contract.md) |
+| 78 | BL-111 | Three-mode UI consistency and overflow audit | P1 | Open | C | BL-090 (Done), BL-093 (Done), BL-094 (Done) | BL-107 quality signoff | [bl-111](bl-111-three-mode-ui-consistency-and-overflow-audit.md) |
+| 79 | BL-112 | Choreography Lab authority and parameter contract | P1 | Open | E | BL-094 (Done) | BL-113, BL-114, BL-115, BL-116 | [bl-112](bl-112-choreography-lab-authority-and-parameter-contract.md) |
+| 80 | BL-113 | Choreography worker foundation and production motion systems | P1 | Open | E | BL-112 | BL-114, BL-115, BL-116 | [bl-113](bl-113-choreography-worker-foundation-and-production-motion-systems.md) |
+| 81 | BL-114 | Choreography Lab WebView controls and overlay integration | P2 | Open | C | BL-112, BL-113, BL-109, BL-111 | BL-116 UI evidence readiness | [bl-114](bl-114-choreography-lab-webview-controls-and-overlay-integration.md) |
+| 82 | BL-115 | Choreography Lab audio-reactive and coordination modes | P3 | Open | E | BL-112, BL-113 | future promotion of lab-only choreography modes | [bl-115](bl-115-choreography-lab-audio-reactive-and-coordination-modes.md) |
+| 83 | BL-116 | Choreography Lab validation and bake proof matrix | P1 | Open | G | BL-113, BL-114 | production or lab promotion claims for the new choreography program | [bl-116](bl-116-choreography-lab-validation-and-bake-proof-matrix.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
