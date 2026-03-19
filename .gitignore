@@ -2,6 +2,7 @@
 build/
 build_*/
 build_bl*/
+_bl*_build/
 build_no_clap_check/
 cmake-build-*/
 out/
@@ -82,6 +83,9 @@ TestEvidence/ui_pr_gate_*/
 TestEvidence/stage13_acceptance_sweep_*/
 TestEvidence/stage16a_scenario_validation_*/
 TestEvidence/*_20??????T??????Z/
+TestEvidence/*_20??????_??????Z/
+TestEvidence/reaper_phys_daw_auto_gate_*/
+TestEvidence/locusq_production_p0_selftest_*
 
 TestEvidence/*_20??????T??????Z.json
 TestEvidence/*_20??????T??????Z.png
@@ -99,6 +103,12 @@ TestEvidence/archive/*.zip
 
 # Large local research bundles (never commit)
 Documentation/Calibration POC/*.zip
+
+# Tool scratch dirs (non-canonical generated outputs)
+docs/
+output/
+.playwright-cli/
+.superpowers/
 
 # Local secrets/env
 .env
