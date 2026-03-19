@@ -236,3 +236,5 @@ Last Modified Date: 2026-03-19
 
 The original long-form build summary is preserved in the archive copy above.
 Use this file for current governance snapshots and the archive file for full historical detail.
+
+[2026-03-19] C1 authority migration: dual-integration assertion added; 5 legacy paths confirmed zeroed for coordinated emitters (gravity, interaction, wall-collision, throw, reset); PhysicsEngine standalone guard added to suppress integration when worker owns authority; runtime probe build deps confirmed clean.
