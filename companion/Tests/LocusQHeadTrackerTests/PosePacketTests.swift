@@ -33,6 +33,42 @@ final class PosePacketTests: XCTestCase {
         XCTAssertEqual(readUInt32(encoded, at: 48), packet.sensorLocationFlags)
     }
 
+    func testMotionSamplePosePacketUsesCanonicalFlagsAndRotationRateFields() {
+        let sample = MotionSample(
+            qx: -0.125,
+            qy: 0.25,
+            qz: 0.5,
+            qw: 0.75,
+            timestampMs: 0x0102030405060708,
+            angVx: 0.125,
+            angVy: -0.25,
+            angVz: 0.5,
+            sensorLocation: 2,
+            hasRotationRate: true
+        )
+
+        let encoded = sample.posePacket(sequence: 0xAABBCCDD).serialize()
+        XCTAssertEqual(encoded.count, PosePacket.encodedSize)
+        XCTAssertEqual(readUInt32(encoded, at: 4), PosePacket.version)
+        XCTAssertEqual(readFloat(encoded, at: 36), sample.angVx)
+        XCTAssertEqual(readFloat(encoded, at: 40), sample.angVy)
+        XCTAssertEqual(readFloat(encoded, at: 44), sample.angVz)
+        XCTAssertEqual(readUInt32(encoded, at: 48), 0x00000006)
+    }
+
+    func testMotionSamplePosePacketDefaultsSyntheticFlagsToZero() {
+        let sample = MotionSample(
+            qx: 0.0,
+            qy: 0.0,
+            qz: 0.0,
+            qw: 1.0,
+            timestampMs: 42
+        )
+
+        let encoded = sample.posePacket(sequence: 7).serialize()
+        XCTAssertEqual(readUInt32(encoded, at: 48), 0x00000000)
+    }
+
     private func readUInt32(_ data: Data, at offset: Int) -> UInt32 {
         data.withUnsafeBytes { raw in
             let value = raw.load(fromByteOffset: offset, as: UInt32.self)

@@ -1216,6 +1216,16 @@
       box-shadow: 0 0 0 1px rgba(212, 168, 71, 0.16), 0 0 18px rgba(212, 168, 71, 0.12);
       transition: border-color 180ms ease, box-shadow 180ms ease;
     }
+    .cal-remediation-followup {
+      margin-top: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(212, 168, 71, 0.28);
+      background: rgba(212, 168, 71, 0.08);
+      color: var(--text-secondary);
+      font-size: 9px;
+      line-height: 1.4;
+    }
     .cal-ack-row {
       display: flex;
       align-items: center;
@@ -2437,6 +2447,7 @@
           <div class="cal-card" id="cal-card-discovery">
             <div class="section">
               <div class="section-header" id="cal-discovery-title">Discovery</div>
+              <div class="cal-remediation-followup" id="cal-discovery-followup" hidden>Role-specific follow-up from the Calibration Library will appear here.</div>
               <div class="cal-automation-list">
                 <article class="cal-automation-row">
                   <div class="cal-automation-row-header">
@@ -2508,6 +2519,7 @@
           <div class="cal-card" id="cal-card-mapping">
             <div class="section">
               <div class="section-header">Output Mapping</div>
+              <div class="cal-remediation-followup" id="cal-mapping-followup" hidden>Role-specific reroute guidance will appear here.</div>
               <div class="control-row"><span class="control-label">Legacy Config</span><select class="dropdown" id="cal-config"><option>4x Mono</option><option>2x Stereo</option></select></div>
               <div class="control-row"><span class="control-label">Routing</span><button class="btn-secondary" id="cal-redetect-btn">REDETECT</button></div>
               <div class="cal-mapping-matrix" id="cal-mapping-matrix"></div>

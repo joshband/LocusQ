@@ -9348,13 +9348,51 @@ function setCalibrationProfileSummary(message) {
 }
 
 let calibrationProfileRemediationFlashTimer = 0;
+let calibrationProfileRemediationContext = null;
+
+function applyCalibrationProfileRemediationContext() {
+    const discoveryFollowup = document.getElementById("cal-discovery-followup");
+    const mappingFollowup = document.getElementById("cal-mapping-followup");
+    const context = calibrationProfileRemediationContext && typeof calibrationProfileRemediationContext === "object"
+        ? calibrationProfileRemediationContext
+        : null;
+    const targetCardId = String(context?.targetCardId || "").trim();
+    const roles = Array.isArray(context?.roles)
+        ? context.roles.map(role => String(role || "").trim().toUpperCase()).filter(Boolean)
+        : [];
+    const roleLabel = roles.length > 0 ? roles.join(", ") : "selected roles";
+
+    if (discoveryFollowup) {
+        if (targetCardId === "cal-card-discovery") {
+            discoveryFollowup.hidden = false;
+            discoveryFollowup.textContent = String(context?.followupMessage || `Discovery follow-up is active for ${roleLabel}.`);
+        } else {
+            discoveryFollowup.hidden = true;
+            discoveryFollowup.textContent = "Role-specific follow-up from the Calibration Library will appear here.";
+        }
+    }
+
+    if (mappingFollowup) {
+        if (targetCardId === "cal-card-mapping") {
+            mappingFollowup.hidden = false;
+            mappingFollowup.textContent = String(context?.followupMessage || `Manual reroute workflow is active for ${roleLabel}.`);
+        } else {
+            mappingFollowup.hidden = true;
+            mappingFollowup.textContent = "Role-specific reroute guidance will appear here.";
+        }
+    }
+}
 
 function setCalibrationProfileRemediationActions(actions = []) {
     const container = document.getElementById("cal-profile-remediation-actions");
     if (!container) return;
     container.innerHTML = "";
     const safeActions = Array.isArray(actions) ? actions.filter(action => action && typeof action === "object") : [];
-    if (safeActions.length === 0) return;
+    if (safeActions.length === 0) {
+        calibrationProfileRemediationContext = null;
+        applyCalibrationProfileRemediationContext();
+        return;
+    }
 
     safeActions.forEach((action) => {
         const button = document.createElement("button");
@@ -9366,6 +9404,26 @@ function setCalibrationProfileRemediationActions(actions = []) {
             if (targetMode === "speaker_room" || targetMode === "headphones") {
                 setCalibrationTargetUi(targetMode);
             }
+
+            const roles = Array.isArray(action?.roles)
+                ? action.roles.map(role => String(role || "").trim().toUpperCase()).filter(Boolean)
+                : [];
+            const roleLabel = roles.length > 0 ? roles.join(", ") : "selected roles";
+            const policyType = String(action?.policyType || "").trim().toLowerCase();
+            let followupMessage = "";
+            if (policyType === "manual_reroute_later") {
+                followupMessage = `Manual reroute workflow for ${roleLabel}: assign unique output destinations in Output Mapping, then save a refreshed profile.`;
+            } else if (policyType === "defer") {
+                followupMessage = `Deferred-role workflow for ${roleLabel}: revisit Discovery and plan a measurement or mapping pass before treating the layout as complete.`;
+            } else if (policyType === "fold_front_pair") {
+                followupMessage = `Wider-output workflow for ${roleLabel}: review Discovery and adopt a wider writable output surface before relying on the folded route.`;
+            }
+            calibrationProfileRemediationContext = {
+                targetCardId: String(action?.targetCardId || "").trim(),
+                roles,
+                followupMessage,
+            };
+            applyCalibrationProfileRemediationContext();
 
             const targetCardId = String(action?.targetCardId || "").trim();
             const targetCard = targetCardId ? document.getElementById(targetCardId) : null;
@@ -10417,6 +10475,8 @@ async function runProductionP0SelfTest() {
                         label: "REROUTE ROLES NOW",
                         targetCardId: "cal-card-mapping",
                         targetMode: "speaker_room",
+                        policyType: "manual_reroute_later",
+                        roles: ["RS"],
                         statusMessage: "Manual reroute needed for RS. Open Output Mapping and assign unique outputs.",
                     },
                     {
@@ -10424,6 +10484,8 @@ async function runProductionP0SelfTest() {
                         label: "REVISIT DEFERRED ROLES",
                         targetCardId: "cal-card-discovery",
                         targetMode: "speaker_room",
+                        policyType: "defer",
+                        roles: ["LS", "RS"],
                         statusMessage: "Deferred roles LS, RS still need direct measurement or mapping before the layout is complete.",
                     },
                     {
@@ -10431,6 +10493,8 @@ async function runProductionP0SelfTest() {
                         label: "USE WIDER OUTPUT SURFACE",
                         targetCardId: "cal-card-discovery",
                         targetMode: "speaker_room",
+                        policyType: "fold_front_pair",
+                        roles: ["LS"],
                         statusMessage: "Folded roles LS should be rerouted once more writable outputs are available.",
                     },
                 ],
@@ -11276,6 +11340,7 @@ async function runProductionP0SelfTest() {
                 rerouteButton.click();
                 await waitMs(80);
                 expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Manual reroute needed for RS.", "reroute remediation status");
+                expectIncludes("UI-P1-102G", readText("cal-mapping-followup"), "Manual reroute workflow for RS", "reroute remediation follow-up banner");
             }
             recordCheck("UI-P1-102G", true, "exported and imported calibration profiles preserve human-readable speaker-role intent, remediation metadata, and follow-up actions");
         } finally {

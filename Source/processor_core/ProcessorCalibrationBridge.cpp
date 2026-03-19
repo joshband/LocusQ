@@ -296,7 +296,9 @@ juce::var buildCalibrationRemediationActions (const juce::var& discoveryReconcil
     auto appendAction = [&actions] (const juce::String& id,
                                     const juce::String& label,
                                     const juce::String& targetCardId,
-                                    const juce::String& statusMessage)
+                                    const juce::String& statusMessage,
+                                    const juce::String& policyType,
+                                    const juce::StringArray& roles)
     {
         juce::var actionVar (new juce::DynamicObject());
         auto* action = actionVar.getDynamicObject();
@@ -305,6 +307,11 @@ juce::var buildCalibrationRemediationActions (const juce::var& discoveryReconcil
         action->setProperty ("targetCardId", targetCardId);
         action->setProperty ("targetMode", "speaker_room");
         action->setProperty ("statusMessage", statusMessage);
+        action->setProperty ("policyType", policyType);
+        juce::Array<juce::var> roleArray;
+        for (const auto& role : roles)
+            roleArray.add (juce::var (role));
+        action->setProperty ("roles", juce::var (roleArray));
         actions.add (actionVar);
     };
 
@@ -336,7 +343,9 @@ juce::var buildCalibrationRemediationActions (const juce::var& discoveryReconcil
                       "cal-card-mapping",
                       "Manual reroute needed for "
                           + manualRoles.joinIntoString (", ")
-                          + ". Open Output Mapping and assign unique outputs.");
+                          + ". Open Output Mapping and assign unique outputs.",
+                      "manual_reroute_later",
+                      manualRoles);
     }
 
     const auto deferredRoles = collectRolesForPolicy ("defer");
@@ -347,7 +356,9 @@ juce::var buildCalibrationRemediationActions (const juce::var& discoveryReconcil
                       "cal-card-discovery",
                       "Deferred roles "
                           + deferredRoles.joinIntoString (", ")
-                          + " still need direct measurement or mapping before the layout is complete.");
+                          + " still need direct measurement or mapping before the layout is complete.",
+                      "defer",
+                      deferredRoles);
     }
 
     const auto foldedRoles = collectRolesForPolicy ("fold_front_pair");
@@ -358,7 +369,9 @@ juce::var buildCalibrationRemediationActions (const juce::var& discoveryReconcil
                       "cal-card-discovery",
                       "Folded roles "
                           + foldedRoles.joinIntoString (", ")
-                          + " should be rerouted once more writable outputs are available.");
+                          + " should be rerouted once more writable outputs are available.",
+                      "fold_front_pair",
+                      foldedRoles);
     }
 
     return juce::var (actions);
@@ -401,7 +414,7 @@ juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
         summary->setProperty ("bestMapRemediation", bestMapRemediation);
     if (bestTopologyRemediation.isNotEmpty())
         summary->setProperty ("bestTopologyRemediation", bestTopologyRemediation);
-    const remediationActions = buildCalibrationRemediationActions (discoveryReconciliation);
+    const auto remediationActions = buildCalibrationRemediationActions (discoveryReconciliation);
     if (const auto* actionArray = remediationActions.getArray(); actionArray != nullptr && ! actionArray->isEmpty())
         summary->setProperty ("remediationActions", remediationActions);
 
@@ -1480,8 +1493,7 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
             spatialRenderer.clearFirImpulseResponse();
             spatialRenderer.setHeadphoneCalibrationEnabled (false);
             spatialRenderer.setRequestedSofaHrtf ({}, false);
-            const juce::ScopedLock callbackLock (getCallbackLock());
-            spatialRenderer.reloadSteamAudioRuntime();
+            pendingCompanionCalibrationRuntimeReload = true;
         }
 
         companionCalibrationProfileLastModifiedMs = -1;
@@ -1605,8 +1617,7 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     if (sofaRequestChanged)
     {
         spatialRenderer.setRequestedSofaHrtf (sofaRef, requestedSofaHrtf);
-        const juce::ScopedLock callbackLock (getCallbackLock());
-        spatialRenderer.reloadSteamAudioRuntime();
+        pendingCompanionCalibrationRuntimeReload = true;
         cachedCalibrationRequestedSofa = requestedSofaHrtf;
         cachedCalibrationSofaRef = sofaRef;
     }
@@ -1679,4 +1690,14 @@ void LocusQAudioProcessor::pollCompanionCalibrationProfileFromDisk()
     }
 
     companionCalibrationProfileLastModifiedMs = modifiedMs;
+}
+
+void LocusQAudioProcessor::applyPendingCompanionCalibrationProfileReload()
+{
+    if (! pendingCompanionCalibrationRuntimeReload)
+        return;
+
+    const juce::ScopedLock callbackLock (getCallbackLock());
+    spatialRenderer.reloadSteamAudioRuntime();
+    pendingCompanionCalibrationRuntimeReload = false;
 }

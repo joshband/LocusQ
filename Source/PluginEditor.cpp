@@ -80,6 +80,7 @@ void LocusQAudioProcessorEditor::timerCallback()
     updateStandaloneWindowTitle();
     if ((bridgeTickCount % kCalibrationProfilePollIntervalTicks) == 0)
         audioProcessor.pollCompanionCalibrationProfileFromDisk();
+    audioProcessor.applyPendingCompanionCalibrationProfileReload();
 
     pushBridgePayloadsIfDue();
 

@@ -98,42 +98,6 @@ private func remapCoreMotionVectorToSteamBasis(_ vector: Vector3) -> Vector3 {
     Vector3(x: vector.x, y: vector.z, z: -vector.y)
 }
 
-private struct PosePacketV1 {
-    static let magic: UInt32 = 0x4C515054
-    static let version: UInt32 = 1
-
-    var quaternion: Quaternion
-    var timestampMs: UInt64
-    var sequence: UInt32
-
-    func encodedData() -> Data {
-        var payload = Data(capacity: 40)
-        payload.appendLittleEndian(PosePacketV1.magic)
-        payload.appendLittleEndian(PosePacketV1.version)
-        payload.appendLittleEndian(quaternion.x)
-        payload.appendLittleEndian(quaternion.y)
-        payload.appendLittleEndian(quaternion.z)
-        payload.appendLittleEndian(quaternion.w)
-        payload.appendLittleEndian(timestampMs)
-        payload.appendLittleEndian(sequence)
-        payload.appendLittleEndian(UInt32(0))
-        return payload
-    }
-}
-
-private extension Data {
-    mutating func appendLittleEndian<T: FixedWidthInteger>(_ value: T) {
-        var little = value.littleEndian
-        Swift.withUnsafeBytes(of: &little) { bytes in
-            append(contentsOf: bytes)
-        }
-    }
-
-    mutating func appendLittleEndian(_ value: Float) {
-        appendLittleEndian(value.bitPattern)
-    }
-}
-
 private enum CompanionMode: String {
     case synthetic
     case live
@@ -4263,15 +4227,14 @@ private func runSynthetic(arguments: CompanionArguments,
         let allowPoseSend = sendGateOpen
         var reportedSequence = sentPackets == 0 ? 0 : seq - 1
         if allowPoseSend {
-            let packet = PosePacketV1(
-                quaternion: quat,
-                timestampMs: timestampMs,
-                sequence: seq
+            let sample = MotionSample(
+                qx: quat.x,
+                qy: quat.y,
+                qz: quat.z,
+                qw: quat.w,
+                timestampMs: timestampMs
             )
-
-            let payload = packet.encodedData()
-            precondition(payload.count == 40, "Pose packet v1 must be 40 bytes")
-            try sender.send(payload)
+            try sender.send(sample.posePacket(sequence: seq).serialize())
             sentPackets += 1
             reportedSequence = seq
             seq &+= 1
@@ -4445,15 +4408,20 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
         let rawQuaternion = mapCoreMotionAttitudeToSteamPose(rawCoreMotionQuaternion)
 
         let sensorLocation: String
+        let sensorLocationCode: UInt8
         switch motion.sensorLocation {
         case .default:
             sensorLocation = "default"
+            sensorLocationCode = 0
         case .headphoneLeft:
             sensorLocation = "headphone_left"
+            sensorLocationCode = 1
         case .headphoneRight:
             sensorLocation = "headphone_right"
+            sensorLocationCode = 2
         @unknown default:
             sensorLocation = "unknown"
+            sensorLocationCode = 0
         }
 
         let gravityCoreMotion = Vector3(
@@ -4594,14 +4562,21 @@ private final class LiveRuntimeProcessor: @unchecked Sendable {
         let allowPoseSend = (readinessState == "active_ready") && sendGateOpen
 
         if shouldSend && allowPoseSend {
-            let packet = PosePacketV1(
-                quaternion: outputQuaternion,
+            let sample = MotionSample(
+                qx: outputQuaternion.x,
+                qy: outputQuaternion.y,
+                qz: outputQuaternion.z,
+                qw: outputQuaternion.w,
                 timestampMs: nowMs,
-                sequence: sequence
+                angVx: Float(motion.rotationRate.x),
+                angVy: Float(motion.rotationRate.y),
+                angVz: Float(motion.rotationRate.z),
+                sensorLocation: sensorLocationCode,
+                hasRotationRate: true
             )
-            let payload = packet.encodedData()
+
             do {
-                try sender.send(payload)
+                try sender.send(sample.posePacket(sequence: sequence).serialize())
                 packetCount += 1
                 sentSeq = sequence
                 packetTimestampMs = nowMs

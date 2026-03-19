@@ -147,6 +147,7 @@ public:
     juce::var exportCalibrationProfileFromUI (const juce::var& options) const;
     juce::var importCalibrationProfileFromUI (const juce::var& options);
     void pollCompanionCalibrationProfileFromDisk();
+    void applyPendingCompanionCalibrationProfileReload();
 
     // Timeline and preset API for WebView bridge (Phase 2.6)
     juce::var getKeyframeTimelineForUI() const;
@@ -653,6 +654,7 @@ private:
     std::int64_t cachedCalibrationProfileUpdatedAtUtcMs = 0;
     float        cachedExternalizationScore       = -1.0f;  // -1 = not yet available
     float        cachedFrontBackConfusionRate     = -1.0f;  // -1 = not yet available
+    bool         pendingCompanionCalibrationRuntimeReload = false;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LocusQAudioProcessor)

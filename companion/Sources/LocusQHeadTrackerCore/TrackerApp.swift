@@ -22,24 +22,8 @@ public final class TrackerApp {
             guard let self else { return }
             self.seq &+= 1
 
-            let flags: UInt32 = (UInt32(sample.sensorLocation) & 0x3)
-                              | (sample.hasRotationRate ? 0x4 : 0x0)
-
-            let packet = PosePacket(
-                qx: sample.qx,
-                qy: sample.qy,
-                qz: sample.qz,
-                qw: sample.qw,
-                timestampMs: sample.timestampMs,
-                seq: self.seq,
-                angVx: sample.angVx,
-                angVy: sample.angVy,
-                angVz: sample.angVz,
-                sensorLocationFlags: flags
-            )
-
             do {
-                try self.udpSender.send(packet.serialize())
+                try self.udpSender.send(sample.posePacket(sequence: self.seq).serialize())
             } catch {
                 print("[LocusQHeadTracker] UDP send failed: \(error)")
             }

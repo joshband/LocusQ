@@ -777,9 +777,21 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
         DBG ("  -> NOT FOUND: " + path);
 #endif
 
-    resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
-        + " result path=" + path + " found=" + juce::String (resourceData != nullptr ? "1" : "0")
-        + " size=" + juce::String (resourceSize) + "\n");
+    if (shouldLogResourceRequests())
+    {
+        const auto logDirectory = locusq::processor_bridge::getLocusQUserDataDirectory();
+        logDirectory.createDirectory();
+        const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
+    if (shouldLogResourceRequests())
+    {
+        const auto logDirectory = locusq::processor_bridge::getLocusQUserDataDirectory();
+        logDirectory.createDirectory();
+        const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
+        resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
+            + " result path=" + path + " found=" + juce::String (resourceData != nullptr ? "1" : "0")
+            + " size=" + juce::String (resourceSize) + "\n");
+    }
+    }
 
     if (resourceData != nullptr && resourceSize > 0)
     {
