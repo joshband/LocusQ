@@ -2,11 +2,19 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-19T01:30:00Z
+Last Modified Date: 2026-03-19
 
 # LocusQ Build Summary (Acceptance Closeout)
 
 ## Current Snapshot
+
+| Time (UTC) | Item | Result | Decision |
+|---|---|---|---|
+| 2026-03-19T03:45:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
+| 2026-03-19T03:35:00Z | BL-085 owner sync review | PASS | `Done-candidate` |
+| 2026-03-19T02:57:38Z | BL-079 clean-checkout replay | PASS | `In Validation` |
+| 2026-03-19T03:58:11Z | Reaper Physics DAW Auto Gate — upgraded with BlackHole 16ch audio device, diagnostic logging, all 4 gates | PASS | `Done` |
+| 2026-03-19T01:40:38Z | Reaper Physics DAW Auto Gate — all 4 gates (A param-reg, B live-spread, C no-jump, D live-resume) | PASS | `Done` |
 
 - Canonical trend/history surfaces:
   - [TestEvidence/build-summary.md](/Users/artbox/Documents/Repos/LocusQ/TestEvidence/build-summary.md)
@@ -20,7 +28,14 @@ Last Modified Date: 2026-03-19T01:30:00Z
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
-| 2026-03-19T01:30:00Z | BL-098 local validation lane restored | PASS | `Done-candidate` |
+| 2026-03-19T03:45:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
+| 2026-03-19T02:52:12Z | Physics collision transient runtime proof | PASS | `In Validation` |
+| 2026-03-19T02:52:12Z | Physics attractor-crossing transient runtime proof | PASS | `In Validation` |
+| 2026-03-19T03:25:00Z | Physics orbit + mass runtime refinement; attractor-crossing transient repro | PASS_WITH_WARNING | `Superseded by corrected crossing proof` |
+| 2026-03-19T03:13:00Z | BL-095 BL095-HOST PDC gate; Reaper pdc_samples=0 | PASS | `Done` |
+| 2026-03-19T02:30:00Z | BL-095 Slice C objective evidence; contract 5/5 + execute 3×6/6 | PASS | `Done-candidate` |
+| 2026-03-19T02:00:00Z | BL-095 Slice B FIR honesty fix; ctest 4/4 + BL-055 QA lane 10/10 | PASS | `In Validation` |
+| 2026-03-19T01:30:00Z | BL-098 local validation lane restoration | PASS | `In Validation` |
 | 2026-03-18T23:20:00Z | BL-080 and BL-089..BL-094 closeout sync | PASS | `Done` |
 | 2026-03-18T22:19:06Z | BL-089 closeout draft | PASS | `DRAFT_READY` |
 | 2026-03-18T22:18:40Z | BL-080 closeout draft | PASS | `DRAFT_READY` |
@@ -35,7 +50,10 @@ Last Modified Date: 2026-03-19T01:30:00Z
 | 2026-03-18T04:40:57Z | BL-093 owner sync | PASS | `Done-candidate` |
 | 2026-03-18T03:57:20Z | UI/UX trust-wave sync | PASS | BL-089..BL-092 `In Validation` |
 | 2026-03-18T02:24:50Z | BL-080 recovery addendum | PASS | `Done-candidate` |
-| 2026-03-17T23:00:00Z | BL-085 CMake integration intake | PASS | `In Validation` |
+| 2026-03-19T03:35:00Z | BL-085 owner sync review | PASS | `Done-candidate` |
+| 2026-03-19T02:57:38Z | BL-085 CMake integration recheck | PASS | `Done-candidate` |
+| 2026-03-19T02:57:38Z | BL-079 clean-checkout replay | PASS | `In Validation` |
+| 2026-03-19T02:00:00Z | BL-085 CMake integration recheck | FAIL | `Superseded by 2026-03-19 green replay` |
 | 2026-03-17T19:12:47Z | BL-067 validation intake | PASS_WITH_BLOCKERS | `In Validation` |
 
 ## Physics Runtime Snapshot
@@ -55,10 +73,29 @@ Last Modified Date: 2026-03-19T01:30:00Z
 - 2026-03-19 implementation-plan framing sync: the repo now explicitly distinguishes broad production-path coordinated-runtime validation from the still-incomplete full Tier A migration and final host-level completion claim.
 - 2026-03-19 remaining-work sync: the implementation plan now carries an explicit four-part blocker list for any future "Tier A complete" claim: finish authority migration, publish a control-by-control proof matrix, add a host-level acceptance lane, and reconcile the spec/traceability surface.
 - 2026-03-19 proof-matrix sync: the implementation plan now classifies Tier A families as `runtime-proven`, `partially proven`, or `not yet production-proven`, which makes the remaining gaps concrete instead of generic.
+- 2026-03-19 attractor-crossing transient refinement: the earlier failing lane was a false negative caused by a probe coordinate mismatch; after correcting the 3D attractor placement and tightening the runtime contract, the dedicated production-path crossing transient lane now passes across reruns.
+- 2026-03-19 collision transient refinement: `phys_collision_decay_ms` now reaches `PhysicsDSPBridge` transient smoothing for real, and the new production-path collision transient lane proves both peak-scale and decay-shape responsiveness instead of inferring them from generic collision motion.
+- 2026-03-19 collision transient replay hardening: three immediate reruns stayed green, and the gain/delay separation held within a stable band instead of collapsing to a one-run coincidence.
+- 2026-03-19 angular runtime refinement: the processor now routes angular APVTS controls into `PhysicsWorker`, angular-only scenes can activate coordinated worker ownership, and a new runtime probe proves worker-owned `directivityAim` throw/reset behavior in the production path.
+- 2026-03-19 soft-boundary runtime refinement: the production path now has a dedicated soft-boundary probe, and the legacy-engine soft-boundary path publishes `collisionMask` parity with the worker path so the scene snapshot reflects soft-wall contact honestly.
 - New runtime lane: `locusq_physics_runtime_collision_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_boids_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_interaction_probe` PASS.
 - New runtime lane: `locusq_physics_runtime_spring_turbulence_probe` PASS.
+- New runtime lane: `locusq_physics_runtime_angular_probe` PASS.
+- New runtime lane: `locusq_physics_runtime_soft_boundary_probe` PASS.
+- Angular lane result:
+  - `baselineAim=(0.000,0.000,-1.000)`
+  - `maxAbsAimYAfterThrow=0.994`
+  - `maxAimNormError=0.0004`
+  - `resetMeanAim=(0.000,0.000,-1.000)`
+- Soft-boundary lane result:
+  - `maxX=2.464`
+  - `minDistanceToWall=0.536`
+  - `minVelocityX=-3.427`
+  - `settleMeanX=1.152`
+  - `settleRangeX=0.339`
+  - `collisionMask=1`
 - Collision lane result:
   - `emitterIds=(0,1)`
   - `initialDistance=0.900`
@@ -152,10 +189,25 @@ Last Modified Date: 2026-03-19T01:30:00Z
   - `Documentation/backlog/done/bl-093-visual-dna-token-adoption-and-polish.md`
   - `Documentation/backlog/done/bl-094-reactive-simulation-temporal-lab-containment.md`
 - BL-085:
-  - `TestEvidence/bl085_cmake_integration_20260317T230000Z/status.tsv`
+  - `TestEvidence/bl085_cmake_integration_20260319T030000Z/status.tsv`
+  - `TestEvidence/bl085_cmake_integration_20260319T020000Z/status.tsv`
+- BL-079:
+  - `TestEvidence/bl079_validation_20260319T030000Z/status.tsv`
+  - `TestEvidence/bl079_validation_20260319T014000Z/status.tsv`
 - BL-067:
+  - `TestEvidence/bl067_runtime_access_20260319T034500Z/status.tsv`
+  - `TestEvidence/bl067_runtime_access_20260319T034500Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute`
+- Physics runtime refinement:
+  - `qa/physics_runtime_orbit_probe_main.cpp`
+  - `qa/physics_runtime_mass_override_probe_main.cpp`
+  - `qa/physics_runtime_attractor_crossing_probe_main.cpp`
+  - `qa/physics_runtime_collision_transient_probe_main.cpp`
+  - `locusq_physics_runtime_orbit_probe`: PASS with `initialRadius=2.000`, `settleMeanRadius=2.179`, `settleRangePct=6.82`, `maxAngularDeviationDeg=59.95`
+  - `locusq_physics_runtime_mass_override_probe`: PASS with `heavyMeanPostCollisionVx=2.268`, `lightMeanPostCollisionVx=7.489`
+  - `locusq_physics_runtime_attractor_crossing_probe`: PASS across 3 reruns with `maxCollisionEnergy=0.964`, `maxBridgeTransient=0.964`, and quiet late-window decay; the earlier zero-transient result was caused by probe-side 3D coordinate mismatch, not by a live propagation failure
+  - `locusq_physics_runtime_collision_transient_probe`: PASS across 3 reruns with `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, and `decayLateDeltaBridge=0.065..0.146`; the production path now proves that collision gain scale changes burst size and collision decay ms changes burst persistence
 
 ## Evidence Hygiene Notes
 
