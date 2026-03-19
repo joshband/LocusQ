@@ -531,6 +531,15 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                              });
 }
 
+inline bool shouldLogResourceRequests() noexcept
+{
+#if JUCE_DEBUG
+    return true;
+#else
+    return readFeatureFlag ("LOCUSQ_WEBVIEW_RESOURCE_LOG");
+#endif
+}
+
 inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juce::String& url)
 {
     auto resourcePath = url.trim();
@@ -559,11 +568,14 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
     if (resourcePath.isEmpty() || resourcePath == "/")
         resourcePath = "/index.html";
 
-    const auto logDirectory = locusq::processor_bridge::getLocusQUserDataDirectory();
-    logDirectory.createDirectory();
-    const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
-    resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
-        + " request url=" + url + " path=" + resourcePath + "\n");
+    if (shouldLogResourceRequests())
+    {
+        const auto logDirectory = locusq::processor_bridge::getLocusQUserDataDirectory();
+        logDirectory.createDirectory();
+        const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
+        resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)
+            + " request url=" + url + " path=" + resourcePath + "\n");
+    }
 
 #if JUCE_DEBUG
     DBG ("LocusQ resource requested: " + resourcePath);

@@ -43,8 +43,8 @@ LocusQAudioProcessorEditor::LocusQAudioProcessorEditor (LocusQAudioProcessor& p)
     DBG ("LocusQ: Loading UI path " + initialResourcePath);
     webView->goToURL (initialUrl);
 
-    // Start timer for scene state updates (~30fps)
-    startTimerHz (30);
+    // Keep a responsive editor timer, but tier expensive bridge work under BL-097.
+    startTimerHz (kEditorTimerHz);
 
     setSize (1200, 800);
     DBG ("LocusQ: Editor constructor completed");
@@ -76,14 +76,12 @@ void LocusQAudioProcessorEditor::timerCallback()
 {
     if (webView == nullptr) return;
 
+    ++bridgeTickCount;
     updateStandaloneWindowTitle();
-    audioProcessor.pollCompanionCalibrationProfileFromDisk();
+    if ((bridgeTickCount % kCalibrationProfilePollIntervalTicks) == 0)
+        audioProcessor.pollCompanionCalibrationProfileFromDisk();
 
-    // Push scene + calibration payloads in one JS evaluation so panel updates stay
-    // deterministic under rapid profile switch bursts.
-    auto sceneJSON = audioProcessor.getSceneStateJSON();
-    auto calibrationJSON = juce::JSON::toString (audioProcessor.getCalibrationStatus());
-    locusq::editor_shell::pushSceneAndCalibrationUpdate (*webView, sceneJSON, calibrationJSON);
+    pushBridgePayloadsIfDue();
 
     // BL-045 Slice C: push drift telemetry at ~500ms intervals (every 15 ticks at 30Hz).
     if (++driftTelemetryTickCount >= kDriftTelemetryIntervalTicks)
@@ -237,6 +235,45 @@ void LocusQAudioProcessorEditor::timerCallback()
                 });
         }
     }
+}
+
+void LocusQAudioProcessorEditor::pushBridgePayloadsIfDue()
+{
+    if (webView == nullptr)
+        return;
+
+    const bool publishSceneNow = (bridgeTickCount % kStructuralScenePublishIntervalTicks) == 0;
+    const bool publishCalibrationNow = (bridgeTickCount % kCalibrationStatusPublishIntervalTicks) == 0;
+
+    if (! publishSceneNow && ! publishCalibrationNow)
+        return;
+
+    juce::String sceneJSON;
+    if (publishSceneNow)
+        sceneJSON = audioProcessor.getSceneStateJSON();
+
+    juce::String calibrationJSON;
+    if (publishCalibrationNow)
+    {
+        calibrationJSON = juce::JSON::toString (audioProcessor.getCalibrationStatus());
+        if (calibrationJSON == lastCalibrationPayload && ! publishSceneNow)
+            return;
+        lastCalibrationPayload = calibrationJSON;
+    }
+
+    if (publishSceneNow && publishCalibrationNow)
+    {
+        locusq::editor_shell::pushSceneAndCalibrationUpdate (*webView, sceneJSON, calibrationJSON);
+        return;
+    }
+
+    if (publishSceneNow)
+    {
+        locusq::editor_shell::pushSceneUpdate (*webView, sceneJSON);
+        return;
+    }
+
+    locusq::editor_shell::pushCalibrationUpdate (*webView, calibrationJSON);
 }
 
 void LocusQAudioProcessorEditor::updateStandaloneWindowTitle()

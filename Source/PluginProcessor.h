@@ -403,7 +403,11 @@ private:
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physSpreadModParams {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physTransientParams {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physFrozenParams    {};
+    std::array<juce::RangedAudioParameter*, kPhysicsDAWSlotCount> physSpreadNotifyTargets {};
     std::array<juce::RangedAudioParameter*, kPhysicsDAWSlotCount> physTransientNotifyTargets {};
+    std::array<std::atomic<float>, kPhysicsDAWSlotCount> physSpreadHostPending {};
+    std::array<std::atomic<float>, kPhysicsDAWSlotCount> physSpreadHostPublished {};
+    std::array<std::atomic<bool>, kPhysicsDAWSlotCount> physSpreadHostDirty {};
     std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPending {};
     std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPublished {};
     std::array<std::atomic<bool>, kPhysicsDAWSlotCount> physTransientHostDirty {};

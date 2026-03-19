@@ -290,6 +290,80 @@ juce::String buildCalibrationRemediationSegment (const juce::var& source, const 
     return label + " remediation: " + notes.joinIntoString ("; ") + ".";
 }
 
+juce::var buildCalibrationRemediationActions (const juce::var& discoveryReconciliation)
+{
+    juce::Array<juce::var> actions;
+    auto appendAction = [&actions] (const juce::String& id,
+                                    const juce::String& label,
+                                    const juce::String& targetCardId,
+                                    const juce::String& statusMessage)
+    {
+        juce::var actionVar (new juce::DynamicObject());
+        auto* action = actionVar.getDynamicObject();
+        action->setProperty ("id", id);
+        action->setProperty ("label", label);
+        action->setProperty ("targetCardId", targetCardId);
+        action->setProperty ("targetMode", "speaker_room");
+        action->setProperty ("statusMessage", statusMessage);
+        actions.add (actionVar);
+    };
+
+    auto collectRolesForPolicy = [&discoveryReconciliation] (const juce::String& policyId)
+    {
+        juce::StringArray roles;
+        if (auto* reconciliation = discoveryReconciliation.getDynamicObject())
+        {
+            for (const auto* bucketName : { "output", "topology" })
+            {
+                if (auto* bucket = reconciliation->getProperty (bucketName).getDynamicObject())
+                {
+                    for (const auto& property : bucket->getProperties())
+                    {
+                        if (property.value.toString().trim().toLowerCase() == policyId)
+                            roles.addIfNotAlreadyThere (property.name.toString().trim().toUpperCase());
+                    }
+                }
+            }
+        }
+        return roles;
+    };
+
+    const auto manualRoles = collectRolesForPolicy ("manual_reroute_later");
+    if (! manualRoles.isEmpty())
+    {
+        appendAction ("manual_reroute_roles",
+                      "REROUTE ROLES NOW",
+                      "cal-card-mapping",
+                      "Manual reroute needed for "
+                          + manualRoles.joinIntoString (", ")
+                          + ". Open Output Mapping and assign unique outputs.");
+    }
+
+    const auto deferredRoles = collectRolesForPolicy ("defer");
+    if (! deferredRoles.isEmpty())
+    {
+        appendAction ("revisit_deferred_roles",
+                      "REVISIT DEFERRED ROLES",
+                      "cal-card-discovery",
+                      "Deferred roles "
+                          + deferredRoles.joinIntoString (", ")
+                          + " still need direct measurement or mapping before the layout is complete.");
+    }
+
+    const auto foldedRoles = collectRolesForPolicy ("fold_front_pair");
+    if (! foldedRoles.isEmpty())
+    {
+        appendAction ("use_wider_output_surface",
+                      "USE WIDER OUTPUT SURFACE",
+                      "cal-card-discovery",
+                      "Folded roles "
+                          + foldedRoles.joinIntoString (", ")
+                          + " should be rerouted once more writable outputs are available.");
+    }
+
+    return juce::var (actions);
+}
+
 juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
                                                 const juce::String& monitoringPathId,
                                                 const juce::var& validationSummary,
@@ -327,6 +401,9 @@ juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
         summary->setProperty ("bestMapRemediation", bestMapRemediation);
     if (bestTopologyRemediation.isNotEmpty())
         summary->setProperty ("bestTopologyRemediation", bestTopologyRemediation);
+    const remediationActions = buildCalibrationRemediationActions (discoveryReconciliation);
+    if (const auto* actionArray = remediationActions.getArray(); actionArray != nullptr && ! actionArray->isEmpty())
+        summary->setProperty ("remediationActions", remediationActions);
 
     juce::StringArray parts;
     parts.add (tupleLabel);

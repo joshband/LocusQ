@@ -1199,6 +1199,23 @@
       color: var(--text-secondary);
       font-weight: 600;
     }
+    .cal-profile-remediation-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 6px;
+    }
+    .cal-profile-remediation-actions .btn-secondary {
+      flex: 1 1 calc(50% - 3px);
+      min-width: 0;
+      padding: 5px 8px;
+      font-size: 10px;
+    }
+    .cal-card.attention-flash {
+      border-color: rgba(212, 168, 71, 0.42);
+      box-shadow: 0 0 0 1px rgba(212, 168, 71, 0.16), 0 0 18px rgba(212, 168, 71, 0.12);
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
     .cal-ack-row {
       display: flex;
       align-items: center;
@@ -2580,6 +2597,7 @@
               </div>
               <div class="cal-profile-status" id="cal-profile-status">No calibration profiles loaded.</div>
               <div class="cal-profile-summary" id="cal-profile-summary">Saved profile summaries will appear here, including deferred, folded, or manually rerouted speaker roles.</div>
+              <div class="cal-profile-remediation-actions" id="cal-profile-remediation-actions"></div>
             </div>
           </div>
 

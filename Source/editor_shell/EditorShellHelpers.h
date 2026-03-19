@@ -4,6 +4,28 @@
 
 namespace locusq::editor_shell
 {
+inline void pushSceneUpdate (juce::WebBrowserComponent& webView,
+                             const juce::String& sceneJson)
+{
+    juce::String script;
+    script.preallocateBytes (sceneJson.getNumBytesAsUTF8() + 256);
+    script = "(()=>{const __scene=" + sceneJson
+           + ";try{if(typeof updateSceneState==='function')updateSceneState(__scene);}"
+             "catch(e){console.error('LocusQ scene update failed', e);}})();";
+    webView.evaluateJavascript (script);
+}
+
+inline void pushCalibrationUpdate (juce::WebBrowserComponent& webView,
+                                   const juce::String& calibrationJson)
+{
+    juce::String script;
+    script.preallocateBytes (calibrationJson.getNumBytesAsUTF8() + 256);
+    script = "(()=>{const __cal=" + calibrationJson
+           + ";try{if(typeof updateCalibrationStatus==='function')updateCalibrationStatus(__cal);}"
+             "catch(e){console.error('LocusQ calibration update failed', e);}})();";
+    webView.evaluateJavascript (script);
+}
+
 inline void pushSceneAndCalibrationUpdate (juce::WebBrowserComponent& webView,
                                            const juce::String& sceneJson,
                                            const juce::String& calibrationJson)

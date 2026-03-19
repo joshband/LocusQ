@@ -9347,6 +9347,49 @@ function setCalibrationProfileSummary(message) {
     summary.innerHTML = String(message || "");
 }
 
+let calibrationProfileRemediationFlashTimer = 0;
+
+function setCalibrationProfileRemediationActions(actions = []) {
+    const container = document.getElementById("cal-profile-remediation-actions");
+    if (!container) return;
+    container.innerHTML = "";
+    const safeActions = Array.isArray(actions) ? actions.filter(action => action && typeof action === "object") : [];
+    if (safeActions.length === 0) return;
+
+    safeActions.forEach((action) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn-secondary";
+        button.textContent = String(action?.label || "FOLLOW UP").trim() || "FOLLOW UP";
+        button.addEventListener("click", () => {
+            const targetMode = String(action?.targetMode || "").trim().toLowerCase();
+            if (targetMode === "speaker_room" || targetMode === "headphones") {
+                setCalibrationTargetUi(targetMode);
+            }
+
+            const targetCardId = String(action?.targetCardId || "").trim();
+            const targetCard = targetCardId ? document.getElementById(targetCardId) : null;
+            if (targetCard) {
+                targetCard.scrollIntoView({ block: "nearest", behavior: "smooth" });
+                targetCard.classList.add("attention-flash");
+                if (calibrationProfileRemediationFlashTimer) {
+                    window.clearTimeout(calibrationProfileRemediationFlashTimer);
+                }
+                calibrationProfileRemediationFlashTimer = window.setTimeout(() => {
+                    targetCard.classList.remove("attention-flash");
+                    calibrationProfileRemediationFlashTimer = 0;
+                }, 1800);
+            }
+
+            const statusMessage = String(action?.statusMessage || "").trim();
+            if (statusMessage) {
+                setCalibrationProfileStatus(statusMessage, false, false);
+            }
+        });
+        container.appendChild(button);
+    });
+}
+
 function buildCalibrationProfileReconciliationSummary(discoveryReconciliation) {
     if (!discoveryReconciliation || typeof discoveryReconciliation !== "object") return "";
     const segments = [];
@@ -9373,6 +9416,7 @@ function updateCalibrationProfileSummary(entry = null, overrideDiscoveryReconcil
     const resolvedEntry = entry || getSelectedCalibrationProfileEntry();
     if (!resolvedEntry) {
         setCalibrationProfileSummary("Saved profile summaries will appear here, including deferred, folded, or manually rerouted speaker roles.");
+        setCalibrationProfileRemediationActions([]);
         return;
     }
 
@@ -9382,6 +9426,7 @@ function updateCalibrationProfileSummary(entry = null, overrideDiscoveryReconcil
     const intentPlainText = String(intentSummary?.plainText || "").trim();
     if (intentPlainText && overrideDiscoveryReconciliation === undefined) {
         setCalibrationProfileSummary(intentPlainText);
+        setCalibrationProfileRemediationActions(Array.isArray(intentSummary?.remediationActions) ? intentSummary.remediationActions : []);
         return;
     }
 
@@ -9412,6 +9457,7 @@ function updateCalibrationProfileSummary(entry = null, overrideDiscoveryReconcil
         summaryParts.push("No saved role reconciliation notes for this profile.");
     }
     setCalibrationProfileSummary(summaryParts.join(" "));
+    setCalibrationProfileRemediationActions(Array.isArray(intentSummary?.remediationActions) ? intentSummary.remediationActions : []);
 }
 
 function getCalibrationProfileNameInputValue() {
@@ -10365,6 +10411,29 @@ async function runProductionP0SelfTest() {
                 bestTopologySummary,
                 bestMapRemediation,
                 bestTopologyRemediation,
+                remediationActions: [
+                    {
+                        id: "manual_reroute_roles",
+                        label: "REROUTE ROLES NOW",
+                        targetCardId: "cal-card-mapping",
+                        targetMode: "speaker_room",
+                        statusMessage: "Manual reroute needed for RS. Open Output Mapping and assign unique outputs.",
+                    },
+                    {
+                        id: "revisit_deferred_roles",
+                        label: "REVISIT DEFERRED ROLES",
+                        targetCardId: "cal-card-discovery",
+                        targetMode: "speaker_room",
+                        statusMessage: "Deferred roles LS, RS still need direct measurement or mapping before the layout is complete.",
+                    },
+                    {
+                        id: "use_wider_output_surface",
+                        label: "USE WIDER OUTPUT SURFACE",
+                        targetCardId: "cal-card-discovery",
+                        targetMode: "speaker_room",
+                        statusMessage: "Folded roles LS should be rerouted once more writable outputs are available.",
+                    },
+                ],
                 plainText: `5.1 · Speakers Profile metadata available. ${bestMapSummary} ${bestTopologySummary} ${bestMapRemediation} ${bestTopologyRemediation}`,
             };
         };
@@ -11198,7 +11267,17 @@ async function runProductionP0SelfTest() {
             expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Topology: LS=Fold To Front Pair; RS=Defer Role.", "imported profile summary best topology");
             expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Map remediation: LS still needs direct measurement or mapping before this layout is complete", "imported profile remediation best map");
             expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Topology remediation: LS is folded to the front pair and should be rerouted once more writable outputs are available", "imported profile remediation best topology");
-            recordCheck("UI-P1-102G", true, "exported and imported calibration profiles preserve human-readable speaker-role intent and remediation metadata");
+            expectIncludes("UI-P1-102G", String(document.getElementById("cal-profile-remediation-actions")?.textContent || ""), "REROUTE ROLES NOW", "imported profile remediation action");
+            const remediationButtons = Array.from(document.querySelectorAll("#cal-profile-remediation-actions button"));
+            const rerouteButton = remediationButtons.find((button) => String(button.textContent || "").trim() === "REROUTE ROLES NOW");
+            if (!(rerouteButton instanceof HTMLButtonElement)) {
+                failCheck("UI-P1-102G", "missing reroute remediation action button");
+            } else {
+                rerouteButton.click();
+                await waitMs(80);
+                expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Manual reroute needed for RS.", "reroute remediation status");
+            }
+            recordCheck("UI-P1-102G", true, "exported and imported calibration profiles preserve human-readable speaker-role intent, remediation metadata, and follow-up actions");
         } finally {
             nativeFunctions.applyBestCalibrationOutputMap = applyBestOutputBefore;
             nativeFunctions.applyBestCalibrationTopology = applyBestTopologyBefore;

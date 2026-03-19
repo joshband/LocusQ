@@ -1500,8 +1500,13 @@ LocusQAudioProcessor::LocusQAudioProcessor()
         physSpreadModParams[i] = apvts.getRawParameterValue ("phys_out_spread_mod_" + juce::String (i));
         physTransientParams[i] = apvts.getRawParameterValue ("phys_out_transient_"  + juce::String (i));
         physFrozenParams[i]    = apvts.getRawParameterValue ("phys_frozen_"         + juce::String (i));
+        physSpreadNotifyTargets[i] = dynamic_cast<juce::RangedAudioParameter*> (
+            apvts.getParameter ("phys_out_spread_mod_" + juce::String (i)));
         physTransientNotifyTargets[i] = dynamic_cast<juce::RangedAudioParameter*> (
             apvts.getParameter ("phys_out_transient_" + juce::String (i)));
+        physSpreadHostPending[i].store (0.0f, std::memory_order_relaxed);
+        physSpreadHostPublished[i].store (0.0f, std::memory_order_relaxed);
+        physSpreadHostDirty[i].store (false, std::memory_order_relaxed);
         physTransientHostPending[i].store (0.0f, std::memory_order_relaxed);
         physTransientHostPublished[i].store (0.0f, std::memory_order_relaxed);
         physTransientHostDirty[i].store (false, std::memory_order_relaxed);
@@ -1709,6 +1714,20 @@ void LocusQAudioProcessor::handleAsyncUpdate()
 {
     for (int slot = 0; slot < kPhysicsDAWSlotCount; ++slot)
     {
+        if (physSpreadHostDirty[slot].exchange (false, std::memory_order_acq_rel))
+        {
+            auto* parameter = physSpreadNotifyTargets[slot];
+            if (parameter != nullptr)
+            {
+                const auto value = juce::jlimit (
+                    0.0f,
+                    1.0f,
+                    physSpreadHostPending[slot].load (std::memory_order_acquire));
+                parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
+                physSpreadHostPublished[slot].store (value, std::memory_order_release);
+            }
+        }
+
         if (! physTransientHostDirty[slot].exchange (false, std::memory_order_acq_rel))
             continue;
 
@@ -3074,6 +3093,16 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
                 // Live path: mirror atomics to APVTS output params - DAW polls these for recording
                 physSpreadModParams[slot]->store (dspValues.spreadMod);
                 physGainModParams[slot]->store   (dspValues.gainMod);
+                const auto publishedSpread = physSpreadHostPublished[slot].load (std::memory_order_acquire);
+                const bool spreadStateChanged = std::abs (dspValues.spreadMod - publishedSpread) >= kPhysicsHostMirrorNotifyEpsilon
+                                            || ((dspValues.spreadMod <= kPhysicsHostMirrorNotifyEpsilon)
+                                                != (publishedSpread <= kPhysicsHostMirrorNotifyEpsilon));
+                if (spreadStateChanged)
+                {
+                    physSpreadHostPending[slot].store (dspValues.spreadMod, std::memory_order_release);
+                    physSpreadHostDirty[slot].store (true, std::memory_order_release);
+                    triggerAsyncUpdate();
+                }
                 spreadMod = dspValues.spreadMod;
                 gainMod   = dspValues.gainMod;
             }
@@ -3084,6 +3113,8 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
                     // LIVE -> FROZEN: snapshot current values at the freeze-effective block boundary
                     physSpreadModParams[slot]->store (dspValues.spreadMod);
                     physGainModParams[slot]->store   (dspValues.gainMod);
+                    physSpreadHostPending[slot].store (dspValues.spreadMod, std::memory_order_release);
+                    physSpreadHostDirty[slot].store (true, std::memory_order_release);
                     triggerAsyncUpdate();
                 }
                 // Frozen path: DAW playback owns the APVTS value; load() it for DSP

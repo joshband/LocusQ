@@ -33,6 +33,7 @@ private:
     // Timer for pushing scene state to WebView
     void timerCallback() override;
     void updateStandaloneWindowTitle();
+    void pushBridgePayloadsIfDue();
 
     //==============================================================================
     // CRITICAL: MEMBER DECLARATION ORDER
@@ -55,6 +56,14 @@ private:
     bool uiSelfTestProbeInFlight = false;
     bool uiSelfTestResultWritten = false;
     int uiSelfTestPollTicks = 0;
+    int bridgeTickCount = 0;
+    juce::String lastCalibrationPayload;
+
+    // BL-097: keep the editor timer responsive, but tier the expensive work.
+    static constexpr int kEditorTimerHz = 30;
+    static constexpr int kStructuralScenePublishIntervalTicks = 3;   // 10 Hz
+    static constexpr int kCalibrationStatusPublishIntervalTicks = 6; // 5 Hz
+    static constexpr int kCalibrationProfilePollIntervalTicks = 15;  // 2 Hz
 
     // BL-045 Slice C: drift telemetry push — fires every ~500ms (15 ticks at 30Hz)
     static constexpr int kDriftTelemetryIntervalTicks = 15;
