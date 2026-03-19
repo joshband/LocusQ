@@ -262,6 +262,34 @@ juce::String buildCalibrationIntentSegment (const juce::var& source, const juce:
     return label + ": " + pairs.joinIntoString ("; ") + ".";
 }
 
+juce::String buildCalibrationRemediationSegment (const juce::var& source, const juce::String& label)
+{
+    auto* object = source.getDynamicObject();
+    if (object == nullptr)
+        return {};
+
+    juce::StringArray notes;
+    for (const auto& property : object->getProperties())
+    {
+        const auto role = property.name.toString().trim().toUpperCase();
+        const auto policyId = property.value.toString().trim().toLowerCase();
+        if (role.isEmpty() || policyId.isEmpty())
+            continue;
+
+        if (policyId == "defer")
+            notes.add (role + " still needs direct measurement or mapping before this layout is complete");
+        else if (policyId == "fold_front_pair")
+            notes.add (role + " is folded to the front pair and should be rerouted once more writable outputs are available");
+        else if (policyId == "manual_reroute_later")
+            notes.add (role + " still needs a manual reroute decision before full-layout playback");
+    }
+
+    if (notes.isEmpty())
+        return {};
+
+    return label + " remediation: " + notes.joinIntoString ("; ") + ".";
+}
+
 juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
                                                 const juce::String& monitoringPathId,
                                                 const juce::var& validationSummary,
@@ -276,21 +304,29 @@ juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
     summary->setProperty ("tupleLabel", tupleLabel);
 
     const auto profileReady = validationSummary.getDynamicObject() != nullptr
-                              && static_cast<bool> (validationSummary.getProperty ("profileValid"));
+                              && static_cast<bool> (validationSummary.getProperty ("profileValid", false));
     summary->setProperty ("profileStateLabel", profileReady ? "Profile marked ready." : "Profile metadata available.");
 
     juce::String bestMapSummary;
     juce::String bestTopologySummary;
+    juce::String bestMapRemediation;
+    juce::String bestTopologyRemediation;
     if (auto* reconciliation = discoveryReconciliation.getDynamicObject())
     {
         bestMapSummary = buildCalibrationIntentSegment (reconciliation->getProperty ("output"), "Best Map");
         bestTopologySummary = buildCalibrationIntentSegment (reconciliation->getProperty ("topology"), "Best Topology");
+        bestMapRemediation = buildCalibrationRemediationSegment (reconciliation->getProperty ("output"), "Best Map");
+        bestTopologyRemediation = buildCalibrationRemediationSegment (reconciliation->getProperty ("topology"), "Best Topology");
     }
 
     if (bestMapSummary.isNotEmpty())
         summary->setProperty ("bestMapSummary", bestMapSummary);
     if (bestTopologySummary.isNotEmpty())
         summary->setProperty ("bestTopologySummary", bestTopologySummary);
+    if (bestMapRemediation.isNotEmpty())
+        summary->setProperty ("bestMapRemediation", bestMapRemediation);
+    if (bestTopologyRemediation.isNotEmpty())
+        summary->setProperty ("bestTopologyRemediation", bestTopologyRemediation);
 
     juce::StringArray parts;
     parts.add (tupleLabel);
@@ -299,6 +335,10 @@ juce::var buildCalibrationProfileIntentSummary (const juce::String& topologyId,
         parts.add (bestMapSummary);
     if (bestTopologySummary.isNotEmpty())
         parts.add (bestTopologySummary);
+    if (bestMapRemediation.isNotEmpty())
+        parts.add (bestMapRemediation);
+    if (bestTopologyRemediation.isNotEmpty())
+        parts.add (bestTopologyRemediation);
     if (bestMapSummary.isEmpty() && bestTopologySummary.isEmpty())
         parts.add ("No saved role reconciliation notes for this profile.");
     summary->setProperty ("plainText", parts.joinIntoString (" "));
@@ -1217,7 +1257,7 @@ juce::var LocusQAudioProcessor::exportCalibrationProfileFromUI (const juce::var&
         return response;
     }
 
-    const auto payload = readJsonFromFile (sourceFile);
+    auto payload = readJsonFromFile (sourceFile);
     if (! payload.has_value())
     {
         result->setProperty ("ok", false);

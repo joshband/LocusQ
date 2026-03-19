@@ -9401,6 +9401,13 @@ function updateCalibrationProfileSummary(entry = null, overrideDiscoveryReconcil
     ];
     if (reconciliationSummary) {
         summaryParts.push(reconciliationSummary);
+        const remediationSegments = [
+            String(intentSummary?.bestMapRemediation || "").trim(),
+            String(intentSummary?.bestTopologyRemediation || "").trim(),
+        ].filter(Boolean);
+        if (remediationSegments.length > 0) {
+            summaryParts.push(remediationSegments.join(" "));
+        }
     } else {
         summaryParts.push("No saved role reconciliation notes for this profile.");
     }
@@ -10336,12 +10343,30 @@ async function runProductionP0SelfTest() {
         const applyBestTopologyBefore = nativeFunctions.applyBestCalibrationTopology;
         const saveCalibrationProfileBefore = nativeFunctions.saveCalibrationProfile;
         const loadCalibrationProfileBefore = nativeFunctions.loadCalibrationProfile;
+        const exportCalibrationProfileBefore = nativeFunctions.exportCalibrationProfile;
+        const importCalibrationProfileBefore = nativeFunctions.importCalibrationProfile;
+        const listCalibrationProfilesBefore = nativeFunctions.listCalibrationProfiles;
         const getCalibrationStatusBefore = nativeFunctions.getCalibrationStatus;
         const readText = (id) => String(document.getElementById(id)?.textContent || "").trim();
         const expectIncludes = (checkId, actual, expected, label) => {
             if (!String(actual || "").includes(expected)) {
                 failCheck(checkId, `${label} mismatch (expected substring "${expected}", got "${actual || "n/a"}")`);
             }
+        };
+        const buildSyntheticIntentSummary = () => {
+            const bestMapSummary = "Best Map: LS=Defer Role; RS=Manual Reroute Later.";
+            const bestTopologySummary = "Best Topology: LS=Fold To Front Pair; RS=Defer Role.";
+            const bestMapRemediation = "Best Map remediation: LS still needs direct measurement or mapping before this layout is complete; RS still needs a manual reroute decision before full-layout playback.";
+            const bestTopologyRemediation = "Best Topology remediation: LS is folded to the front pair and should be rerouted once more writable outputs are available; RS still needs direct measurement or mapping before this layout is complete.";
+            return {
+                tupleLabel: "5.1 · Speakers",
+                profileStateLabel: "Profile metadata available.",
+                bestMapSummary,
+                bestTopologySummary,
+                bestMapRemediation,
+                bestTopologyRemediation,
+                plainText: `5.1 · Speakers Profile metadata available. ${bestMapSummary} ${bestTopologySummary} ${bestMapRemediation} ${bestTopologyRemediation}`,
+            };
         };
 
         try {
@@ -10867,6 +10892,7 @@ async function runProductionP0SelfTest() {
                     deviceProfile: "generic",
                     profileTupleKey: "surround_51::speakers",
                     discoveryReconciliation: savedDiscoveryReconciliation,
+                    intentSummary: buildSyntheticIntentSummary(),
                 };
             };
             nativeFunctions.loadCalibrationProfile = async () => ({
@@ -10878,6 +10904,7 @@ async function runProductionP0SelfTest() {
                 deviceProfile: "generic",
                 profileTupleKey: "surround_51::speakers",
                 discoveryReconciliation: savedDiscoveryReconciliation,
+                intentSummary: buildSyntheticIntentSummary(),
             });
 
             if (calTopologySelect instanceof HTMLSelectElement) {
@@ -11108,11 +11135,78 @@ async function runProductionP0SelfTest() {
             expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "5.1 · Speakers", "loaded profile summary tuple");
             expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Topology: LS=Fold To Front Pair; RS=Defer Role.", "loaded profile summary topology roles");
             recordCheck("UI-P1-102F", true, "discovery reconciliation policies persist through calibration profile save/load roundtrip");
+
+            nativeFunctions.exportCalibrationProfile = async () => ({
+                ok: true,
+                name: "Discovery_Reconcile_Test",
+                exportPath: "/tmp/Discovery_Reconcile_Test_Export.json",
+                topologyProfile: "surround_51",
+                monitoringPath: "speakers",
+                deviceProfile: "generic",
+                profileTupleKey: "surround_51::speakers",
+                discoveryReconciliation: savedDiscoveryReconciliation,
+                intentSummary: buildSyntheticIntentSummary(),
+            });
+            nativeFunctions.listCalibrationProfiles = async () => ([{
+                name: "Imported_Discovery_Profile",
+                file: "Imported_Discovery_Profile.json",
+                path: "/tmp/Imported_Discovery_Profile.json",
+                topologyProfile: "surround_51",
+                monitoringPath: "speakers",
+                deviceProfile: "generic",
+                profileTupleKey: "surround_51::speakers",
+                validationSummary: { profileValid: false },
+                discoveryReconciliation: savedDiscoveryReconciliation,
+                intentSummary: buildSyntheticIntentSummary(),
+            }]);
+            nativeFunctions.importCalibrationProfile = async () => ({
+                ok: true,
+                name: "Imported_Discovery_Profile",
+                importedPath: "/tmp/Imported_Discovery_Profile.json",
+                path: "/tmp/Imported_Discovery_Profile.json",
+                topologyProfile: "surround_51",
+                monitoringPath: "speakers",
+                deviceProfile: "generic",
+                profileTupleKey: "surround_51::speakers",
+                importedFromLibrary: false,
+                discoveryReconciliation: savedDiscoveryReconciliation,
+                intentSummary: buildSyntheticIntentSummary(),
+            });
+            if (calProfileSelect instanceof HTMLSelectElement) {
+                calProfileSelect.innerHTML = "";
+                const exportOption = document.createElement("option");
+                exportOption.value = "/tmp/Discovery_Reconcile_Test.json";
+                exportOption.textContent = "Discovery_Reconcile_Test";
+                exportOption.dataset.profileName = "Discovery_Reconcile_Test";
+                exportOption.dataset.topologyProfile = "surround_51";
+                exportOption.dataset.monitoringPath = "speakers";
+                exportOption.dataset.profileTupleKey = "surround_51::speakers";
+                calProfileSelect.appendChild(exportOption);
+                calProfileSelect.value = exportOption.value;
+            }
+            const profileExported = await exportCalibrationProfile();
+            if (!profileExported) {
+                failCheck("UI-P1-102G", "calibration profile export with intent summary failed");
+            }
+            expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Exported profile: Discovery_Reconcile_Test -> Discovery_Reconcile_Test_Export.json", "export status");
+            const profileImported = await importCalibrationProfile();
+            if (!profileImported) {
+                failCheck("UI-P1-102G", "calibration profile import with intent summary failed");
+            }
+            expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Imported_Discovery_Profile", "import status");
+            expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Map: LS=Defer Role; RS=Manual Reroute Later.", "imported profile summary best map");
+            expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Topology: LS=Fold To Front Pair; RS=Defer Role.", "imported profile summary best topology");
+            expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Map remediation: LS still needs direct measurement or mapping before this layout is complete", "imported profile remediation best map");
+            expectIncludes("UI-P1-102G", readText("cal-profile-summary"), "Best Topology remediation: LS is folded to the front pair and should be rerouted once more writable outputs are available", "imported profile remediation best topology");
+            recordCheck("UI-P1-102G", true, "exported and imported calibration profiles preserve human-readable speaker-role intent and remediation metadata");
         } finally {
             nativeFunctions.applyBestCalibrationOutputMap = applyBestOutputBefore;
             nativeFunctions.applyBestCalibrationTopology = applyBestTopologyBefore;
             nativeFunctions.saveCalibrationProfile = saveCalibrationProfileBefore;
             nativeFunctions.loadCalibrationProfile = loadCalibrationProfileBefore;
+            nativeFunctions.exportCalibrationProfile = exportCalibrationProfileBefore;
+            nativeFunctions.importCalibrationProfile = importCalibrationProfileBefore;
+            nativeFunctions.listCalibrationProfiles = listCalibrationProfilesBefore;
             nativeFunctions.getCalibrationStatus = getCalibrationStatusBefore;
             sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
             setChoiceIndex(comboStates.cal_topology_profile, topologyBefore, calibrationTopologyIds.length);
@@ -17068,6 +17162,15 @@ async function importCalibrationProfile() {
         await refreshCalibrationProfileList("", activeTuple);
         const tupleLabel =
             `${getCalibrationTopologyLabel(importedTuple.topologyProfile, true)} / ${getCalibrationMonitoringPathLabel(importedTuple.monitoringPath)}`;
+        updateCalibrationProfileSummary({
+            name: importedName,
+            path: result?.path || result?.importedPath || "",
+            topologyProfile: importedTuple.topologyProfile,
+            monitoringPath: importedTuple.monitoringPath,
+            validationSummary: result?.validationSummary,
+            discoveryReconciliation: result?.discoveryReconciliation,
+            intentSummary: result?.intentSummary,
+        }, result?.discoveryReconciliation);
         setCalibrationProfileStatus(
             result?.importedFromLibrary
                 ? `Library profile already present under ${tupleLabel}: ${importedName}`

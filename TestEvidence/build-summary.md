@@ -10,6 +10,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T04:36:49Z | BL-099 headphone truthfulness lane | PASS | `Done-candidate` |
 | 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
 | 2026-03-19T03:55:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
 | 2026-03-19T03:35:00Z | BL-085 owner sync review | PASS | `Done-candidate` |
@@ -29,6 +30,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T04:36:49Z | BL-099 headphone truthfulness lane | PASS | `Done-candidate` |
 | 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
 | 2026-03-19T03:55:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
 | 2026-03-19T02:52:12Z | Physics collision transient runtime proof | PASS | `In Validation` |
@@ -214,7 +216,7 @@ Last Modified Date: 2026-03-19
   - `locusq_physics_runtime_mass_override_probe`: PASS with `heavyMeanPostCollisionVx=2.268`, `lightMeanPostCollisionVx=7.489`
   - `locusq_physics_runtime_attractor_crossing_probe`: PASS across 3 reruns with `maxCollisionEnergy=0.964`, `maxBridgeTransient=0.964`, and quiet late-window decay; the earlier zero-transient result was caused by probe-side 3D coordinate mismatch, not by a live propagation failure
   - `locusq_physics_runtime_collision_transient_probe`: PASS across 3 reruns with `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, and `decayLateDeltaBridge=0.065..0.146`; the production path now proves that collision gain scale changes burst size and collision decay ms changes burst persistence
-  - `reaper-phys-collision-transient-gate-mac.sh`: FAIL after fresh install + cache prune; REAPER now sees the new `Emitter N Physics Transient` params, but the multi-instance collision scenario still produced `low_peak_transient=0.000`, `high_peak_transient=0.000`, `short_late_mean=0.000`, `long_late_mean=0.000`. This is the current host-acceptance blocker.
+  - `reaper-phys-collision-transient-gate-mac.sh`: PASS after the host-friendly transient observation envelope landed; REAPER now proves burst visibility plus both control responses in-host (`low_peak_transient=0.026`, `high_peak_transient=0.260`, `short_late_mean=0.001824`, `long_late_mean=0.131882`, `gate_b_gain_scale=true`, `gate_c_decay=true`, `gate_d_visible=true`)
 
 ## Evidence Hygiene Notes
 

@@ -407,6 +407,7 @@ private:
     std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPending {};
     std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPublished {};
     std::array<std::atomic<bool>, kPhysicsDAWSlotCount> physTransientHostDirty {};
+    std::array<float, kPhysicsDAWSlotCount> physTransientHostMirrorState {};
     std::atomic<float>* rendPhysRateParam = nullptr;
     std::atomic<float>* rendPhysPauseParam = nullptr;
     std::atomic<float>* rendPhysWallsParam = nullptr;

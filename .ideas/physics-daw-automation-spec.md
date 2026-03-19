@@ -96,6 +96,7 @@ float value = getRawParameterValue("phys_out_spread_mod_N")->load();
 `setValueNotifyingHost` is **not** called from `processBlock`. It is not RT-safe — it triggers host listener callbacks synchronously, which may allocate or hold locks. The DAW records automation by polling `getRawParameterValue` each processing cycle; no notification is required for recording to work.
 
 Host notification (for UI refresh) is dispatched asynchronously via `AsyncUpdater::triggerAsyncUpdate()` from `processBlock`, resolved on the message thread.
+For host-observation lanes that need REAPER-visible updates, the current implementation also pushes `phys_out_transient_N` through that same async/message-thread path so the host cache can observe live transient changes without violating RT safety.
 
 ### Live path (`phys_frozen_N = false`)
 

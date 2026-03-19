@@ -71,6 +71,21 @@ if [[ "$MODE" == "contract" ]]; then
     exit 1
   fi
 
+  if rg -n 'snapshot\.scoreProvenance = provenance::kUnavailable|snapshot\.compensationLabel = "Generic baseline compensation"|snapshot\.compensationProvenance = provenance::kGeneric' \
+      Source/PluginProcessor.cpp >/dev/null; then
+    record "runtime_truth_contract" "PASS" "runtime snapshot withholds unmeasured verification evidence and keeps compensation generic"
+  else
+    record "runtime_truth_contract" "FAIL" "runtime snapshot does not enforce unavailable score provenance plus generic compensation labeling"
+    exit 1
+  fi
+
+  if ! rg -n 'baseFrontBack|baseElevation|baseExternalization|confidenceBias|0\\.84f|0\\.79f|0\\.82f' Source/PluginProcessor.cpp >/dev/null; then
+    record "static_score_tables_removed" "PASS" "synthetic headphone verification score tables absent from runtime snapshot path"
+  else
+    record "static_score_tables_removed" "FAIL" "synthetic headphone verification score tables still present in runtime snapshot path"
+    exit 1
+  fi
+
   if rg -n "qa-bl099-headphone-truthfulness-mac.sh|bl099" Documentation/backlog/bl-099-headphone-verification-truthfulness-and-compensation-provenance.md status.json >/dev/null; then
     record "traceability" "PASS" "runbook/status trace present for BL-099"
   else

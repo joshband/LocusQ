@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-095, BL-098 promoted to Done; active open set: BL-099, BL-100, BL-101)
+Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-095, BL-098, BL-099, BL-101 promoted to Done; active open set: BL-100)
 
 # LocusQ Master Backlog Index
 
@@ -181,8 +181,8 @@ Immediate wave summary:
 | 66 | BL-096 | Companion executable/core protocol reunification | P1 | Open | E | BL-045, BL-072 | — | [bl-096](bl-096-companion-executable-core-protocol-reunification.md) |
 | 67 | BL-097 | Editor bridge cadence tiering and calibration reload isolation | P1 | Open | B | HX-05, BL-059, BL-074 | — | [bl-097](bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md) |
 | 68 | BL-098 | Local validation lane restoration and clean-build completeness | P1 | Done (2026-03-19) | G | BL-042 | — | [bl-098](done/bl-098-local-validation-lane-restoration-and-clean-build-completeness.md) |
-| 69 | BL-099 | Headphone verification truthfulness and compensation provenance | P1 | Open | E | BL-034, BL-057 | BL-089 | [bl-099](bl-099-headphone-verification-truthfulness-and-compensation-provenance.md) |
-| 70 | BL-101 | CALIBRATE discovery, provenance, and truthfulness | P1 | Open | E | BL-026, BL-038, BL-059, BL-099 | future CALIBRATE capability-expansion lanes | [bl-101](bl-101-calibrate-discovery-provenance-and-truthfulness.md) |
+| 69 | BL-099 | Headphone verification truthfulness and compensation provenance | P1 | **Done** (2026-03-19) | E | BL-034, BL-057 | BL-089 | [bl-099](done/bl-099-headphone-verification-truthfulness-and-compensation-provenance.md) |
+| 70 | BL-101 | CALIBRATE discovery, provenance, and truthfulness | P1 | **Done** (2026-03-19) | E | BL-026, BL-038, BL-059, BL-099 | future CALIBRATE capability-expansion lanes | [bl-101](done/bl-101-calibrate-discovery-provenance-and-truthfulness.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 

@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 109,
-    "open": 19,
-    "done": 90
+    "open": 17,
+    "done": 92
   },
   "items": [
     {
@@ -1891,8 +1891,8 @@
     {
       "id": "BL-099",
       "title": "BL-099 Headphone verification truthfulness and compensation provenance",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "Done (2026-03-19: contract 3/3 PASS, execute 3/3 PASS; measured/estimated/generic/unavailable provenance live in HeadphoneVerificationContract.h, sanitizeProvenance live in bridge, scoreProvenance + compensationProvenance published through ProcessorSceneStateBridgeOps.h)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-034 (Done), BL-057 (Done)",
@@ -1903,9 +1903,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-099 in plain terms: make headphone-verification scores and headphone-compensation behavior honest about what is actually measured, what is only estimated, and what is merely a generic placeholder. Current state: Open. This item was created after the 2026-03-17 second-opinion supplement found that operator-visible verification scores are synthesized from static lookup tables and that per-profile compensation coefficients name specific headphones without measurement provenance.",
+      "plain_language_summary": "BL-099 in plain terms: make headphone-verification scores and headphone-compensation behavior honest about what is actually measured, what is only estimated, and what is merely a generic placeholder. Current state: Done-candidate. Runtime verification stages still publish, but synthetic score tables no longer masquerade as evidence: operator-visible score provenance now falls back to unavailable, generic compensation stays explicitly generic, and the dedicated BL-099 execute lane is green.",
       "objective": "Restore truthfulness and provenance clarity to headphone-calibration quality surfaces. BL-099 is complete only when verification scores cannot be mistaken for measured perceptual results unless real evidence exists, and when named headphone-compensation behavior is either traceable to documented measurement sources or clearly framed as generic/unmeasured.",
-      "runbook_path": "Documentation/backlog/bl-099-headphone-verification-truthfulness-and-compensation-provenance.md"
+      "runbook_path": "Documentation/backlog/done/bl-099-headphone-verification-truthfulness-and-compensation-provenance.md"
     },
     {
       "id": "BL-100",
@@ -1929,8 +1929,8 @@
     {
       "id": "BL-101",
       "title": "BL-101 CALIBRATE discovery, provenance, and truthfulness",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "Done (2026-03-19: contract 4/4 PASS, execute 3/3 PASS; inferred/detected/generic/unavailable/manual_override/stale provenance states live in ProcessorUiBridgeOps.h; makeBl101Descriptor wired across all CALIBRATE surfaces)",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Open, complementary)",
@@ -1943,7 +1943,7 @@
       "where": "",
       "plain_language_summary": "BL-101 in plain terms: make CALIBRATE honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Open. This item is the direct follow-on from the 2026-03-18 CALIBRATE research packet and exists because the current panel can show useful status, but it still cannot prove all of its automation and verification claims end-to-end.",
       "objective": "Make CALIBRATE trustworthy and expandable by freezing one explicit contract for output discovery, input identification, topology inference, profile provenance, freshness, and verification truthfulness. BL-101 is complete only when HEADPHONE DEVICE STATUS, AUTOMATION SUMMARY, CALIBRATION STATUS, and HEADPHONE VERIFY can state what is detected, inferred, measured, estimated, generic, stale, or manually overridden without rewriting weaker evidence into stronger claims.",
-      "runbook_path": "Documentation/backlog/bl-101-calibrate-discovery-provenance-and-truthfulness.md"
+      "runbook_path": "Documentation/backlog/done/bl-101-calibrate-discovery-provenance-and-truthfulness.md"
     },
     {
       "id": "HX-01",

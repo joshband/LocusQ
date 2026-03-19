@@ -1505,6 +1505,7 @@ LocusQAudioProcessor::LocusQAudioProcessor()
         physTransientHostPending[i].store (0.0f, std::memory_order_relaxed);
         physTransientHostPublished[i].store (0.0f, std::memory_order_relaxed);
         physTransientHostDirty[i].store (false, std::memory_order_relaxed);
+        physTransientHostMirrorState[i] = 0.0f;
     }
 
     auto rawParam = [this] (const char* paramId) -> std::atomic<float>*
@@ -3037,14 +3038,32 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             const auto dspValues = physicsDspBridge.read (slot);  // single read per slot per block
 
             lastFrozenState[slot] = nowFrozen;
-            physTransientParams[slot]->store (dspValues.gainTransient);
+
+            // Host-facing transient mirrors need a slower observation envelope than the
+            // raw bridge burst, otherwise REAPER only catches the initial peak and loses
+            // the short-vs-long decay distinction. This mirror remains observation-only:
+            // DSP and scene state still consume the raw `gainTransient`.
+            const auto blockPeriodSec = static_cast<float> (numSamplesInBlock / juce::jmax (1.0, getSampleRate()));
+            const auto hostDecayMs = juce::jlimit (40.0f,
+                                                   600.0f,
+                                                   loadParam (physCollisionDecayMsParam) * 1.5f);
+            const auto hostReleaseSec = hostDecayMs * 0.001f;
+            const auto hostReleaseCoef = 1.0f - std::exp (-blockPeriodSec / juce::jmax (1.0e-4f, hostReleaseSec));
+            auto& hostTransientState = physTransientHostMirrorState[slot];
+            if (dspValues.gainTransient >= hostTransientState)
+                hostTransientState = dspValues.gainTransient;
+            else
+                hostTransientState += hostReleaseCoef * (dspValues.gainTransient - hostTransientState);
+
+            const auto hostObservedTransient = juce::jlimit (0.0f, 1.0f, hostTransientState);
+            physTransientParams[slot]->store (hostObservedTransient);
             const auto publishedTransient = physTransientHostPublished[slot].load (std::memory_order_acquire);
-            const bool transientStateChanged = std::abs (dspValues.gainTransient - publishedTransient) >= kPhysicsHostMirrorNotifyEpsilon
-                                            || ((dspValues.gainTransient <= kPhysicsHostMirrorNotifyEpsilon)
+            const bool transientStateChanged = std::abs (hostObservedTransient - publishedTransient) >= kPhysicsHostMirrorNotifyEpsilon
+                                            || ((hostObservedTransient <= kPhysicsHostMirrorNotifyEpsilon)
                                                 != (publishedTransient <= kPhysicsHostMirrorNotifyEpsilon));
             if (transientStateChanged)
             {
-                physTransientHostPending[slot].store (dspValues.gainTransient, std::memory_order_release);
+                physTransientHostPending[slot].store (hostObservedTransient, std::memory_order_release);
                 physTransientHostDirty[slot].store (true, std::memory_order_release);
                 triggerAsyncUpdate();
             }

@@ -2,13 +2,13 @@ Title: BL-099 Headphone verification truthfulness and compensation provenance
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19 (Done — contract 3/3 PASS, execute 3/3 PASS; provenance fields live in HeadphoneVerificationContract.h + bridge)
 
 # BL-099 Headphone verification truthfulness and compensation provenance
 
 ## Plain-Language Summary
 
-BL-099 in plain terms: make headphone-verification scores and headphone-compensation behavior honest about what is actually measured, what is only estimated, and what is merely a generic placeholder. Current state: Open. This item was created after the 2026-03-17 second-opinion supplement found that operator-visible verification scores are synthesized from static lookup tables and that per-profile compensation coefficients name specific headphones without measurement provenance.
+BL-099 in plain terms: make headphone-verification scores and headphone-compensation behavior honest about what is actually measured, what is only estimated, and what is merely a generic placeholder. Current state: Done-candidate. Runtime verification stages still publish, but synthetic score tables no longer masquerade as evidence: operator-visible score provenance now falls back to `unavailable`, generic compensation stays explicitly generic, and the dedicated BL-099 execute lane is green.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -35,7 +35,7 @@ BL-099 in plain terms: make headphone-verification scores and headphone-compensa
 |---|---|
 | ID | BL-099 |
 | Priority | P1 |
-| Status | Open |
+| Status | Done (2026-03-19: contract 3/3 PASS, execute 3/3 PASS; measured/estimated/generic/unavailable provenance live in HeadphoneVerificationContract.h, sanitizeProvenance live in bridge, scoreProvenance + compensationProvenance published through ProcessorSceneStateBridgeOps.h) |
 | Track | E - R&D Expansion |
 | Effort | High / M |
 | Depends On | BL-034 (Done), BL-057 (Done) |
@@ -87,6 +87,15 @@ Restore truthfulness and provenance clarity to headphone-calibration quality sur
 | BL099-CONTRACT | Automated | `scripts/qa-bl099-headphone-truthfulness-mac.sh --contract-only` | score-status/provenance rules and compensation provenance expectations are explicitly asserted |
 | BL099-EXECUTE | Automated | `scripts/qa-bl099-headphone-truthfulness-mac.sh --execute --runs 3` | synthetic-score publication is labeled honestly and compensation provenance output matches the contract |
 | BL099-EVIDENCE | Focused validation | compare runtime output against BL-060/listening-harness evidence or explicit `unavailable`/`estimated` fallback state | user-visible truth claims match available evidence |
+
+## Current Evidence
+
+- Runtime publication now keeps verification stage/fallback telemetry while withholding synthetic score evidence.
+- Compensation remains labeled `Generic baseline compensation` with `generic` provenance.
+- Green evidence:
+  - `TestEvidence/bl099_headphone_truthfulness_contract_20260319T043352Z/status.tsv`
+  - `TestEvidence/bl099_headphone_truthfulness_20260319T043553Z/status.tsv`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T043606Z.json`
 
 ## Replay Cadence Plan (Required)
 

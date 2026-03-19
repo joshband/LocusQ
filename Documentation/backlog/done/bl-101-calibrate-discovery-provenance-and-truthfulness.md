@@ -2,7 +2,7 @@ Title: BL-101 CALIBRATE discovery, provenance, and truthfulness
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-19 (Done — contract 4/4 PASS, execute 3/3 PASS; inferred/detected/generic/unavailable/manual_override/stale states live in ProcessorUiBridgeOps.h)
 
 # BL-101 CALIBRATE discovery, provenance, and truthfulness
 
@@ -35,7 +35,7 @@ BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating devi
 |---|---|
 | ID | BL-101 |
 | Priority | P1 |
-| Status | Open |
+| Status | Done (2026-03-19: contract 4/4 PASS, execute 3/3 PASS; inferred/detected/generic/unavailable/manual_override/stale provenance states live in ProcessorUiBridgeOps.h; makeBl101Descriptor wired across all CALIBRATE surfaces) |
 | Track | E - R&D Expansion |
 | Effort | High / L |
 | Depends On | BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Open, complementary) |
