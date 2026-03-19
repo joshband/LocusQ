@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-20
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -10,6 +10,8 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T06:12:00Z | BL-067 runtime boundary tightening contract replay | PASS | `In Validation` |
+| 2026-03-19T19:44:50Z | BL-086 CI checkout composite action — contract 11/11 + execute 3/3 | PASS | `Done` |
 | 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `In Validation` |
 | 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `In Validation` |
 | 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `In Validation` |
@@ -38,6 +40,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T06:12:00Z | BL-067 runtime boundary tightening contract replay | PASS | `In Validation` |
 | 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `In Validation` |
 | 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `In Validation` |
 | 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `In Validation` |
@@ -95,7 +98,8 @@ Last Modified Date: 2026-03-19
 - 2026-03-19 attractor-crossing transient refinement: the earlier failing lane was a false negative caused by a probe coordinate mismatch; after correcting the 3D attractor placement and tightening the runtime contract, the dedicated production-path crossing transient lane now passes across reruns.
 - 2026-03-19 attractor-spread host refinement: `phys_out_spread_mod_0` now has a real host-visible observation path, and REAPER can see the attractor-off baseline, attractor-on spread rise, and attractor-off decay instead of only a sentinel write.
 - 2026-03-19 attractor-crossing host refinement: the DAW-visible transient mirror now has a real REAPER acceptance lane for single-emitter radius crossing, so this transient family is no longer processor-only evidence.
-- 2026-03-19 boids host refinement: the new REAPER boids-spread lane is a useful failing repro, not a green claim. Dual-instance setup and baseline are good, but host-visible spread remains dark after boids enable.
+- 2026-03-19 boids host refinement: the new REAPER boids-spread lane is a useful failing repro, not a green claim. Dual-instance setup and baseline are good, but host-visible spread remains dark after boids enable; the runtime boids probe still passes on the same build, so the blocker is now narrowed to the host/shared-lifecycle boundary.
+- 2026-03-19 boids host debug refinement: the new controlled two-instance boids debug probe narrows that host blocker further. In the processor path, boids reaches worker density, bridge spread, APVTS spread mirror, and scene spread on both instances (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `scene=1.000`), but the async host-published spread mirror still remains `0.000` while the pending host spread is `1.000`, so the current failure boundary is now specifically the spread host-mirror publication step.
 - 2026-03-19 collision transient refinement: `phys_collision_decay_ms` now reaches `PhysicsDSPBridge` transient smoothing for real, and the new production-path collision transient lane proves both peak-scale and decay-shape responsiveness instead of inferring them from generic collision motion.
 - 2026-03-19 collision transient replay hardening: three immediate reruns stayed green, and the gain/delay separation held within a stable band instead of collapsing to a one-run coincidence.
 - 2026-03-19 angular runtime refinement: the processor now routes angular APVTS controls into `PhysicsWorker`, angular-only scenes can activate coordinated worker ownership, and a new runtime probe proves worker-owned `directivityAim` throw/reset behavior in the production path.
@@ -219,6 +223,8 @@ Last Modified Date: 2026-03-19
   - `TestEvidence/bl079_validation_20260319T030000Z/status.tsv`
   - `TestEvidence/bl079_validation_20260319T014000Z/status.tsv`
 - BL-067:
+  - `TestEvidence/bl067_runtime_access_20260319T061200Z/status.tsv`
+  - `TestEvidence/bl067_runtime_access_20260319T061200Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_runtime_access_20260319T035500Z/status.tsv`
   - `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
@@ -264,7 +270,7 @@ Last Modified Date: 2026-03-19
   - `locusq_physics_runtime_collision_transient_probe`: PASS across 3 reruns with `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, and `decayLateDeltaBridge=0.065..0.146`; the production path now proves that collision gain scale changes burst size and collision decay ms changes burst persistence
   - `reaper-phys-attractor-spread-gate-mac.sh`: PASS; REAPER now proves a quiet attractor-off baseline, a visible attractor-on spread rise, and decay back to quiet after disable on `Emitter 1 Physics Spread` (`baseline_peak_spread=0.000`, `active_peak_spread=0.880`, `off_mean_spread=0.000`, `gate_b_quiet_baseline=true`, `gate_c_attractor_visible=true`, `gate_d_decay_observed=true`)
   - `reaper-phys-attractor-crossing-gate-mac.sh`: PASS; REAPER now proves quiet baseline plus a visible attractor-crossing burst and decay on `Emitter 1 Physics Transient` (`baseline_peak_transient=0.000`, `peak_transient=0.967`, `late_mean=0.002158`, `decay_ratio=0.002232`, `gate_b_quiet_baseline=true`, `gate_c_crossing_visible=true`, `gate_d_decay_observed=true`)
-  - `reaper-phys-boids-spread-gate-mac.sh`: FAIL twice; REAPER sees both plugin instances and a quiet baseline, but no host-visible spread after boids enable (`baseline_peak_spread=0.000`, `active_peak_spread=0.000`), so this is now the concrete host blocker for boids
+  - `reaper-phys-boids-spread-gate-mac.sh`: FAIL twice; REAPER sees both plugin instances and a quiet baseline, but no host-visible spread after boids enable (`baseline_peak_spread=0.000`, `active_peak_spread=0.000`), while the rebuilt runtime boids probe still passes with `maxSpread=1.000`, so this is now the concrete host blocker for boids
   - `reaper-phys-collision-transient-gate-mac.sh`: PASS after the host-friendly transient observation envelope landed; REAPER now proves burst visibility plus both control responses in-host (`low_peak_transient=0.026`, `high_peak_transient=0.260`, `short_late_mean=0.001824`, `long_late_mean=0.131882`, `gate_b_gain_scale=true`, `gate_c_decay=true`, `gate_d_visible=true`)
 
 ## Evidence Hygiene Notes
