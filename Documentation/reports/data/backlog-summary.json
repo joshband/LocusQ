@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 109,
-    "open": 22,
-    "done": 87
+    "open": 20,
+    "done": 89
   },
   "items": [
     {
@@ -1625,8 +1625,8 @@
     {
       "id": "BL-085",
       "title": "BL-085 CMake Integration Module \u2014 audio-dsp-qa-harness",
-      "state_bucket": "open",
-      "status": "Done-candidate (2026-03-19: upstream module remains integrated; local configure, build, and smoke replay now pass again)",
+      "state_bucket": "done",
+      "status": "Done (2026-03-19: local configure/build/smoke PASS; upstream module integrated; CI follow-up is optional adoption work, not a local blocker)",
       "priority": "P1",
       "track": "G - Tooling / Governance",
       "depends_on": "BL-082 (runner app library; best adopted together)",
@@ -1639,7 +1639,7 @@
       "where": "",
       "plain_language_summary": "BL-085 in plain terms: add a harness-provided qa_harness_integration.cmake module that exposes an enable_qa_harness() CMake function so plugins have one tested integration path instead of each maintaining subtly different submodule/find_package/target-fallback glue. Current state: Done-candidate. The upstream module is still integrated, the 2026-03-19 local replay is green again, and the remaining work is final owner closeout plus any optional upstream consumer follow-up, not a local smoke blocker.",
       "objective": "Publish a harness CMake module that normalizes plugin integration across three lookup strategies:",
-      "runbook_path": "Documentation/backlog/bl-085-cmake-integration-module.md"
+      "runbook_path": "Documentation/backlog/done/bl-085-cmake-integration-module.md"
     },
     {
       "id": "BL-086",
@@ -1815,7 +1815,7 @@
     {
       "id": "BL-095",
       "title": "BL-095 Partitioned FIR truthfulness recovery and objective validation",
-      "state_bucket": "open",
+      "state_bucket": "done",
       "status": "Done (2026-03-19 \u2014 all slices complete; BL095-HOST PASS: pdc_samples=0 via headless Reaper against LocusQ-Loaded-Track1.RPP)",
       "priority": "P0",
       "track": "E - R&D Expansion",
@@ -1829,7 +1829,7 @@
       "where": "",
       "plain_language_summary": "BL-095 in plain terms: restore truth between what LocusQ says its long-FIR calibration engine is doing and what the DSP actually does. Current state: Open. This item was created from the 2026-03-17 comprehensive code/DSP review after the repo\u2019s BL-055 surfaces were found to over-claim partitioned-runtime readiness.",
       "objective": "Restore a truthful FIR engine contract for calibration mode. BL-095 is complete only when the runtime either stays honestly direct-form with matching zero-latency reporting, or ships a real partitioned path whose measured impulse offset, host latency publication, engine state, and CPU behavior all agree.",
-      "runbook_path": "Documentation/backlog/bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md"
+      "runbook_path": "Documentation/backlog/done/bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md"
     },
     {
       "id": "BL-096",

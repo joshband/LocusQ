@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BinaryData.h"
+#include "../processor_bridge/ProcessorBridgeUtilities.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <cstdlib>
 #include <cstring>
@@ -137,6 +138,13 @@ inline juce::File getUiSelfTestResultFile()
 
     return juce::File::getSpecialLocation (juce::File::tempDirectory)
         .getChildFile ("locusq_incremental_ui_selftest_result.json");
+}
+
+inline juce::File getCalibrationProfileDialogDirectory()
+{
+    auto directory = locusq::processor_bridge::getUserDataSubdirectory ("CalibrationProfiles");
+    directory.createDirectory();
+    return directory;
 }
 
 inline juce::String getOptionString (const juce::var& options,
@@ -310,8 +318,7 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
 
                                  auto chooser = std::make_shared<juce::FileChooser> (
                                      "Export calibration profile",
-                                     juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
-                                         .getChildFile (suggestedFileName),
+                                     getCalibrationProfileDialogDirectory().getChildFile (suggestedFileName),
                                      "*.json");
 
                                  chooser->launchAsync (
@@ -341,7 +348,7 @@ inline juce::WebBrowserComponent::Options withNativeBindings (
                                  const auto optionsFromUi = args.isEmpty() ? juce::var() : args[0];
                                  auto chooser = std::make_shared<juce::FileChooser> (
                                      "Import calibration profile",
-                                     juce::File::getSpecialLocation (juce::File::userDocumentsDirectory),
+                                     getCalibrationProfileDialogDirectory(),
                                      "*.json");
 
                                  chooser->launchAsync (
@@ -552,8 +559,7 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
     if (resourcePath.isEmpty() || resourcePath == "/")
         resourcePath = "/index.html";
 
-    const auto logDirectory = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-        .getChildFile ("LocusQ");
+    const auto logDirectory = locusq::processor_bridge::getLocusQUserDataDirectory();
     logDirectory.createDirectory();
     const auto resourceLogFile = logDirectory.getChildFile ("resource_requests.log");
     resourceLogFile.appendText (juce::Time::getCurrentTime().toISO8601 (true)

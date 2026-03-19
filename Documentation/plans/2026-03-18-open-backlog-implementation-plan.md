@@ -284,14 +284,14 @@ Reason:
 
 - Smallest local runtime-access slice is now complete.
 - Local proof:
-  - `TestEvidence/bl067_runtime_access_20260319T034500Z/sandbox_runtime_access.tsv`
+  - `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
 - What changed:
   - calibration-profile fallback now uses the LocusQ user-data directory only
   - custom SOFA fallback now uses the LocusQ user-data directory only
+  - calibration import/export dialogs now default to the LocusQ calibration-profile directory
 - Next blockers are external or host-facing:
   - Apple signing
   - real AUv3 host execution
-  - optional follow-on: tighten native file-dialog defaults in `Source/editor_webview/EditorWebViewRuntime.h`
 
 ### Docs Gate
 
