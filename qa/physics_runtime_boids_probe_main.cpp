@@ -29,6 +29,14 @@ struct SceneSnapshot
     EmitterSample second;
 };
 
+struct BoidsSettleMetrics
+{
+    float settleMinDistance = std::numeric_limits<float>::max();
+    float settleMaxDistance = 0.0f;
+    float settleSumDistance = 0.0f;
+    int settleSampleCount = 0;
+};
+
 void setActualParam (LocusQAudioProcessor& processor, const char* paramId, float actualValue)
 {
     if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (processor.apvts.getParameter (paramId)))
@@ -166,6 +174,7 @@ ProbeResult runProbe()
     float initialDistance = 0.0f;
     float minDistance = std::numeric_limits<float>::max();
     float maxSpread = 0.0f;
+    BoidsSettleMetrics settleMetrics;
 
     const auto baselineSnapshot = parseSceneSnapshot (first.getSceneStateJSON(), firstEmitterId, secondEmitterId);
     if (baselineSnapshot.emitterCount >= 2 && baselineSnapshot.first.found && baselineSnapshot.second.found)
@@ -209,6 +218,14 @@ ProbeResult runProbe()
             if (initialDistanceCaptured)
                 minDistance = juce::jmin (minDistance, distance);
             maxSpread = juce::jmax (maxSpread, juce::jmax (snapshot.first.spread, snapshot.second.spread));
+
+            if (block >= 56 && initialDistanceCaptured)
+            {
+                settleMetrics.settleMinDistance = juce::jmin (settleMetrics.settleMinDistance, distance);
+                settleMetrics.settleMaxDistance = juce::jmax (settleMetrics.settleMaxDistance, distance);
+                settleMetrics.settleSumDistance += distance;
+                ++settleMetrics.settleSampleCount;
+            }
         }
 
         std::this_thread::sleep_for (std::chrono::milliseconds (10));
@@ -220,14 +237,28 @@ ProbeResult runProbe()
     const bool capturedValidBaseline = initialDistanceCaptured && initialDistance >= 1.0f;
     const bool approached = capturedValidBaseline && minDistance < (initialDistance - 0.25f);
     const bool spreadLive = maxSpread >= 0.20f;
+    const float settleMeanDistance = settleMetrics.settleSampleCount > 0
+        ? settleMetrics.settleSumDistance / static_cast<float> (settleMetrics.settleSampleCount)
+        : 0.0f;
+    const float settleRangeDistance = settleMetrics.settleSampleCount > 0
+        ? settleMetrics.settleMaxDistance - settleMetrics.settleMinDistance
+        : std::numeric_limits<float>::max();
+    const bool settleWindowCaptured = settleMetrics.settleSampleCount >= 4;
+    const bool settleBandOk = settleWindowCaptured
+        && settleMeanDistance >= 2.20f
+        && settleMeanDistance <= 2.70f
+        && settleRangeDistance <= 0.30f;
 
     juce::String detail;
     detail << "emitterIds=(" << firstEmitterId << "," << secondEmitterId << ")"
            << " initialDistance=" << juce::String (initialDistance, 3)
            << " minDistance=" << juce::String (minDistance, 3)
+           << " settleSamples=" << settleMetrics.settleSampleCount
+           << " settleMeanDistance=" << juce::String (settleMeanDistance, 3)
+           << " settleRangeDistance=" << juce::String (settleRangeDistance, 3)
            << " maxSpread=" << juce::String (maxSpread, 3);
 
-    return { sawBothEmitters && capturedValidBaseline && approached && spreadLive, detail };
+    return { sawBothEmitters && capturedValidBaseline && approached && spreadLive && settleBandOk, detail };
 }
 } // namespace
 

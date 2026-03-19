@@ -31,6 +31,14 @@ struct SceneSnapshot
     EmitterSample second;
 };
 
+struct InteractionSettleMetrics
+{
+    float settleMinDistance = std::numeric_limits<float>::max();
+    float settleMaxDistance = 0.0f;
+    float settleSumDistance = 0.0f;
+    int settleSampleCount = 0;
+};
+
 void setActualParam (LocusQAudioProcessor& processor, const char* paramId, float actualValue)
 {
     if (auto* parameter = dynamic_cast<juce::RangedAudioParameter*> (processor.apvts.getParameter (paramId)))
@@ -162,6 +170,7 @@ ProbeResult runProbe()
     float maxAbsForce = 0.0f;
     EmitterSample lastFirst;
     EmitterSample lastSecond;
+    InteractionSettleMetrics settleMetrics;
 
     for (int block = 0; block < 64; ++block)
     {
@@ -205,6 +214,14 @@ ProbeResult runProbe()
                                  || (snapshot.first.fx < -0.05f && snapshot.second.fx > 0.05f);
             lastFirst = snapshot.first;
             lastSecond = snapshot.second;
+
+            if (block >= 56 && initialDistanceCaptured)
+            {
+                settleMetrics.settleMinDistance = juce::jmin (settleMetrics.settleMinDistance, distance);
+                settleMetrics.settleMaxDistance = juce::jmax (settleMetrics.settleMaxDistance, distance);
+                settleMetrics.settleSumDistance += distance;
+                ++settleMetrics.settleSampleCount;
+            }
         }
 
         std::this_thread::sleep_for (std::chrono::milliseconds (10));
@@ -215,6 +232,17 @@ ProbeResult runProbe()
 
     const bool separated = initialDistanceCaptured && maxDistance > (initialDistance + 0.20f);
     const bool forceLive = maxAbsForce >= 0.50f;
+    const float settleMeanDistance = settleMetrics.settleSampleCount > 0
+        ? settleMetrics.settleSumDistance / static_cast<float> (settleMetrics.settleSampleCount)
+        : 0.0f;
+    const float settleRangeDistance = settleMetrics.settleSampleCount > 0
+        ? settleMetrics.settleMaxDistance - settleMetrics.settleMinDistance
+        : std::numeric_limits<float>::max();
+    const bool settleWindowCaptured = settleMetrics.settleSampleCount >= 4;
+    const bool settleBandOk = settleWindowCaptured
+        && settleMeanDistance >= 2.80f
+        && settleMeanDistance <= 3.30f
+        && settleRangeDistance <= 0.30f;
     const bool oppositeVelocitySeen =
         (lastFirst.vx < -0.05f) && (lastSecond.vx > 0.05f);
 
@@ -223,10 +251,14 @@ ProbeResult runProbe()
            << " initialDistance=" << juce::String (initialDistance, 3)
            << " maxDistance=" << juce::String (maxDistance, 3)
            << " maxAbsForce=" << juce::String (maxAbsForce, 3)
+           << " settleSamples=" << settleMetrics.settleSampleCount
+           << " settleMeanDistance=" << juce::String (settleMeanDistance, 3)
+           << " settleRangeDistance=" << juce::String (settleRangeDistance, 3)
            << " finalFx=(" << juce::String (lastFirst.fx, 3) << "," << juce::String (lastSecond.fx, 3) << ")"
            << " finalVx=(" << juce::String (lastFirst.vx, 3) << "," << juce::String (lastSecond.vx, 3) << ")";
 
-    return { sawBothEmitters && initialDistanceCaptured && separated && forceLive && oppositeForcesSeen && oppositeVelocitySeen,
+    return { sawBothEmitters && initialDistanceCaptured && separated && forceLive && oppositeForcesSeen
+             && oppositeVelocitySeen && settleBandOk,
              detail };
 }
 } // namespace

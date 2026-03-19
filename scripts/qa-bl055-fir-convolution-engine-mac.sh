@@ -3,7 +3,7 @@
 # Document Type: QA Script
 # Author: APC Codex
 # Created Date: 2026-03-02
-# Last Modified Date: 2026-03-02
+# Last Modified Date: 2026-03-19
 #
 # Exit codes:
 #   0 all checks passed
@@ -143,7 +143,7 @@ printf "check_id\tresult\tdetail\tartifact\n" > "$STATUS_TSV"
 printf "check\tresult\tdetail\tartifact\n" > "$LATENCY_CONTRACT_TSV"
 printf "scenario\tresult\tdetail\tartifact\n" > "$SWAP_CROSSFADE_CHECK_TSV"
 
-BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/bl-055-fir-convolution-engine.md"
+BACKLOG_DOC="${ROOT_DIR}/Documentation/backlog/done/bl-055-fir-convolution-engine.md"
 PROCESSOR_CPP="${ROOT_DIR}/Source/PluginProcessor.cpp"
 SPATIAL_RENDERER_HDR="${ROOT_DIR}/Source/SpatialRenderer.h"
 SPATIAL_PROFILE_IMPL="${ROOT_DIR}/Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp"
@@ -196,19 +196,17 @@ else
     "identity FIR zero-latency markers missing" "$FIR_HOOK_HDR"
 fi
 
-if rg -q 'DirectFirConvolver|PartitionedFftConvolver|FirEngineManager' \
-      "$CALIBRATION_CHAIN_HDR" "$FIR_HOOK_HDR" "$SPATIAL_RENDERER_HDR" "$PROCESSOR_CPP" \
-   && rg -q 'nextPow2|nextPowerOfTwo|juce::nextPowerOfTwo' \
-      "$CALIBRATION_CHAIN_HDR" "$FIR_HOOK_HDR" "$SPATIAL_RENDERER_HDR" "$PROCESSOR_CPP"; then
-  printf "partitioned_latency_next_pow2_contract\tPASS\tdirect/partitioned engine markers with nextPow2 latency contract detected\t%s\n" "$FIR_HOOK_HDR" \
+if rg -q 'getLatencySamples' "$FIR_HOOK_HDR" \
+   && ! rg -q 'partitionedLatencySamples' "$FIR_HOOK_HDR"; then
+  printf "honest_direct_form_latency_zero\tPASS\tgetLatencySamples present and no false partitioned latency field\t%s\n" "$FIR_HOOK_HDR" \
     >> "$LATENCY_CONTRACT_TSV"
-  record "BL055-C4-partitioned_latency_next_pow2_contract" "PASS" \
-    "direct/partitioned nextPow2 latency markers present" "$FIR_HOOK_HDR"
+  record "BL055-C4-honest_direct_form_latency_zero" "PASS" \
+    "direct-form honesty: getLatencySamples present, no partitionedLatencySamples field" "$FIR_HOOK_HDR"
 else
-  printf "partitioned_latency_next_pow2_contract\tFAIL\tdirect/partitioned engine markers or nextPow2 latency contract missing\t%s\n" "$FIR_HOOK_HDR" \
+  printf "honest_direct_form_latency_zero\tFAIL\tgetLatencySamples missing or false partitionedLatencySamples field present\t%s\n" "$FIR_HOOK_HDR" \
     >> "$LATENCY_CONTRACT_TSV"
-  record "BL055-C4-partitioned_latency_next_pow2_contract" "FAIL" \
-    "direct/partitioned nextPow2 latency markers missing" "$FIR_HOOK_HDR"
+  record "BL055-C4-honest_direct_form_latency_zero" "FAIL" \
+    "getLatencySamples missing or partitionedLatencySamples field still present" "$FIR_HOOK_HDR"
 fi
 
 if rg -Fq 'headphoneCalibrationChain.setRequestedEngineIndex (' "$OUTPUT_ROUTING_CPP" \
