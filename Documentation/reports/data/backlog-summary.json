@@ -1933,7 +1933,7 @@
       "status": "Done (2026-03-19: contract 4/4 PASS, execute 3/3 PASS; inferred/detected/generic/unavailable/manual_override/stale provenance states live in ProcessorUiBridgeOps.h; makeBl101Descriptor wired across all CALIBRATE surfaces)",
       "priority": "P1",
       "track": "E - R&D Expansion",
-      "depends_on": "BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Open, complementary)",
+      "depends_on": "BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Done, complementary)",
       "blocks": "future CALIBRATE capability-expansion lanes",
       "who": "",
       "what": "",
@@ -1941,7 +1941,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-101 in plain terms: make CALIBRATE honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Open. This item is the direct follow-on from the 2026-03-18 CALIBRATE research packet and exists because the current panel can show useful status, but it still cannot prove all of its automation and verification claims end-to-end.",
+      "plain_language_summary": "BL-101 in plain terms: make CALIBRATE honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Done. The CALIBRATE surfaces now publish explicit source/provenance/freshness semantics, and the dedicated BL-101 truthfulness lane is green.",
       "objective": "Make CALIBRATE trustworthy and expandable by freezing one explicit contract for output discovery, input identification, topology inference, profile provenance, freshness, and verification truthfulness. BL-101 is complete only when HEADPHONE DEVICE STATUS, AUTOMATION SUMMARY, CALIBRATION STATUS, and HEADPHONE VERIFY can state what is detected, inferred, measured, estimated, generic, stale, or manually overridden without rewriting weaker evidence into stronger claims.",
       "runbook_path": "Documentation/backlog/done/bl-101-calibrate-discovery-provenance-and-truthfulness.md"
     },

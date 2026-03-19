@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-19 (Done — contract 4/4 PASS, execute 3/3 PASS; in
 
 ## Plain-Language Summary
 
-BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Open. This item is the direct follow-on from the 2026-03-18 CALIBRATE research packet and exists because the current panel can show useful status, but it still cannot prove all of its automation and verification claims end-to-end.
+BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Done. The CALIBRATE surfaces now publish explicit source/provenance/freshness semantics, and the dedicated BL-101 truthfulness lane is green.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -38,7 +38,7 @@ BL-101 in plain terms: make `CALIBRATE` honest and expandable by separating devi
 | Status | Done (2026-03-19: contract 4/4 PASS, execute 3/3 PASS; inferred/detected/generic/unavailable/manual_override/stale provenance states live in ProcessorUiBridgeOps.h; makeBl101Descriptor wired across all CALIBRATE surfaces) |
 | Track | E - R&D Expansion |
 | Effort | High / L |
-| Depends On | BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Open, complementary) |
+| Depends On | BL-026 (Done), BL-038 (Done), BL-059 (Done), BL-099 (Done, complementary) |
 | Blocks | future CALIBRATE capability-expansion lanes |
 | Annex Spec | `Documentation/plans/2026-03-18-calibrate-discovery-provenance-execution-packet.md` |
 | Default Replay Tier | T1 |
