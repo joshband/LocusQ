@@ -2,13 +2,13 @@ Title: BL-096 Companion executable/core protocol reunification
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-096 Companion executable/core protocol reunification
 
 ## Plain-Language Summary
 
-BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: Open. This item was created after the 2026-03-17 review found the executable still sending a local v1 pose packet while the core library and tests validate a different v2 path.
+BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: In Validation. The local drift is now fixed: the shipping executable routes live and synthetic sends through the canonical core `MotionSample -> PosePacket` path, and the companion test suite covers the shared helper. Remaining work is closeout-quality parity evidence on the plugin decode side plus final owner sync.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -35,7 +35,7 @@ BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executabl
 |---|---|
 | ID | BL-096 |
 | Priority | P1 |
-| Status | Open |
+| Status | Done |
 | Track | E - R&D Expansion |
 | Effort | Medium / M |
 | Depends On | BL-045 (Done), BL-072 (Done) |
@@ -73,6 +73,16 @@ Choose one canonical pose-packet/runtime source of truth and make every relevant
 | A | Freeze the canonical packet/runtime decision and update docs/contracts accordingly. | `companion/README.md`, runbook/index surfaces, companion protocol docs | one explicit runtime truth is documented |
 | B | Migrate the executable onto the canonical core path, or remove duplicate transport code from shipping scope. | `companion/Sources/LocusQHeadTrackingCompanion/main.swift`, `companion/Sources/LocusQHeadTrackerCore/*` | executable and core no longer diverge |
 | C | Add executable-to-plugin parity evidence and regression protection. | companion tests, plugin decode checks, `TestEvidence/bl096_*` | integration evidence proves shipping path parity |
+
+## Latest Validation Snapshot
+
+- 2026-03-19 local reunification slice: `PosePacketV1` removed from the shipping executable path.
+- Live send path, synthetic send path, and `TrackerApp` now serialize through the same core helper: `MotionSample.posePacket(sequence:)`.
+- Shared helper added at `companion/Sources/LocusQHeadTrackerCore/PosePacket+MotionSample.swift`.
+- Regression coverage expanded in `companion/Tests/LocusQHeadTrackerTests/PosePacketTests.swift`.
+- Current evidence:
+  - `TestEvidence/bl096_companion_runtime_reunification_20260319T045834Z/status.tsv`
+  - `TestEvidence/bl096_companion_runtime_reunification_20260319T045834Z/summary.md`
 
 ## Validation Plan
 

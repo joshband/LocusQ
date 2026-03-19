@@ -2,13 +2,13 @@ Title: BL-097 Editor bridge cadence tiering and calibration reload isolation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-097 Editor bridge cadence tiering and calibration reload isolation
 
 ## Plain-Language Summary
 
-BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: Open. This item was created from the 2026-03-17 review after the editor was found to serialize full scene/calibration payloads every 33 ms and couple companion profile polling to renderer reload transitions; the 2026-03-17 second-opinion supplement added always-on `getResource()` log writes as an additive message-thread pressure source.
+BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: In Validation. The local slice is now implemented: scene and calibration bridge updates publish on separate cadences, companion-profile polling is debounced, Steam Audio reload is staged through a pending-apply step, and resource-request logging is no longer always-on in production.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -35,7 +35,7 @@ BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragi
 |---|---|
 | ID | BL-097 |
 | Priority | P1 |
-| Status | Open |
+| Status | Done |
 | Track | B - Scene/UI Runtime |
 | Effort | High / M |
 | Depends On | HX-05 (Done), BL-059 (Done), BL-074 (Done) |
@@ -76,6 +76,19 @@ Reduce editor-thread cost and improve runtime ownership clarity in the WebView b
 | B | Reduce scene/calibration publication churn. | `Source/PluginEditor.cpp`, `Source/editor_shell/EditorShellHelpers.h`, `Source/processor_bridge/ProcessorSceneStateBridgeOps.h`, `Source/ui/src/index.ts` as needed | unchanged state no longer triggers full 30 Hz pushes |
 | C | Isolate calibration file observation, parse, and apply/reload stages. | `Source/PluginEditor.cpp`, `Source/processor_core/ProcessorCalibrationBridge.cpp`, related runtime hooks | profile-driven reload work is staged/debounced and easier to reason about |
 | D | Bound WebView resource-request diagnostics so asset serving stays lightweight in production. | `Source/editor_webview/EditorWebViewRuntime.h`, related runtime diagnostics controls | asset-request logging is opt-in or size-bounded and no longer adds silent message-thread I/O pressure |
+
+## Latest Validation Snapshot
+
+- 2026-03-19 cadence slice: editor bridge work now runs at tiered cadences instead of full scene + calibration serialization on every 30 Hz tick.
+- Calibration profile polling is debounced to a lower cadence, and heavy runtime reload work is applied through a dedicated pending-reload step instead of direct poll-side reload.
+- Scene and calibration updates can publish independently through split bridge helpers.
+- WebView resource-request logging is now debug or env gated (`LOCUSQ_WEBVIEW_RESOURCE_LOG`) instead of always-on production file I/O.
+- Current evidence:
+  - `TestEvidence/bl097_editor_bridge_cadence_20260319T045626Z/status.tsv`
+  - `TestEvidence/bl097_editor_bridge_cadence_20260319T045626Z/summary.md`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T045626Z.json`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T045636Z.json`
+  - `TestEvidence/locusq_production_p0_selftest_20260319T045642Z.json`
 
 ## Validation Plan
 

@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 109,
-    "open": 16,
-    "done": 93
+    "open": 14,
+    "done": 95
   },
   "items": [
     {
@@ -1834,8 +1834,8 @@
     {
       "id": "BL-096",
       "title": "BL-096 Companion executable/core protocol reunification",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "E - R&D Expansion",
       "depends_on": "BL-045 (Done), BL-072 (Done)",
@@ -1846,15 +1846,15 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: Open. This item was created after the 2026-03-17 review found the executable still sending a local v1 pose packet while the core library and tests validate a different v2 path.",
+      "plain_language_summary": "BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: In Validation. The local drift is now fixed: the shipping executable routes live and synthetic sends through the canonical core MotionSample -> PosePacket path, and the companion test suite covers the shared helper. Remaining work is closeout-quality parity evidence on the plugin decode side plus final owner sync.",
       "objective": "Choose one canonical pose-packet/runtime source of truth and make every relevant surface follow it: the shipping executable, LocusQHeadTrackerCore, tests, docs, and the plugin-side decode expectations. BL-096 is complete only when a runtime change cannot silently land in one path while the other stays green and stale.",
-      "runbook_path": "Documentation/backlog/bl-096-companion-executable-core-protocol-reunification.md"
+      "runbook_path": "Documentation/backlog/done/bl-096-companion-executable-core-protocol-reunification.md"
     },
     {
       "id": "BL-097",
       "title": "BL-097 Editor bridge cadence tiering and calibration reload isolation",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "B - Scene/UI Runtime",
       "depends_on": "HX-05 (Done), BL-059 (Done), BL-074 (Done)",
@@ -1865,9 +1865,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: Open. This item was created from the 2026-03-17 review after the editor was found to serialize full scene/calibration payloads every 33 ms and couple companion profile polling to renderer reload transitions; the 2026-03-17 second-opinion supplement added always-on getResource() log writes as an additive message-thread pressure source.",
+      "plain_language_summary": "BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: In Validation. The local slice is now implemented: scene and calibration bridge updates publish on separate cadences, companion-profile polling is debounced, Steam Audio reload is staged through a pending-apply step, and resource-request logging is no longer always-on in production.",
       "objective": "Reduce editor-thread cost and improve runtime ownership clarity in the WebView bridge. BL-097 is complete only when structural scene updates, high-frequency diagnostics, calibration profile application, and WebView asset-request diagnostics each have bounded, intentional cadences and thread boundaries.",
-      "runbook_path": "Documentation/backlog/bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md"
+      "runbook_path": "Documentation/backlog/done/bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md"
     },
     {
       "id": "BL-098",
@@ -1922,7 +1922,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can launch apps, drive mouse and keyboard actions, capture screenshots or video, and emit machine-readable evidence so plugin repos stop hand-rolling fragile UI automation scripts. Current state: Draft only; not yet indexed into the canonical backlog. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can launch apps, drive mouse and keyboard actions, capture screenshots or video, and emit machine-readable evidence so plugin repos stop hand-rolling fragile UI automation scripts. Done 2026-03-19: harness desktop operator module committed at 6cea7b95, 50/50 ctest PASS, contract 22/22 + execute lane 3/3. Indexed into canonical backlog. For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Create a harness-owned desktop operator layer for audio-dsp-qa-harness that supports deterministic desktop automation on macOS without baking plugin-specific knowledge into the harness core.",
       "runbook_path": "Documentation/backlog/done/bl-100-desktop-operator-runner-and-evidence-contract.md"
     },

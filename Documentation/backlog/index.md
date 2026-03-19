@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-095, BL-098, BL-099, BL-100, BL-101 promoted to Done; no active P1 open items)
+Last Modified Date: 2026-03-19 (BL-079, BL-085, BL-095, BL-096, BL-097, BL-098, BL-099, BL-100, BL-101 promoted to Done; active P1 open: BL-060 blocked, BL-067 blocked, BL-086 open)
 
 # LocusQ Master Backlog Index
 
