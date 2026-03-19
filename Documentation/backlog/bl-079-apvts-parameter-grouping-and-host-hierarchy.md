@@ -8,7 +8,7 @@ Last Modified Date: 2026-03-19
 
 ## Plain-Language Summary
 
-BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally, a fresh 2026-03-19 clean-checkout replay now passes end to end, and the remaining work is host-view verification plus promotion follow-up.
+BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally, the clean-checkout replay passes, REAPER VST3 host verification now passes, and REAPER AU still shows a flat-order mismatch that blocks promotion.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -59,7 +59,7 @@ BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visib
 |---|---|---|---|---|---|---|---|---|
 | `~~Slice A~~` grouped APVTS tree implementation | `[DONE]` | P2 | Small | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorParameterLayout.cpp` | none |
 | `~~Slice B~~` promotion validation | `[DONE]` | P2 | Small | fresh clean-checkout replay passed 2026-03-19 | `n/a` | 2026-03-19 | `build_bl079_check2`, `TestEvidence/bl079_validation_20260319T030000Z` | none |
-| Host smoke follow-up | `[ACTIVE]` | P2 | Small | QA smoke lane is green again; representative host-view check still pending | `n/a` | 2026-03-19 | representative AU/VST3 host surfaces | confirm grouped presentation and no automation/session regressions in host UI |
+| Host smoke follow-up | `[ACTIVE]` | P2 | Small | REAPER VST3 gate PASS; REAPER AU gate FAIL on flat-order check (`Mode` at idx `1`, expected `0`) | `n/a` | 2026-03-19 | `TestEvidence/bl079_param_group_host_gate_*_20260319T042105Z` | resolve AU host ordering mismatch or narrow the acceptance contract honestly |
 
 ## Objective
 
@@ -100,7 +100,7 @@ Expose LocusQ's APVTS as a grouped host hierarchy so DAWs that understand parame
 | BL079-BUILD | Automated | `cmake --build build_local --config Release --target LocusQ locusq_qa -- -j8` | Exit 0 |
 | BL079-PARITY | Automated | local source-parity script comparing pre/post W1-D IDs and order | `90/90` IDs match and flattened order is unchanged |
 | BL079-QA-FOLLOWUP | Automated | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial ...` representative scenario replay in a clean checkout | scenario result emits normally and does not regress |
-| BL079-HOST-SMOKE | Manual | Open representative AU/VST3 host parameter view | grouped sections render as expected; existing sessions/automation stay intact |
+| BL079-HOST-SMOKE | Automated + manual follow-up | `scripts/reaper-param-group-host-gate-mac.sh --format VST3` and `scripts/reaper-param-group-host-gate-mac.sh --format AU` | VST3 and AU both satisfy the host gate, or any format-specific mismatch is recorded honestly and handled before promotion |
 
 ## Validation Snapshot (2026-03-19)
 
@@ -113,7 +113,13 @@ Expose LocusQ's APVTS as a grouped host hierarchy so DAWs that understand parame
 - `cmake --build build_bl079_check2 --config Release --target LocusQ locusq_qa -j8` -> `PASS`
 - `build_bl079_check2/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> `PASS_WITH_WARNING`
 - top finding: `locusq_emitter_passthrough (WARN) [rms_level] rms=-29.667015 dBFS (range: -10.000000 to -5.000000)`
-- disposition: shared `locusq_rt_safety_emitter` blocker is cleared; BL-079 remains in validation only for representative AU/VST3 host verification and promotion review
+- `scripts/reaper-param-group-host-gate-mac.sh --format VST3` -> `PASS`
+- VST3 host gate: `param_count=215`, all required group-boundary names present, `Mode` at index `0`, renderer section ordered after emitter identity
+- evidence root: `TestEvidence/bl079_param_group_host_gate_vst3_20260319T042105Z`
+- `scripts/reaper-param-group-host-gate-mac.sh --format AU` -> `FAIL`
+- AU host gate: `param_count=214`, all required names present, but `Mode` is at index `1` instead of `0`
+- evidence root: `TestEvidence/bl079_param_group_host_gate_au_20260319T042105Z`
+- disposition: shared RT-safety blocker is cleared; VST3 host verification is now green, but BL-079 remains in validation because AU host ordering does not yet satisfy the same flat-order contract
 - evidence root: `TestEvidence/bl079_validation_20260319T030000Z`
 
 ## Replay Cadence Plan (Required)
@@ -131,8 +137,8 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 | Risk | Impact | Likelihood | Mitigation |
 |---|---|---|---|
 | Legacy automation or QA depends on flattened parameter indices | High | Medium | Keep declaration order unchanged and verify parity against the pre-grouping source |
-| Host-specific parameter-tree presentation differs across formats | Medium | Medium | Keep BL-079 in validation until representative AU/VST3 host checks are captured |
-| Representative host parameter-tree presentation differs across formats even with a green QA replay | Medium | Medium | Keep BL-079 in validation until AU/VST3 host-view checks are captured |
+| Host-specific parameter-tree presentation differs across formats | High | Medium | Treat format-specific host evidence as a real gate, not a documentation afterthought |
+| AU host ordering differs even when required names are present | High | Medium | Keep BL-079 in validation until the AU mismatch is fixed or the acceptance contract is narrowed honestly |
 | Concurrent editor/toolchain work muddies validation signal | Medium | High | Keep promotion follow-up in a clean checkout or separate worktree |
 
 ## Evidence Bundle Contract
@@ -151,5 +157,6 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - [x] Build/parity evidence recorded
 - [x] Clean-checkout configure/build replay captured
 - [x] Clean-checkout QA replay captured with smoke lane green
-- [ ] Representative host parameter-view check captured
+- [x] Representative VST3 host parameter-view gate captured
+- [ ] Representative AU host parameter-view gate reconciled
 - [ ] Promotion decision recorded
