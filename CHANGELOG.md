@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-19
+Last Modified Date: 2026-03-20
 
 # Changelog
 
@@ -13,6 +13,10 @@ All notable changes to LocusQ are documented here.
 Operational snapshot:
 - Live backlog authority: `Documentation/backlog/index.md`
 - Canonical runtime/state authority: `status.json`
+
+### Changed
+
+- BL-032: Source modularization complete — PluginProcessor/PluginEditor decomposed into `processor_core`, `processor_bridge`, `shared_contracts`, `editor_shell`, `editor_webview` modules; guardrails 13/13 PASS (PluginProcessor.cpp 3395 ≤ 3600 LOC, RT audit non_allowlisted=0)
 
 ### Added
 

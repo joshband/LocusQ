@@ -10,15 +10,17 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T21:09:42Z | BL-032 source modularization — guardrails 13/13 PASS | PASS | `Done` |
+| 2026-03-19T20:52:01Z | BL-060 real-session packet bootstrap | PASS | `In Validation` |
 | 2026-03-19T06:12:00Z | BL-067 runtime boundary tightening contract replay | PASS | `In Validation` |
 | 2026-03-19T19:44:50Z | BL-086 CI checkout composite action — contract 11/11 + execute 3/3 | PASS | `Done` |
-| 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `In Validation` |
-| 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `In Validation` |
-| 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `In Validation` |
+| 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `Done` |
+| 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `Done` |
+| 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `Done` |
 | 2026-03-19T19:20:00Z | REAPER attractor-spread host gate | PASS | `In Validation` |
 | 2026-03-19T19:19:29Z | BL-100 desktop operator runner — contract 22/22 + execute 3/3 | PASS | `Done` |
-| 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `In Validation` |
-| 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `In Validation` |
+| 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `Done` |
+| 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `Done` |
 | 2026-03-19T04:47:44Z | REAPER attractor-crossing transient host gate | PASS | `In Validation` |
 | 2026-03-19T04:36:49Z | BL-099 headphone truthfulness lane | PASS | `Done-candidate` |
 | 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
@@ -40,13 +42,14 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T20:52:01Z | BL-060 real-session packet bootstrap | PASS | `In Validation` |
 | 2026-03-19T06:12:00Z | BL-067 runtime boundary tightening contract replay | PASS | `In Validation` |
-| 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `In Validation` |
-| 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `In Validation` |
-| 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `In Validation` |
+| 2026-03-19T19:28:03Z | BL-082 runner app parity lane | PASS | `Done` |
+| 2026-03-19T19:27:16Z | BL-083 runtime-config contract lane | PASS | `Done` |
+| 2026-03-19T19:25:50Z | BL-084 profiling contract lane | PASS | `Done` |
 | 2026-03-19T19:20:00Z | REAPER attractor-spread host gate | PASS | `In Validation` |
-| 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `In Validation` |
-| 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `In Validation` |
+| 2026-03-19T04:58:34Z | BL-096 companion runtime reunification lane | PASS | `Done` |
+| 2026-03-19T04:56:26Z | BL-097 editor bridge cadence lane | PASS | `Done` |
 | 2026-03-19T04:47:44Z | REAPER attractor-crossing transient host gate | PASS | `In Validation` |
 | 2026-03-19T04:36:49Z | BL-099 headphone truthfulness lane | PASS | `Done-candidate` |
 | 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
@@ -99,7 +102,7 @@ Last Modified Date: 2026-03-20
 - 2026-03-19 attractor-spread host refinement: `phys_out_spread_mod_0` now has a real host-visible observation path, and REAPER can see the attractor-off baseline, attractor-on spread rise, and attractor-off decay instead of only a sentinel write.
 - 2026-03-19 attractor-crossing host refinement: the DAW-visible transient mirror now has a real REAPER acceptance lane for single-emitter radius crossing, so this transient family is no longer processor-only evidence.
 - 2026-03-19 boids host refinement: the new REAPER boids-spread lane is a useful failing repro, not a green claim. Dual-instance setup and baseline are good, but host-visible spread remains dark after boids enable; the runtime boids probe still passes on the same build, so the blocker is now narrowed to the host/shared-lifecycle boundary.
-- 2026-03-19 boids host debug refinement: the new controlled two-instance boids debug probe narrows that host blocker further. In the processor path, boids reaches worker density, bridge spread, APVTS spread mirror, and scene spread on both instances (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `scene=1.000`), but the async host-published spread mirror still remains `0.000` while the pending host spread is `1.000`, so the current failure boundary is now specifically the spread host-mirror publication step.
+- 2026-03-19 boids host debug refinement correction: after fixing the debug probe to service `handleAsyncUpdate()` explicitly, the controlled two-instance processor lane is fully green (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `pending=1.000`, `published=1.000`, `scene=1.000`). That means the spread host-mirror publication path itself is not the live blocker. The real remaining gap is REAPER-specific: the instrumented boids host gate applies `Emitter`, `Group 1`, and `On` on both instances during the active window, yet still observes `active_peak_spread=0.000`.
 - 2026-03-19 collision transient refinement: `phys_collision_decay_ms` now reaches `PhysicsDSPBridge` transient smoothing for real, and the new production-path collision transient lane proves both peak-scale and decay-shape responsiveness instead of inferring them from generic collision motion.
 - 2026-03-19 collision transient replay hardening: three immediate reruns stayed green, and the gain/delay separation held within a stable band instead of collapsing to a one-run coincidence.
 - 2026-03-19 angular runtime refinement: the processor now routes angular APVTS controls into `PhysicsWorker`, angular-only scenes can activate coordinated worker ownership, and a new runtime probe proves worker-owned `directivityAim` throw/reset behavior in the production path.
@@ -223,12 +226,22 @@ Last Modified Date: 2026-03-20
   - `TestEvidence/bl079_validation_20260319T030000Z/status.tsv`
   - `TestEvidence/bl079_validation_20260319T014000Z/status.tsv`
 - BL-067:
+  - `TestEvidence/bl067_owner_blocker_packet_20260319T204346Z/status.tsv`
+  - `TestEvidence/bl067_owner_blocker_packet_20260319T204346Z/signing_checklist.md`
+  - `TestEvidence/bl067_owner_blocker_packet_20260319T204346Z/host_execution_matrix.tsv`
   - `TestEvidence/bl067_runtime_access_20260319T061200Z/status.tsv`
   - `TestEvidence/bl067_runtime_access_20260319T061200Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_runtime_access_20260319T035500Z/status.tsv`
   - `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute`
+- BL-060:
+  - `TestEvidence/bl060_phase_b_listening_real_20260319T205201Z/status.tsv`
+  - `TestEvidence/bl060_phase_b_listening_real_20260319T205201Z/participant_brief.md`
+  - `TestEvidence/bl060_phase_b_listening_real_20260319T205201Z/analysis_commands.md`
+  - `TestEvidence/bl060_participant_ops_packet_20260319T204346Z/status.tsv`
+  - `TestEvidence/bl060_participant_ops_packet_20260319T204346Z/participant_checklist.md`
+  - `TestEvidence/bl060_participant_ops_packet_20260319T204346Z/session_matrix.tsv`
 - BL-096:
   - `TestEvidence/bl096_companion_runtime_reunification_20260319T045834Z/status.tsv`
   - `TestEvidence/bl096_companion_runtime_reunification_20260319T045834Z/summary.md`

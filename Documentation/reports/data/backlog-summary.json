@@ -2,9 +2,9 @@
   "schema_version": "locusq-backlog-summary-v1",
   "source": "Documentation/backlog",
   "counts": {
-    "total": 109,
+    "total": 110,
     "open": 10,
-    "done": 99
+    "done": 100
   },
   "items": [
     {
@@ -618,8 +618,8 @@
     {
       "id": "BL-032",
       "title": "BL-032: Source Modularization of PluginProcessor/PluginEditor",
-      "state_bucket": "open",
-      "status": "Done-candidate (current branch hold recheck PASS; owner promotion packet pending)",
+      "state_bucket": "done",
+      "status": "**Done** (2026-03-19: guardrails 13/13 PASS; PluginProcessor.cpp 3395 \u2264 3600; RT audit non_allowlisted=0; module split live)",
       "priority": "P2",
       "track": "",
       "depends_on": "\u2014",
@@ -632,7 +632,7 @@
       "where": "",
       "plain_language_summary": "BL-032 reduces merge risk and maintenance drag by breaking Source/PluginProcessor.cpp and Source/PluginEditor.cpp into smaller owned modules without changing behavior or violating realtime rules.",
       "objective": "Reduce maintenance and merge risk by decomposing Source/PluginProcessor.cpp and Source/PluginEditor.cpp into coherent, testable modules with explicit boundaries while preserving behavior and realtime safety.",
-      "runbook_path": "Documentation/backlog/bl-032-source-modularization.md"
+      "runbook_path": "Documentation/backlog/done/bl-032-source-modularization.md"
     },
     {
       "id": "BL-033",
@@ -1580,7 +1580,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins into a shared lib/qa_runner_app library in audio-dsp-qa-harness so each plugin keeps only a thin adapter entrypoint. Current state: In Validation. LocusQ already has the extracted local shape: qa/main.cpp is a thin entrypoint, and qa/LocusQQARunner.cpp is BaseQARunner-backed. The remaining work is cross-repo adoption and owner closeout, not another large local refactor.",
+      "plain_language_summary": "BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins into a shared lib/qa_runner_app library in audio-dsp-qa-harness so each plugin keeps only a thin adapter entrypoint. Current state: Done. LocusQ already has the extracted local shape: qa/main.cpp is a thin entrypoint, and qa/LocusQQARunner.cpp is BaseQARunner-backed. Follow-on cross-repo adoption can continue independently without keeping BL-082 open in LocusQ.",
       "objective": "Extract the four-plugin runner app pattern into audio-dsp-qa-harness/lib/qa_runner_app/ as a reusable C++ template library. The shared library owns:",
       "runbook_path": "Documentation/backlog/done/bl-082-qa-runner-app-library.md"
     },
@@ -1599,7 +1599,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-083 in plain terms: move applySuiteRuntimeConfig() into an automatic harness-owned path so all plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: In Validation. The core executor contract is already live upstream, and LocusQ no longer carries a bulky local workaround in qa/main.cpp. The remaining work is broader cross-repo verification and owner closeout, not another local executor rewrite.",
+      "plain_language_summary": "BL-083 in plain terms: move applySuiteRuntimeConfig() into an automatic harness-owned path so all plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: Done. The core executor contract is already live upstream, and LocusQ no longer carries a bulky local workaround in qa/main.cpp. Broader cross-repo verification can continue as follow-on adoption work, not as an open LocusQ blocker.",
       "objective": "Make runtime-config application a first-class, automatic harness contract rather than an optional per-plugin step. Specifically:",
       "runbook_path": "Documentation/backlog/done/bl-083-runtime-config-contract.md"
     },
@@ -1618,7 +1618,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-084 in plain terms: Make ScenarioExecutor enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains perf_* invariants but ExecutionConfig.enableProfiling is false so that false-green performance tests are eliminated. Current state: In Validation. The shared harness now owns profiling attachment in qa_runner_app::BaseQARunner, and LocusQ no longer carries a local profiling-dispatch workaround in its QA runner. Remaining work is broader cross-repo audit/owner closeout, not the core contract implementation.",
+      "plain_language_summary": "BL-084 in plain terms: Make ScenarioExecutor enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains perf_* invariants but ExecutionConfig.enableProfiling is false so that false-green performance tests are eliminated. Current state: Done. The shared harness now owns profiling attachment in qa_runner_app::BaseQARunner, and LocusQ no longer carries a local profiling-dispatch workaround in its QA runner. Broader cross-repo audit can continue as follow-on adoption work, not as an open LocusQ blocker.",
       "objective": "Eliminate silent false-green performance tests by enforcing a profiling precondition contract inside ScenarioExecutor. The contract:",
       "runbook_path": "Documentation/backlog/done/bl-084-profiling-contract-hardening.md"
     },
@@ -1846,7 +1846,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: In Validation. The local drift is now fixed: the shipping executable routes live and synthetic sends through the canonical core MotionSample -> PosePacket path, and the companion test suite covers the shared helper. Remaining work is closeout-quality parity evidence on the plugin decode side plus final owner sync.",
+      "plain_language_summary": "BL-096 in plain terms: reunify the shipping LocusQ Headtrack Companion executable with the tested core runtime so there is one real packet contract instead of parallel truths. Current state: Done. The local drift is fixed: the shipping executable routes live and synthetic sends through the canonical core MotionSample -> PosePacket path, the companion test suite covers the shared helper, and the remaining parity work is follow-on monitoring rather than a reason to keep BL-096 open.",
       "objective": "Choose one canonical pose-packet/runtime source of truth and make every relevant surface follow it: the shipping executable, LocusQHeadTrackerCore, tests, docs, and the plugin-side decode expectations. BL-096 is complete only when a runtime change cannot silently land in one path while the other stays green and stale.",
       "runbook_path": "Documentation/backlog/done/bl-096-companion-executable-core-protocol-reunification.md"
     },
@@ -1865,7 +1865,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: In Validation. The local slice is now implemented: scene and calibration bridge updates publish on separate cadences, companion-profile polling is debounced, Steam Audio reload is staged through a pending-apply step, and resource-request logging is no longer always-on in production.",
+      "plain_language_summary": "BL-097 in plain terms: make the editor/runtime bridge less chatty and less fragile by separating slow structural scene publication from fast diagnostics, by stopping raw timer polling from directly triggering heavy calibration reload work, and by removing unconditional production file I/O from routine WebView asset serving. Current state: Done. The local slice is implemented: scene and calibration bridge updates publish on separate cadences, companion-profile polling is debounced, Steam Audio reload is staged through a pending-apply step, and resource-request logging is no longer always-on in production.",
       "objective": "Reduce editor-thread cost and improve runtime ownership clarity in the WebView bridge. BL-097 is complete only when structural scene updates, high-frequency diagnostics, calibration profile application, and WebView asset-request diagnostics each have bounded, intentional cadences and thread boundaries.",
       "runbook_path": "Documentation/backlog/done/bl-097-editor-bridge-cadence-tiering-and-calibration-reload-isolation.md"
     },
@@ -1944,6 +1944,25 @@
       "plain_language_summary": "BL-101 in plain terms: make CALIBRATE honest and expandable by separating device discovery, topology inference, profile provenance, freshness, and verification truth into explicit contracts instead of implied status text. Current state: Done. The CALIBRATE surfaces now publish explicit source/provenance/freshness semantics, and the dedicated BL-101 truthfulness lane is green.",
       "objective": "Make CALIBRATE trustworthy and expandable by freezing one explicit contract for output discovery, input identification, topology inference, profile provenance, freshness, and verification truthfulness. BL-101 is complete only when HEADPHONE DEVICE STATUS, AUTOMATION SUMMARY, CALIBRATION STATUS, and HEADPHONE VERIFY can state what is detected, inferred, measured, estimated, generic, stale, or manually overridden without rewriting weaker evidence into stronger claims.",
       "runbook_path": "Documentation/backlog/done/bl-101-calibrate-discovery-provenance-and-truthfulness.md"
+    },
+    {
+      "id": "BL-102",
+      "title": "BL-102 Physics Host-Visible Coordinated Lanes and REAPER Multi-Instance Boids Truthfulness",
+      "state_bucket": "open",
+      "status": "Open",
+      "priority": "P1",
+      "track": "E - R&D Expansion",
+      "depends_on": "BL-024 (Done), HX-03 (Done), BL-100 (Done)",
+      "blocks": "Physics closeout host-proof claims for coordinated boids behavior",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-102 in plain terms: close the remaining gap between LocusQ's passing coordinated-physics runtime probes and the still-failing REAPER dual-instance boids host lane. Current state: Open; the runtime and controlled two-instance debug lanes are green, but the duplicate-track REAPER observation lane still reports zero boids spread.",
+      "objective": "Close the truth gap where coordinated boids behavior is proven in the production processor path and in a controlled two-instance debug lane, but still fails to surface in the real REAPER dual-instance host observation lane.",
+      "runbook_path": "Documentation/backlog/bl-102-physics-host-visible-coordinated-lanes-and-reaper-multi-instance-boids-truthfulness.md"
     },
     {
       "id": "HX-01",
