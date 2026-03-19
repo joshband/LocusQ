@@ -2,13 +2,13 @@ Title: BL-083 Runtime-Config Contract Enforcement — audio-dsp-qa-harness Scena
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-083 Runtime-Config Contract Enforcement — audio-dsp-qa-harness ScenarioExecutor
 
 ## Plain-Language Summary
 
-BL-083 in plain terms: Move `applySuiteRuntimeConfig()` (sample rate, block size, channel count, seed, output dir overrides) into `ScenarioExecutor` as an automatic, harness-owned step so all four plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-083 in plain terms: move `applySuiteRuntimeConfig()` into an automatic harness-owned path so all plugins get consistent runtime-config behavior without manual per-repo implementations. Current state: In Validation. The core executor contract is already live upstream, and LocusQ no longer carries a bulky local workaround in `qa/main.cpp`. The remaining work is broader cross-repo verification and owner closeout, not another local executor rewrite.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -34,7 +34,7 @@ BL-083 in plain terms: Move `applySuiteRuntimeConfig()` (sample rate, block size
 |---|---|
 | ID | BL-083 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Validation |
 | Track | G - Tooling / Governance |
 | Effort | Small / S |
 | Depends On | — |
@@ -77,6 +77,15 @@ Call `applySuiteRuntimeConfig()` inside `executeScenario()` before scenario exec
 
 ### S3 — Remove LocusQ workaround
 Delete `applySuiteRuntimeConfigManual` from `qa/main.cpp`. Run full LocusQ scenario baseline; confirm zero output delta.
+
+## Latest Validation Snapshot
+
+- 2026-03-19 upstream contract check: `ScenarioExecutor::resolveExecutionConfig()` delegates to `applySuiteRuntimeConfig(config_, suite)`.
+- Upstream no-op override warning contract is present.
+- LocusQ local proof lane shows suite `runtime_config` overrides beat CLI base config and redirect output into the suite-owned output directory.
+- Current evidence:
+  - `TestEvidence/bl083_runtime_config_contract_20260319T192716Z/status.tsv`
+  - `TestEvidence/bl083_runtime_config_contract_20260319T192716Z/summary.md`
 
 ## Validation Plan
 

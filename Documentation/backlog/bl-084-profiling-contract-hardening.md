@@ -2,13 +2,13 @@ Title: BL-084 Profiling Contract Hardening — audio-dsp-qa-harness ScenarioExec
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-084 Profiling Contract Hardening — audio-dsp-qa-harness ScenarioExecutor
 
 ## Plain-Language Summary
 
-BL-084 in plain terms: Make `ScenarioExecutor` enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains `perf_*` invariants but `ExecutionConfig.enableProfiling` is false so that false-green performance tests are eliminated. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-084 in plain terms: Make `ScenarioExecutor` enforce that performance invariants are only evaluated when profiling is enabled; emit an explicit error or warning when a scenario contains `perf_*` invariants but `ExecutionConfig.enableProfiling` is false so that false-green performance tests are eliminated. Current state: In Validation. The shared harness now owns profiling attachment in `qa_runner_app::BaseQARunner`, and LocusQ no longer carries a local profiling-dispatch workaround in its QA runner. Remaining work is broader cross-repo audit/owner closeout, not the core contract implementation.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -34,7 +34,7 @@ BL-084 in plain terms: Make `ScenarioExecutor` enforce that performance invarian
 |---|---|
 | ID | BL-084 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Validation |
 | Track | G - Tooling / Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -81,6 +81,15 @@ Delete `profileDspPerformance()` dispatch from `qa/main.cpp`. Update affected Lo
 
 ### S4 — Audit echoform/monument-reverb suites
 Identify suites with `perf_*` invariants and `enableProfiling` unset. Confirm they now emit WARN rather than silent PASS. Document findings in evidence.
+
+## Latest Validation Snapshot
+
+- 2026-03-19 shared-runner slice: `qa_runner_app::BaseQARunner` now auto-attaches profiling metrics when profiling is enabled.
+- LocusQ local workaround removed from `qa/LocusQQARunner.cpp`.
+- Harness precondition policy still enforces WARN/ERROR behavior for perf invariants without profiling.
+- Current evidence:
+  - `TestEvidence/bl084_profiling_contract_20260319T192550Z/status.tsv`
+  - `TestEvidence/bl084_profiling_contract_20260319T192550Z/summary.md`
 
 ## Validation Plan
 

@@ -8,18 +8,18 @@ Last Modified Date: 2026-03-19
 
 ## Plain-Language Summary
 
-BL-086 in plain terms: Publish a GitHub Actions composite action in `audio-dsp-qa-harness` that standardizes private-repo checkout and auth token validation so all four plugins stop maintaining subtly different versions of the same YAML block. Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-086 in plain terms: publish a GitHub Actions composite action in `audio-dsp-qa-harness` that standardizes private-repo checkout and auth token validation so plugin repos stop maintaining subtly different versions of the same YAML block. Current state: Done. LocusQ CI now uses the shared action, the token-missing path is explicitly validated, and the workflow now consumes the action’s `harness-path` output instead of hardcoding the checkout location.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
 | Question | Plain-language answer |
 |---|---|
 | Who is this for? | Plugin CI maintainers managing GitHub Actions workflows for LocusQ, echoform, memory-echoes, and monument-reverb. |
-| What is changing? | A multi-step checkout + token validation block (currently copy-pasted in four repos) is replaced with a single `uses: joshband/audio-dsp-qa-harness/.github/actions/checkout-qa-harness@master` call. |
+| What is changing? | A multi-step checkout + token validation block is replaced with a single `uses: joshband/audio-dsp-qa-harness/.github/actions/checkout-qa-harness@master` call plus the action output is used downstream for `QA_HARNESS_DIR`. |
 | Why is this important? | monument-reverb currently falls back to `github.token` (insufficient for private harness); echoform/memory-echoes have inconsistent error messages; any harness URL or ref change requires four-repo updates. A composite action is a single-repo fix. |
 | How will we deliver it? | Author `.github/actions/checkout-qa-harness/action.yml` in harness; update LocusQ `qa_harness.yml` to use it; verify CI passes; document migration for other plugins. |
 | When is it done? | When the composite action exists in harness, LocusQ CI uses it, and CI passes with identical behavior to the current workflow. |
-| Where is the source of truth? | Runbook `Documentation/backlog/bl-086-ci-checkout-composite-action.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+| Where is the source of truth? | This done runbook, `Documentation/backlog/index.md`, `.github/workflows/qa_harness.yml`, and evidence under `TestEvidence/...`. |
 
 ## Visual Aid Index
 
@@ -80,11 +80,21 @@ Implement composite action with token validation, checkout, and path output.
 Replace checkout block with `uses:` call. Run CI; confirm identical behavior.
 
 ### S3 — Document migration
-Add migration notes in action README and in `Documentation/backlog/` reference for other plugins.
+Add migration notes in action README and use the LocusQ lane as the reference proof for other plugins.
+
+## Latest Validation Snapshot
+
+- 2026-03-19: upstream composite action exists at `.github/actions/checkout-qa-harness/action.yml`.
+- LocusQ `qa_harness.yml` uses the composite action in both checkout sites.
+- LocusQ configure steps now consume `steps.checkout-qa-harness.outputs.harness-path` instead of hardcoding the checkout directory.
+- Local execute lane confirms the token-missing path exits non-zero with the expected actionable message.
+- Current evidence:
+  - `TestEvidence/bl086_ci_composite_action_20260319T193051Z/status.tsv`
+  - `TestEvidence/bl086_ci_composite_action_20260319T193051Z/summary.md`
 
 ## Validation Plan
 
-QA harness script: `scripts/qa-bl086-ci-composite-action-mac.sh` (to be authored in S2; validates action.yml schema and simulates token-missing error path locally).
+QA harness script: `scripts/qa-bl086-ci-composite-action-mac.sh` (validates action.yml schema and simulates token-missing error path locally).
 Evidence schema: `TestEvidence/bl086_*/status.tsv`.
 
 Gate criterion: LocusQ CI workflow passes; local action schema validation passes; token-missing error path produces expected message.
@@ -110,12 +120,13 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 
 Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
 
-Additional field required at handoff: `UPSTREAM_HARNESS_COMMIT: <sha>` — the `audio-dsp-qa-harness` commit introducing `.github/actions/checkout-qa-harness/`.
+Additional field captured at closeout:
+- `UPSTREAM_HARNESS_COMMIT: 9bb2ec8`
 
 ## Governance Alignment (2026-03-17)
 
 Canonical lifecycle/evidence rules are defined in:
-- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
-- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
+- `Documentation/backlog/index.md`
+- `Documentation/standards.md`
 
-This runbook lists only item-specific exceptions or additions.
+This runbook is the historical closeout record for the BL-086 CI action migration.

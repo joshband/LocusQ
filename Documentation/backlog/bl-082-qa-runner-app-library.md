@@ -2,13 +2,13 @@ Title: BL-082 QA Runner App Library — Upstream Extraction to audio-dsp-qa-harn
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-082 QA Runner App Library — Upstream Extraction to audio-dsp-qa-harness
 
 ## Plain-Language Summary
 
-BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins (LocusQ 597 LOC, echoform 451 LOC, memory-echoes 527 LOC, monument-reverb 406 LOC) into a shared `lib/qa_runner_app` library in `audio-dsp-qa-harness`. Each plugin's `qa/main.cpp` becomes a thin adapter registration (~20–50 LOC). Current state: Open. For technical detail, see `## Objective` and `## Validation Plan`.
+BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared across all four plugins into a shared `lib/qa_runner_app` library in `audio-dsp-qa-harness` so each plugin keeps only a thin adapter entrypoint. Current state: In Validation. LocusQ already has the extracted local shape: `qa/main.cpp` is a thin entrypoint, and `qa/LocusQQARunner.cpp` is `BaseQARunner`-backed. The remaining work is cross-repo adoption and owner closeout, not another large local refactor.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -34,7 +34,7 @@ BL-082 in plain terms: Extract the nearly-identical QA runner app logic shared a
 |---|---|
 | ID | BL-082 |
 | Priority | P0 |
-| Status | Open |
+| Status | In Validation |
 | Track | G - Tooling / Governance |
 | Effort | Med / M |
 | Depends On | — |
@@ -88,6 +88,15 @@ Extract result export (TSV/JSON, exit code mapping) into `ResultExporter`. Confi
 
 ### S4 — Document adoption pattern + backport guide
 Add `lib/qa_runner_app/README.md` documenting plugin adoption steps. Include diff-minimal `main.cpp` template. Note any known plugin-specific flags that must remain in-repo.
+
+## Latest Validation Snapshot
+
+- 2026-03-19 local parity lane: `qa/main.cpp` is 13 lines and remains a thin process entrypoint.
+- `qa/LocusQQARunner.cpp` subclasses `qa_runner_app::BaseQARunner` and keeps repo-local policy isolated there.
+- Local smoke coverage passed across single-scenario, suite, and curated-discover routes.
+- Current evidence:
+  - `TestEvidence/bl082_runner_app_library_20260319T192803Z/status.tsv`
+  - `TestEvidence/bl082_runner_app_library_20260319T192803Z/summary.md`
 
 ## Validation Plan
 

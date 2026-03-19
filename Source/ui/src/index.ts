@@ -8408,6 +8408,138 @@ function getCalibrationDiscoveryRoleKey(label = "") {
     return String(label || "").trim().toLowerCase();
 }
 
+function getCalibrationProfileRemediationRoles(context = calibrationProfileRemediationContext) {
+    return new Set(
+        (Array.isArray(context?.roles) ? context.roles : [])
+            .map((role) => getCalibrationDiscoveryRoleKey(role))
+            .filter(Boolean)
+    );
+}
+
+function getCalibrationProfileRemediationSuggestion(roleKey = "") {
+    const context = calibrationProfileRemediationContext && typeof calibrationProfileRemediationContext === "object"
+        ? calibrationProfileRemediationContext
+        : null;
+    const suggestions = context?.suggestions && typeof context.suggestions === "object"
+        ? context.suggestions
+        : null;
+    const key = getCalibrationDiscoveryRoleKey(roleKey);
+    if (!suggestions || !key) return null;
+    const suggestion = suggestions[key];
+    return suggestion && typeof suggestion === "object" ? suggestion : null;
+}
+
+function applyCalibrationProfileRemediationSuggestions(context) {
+    const resolvedContext = context && typeof context === "object" ? context : null;
+    if (!resolvedContext) return resolvedContext;
+
+    const targetCardId = String(resolvedContext.targetCardId || "").trim();
+    const policyType = String(resolvedContext.policyType || "").trim().toLowerCase();
+    const roles = Array.isArray(resolvedContext.roles)
+        ? resolvedContext.roles.map((role) => String(role || "").trim().toUpperCase()).filter(Boolean)
+        : [];
+    const suggestions = {};
+
+    if (targetCardId !== "cal-card-mapping" || policyType !== "manual_reroute_later" || roles.length === 0) {
+        return {
+            ...resolvedContext,
+            suggestions,
+        };
+    }
+
+    const routing = getCalibrationRoutingFromControls();
+    const activeRows = ensureCalibrationMappingRows();
+    roles.forEach((role) => {
+        const roleKey = getCalibrationDiscoveryRoleKey(role);
+        const row = activeRows.find((entry) => getCalibrationDiscoveryRoleKey(entry?.row?.dataset?.roleKey || "") === roleKey);
+        if (!row) return;
+
+        const currentOutput = row.select instanceof HTMLSelectElement
+            ? clamp((row.select.selectedIndex || 0) + 1, 1, CALIBRATION_OUTPUT_CHANNEL_COUNT)
+            : 0;
+        const usedByOtherRows = new Set();
+        for (let idx = 0; idx < CALIBRATION_ROUTABLE_CHANNELS; ++idx) {
+            const channelIndex = idx + 1;
+            if (channelIndex === row.channelIndex) continue;
+            usedByOtherRows.add(clamp(Math.round(Number(routing[idx]) || channelIndex), 1, CALIBRATION_OUTPUT_CHANNEL_COUNT));
+        }
+
+        let suggestedOutputChannel = 0;
+        if (currentOutput >= 1 && !usedByOtherRows.has(currentOutput)) {
+            suggestedOutputChannel = currentOutput;
+        } else {
+            for (let outputChannel = 1; outputChannel <= CALIBRATION_OUTPUT_CHANNEL_COUNT; ++outputChannel) {
+                if (!usedByOtherRows.has(outputChannel)) {
+                    suggestedOutputChannel = outputChannel;
+                    break;
+                }
+            }
+        }
+        if (suggestedOutputChannel <= 0) return;
+
+        const writable = row.select instanceof HTMLSelectElement && !row.select.disabled;
+        const alreadyApplied = writable && currentOutput === suggestedOutputChannel;
+        if (writable && !alreadyApplied) {
+            row.select.selectedIndex = clamp(suggestedOutputChannel - 1, 0, Math.max(0, row.select.options.length - 1));
+            row.select.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        suggestions[roleKey] = {
+            outputChannel: suggestedOutputChannel,
+            writable,
+            applied: writable,
+            rowIndex: row.channelIndex,
+        };
+    });
+
+    return {
+        ...resolvedContext,
+        suggestions,
+    };
+}
+
+function applyCalibrationProfileRemediationHighlighting() {
+    const context = calibrationProfileRemediationContext && typeof calibrationProfileRemediationContext === "object"
+        ? calibrationProfileRemediationContext
+        : null;
+    const targetCardId = String(context?.targetCardId || "").trim();
+    const targetRoles = getCalibrationProfileRemediationRoles(context);
+
+    calibrationMappingRowEntries.forEach((entry) => {
+        const roleKey = getCalibrationDiscoveryRoleKey(entry?.row?.dataset?.roleKey || entry?.label?.dataset?.roleKey || "");
+        const isTargeted = targetCardId === "cal-card-mapping" && roleKey && targetRoles.has(roleKey);
+        entry?.row?.classList.toggle("role-targeted", isTargeted);
+    });
+
+    document.querySelectorAll(".cal-reconcile-row").forEach((node) => {
+        const row = node instanceof HTMLElement ? node : null;
+        if (!row) return;
+        const roleKey = getCalibrationDiscoveryRoleKey(row.dataset.roleKey || "");
+        const isTargeted = targetCardId === "cal-card-discovery" && roleKey && targetRoles.has(roleKey);
+        row.classList.toggle("role-targeted", isTargeted);
+    });
+}
+
+function focusCalibrationProfileRemediationTarget() {
+    const context = calibrationProfileRemediationContext && typeof calibrationProfileRemediationContext === "object"
+        ? calibrationProfileRemediationContext
+        : null;
+    const targetCardId = String(context?.targetCardId || "").trim();
+    let targetRow = null;
+    if (targetCardId === "cal-card-mapping") {
+        targetRow = document.querySelector(".cal-mapping-row.role-targeted");
+    } else if (targetCardId === "cal-card-discovery") {
+        targetRow = document.querySelector(".cal-reconcile-row.role-targeted");
+    }
+    const row = targetRow instanceof HTMLElement ? targetRow : null;
+    if (!row) return;
+    row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    const select = row.querySelector("select");
+    if (select instanceof HTMLSelectElement) {
+        select.focus({ preventScroll: true });
+    }
+}
+
 function getCalibrationDiscoveryReconciliationBucket(kind = "output") {
     const normalizedKind = kind === "topology" ? "topology" : "output";
     if (!calibrationDiscoveryReconciliation[normalizedKind] || typeof calibrationDiscoveryReconciliation[normalizedKind] !== "object") {
@@ -8528,6 +8660,7 @@ function updateCalibrationDiscoveryActionButtons({ outputCandidates = [], topolo
                 select.appendChild(optionElement);
             });
             const roleKey = getCalibrationDiscoveryRoleKey(role);
+            row.dataset.roleKey = roleKey;
             select.value = String(bucket[roleKey] || "review");
             select.addEventListener("change", () => {
                 bucket[roleKey] = select.value;
@@ -8657,6 +8790,8 @@ function updateCalibrationDiscoveryActionButtons({ outputCandidates = [], topolo
         }
         if (topologyAckRow) topologyAckRow.hidden = true;
     }
+
+    applyCalibrationProfileRemediationHighlighting();
 }
 
 async function refreshCalibrationStatusFromNative() {
@@ -9374,13 +9509,29 @@ function applyCalibrationProfileRemediationContext() {
 
     if (mappingFollowup) {
         if (targetCardId === "cal-card-mapping") {
+            const suggestionDetails = roles
+                .map((role) => {
+                    const suggestion = getCalibrationProfileRemediationSuggestion(role);
+                    if (!suggestion || !Number.isFinite(Number(suggestion.outputChannel)) || Number(suggestion.outputChannel) <= 0) return "";
+                    const outputLabel = `Output ${Number(suggestion.outputChannel)}`;
+                    return suggestion.applied
+                        ? `${role} prefilled to ${outputLabel}.`
+                        : `${role} suggests ${outputLabel} once a writable row is available.`;
+                })
+                .filter(Boolean)
+                .join(" ");
             mappingFollowup.hidden = false;
-            mappingFollowup.textContent = String(context?.followupMessage || `Manual reroute workflow is active for ${roleLabel}.`);
+            mappingFollowup.textContent = [
+                String(context?.followupMessage || `Manual reroute workflow is active for ${roleLabel}.`),
+                suggestionDetails,
+            ].filter(Boolean).join(" ");
         } else {
             mappingFollowup.hidden = true;
             mappingFollowup.textContent = "Role-specific reroute guidance will appear here.";
         }
     }
+
+    applyCalibrationProfileRemediationHighlighting();
 }
 
 function setCalibrationProfileRemediationActions(actions = []) {
@@ -9418,11 +9569,12 @@ function setCalibrationProfileRemediationActions(actions = []) {
             } else if (policyType === "fold_front_pair") {
                 followupMessage = `Wider-output workflow for ${roleLabel}: review Discovery and adopt a wider writable output surface before relying on the folded route.`;
             }
-            calibrationProfileRemediationContext = {
+            calibrationProfileRemediationContext = applyCalibrationProfileRemediationSuggestions({
                 targetCardId: String(action?.targetCardId || "").trim(),
+                policyType,
                 roles,
                 followupMessage,
-            };
+            });
             applyCalibrationProfileRemediationContext();
 
             const targetCardId = String(action?.targetCardId || "").trim();
@@ -9438,6 +9590,9 @@ function setCalibrationProfileRemediationActions(actions = []) {
                     calibrationProfileRemediationFlashTimer = 0;
                 }, 1800);
             }
+            window.setTimeout(() => {
+                focusCalibrationProfileRemediationTarget();
+            }, 70);
 
             const statusMessage = String(action?.statusMessage || "").trim();
             if (statusMessage) {
@@ -10480,6 +10635,15 @@ async function runProductionP0SelfTest() {
                         statusMessage: "Manual reroute needed for RS. Open Output Mapping and assign unique outputs.",
                     },
                     {
+                        id: "manual_reroute_center",
+                        label: "REROUTE CENTER NOW",
+                        targetCardId: "cal-card-mapping",
+                        targetMode: "speaker_room",
+                        policyType: "manual_reroute_later",
+                        roles: ["C"],
+                        statusMessage: "Manual reroute needed for C. Open Output Mapping and assign a unique output.",
+                    },
+                    {
                         id: "revisit_deferred_roles",
                         label: "REVISIT DEFERRED ROLES",
                         targetCardId: "cal-card-discovery",
@@ -11334,13 +11498,54 @@ async function runProductionP0SelfTest() {
             expectIncludes("UI-P1-102G", String(document.getElementById("cal-profile-remediation-actions")?.textContent || ""), "REROUTE ROLES NOW", "imported profile remediation action");
             const remediationButtons = Array.from(document.querySelectorAll("#cal-profile-remediation-actions button"));
             const rerouteButton = remediationButtons.find((button) => String(button.textContent || "").trim() === "REROUTE ROLES NOW");
+            const rerouteCenterButton = remediationButtons.find((button) => String(button.textContent || "").trim() === "REROUTE CENTER NOW");
+            const deferredButton = remediationButtons.find((button) => String(button.textContent || "").trim() === "REVISIT DEFERRED ROLES");
             if (!(rerouteButton instanceof HTMLButtonElement)) {
                 failCheck("UI-P1-102G", "missing reroute remediation action button");
             } else {
                 rerouteButton.click();
-                await waitMs(80);
+                await waitMs(140);
                 expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Manual reroute needed for RS.", "reroute remediation status");
                 expectIncludes("UI-P1-102G", readText("cal-mapping-followup"), "Manual reroute workflow for RS", "reroute remediation follow-up banner");
+                expectIncludes("UI-P1-102G", readText("cal-mapping-followup"), "RS suggests Output 5 once a writable row is available.", "reroute remediation suggested output");
+                const rsTargetRow = document.getElementById("cal-map-row-6");
+                if (!(rsTargetRow instanceof HTMLElement) || !rsTargetRow.classList.contains("role-targeted")) {
+                    failCheck("UI-P1-102G", "RS mapping row was not targeted by reroute remediation");
+                }
+                expectIncludes("UI-P1-102G", String(rsTargetRow?.textContent || ""), "Suggested Output 5", "reroute remediation read-only suggestion");
+            }
+            if (!(rerouteCenterButton instanceof HTMLButtonElement)) {
+                failCheck("UI-P1-102G", "missing center reroute remediation action button");
+            } else {
+                const centerSelect = document.getElementById("cal-spk3");
+                if (!(centerSelect instanceof HTMLSelectElement)) {
+                    failCheck("UI-P1-102G", "missing center output mapping select");
+                } else {
+                    centerSelect.selectedIndex = 0;
+                    centerSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                    await waitMs(40);
+                    rerouteCenterButton.click();
+                    await waitMs(140);
+                    expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Manual reroute needed for C.", "center reroute status");
+                    expectIncludes("UI-P1-102G", readText("cal-mapping-followup"), "C prefilled to Output 3.", "center reroute prefill note");
+                    if (centerSelect.selectedIndex !== 2) {
+                        failCheck("UI-P1-102G", `center reroute did not prefill safe unique output (${centerSelect.selectedIndex + 1})`);
+                    }
+                }
+            }
+            if (!(deferredButton instanceof HTMLButtonElement)) {
+                failCheck("UI-P1-102G", "missing deferred remediation action button");
+            } else {
+                deferredButton.click();
+                await waitMs(140);
+                expectIncludes("UI-P1-102G", readText("cal-profile-status"), "Deferred roles LS, RS still need direct measurement or mapping", "deferred remediation status");
+                expectIncludes("UI-P1-102G", readText("cal-discovery-followup"), "Deferred-role workflow for LS, RS", "deferred remediation follow-up banner");
+                const targetedDiscoveryRoles = Array.from(document.querySelectorAll(".cal-reconcile-row.role-targeted"))
+                    .map((row) => String((row instanceof HTMLElement ? row.dataset.roleKey : "") || ""))
+                    .filter(Boolean)
+                    .sort()
+                    .join("/");
+                expectIncludes("UI-P1-102G", targetedDiscoveryRoles, "ls/rs", "deferred remediation targets discovery rows");
             }
             recordCheck("UI-P1-102G", true, "exported and imported calibration profiles preserve human-readable speaker-role intent, remediation metadata, and follow-up actions");
         } finally {
@@ -17701,6 +17906,9 @@ function applyCalibrationStatus() {
 
         if (entry.label) {
             entry.label.textContent = `${getCalibrationChannelLabel(topologyId, idx)} Out`;
+            const roleKey = getCalibrationDiscoveryRoleKey(getCalibrationChannelLabel(topologyId, idx));
+            entry.row.dataset.roleKey = roleKey;
+            entry.label.dataset.roleKey = roleKey;
         }
 
         if (entry.select) {
@@ -17712,9 +17920,15 @@ function applyCalibrationStatus() {
         }
 
         if (entry.value) {
-            entry.value.textContent = `Read-only (first ${Math.min(writableChannels, CALIBRATION_ROUTABLE_CHANNELS)} routable)`;
+            const suggestion = getCalibrationProfileRemediationSuggestion(entry.row.dataset.roleKey || "");
+            const suggestionText = suggestion && !suggestion.applied && Number(suggestion.outputChannel) > 0
+                ? ` · Suggested Output ${Number(suggestion.outputChannel)} when wider routing is writable`
+                : "";
+            entry.value.textContent = `Read-only (first ${Math.min(writableChannels, CALIBRATION_ROUTABLE_CHANNELS)} routable)${suggestionText}`;
         }
     });
+
+    applyCalibrationProfileRemediationHighlighting();
 
     const mappingNote = document.getElementById("cal-mapping-note");
     if (mappingNote) {

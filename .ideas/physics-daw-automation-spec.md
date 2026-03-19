@@ -96,7 +96,7 @@ float value = getRawParameterValue("phys_out_spread_mod_N")->load();
 `setValueNotifyingHost` is **not** called from `processBlock`. It is not RT-safe — it triggers host listener callbacks synchronously, which may allocate or hold locks. The DAW records automation by polling `getRawParameterValue` each processing cycle; no notification is required for recording to work.
 
 Host notification (for UI refresh) is dispatched asynchronously via `AsyncUpdater::triggerAsyncUpdate()` from `processBlock`, resolved on the message thread.
-For host-observation lanes that need REAPER-visible updates, the current implementation also pushes `phys_out_transient_N` through that same async/message-thread path so the host cache can observe live transient changes without violating RT safety. As of 2026-03-19, that path is now proven in REAPER for both the collision-burst host lane and the single-emitter attractor-crossing host lane.
+For host-observation lanes that need REAPER-visible updates, the current implementation also pushes `phys_out_spread_mod_N` and `phys_out_transient_N` through the same async/message-thread path so the host cache can observe live changes without violating RT safety. As of 2026-03-19, that path is now proven in REAPER for attractor-driven spread, collision bursts, and single-emitter attractor-crossing bursts.
 
 ### Live path (`phys_frozen_N = false`)
 
@@ -196,8 +196,9 @@ Out of scope for this spec. Position and directivityAim are captured via the Cho
 - [ ] LIVE→FROZEN snapshot guard: no value jump on transition (measured: |pre - post| < 0.01); guard executes on audio thread only
 - [ ] FROZEN→LIVE transition: DSP switches to live atomics within one `processBlock` call
 - [ ] No `setValueNotifyingHost` calls from `processBlock` (RT-safety: verified via pluginval + Reaper thread-safety mode)
-- [ ] AsyncUpdater dispatches host notification from message thread after freeze state change
+- [ ] AsyncUpdater dispatches host notification from message thread after freeze state change and for REAPER-visible spread/transient observation lanes
 - [ ] `gainTransient` flows through DSP path regardless of freeze state (not mirrored, not suppressed)
+- [ ] `phys_out_spread_mod_N` is host-visible in REAPER for an attractor-driven spread scene
 - [ ] `phys_out_transient_N` is host-visible in REAPER for both collision-burst and attractor-crossing transient scenes
 - [ ] All 24 parameters added to `parameter-spec.md` and `implementation-traceability.md`
 - [ ] DAW automation lane display names correct in Logic and Reaper

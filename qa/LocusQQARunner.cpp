@@ -6,7 +6,6 @@
 #include "locusq_adapter.h"
 
 #include "qa_runner_app/BaseQARunner.h"
-#include "runners/performance_profiler.h"
 
 #if defined(QA_HOST_RUNNER_AVAILABLE)
 #include "runners/au_plugin_host.h"
@@ -60,102 +59,6 @@ struct LocusQRunOptions : public qa::runner_app::RunOptions
     std::string parseError;
     HostRunnerOptions hostRunner;
 };
-
-nlohmann::json mergedScenarioParameters(const qa::scenario::ScenarioSpec& scenario)
-{
-    nlohmann::json merged = nlohmann::json::object();
-
-    if (scenario.defaultParameters.is_object())
-        merged = scenario.defaultParameters;
-
-    if (scenario.parameterVariations.is_object())
-    {
-        for (auto it = scenario.parameterVariations.begin(); it != scenario.parameterVariations.end(); ++it)
-            merged[it.key()] = it.value();
-    }
-
-    return merged;
-}
-
-int resolveParameterIndex(const qa::DspUnderTest& dut,
-                          const std::string& key,
-                          int parameterCount)
-{
-    try
-    {
-        std::size_t parsed = 0;
-        const int index = std::stoi(key, &parsed);
-        if (parsed == key.size() && index >= 0 && index < parameterCount)
-            return index;
-    }
-    catch (const std::exception&)
-    {
-        // Fall through to name lookup.
-    }
-
-    for (int i = 0; i < parameterCount; ++i)
-    {
-        if (const auto* name = dut.getParameterName(i); name != nullptr && key == name)
-            return i;
-    }
-
-    return -1;
-}
-
-void applyScenarioParameters(qa::DspUnderTest& dut, const nlohmann::json& parameters)
-{
-    if (!parameters.is_object())
-        return;
-
-    const int parameterCount = dut.getParameterCount();
-    for (auto it = parameters.begin(); it != parameters.end(); ++it)
-    {
-        if (!it.value().is_number())
-            continue;
-
-        const int index = resolveParameterIndex(dut, it.key(), parameterCount);
-        if (index < 0)
-            continue;
-
-        const float normalized = std::clamp(it.value().get<float>(), 0.0f, 1.0f);
-        dut.setParameter(index, normalized);
-    }
-}
-
-void attachProfilingMetrics(const qa::scenario::ScenarioSpec& scenario,
-                            const qa::DutFactory& dutFactory,
-                            const qa::scenario::ExecutionConfig& config,
-                            qa::scenario::ScenarioResult& result)
-{
-    if (!config.enableProfiling || result.performanceMetrics != nullptr)
-        return;
-
-    if (result.status == qa::scenario::ScenarioResult::Status::ERROR
-        || result.status == qa::scenario::ScenarioResult::Status::SKIP)
-    {
-        return;
-    }
-
-    auto dut = dutFactory ? dutFactory() : nullptr;
-    if (!dut)
-        return;
-
-    qa::AudioConfig audioConfig;
-    audioConfig.sampleRate = config.sampleRate;
-    audioConfig.blockSize = config.blockSize;
-    audioConfig.numChannels = config.numChannels;
-    audioConfig.totalSamples = config.sampleRate;
-
-    dut->prepare(audioConfig.sampleRate, audioConfig.blockSize, audioConfig.numChannels);
-    applyScenarioParameters(*dut, mergedScenarioParameters(scenario));
-
-    const auto metrics = qa::profileDspPerformance(*dut, audioConfig,
-                                                   config.profilingIterations,
-                                                   config.profilingWarmupIterations);
-    dut->release();
-
-    result.performanceMetrics = std::make_unique<qa::PerformanceMetrics>(metrics);
-}
 
 #if defined(QA_HOST_RUNNER_AVAILABLE)
 std::string normalizedHostFormat(std::string format)
@@ -458,14 +361,6 @@ protected:
         output << "  --host-plugin <path>            Plugin path for HostRunner smoke probe\n";
         output << "  --host-output <dir>             Output directory for HostRunner smoke probe\n";
         output << "  --host-skeleton                 Run HostRunner without backend (expects SKIPPED)\n";
-    }
-
-    void afterScenarioExecution(const qa::scenario::ScenarioSpec& scenario,
-                                qa::scenario::ScenarioResult& result,
-                                const qa::scenario::ExecutionConfig& config,
-                                const LocusQRunOptions& options) override
-    {
-        attachProfilingMetrics(scenario, createDutFactory(options), config, result);
     }
 };
 

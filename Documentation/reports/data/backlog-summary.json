@@ -1656,7 +1656,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-086 in plain terms: Publish a GitHub Actions composite action in audio-dsp-qa-harness that standardizes private-repo checkout and auth token validation so all four plugins stop maintaining subtly different versions of the same YAML block. Current state: Open. For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-086 in plain terms: publish a GitHub Actions composite action in audio-dsp-qa-harness that standardizes private-repo checkout and auth token validation so plugin repos stop maintaining subtly different versions of the same YAML block. Current state: Done. LocusQ CI now uses the shared action, the token-missing path is explicitly validated, and the workflow now consumes the action\u2019s harness-path output instead of hardcoding the checkout location.",
       "objective": "Author a composite GitHub Actions action that encapsulates:",
       "runbook_path": "Documentation/backlog/done/bl-086-ci-checkout-composite-action.md"
     },
