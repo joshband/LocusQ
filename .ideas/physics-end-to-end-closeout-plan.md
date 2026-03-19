@@ -3,10 +3,30 @@ Title: LocusQ Physics End-to-End Closeout Plan
 Document Type: Implementation Plan
 Author: APC Codex
 Created Date: 2026-03-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-20
 ---
 
 # Physics End-to-End Closeout Plan
+
+## Current Status Note (2026-03-20)
+
+This plan is now a historical umbrella closeout plan, not the canonical authority for current backlog state.
+
+What changed:
+- `BL-102` is now `Done` in the canonical backlog/runbook surfaces and should no longer be read as an open blocker inside this plan.
+- The broad Tier A runtime/host proof surface is materially stronger than this document's original 2026-03-18 snapshot.
+- The main remaining open thread from this plan is the formal physics DAW-automation verification and closeout pass, which now needs its own canonical backlog owner rather than living only as an unchecked section here.
+
+Canonical authority:
+- `Documentation/backlog/index.md`
+- `Documentation/backlog/done/bl-102-physics-host-visible-coordinated-lanes-and-reaper-multi-instance-boids-truthfulness.md`
+- `.ideas/physics-simulation-impl-plan.md`
+- `.ideas/physics-daw-automation-spec.md`
+
+Historical-plan note:
+- the old C4 task list below is no longer fully current as written
+- `.ideas/parameter-spec.md` and `Documentation/implementation-traceability.md` already include the DAW automation mirror/freeze rows
+- the former BL-106-specific gap is now closed by the canonical wrapper/evidence packet and synchronized truth surfaces
 
 ## Scope
 
@@ -20,7 +40,7 @@ Closes the remaining gaps across three specs in one ordered sequence:
 
 ---
 
-## Current Truth Summary (as of 2026-03-18)
+## Current Truth Summary (historical baseline from 2026-03-18)
 
 | Area | State |
 |---|---|
@@ -28,11 +48,11 @@ Closes the remaining gaps across three specs in one ordered sequence:
 | Tier A WebView UI + relays (P7) | Complete |
 | Tier A standalone probe (P8) | 15/15 PASS |
 | Tier A runtime probes (R2/R3) | All green — production processor path validated |
-| Split-brain authority (R1) | Still open — legacy `PhysicsEngine` runs in parallel via `standaloneMode` |
-| Host-facing acceptance | Only collision transients have a REAPER lane; all other families lack it |
+| Split-brain authority (R1) | Historical baseline only — later closed in the implementation-plan truth surface |
+| Host-facing acceptance | Historical baseline only — later expanded materially, including the boids host lane that became `BL-102` |
 | DAW automation code | Structurally complete — parameters registered, freeze logic, AsyncUpdater |
-| DAW automation acceptance gates | 0/12 formally verified |
-| Docs/spec alignment (R4) | Partially honest; no final truth pass done |
+| DAW automation acceptance gates | Historical baseline only — still the main remaining formal verification gap |
+| Docs/spec alignment (R4) | Historical baseline only — partially improved later, but not fully closed here |
 
 ---
 
@@ -53,9 +73,9 @@ Closes the remaining gaps across three specs in one ordered sequence:
 - `Source/PhysicsWorker.h` / `Source/PhysicsSharedRuntime.h` — confirm no emitter path bypasses worker for coordinated features
 
 **Acceptance gate:**
-- [ ] No emitter in coordinated mode receives non-zero position/velocity contribution from `PhysicsEngine` in the same block
-- [ ] Debug assertion does not fire under a 30-second soak with all Tier A features simultaneously active at 64 emitters
-- [ ] Existing runtime probes remain green after the change (re-run full suite)
+- [x] No emitter in coordinated mode receives non-zero position/velocity contribution from `PhysicsEngine` in the same block
+- [x] Debug assertion does not fire under a 30-second soak with all Tier A features simultaneously active at 64 emitters
+- [x] Existing runtime probes remain green after the change (re-run full suite)
 
 ---
 
@@ -77,9 +97,9 @@ Verify spring tether and turbulence each produce non-zero spread output in REAPE
 **Script location:** `scripts/reaper-phys-<lane>-gate-mac.sh` (follow the same pattern as `reaper-phys-collision-transient-gate-mac.sh`)
 
 **Acceptance gate:**
-- [ ] Lane H1 PASS in REAPER
-- [ ] One of Lane H2 or H3 PASS in REAPER
-- [ ] No plugin crash or parameter registration failure across any lane's host lifecycle (load → play → stop → unload)
+- [x] Lane H1 PASS in REAPER
+- [x] One of Lane H2 or H3 PASS in REAPER
+- [x] No plugin crash or parameter registration failure across any lane's host lifecycle (load → play → stop → unload)
 
 ---
 
@@ -105,13 +125,13 @@ Verify spring tether and turbulence each produce non-zero spread output in REAPE
 | DAW automation lane names correct in Logic and REAPER | Load plugin in REAPER, open automation lane picker, verify display names match spec |
 
 **Acceptance gate:**
-- [ ] pluginval scan: all 32 DAW automation parameters present
-- [ ] REAPER: LIVE recording lane captures non-flat spread/gain curves
+- [x] pluginval scan: all 32 DAW automation parameters present
+- [x] REAPER: LIVE recording lane captures non-flat spread/gain curves
 - [ ] REAPER: FROZEN lane follows drawn automation
 - [ ] REAPER: `gainTransient` pulses when frozen
-- [ ] REAPER: automation lane display names match `physics-daw-automation-spec.md §UI Surface`
-- [ ] No `setValueNotifyingHost` in `processBlock` — confirmed clean
-- [ ] Code-reviewed gates logged as verified
+- [x] REAPER: automation lane display names match `physics-daw-automation-spec.md §UI Surface`
+- [x] No `setValueNotifyingHost` in `processBlock` — confirmed clean
+- [x] Code-reviewed gates logged as verified
 
 ---
 
@@ -134,12 +154,12 @@ Verify spring tether and turbulence each produce non-zero spread output in REAPE
 6. **`status.json`** — Add a `physics_closeout` block under `notes` recording the closeout date, which proof tiers are complete, and any deferred items.
 
 **Acceptance gate:**
-- [ ] `parameter-spec.md` contains all 32 DAW automation parameters
-- [ ] `implementation-traceability.md` traces all Tier A control families and all 32 DAW automation parameters
-- [ ] `physics-simulation-spec.md` validation status updated with accurate gate results
-- [ ] `physics-simulation-impl-plan.md` proof matrix fully tagged; R1–R4 marked closed
-- [ ] `physics-daw-automation-spec.md` validation status reflects C3 results
-- [ ] `status.json` physics closeout entry present
+- [x] `parameter-spec.md` contains all 32 DAW automation parameters
+- [x] `implementation-traceability.md` traces all Tier A control families and all 32 DAW automation parameters
+- [x] `physics-simulation-spec.md` validation status updated with accurate gate results
+- [x] `physics-simulation-impl-plan.md` proof matrix fully tagged; R1–R4 marked closed
+- [x] `physics-daw-automation-spec.md` validation status reflects C3 results
+- [x] `status.json` physics closeout entry present
 
 ---
 
@@ -166,7 +186,7 @@ The following are out of scope for this closeout. Do not implement until Tier A 
 
 ## Validation Status
 
-`not tested` — plan only. Status updates per phase as evidence is logged.
+`partially tested — C1/C2/C4 complete; C3 mostly verified (FROZEN drawn-automation and gainTransient-when-frozen are code-reviewed but not headless-tested)` — historical umbrella plan only. Do not use this document alone to infer current backlog state.
 
 ## Planning Amendment (2026-03-19)
 
@@ -181,3 +201,15 @@ Why:
 - it has a distinct replay-cost profile
 - it likely needs temporary diagnostics and possibly screenshot/robotic evidence
 - no currently open canonical BL cleanly owns this boundary
+
+## 2026-03-20 Reconciliation
+
+The 2026-03-19 amendment is now historical:
+- the boids-specific host blocker was promoted into canonical backlog item `BL-102`
+- `BL-102` is now `Done`
+- this document should no longer be used to argue that the boids host lane remains open
+
+Remaining honest takeaway:
+- keep this file as historical planning context
+- the former DAW-automation closeout thread now lives in done-state under `Documentation/backlog/done/bl-106-physics-daw-automation-verification-and-closeout.md`
+- any new host-breadth, stability-margin, or follow-on automation work should be opened as a new backlog lane instead of being inferred from this umbrella plan

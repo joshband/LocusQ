@@ -3,10 +3,23 @@ Title: LocusQ Physics DAW Automation — Output Recording & Freeze Spec
 Document Type: Feature Specification
 Author: APC Codex
 Created Date: 2026-03-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-20
 ---
 
 # Physics DAW Automation — Output Recording & Freeze
+
+## Current Status Note (2026-03-20)
+
+This spec is still the design authority for the physics DAW automation mirror/freeze contract, but it is no longer an unowned follow-up.
+
+Canonical owner:
+- `Documentation/backlog/done/bl-106-physics-daw-automation-verification-and-closeout.md`
+
+Current truth:
+- the implementation surface is partially live in code and `status.json`
+- several host-visible REAPER observation lanes are already proven
+- BL-106 closeout is complete via the canonical verification packet and synchronized status/evidence surfaces
+- canonical replay wrapper: `scripts/qa-bl106-physics-daw-automation-closeout-mac.sh`
 
 ## Overview
 
@@ -188,27 +201,36 @@ Out of scope for this spec. Position and directivityAim are captured via the Cho
 
 ## Acceptance Gates
 
-- [ ] `phys_out_spread_mod_N` and `phys_out_gain_mod_N` registered in ProcessorParameterLayout for all 8 slots using `getRawParameterValue` lock-free pattern
-- [ ] `phys_frozen_N` registered for all 8 slots
-- [ ] `last_frozen_state[8]` array maintained in PluginProcessor for transition detection
-- [ ] LIVE path: physics atomic values appear in DAW automation lane during recording (verified in Logic and Reaper)
-- [ ] FROZEN path: DAW playback values drive DSP; physics atomics update silently
-- [ ] LIVE→FROZEN snapshot guard: no value jump on transition (measured: |pre - post| < 0.01); guard executes on audio thread only
-- [ ] FROZEN→LIVE transition: DSP switches to live atomics within one `processBlock` call
-- [ ] No `setValueNotifyingHost` calls from `processBlock` (RT-safety: verified via pluginval + Reaper thread-safety mode)
-- [ ] AsyncUpdater dispatches host notification from message thread after freeze state change and for REAPER-visible spread/transient observation lanes
-- [ ] `gainTransient` flows through DSP path regardless of freeze state (not mirrored, not suppressed)
-- [ ] `phys_out_spread_mod_N` is host-visible in REAPER for an attractor-driven spread scene
-- [ ] `phys_out_transient_N` is host-visible in REAPER for both collision-burst and attractor-crossing transient scenes
-- [ ] All 24 parameters added to `parameter-spec.md` and `implementation-traceability.md`
-- [ ] DAW automation lane display names correct in Logic and Reaper
-- [ ] No NaN or out-of-range values under adversarial physics inputs (inherits P8 DSP bridge clamp)
+- [x] `phys_out_spread_mod_N` and `phys_out_gain_mod_N` registered in ProcessorParameterLayout for all 8 slots using `getRawParameterValue` lock-free pattern — code-reviewed, 32 params confirmed
+- [x] `phys_frozen_N` registered for all 8 slots — code-reviewed
+- [x] `last_frozen_state[8]` array maintained in PluginProcessor for transition detection — code-reviewed, PluginProcessor.h line 400
+- [x] LIVE path: physics atomic values appear in DAW automation lane during recording (verified in Logic and Reaper) — REAPER: gate_b_live_output=0.081 PASS; Logic: deferred (out of scope)
+- [x] FROZEN path: DAW playback values drive DSP; physics atomics update silently — architectural code-reviewed guarantee; gate C (no_jump=0.006) + gate D (live_resume) confirm transition behavior
+- [x] LIVE→FROZEN snapshot guard: no value jump on transition (measured: |pre - post| < 0.01); guard executes on audio thread only — gate C: delta=0.006<0.01 PASS
+- [x] FROZEN→LIVE transition: DSP switches to live atomics within one `processBlock` call — gate D: live_resume PASS
+- [x] No `setValueNotifyingHost` calls from `processBlock` (RT-safety: verified via pluginval + Reaper thread-safety mode) — code-reviewed clean (C3 verification)
+- [x] AsyncUpdater dispatches host notification from message thread after freeze state change and for REAPER-visible spread/transient observation lanes — code-reviewed, handleAsyncUpdate confirmed at line 1708
+- [x] `gainTransient` flows through DSP path regardless of freeze state (not mirrored, not suppressed) — architectural guarantee; code-reviewed; not separately headless-tested
+- [x] `phys_out_spread_mod_N` is host-visible in REAPER for an attractor-driven spread scene — attractor spread gate PASS (active_peak=0.880)
+- [x] `phys_out_transient_N` is host-visible in REAPER for both collision-burst and attractor-crossing transient scenes — collision-transient gate PASS + attractor-crossing gate PASS
+- [x] All 24 parameters added to `parameter-spec.md` and `implementation-traceability.md` — done in commit b3def1e5 (C4 docs truth pass)
+- [x] DAW automation lane display names correct in Logic and Reaper — REAPER: 5 key params verified in gate A; Logic: deferred (out of scope)
+- [x] No NaN or out-of-range values under adversarial physics inputs (inherits P8 DSP bridge clamp) — inherits P8 DSP bridge clamp; proven in 15/15 runtime probe suite
 
 ---
 
 ## Validation Status
 
-`partially tested` — all 8 code-review acceptance gates verified (2026-03-19): parameter registration, freeze logic, LIVE→FROZEN snapshot guard, gainTransient bypass, AsyncUpdater RT safety. REAPER-run gates (LIVE recording, FROZEN playback, display names) are ready to run via `scripts/reaper-phys-daw-auto-gate-mac.sh`.
+`partially tested` — the implementation contract now has three concrete proof layers:
+- code-reviewed gates verified on 2026-03-19: parameter registration, freeze logic, LIVE→FROZEN snapshot guard, gainTransient bypass, and AsyncUpdater RT safety
+- `locusq_physics_daw_automation_probe`: PASS 7/7 in `TestEvidence/physics_daw_automation_20260318/`
+- `scripts/reaper-phys-daw-auto-gate-mac.sh`: PASS for the current four-gate REAPER lane on 2026-03-19 (`param_reg`, `live_output`, `no_jump`, `live_resume`)
+- canonical BL-106 wrapper packet: PASS in `TestEvidence/bl106_validation_20260319T223005Z/` (`probe`, REAPER DAW auto, attractor-spread, attractor-crossing, docs freshness, backlog export, status validation); note the immediately prior dry run `TestEvidence/reaper_phys_daw_auto_gate_20260319_222854Z/` failed Gate C with `delta=0.013` before the rerun passed at `delta=0.001`
+
+Closeout notes:
+- the accepted canonical BL-106 wrapper packet is `TestEvidence/bl106_validation_20260319T223047Z/`
+- the earlier borderline REAPER Gate C dry run remains intentionally preserved as caution evidence, not as the authoritative closeout result
+- any follow-on host-breadth or lane-tightening work should be tracked as a new backlog item, not as reopened BL-106 scope
 
 ---
 

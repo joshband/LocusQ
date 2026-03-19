@@ -3,7 +3,7 @@ Title: LocusQ Physics Simulation — First-Pass Implementation Plan
 Document Type: Implementation Plan
 Author: APC Codex
 Created Date: 2026-03-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-20
 ---
 
 # Physics Simulation Feature — First-Pass Action Plan
@@ -282,7 +282,7 @@ What is not yet complete in the production plugin runtime:
 
 ## Validation Status
 
-`partially tested` — production-path runtime probes green for all Tier A families; split-brain authority closed (C1 2026-03-19); host-facing acceptance lanes H1–H3 ready to run; collision transient lane passed REAPER host. Full completion claim pending H1–H3 host runs and DAW automation gate.
+`partially tested` — production-path runtime probes are green for all Tier A families; split-brain authority is closed; multiple REAPER host-facing lanes are now green, including the former boids blocker that closed as `BL-102` on 2026-03-20. Full completion claim still depends on a formal physics DAW-automation verification/closeout lane and the final docs truth pass.
 
 Validation summary:
 - `locusq_physics_tier_a_probe`: PASS 15/15 on standalone subsystem checks.
@@ -293,8 +293,8 @@ Validation summary:
 - `scripts/reaper-phys-attractor-spread-gate-mac.sh`: PASS in a real REAPER host run for the continuous attractor motion/spread slice. The host lane now proves parameter registration, a quiet baseline with the attractor disabled, visible spread modulation when the attractor is enabled, and decay back to quiet after deactivation (`baseline_peak_spread=0.000`, `active_peak_spread=0.880`, `off_mean_spread=0.000`, `gate_b_quiet_baseline=true`, `gate_c_attractor_visible=true`, `gate_d_decay_observed=true`).
 - `scripts/reaper-phys-attractor-crossing-gate-mac.sh`: PASS in a real REAPER host run for the single-emitter attractor-crossing transient lane. The host lane now proves required parameter registration, a quiet pre-throw baseline, a visible crossing burst, and bounded decay on the DAW-visible transient mirror (`baseline_peak_transient=0.000`, `peak_transient=0.967`, `late_mean=0.002158`, `decay_ratio=0.002232`, `gate_b_quiet_baseline=true`, `gate_c_crossing_visible=true`, `gate_d_decay_observed=true`).
 - `scripts/reaper-phys-collision-transient-gate-mac.sh`: PASS in a real REAPER host run after upgrading `phys_out_transient_N` into a host-friendly observation lane. The host lane now proves parameter registration, visible transient bursts, gain-scale separation, and decay separation (`low_peak_transient=0.026`, `high_peak_transient=0.260`, `short_late_mean=0.001824`, `long_late_mean=0.131882`, `gate_b_gain_scale=true`, `gate_c_decay=true`, `gate_d_visible=true`).
-- `scripts/reaper-phys-boids-spread-gate-mac.sh`: FAIL twice in real REAPER host runs. The lane cleanly proves a quiet baseline and correct dual-instance parameter registration, but no host-visible spread appears after boids enable (`baseline_peak_spread=0.000`, `active_peak_spread=0.000` both reruns). The existing runtime boids probe still passes on the same build (`maxSpread=1.000`), which narrows this to a host-boundary/shared-lifecycle gap rather than a core boids regression.
-- `locusq_physics_runtime_boids_host_debug_probe`: PASS after correcting the probe to service the async update path explicitly. The controlled two-instance processor lane now shows the full boids chain is healthy end to end in-plugin, including the host-published spread mirror (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `pending=1.000`, `published=1.000`, `scene=1.000` on both instances). That removes the earlier false narrowing around `handleAsyncUpdate()`: the remaining blocker is specifically in the REAPER host lane, not the controlled processor path.
+- `scripts/reaper-phys-boids-spread-gate-mac.sh`: PASS in real REAPER host runs after the skew-aware boids parameter-write fix closed `BL-102`. The lane now proves a quiet baseline, visible host spread under boids enable, and bounded late-window decay in both duplicate-live and prepared-dual REAPER session shapes (`active_peak_spread=1.000`).
+- `locusq_physics_runtime_boids_host_debug_probe`: PASS. The controlled two-instance processor lane shows the full boids chain is healthy end to end in-plugin, including the host-published spread mirror (`density=1.000`, `bridge=1.000`, `apvts=1.000`, `pending=1.000`, `published=1.000`, `scene=1.000` on both instances). Together with the repaired REAPER lane, this closes the former boids host-proof gap.
 - `locusq_physics_runtime_attractor_probe`: PASS in the production processor path for the first coordinated Tier A slice, now under a damped settle-window contract (`baselineMaxSpread=0.000`, `attractorMaxSpread=0.880`, `spreadDelta=0.880`, `attractorMaxDisp=2.235`, `settleMeanX≈2.00`, `settleRangeX=0.605`).
 - `locusq_physics_runtime_boundary_probe`: PASS in the production processor path for worker-owned boundary response, now under a settle-window rebound contract (`maxX=3.000`, `collisionMask=1`, `settleMeanX≈1.36`, `settleRangeX=0.350`).
 - `locusq_physics_runtime_soft_boundary_probe`: PASS in the production processor path for soft-boundary shaping, proving the emitter enters the soft zone, stays inside room bounds, publishes `collisionMask`, and peels away under a bounded settle window (`maxX=2.464`, `minDistanceToWall=0.536`, `minVelocityX=-3.427`, `settleMeanX=1.152`, `settleRangeX=0.339`, `collisionMask=1`).
@@ -328,9 +328,9 @@ These are the highest-value blockers that still separate the current state from 
    - The major coordinated families now have credible runtime proof, but the plan still does not enumerate which Tier A controls only have partial production-path evidence versus full end-to-end proof.
    - Exit condition: every Tier A control is tagged as either `runtime-proven`, `partially proven`, or `not yet proven`, with a linked probe, self-test, or explicit gap note.
 
-3. Add at least one host-level acceptance lane on top of the targeted runtime probes.
-   - The current runtime probes prove real plugin behavior, but they are still controlled integration lanes rather than DAW-host acceptance evidence.
-   - Exit condition: one repeatable host-facing lane confirms that coordinated Tier A behavior survives the actual plugin-host lifecycle, not just isolated processor-path execution.
+3. Formalize the remaining physics DAW-automation acceptance and closeout lane.
+   - The repo now has real host-facing proof for the main coordinated runtime families, but the DAW automation mirror/freeze contract still lacks a clean canonical closeout owner.
+   - Exit condition: one canonical backlog lane closes the formal automation verification, evidence, and docs-truth pass.
 
 4. Reconcile the docs/spec surface with the implementation truth.
    - The implementation plan is now much more honest, but the broader spec/traceability surface still needs one explicit pass to reflect which Tier A claims are complete, partial, or deferred.
@@ -339,7 +339,7 @@ These are the highest-value blockers that still separate the current state from 
 Recommended execution order:
 - First: finish the authority boundary.
 - Second: publish the Tier A control-by-control proof matrix.
-- Third: add the host-level acceptance lane.
+- Third: close the DAW automation verification lane.
 - Fourth: do the final documentation truth pass for promotion readiness.
 
 ## Tier A Proof Matrix
@@ -351,7 +351,7 @@ This matrix is the current truth surface for the Tier A controls. It is intentio
 | Attractor motion + spread | `attractor_N_active`, `attractor_N_pos_*`, `attractor_N_strength`, `attractor_N_falloff`, `attractor_N_radius` | `runtime-proven` | `locusq_physics_runtime_attractor_probe` proves worker-owned motion plus spread response in the production processor path; `scripts/reaper-phys-attractor-spread-gate-mac.sh` now proves the spread lane survives the REAPER host lifecycle too | Add a second host or longer soak lane if this becomes a promotion-grade completion claim |
 | Boundary hard-wall response | `rend_phys_walls`, `phys_boundary_mode=Hard` | `runtime-proven` | `locusq_physics_runtime_boundary_probe` proves published wall clamp, rebound, and `collisionMask` output in the production processor path | Add equivalent proof for non-hard boundary modes |
 | Collision core lane | `phys_collide_emitters`, `phys_collision_radius`, `phys_collision_gain_scale`, `phys_collision_decay_ms` | `runtime-proven` | `locusq_physics_runtime_collision_probe` proves shared-worker two-emitter collision in the production processor path; `scripts/reaper-phys-collision-transient-gate-mac.sh` now adds real host-facing evidence for the same family | Add broader host lifecycle coverage beyond the dedicated transient lane if promoted further |
-| Boids coordinated motion | `phys_flock_group`, `phys_flock_G_enable`, `phys_flock_G_*` weights/radii/speed | `runtime-proven` | `locusq_physics_runtime_boids_probe` proves flock-driven coordinated motion and density-driven spread in the production processor path; `locusq_physics_runtime_boids_host_debug_probe` now proves that same chain reaches the host-published spread mirror in a controlled two-instance processor lane; `scripts/reaper-phys-boids-spread-gate-mac.sh` remains the concrete failing REAPER host repro, even after confirming the active lane really sets `Group 1`, `On`, and `Emitter` on both instances | Resolve the REAPER-specific multi-instance boids host lane, then add proof for non-motion hooks such as breakup-driven gain behavior |
+| Boids coordinated motion | `phys_flock_group`, `phys_flock_G_enable`, `phys_flock_G_*` weights/radii/speed | `host-proven` | `locusq_physics_runtime_boids_probe` proves flock-driven coordinated motion and density-driven spread in the production processor path; `locusq_physics_runtime_boids_host_debug_probe` proves the same chain reaches the host-published spread mirror in the controlled two-instance processor lane; `scripts/reaper-phys-boids-spread-gate-mac.sh` and `scripts/reaper-phys-boids-spread-prepared-gate-mac.sh` now pass after the skew-aware REAPER gate fix recorded under `BL-102` | Add non-motion hook proof such as breakup-driven gain behavior only if it becomes a promoted user-facing claim |
 | Interaction-only repulsion | `rend_phys_interact` | `runtime-proven` | `locusq_physics_runtime_interaction_probe` proves interaction-only shared-worker repulsion in the production processor path | Add host-facing acceptance and multi-scene lifecycle coverage |
 | Spring tether motion | `phys_spring_enable`, `phys_spring_k`, `phys_spring_damp`, `phys_spring_anchor_mode`, `phys_spring_anchor_*` | `runtime-proven` | `locusq_physics_runtime_spring_turbulence_probe` proves spring-only shared-worker activation, motion, and spread behavior in the production processor path | Add proof for gain-modulation variants if those are intended to be user-visible |
 | Turbulence motion + spread jitter | `phys_turbulence`, `phys_turbulence_rate` | `runtime-proven` | `locusq_physics_runtime_spring_turbulence_probe` proves turbulence-only shared-worker activation, motion, and spread behavior in the production processor path | Add host-facing acceptance and longer replay/soak confidence if promoted further |
@@ -367,7 +367,7 @@ Interpretation rule:
 - `partially proven` means the control is wired and/or subsystem-tested, but the production-path proof is incomplete or too indirect.
 - `not yet production-proven` means the current evidence is still standalone/subsystem-only for completion-claim purposes.
 
-**C1 closeout (2026-03-19):** Split-brain authority closed. PhysicsEngine::step() guard added; dual-integration assertion in JUCE_DEBUG builds. R1–R4 status: R1 complete, R2 complete (attractor slice + all runtime lanes green), R3 complete (runtime probe suite covers all Tier A families), R4 pending (doc truth pass in progress via C4).
+**C1 closeout (2026-03-19, reconciled 2026-03-20):** Split-brain authority closed. PhysicsEngine::step() guard added; dual-integration assertion in JUCE_DEBUG builds. `BL-102` then closed the boids-specific REAPER host lane on 2026-03-20. R1 complete, R2 complete, R3 complete, R4 still pending as a documentation/closeout truth pass rather than a runtime boids blocker.
 
 ## Review-Driven Refinement Priorities
 
