@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 109,
-    "open": 17,
-    "done": 92
+    "open": 16,
+    "done": 93
   },
   "items": [
     {
@@ -1910,8 +1910,8 @@
     {
       "id": "BL-100",
       "title": "BL-100 Desktop operator runner and evidence contract \u2014 audio-dsp-qa-harness",
-      "state_bucket": "open",
-      "status": "Draft (not yet indexed)",
+      "state_bucket": "done",
+      "status": "Done",
       "priority": "P1",
       "track": "G - Tooling / Governance",
       "depends_on": "BL-082, BL-083, BL-084, BL-085",
@@ -1924,7 +1924,7 @@
       "where": "",
       "plain_language_summary": "BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can launch apps, drive mouse and keyboard actions, capture screenshots or video, and emit machine-readable evidence so plugin repos stop hand-rolling fragile UI automation scripts. Current state: Draft only; not yet indexed into the canonical backlog. For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Create a harness-owned desktop operator layer for audio-dsp-qa-harness that supports deterministic desktop automation on macOS without baking plugin-specific knowledge into the harness core.",
-      "runbook_path": "Documentation/backlog/bl-100-desktop-operator-runner-and-evidence-contract.md"
+      "runbook_path": "Documentation/backlog/done/bl-100-desktop-operator-runner-and-evidence-contract.md"
     },
     {
       "id": "BL-101",

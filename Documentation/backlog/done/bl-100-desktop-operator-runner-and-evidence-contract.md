@@ -2,7 +2,7 @@ Title: BL-100 Desktop operator runner and evidence contract — audio-dsp-qa-har
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19
 
 # BL-100 Desktop operator runner and evidence contract — audio-dsp-qa-harness
 
@@ -35,7 +35,7 @@ BL-100 in plain terms: add a harness-owned macOS desktop robot layer that can la
 |---|---|
 | ID | BL-100 |
 | Priority | P1 |
-| Status | Draft (not yet indexed) |
+| Status | Done |
 | Track | G - Tooling / Governance |
 | Effort | Medium / M |
 | Depends On | BL-082, BL-083, BL-084, BL-085 |
