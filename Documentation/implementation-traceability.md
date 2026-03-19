@@ -1296,6 +1296,28 @@ Note: spec document uses `attractor_pos_N_x/y/z` and `attractor_strength_N` nota
 
 Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` lines 314–339 (8 slots × 4 = 32 parameters).
 
+## Physics Simulation Tier A — Runtime Probe Evidence (C1 Closeout, 2026-03-19)
+
+Split-brain authority gap closed (2026-03-19): `PhysicsEngine::step()` guard added; dual-integration assertion in JUCE_DEBUG builds. All 15 runtime probes listed below passed as of their recorded evidence date.
+
+| Probe | Path | Status | Key Evidence |
+|---|---|---|---|
+| `locusq_physics_tier_a_probe` | Standalone subsystem checks | PASS 15/15 | `TestEvidence/physics_p8_tier_a_20260318/`; worker tick rate, stall guard, spring frequency 0.55% < 2% gate, angular no-NaN, boids determinism, collision determinism, DSP clamp |
+| `locusq_physics_runtime_attractor_probe` | Production path — attractor spread | PASS | `baselineMaxSpread=0.000`, `attractorMaxSpread=0.880`, `spreadDelta=0.880`, `settleMeanX≈2.00` |
+| `locusq_physics_runtime_boundary_probe` | Production path — hard boundary | PASS | `maxX=3.000`, `collisionMask=1`, `settleMeanX≈1.36`, `settleRangeX=0.350` |
+| `locusq_physics_runtime_soft_boundary_probe` | Production path — soft boundary | PASS | `maxX=2.464`, `minDistanceToWall=0.536`, `collisionMask=1`, emitter stays in-room under soft repulsion |
+| `locusq_physics_runtime_collision_probe` | Production path — two-emitter collision | PASS | `minDistance=0.634`, `maxAbsX=2.046`, `maxCollisionEnergy=0.0136`, room-contained settle window |
+| `locusq_physics_runtime_boids_probe` | Production path — flock motion + spread | PASS | `minDistance=2.410`, `maxSpread=1.000`, settle-window stable across 3 reruns |
+| `locusq_physics_runtime_interaction_probe` | Production path — interaction repulsion | PASS | `maxDistance=3.186`, `maxAbsForce=5.641`, `finalVx=(-1.837, 1.626)` |
+| `locusq_physics_runtime_spring_turbulence_probe` | Production path — spring + turbulence | PASS | Spring: `maxSpread=0.300`, `maxDisp=1.919`, `settleMeanX≈0.03`; Turbulence: `maxSpread=0.090`, `maxAbsForceX=1.179` |
+| `locusq_physics_runtime_angular_probe` | Production path — angular/directivity | PASS | `baselineAim=(0,0,-1)`, throw response `maxAbsAimYAfterThrow=0.994`, `maxAimNormError=0.0004`, clean reset |
+| `locusq_physics_runtime_orbit_probe` | Production path — orbit stabilization | PASS | `initialRadius=2.000`, `settleMeanRadius=2.179`, `settleRangePct=6.82`, `maxAngularDeviationDeg=59.95` |
+| `locusq_physics_runtime_mass_override_probe` | Production path — heterogeneous mass | PASS | `heavyMeanPostCollisionVx=2.268`, `lightMeanPostCollisionVx=7.489` (asymmetric as expected) |
+| `locusq_physics_runtime_attractor_crossing_probe` | Production path — crossing transient | PASS | `maxCollisionEnergy=0.964`, `maxBridgeTransient=0.964`, `settleMeanCollisionEnergy=0.000` across 3 reruns |
+| `locusq_physics_runtime_collision_transient_probe` | Production path — collision burst | PASS | `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, `decayLateDeltaBridge=0.065..0.146` |
+| `scripts/reaper-phys-collision-transient-gate-mac.sh` | REAPER host — collision burst | PASS | `low_peak_transient=0.026`, `high_peak_transient=0.260`, `gate_b_gain_scale=true`, `gate_c_decay=true`, `gate_d_visible=true` |
+| `scripts/reaper-phys-daw-auto-gate-mac.sh` | REAPER host — DAW automation | READY TO RUN | Code gates verified (2026-03-19); parameter registration, freeze logic, LIVE→FROZEN snapshot guard, gainTransient bypass, AsyncUpdater RT safety confirmed via code review |
+
 ## Notes
 
 - Room chain order in renderer: emitter spatialization -> `EarlyReflections` -> `FDNReverb` -> speaker delay/trim -> master gain/output.

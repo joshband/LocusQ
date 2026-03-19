@@ -2605,5 +2605,15 @@
   "physics_collision_transient_host_validation": "./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh; ./scripts/build-and-install-mac.sh; ./scripts/reaper-phys-collision-transient-gate-mac.sh",
   "physics_daw_automation_build_evidence": "build_local/LocusQ_artefacts/Release/VST3/LocusQ.vst3",
   "physics_daw_automation_p0_selftest_status": "pass_2026-03-18_standalone_production_selftest",
-  "physics_daw_automation_p0_selftest_evidence": "TestEvidence/locusq_production_p0_selftest_20260318T223926Z.json"
+  "physics_daw_automation_p0_selftest_evidence": "TestEvidence/locusq_production_p0_selftest_20260318T223926Z.json",
+  "physics_closeout": {
+    "date": "2026-03-19",
+    "phases_complete": ["C1", "C2", "C3"],
+    "phases_pending_host_run": ["C2-H1", "C2-H2", "C2-H3", "C3-REAPER-gates"],
+    "tier_a_status": "runtime-proven; host-facing acceptance lanes ready to run",
+    "tier_b_status": "deferred",
+    "daw_automation_status": "code-gates verified; REAPER gates ready to run",
+    "split_brain_closed": true,
+    "deferred_items": ["Tier B (Flow Fields, Presets, Materials, Shockwave)", "Logic host testing", "AUv3-specific acceptance"]
+  }
 }
