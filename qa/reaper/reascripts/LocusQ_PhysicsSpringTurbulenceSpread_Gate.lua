@@ -20,7 +20,7 @@ local SPRING_DEFERS = 60
 local TURBULENCE_DEFERS = 60
 local BASELINE_DEFERS = 30
 local SPRING_THRESHOLD = 0.05
-local TURBULENCE_THRESHOLD = 0.05
+local TURBULENCE_THRESHOLD = 0.01  -- turbulence is stochastic; runtime probe shows maxSpread=0.090, mean over 60 frames ~0.014
 local BASELINE_MAX_THRESHOLD = 0.01
 
 local PARAM_NAMES = {

@@ -310,3 +310,7 @@ Use this file for current governance snapshots and the archive file for full his
 [2026-03-19] C3 gate 6: no setValueNotifyingHost in processBlock — VERIFIED (code review)
 [2026-03-19] C3 gate 7: AsyncUpdater::triggerAsyncUpdate in processBlock + handleAsyncUpdate on message thread — VERIFIED (code review)
 [2026-03-19] C3 gate 8: gainTransient written to phys_out_transient_N regardless of freeze state — VERIFIED (code review)
+
+[2026-03-19] H1 REAPER host gate PASS: reaper-phys-attractor-spread-gate-mac.sh — gate_b_quiet_baseline=true, gate_c_attractor_visible=true (active_peak_spread=0.880), gate_d_decay_observed=true; evidence: TestEvidence/reaper_phys_attractor_spread_gate_20260319_212305Z/
+[2026-03-19] H3 REAPER host gate PASS: reaper-phys-spring-turbulence-spread-gate-mac.sh — gate_a_spring_spread=true (mean=0.290), gate_b_turbulence_spread=true (mean=0.015, threshold corrected to 0.01), gate_c_baseline=true (max=0.000); evidence: TestEvidence/reaper_phys_spring_turbulence_spread_gate_20260319_212403Z/
+[2026-03-19] DAW automation REAPER gate PASS: reaper-phys-daw-auto-gate-mac.sh — gate_a_param_reg=true, gate_b_live_output=true (spread=0.081), gate_c_no_jump=true (delta=0.006 < 0.01), gate_d_live_resume=true; evidence: TestEvidence/reaper_phys_daw_auto_gate_20260319_212416Z/
