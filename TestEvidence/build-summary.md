@@ -10,7 +10,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
-| 2026-03-19T03:45:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
+| 2026-03-19T03:55:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
 | 2026-03-19T03:35:00Z | BL-085 owner sync review | PASS | `Done-candidate` |
 | 2026-03-19T02:57:38Z | BL-079 clean-checkout replay | PASS | `In Validation` |
 | 2026-03-19T03:58:11Z | Reaper Physics DAW Auto Gate — upgraded with BlackHole 16ch audio device, diagnostic logging, all 4 gates | PASS | `Done` |
@@ -28,7 +28,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
-| 2026-03-19T03:45:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
+| 2026-03-19T03:55:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
 | 2026-03-19T02:52:12Z | Physics collision transient runtime proof | PASS | `In Validation` |
 | 2026-03-19T02:52:12Z | Physics attractor-crossing transient runtime proof | PASS | `In Validation` |
 | 2026-03-19T03:25:00Z | Physics orbit + mass runtime refinement; attractor-crossing transient repro | PASS_WITH_WARNING | `Superseded by corrected crossing proof` |
@@ -195,8 +195,8 @@ Last Modified Date: 2026-03-19
   - `TestEvidence/bl079_validation_20260319T030000Z/status.tsv`
   - `TestEvidence/bl079_validation_20260319T014000Z/status.tsv`
 - BL-067:
-  - `TestEvidence/bl067_runtime_access_20260319T034500Z/status.tsv`
-  - `TestEvidence/bl067_runtime_access_20260319T034500Z/sandbox_runtime_access.tsv`
+  - `TestEvidence/bl067_runtime_access_20260319T035500Z/status.tsv`
+  - `TestEvidence/bl067_runtime_access_20260319T035500Z/sandbox_runtime_access.tsv`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_contract`
   - `TestEvidence/bl067_auv3_lifecycle_intake_20260317T191247Z_execute`
 - Physics runtime refinement:
