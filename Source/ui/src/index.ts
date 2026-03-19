@@ -10417,7 +10417,7 @@ async function runProductionP0SelfTest() {
             expectIncludes("UI-P1-102A", readText("cal-discovery-row1-note"), "Trust: Detected.", "output discovery trust");
             expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row1-candidates")?.textContent || ""), "Writable Calibration Routes", "output best candidate strip");
             expectIncludes("UI-P1-102A", String(document.getElementById("cal-discovery-row1-candidates")?.textContent || ""), "Host Main Output", "output alternate candidate strip");
-            expectIncludes("UI-P1-102A", readText("cal-discovery-apply-output-note"), "Best map active: L->1, R->2.", "output action preview");
+            expectIncludes("UI-P1-102A", readText("cal-discovery-apply-output-note"), "Best map preview: L->1, R->2.", "output action preview");
             expectIncludes("UI-P1-102A", readText("cal-discovery-apply-output-note"), "Role guess: Inferred.", "output action role trust");
             expectIncludes("UI-P1-102A", readText("cal-discovery-row2-value"), "Mic 1 selected", "input headline");
             expectIncludes("UI-P1-102A", readText("cal-discovery-row2-note"), "Recommended mic: 1.", "recommended mic");
