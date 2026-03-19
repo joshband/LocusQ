@@ -397,6 +397,7 @@ private:
     static constexpr int kAttractorSlotCount = 4;
     static constexpr int kFlockGroupCount = 4;
     std::array<bool, kPhysicsDAWSlotCount> lastFrozenState {};
+    int lastPhysicsRateIndex = -1; // guards per-block physicsDspBridge.prepare() calls
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physGainModParams  {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physSpreadModParams {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physTransientParams {};
