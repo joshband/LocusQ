@@ -4653,6 +4653,17 @@ let calibrationAutomationSources = {
     lastLoadedProfilePath: "",
 };
 let calibrationLegacyAliasSyncInFlight = false;
+
+function parseCalibrationProfileDatasetJson(value) {
+    const text = String(value || "").trim();
+    if (!text) return undefined;
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        console.warn("LocusQ: failed to parse calibration profile dataset JSON", error);
+        return undefined;
+    }
+}
 let calibrationLegacyAliasSyncSource = "";
 const calibrationMappingRowEntries = [];
 let rendererSteamDiagnosticsExpanded = false;
@@ -7677,8 +7688,13 @@ function updateRendererPanelShell(data = sceneData) {
     const hpCalibrationRouteText = `${formatAuditionTokenLabel(hpCalibrationRequested)} -> ${formatAuditionTokenLabel(hpCalibrationActive)}`;
     const hpCalibrationEngineText = `${formatAuditionTokenLabel(hpCalibrationEngineRequested)} -> ${formatAuditionTokenLabel(hpCalibrationEngineActive)}`;
     const hpCalibrationFallbackDetail = `ready=${hpCalibrationFallbackReady ? "yes" : "no"} · ${formatAuditionTokenLabel(hpCalibrationFallbackReasonToken)}${hpCalibrationFallbackReasonCode ? ` (${hpCalibrationFallbackReasonCode})` : ""}`;
-    const hpScoreSummaryText = `FB ${formatUnitIntervalMetric(hpFrontBackMetric)} · EL ${formatUnitIntervalMetric(hpElevationMetric)} · EXT ${formatUnitIntervalMetric(hpExternalizationMetric)}`;
-    const hpConfidenceText = hpConfidenceMetric.present
+    const hpVerificationEvidenceAvailable = hpVerificationPayloadPresent
+        && !["unavailable"].includes(hpVerificationScoreProvenanceToken)
+        && !["unavailable"].includes(hpVerificationScoreStatusToken);
+    const hpScoreSummaryText = hpVerificationEvidenceAvailable
+        ? `FB ${formatUnitIntervalMetric(hpFrontBackMetric)} · EL ${formatUnitIntervalMetric(hpElevationMetric)} · EXT ${formatUnitIntervalMetric(hpExternalizationMetric)}`
+        : "FB n/a · EL n/a · EXT n/a";
+    const hpConfidenceText = hpVerificationEvidenceAvailable && hpConfidenceMetric.present
         ? `${hpConfidenceMetric.value.toFixed(3)} (${Math.round(hpConfidenceMetric.value * 100)}%)`
         : "n/a";
 
@@ -9325,6 +9341,72 @@ function setCalibrationProfileStatus(message, isError = false, toastOnError = tr
     }
 }
 
+function setCalibrationProfileSummary(message) {
+    const summary = document.getElementById("cal-profile-summary");
+    if (!summary) return;
+    summary.innerHTML = String(message || "");
+}
+
+function buildCalibrationProfileReconciliationSummary(discoveryReconciliation) {
+    if (!discoveryReconciliation || typeof discoveryReconciliation !== "object") return "";
+    const segments = [];
+    ["output", "topology"].forEach((kind) => {
+        const source = discoveryReconciliation?.[kind];
+        if (!source || typeof source !== "object") return;
+        const resolved = Object.entries(source)
+            .map(([roleKey, policyId]) => {
+                const role = String(roleKey || "").trim().toUpperCase();
+                const normalizedPolicyId = String(policyId || "").trim().toLowerCase();
+                if (!role || !normalizedPolicyId || normalizedPolicyId === "review") return "";
+                const policyLabel = calibrationDiscoveryReconciliationOptions.find((option) => option.id === normalizedPolicyId)?.label || normalizedPolicyId;
+                return `${role}=${policyLabel}`;
+            })
+            .filter(Boolean);
+        if (resolved.length > 0) {
+            segments.push(`<strong>${kind === "topology" ? "Best Topology" : "Best Map"}</strong>: ${resolved.join("; ")}.`);
+        }
+    });
+    return segments.join(" ");
+}
+
+function updateCalibrationProfileSummary(entry = null, overrideDiscoveryReconciliation = undefined) {
+    const resolvedEntry = entry || getSelectedCalibrationProfileEntry();
+    if (!resolvedEntry) {
+        setCalibrationProfileSummary("Saved profile summaries will appear here, including deferred, folded, or manually rerouted speaker roles.");
+        return;
+    }
+
+    const intentSummary = resolvedEntry?.intentSummary && typeof resolvedEntry.intentSummary === "object"
+        ? resolvedEntry.intentSummary
+        : undefined;
+    const intentPlainText = String(intentSummary?.plainText || "").trim();
+    if (intentPlainText && overrideDiscoveryReconciliation === undefined) {
+        setCalibrationProfileSummary(intentPlainText);
+        return;
+    }
+
+    const topologyLabel = getCalibrationTopologyLabel(resolvedEntry.topologyProfile, true);
+    const monitoringLabel = getCalibrationMonitoringPathLabel(resolvedEntry.monitoringPath);
+    const validationSummary = resolvedEntry?.validationSummary && typeof resolvedEntry.validationSummary === "object"
+        ? resolvedEntry.validationSummary
+        : undefined;
+    const profileReady = !!validationSummary?.profileValid;
+    const discoveryReconciliation = overrideDiscoveryReconciliation !== undefined
+        ? overrideDiscoveryReconciliation
+        : resolvedEntry?.discoveryReconciliation;
+    const reconciliationSummary = buildCalibrationProfileReconciliationSummary(discoveryReconciliation);
+    const summaryParts = [
+        `<strong>${topologyLabel} · ${monitoringLabel}</strong>`,
+        profileReady ? "Profile marked ready." : "Profile metadata available.",
+    ];
+    if (reconciliationSummary) {
+        summaryParts.push(reconciliationSummary);
+    } else {
+        summaryParts.push("No saved role reconciliation notes for this profile.");
+    }
+    setCalibrationProfileSummary(summaryParts.join(" "));
+}
+
 function getCalibrationProfileNameInputValue() {
     const input = document.getElementById("cal-profile-name");
     if (!input) return "";
@@ -9419,6 +9501,9 @@ function getSelectedCalibrationProfileEntry() {
         monitoringPath: String(option.dataset.monitoringPath || ""),
         deviceProfile: String(option.dataset.deviceProfile || ""),
         profileTupleKey: String(option.dataset.profileTupleKey || ""),
+        validationSummary: parseCalibrationProfileDatasetJson(option.dataset.validationSummary),
+        discoveryReconciliation: parseCalibrationProfileDatasetJson(option.dataset.discoveryReconciliation),
+        intentSummary: parseCalibrationProfileDatasetJson(option.dataset.intentSummary),
     };
 }
 
@@ -10995,6 +11080,9 @@ async function runProductionP0SelfTest() {
             if (!savedDiscoveryReconciliation?.output?.ls || !savedDiscoveryReconciliation?.topology?.rs) {
                 failCheck("UI-P1-102F", "discovery reconciliation payload was not sent during profile save");
             }
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Map", "saved profile summary shows output reconciliation");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "LS=Defer Role; RS=Manual Reroute Later.", "saved profile summary output roles");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Topology", "saved profile summary shows topology reconciliation");
             applyCalibrationDiscoveryReconciliationPayload({});
             updateCalibrationDiscoverySummary();
             expectIncludes("UI-P1-102F", readText("cal-discovery-apply-output-note"), "Choose a reconciliation policy for Ls, Rs before applying this partial map.", "reconciliation cleared state");
@@ -11005,6 +11093,8 @@ async function runProductionP0SelfTest() {
                 option.textContent = "Discovery_Reconcile_Test";
                 option.dataset.profilePath = "/tmp/Discovery_Reconcile_Test.json";
                 option.dataset.profileName = "Discovery_Reconcile_Test";
+                option.dataset.topologyProfile = "surround_51";
+                option.dataset.monitoringPath = "speakers";
                 option.dataset.profileTupleKey = "surround_51::speakers";
                 calProfileSelect.appendChild(option);
                 calProfileSelect.value = option.value;
@@ -11015,6 +11105,8 @@ async function runProductionP0SelfTest() {
             }
             expectIncludes("UI-P1-102F", readText("cal-discovery-apply-output-note"), "Reconciliation: Ls=Defer Role; Rs=Manual Reroute Later.", "loaded output reconciliation");
             expectIncludes("UI-P1-102F", readText("cal-discovery-apply-topology-note"), "Reconciliation: Ls=Fold To Front Pair; Rs=Defer Role.", "loaded topology reconciliation");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "5.1 · Speakers", "loaded profile summary tuple");
+            expectIncludes("UI-P1-102F", readText("cal-profile-summary"), "Best Topology: LS=Fold To Front Pair; RS=Defer Role.", "loaded profile summary topology roles");
             recordCheck("UI-P1-102F", true, "discovery reconciliation policies persist through calibration profile save/load roundtrip");
         } finally {
             nativeFunctions.applyBestCalibrationOutputMap = applyBestOutputBefore;
@@ -11085,13 +11177,13 @@ async function runProductionP0SelfTest() {
                     rendererHeadphoneVerificationFallbackReasonCode: "none",
                     rendererHeadphoneVerificationFallbackTarget: "none",
                     rendererHeadphoneVerificationFallbackReasonText: "Requested calibration engine active.",
-                    rendererHeadphoneVerificationFrontBackScore: 0.84,
-                    rendererHeadphoneVerificationElevationScore: 0.79,
-                    rendererHeadphoneVerificationExternalizationScore: 0.82,
-                    rendererHeadphoneVerificationConfidence: 0.90,
+                    rendererHeadphoneVerificationFrontBackScore: 0.0,
+                    rendererHeadphoneVerificationElevationScore: 0.0,
+                    rendererHeadphoneVerificationExternalizationScore: 0.0,
+                    rendererHeadphoneVerificationConfidence: 0.0,
                     rendererHeadphoneVerificationStage: "verified",
-                    rendererHeadphoneVerificationScoreStatus: "estimated",
-                    rendererHeadphoneVerificationScoreProvenance: "estimated",
+                    rendererHeadphoneVerificationScoreStatus: "unavailable",
+                    rendererHeadphoneVerificationScoreProvenance: "unavailable",
                     rendererHeadphoneVerificationCompensationLabel: "Generic baseline compensation",
                     rendererHeadphoneVerificationCompensationProvenance: "generic",
                     rendererHeadphoneVerificationLatencySamples: 128,
@@ -11103,13 +11195,13 @@ async function runProductionP0SelfTest() {
             emitSyntheticSnapshot(1, {});
             await waitMs(140);
 
-            if (readText("rend-hpver-chip") !== "ESTIMATED") {
+            if (readText("rend-hpver-chip") !== "UNAVAILABLE") {
                 failCheck("UI-P1-099A", `unexpected headphone verification chip (${readText("rend-hpver-chip") || "n/a"})`);
             }
-            if (readText("rend-hpver-score-status") !== "Estimated") {
+            if (readText("rend-hpver-score-status") !== "Unavailable") {
                 failCheck("UI-P1-099A", `unexpected score status label (${readText("rend-hpver-score-status") || "n/a"})`);
             }
-            if (readText("rend-hpver-score-provenance") !== "Estimated") {
+            if (readText("rend-hpver-score-provenance") !== "Unavailable") {
                 failCheck("UI-P1-099A", `unexpected score provenance label (${readText("rend-hpver-score-provenance") || "n/a"})`);
             }
             if (readText("rend-hpver-comp-label") !== "Generic baseline compensation") {
@@ -11118,10 +11210,17 @@ async function runProductionP0SelfTest() {
             if (readText("rend-hpver-comp-provenance") !== "Generic") {
                 failCheck("UI-P1-099A", `unexpected compensation provenance (${readText("rend-hpver-comp-provenance") || "n/a"})`);
             }
-            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "evidence=Estimated", "verification detail evidence");
+            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "stage=Verified", "verification detail stage");
+            expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "evidence=Unavailable", "verification detail evidence");
             expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "compensation=Generic", "verification detail compensation provenance");
             expectIncludes("UI-P1-099A", readText("rend-hpver-detail"), "Generic baseline compensation", "verification detail compensation label");
-            recordCheck("UI-P1-099A", true, "headphone verification keeps estimated evidence separate from active runtime stage");
+            if (readText("rend-hpver-scores") !== "FB n/a · EL n/a · EXT n/a") {
+                failCheck("UI-P1-099A", `unexpected score summary (${readText("rend-hpver-scores") || "n/a"})`);
+            }
+            if (readText("rend-hpver-confidence") !== "n/a") {
+                failCheck("UI-P1-099A", `unexpected confidence summary (${readText("rend-hpver-confidence") || "n/a"})`);
+            }
+            recordCheck("UI-P1-099A", true, "headphone verification keeps runtime stage while withholding synthetic evidence values");
 
             emitSyntheticSnapshot(2, {
                 rendererHeadphoneVerificationStage: "unavailable",
@@ -13705,6 +13804,7 @@ function initUIBindings() {
             if (selected?.name) {
                 setCalibrationProfileNameInputValue(selected.name);
             }
+            updateCalibrationProfileSummary(selected);
         });
     }
 
@@ -16673,6 +16773,7 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
         emptyOption.value = "";
         select.appendChild(emptyOption);
         setCalibrationProfileStatus("No calibration profiles saved yet.");
+        updateCalibrationProfileSummary(null);
         return;
     }
 
@@ -16690,6 +16791,7 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
         } else {
             setCalibrationProfileStatus(`No profiles for ${tupleLabel}.`);
         }
+        updateCalibrationProfileSummary(null);
         return;
     }
 
@@ -16706,6 +16808,15 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
         option.dataset.monitoringPath = monitoringPathId;
         option.dataset.deviceProfile = deviceProfileId;
         option.dataset.profileTupleKey = String(entry?.profileTupleKey || buildCalibrationProfileTupleKey({ topologyProfile: topologyId, monitoringPath: monitoringPathId }));
+        if (entry?.validationSummary && typeof entry.validationSummary === "object") {
+            option.dataset.validationSummary = JSON.stringify(entry.validationSummary);
+        }
+        if (entry?.discoveryReconciliation && typeof entry.discoveryReconciliation === "object") {
+            option.dataset.discoveryReconciliation = JSON.stringify(entry.discoveryReconciliation);
+        }
+        if (entry?.intentSummary && typeof entry.intentSummary === "object") {
+            option.dataset.intentSummary = JSON.stringify(entry.intentSummary);
+        }
         select.appendChild(option);
     });
 
@@ -16725,6 +16836,7 @@ async function refreshCalibrationProfileList(preferredPath = "", tupleOptions = 
     }
     const tupleLabel = `${getCalibrationTopologyLabel(activeTuple.topologyProfile, true)} / ${getCalibrationMonitoringPathLabel(activeTuple.monitoringPath)}`;
     setCalibrationProfileStatus(`${tupleEntries.length} calibration profile(s) available for ${tupleLabel}.`);
+    updateCalibrationProfileSummary(selected);
 }
 
 async function saveCalibrationProfile() {
@@ -16751,8 +16863,18 @@ async function saveCalibrationProfile() {
             return false;
         }
 
+        const savedEntry = {
+            name: result?.name || profileName,
+            path: result?.path || "",
+            topologyProfile: result?.topologyProfile || activeTuple.topologyProfile,
+            monitoringPath: result?.monitoringPath || activeTuple.monitoringPath,
+            validationSummary: result?.validationSummary || buildCalibrationValidationSummaryPayload(),
+            discoveryReconciliation: result?.discoveryReconciliation,
+            intentSummary: result?.intentSummary,
+        };
         setCalibrationProfileStatus(`Saved profile: ${result.name || profileName}`);
         await refreshCalibrationProfileList(result?.path || "", activeTuple);
+        updateCalibrationProfileSummary(getSelectedCalibrationProfileEntry() || savedEntry, result?.discoveryReconciliation);
         return true;
     } catch (error) {
         setCalibrationProfileStatus("Calibration profile save failed.", true);
@@ -16786,6 +16908,16 @@ async function loadCalibrationProfile() {
         if (ackRedetect) ackRedetect.checked = false;
         applyCalibrationDiscoveryReconciliationPayload(result?.discoveryReconciliation);
 
+        const loadedEntry = {
+            ...selected,
+            name: result?.name || selected.name || "",
+            path: result?.path || selected.path || "",
+            topologyProfile: result?.topologyProfile || activeTuple.topologyProfile,
+            monitoringPath: result?.monitoringPath || activeTuple.monitoringPath,
+            validationSummary: result?.validationSummary,
+            discoveryReconciliation: result?.discoveryReconciliation,
+            intentSummary: result?.intentSummary,
+        };
         setCalibrationProfileNameInputValue(result?.name || selected.name || "");
         setCalibrationProfileStatus(`Loaded profile: ${result?.name || selected.name || "profile"}`);
         setCalibrationAutomationProfileContext(result?.name || selected.name || "", result?.path || selected.path || "");
@@ -16795,6 +16927,7 @@ async function loadCalibrationProfile() {
         setCalibrationAutomationSource("routing", "loaded_profile");
         const resolvedTuple = buildCalibrationProfileTuple(result?.topologyProfile || activeTuple.topologyProfile, result?.monitoringPath || activeTuple.monitoringPath);
         await refreshCalibrationProfileList(result?.path || selected.path, resolvedTuple);
+        updateCalibrationProfileSummary(getSelectedCalibrationProfileEntry() || loadedEntry, result?.discoveryReconciliation);
         applyCalibrationStatus();
         return true;
     } catch (error) {

@@ -10,6 +10,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
 | 2026-03-19T03:55:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
 | 2026-03-19T03:35:00Z | BL-085 owner sync review | PASS | `Done-candidate` |
 | 2026-03-19T02:57:38Z | BL-079 clean-checkout replay | PASS | `In Validation` |
@@ -28,6 +29,7 @@ Last Modified Date: 2026-03-19
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-19T04:26:14Z | BL-079 REAPER parameter-group host gate | PASS | `Done` |
 | 2026-03-19T03:55:00Z | BL-067 runtime-access hardening contract replay | PASS | `In Validation` |
 | 2026-03-19T02:52:12Z | Physics collision transient runtime proof | PASS | `In Validation` |
 | 2026-03-19T02:52:12Z | Physics attractor-crossing transient runtime proof | PASS | `In Validation` |
@@ -192,6 +194,8 @@ Last Modified Date: 2026-03-19
   - `TestEvidence/bl085_cmake_integration_20260319T030000Z/status.tsv`
   - `TestEvidence/bl085_cmake_integration_20260319T020000Z/status.tsv`
 - BL-079:
+  - `TestEvidence/bl079_param_group_host_gate_vst3_20260319T042105Z/status.json`
+  - `TestEvidence/bl079_param_group_host_gate_au_20260319T042614Z/status.json`
   - `TestEvidence/bl079_validation_20260319T030000Z/status.tsv`
   - `TestEvidence/bl079_validation_20260319T014000Z/status.tsv`
 - BL-067:
@@ -204,10 +208,13 @@ Last Modified Date: 2026-03-19
   - `qa/physics_runtime_mass_override_probe_main.cpp`
   - `qa/physics_runtime_attractor_crossing_probe_main.cpp`
   - `qa/physics_runtime_collision_transient_probe_main.cpp`
+  - `qa/reaper/reascripts/LocusQ_PhysicsCollisionTransient_Gate.lua`
+  - `scripts/reaper-phys-collision-transient-gate-mac.sh`
   - `locusq_physics_runtime_orbit_probe`: PASS with `initialRadius=2.000`, `settleMeanRadius=2.179`, `settleRangePct=6.82`, `maxAngularDeviationDeg=59.95`
   - `locusq_physics_runtime_mass_override_probe`: PASS with `heavyMeanPostCollisionVx=2.268`, `lightMeanPostCollisionVx=7.489`
   - `locusq_physics_runtime_attractor_crossing_probe`: PASS across 3 reruns with `maxCollisionEnergy=0.964`, `maxBridgeTransient=0.964`, and quiet late-window decay; the earlier zero-transient result was caused by probe-side 3D coordinate mismatch, not by a live propagation failure
   - `locusq_physics_runtime_collision_transient_probe`: PASS across 3 reruns with `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, and `decayLateDeltaBridge=0.065..0.146`; the production path now proves that collision gain scale changes burst size and collision decay ms changes burst persistence
+  - `reaper-phys-collision-transient-gate-mac.sh`: FAIL after fresh install + cache prune; REAPER now sees the new `Emitter N Physics Transient` params, but the multi-instance collision scenario still produced `low_peak_transient=0.000`, `high_peak_transient=0.000`, `short_late_mean=0.000`, `long_late_mean=0.000`. This is the current host-acceptance blocker.
 
 ## Evidence Hygiene Notes
 

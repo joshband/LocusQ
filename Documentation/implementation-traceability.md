@@ -1283,7 +1283,7 @@ Note: spec document uses `attractor_pos_N_x/y/z` and `attractor_strength_N` nota
 
 **Evidence:** `TestEvidence/physics_daw_automation_20260318/`
 
-24 APVTS float parameters exposing per-slot physics output state as DAW-automatable lanes. Registered as part of the physics choreography timeline work on `feat/physics-choreography-timeline-specs`.
+32 APVTS parameters exposing per-slot physics output state as DAW-automatable lanes. Registered as part of the physics choreography timeline work on `feat/physics-choreography-timeline-specs`.
 
 ### Renderer-Scope: Physics DAW Automation Mirrors (×8 slots N=0..7)
 
@@ -1291,9 +1291,10 @@ Note: spec document uses `attractor_pos_N_x/y/z` and `attractor_strength_N` nota
 |---|---|---|---|---|
 | `phys_out_gain_mod_0` .. `phys_out_gain_mod_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (live physics output mirror; freeze-holds last-live value when `phys_frozen_N=1`) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` + `Source/ui/public/index.html` | Physics gain modulation mirror 0.0–1.0; `gainTransient` excluded from freeze snapshot |
 | `phys_out_spread_mod_0` .. `phys_out_spread_mod_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (live physics output mirror; freeze-holds last-live value when `phys_frozen_N=1`) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` + `Source/ui/public/index.html` | Physics spread modulation mirror 0.0–1.0; same freeze/live behavior as gain mod |
+| `phys_out_transient_0` .. `phys_out_transient_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (live `gainTransient` mirror; bypasses freeze hold and updates every block) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` | Physics transient mirror 0.0–1.0; host-observable lane for collision / attractor burst validation |
 | `phys_frozen_0` .. `phys_frozen_7` | `scene_physics` | `Source/PluginProcessor.cpp` `processBlock` physics automation section (freeze gate read; suppresses mirror advance when 1.0) | `Source/editor_webview/EditorParameterBridge.h` `kParameterBridgeSpecs` ×8; `Source/ui/src/index.ts` + `Source/ui/public/index.html` | Bool 0.0/1.0; freeze gate for slot N; `gainTransient` excluded from snapshot |
 
-Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` lines 314–335 (8 slots × 3 = 24 parameters).
+Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` lines 314–339 (8 slots × 4 = 32 parameters).
 
 ## Notes
 

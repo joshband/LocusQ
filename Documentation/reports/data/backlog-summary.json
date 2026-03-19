@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 109,
-    "open": 20,
-    "done": 89
+    "open": 19,
+    "done": 90
   },
   "items": [
     {
@@ -1511,8 +1511,8 @@
     {
       "id": "BL-079",
       "title": "BL-079: APVTS Parameter Grouping and Host Hierarchy",
-      "state_bucket": "open",
-      "status": "In Validation",
+      "state_bucket": "done",
+      "status": "Done (2026-03-19: host-view gate PASS \u2014 215 params, 20/20 group-boundary names confirmed, Mode at idx 0, Renderer immediately after Emitter)",
       "priority": "P2",
       "track": "",
       "depends_on": "BL-032",
@@ -1523,9 +1523,9 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally, a fresh 2026-03-19 clean-checkout replay now passes end to end, and the remaining work is host-view verification plus promotion follow-up.",
+      "plain_language_summary": "BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: Done. The grouped APVTS tree is implemented locally, the clean-checkout replay passes, and the REAPER host gate now passes for both VST3 and AU with the correct format-aware flat-order expectation.",
       "objective": "Expose LocusQ's APVTS as a grouped host hierarchy so DAWs that understand parameter groups can present a cleaner tree, while preserving the plugin's compatibility contracts: stable parameter IDs, stable defaults, and unchanged flattened ordering for legacy automation and QA lanes that still depend on raw indices.",
-      "runbook_path": "Documentation/backlog/bl-079-apvts-parameter-grouping-and-host-hierarchy.md"
+      "runbook_path": "Documentation/backlog/done/bl-079-apvts-parameter-grouping-and-host-hierarchy.md"
     },
     {
       "id": "BL-080",

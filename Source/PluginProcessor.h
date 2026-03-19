@@ -396,12 +396,17 @@ private:
     static constexpr int kPhysicsDAWSlotCount = 8;
     static constexpr int kAttractorSlotCount = 4;
     static constexpr int kFlockGroupCount = 4;
+    static constexpr float kPhysicsHostMirrorNotifyEpsilon = 0.0005f;
     std::array<bool, kPhysicsDAWSlotCount> lastFrozenState {};
     int lastPhysicsRateIndex = -1; // guards per-block physicsDspBridge.prepare() calls
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physGainModParams  {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physSpreadModParams {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physTransientParams {};
     std::array<std::atomic<float>*, kPhysicsDAWSlotCount> physFrozenParams    {};
+    std::array<juce::RangedAudioParameter*, kPhysicsDAWSlotCount> physTransientNotifyTargets {};
+    std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPending {};
+    std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPublished {};
+    std::array<std::atomic<bool>, kPhysicsDAWSlotCount> physTransientHostDirty {};
     std::atomic<float>* rendPhysRateParam = nullptr;
     std::atomic<float>* rendPhysPauseParam = nullptr;
     std::atomic<float>* rendPhysWallsParam = nullptr;

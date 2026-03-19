@@ -53,7 +53,7 @@ ProcessorParameterLayout (existing)
 
 ## Parameter Contract
 
-24 new APVTS parameters, per emitter slot N = 0..7. These follow the existing per-slot suffix pattern already established by `attractor_N_pos_x`, `phys_flock_G_sep_weight`, etc. in `ProcessorParameterLayout.cpp`. The existing single-instance physics parameters (`phys_spring_enable`, `phys_turbulence`, etc.) remain single-instance (shared across all emitters); the new output mirror and freeze parameters are the first per-slot parameters in the emitter physics group.
+32 new APVTS parameters, per emitter slot N = 0..7. These follow the existing per-slot suffix pattern already established by `attractor_N_pos_x`, `phys_flock_G_sep_weight`, etc. in `ProcessorParameterLayout.cpp`. The existing single-instance physics parameters (`phys_spring_enable`, `phys_turbulence`, etc.) remain single-instance (shared across all emitters); the new output mirror and freeze parameters are the first per-slot parameters in the emitter physics group.
 
 ### Output mirrors (physics writes, DAW records)
 
@@ -61,6 +61,7 @@ ProcessorParameterLayout (existing)
 |---|---|---|---|---|
 | `phys_out_spread_mod_N` | Float | 0..1 | `Emitter N+1 Physics Spread` | Aggregate physics spread contribution for slot N |
 | `phys_out_gain_mod_N` | Float | 0..1 | `Emitter N+1 Physics Gain` | Aggregate physics gain contribution for slot N |
+| `phys_out_transient_N` | Float | 0..1 | `Emitter N+1 Physics Transient` | Live one-shot transient mirror for slot N (`gainTransient`); bypasses freeze snapshotting |
 
 ### Freeze toggles (operator + DAW automatable)
 
@@ -70,11 +71,11 @@ ProcessorParameterLayout (existing)
 
 ### Authority chain position
 
-`phys_out_spread_mod_N` and `phys_out_gain_mod_N` are additive offsets in the spread/gain arbitration chain — the same position as the current physics atomics. Freezing does not change their authority chain position; it only changes which process writes the value (physics worker vs DAW playback). ADR-0020 is unaffected.
+`phys_out_spread_mod_N` and `phys_out_gain_mod_N` are additive offsets in the spread/gain arbitration chain — the same position as the current physics atomics. `phys_out_transient_N` is a readback lane for the separate one-shot `gainTransient` burst path. Freezing does not change gain/spread authority chain position; it only changes which process writes the held mirror value (physics worker vs DAW playback). ADR-0020 is unaffected.
 
 ### Parameter count delta
 
-Emitter: 55 → 79 (+24). Total: ~165 → ~189.
+Emitter: 55 → 87 (+32). Total: ~165 → ~197.
 
 ---
 
@@ -103,9 +104,10 @@ Host notification (for UI refresh) is dispatched asynchronously via `AsyncUpdate
 PerEmitterDSPValues val = dspBridge.readAtomic(N);  // single read — val used for both mirror and DSP
 getRawParameterValue("phys_out_spread_mod_N")->store(val.spreadMod);  // DAW polls this
 getRawParameterValue("phys_out_gain_mod_N")->store(val.gainMod);
+getRawParameterValue("phys_out_transient_N")->store(val.gainTransient);
 float spreadDelta = val.spreadMod;   // DSP uses same val as mirrored to APVTS — not a second read
 float gainDelta   = val.gainMod;
-// gainTransient flows separately through DSP path regardless of freeze state
+// gainTransient still flows separately through DSP path; the DAW mirror is observation-only
 ```
 
 ### Frozen path (`phys_frozen_N = true`)
@@ -116,7 +118,7 @@ float spreadDelta = getRawParameterValue("phys_out_spread_mod_N")->load();  // D
 float gainDelta   = getRawParameterValue("phys_out_gain_mod_N")->load();
 // no store() call — DAW owns the value
 // physics atomics keep updating silently (worker never stops)
-// gainTransient continues through DSP path unaffected
+// phys_out_transient_N keeps mirroring live gainTransient and is never frozen
 ```
 
 ### LIVE → FROZEN transition (snapshot guard — audio thread)

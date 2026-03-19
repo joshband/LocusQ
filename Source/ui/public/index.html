@@ -1185,6 +1185,20 @@
     .cal-profile-status.error {
       color: #ffb2b2;
     }
+    .cal-profile-summary {
+      margin-top: 6px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(45, 55, 69, 0.82);
+      background: rgba(14, 18, 24, 0.76);
+      color: var(--text-dim);
+      font-size: 9px;
+      line-height: 1.4;
+    }
+    .cal-profile-summary strong {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
     .cal-ack-row {
       display: flex;
       align-items: center;
@@ -2565,6 +2579,7 @@
                 <button class="btn-secondary" id="cal-profile-delete-btn">DELETE</button>
               </div>
               <div class="cal-profile-status" id="cal-profile-status">No calibration profiles loaded.</div>
+              <div class="cal-profile-summary" id="cal-profile-summary">Saved profile summaries will appear here, including deferred, folded, or manually rerouted speaker roles.</div>
             </div>
           </div>
 

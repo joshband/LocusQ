@@ -300,7 +300,7 @@ Last Modified Date: 2026-03-18
 
 ---
 
-## Physics DAW Automation Mirror Parameters (8 slots × 3, N = 0..7)
+## Physics DAW Automation Mirror Parameters (8 slots × 4, N = 0..7)
 
 Physics output parameters exposed as DAW-automatable APVTS floats. These mirror per-slot physics runtime state into the DAW automation lane so hosts can read, record, and replay physics-driven modulation.
 
@@ -308,11 +308,12 @@ Physics output parameters exposed as DAW-automatable APVTS floats. These mirror 
 |:---|:-----|:-----|:------|:--------|:-----|:------|
 | `phys_out_gain_mod_N` | Physics Gain Mod N | Float | 0.0–1.0 | 0.0 | — | Physics gain modulation mirror for slot N. Tracks real-time physics output when live; holds last-live snapshot when frozen. DAW-automatable. N ∈ {0..7} |
 | `phys_out_spread_mod_N` | Physics Spread Mod N | Float | 0.0–1.0 | 0.0 | — | Physics spread modulation mirror for slot N. Same freeze/live behavior as gain mod. DAW-automatable. N ∈ {0..7} |
+| `phys_out_transient_N` | Physics Transient N | Float | 0.0–1.0 | 0.0 | — | Physics one-shot transient mirror for slot N. Tracks live `gainTransient` bursts directly and intentionally bypasses freeze snapshotting so hosts can observe transient events in real time. DAW-automatable. N ∈ {0..7} |
 | `phys_frozen_N` | Physics Frozen N | Bool | 0.0/1.0 | 0.0 | — | Freeze gate for physics slot N. When 1, `phys_out_gain_mod_N` and `phys_out_spread_mod_N` hold their last-live snapshot. `gainTransient` is excluded from the snapshot. DAW-automatable. N ∈ {0..7} |
 
-Total: 24 parameters (8 gain mod + 8 spread mod + 8 freeze gates).
+Total: 32 parameters (8 gain mod + 8 spread mod + 8 transient mirrors + 8 freeze gates).
 
-**Authority chain (ADR-0020):** These parameters sit at the DAW/APVTS layer. Physics computes the live value; the freeze gate governs whether the mirror advances or holds. `gainTransient` (collision burst) is intentionally excluded from freeze snapshots to prevent static transient artifacts.
+**Authority chain (ADR-0020):** These parameters sit at the DAW/APVTS layer. Physics computes the live value; the freeze gate governs whether the gain/spread mirrors advance or hold. `phys_out_transient_N` mirrors `gainTransient` directly and intentionally bypasses freeze snapshots to prevent static transient artifacts while still giving hosts a real transient-observation lane.
 
 ---
 

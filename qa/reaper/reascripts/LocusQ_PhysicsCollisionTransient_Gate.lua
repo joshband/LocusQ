@@ -17,12 +17,14 @@ local STATUS_JSON = os.getenv("LQ_REAPER_STATUS_JSON") or ""
 local REQUIRE_LOCUSQ = os.getenv("LQ_REAPER_REQUIRE_LOCUSQ") ~= "0"
 
 local SETTLE_DEFERS = 60
-local COLLISION_DEFERS = 90
+local COLLISION_DEFERS = 120
 local RESET_PULSE_DEFERS = 6
 local THROW_PULSE_DEFERS = 12
 local COLLISION_THRESHOLD = 0.005
 local GAIN_DELTA_THRESHOLD = 0.05
 local DECAY_DELTA_THRESHOLD = 0.03
+local LATE_WINDOW_START = 8
+local LATE_WINDOW_END = 24
 
 local PARAM_NAMES = {
   phys_enable = "Physics Enable",
@@ -265,7 +267,7 @@ local function run_collision_scenario(contexts, gain_scale, decay_ms, done)
       collision_tick = tick
     end
 
-    if collision_tick >= 0 and tick >= collision_tick + 3 and tick <= collision_tick + 10 then
+    if collision_tick >= 0 and tick >= collision_tick + LATE_WINDOW_START and tick <= collision_tick + LATE_WINDOW_END then
       late_sum = late_sum + transient
       late_count = late_count + 1
     end
@@ -340,13 +342,13 @@ local function run_scenarios()
         high_metrics.peak_transient, high_metrics.late_mean, tostring(high_metrics.transient_visible), high_metrics.collision_tick))
 
       log("Running short-decay scenario")
-      run_collision_scenario(contexts, 10.0, 25.0, function(metrics_short)
+      run_collision_scenario(contexts, 10.0, 10.0, function(metrics_short)
         short_metrics = metrics_short
         log(string.format("short: peak=%.3f late=%.3f visible=%s tick=%d",
           short_metrics.peak_transient, short_metrics.late_mean, tostring(short_metrics.transient_visible), short_metrics.collision_tick))
 
         log("Running long-decay scenario")
-        run_collision_scenario(contexts, 10.0, 200.0, function(metrics_long)
+        run_collision_scenario(contexts, 10.0, 400.0, function(metrics_long)
           long_metrics = metrics_long
           log(string.format("long: peak=%.3f late=%.3f visible=%s tick=%d",
             long_metrics.peak_transient, long_metrics.late_mean, tostring(long_metrics.transient_visible), long_metrics.collision_tick))

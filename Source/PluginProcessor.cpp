@@ -1201,78 +1201,13 @@ HeadphoneVerificationSnapshot buildHeadphoneVerificationSnapshot (
         snapshot.verificationStage = stage::kUnavailable;
     }
 
-    float baseFrontBack = 0.0f;
-    float baseElevation = 0.0f;
-    float baseExternalization = 0.0f;
-
-    switch (static_cast<locusq::headphone_core::CalibrationChainEngine> (activeEngineSanitized))
-    {
-        case locusq::headphone_core::CalibrationChainEngine::ParametricEq:
-            baseFrontBack = 0.70f;
-            baseElevation = 0.62f;
-            baseExternalization = 0.66f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainEngine::FirConvolution:
-            baseFrontBack = 0.84f;
-            baseElevation = 0.79f;
-            baseExternalization = 0.82f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainEngine::Disabled:
-        default:
-            break;
-    }
-
-    float penalty = 0.0f;
-    switch (static_cast<locusq::headphone_core::CalibrationChainFallbackReason> (fallbackReasonSanitized))
-    {
-        case locusq::headphone_core::CalibrationChainFallbackReason::None:
-            penalty = 0.0f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainFallbackReason::DisabledByRequest:
-            penalty = 1.0f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainFallbackReason::InvalidEngineSelection:
-            penalty = 0.55f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainFallbackReason::DspNotPrepared:
-            penalty = 0.85f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainFallbackReason::PeqUnavailable:
-            penalty = 0.45f;
-            break;
-
-        case locusq::headphone_core::CalibrationChainFallbackReason::FirUnavailable:
-            penalty = 0.25f;
-            break;
-    }
-
-    if (verificationDisabled)
-        penalty = 1.0f;
-
-    snapshot.frontBackScore = sanitizeScore (baseFrontBack - penalty, 0.0f);
-    snapshot.elevationScore = sanitizeScore (baseElevation - penalty, 0.0f);
-    snapshot.externalizationScore = sanitizeScore (baseExternalization - penalty, 0.0f);
-
-    const float aggregateScore =
-        (snapshot.frontBackScore + snapshot.elevationScore + snapshot.externalizationScore) / 3.0f;
-    float confidenceBias = -0.25f;
-
-    if (snapshot.verificationStage == stage::kVerified)
-        confidenceBias = 0.08f;
-    else if (snapshot.verificationStage == stage::kFallback)
-        confidenceBias = -0.08f;
-    else if (snapshot.verificationStage == stage::kInitializing)
-        confidenceBias = -0.20f;
-    else if (snapshot.verificationStage == stage::kUnavailable)
-        confidenceBias = -0.35f;
-
-    snapshot.confidence = sanitizeScore (aggregateScore + confidenceBias, 0.0f);
+    // BL-099: the current renderer-side scores are policy placeholders, not measured
+    // perceptual evidence. Keep stage/fallback telemetry, but do not publish the
+    // synthetic values as operator-facing verification evidence.
+    snapshot.frontBackScore = 0.0f;
+    snapshot.elevationScore = 0.0f;
+    snapshot.externalizationScore = 0.0f;
+    snapshot.confidence = 0.0f;
     snapshot.chainLatencySamples = sanitizeLatencySamples (snapshot.chainLatencySamples);
     snapshot.verificationStage = sanitizeVerificationStage (snapshot.verificationStage);
     snapshot.fallbackReasonCode = sanitizeFallbackReasonCode (snapshot.fallbackReasonCode);
@@ -1282,15 +1217,7 @@ HeadphoneVerificationSnapshot buildHeadphoneVerificationSnapshot (
         snapshot.activeEngineId);
     snapshot.fallbackReasonText = fallbackReasonTextForCode (snapshot.fallbackReasonCode);
 
-    if (snapshot.verificationStage == stage::kUnavailable || snapshot.verificationStage == stage::kDisabled)
-    {
-        snapshot.scoreProvenance = provenance::kUnavailable;
-    }
-    else
-    {
-        snapshot.scoreProvenance = provenance::kEstimated;
-    }
-
+    snapshot.scoreProvenance = provenance::kUnavailable;
     snapshot.compensationLabel = "Generic baseline compensation";
     snapshot.compensationProvenance = provenance::kGeneric;
     snapshot.verificationScoreStatus = scoreStatusFromProvenance (snapshot.scoreProvenance);
@@ -1573,6 +1500,11 @@ LocusQAudioProcessor::LocusQAudioProcessor()
         physSpreadModParams[i] = apvts.getRawParameterValue ("phys_out_spread_mod_" + juce::String (i));
         physTransientParams[i] = apvts.getRawParameterValue ("phys_out_transient_"  + juce::String (i));
         physFrozenParams[i]    = apvts.getRawParameterValue ("phys_frozen_"         + juce::String (i));
+        physTransientNotifyTargets[i] = dynamic_cast<juce::RangedAudioParameter*> (
+            apvts.getParameter ("phys_out_transient_" + juce::String (i)));
+        physTransientHostPending[i].store (0.0f, std::memory_order_relaxed);
+        physTransientHostPublished[i].store (0.0f, std::memory_order_relaxed);
+        physTransientHostDirty[i].store (false, std::memory_order_relaxed);
     }
 
     auto rawParam = [this] (const char* paramId) -> std::atomic<float>*
@@ -1774,6 +1706,23 @@ void LocusQAudioProcessor::releaseResources()
 
 void LocusQAudioProcessor::handleAsyncUpdate()
 {
+    for (int slot = 0; slot < kPhysicsDAWSlotCount; ++slot)
+    {
+        if (! physTransientHostDirty[slot].exchange (false, std::memory_order_acq_rel))
+            continue;
+
+        auto* parameter = physTransientNotifyTargets[slot];
+        if (parameter == nullptr)
+            continue;
+
+        const auto value = juce::jlimit (
+            0.0f,
+            1.0f,
+            physTransientHostPending[slot].load (std::memory_order_acquire));
+        parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
+        physTransientHostPublished[slot].store (value, std::memory_order_release);
+    }
+
     updateHostDisplay();
 }
 
@@ -3089,6 +3038,16 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
             lastFrozenState[slot] = nowFrozen;
             physTransientParams[slot]->store (dspValues.gainTransient);
+            const auto publishedTransient = physTransientHostPublished[slot].load (std::memory_order_acquire);
+            const bool transientStateChanged = std::abs (dspValues.gainTransient - publishedTransient) >= kPhysicsHostMirrorNotifyEpsilon
+                                            || ((dspValues.gainTransient <= kPhysicsHostMirrorNotifyEpsilon)
+                                                != (publishedTransient <= kPhysicsHostMirrorNotifyEpsilon));
+            if (transientStateChanged)
+            {
+                physTransientHostPending[slot].store (dspValues.gainTransient, std::memory_order_release);
+                physTransientHostDirty[slot].store (true, std::memory_order_release);
+                triggerAsyncUpdate();
+            }
 
             float spreadMod, gainMod;
             if (!nowFrozen)
