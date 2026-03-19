@@ -10,7 +10,7 @@ Last Modified Date: 2026-03-18
 
 BL-032 reduces merge risk and maintenance drag by breaking `Source/PluginProcessor.cpp` and `Source/PluginEditor.cpp` into smaller owned modules without changing behavior or violating realtime rules.
 
-Current state: `Done-candidate`, but still held. The latest hold recheck on 2026-03-05 failed `BL032-G-001` because `Source/PluginProcessor.cpp` was `3653 > 3600` lines. RT audit stayed green.
+Current state: `Done-candidate` on the current branch. The latest hold recheck on 2026-03-18 passed `BL032-G-001` because `Source/PluginProcessor.cpp` is `3248 <= 3600` lines. RT audit stayed green.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -39,13 +39,13 @@ Use visuals only when they materially improve understanding.
 | Field | Value |
 |---|---|
 | Priority | P2 |
-| Status | Done-candidate on hold |
+| Status | Done-candidate (current branch hold recheck PASS; owner promotion packet pending) |
 | Owner Track | Track F - Hardening |
 | Depends On | — |
 | Blocks | — |
-| Active Blocker | `BL032-G-001` line-count threshold failure on `Source/PluginProcessor.cpp` |
-| Latest Evidence | `TestEvidence/bl032_hold_recheck_20260305T224608Z/status.tsv` |
-| Latest Guardrail Result | `FAIL` (`Source/PluginProcessor.cpp` `3653 > 3600`) |
+| Active Blocker | — |
+| Latest Evidence | `TestEvidence/bl032_hold_recheck_20260318T013500Z/status.tsv` |
+| Latest Guardrail Result | `PASS` (`Source/PluginProcessor.cpp` `3248 <= 3600`) |
 | Latest RT Result | `PASS` (`non_allowlisted=0`) |
 | Default Replay Tier | T1 |
 | Heavy Lane Budget | Standard |
@@ -78,7 +78,7 @@ Reduce maintenance and merge risk by decomposing `Source/PluginProcessor.cpp` an
 
 | Item | State | Notes |
 |---|---|---|
-| `BL032-G-001` line-count guardrail | Active | Latest hold recheck shows `Source/PluginProcessor.cpp` at `3653`, above the `<= 3600` threshold. |
+| `BL032-G-001` line-count guardrail | Cleared on current branch | Latest current-branch hold recheck shows `Source/PluginProcessor.cpp` at `3248`, within the `<= 3600` threshold. |
 | Build + smoke parity | Green | Latest hold recheck stayed green. |
 | UI self-test parity | Green | Green in the latest done-candidate replay sequence. |
 | RT audit | Green | Latest hold recheck recorded `non_allowlisted=0`. |
@@ -105,6 +105,7 @@ Reduce maintenance and merge risk by decomposing `Source/PluginProcessor.cpp` an
 | 2026-02-26 | `TestEvidence/bl032_rt_gate_d2_20260226T150423Z/status.tsv` | PASS | RT reconciliation closed the D1 regression. |
 | 2026-02-26 | `TestEvidence/bl032_done_promotion_f1_20260226T152552Z/status.tsv` | PASS | Item reached `Done-candidate`. |
 | 2026-03-05 | `TestEvidence/bl032_hold_recheck_20260305T224608Z/status.tsv` | FAIL | Latest authoritative hold recheck reopened `BL032-G-001`; RT stayed green. |
+| 2026-03-18 | `TestEvidence/bl032_hold_recheck_20260318T013500Z/status.tsv` | PASS | Current-branch hold recheck cleared `BL032-G-001`; RT stayed green. |
 
 ## Evidence Pointers
 
@@ -113,6 +114,9 @@ Reduce maintenance and merge risk by decomposing `Source/PluginProcessor.cpp` an
 | `TestEvidence/bl032_hold_recheck_20260305T224608Z/status.tsv` | Latest authoritative hold result |
 | `TestEvidence/bl032_hold_recheck_20260305T224608Z/guardrail_report.tsv` | Current blocker detail for `BL032-G-001` |
 | `TestEvidence/bl032_hold_recheck_20260305T224608Z/rt_audit.tsv` | Confirms RT audit stayed green |
+| `TestEvidence/bl032_hold_recheck_20260318T013500Z/status.tsv` | Current-branch guardrail pass |
+| `TestEvidence/bl032_hold_recheck_20260318T013500Z/guardrail_report.tsv` | Current-branch guardrail detail |
+| `TestEvidence/bl032_hold_recheck_20260318T013500Z/rt_audit.tsv` | Confirms RT audit stayed green |
 | `Documentation/plans/bl-032-modularization-boundary-map-2026-02-25.md` | Short supporting module-boundary spec |
 
 ## Closeout Checklist
@@ -121,7 +125,7 @@ Reduce maintenance and merge risk by decomposing `Source/PluginProcessor.cpp` an
 - [x] Processor/editor extraction landed.
 - [x] Required module directories exist.
 - [x] RT audit is green on the latest hold packet.
-- [ ] `BL032-G-001` line-count guardrail passes on the current branch.
+- [x] `BL032-G-001` line-count guardrail passes on the current branch.
 - [ ] Final owner promotion packet is refreshed after the guardrail passes.
 - [ ] `Documentation/backlog/index.md`, `status.json`, and summary exports are synced in the same closeout change set.
 

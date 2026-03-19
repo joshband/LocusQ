@@ -85,7 +85,7 @@ Reference-only docs are retained for traceability but are not status authority:
 - `Documentation/archive/2026-03-01-build-summary-compaction/`
 - `Documentation/archive/2026-03-01-validation-trend-compaction/`
 - `Documentation/archive/2026-03-18-doc-surface-consolidation/`
-- `Documentation/Calibration POC/` (active research prototype surface; reference-only)
+- `Documentation/Calibration POC/` (curated research prototype surface; reference-only)
 - `Documentation/lessons-learned.md`
 - `Documentation/archive/2026-02-23-clap-reference-bundle/`
 - `Documentation/backlog-post-v1-agentic-sprints.md` (superseded by `Documentation/backlog/index.md`)
@@ -123,6 +123,7 @@ Escalation path:
 - Per `ADR-0022`, generated report data, visuals, and timestamped support outputs are current-only by default in active folders.
 - Superseded plan packets, legacy report bundles, and stale generated summaries were further reduced from active folders on 2026-03-18 and moved to:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/`
+- `Documentation/Calibration POC/` was also reduced on 2026-03-18 to a curated prototype plus retained-reference subset.
 - The active testing surface was also classified on 2026-03-18:
   - reusable guides and supporting contracts remain active under `Documentation/testing/`
   - one-off notes move to `Documentation/archive/2026-03-18-doc-surface-consolidation/testing/`

@@ -2,7 +2,7 @@ Title: BL-095 Partitioned FIR truthfulness recovery and objective validation
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19 (Done — all slices PASS; governance move complete)
 
 # BL-095 Partitioned FIR truthfulness recovery and objective validation
 
@@ -35,7 +35,7 @@ BL-095 in plain terms: restore truth between what LocusQ says its long-FIR calib
 |---|---|
 | ID | BL-095 |
 | Priority | P0 |
-| Status | Open |
+| Status | Done (2026-03-19 — all slices complete; BL095-HOST PASS: pdc_samples=0 via headless Reaper against LocusQ-Loaded-Track1.RPP) |
 | Track | E - R&D Expansion |
 | Effort | High / L |
 | Depends On | BL-050 (Done), BL-055 (Done), BL-073 (Done) |
@@ -71,8 +71,8 @@ Restore a truthful FIR engine contract for calibration mode. BL-095 is complete 
 | Slice | Description | Files / Surfaces | Exit Criteria |
 |---|---|---|---|
 | A | Correct historical overclaim and replace marker-only validation with an objective contract. | `Documentation/backlog/done/bl-055-fir-convolution-engine.md`, `Documentation/backlog/index.md`, `scripts/qa-bl055-fir-convolution-engine-mac.sh`, new BL-095 evidence surfaces | BL-055 surfaces no longer overstate implemented behavior; objective lane entrypoint is defined |
-| B | Correct runtime truth: direct-only honesty now, or real partitioned implementation. | `Source/headphone_dsp/HeadphoneFirHook.h`, `Source/headphone_dsp/HeadphoneCalibrationChain.h`, `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`, `Source/PluginProcessor.cpp` | engine reporting, latency publication, and runtime path are internally consistent |
-| C | Capture latency/parity/CPU evidence and revalidate host-facing behavior. | `TestEvidence/bl095_*`, targeted FIR parity tooling and host-facing checks | short/long FIR evidence is green and promotion claims are behavior-backed |
+| B | **Done (2026-03-19)** Removed false partitioned latency claim: `getLatencySamples()` unconditionally returns 0, `partitionedLatencySamples` field removed, dead `ignoreUnused(DirectFirConvolver{}, PartitionedFftConvolver{})` removed. BL-055 QA script C4 check and runbook updated. | `Source/headphone_dsp/HeadphoneFirHook.h`, `scripts/qa-bl055-fir-convolution-engine-mac.sh`, `Documentation/backlog/done/bl-055-fir-convolution-engine.md` | engine reporting, latency publication, and runtime path are internally consistent |
+| C | **Done (2026-03-19)** Created `qa/fir_truthfulness_probe_main.cpp` (6 gates: latency short/long taps, identity offset, chain latency, shifted-IR offset, long-FIR identity) and `scripts/qa-bl095-fir-truthfulness-mac.sh`; registered probe in CMakeLists.txt; contract 5/5 + execute 3×6/6 PASS. | `qa/fir_truthfulness_probe_main.cpp`, `scripts/qa-bl095-fir-truthfulness-mac.sh`, `TestEvidence/bl095_fir_truthfulness_*` | short/long FIR evidence is green and promotion claims are behavior-backed |
 
 ## Validation Plan
 
@@ -81,7 +81,7 @@ Restore a truthful FIR engine contract for calibration mode. BL-095 is complete 
 | BL095-DOCS | Automated | `./scripts/validate-backlog-plain-language.sh` + `./scripts/validate-backlog-redundancy.py` + `./scripts/validate-docs-freshness.sh` | exit 0 |
 | BL095-CONTRACT | Automated | `scripts/qa-bl095-fir-truthfulness-mac.sh --contract-only` | latency/engine/crossfade checks describe measured or directly provable runtime behavior |
 | BL095-EXECUTE | Automated | `scripts/qa-bl095-fir-truthfulness-mac.sh --execute --runs 3` | impulse offset, reported latency, and CPU profile agree across tap thresholds |
-| BL095-HOST | Focused validation | representative standalone/host PDC check after Slice B | no false nonzero PDC in direct-only mode, or correct PDC in partitioned mode |
+| BL095-HOST | Automated (headless Reaper) | `scripts/reaper-pdc-host-gate-mac.sh` — launches `qa/reaper/reascripts/LocusQ_PDCHostGate.lua`, queries `TrackFX_GetNamedConfigParm(track, fx, "pdc")`, asserts 0 | pdc_samples == 0; requires LocusQ installed and REAPER.app present |
 
 ## Replay Cadence Plan (Required)
 

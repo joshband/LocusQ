@@ -2,13 +2,13 @@ Title: BL-079 APVTS Parameter Grouping and Host Hierarchy
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-07
-Last Modified Date: 2026-03-07
+Last Modified Date: 2026-03-19
 
 # BL-079: APVTS Parameter Grouping and Host Hierarchy
 
 ## Plain-Language Summary
 
-BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally; the remaining work is promotion-grade validation and host verification in a clean checkout.
+BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visible groups so DAWs can show cleaner sections like Calibration, Emitter, and Renderer without breaking existing sessions, automation IDs, or the WebView bridge. Current state: In Validation. The grouped APVTS tree is implemented locally, a fresh 2026-03-19 clean-checkout replay now passes end to end, and the remaining work is host-view verification plus promotion follow-up.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -58,8 +58,8 @@ BL-079 in plain terms: organize LocusQ's parameter list into sensible host-visib
 | Item | Status | Priority | Estimate | Actual / Time | Tokens | Updated | Where | Remaining |
 |---|---|---|---|---|---|---|---|---|
 | `~~Slice A~~` grouped APVTS tree implementation | `[DONE]` | P2 | Small | focused refactor completed 2026-03-07 | `n/a` | 2026-03-07 | `Source/processor_core/ProcessorParameterLayout.cpp` | none |
-| Slice B promotion validation | `[ACTIVE]` | P2 | Small | focused validation started 2026-03-07 | `n/a` | 2026-03-07 | `build_local`, representative host/QA lanes | clean-checkout replay and host verification |
-| Host smoke follow-up | `[NEXT]` | P2 | Small | not started | `n/a` | 2026-03-07 | representative AU/VST3 host surfaces | confirm grouped presentation and no automation/session regressions |
+| `~~Slice B~~` promotion validation | `[DONE]` | P2 | Small | fresh clean-checkout replay passed 2026-03-19 | `n/a` | 2026-03-19 | `build_bl079_check2`, `TestEvidence/bl079_validation_20260319T030000Z` | none |
+| Host smoke follow-up | `[ACTIVE]` | P2 | Small | QA smoke lane is green again; representative host-view check still pending | `n/a` | 2026-03-19 | representative AU/VST3 host surfaces | confirm grouped presentation and no automation/session regressions in host UI |
 
 ## Objective
 
@@ -102,6 +102,20 @@ Expose LocusQ's APVTS as a grouped host hierarchy so DAWs that understand parame
 | BL079-QA-FOLLOWUP | Automated | `build_local/locusq_qa_artefacts/Release/locusq_qa --spatial ...` representative scenario replay in a clean checkout | scenario result emits normally and does not regress |
 | BL079-HOST-SMOKE | Manual | Open representative AU/VST3 host parameter view | grouped sections render as expected; existing sessions/automation stay intact |
 
+## Validation Snapshot (2026-03-19)
+
+- `cmake -S . -B build_bl079_check -DBUILD_LOCUSQ_QA=ON -DLOCUSQ_ENABLE_STEAM_AUDIO=OFF -DCMAKE_BUILD_TYPE=Release` -> `PASS`
+- `cmake --build build_bl079_check --config Release --target LocusQ locusq_qa -j8` -> `PASS`
+- `build_bl079_check/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> `FAIL`
+- top finding: `locusq_rt_safety_emitter (FAIL) [allocation_free] perf_allocation_free=false (expected: true)`
+- evidence root: `TestEvidence/bl079_validation_20260319T014000Z`
+- `cmake -S . -B build_bl079_check2 -DBUILD_LOCUSQ_QA=ON -DCMAKE_BUILD_TYPE=Release` -> `PASS`
+- `cmake --build build_bl079_check2 --config Release --target LocusQ locusq_qa -j8` -> `PASS`
+- `build_bl079_check2/locusq_qa_artefacts/Release/locusq_qa --spatial qa/scenarios/locusq_smoke_suite.json` -> `PASS_WITH_WARNING`
+- top finding: `locusq_emitter_passthrough (WARN) [rms_level] rms=-29.667015 dBFS (range: -10.000000 to -5.000000)`
+- disposition: shared `locusq_rt_safety_emitter` blocker is cleared; BL-079 remains in validation only for representative AU/VST3 host verification and promotion review
+- evidence root: `TestEvidence/bl079_validation_20260319T030000Z`
+
 ## Replay Cadence Plan (Required)
 
 Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
@@ -118,6 +132,7 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 |---|---|---|---|
 | Legacy automation or QA depends on flattened parameter indices | High | Medium | Keep declaration order unchanged and verify parity against the pre-grouping source |
 | Host-specific parameter-tree presentation differs across formats | Medium | Medium | Keep BL-079 in validation until representative AU/VST3 host checks are captured |
+| Representative host parameter-tree presentation differs across formats even with a green QA replay | Medium | Medium | Keep BL-079 in validation until AU/VST3 host-view checks are captured |
 | Concurrent editor/toolchain work muddies validation signal | Medium | High | Keep promotion follow-up in a clean checkout or separate worktree |
 
 ## Evidence Bundle Contract
@@ -134,6 +149,7 @@ Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Pol
 - [x] Architecture review updated
 - [x] Backlog index row added
 - [x] Build/parity evidence recorded
-- [ ] Clean-checkout QA replay captured
+- [x] Clean-checkout configure/build replay captured
+- [x] Clean-checkout QA replay captured with smoke lane green
 - [ ] Representative host parameter-view check captured
 - [ ] Promotion decision recorded

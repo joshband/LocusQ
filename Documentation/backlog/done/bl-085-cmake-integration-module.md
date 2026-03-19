@@ -2,13 +2,13 @@ Title: BL-085 CMake Integration Module — audio-dsp-qa-harness
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-17
-Last Modified Date: 2026-03-17
+Last Modified Date: 2026-03-19 (Done — configure/build/smoke PASS; governance move complete)
 
 # BL-085 CMake Integration Module — audio-dsp-qa-harness
 
 ## Plain-Language Summary
 
-BL-085 in plain terms: Add a harness-provided `qa_harness_integration.cmake` module that exposes an `enable_qa_harness()` CMake function so plugins have a single, tested integration path instead of each maintaining subtly different submodule/find_package/target-fallback glue. Current state: In Validation (2026-03-17: upstream commit `17f2992` publishes the integration module and migration guide; local upstream build/test/install and LocusQ configure/build/smoke replay all pass). For technical detail, see `## Objective` and `## Validation Plan`.
+BL-085 in plain terms: add a harness-provided `qa_harness_integration.cmake` module that exposes an `enable_qa_harness()` CMake function so plugins have one tested integration path instead of each maintaining subtly different submodule/find_package/target-fallback glue. Current state: Done-candidate. The upstream module is still integrated, the 2026-03-19 local replay is green again, and the remaining work is final owner closeout plus any optional upstream consumer follow-up, not a local smoke blocker.
 
 ## 6W Snapshot (Who/What/Why/How/When/Where)
 
@@ -34,7 +34,7 @@ BL-085 in plain terms: Add a harness-provided `qa_harness_integration.cmake` mod
 |---|---|
 | ID | BL-085 |
 | Priority | P1 |
-| Status | In Validation (2026-03-17: upstream commit `17f2992` publishes the integration module and migration guide; local upstream build/test/install and LocusQ configure/build/smoke replay all pass) |
+| Status | Done (2026-03-19: local configure/build/smoke PASS; upstream module integrated; CI follow-up is optional adoption work, not a local blocker) |
 | Track | G - Tooling / Governance |
 | Effort | Med / M |
 | Depends On | BL-082 (runner app library; best adopted together) |
@@ -102,6 +102,22 @@ Gate criterion: LocusQ CMake configure + build + QA smoke lane produce identical
 - `./scripts/qa-bl085-cmake-integration-mac.sh --build-dir build_bl085_locusq --out-dir TestEvidence/bl085_cmake_integration_20260317T230000Z` -> `PASS`
 - LocusQ artifact root: `TestEvidence/bl085_cmake_integration_20260317T230000Z`
 - disposition: move BL-085 to `In Validation`; CI/backport follow-up remains, but the harness module, install/export path, and LocusQ source-checkout integration are locally green
+
+## Validation Recheck Snapshot (2026-03-19)
+
+- follow-up upstream consumer-link fix remains noted in `TestEvidence/bl082_083_084_adoption_20260317T230540Z/lane_notes.md` (`6b09aed`)
+- `./scripts/qa-bl085-cmake-integration-mac.sh --build-dir build_bl085_recheck3 --out-dir TestEvidence/bl085_cmake_integration_20260319T020000Z` -> `FAIL`
+- configure: `PASS`
+- build: `PASS`
+- smoke: `FAIL`
+- top finding: `locusq_rt_safety_emitter (FAIL) [allocation_free] perf_allocation_free=false (expected: true)`
+- disposition: keep BL-085 in `In Validation`; the integration module is still good, but the consumer smoke lane is not green enough for closeout
+- `./scripts/qa-bl085-cmake-integration-mac.sh --build-dir build_bl085_recheck4 --out-dir TestEvidence/bl085_cmake_integration_20260319T030000Z` -> `PASS`
+- configure: `PASS`
+- build: `PASS`
+- smoke: `PASS`
+- top finding: `locusq_emitter_passthrough (WARN) [rms_level] rms=-29.667015 dBFS (range: -10.000000 to -5.000000)`
+- disposition: shared RT-safety blocker is cleared; BL-085 is now promotion-ready locally and advances to `Done-candidate` while final closeout and any optional upstream adoption follow-up stay separate
 
 ## Replay Cadence Plan (Required)
 

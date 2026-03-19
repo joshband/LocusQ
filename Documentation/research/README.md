@@ -17,17 +17,27 @@ Keep active research discoverable while moving superseded historical research to
 
 ## Active Research Prototype Surface
 
-`Documentation/Calibration POC/` is retained as an active research prototype surface, not as product status authority.
+`Documentation/Calibration POC/` is retained as a curated research prototype surface, not as product status authority.
 
 Use it for:
 - offline SOFA/HRTF prototype tooling,
-- calibration-reference notes,
+- a small retained set of calibration-reference notes,
 - prototype evaluation scripts consumed by BL-060 style evidence lanes.
 
 Do not use it for:
 - backlog status authority,
 - release-readiness claims,
 - implementation truth that should live in ADRs, runbooks, or canonical specs.
+
+Retained active references:
+- `Documentation/Calibration POC/LocusQ Headphone Calibration Research Outline.md`
+- `Documentation/Calibration POC/HRTF and Personalized Headphone Calibration.md`
+- `Documentation/Calibration POC/locusq_spatial_audio_spec.md`
+- `Documentation/Calibration POC/Headphone Calibration for 3D Audio.pdf`
+- `Documentation/Calibration POC/locusq_spatial_prototype/`
+
+Exploratory duplicates were moved to:
+- `Documentation/archive/2026-03-18-doc-surface-consolidation/calibration-poc/`
 
 ## Archived Research (Legacy)
 Legacy research moved on 2026-02-25:

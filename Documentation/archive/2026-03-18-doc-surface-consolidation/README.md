@@ -92,6 +92,84 @@ Reduce active documentation surface area by moving superseded planning packets, 
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-039-parameter-relay-spec-generation-legacy.md`
 - `Documentation/backlog/done/bl-040-ui-modularization-and-authority-status.md` deep legacy runbook preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-040-ui-modularization-and-authority-status-legacy.md`
+- `Documentation/backlog/done/bl-041-doppler-v2-and-vbap-geometry-validation.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-041-doppler-v2-and-vbap-geometry-validation-legacy.md`
+- `Documentation/backlog/done/bl-037-emitter-snapshot-cpu-budget.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-037-emitter-snapshot-cpu-budget-legacy.md`
+- `Documentation/backlog/done/bl-030-release-governance.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-030-release-governance-legacy.md`
+- `Documentation/backlog/done/bl-036-dsp-finite-output-guardrails.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-036-dsp-finite-output-guardrails-legacy.md`
+- `Documentation/backlog/done/bl-029-dsp-visualization.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-029-dsp-visualization-legacy.md`
+- `Documentation/backlog/done/bl-035-rt-lock-free-registration.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-035-rt-lock-free-registration-legacy.md`
+- `Documentation/backlog/done/bl-076-spatial-renderer-decomposition-and-boundary-guardrails.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-076-spatial-renderer-decomposition-and-boundary-guardrails-legacy.md`
+- `Documentation/backlog/done/bl-017-head-tracked-monitoring.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-017-head-tracked-monitoring-legacy.md`
+- `Documentation/backlog/done/bl-027-renderer-uiux-v2.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-027-renderer-uiux-v2-legacy.md`
+- `Documentation/backlog/done/bl-023-resize-dpi-hardening.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-023-resize-dpi-hardening-legacy.md`
+- `Documentation/backlog/done/bl-026-calibrate-uiux-v2.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-026-calibrate-uiux-v2-legacy.md`
+- `Documentation/backlog/done/bl-034-headphone-calibration-verification.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-034-headphone-calibration-verification-legacy.md`
+- `Documentation/backlog/done/bl-031-tempo-token-scheduler.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-031-tempo-token-scheduler-legacy.md`
+- `Documentation/backlog/done/bl-033-headphone-calibration-core.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-033-headphone-calibration-core-legacy.md`
+- `Documentation/backlog/done/hx-05-payload-budget.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/hx-05-payload-budget-legacy.md`
+- `Documentation/backlog/done/bl-045-head-tracking-fidelity-v11.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-045-head-tracking-fidelity-v11-legacy.md`
+- `Documentation/backlog/done/bl-013-hostrunner-feasibility.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-013-hostrunner-feasibility-legacy.md`
+- `Documentation/backlog/done/bl-066-ambisonics-adm-pilot-execution-intake.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-066-ambisonics-adm-pilot-execution-intake-legacy.md`
+- `Documentation/backlog/done/bl-065-iamf-mapping-contract.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-065-iamf-mapping-contract-legacy.md`
+- `Documentation/backlog/done/bl-064-adm-mapping-contract.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-064-adm-mapping-contract-legacy.md`
+- `Documentation/backlog/done/bl-062-ambisonics-ir-interface-contract.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-062-ambisonics-ir-interface-contract-legacy.md`
+- `Documentation/backlog/done/bl-063-ambisonics-renderer-compatibility-guardrails.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-063-ambisonics-renderer-compatibility-guardrails-legacy.md`
+- `Documentation/backlog/done/hx-06-rt-safety-audit.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/hx-06-rt-safety-audit-legacy.md`
+- `Documentation/backlog/done/hx-02-registration-lock.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/hx-02-registration-lock-legacy.md`
+- `Documentation/backlog/done/bl-029-audition-platform-retrospective-2026-02-25.md` deep legacy retrospective preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-029-audition-platform-retrospective-2026-02-25-legacy.md`
+- `Documentation/backlog/done/bl-022-choreography-closeout.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-022-choreography-closeout-legacy.md`
+- `Documentation/backlog/done/bl-018-spatial-format-matrix.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-018-spatial-format-matrix-legacy.md`
+- `Documentation/backlog/done/bl-028-spatial-output-matrix.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-028-spatial-output-matrix-legacy.md`
+- `Documentation/backlog/done/bl-050-high-rate-delay-and-fir-hardening.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-050-high-rate-delay-and-fir-hardening-legacy.md`
+- `Documentation/backlog/done/bl-051-ambisonics-and-adm-roadmap.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-051-ambisonics-and-adm-roadmap-legacy.md`
+- `Documentation/backlog/done/bl-012-qa-harness-tranche.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-012-qa-harness-tranche-legacy.md`
+- `Documentation/backlog/done/bl-077-unified-visual-capture-and-replay-harness.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-077-unified-visual-capture-and-replay-harness-legacy.md`
+- `Documentation/backlog/done/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-070-coherent-audio-snapshot-and-telemetry-seqlock-contract-legacy.md`
+- `Documentation/backlog/done/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-069-rt-safe-headphone-preset-pipeline-and-failure-backoff-legacy.md`
+- `Documentation/backlog/done/bl-080-authoring-undo-redo-for-timeline-and-preset-operations.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-080-authoring-undo-redo-for-timeline-and-preset-operations-legacy.md`
+- `Documentation/backlog/done/bl-043-fdn-sample-rate-integrity.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-043-fdn-sample-rate-integrity-legacy.md`
+- `Documentation/backlog/done/bl-055-fir-convolution-engine.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-055-fir-convolution-engine-legacy.md`
+- `Documentation/backlog/done/bl-058-companion-profile-acquisition.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-058-companion-profile-acquisition-legacy.md`
+- `Documentation/backlog/done/bl-089-render-trust-contract-and-requested-active-language.md` deep legacy runbook preserved as:
+  - `Documentation/archive/2026-03-18-doc-surface-consolidation/backlog/bl-089-render-trust-contract-and-requested-active-language-legacy.md`
 
 ### Testing
 
@@ -144,6 +222,15 @@ Reduce active documentation surface area by moving superseded planning packets, 
 - `Documentation/runbooks/backlog-execution-runbooks.md` deep legacy deprecated runbook bundle preserved as:
   - `Documentation/archive/2026-03-18-doc-surface-consolidation/runbooks/backlog-execution-runbooks-legacy.md`
 
+### Calibration POC
+
+- `Documentation/Calibration POC/Core JUCE real-time rules (non-negotiable).md`
+- `Documentation/Calibration POC/DSP_REALTIME_SPATIAL_CONSTRAINTS.md`
+- `Documentation/Calibration POC/DSP_SPATIAL_INVARIANTS_CONTRACT.md`
+- `Documentation/Calibration POC/LocusQ Spatial Audio Personalization Engineering Task Breakdown (Tickets, Acceptance Criteria, Sequencing).md`
+- `Documentation/Calibration POC/LocusQ Spatial Personalization Phase-Gated Execution Plan (Hard Technical Milestones).md`
+- `Documentation/Calibration POC/OFA HRIR loading + nearest-direction selection + binaural convolution + optional WH‑1000XM5 PEQ.md`
+
 ### Test Evidence
 
 - `TestEvidence/build-summary.md` deep legacy governance summary preserved as:
@@ -173,10 +260,14 @@ Reduce active documentation surface area by moving superseded planning packets, 
   - `TestEvidence/build-summary.md`
   - `TestEvidence/validation-trend.md`
   - `TestEvidence/README.md`
+- Current Calibration POC authority remains a curated reference surface:
+  - `Documentation/Calibration POC/README.md`
+  - `Documentation/Calibration POC/locusq_spatial_prototype/`
+  - retained reference docs and the external PDF at their original paths
 
 ## Reason
 
-These files were preserved for traceability but were no longer the best active surfaces for day-to-day work. Keeping them in active folders made `Documentation/reports/` and `Documentation/plans/` look larger, noisier, and more authoritative than they should.
+These files were preserved for traceability but were no longer the best active surfaces for day-to-day work. Keeping them in active folders made the repo look larger, noisier, and more authoritative than it should.
 
 ## Re-Promotion Rule
 
