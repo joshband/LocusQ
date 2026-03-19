@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 110,
-    "open": 9,
-    "done": 101
+    "open": 8,
+    "done": 102
   },
   "items": [
     {
@@ -390,8 +390,8 @@
     {
       "id": "BL-021",
       "title": "BL-021 Room-Story Overlays",
-      "state_bucket": "open",
-      "status": "In Implementation (C4 parity green; owner intake/promotion decision pending)",
+      "state_bucket": "done",
+      "status": "**Done** (2026-03-19: contract-only 3/3 PASS; overlay modes, degraded/stale-hold states, additive composite policy confirmed)",
       "priority": "P2",
       "track": "",
       "depends_on": "BL-014 (Done), BL-015 (Done), HX-05",
@@ -404,7 +404,7 @@
       "where": "",
       "plain_language_summary": "BL-021 defines the room-story overlay contract for the viewport. It keeps room analysis rendering deterministic, degrades safely on partial payloads, and stays replayable for owner review. Current state: In Implementation with C4 parity green and owner intake/promotion still pending.",
       "objective": "Define a deterministic room-story overlay contract for the viewport. Preserve predictability, additive degradation, and replayable owner evidence.",
-      "runbook_path": "Documentation/backlog/bl-021-room-story-overlays.md"
+      "runbook_path": "Documentation/backlog/done/bl-021-room-story-overlays.md"
     },
     {
       "id": "BL-022",

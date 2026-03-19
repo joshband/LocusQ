@@ -2697,5 +2697,6 @@
   "bl032_source_modularization_status": "Done",
   "bl032_source_modularization_evidence": "TestEvidence/bl032_structure_guardrails_20260319T210942Z/status.tsv \u2014 13/13 PASS; PluginProcessor.cpp 3395 <= 3600; RT audit non_allowlisted=0; 2026-03-19",
   "bl020_confidence_masking_status": "Done",
-  "bl020_confidence_masking_evidence": "TestEvidence/bl020_confidence_masking_closeout_20260319T212342Z/status.tsv \u2014 contract 3/3 PASS; 2026-03-19"
+  "bl020_confidence_masking_evidence": "TestEvidence/bl020_confidence_masking_closeout_20260319T212342Z/status.tsv \u2014 contract 3/3 PASS; 2026-03-19",
+  "bl021_room_story_overlays_status": "Done"
 }

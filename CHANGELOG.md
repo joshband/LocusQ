@@ -17,6 +17,7 @@ Operational snapshot:
 ### Added
 
 - BL-020: Confidence/masking overlay contract — deterministic combinedConfidence formula, fallback codes, and degradation policy confirmed; QA lane 3/3 PASS
+- BL-021: Room-story overlay contract — five modes, degraded/stale-hold states, additive composite policy confirmed; QA lane 3/3 PASS
 
 ### Changed
 

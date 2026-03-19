@@ -13,6 +13,7 @@ Track a short recent window for regression visibility.
 
 | Timestamp (UTC) | Phase Context | Command | Result |
 |---|---|---|---|
+| 2026-03-19T21:26:32Z | BL-021 room-story overlays closeout | `bash scripts/qa-bl021-room-story-overlays-lane-mac.sh --contract-only --runs 3` | PASS — contract 3/3; overlay modes, degraded/stale-hold states, additive composite policy confirmed. BL-021 Done. Evidence: `TestEvidence/bl021_room_story_closeout_20260319T212632Z/` |
 | 2026-03-19T21:23:42Z | BL-020 confidence/masking overlay closeout | `bash scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 3` | PASS — contract 3/3; overlay rules, formula, fallback codes, artifact schema confirmed. BL-020 Done. Evidence: `TestEvidence/bl020_confidence_masking_closeout_20260319T212342Z/` |
 | 2026-03-20T00:00:00Z | BL-032 source modularization closeout | `bash scripts/qa-bl032-structure-guardrails-mac.sh --contract-only` | PASS — PluginProcessor.cpp 3248 ≤ 3600; RT audit non_allowlisted=0; module split confirmed. BL-032 Done. |
 | 2026-03-19T21:09:42Z | BL-032 source modularization closeout | `bash scripts/qa-bl032-structure-guardrails-mac.sh` | PASS — guardrails 13/13; PluginProcessor.cpp 3395 ≤ 3600; RT audit non_allowlisted=0; module split (processor_core/bridge/shared_contracts/editor_shell/editor_webview) confirmed. BL-032 Done. Evidence: `TestEvidence/bl032_structure_guardrails_20260319T210942Z/` |
