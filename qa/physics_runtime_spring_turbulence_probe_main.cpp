@@ -28,6 +28,10 @@ struct RuntimeMetrics
     float maxSpread = 0.0f;
     float maxAbsForceX = 0.0f;
     float maxRelativeDisplacement = 0.0f;
+    float settleMinX = std::numeric_limits<float>::max();
+    float settleMaxX = std::numeric_limits<float>::lowest();
+    float settleSumX = 0.0f;
+    int settleSampleCount = 0;
     float baselineSpread = 0.0f;
     float baselineAbsForceX = 0.0f;
     Vec3 originPosition {};
@@ -90,7 +94,8 @@ RuntimeMetrics runAndSampleMetrics (LocusQAudioProcessor& processor,
                                     juce::AudioBuffer<float>& buffer,
                                     juce::MidiBuffer& midi,
                                     int blocks,
-                                    int sleepMs)
+                                    int sleepMs,
+                                    int settleWindowBlocks = 0)
 {
     const int emitterId = processor.getEmitterSlotId();
     RuntimeMetrics metrics;
@@ -129,6 +134,14 @@ RuntimeMetrics runAndSampleMetrics (LocusQAudioProcessor& processor,
             const float displacement = std::sqrt (delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
             metrics.maxRelativeDisplacement = juce::jmax (metrics.maxRelativeDisplacement, displacement);
             metrics.lastPosition = sample.position;
+
+            if (settleWindowBlocks > 0 && block >= (blocks - settleWindowBlocks))
+            {
+                metrics.settleMinX = juce::jmin (metrics.settleMinX, sample.position.x);
+                metrics.settleMaxX = juce::jmax (metrics.settleMaxX, sample.position.x);
+                metrics.settleSumX += sample.position.x;
+                ++metrics.settleSampleCount;
+            }
         }
 
         if (sleepMs > 0)
@@ -217,10 +230,14 @@ ProbeResult runSpringPhase()
 
     RuntimeMetrics metrics;
     captureBaselineMetrics (processor, buffer, midi, metrics);
-    const auto liveMetrics = runAndSampleMetrics (processor, buffer, midi, 64, 10);
+    const auto liveMetrics = runAndSampleMetrics (processor, buffer, midi, 64, 10, 8);
     metrics.maxSpread = liveMetrics.maxSpread;
     metrics.maxAbsForceX = liveMetrics.maxAbsForceX;
     metrics.maxRelativeDisplacement = liveMetrics.maxRelativeDisplacement;
+    metrics.settleMinX = liveMetrics.settleMinX;
+    metrics.settleMaxX = liveMetrics.settleMaxX;
+    metrics.settleSumX = liveMetrics.settleSumX;
+    metrics.settleSampleCount = liveMetrics.settleSampleCount;
     metrics.lastPosition = liveMetrics.lastPosition;
     processor.releaseResources();
 
@@ -230,6 +247,17 @@ ProbeResult runSpringPhase()
     const bool spreadLive = metrics.maxSpread >= 0.10f;
     const bool motionLive = metrics.maxRelativeDisplacement >= 0.20f;
     const bool forceLive = metrics.maxAbsForceX >= 0.50f;
+    const float settleMeanX = metrics.settleSampleCount > 0
+        ? metrics.settleSumX / static_cast<float> (metrics.settleSampleCount)
+        : 0.0f;
+    const float settleRangeX = metrics.settleSampleCount > 0
+        ? metrics.settleMaxX - metrics.settleMinX
+        : std::numeric_limits<float>::max();
+    const bool settleWindowCaptured = metrics.settleSampleCount >= 4;
+    const bool settleBandOk = settleWindowCaptured
+        && settleMeanX >= -0.25f
+        && settleMeanX <= 0.15f
+        && settleRangeX <= 0.35f;
 
     juce::String detail;
     detail << "emitterId=" << emitterId
@@ -239,12 +267,15 @@ ProbeResult runSpringPhase()
            << " maxSpread=" << juce::String (metrics.maxSpread, 3)
            << " maxAbsForceX=" << juce::String (metrics.maxAbsForceX, 3)
            << " maxDisp=" << juce::String (metrics.maxRelativeDisplacement, 3)
+           << " settleSamples=" << metrics.settleSampleCount
+           << " settleMeanX=" << juce::String (settleMeanX, 3)
+           << " settleRangeX=" << juce::String (settleRangeX, 3)
            << " finalPos=("
            << juce::String (metrics.lastPosition.x, 3) << ","
            << juce::String (metrics.lastPosition.y, 3) << ","
            << juce::String (metrics.lastPosition.z, 3) << ")";
 
-    return { baselineOk && spreadLive && motionLive && forceLive, detail };
+    return { baselineOk && spreadLive && motionLive && forceLive && settleBandOk, detail };
 }
 
 ProbeResult runTurbulencePhase()
@@ -275,10 +306,14 @@ ProbeResult runTurbulencePhase()
 
     RuntimeMetrics metrics;
     captureBaselineMetrics (processor, buffer, midi, metrics);
-    const auto liveMetrics = runAndSampleMetrics (processor, buffer, midi, 64, 10);
+    const auto liveMetrics = runAndSampleMetrics (processor, buffer, midi, 64, 10, 8);
     metrics.maxSpread = liveMetrics.maxSpread;
     metrics.maxAbsForceX = liveMetrics.maxAbsForceX;
     metrics.maxRelativeDisplacement = liveMetrics.maxRelativeDisplacement;
+    metrics.settleMinX = liveMetrics.settleMinX;
+    metrics.settleMaxX = liveMetrics.settleMaxX;
+    metrics.settleSumX = liveMetrics.settleSumX;
+    metrics.settleSampleCount = liveMetrics.settleSampleCount;
     metrics.lastPosition = liveMetrics.lastPosition;
     processor.releaseResources();
 
@@ -288,6 +323,17 @@ ProbeResult runTurbulencePhase()
     const bool spreadLive = metrics.maxSpread >= 0.08f;
     const bool motionLive = metrics.maxRelativeDisplacement >= 0.03f;
     const bool forceLive = metrics.maxAbsForceX >= 0.10f;
+    const float settleMeanX = metrics.settleSampleCount > 0
+        ? metrics.settleSumX / static_cast<float> (metrics.settleSampleCount)
+        : 0.0f;
+    const float settleRangeX = metrics.settleSampleCount > 0
+        ? metrics.settleMaxX - metrics.settleMinX
+        : std::numeric_limits<float>::max();
+    const bool settleWindowCaptured = metrics.settleSampleCount >= 4;
+    const bool settleBandOk = settleWindowCaptured
+        && settleMeanX >= 0.02f
+        && settleMeanX <= 0.20f
+        && settleRangeX <= 0.08f;
 
     juce::String detail;
     detail << "emitterId=" << emitterId
@@ -297,12 +343,15 @@ ProbeResult runTurbulencePhase()
            << " maxSpread=" << juce::String (metrics.maxSpread, 3)
            << " maxAbsForceX=" << juce::String (metrics.maxAbsForceX, 3)
            << " maxDisp=" << juce::String (metrics.maxRelativeDisplacement, 3)
+           << " settleSamples=" << metrics.settleSampleCount
+           << " settleMeanX=" << juce::String (settleMeanX, 3)
+           << " settleRangeX=" << juce::String (settleRangeX, 3)
            << " finalPos=("
            << juce::String (metrics.lastPosition.x, 3) << ","
            << juce::String (metrics.lastPosition.y, 3) << ","
            << juce::String (metrics.lastPosition.z, 3) << ")";
 
-    return { baselineOk && spreadLive && motionLive && forceLive, detail };
+    return { baselineOk && spreadLive && motionLive && forceLive && settleBandOk, detail };
 }
 } // namespace
 

@@ -75,6 +75,10 @@ struct BoundaryMetrics
 {
     float minX = std::numeric_limits<float>::max();
     float maxX = -std::numeric_limits<float>::max();
+    float settleMinX = std::numeric_limits<float>::max();
+    float settleMaxX = -std::numeric_limits<float>::max();
+    float settleSumX = 0.0f;
+    int settleSampleCount = 0;
     std::uint8_t maxCollisionMask = 0;
     Vec3 lastPosition {};
 };
@@ -83,7 +87,8 @@ BoundaryMetrics runAndSampleMetrics (LocusQAudioProcessor& processor,
                                      juce::AudioBuffer<float>& buffer,
                                      juce::MidiBuffer& midi,
                                      int blocks,
-                                     int sleepMs)
+                                     int sleepMs,
+                                     int settleWindowBlocks = 0)
 {
     const int emitterId = processor.getEmitterSlotId();
     BoundaryMetrics metrics;
@@ -109,6 +114,14 @@ BoundaryMetrics runAndSampleMetrics (LocusQAudioProcessor& processor,
             metrics.maxX = juce::jmax (metrics.maxX, sample.position.x);
             metrics.maxCollisionMask = static_cast<std::uint8_t> (metrics.maxCollisionMask | sample.collisionMask);
             metrics.lastPosition = sample.position;
+
+            if (settleWindowBlocks > 0 && block >= (blocks - settleWindowBlocks))
+            {
+                metrics.settleMinX = juce::jmin (metrics.settleMinX, sample.position.x);
+                metrics.settleMaxX = juce::jmax (metrics.settleMaxX, sample.position.x);
+                metrics.settleSumX += sample.position.x;
+                ++metrics.settleSampleCount;
+            }
         }
 
         if (sleepMs > 0)
@@ -169,25 +182,39 @@ ProbeResult runProbe()
     midi.clear();
     setActualParam (processor, "phys_throw", 0.0f);
 
-    const auto metrics = runAndSampleMetrics (processor, buffer, midi, 40, 10);
+    const auto metrics = runAndSampleMetrics (processor, buffer, midi, 40, 10, 8);
     processor.releaseResources();
 
     const bool clampedToWall = metrics.maxX <= (expectedWallX + 0.01f);
     const bool reachedWall = metrics.maxX >= 2.98f;
     const bool collisionSeen = (metrics.maxCollisionMask & 0x1u) != 0;
     const bool bouncedBack = metrics.lastPosition.x < metrics.maxX - 0.02f;
+    const float settleMeanX = metrics.settleSampleCount > 0
+        ? metrics.settleSumX / static_cast<float> (metrics.settleSampleCount)
+        : 0.0f;
+    const float settleRangeX = metrics.settleSampleCount > 0
+        ? metrics.settleMaxX - metrics.settleMinX
+        : std::numeric_limits<float>::max();
+    const bool settleWindowCaptured = metrics.settleSampleCount >= 4;
+    const bool settleBandOk = settleWindowCaptured
+        && settleMeanX >= 0.80f
+        && settleMeanX <= 1.80f
+        && settleRangeX <= 0.90f;
 
     juce::String detail;
     detail << "emitterId=" << emitterId
            << " minX=" << juce::String (metrics.minX, 3)
            << " maxX=" << juce::String (metrics.maxX, 3)
+           << " settleSamples=" << metrics.settleSampleCount
+           << " settleMeanX=" << juce::String (settleMeanX, 3)
+           << " settleRangeX=" << juce::String (settleRangeX, 3)
            << " collisionMask=" << juce::String (static_cast<int> (metrics.maxCollisionMask))
            << " finalPos=("
            << juce::String (metrics.lastPosition.x, 3) << ","
            << juce::String (metrics.lastPosition.y, 3) << ","
            << juce::String (metrics.lastPosition.z, 3) << ")";
 
-    return { clampedToWall && reachedWall && collisionSeen && bouncedBack, detail };
+    return { clampedToWall && reachedWall && collisionSeen && bouncedBack && settleBandOk, detail };
 }
 } // namespace
 

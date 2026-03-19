@@ -7,9 +7,11 @@
 --   D  frozen_to_live       value after unfreeze is non-zero (physics resumes)
 --
 -- Env vars (all optional):
---   LQ_REAPER_NONINTERACTIVE=1     suppress message boxes
---   LQ_REAPER_STATUS_JSON=<path>   where to write status.json (required for shell wrapper)
---   LQ_REAPER_REQUIRE_LOCUSQ=1     fail if LocusQ FX not found (default: 1)
+--   LQ_REAPER_NONINTERACTIVE=1        suppress message boxes
+--   LQ_REAPER_STATUS_JSON=<path>      where to write status.json (required for shell wrapper)
+--   LQ_REAPER_REQUIRE_LOCUSQ=1        fail if LocusQ FX not found (default: 1)
+--   LQ_REAPER_PROJECT_FILE=<path>     open an existing RPP instead of creating a blank project;
+--                                     the RPP must have LocusQ on Track 1 (e.g. LocusQ-Loaded-Track1.RPP)
 --
 -- Usage:
 --   Launched automatically by scripts/reaper-phys-daw-auto-gate-mac.sh
@@ -18,6 +20,7 @@
 local NONINTERACTIVE  = os.getenv("LQ_REAPER_NONINTERACTIVE") == "1"
 local STATUS_JSON     = os.getenv("LQ_REAPER_STATUS_JSON") or ""
 local REQUIRE_LOCUSQ  = os.getenv("LQ_REAPER_REQUIRE_LOCUSQ") ~= "0"
+local PROJECT_FILE    = os.getenv("LQ_REAPER_PROJECT_FILE") or ""
 
 local WARMUP_DEFERS   = 90   -- ~3 s at Reaper's ~30 fps defer rate
 local FROZEN_DEFERS   = 45   -- ~1.5 s
@@ -93,6 +96,8 @@ local PARAM_NAMES = {
   phys_out_spread_mod_0 = "Emitter 1 Physics Spread",
   phys_out_gain_mod_0   = "Emitter 1 Physics Gain",
   phys_frozen_0         = "Emitter 1 Physics Freeze",
+  bypass                = "Bypass",
+  mode                  = "Mode",
 }
 
 -- ── State machine ────────────────────────────────────────────────────────────
@@ -250,15 +255,42 @@ local function tick()
     end
     log("Gate A PASS: all params found")
 
+    -- ── diagnostic: log bypass + mode state from RPP ─────────────────────
+    local bypass_val = get_param("bypass")
+    local mode_val   = get_param("mode")
+    log(string.format("diag: bypass=%.3f mode=%.3f", bypass_val, mode_val))
+    if bypass_val > 0.5 then
+      log("WARNING: plugin is bypassed — clearing bypass param")
+      set_param("bypass", 0.0)
+    end
+
     -- ── enable physics + turbulence for observable spread output ─────────
+    -- BlackHole 16ch is set as the CoreAudio device in the gate-local
+    -- reaper.ini, so prepareToPlay and processBlock run for real.  The
+    -- physics worker produces turbulence spread into APVTS within ~1–2 s;
+    -- Gate B reads the genuine output after the 3 s warmup window.
+    local audio_running = reaper.Audio_IsRunning()
+    log("audio_running=" .. tostring(audio_running))
     set_param("phys_enable",     1.0)
     set_param("phys_turbulence", 0.8)  -- high turbulence → non-zero spread immediately
     log("Physics enabled, turbulence=0.8")
+    log(string.format("diag: phys_enable readback=%.3f phys_turbulence readback=%.3f",
+                      get_param("phys_enable"), get_param("phys_turbulence")))
+
+    -- ── processBlock detection: set marker, wait 5 defers, check result ──
+    -- If processBlock is running and writes dspValues.spreadMod (even 0),
+    -- it will overwrite the marker. If marker survives, processBlock is not
+    -- executing the spread-write path.
+    set_param("phys_out_spread_mod_0", 0.777)
+    log(string.format("diag: marker set → spread readback immediate=%.3f",
+                      get_param("phys_out_spread_mod_0")))
 
     -- ── start real-time playback ─────────────────────────────────────────
     reaper.SetEditCurPos(0.0, false, false)
     reaper.Main_OnCommand(1007, 0)  -- Transport: Play
-    log("Transport started — warmup " .. WARMUP_DEFERS .. " defers")
+    local initial_pos = reaper.GetPlayPosition()
+    log(string.format("Transport started — initial_pos=%.3f warmup %d defers",
+                      initial_pos, WARMUP_DEFERS))
 
     defer_count = 0
     state = "WARMUP"
@@ -266,6 +298,13 @@ local function tick()
 
   elseif state == "WARMUP" then
     defer_count = defer_count + 1
+    -- Poll spread every 20 defers (~0.7s) to see if it ever changes
+    if defer_count % 20 == 0 then
+      local poll_spread = get_param("phys_out_spread_mod_0")
+      local poll_pos    = reaper.GetPlayPosition()
+      log(string.format("warmup poll [%d/%d]: spread=%.6f pos=%.3f",
+                        defer_count, WARMUP_DEFERS, poll_spread, poll_pos))
+    end
     if defer_count < WARMUP_DEFERS then
       reaper.defer(tick)
       return
@@ -351,24 +390,40 @@ end
 log("LocusQ PhysicsDAWAuto Gate starting")
 log("STATUS_JSON=" .. STATUS_JSON)
 
--- Always create a fresh project so we don't pick up stale FX from a
--- previously opened project.  Command 40023 = "New project".
-reaper.Main_OnCommand(40023, 0)
-log("New project created")
-
--- Create a minimal project with a track for the freshly-installed LocusQ.
-if reaper.CountTracks(0) == 0 then
-  log("No tracks found — auto-inserting LocusQ track")
-  reaper.InsertTrackAtIndex(0, true)
-  local track = reaper.GetTrack(0, 0)
-  reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "LQ Gate", true)
-  reaper.TrackFX_AddByName(track, "VST3: LocusQ", false, 1)
-  if reaper.TrackFX_GetCount(track) == 0 then
-    reaper.TrackFX_AddByName(track, "AU: LocusQ", false, 1)
+if reaper.CountTracks(0) > 0 then
+  -- Project was pre-loaded by REAPER from the command-line RPP argument.
+  -- prepareToPlay has already been called on LocusQ, so emitterSlotId is set.
+  -- Go straight to SETUP without touching the project or audio graph.
+  log("Project pre-loaded by REAPER (" .. reaper.CountTracks(0) .. " track(s)) — skipping project init")
+  reaper.defer(tick)
+elseif PROJECT_FILE ~= "" then
+  -- Fallback: REAPER didn't pre-load the project; open it from Lua.
+  -- prepareToPlay timing is not guaranteed here — prefer command-line loading.
+  log("Opening project from Lua (timing fallback): " .. PROJECT_FILE)
+  reaper.Main_openProject(PROJECT_FILE)
+  -- Wait several ticks for the audio engine to reinitialise for the new project.
+  local settle = 0
+  local function settle_then_tick()
+    settle = settle + 1
+    if settle < 30 then reaper.defer(settle_then_tick) else reaper.defer(tick) end
   end
-  if reaper.TrackFX_GetCount(track) == 0 then
-    reaper.TrackFX_AddByName(track, "LocusQ", false, 1)
+  reaper.defer(settle_then_tick)
+else
+  -- No project file — create a blank project and auto-insert LocusQ.
+  reaper.Main_OnCommand(40023, 0)
+  log("New project created")
+  if reaper.CountTracks(0) == 0 then
+    log("No tracks found — auto-inserting LocusQ track")
+    reaper.InsertTrackAtIndex(0, true)
+    local track = reaper.GetTrack(0, 0)
+    reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "LQ Gate", true)
+    reaper.TrackFX_AddByName(track, "VST3: LocusQ", false, 1)
+    if reaper.TrackFX_GetCount(track) == 0 then
+      reaper.TrackFX_AddByName(track, "AU: LocusQ", false, 1)
+    end
+    if reaper.TrackFX_GetCount(track) == 0 then
+      reaper.TrackFX_AddByName(track, "LocusQ", false, 1)
+    end
   end
+  reaper.defer(tick)
 end
-
-reaper.defer(tick)

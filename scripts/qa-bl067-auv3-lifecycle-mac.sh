@@ -45,6 +45,7 @@ Outputs (per run):
   host_matrix.tsv
   lifecycle_transitions.tsv
   parity_regression.tsv
+  sandbox_runtime_access.tsv
   packaging_manifest.md
   configure.log
   xcodebuild-list.log
@@ -308,6 +309,7 @@ run_single() {
   local host_matrix_tsv="${run_dir}/host_matrix.tsv"
   local lifecycle_tsv="${run_dir}/lifecycle_transitions.tsv"
   local parity_tsv="${run_dir}/parity_regression.tsv"
+  local sandbox_runtime_access_tsv="${run_dir}/sandbox_runtime_access.tsv"
   local packaging_md="${run_dir}/packaging_manifest.md"
   local configure_log="${run_dir}/configure.log"
   local scheme_log="${run_dir}/xcodebuild-list.log"
@@ -323,6 +325,8 @@ run_single() {
   local cmake_file="${ROOT_DIR}/CMakeLists.txt"
   local serializer_file="${ROOT_DIR}/Source/processor_core/ProcessorStateSerializer.cpp"
   local processor_header="${ROOT_DIR}/Source/PluginProcessor.h"
+  local calibration_bridge_file="${ROOT_DIR}/Source/processor_core/ProcessorCalibrationBridge.cpp"
+  local steam_backend_file="${ROOT_DIR}/Source/spatial_renderer/SpatialSteamAudioBackend.cpp"
   local juce_dir
   local xcode_project
   local generated_auv3_info_plist
@@ -341,6 +345,7 @@ run_single() {
   printf "host\tavailability\tprobe\tresult\tfailure_taxonomy\tdetail\n" > "$host_matrix_tsv"
   printf "transition\tprobe\tresult\tfailure_taxonomy\tdetail\n" > "$lifecycle_tsv"
   printf "lane\tprobe\tresult\tfailure_taxonomy\tdetail\n" > "$parity_tsv"
+  printf "surface\tprobe\tresult\tfailure_taxonomy\tdetail\n" > "$sandbox_runtime_access_tsv"
 
   echo "=== BL-067 AUv3 Lifecycle Lane ==="
   echo "Mode: ${MODE}"
@@ -499,6 +504,33 @@ run_single() {
     record "$status_tsv" "BL067-P6-cmake_clap_gate_present" "FAIL" "CMake missing CLAP gate contract" "$cmake_file"
   fi
 
+  if rg -q 'getLocusQUserDataDirectory' "$calibration_bridge_file" 2>/dev/null \
+     && ! rg -q 'userHomeDirectory' "$calibration_bridge_file" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "companion_profile_path\tsource_scan\tPASS\tnone\tCalibration profile fallback uses LocusQ user-data directory only"
+    record "$status_tsv" "BL067-R1-companion_profile_runtime_access" "PASS" "Calibration profile fallback uses LocusQ user-data directory only" "$calibration_bridge_file"
+  else
+    append_row "$sandbox_runtime_access_tsv" "companion_profile_path\tsource_scan\tFAIL\tdesktop_path_fallback_detected\tCalibration profile fallback still depends on desktop-style path assumptions"
+    record "$status_tsv" "BL067-R1-companion_profile_runtime_access" "FAIL" "Calibration profile fallback still depends on desktop-style path assumptions" "$calibration_bridge_file"
+  fi
+
+  if rg -q 'LOCUSQ_COMPANION_PROFILE_FILE' "$calibration_bridge_file" 2>/dev/null \
+     && rg -q 'LOCUSQ_COMPANION_PROFILE_DIR' "$calibration_bridge_file" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "companion_profile_override_contract\tsource_scan\tPASS\tnone\tCompanion profile env overrides remain available for explicit operator/runtime injection"
+    record "$status_tsv" "BL067-R2-companion_profile_override_contract" "PASS" "Companion profile env overrides remain available" "$calibration_bridge_file"
+  else
+    append_row "$sandbox_runtime_access_tsv" "companion_profile_override_contract\tsource_scan\tFAIL\tmissing_override_contract\tCompanion profile env overrides missing"
+    record "$status_tsv" "BL067-R2-companion_profile_override_contract" "FAIL" "Companion profile env overrides missing" "$calibration_bridge_file"
+  fi
+
+  if rg -q 'getLocusQUserDataDirectory' "$steam_backend_file" 2>/dev/null \
+     && ! rg -q 'userHomeDirectory' "$steam_backend_file" 2>/dev/null; then
+    append_row "$sandbox_runtime_access_tsv" "custom_sofa_path\tsource_scan\tPASS\tnone\tCustom SOFA fallback uses LocusQ user-data directory only"
+    record "$status_tsv" "BL067-R3-custom_sofa_runtime_access" "PASS" "Custom SOFA fallback uses LocusQ user-data directory only" "$steam_backend_file"
+  else
+    append_row "$sandbox_runtime_access_tsv" "custom_sofa_path\tsource_scan\tFAIL\tdesktop_path_fallback_detected\tCustom SOFA fallback still depends on desktop-style path assumptions"
+    record "$status_tsv" "BL067-R3-custom_sofa_runtime_access" "FAIL" "Custom SOFA fallback still depends on desktop-style path assumptions" "$steam_backend_file"
+  fi
+
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H1-logic_pro" "Logic Pro" "/Applications/Logic Pro.app"
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H2-garageband" "GarageBand" "/Applications/GarageBand.app"
   append_host_inventory_row "$status_tsv" "$host_matrix_tsv" "BL067-H3-mainstage" "MainStage" "/Applications/MainStage.app"
@@ -639,6 +671,7 @@ run_single() {
   echo "- ${host_matrix_tsv}"
   echo "- ${lifecycle_tsv}"
   echo "- ${parity_tsv}"
+  echo "- ${sandbox_runtime_access_tsv}"
   echo "- ${packaging_md}"
 
   if [[ "$run_fail_count" -gt 0 ]]; then
