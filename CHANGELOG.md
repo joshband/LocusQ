@@ -14,6 +14,10 @@ Operational snapshot:
 - Live backlog authority: `Documentation/backlog/index.md`
 - Canonical runtime/state authority: `status.json`
 
+### Added
+
+- BL-020: Confidence/masking overlay contract — deterministic combinedConfidence formula, fallback codes, and degradation policy confirmed; QA lane 3/3 PASS
+
 ### Changed
 
 - BL-032: Source modularization complete — PluginProcessor/PluginEditor decomposed into `processor_core`, `processor_bridge`, `shared_contracts`, `editor_shell`, `editor_webview` modules; LOC guardrails and RT audit green (PluginProcessor.cpp 3248 ≤ 3600 LOC, RT audit non_allowlisted=0)

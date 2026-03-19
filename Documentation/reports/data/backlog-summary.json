@@ -3,8 +3,8 @@
   "source": "Documentation/backlog",
   "counts": {
     "total": 110,
-    "open": 10,
-    "done": 100
+    "open": 9,
+    "done": 101
   },
   "items": [
     {
@@ -371,8 +371,8 @@
     {
       "id": "BL-020",
       "title": "BL-020 Confidence/Masking Overlay",
-      "state_bucket": "open",
-      "status": "In Validation (latest C4 refresh `PASS` at `20260228T203021Z`; C4b post-R1 `PASS` at `20260228T202240Z`; owner promotion review pending)",
+      "state_bucket": "done",
+      "status": "**Done** (2026-03-19: contract-only 3/3 PASS; C4/C4b evidence replay confirmed; overlay contract, fallback codes, combinedConfidence formula confirmed)",
       "priority": "P2",
       "track": "E - R&D Expansion",
       "depends_on": "BL-014 (Done), BL-019 (Done)",
@@ -385,7 +385,7 @@
       "where": "",
       "plain_language_summary": "BL-020 defines a deterministic confidence/masking overlay contract. The goal is simple: keep overlay behavior replayable, degrade safely, and ship evidence that humans and agents can read fast. Current state: In Validation; the latest C4 refresh packet passed at 20260228T203021Z, the C4b post-R1 packet passed at 20260228T202240Z, and owner promotion review is still pending.",
       "objective": "Define a deterministic contract for confidence/masking overlays, including input rules, replay behavior, degradation behavior, acceptance thresholds, and QA evidence shape.",
-      "runbook_path": "Documentation/backlog/bl-020-confidence-masking.md"
+      "runbook_path": "Documentation/backlog/done/bl-020-confidence-masking.md"
     },
     {
       "id": "BL-021",

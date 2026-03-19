@@ -5,7 +5,7 @@
   "ui_framework": "webview",
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
-  "last_modified": "2026-03-20",
+  "last_modified": "2026-03-19",
   "notes": "BL-082 BL-083 BL-084 BL-096 BL-097 Done \u2014 authority sync complete 2026-03-20; remaining active blockers are BL-060 participant sessions and BL-067 signing/real host execution",
   "bl086_ci_composite_action_status": "done_2026-03-19_harness_commit_9bb2ec8_contract_11of11_execute_3of3",
   "bl086_ci_composite_action_harness_commit": "9bb2ec8",
@@ -2695,5 +2695,7 @@
   "bl084_profiling_contract_status": "Done",
   "bl084_profiling_contract_evidence": "TestEvidence/bl084_*/status.tsv \u2014 contract+execute PASS 2026-03-20",
   "bl032_source_modularization_status": "Done",
-  "bl032_source_modularization_evidence": "TestEvidence/bl032_structure_guardrails_20260319T210942Z/status.tsv \u2014 13/13 PASS; PluginProcessor.cpp 3395 <= 3600; RT audit non_allowlisted=0; 2026-03-19"
+  "bl032_source_modularization_evidence": "TestEvidence/bl032_structure_guardrails_20260319T210942Z/status.tsv \u2014 13/13 PASS; PluginProcessor.cpp 3395 <= 3600; RT audit non_allowlisted=0; 2026-03-19",
+  "bl020_confidence_masking_status": "Done",
+  "bl020_confidence_masking_evidence": "TestEvidence/bl020_confidence_masking_closeout_20260319T212342Z/status.tsv \u2014 contract 3/3 PASS; 2026-03-19"
 }

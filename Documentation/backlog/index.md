@@ -114,7 +114,7 @@ Immediate wave summary:
 | # | ID | Title | Priority | Status | Track | Depends On | Blocks | Runbook |
 |--:|-----|-------|----------|--------|-------|------------|--------|---------|
 | 1 | BL-030 | Release governance and device rerun | P2 | **Done** (N15 owner authoritative confirm `UNANIMOUS_PASS`; RL-03..RL-09 closeout matrix PASS; release decision `GO`) | G | BL-024, BL-025, HX-06 | — | [bl-030](done/bl-030-release-governance.md) |
-| 2 | BL-020 | Confidence/masking overlay mapping | P2 | In Validation (C4 mode parity + exit semantics packets are green; owner promotion review pending) | E | BL-014, BL-019 | — | [bl-020](bl-020-confidence-masking.md) |
+| 2 | BL-020 | Confidence/masking overlay mapping | P2 | **Done** (2026-03-19: contract-only 3/3 PASS; C4/C4b evidence replay confirmed; overlay contract, fallback codes, combinedConfidence formula confirmed) | E | BL-014, BL-019 | — | [bl-020](done/bl-020-confidence-masking.md) |
 | 3 | BL-021 | Room-story overlays | P2 | In Implementation (C2 soak PASS; N13 owner recheck `--contract-only --runs 3` PASS with stable replay hash/row signatures) | E | BL-014, BL-015 | — | [bl-021](bl-021-room-story-overlays.md) |
 | 4 | BL-023 | Resize/DPI hardening | P2 | **Done** (A2 runtime/UI hardening complete; T3 heavy-wrapper equivalent replay PASS; strict usage exits and mode parity confirmed) | C | BL-025 | — | [bl-023](done/bl-023-resize-dpi-hardening.md) |
 | 5 | BL-032 | Source modularization of PluginProcessor/PluginEditor | P2 | **Done** (2026-03-20: PluginProcessor.cpp 3248 ≤ 3600; processor_core/bridge/shared_contracts/editor_shell/editor_webview module split live; RT audit non_allowlisted=0) | F | — | — | [bl-032](done/bl-032-source-modularization.md) |

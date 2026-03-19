@@ -2,7 +2,7 @@ Title: BL-020 Confidence Masking QA Contract
 Document Type: Testing Runbook
 Author: APC Codex
 Created Date: 2026-02-26
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-19
 
 # BL-020 Confidence/Masking QA Contract
 
@@ -32,6 +32,18 @@ The contract keeps the overlay replayable, fail-safe, and easy to audit.
 | Fallbacks | Invalid rows must emit a deterministic reason token. |
 | Sequence | `snapshotSeq` must be non-decreasing. |
 | Degradation | Base emitter rendering stays available; overlay layer degrades independently. |
+
+### Acceptance IDs
+
+| acceptance_id | gate | threshold |
+|---|---|---|
+| BL020-A1-001 | Required field/type validity | 100% active rows valid |
+| BL020-A1-002 | Numeric range + finiteness | 0 pre-clamp violations |
+| BL020-A1-003 | Combined formula conformance | max abs delta `<= 0.01` |
+| BL020-A1-004 | Bucket mapping determinism | 100% row match |
+| BL020-A1-005 | Fallback token determinism | 100% fallback rows tokenized |
+| BL020-A1-006 | Snapshot sequence monotonicity | 0 regressions |
+| BL020-A1-007 | QA artifact schema completeness | all required artifacts + columns present |
 
 ### Failure Taxonomy
 
@@ -93,6 +105,21 @@ bash -n scripts/qa-bl020-confidence-masking-lane-mac.sh
 ```
 
 Use `N = 3`, `5`, or `20` based on the active replay tier.
+
+## C4 Validation Contract
+
+C4 Evidence Contract requires 20-run sentinel evidence across both modes:
+
+```bash
+./scripts/qa-bl020-confidence-masking-lane-mac.sh --contract-only --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/contract_runs
+./scripts/qa-bl020-confidence-masking-lane-mac.sh --execute-suite --runs 20 --out-dir TestEvidence/bl020_slice_c4_mode_parity_<timestamp>/execute_runs
+```
+
+C4 gate criteria:
+- `replay_hash_drift_count=0` across all 20 runs
+- zero failing validation rows in either mode
+- `mode_parity.tsv` confirms cross-mode doc/scenario hash stability
+- `exit_semantics_probe.tsv` confirms `--runs 0` exits 2 and `--unknown-flag` exits 2
 
 ## Current Signal
 
