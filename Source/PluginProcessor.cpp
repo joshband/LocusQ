@@ -2808,7 +2808,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     data.physicsEnabled = physicsEnabled;
 
     const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();
-    physicsEngine.setUpdateRateIndex (sceneGraph.getPhysicsRateIndex());
+    physicsEngine.setUpdateRateIndex (physicsRateIndex);
     physicsEngine.setPaused (sceneGraph.isPhysicsPaused());
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled());
     const auto boundaryMode = static_cast<PhysicsEngine::BoundaryMode> (juce::jlimit (
@@ -2940,7 +2940,11 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     physicsEngine.setWallCollisionEnabled (sceneGraph.isPhysicsWallCollisionEnabled() && ! coordinatedWorkerActive);
     physicsWorker.setUpdateRateIndex (physicsRateIndex);
     physicsWorker.setPaused (sceneGraph.isPhysicsPaused());
-    physicsDspBridge.prepare (currentSampleRate, physicsWorker.getPeriodMs() * 0.001);
+    if (physicsRateIndex != lastPhysicsRateIndex)
+    {
+        lastPhysicsRateIndex = physicsRateIndex;
+        physicsDspBridge.prepare (currentSampleRate, physicsWorker.getPeriodMs() * 0.001);
+    }
 
     if (coordinatedWorkerActive)
     {
