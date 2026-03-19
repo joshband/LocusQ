@@ -1,0 +1,161 @@
+Title: BL-055 FIR Convolution Engine
+Document Type: Backlog Runbook
+Author: APC Codex
+Created Date: 2026-02-28
+Last Modified Date: 2026-03-17
+
+# BL-055 FIR Convolution Engine
+
+## Plain-Language Summary
+
+BL-055 in plain terms: Integrate FirEngineManager into the monitoring chain after PEQ. Historical closeout is retained here for traceability, but the 2026-03-17 comprehensive review opened follow-on `BL-095` because the archived execute lane proves structural markers more strongly than it proves a real partitioned runtime implementation. For technical detail, see `## Objective`, `## Validation Plan`, and the follow-on note below.
+
+## 6W Snapshot (Who/What/Why/How/When/Where)
+
+| Question | Plain-language answer |
+|---|---|
+| Who is this for? | DSP/engine maintainers, QA owners, and release owners protecting realtime safety. |
+| What is changing? | Integrate FirEngineManager (DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps, already implemented) into the monitoring chain after PEQ. |
+| Why is this important? | It reduces risk and keeps related backlog lanes from being blocked by unclear behavior or missing evidence. |
+| How will we deliver it? | Deliver in slices, run the required replay/validation lanes, and capture evidence in TestEvidence before owner promotion decisions. |
+| When is it done? | Current state: **Done-candidate** (2026-03-16 Z1 owner sync PASS; T3 10/10 contract+execute PASS; 2026-03-07 parity PASS). Final Done requires offline parity reference render confirmation before release gate. |
+| Where is the source of truth? | Runbook `Documentation/backlog/bl-055-fir-convolution-engine.md`, backlog authority `Documentation/backlog/index.md`, and evidence under `TestEvidence/...`. |
+
+
+## Visual Aid Index
+
+Use visuals only when they materially improve understanding.
+
+| Visual Aid | Why it helps | Where to find it |
+|---|---|---|
+| Status ledger | Fast state/priority/dependency scan for humans and agents. | `## Status Ledger` |
+| Validation and evidence tables | Shows pass/fail criteria and artifact contract. | `## Validation Plan` |
+| Optional item-specific diagram | Include only when it clarifies behavior better than prose/tables. | Adjacent to the relevant section |
+
+## Delivery Flow Diagram
+
+Include a runbook-specific diagram only when it clarifies behavior not already obvious from `Status Ledger`, `Implementation Slices`, and `Validation Plan`.
+
+Canonical lifecycle flow is governed by `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`).
+
+## Status Ledger
+
+| Field | Value |
+|---|---|
+| ID | BL-055 |
+| Priority | P1 |
+| Status | **Done** (historical closeout retained; 2026-03-17 review opened `BL-095` for truthfulness and objective-validation follow-up) |
+| Track | E - R&D Expansion |
+| Effort | Med / M |
+| Depends On | — |
+| Blocks | BL-056 |
+| Default Replay Tier | T1 (dev-loop deterministic replay; escalate per Global Replay Cadence Policy) |
+| Heavy Lane Budget | Standard (apply heavy-wrapper containment when wrapper cost is high) |
+
+## Objective
+
+Integrate `FirEngineManager` (historically documented here as `DirectFirConvolver ≤256 taps / PartitionedFftConvolver >256 taps`) into the monitoring chain after PEQ. Engine/profile swaps must be atomic and click-safe, with output crossfade when filter topology changes. Report latency via `setLatencySamples()` and keep offline parity references for truth-render validation.
+
+## Historical Follow-On Note (2026-03-17)
+
+- This archived runbook remains the historical record of the original BL-055 closeout.
+- The 2026-03-17 comprehensive review found that the archived BL-055 lane can pass partitioned-latency and crossfade gates by detecting markers such as `DirectFirConvolver`, `PartitionedFftConvolver`, `nextPow2`, `crossfade`, and `blend`.
+- Follow-on corrective lane: `Documentation/backlog/bl-095-partitioned-fir-truthfulness-recovery-and-objective-validation.md`.
+- Treat BL-095, not this archived runbook alone, as the current authority for unresolved partitioned-FIR truthfulness work.
+
+## Acceptance IDs
+
+- direct engine introduces 0 latency
+- partitioned engine latency = nextPow2(blockSize)
+- engine swap is glitch-free
+- `setLatencySamples()` called on every engine change
+- no RT allocation/locks/blocking I/O in any FIR update or apply path
+- FIR/partitioned output transition is crossfaded (no zipper/click artifacts on profile change)
+- deterministic offline parity check is captured against reference render assets
+
+
+## Validation Plan
+
+QA harness script: `scripts/qa-bl055-fir-convolution-engine-mac.sh`.
+Evidence schema: `TestEvidence/bl055_*/status.tsv`.
+
+Minimum evidence additions:
+- `latency_contract.tsv` (direct vs partitioned)
+- `swap_crossfade_check.tsv`
+- `offline_parity_summary.md` (reference to offline truth-render comparison lane)
+
+Script modes and gates:
+- `--contract-only` (default): structural contract checks with evidence capture.
+- `--execute`: execute gate checks with strict zero-`TODO`-row enforcement.
+- Exit semantics: `0` pass, `1` gate fail, `2` usage/config error.
+
+Evidence fields:
+- `status.tsv`: `check_id`, `result`, `detail`, `artifact`
+- `latency_contract.tsv`: `check`, `result`, `detail`, `artifact`
+- `swap_crossfade_check.tsv`: `scenario`, `result`, `detail`, `artifact`
+
+## Owner Intake Snapshot (2026-03-02)
+
+- Script authored: `scripts/qa-bl055-fir-convolution-engine-mac.sh`.
+- Owner intake packets:
+  - Contract: `TestEvidence/bl055_owner_intake_contract_20260302T035854Z/`
+  - Execute: `TestEvidence/bl055_owner_intake_execute_20260302T035858Z/`
+- Both runs exit non-zero with `lane_result=FAIL` and the same blockers:
+  - `BL055-C4-partitioned_latency_next_pow2_contract` -> `FAIL`
+  - `BL055-C6-swap_crossfade_structure` -> `FAIL`
+- All other current structural checks and docs freshness gate pass.
+- Promotion readiness: blocked until missing partitioned-latency and swap-crossfade implementation markers land.
+
+## Owner Follow-Up Snapshot (2026-03-02)
+
+- Remediation landed in `Source/headphone_dsp/HeadphoneFirHook.h`:
+  - `FirEngineManager` markers with direct/partitioned selection contract.
+  - `nextPow2` partitioned latency marker path.
+  - swap `crossfade`/`blend` structure for topology transitions.
+- Follow-up evidence:
+  - Contract: `TestEvidence/bl055_owner_followup_contract2_20260302T042646Z/status.tsv` -> `lane_result=PASS`
+  - Execute: `TestEvidence/bl055_owner_followup_execute2_20260302T042646Z/status.tsv` -> `lane_result=PASS`
+- Compile safety check:
+  - `cmake --build build_local --config Release --target locusq_qa LocusQ_Standalone -j 8` -> `PASS` (warnings only).
+- Remaining maturity work:
+  - pursue runtime/parity hardening before Done promotion, but C3/C4/C6 structural blockers are cleared.
+
+## Replay Refresh Snapshot (2026-03-07)
+
+- Lane path refresh aligned `scripts/qa-bl055-fir-convolution-engine-mac.sh` with the current split implementation files:
+  - calibration latency getter now checked in `Source/spatial_renderer/SpatialHeadphoneProfileControl.cpp`
+  - engine-state publication markers now checked in `Source/spatial_renderer/SpatialOutputRoutingStage.cpp`
+- Fresh execute replay:
+  - `TestEvidence/bl055_fir_convolution_engine_20260307T061821Z/status.tsv` -> `lane_result=PASS`
+
+## Replay Cadence Plan (Required)
+
+Reference policy: `Documentation/backlog/index.md` -> `Global Replay Cadence Policy`.
+
+| Stage | Tier | Runs | Command Pattern | Evidence |
+|---|---|---|---|---|
+| Dev loop | T1 | 3 | runbook primary lane command at dev-loop depth | validation matrix + replay summary |
+| Candidate intake | T2 | 5 (or heavy-wrapper 2-run cap) | runbook candidate replay command set | contract/execute artifacts + taxonomy |
+| Promotion | T3 | 10 (or owner-approved heavy-wrapper 3-run equivalent) | owner-selected promotion replay command set | owner packet + deterministic replay evidence |
+| Sentinel | T4 | 20+ (explicit only) | long-run sentinel drill when explicitly requested | parity/sentinel artifacts |
+
+### Cost/Flake Policy
+
+- Diagnose failing run index before repeating full multi-run sweeps.
+- Heavy wrappers (`>=20` binary launches per wrapper run) use targeted reruns, candidate at 2 runs, and promotion at 3 runs unless owner requests broader coverage.
+- Document cadence overrides with rationale in `lane_notes.md` or `owner_decisions.md`.
+
+
+## Handoff Return Contract
+
+Use the canonical handoff block in `Documentation/backlog/index.md` (`Owner Sync Packet Contract`) and include `SHARED_FILES_TOUCHED: no|yes`.
+
+Only add runbook-specific handoff fields if they differ from the canonical contract.
+
+## Governance Alignment (2026-02-28)
+
+Canonical lifecycle/evidence rules are defined in:
+- `Documentation/backlog/index.md` (`Backlog Lifecycle Contract`, `Global Replay Cadence Policy`)
+- `Documentation/standards.md` (`Backlog Lifecycle Governance Standard`)
+
+This runbook should list only item-specific exceptions or additions.
