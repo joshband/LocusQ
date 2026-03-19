@@ -466,6 +466,58 @@ Compatibility rule:
 - consumers that do not implement BL-101 must ignore `calAutomationProvenance` with no behavior change
 - consumers that do implement BL-101 must treat missing child descriptors as `source=unknown`, `provenance=unknown/unavailable`, and no freshness guarantee
 
+#### Additive CALIBRATE DiscoveryGraph Payload (Wave A, Backward-Compatible)
+
+CALIBRATE payloads may also publish an additive object:
+
+- `discoveryGraph`
+
+If present, it contains:
+
+- `schema` (string; current value `locusq-calibrate-discovery-graph-v1`)
+- `outputCandidates` (array)
+- `inputCandidates` (array)
+- `topologyCandidates` (array)
+- `needsConfirmation` (array of plain-language strings)
+- `summary` (object)
+
+Minimum candidate shape:
+
+```json
+{
+  "id": "host_main_output",
+  "kind": "output",
+  "label": "Host Main Output",
+  "rank": 1,
+  "confidence": 0.92,
+  "needsConfirmation": false,
+  "descriptor": {
+    "source": "host_auto",
+    "provenance": "detected",
+    "ageMs": 12,
+    "staleAfterMs": 500,
+    "isStale": false,
+    "manualOverride": false,
+    "detail": "Host output layout reports visible and writable channels."
+  }
+}
+```
+
+Additional additive fields may include:
+
+- output candidate metadata such as `layout`, `channelCount`, `writableChannels`
+- output/topology role preview metadata such as `roleAssignments`, `roleAssignmentProvenance`, `roleAssignmentDetail`, `roleIntentMappedCount`, `roleIntentTotalCount`, `roleIntentBlockedCount`, `roleIntentComplete`
+- input candidate metadata such as `channelCount`, `selectedMicChannel`, `selectedMicVisible`, `recommendedMicChannel`, `reasonCodes`, `confirmationPrompt`, `blockedBy`
+- topology candidate metadata such as `requiredChannels`, `selected`
+- summary fields such as `outputHeadline`, `inputHeadline`, `topologyHeadline`, `ambiguityHeadline`
+
+Rules:
+
+28. `discoveryGraph` is informational and additive; consumers must ignore unknown fields safely.
+29. `confidence` is a ranking aid, not proof of measurement or detection strength.
+30. `needsConfirmation == true` must not rewrite `descriptor.source` or `descriptor.provenance`; ambiguity remains an overlay.
+31. Missing `discoveryGraph` must preserve legacy CALIBRATE behavior with no contract break.
+
 ### Audition Resolver Examples
 
 Bound emitter resolved:

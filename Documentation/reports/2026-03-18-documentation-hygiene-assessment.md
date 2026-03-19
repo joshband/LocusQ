@@ -19,19 +19,43 @@ This report is planning and governance support. Canonical status authority remai
 
 ## Current Snapshot
 
-- `Documentation/backlog/`: 115 files
-- `Documentation/reports/`: 60 files
-- `Documentation/archive/`: 47 files
-- `Documentation/plans/`: 44 files
-- `Documentation/testing/`: 34 files
-- `Documentation/Calibration POC/`: 22 files
-- `Documentation/adr/`: 20 files
+- `Documentation/backlog/`: 118 files
+- `Documentation/reports/`: 33 files
+- `Documentation/archive/`: 186 files
+- `Documentation/plans/`: 32 files
+- `Documentation/testing/`: 33 files
+- `Documentation/Calibration POC/`: 17 files
+- `Documentation/adr/`: 23 files
 
 ## Assessment Summary
 
 The main problem is not metadata compliance. The main problem is lifecycle sprawl.
 
 The repo already has reasonable authority rules, archive rules, readability gates, and backlog templates. What is missing is stronger enforcement of one-document-per-job and more aggressive retirement of temporary planning, review, and output bundles once their decisions have been absorbed into canonical surfaces.
+
+## End-State Update
+
+This assessment started as a planning report.
+It now also records the main cleanup result.
+
+What changed in this hygiene wave:
+- active plans were compacted into short execution contracts
+- active reports and review packets were reduced to decision-grade surfaces
+- `Documentation/testing/` was reclassified around reusable guides and short support contracts
+- `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md` were reduced to summary-first governance docs
+- backlog templates, automation docs, and root governance docs were tightened
+- the largest legacy-style done runbooks were compacted into short closeout authorities with archived legacy copies
+- `Documentation/Calibration POC/` was reduced to a curated research-prototype surface with duplicate exploratory notes moved to archive
+
+Current end-state:
+- `Documentation/backlog/done/` still has `86` files, but only `4` are now above `140` lines
+- `Documentation/reports/` is down to a much smaller active markdown surface
+- archive-first preservation is now the default pattern for deep historical detail
+
+Main conclusion:
+- the repository is in much better shape
+- the remaining work is selective, not broad
+- future hygiene should be enforced by templates, ADRs, and archive discipline rather than another repo-wide rescue pass
 
 ## Folder-By-Folder Assessment
 
@@ -47,7 +71,7 @@ The repo already has reasonable authority rules, archive rules, readability gate
 | `Documentation/testing/` | reusable guides plus BL-specific QA docs | `supporting` | BL-specific QA docs overlap with runbooks and `TestEvidence` packets | retain reusable testing guides as canonical support; migrate BL-specific QA truth into runbooks/evidence and archive duplicates |
 | `Documentation/reviews/` | code and design review outputs | `supporting` | valuable findings, but review reports accumulate after their findings have already been translated into backlog items | keep only unresolved or latest anchor reviews active; archive reports once findings are captured in backlog/ADRs |
 | `Documentation/research/` | active research index and references | `supporting` | small but stale: index paths do not fully match current file placement | reconcile index with actual active research locations and archive status |
-| `Documentation/Calibration POC/` | prototype research, reference docs, scripts, PDFs | `reference` + `archive-candidate` | folder mixes research, prototype code, PDFs, and historically large dataset/blob lineage | reclassify explicitly as research prototype surface, or archive/externalize most of it; do not let it read as active product documentation |
+| `Documentation/Calibration POC/` | curated prototype research, reference docs, scripts, PDF | `reference` | lower-risk after cleanup, but still needs strict scope control | keep only prototype code plus curated reference docs active; archive exploratory duplicates quickly |
 | `Documentation/runbooks/` | legacy execution helpers | `supporting` / `archive-candidate` | mostly superseded by backlog templates and runbooks | reduce to pointer docs or archive |
 | `Documentation/archive/` | historical preservation | `archive` | correct destination, but archive index and manifests are lagging current reality | add lightweight manifest discipline: source, reason, promoted replacement, re-open criteria |
 
@@ -61,8 +85,8 @@ The repo already has reasonable authority rules, archive rules, readability gate
    It already has the clearest authority model, strongest templates, and working validation gates.
 4. `Documentation/testing/` and `Documentation/plans/` are acting like secondary backlog systems.
    They often carry status-adjacent execution detail that should either live in runbooks or become archived support.
-5. `Documentation/Calibration POC/` is the highest-risk ambiguity surface.
-   It looks half active, half historical, and it has already contributed oversized artifact history.
+5. `Documentation/Calibration POC/` only became safer once exploratory notes were reduced and the kept surface was made explicit.
+   Prototype folders need curated scope, not just a folder-level disclaimer.
 6. Archiving is present, but archive promotion rules are not yet strict enough.
    Files move into `archive/`, but the active surfaces are not always reduced enough afterward.
 
@@ -127,30 +151,27 @@ Every archive bundle should say:
    Archive review and design packets after their findings are converted into backlog items, ADRs, or canonical docs.
 5. Normalize `testing/`.
    Keep reusable guides; archive BL-specific QA narratives that duplicate runbooks/evidence.
-6. Resolve `Calibration POC/`.
-   Either make it an explicitly indexed research-prototype surface or archive/externalize most of it.
-7. Tighten archive manifests.
+6. Tighten archive manifests.
    Update `Documentation/archive/README.md` and `Documentation/README.md` together whenever archive scope changes.
 
 ## Immediate Action Items
 
 | Priority | Action | Outcome |
 |---|---|---|
-| P0 | keep `Documentation/reports/data/backlog-summary.*` fresh | restore trust in machine-readable backlog consumers |
-| P0 | inventory `plans/` for duplicate vintages per BL/HX | remove parallel-spec confusion |
-| P1 | inventory `reports/` for active-reference vs archive eligibility | shrink noisy active surface |
-| P1 | classify every `testing/*.md` file as reusable guide vs BL-specific packet | cut duplicate QA narrative |
-| P1 | decide whether `Calibration POC/` remains active research or becomes archived prototype material | remove the largest ambiguity surface |
-| P2 | compact older `backlog/done/*.md` items into slimmer closeout format | preserve traceability with less reading tax |
+| P0 | keep `Documentation/reports/data/backlog-summary.*` fresh on every backlog change | preserve trust in machine-readable backlog consumers |
+| P0 | preserve active-surface brevity when new runbooks or reports are created | stop bloat from re-entering through new work |
+| P1 | keep `Documentation/Calibration POC/` on a curated-reference diet | prevent exploratory note sprawl from returning |
+| P1 | selectively review the remaining `Documentation/backlog/done/*.md` files over `140` lines | finish only the items that still read like historical packets |
+| P2 | keep archive manifests current whenever long-form copies are preserved | make archive-first cleanup durable |
 
 ## Validation Status
 
-`partially tested`
+`tested`
 
 - `./scripts/validate-backlog-plain-language.sh` -> PASS
 - `./scripts/validate-backlog-redundancy.py` -> PASS
-- `./scripts/export-backlog-summaries.py --check` -> FAIL before refresh; corrected by refreshing exports
-- `./scripts/validate-docs-freshness.sh` -> rerun after export refresh
+- `./scripts/export-backlog-summaries.py --check` -> PASS
+- `./scripts/validate-docs-freshness.sh` -> PASS
 - `./scripts/git-artifact-hygiene-audit.sh --ref HEAD` -> PARTIAL PASS with two blockers:
   - tracked ignored `TestEvidence/*` paths
   - large historical blobs reachable in git history
