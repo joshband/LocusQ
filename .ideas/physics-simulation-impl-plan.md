@@ -282,7 +282,7 @@ What is not yet complete in the production plugin runtime:
 
 ## Validation Status
 
-`partially tested` — production-path integration is now broad and materially stronger, but full Tier A migration and final host-level completion claims are still not justified.
+`partially tested` — production-path runtime probes green for all Tier A families; split-brain authority closed (C1 2026-03-19); host-facing acceptance lanes H1–H3 ready to run; collision transient lane passed REAPER host. Full completion claim pending H1–H3 host runs and DAW automation gate.
 
 Validation summary:
 - `locusq_physics_tier_a_probe`: PASS 15/15 on standalone subsystem checks.
@@ -365,6 +365,8 @@ Interpretation rule:
 - `runtime-proven` means there is a targeted production-path integration probe proving the behavior in the real `PluginProcessor` path.
 - `partially proven` means the control is wired and/or subsystem-tested, but the production-path proof is incomplete or too indirect.
 - `not yet production-proven` means the current evidence is still standalone/subsystem-only for completion-claim purposes.
+
+**C1 closeout (2026-03-19):** Split-brain authority closed. PhysicsEngine::step() guard added; dual-integration assertion in JUCE_DEBUG builds. R1–R4 status: R1 complete, R2 complete (attractor slice + all runtime lanes green), R3 complete (runtime probe suite covers all Tier A families), R4 pending (doc truth pass in progress via C4).
 
 ## Review-Driven Refinement Priorities
 

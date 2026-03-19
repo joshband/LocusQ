@@ -3001,6 +3001,24 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             && workerState.initialized;
 
         const auto physicsState = physicsEngine.getState();
+
+        // Dual-integration guard: when the worker owns authority, the legacy
+        // engine must not have produced independent motion. The engine's
+        // standaloneMode guard should ensure this; the assertion catches any
+        // future regression where that guard is bypassed.
+#if JUCE_DEBUG
+        if (coordinatedWorkerActive && physicsState.initialized)
+        {
+            const float legacyMotion = std::abs (physicsState.position.x - basePosition.x)
+                                     + std::abs (physicsState.position.y - basePosition.y)
+                                     + std::abs (physicsState.position.z - basePosition.z)
+                                     + std::abs (physicsState.velocity.x)
+                                     + std::abs (physicsState.velocity.y)
+                                     + std::abs (physicsState.velocity.z);
+            jassert (legacyMotion < 1.0e-4f); // legacy engine must not integrate when worker owns authority
+        }
+#endif
+
         if (workerOwnsPublishedMotion)
         {
             data.position = workerState.position;

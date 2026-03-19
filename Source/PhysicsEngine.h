@@ -262,6 +262,26 @@ private:
             return;
         }
 
+        // When PhysicsWorker owns coordinated authority for this emitter, the
+        // engine must not integrate motion independently. Zero out accumulated
+        // state and park the emitter at its rest position so stale integrated
+        // values cannot bleed through during the worker handoff window.
+        if (! standaloneMode.load (std::memory_order_acquire))
+        {
+            state.position = restPosition;
+            state.velocity = {};
+            state.force = {};
+            state.collisionMask = 0;
+            state.collisionEnergy = 0.0f;
+            previousRestPosition = restPosition;
+            // Consume pending sequences so they do not fire when authority reverts.
+            handledThrowSequence = throwSequence.load (std::memory_order_acquire);
+            handledResetSequence = resetSequence.load (std::memory_order_acquire);
+            handledCollisionSeq  = collisionImpulseSeq.load (std::memory_order_acquire);
+            writeState (state);
+            return;
+        }
+
         // Treat physics state as an offset from a moving rest pose:
         // if animation/keyframes move the rest point, shift the body with it.
         const Vec3 restDelta

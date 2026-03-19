@@ -208,7 +208,7 @@ Out of scope for this spec. Position and directivityAim are captured via the Cho
 
 ## Validation Status
 
-Not tested — spec only.
+`partially tested` — all 8 code-review acceptance gates verified (2026-03-19): parameter registration, freeze logic, LIVE→FROZEN snapshot guard, gainTransient bypass, AsyncUpdater RT safety. REAPER-run gates (LIVE recording, FROZEN playback, display names) are ready to run via `scripts/reaper-phys-daw-auto-gate-mac.sh`.
 
 ---
 

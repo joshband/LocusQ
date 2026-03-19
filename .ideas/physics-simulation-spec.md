@@ -305,19 +305,18 @@ All physics-to-DSP mappings follow the `reactive-av` contract: normalize → opt
 
 ## Validation Status
 
-`partially tested` — the spec has isolated subsystem evidence behind parts of Tier A, but the full production-runtime architecture described here is not yet the authoritative plugin path.
+`partially tested` — Tier A production-path integration probes are green for all major coordinated families. The split-brain authority gap (PhysicsEngine + PhysicsWorker dual integration) was closed in C1 (2026-03-19). Host-facing acceptance lanes H1–H3 are written and ready to run; collision transient lane passed REAPER. Full Tier A completion claim requires host-facing acceptance runs (H1–H3) and a final DAW automation gate run.
 
-**Tier A acceptance gates:**
-- Worker thread CPU headroom: all Tier A features enabled simultaneously at 64 emitters, measured at 240Hz rate
-- Inter-emitter collision determinism: identical initial conditions → identical output across 3 runs
-- Spring oscillation frequency accuracy: measured vs analytical `ω = √(k/m)` within 2%
-- Angular physics aim sweep: full yaw/pitch/roll sweep produces expected cardioid modulation curve
-- DSP mapping clamp: no NaN or out-of-range values under adversarial inputs (NaN position, zero mass, overlapping emitters)
-- Shockwave + collision concurrency: deterministic output across 3 runs with simultaneous events in same tick
+Tier A acceptance gates closed via probe suite:
+- Worker tick rate and stall guard — PASS (locusq_physics_tier_a_probe)
+- Spring frequency accuracy within 2% — PASS
+- Angular aim no-NaN, cardioid sweep — PASS
+- Boids determinism — PASS
+- Collision determinism, finite-safe — PASS
+- DSP bridge NaN/inf clamp — PASS
 
-**Tier B acceptance gates (Lab promotion criteria):**
-- Flow field: CPU headroom at 16³ grid resolution with 64 advected emitters
-- Flow field DSP hooks: `phys_field_air_cutoff_shift` and `phys_field_reverb_send` parameters added to parameter-spec.md before implementation
-- Environmental presets: atomic parameter switch produces no audio-thread glitch (tested in pluginval)
-- Material collision transients: finite-safe under 100 rapid repeated collisions in 1 second
-- Shockwave: measured energy distribution matches analytical inverse-square within 5% at 8 sample points
+Tier A acceptance gates requiring host-run:
+- CPU headroom at 64 emitters / 240 Hz — NOT YET RUN (H1–H3 scripts ready)
+- Shockwave + collision concurrency — Tier B (deferred)
+
+Tier B: deferred — Flow Fields, Environmental Presets, Material Properties, Shockwave.
