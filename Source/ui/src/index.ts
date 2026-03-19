@@ -8433,6 +8433,47 @@ function getCalibrationDiscoveryReconciliationSummary(kind, activeRoles = []) {
     return resolved.length > 0 ? `Reconciliation: ${resolved.join("; ")}.` : "";
 }
 
+function buildCalibrationDiscoveryReconciliationPayload() {
+    const buildBucketPayload = (kind) => {
+        const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
+        const payload = {};
+        Object.entries(bucket).forEach(([roleKey, policyId]) => {
+            const normalizedPolicyId = String(policyId || "").trim().toLowerCase();
+            if (!normalizedPolicyId || normalizedPolicyId === "review") return;
+            payload[roleKey] = normalizedPolicyId;
+        });
+        return payload;
+    };
+
+    const output = buildBucketPayload("output");
+    const topology = buildBucketPayload("topology");
+    if (Object.keys(output).length === 0 && Object.keys(topology).length === 0) return undefined;
+    return {
+        output,
+        topology,
+    };
+}
+
+function applyCalibrationDiscoveryReconciliationPayload(payload) {
+    const nextState = {
+        output: {},
+        topology: {},
+    };
+    if (payload && typeof payload === "object") {
+        ["output", "topology"].forEach((kind) => {
+            const source = payload[kind];
+            if (!source || typeof source !== "object") return;
+            Object.entries(source).forEach(([roleKey, policyId]) => {
+                const normalizedRoleKey = getCalibrationDiscoveryRoleKey(roleKey);
+                const normalizedPolicyId = String(policyId || "").trim().toLowerCase();
+                if (!normalizedRoleKey || !normalizedPolicyId || normalizedPolicyId === "review") return;
+                nextState[kind][normalizedRoleKey] = normalizedPolicyId;
+            });
+        });
+    }
+    calibrationDiscoveryReconciliation = nextState;
+}
+
 function calibrationDiscoveryReconciliationComplete(kind, activeRoles = []) {
     const bucket = getCalibrationDiscoveryReconciliationBucket(kind);
     return (Array.isArray(activeRoles) ? activeRoles : []).every((role) => {
@@ -10208,6 +10249,8 @@ async function runProductionP0SelfTest() {
         const mappingEditedBefore = calibrationMappingEditedByUser;
         const applyBestOutputBefore = nativeFunctions.applyBestCalibrationOutputMap;
         const applyBestTopologyBefore = nativeFunctions.applyBestCalibrationTopology;
+        const saveCalibrationProfileBefore = nativeFunctions.saveCalibrationProfile;
+        const loadCalibrationProfileBefore = nativeFunctions.loadCalibrationProfile;
         const getCalibrationStatusBefore = nativeFunctions.getCalibrationStatus;
         const readText = (id) => String(document.getElementById(id)?.textContent || "").trim();
         const expectIncludes = (checkId, actual, expected, label) => {
@@ -10727,6 +10770,31 @@ async function runProductionP0SelfTest() {
                 recordCheck("UI-P1-102D", true, "apply-best-topology action adopts the strongest host-derived topology and aligned map");
             }
 
+            let savedDiscoveryReconciliation = undefined;
+            nativeFunctions.saveCalibrationProfile = async (_options = {}) => {
+                savedDiscoveryReconciliation = _options?.discoveryReconciliation;
+                return {
+                    ok: true,
+                    name: String(_options?.name || "Discovery_Reconcile_Test"),
+                    path: "/tmp/Discovery_Reconcile_Test.json",
+                    topologyProfile: "surround_51",
+                    monitoringPath: "speakers",
+                    deviceProfile: "generic",
+                    profileTupleKey: "surround_51::speakers",
+                    discoveryReconciliation: savedDiscoveryReconciliation,
+                };
+            };
+            nativeFunctions.loadCalibrationProfile = async () => ({
+                ok: true,
+                name: "Discovery_Reconcile_Test",
+                path: "/tmp/Discovery_Reconcile_Test.json",
+                topologyProfile: "surround_51",
+                monitoringPath: "speakers",
+                deviceProfile: "generic",
+                profileTupleKey: "surround_51::speakers",
+                discoveryReconciliation: savedDiscoveryReconciliation,
+            });
+
             if (calTopologySelect instanceof HTMLSelectElement) {
                 calTopologySelect.selectedIndex = topologySurround51Index;
             }
@@ -10914,9 +10982,45 @@ async function runProductionP0SelfTest() {
             expectIncludes("UI-P1-102E", readText("cal-discovery-apply-output-note"), "Reconciliation: Ls=Defer Role; Rs=Manual Reroute Later.", "output reconciliation summary");
             expectIncludes("UI-P1-102E", readText("cal-discovery-apply-topology-note"), "Reconciliation: Ls=Fold To Front Pair; Rs=Defer Role.", "topology reconciliation summary");
             recordCheck("UI-P1-102E", true, "discovery previews retain complete 5.1 speaker-role intent even when only four writable calibration routes are currently addressable");
+
+            const calProfileNameInput = document.getElementById("cal-profile-name");
+            const calProfileSelect = document.getElementById("cal-profile-select");
+            if (calProfileNameInput instanceof HTMLInputElement) {
+                calProfileNameInput.value = "Discovery_Reconcile_Test";
+            }
+            const profileSaved = await saveCalibrationProfile();
+            if (!profileSaved) {
+                failCheck("UI-P1-102F", "calibration profile save with discovery reconciliation failed");
+            }
+            if (!savedDiscoveryReconciliation?.output?.ls || !savedDiscoveryReconciliation?.topology?.rs) {
+                failCheck("UI-P1-102F", "discovery reconciliation payload was not sent during profile save");
+            }
+            applyCalibrationDiscoveryReconciliationPayload({});
+            updateCalibrationDiscoverySummary();
+            expectIncludes("UI-P1-102F", readText("cal-discovery-apply-output-note"), "Choose a reconciliation policy for Ls, Rs before applying this partial map.", "reconciliation cleared state");
+            if (calProfileSelect instanceof HTMLSelectElement) {
+                calProfileSelect.innerHTML = "";
+                const option = document.createElement("option");
+                option.value = "/tmp/Discovery_Reconcile_Test.json";
+                option.textContent = "Discovery_Reconcile_Test";
+                option.dataset.profilePath = "/tmp/Discovery_Reconcile_Test.json";
+                option.dataset.profileName = "Discovery_Reconcile_Test";
+                option.dataset.profileTupleKey = "surround_51::speakers";
+                calProfileSelect.appendChild(option);
+                calProfileSelect.value = option.value;
+            }
+            const profileLoaded = await loadCalibrationProfile();
+            if (!profileLoaded) {
+                failCheck("UI-P1-102F", "calibration profile load with discovery reconciliation failed");
+            }
+            expectIncludes("UI-P1-102F", readText("cal-discovery-apply-output-note"), "Reconciliation: Ls=Defer Role; Rs=Manual Reroute Later.", "loaded output reconciliation");
+            expectIncludes("UI-P1-102F", readText("cal-discovery-apply-topology-note"), "Reconciliation: Ls=Fold To Front Pair; Rs=Defer Role.", "loaded topology reconciliation");
+            recordCheck("UI-P1-102F", true, "discovery reconciliation policies persist through calibration profile save/load roundtrip");
         } finally {
             nativeFunctions.applyBestCalibrationOutputMap = applyBestOutputBefore;
             nativeFunctions.applyBestCalibrationTopology = applyBestTopologyBefore;
+            nativeFunctions.saveCalibrationProfile = saveCalibrationProfileBefore;
+            nativeFunctions.loadCalibrationProfile = loadCalibrationProfileBefore;
             nativeFunctions.getCalibrationStatus = getCalibrationStatusBefore;
             sceneTransportState.lastAcceptedSeq = nativeSeqBeforeSynthetic;
             setChoiceIndex(comboStates.cal_topology_profile, topologyBefore, calibrationTopologyIds.length);
@@ -16639,6 +16743,7 @@ async function saveCalibrationProfile() {
                 topologyProfile: activeTuple.topologyProfile,
                 monitoringPath: activeTuple.monitoringPath,
                 validationSummary: buildCalibrationValidationSummaryPayload(),
+                discoveryReconciliation: buildCalibrationDiscoveryReconciliationPayload(),
             }
         );
         if (!result?.ok) {
@@ -16679,6 +16784,7 @@ async function loadCalibrationProfile() {
         calibrationMappingEditedByUser = false;
         const ackRedetect = document.getElementById("cal-ack-redetect-check");
         if (ackRedetect) ackRedetect.checked = false;
+        applyCalibrationDiscoveryReconciliationPayload(result?.discoveryReconciliation);
 
         setCalibrationProfileNameInputValue(result?.name || selected.name || "");
         setCalibrationProfileStatus(`Loaded profile: ${result?.name || selected.name || "profile"}`);

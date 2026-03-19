@@ -1284,7 +1284,7 @@
       "id": "BL-067",
       "title": "BL-067 AUv3 App-Extension Lifecycle and Host Validation",
       "state_bucket": "open",
-      "status": "In Validation (2026-03-19 runtime-access contract replay PASS for profile/SOFA fallback paths; Apple signing and real host execution remain blocked)",
+      "status": "In Validation (2026-03-19 runtime-access contract replay PASS for profile fallback, custom SOFA fallback, and calibration dialog defaults; Apple signing and real host execution remain blocked)",
       "priority": "P1",
       "track": "A - Runtime Formats",
       "depends_on": "BL-048",
@@ -1295,7 +1295,7 @@
       "how": "",
       "when": "",
       "where": "",
-      "plain_language_summary": "BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-19 local runtime-access hardening replay: contract 1/1 PASS for profile/SOFA fallback paths; Apple signing and real host execution are still blocked). For technical detail, see ## Objective and ## Validation Plan.",
+      "plain_language_summary": "BL-067 in plain terms: Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats. Current state: In Validation (2026-03-19 local runtime-access hardening replay: profile fallback, custom SOFA fallback, and calibration dialog defaults now pass the contract lane; Apple signing and real host execution are still blocked). For technical detail, see ## Objective and ## Validation Plan.",
       "objective": "Add production-ready AUv3 format support for LocusQ with deterministic extension lifecycle behavior, sandbox-safe runtime boundaries, and explicit parity validation against existing AU/VST3/CLAP formats.",
       "runbook_path": "Documentation/backlog/bl-067-auv3-app-extension-lifecycle-and-host-validation.md"
     },

@@ -199,6 +199,7 @@ struct CalibrationProfilePayloadMetadata
     juce::String monitoringPathId { calibrationMonitoringPathIdForIndex (0) };
     juce::String deviceProfileId { calibrationDeviceProfileIdForIndex (0) };
     juce::var validationSummary;
+    juce::var discoveryReconciliation;
 };
 
 CalibrationProfilePayloadMetadata extractCalibrationProfilePayloadMetadata (const juce::var& payload,
@@ -236,6 +237,8 @@ CalibrationProfilePayloadMetadata extractCalibrationProfilePayloadMetadata (cons
 
         if (profile->hasProperty ("validationSummary"))
             metadata.validationSummary = profile->getProperty ("validationSummary");
+        if (profile->hasProperty ("discoveryReconciliation"))
+            metadata.discoveryReconciliation = profile->getProperty ("discoveryReconciliation");
     }
 
     if (metadata.name.isEmpty())
@@ -321,6 +324,8 @@ void populateCalibrationProfileResponse (juce::DynamicObject& result,
     result.setProperty ("profileTupleKey", metadata.topologyId + "::" + metadata.monitoringPathId);
     if (! metadata.validationSummary.isVoid())
         result.setProperty ("validationSummary", metadata.validationSummary);
+    if (! metadata.discoveryReconciliation.isVoid())
+        result.setProperty ("discoveryReconciliation", metadata.discoveryReconciliation);
 }
 } // namespace
 
@@ -589,7 +594,8 @@ void LocusQAudioProcessor::migrateSnapshotLayoutIfNeeded (const juce::ValueTree&
 }
 
 juce::var LocusQAudioProcessor::buildCalibrationProfileState (const juce::String& profileName,
-                                                              const juce::var& validationSummary) const
+                                                              const juce::var& validationSummary,
+                                                              const juce::var& discoveryReconciliation) const
 {
     juce::var profileVar (new juce::DynamicObject());
     auto* profile = profileVar.getDynamicObject();
@@ -637,6 +643,8 @@ juce::var LocusQAudioProcessor::buildCalibrationProfileState (const juce::String
 
     if (! validationSummary.isVoid())
         profile->setProperty ("validationSummary", validationSummary);
+    if (! discoveryReconciliation.isVoid())
+        profile->setProperty ("discoveryReconciliation", discoveryReconciliation);
 
     return profileVar;
 }
@@ -766,12 +774,15 @@ juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& o
 {
     juce::String requestedName;
     juce::var validationSummary;
+    juce::var discoveryReconciliation;
     if (auto* optionsObject = options.getDynamicObject(); optionsObject != nullptr)
     {
         if (optionsObject->hasProperty ("name"))
             requestedName = optionsObject->getProperty ("name").toString();
         if (optionsObject->hasProperty ("validationSummary"))
             validationSummary = optionsObject->getProperty ("validationSummary");
+        if (optionsObject->hasProperty ("discoveryReconciliation"))
+            discoveryReconciliation = optionsObject->getProperty ("discoveryReconciliation");
     }
 
     const auto topologyIndex = getCurrentCalibrationTopologyProfileIndex();
@@ -789,7 +800,7 @@ juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& o
     auto profileDir = getCalibrationProfileDirectory();
     profileDir.createDirectory();
     const auto profileFile = profileDir.getChildFile (safeName + ".json");
-    const auto payload = buildCalibrationProfileState (requestedName, validationSummary);
+    const auto payload = buildCalibrationProfileState (requestedName, validationSummary, discoveryReconciliation);
 
     juce::var response (new juce::DynamicObject());
     auto* result = response.getDynamicObject();
@@ -811,6 +822,8 @@ juce::var LocusQAudioProcessor::saveCalibrationProfileFromUI (const juce::var& o
     result->setProperty ("profileTupleKey", topologyId + "::" + monitoringPathId);
     if (! validationSummary.isVoid())
         result->setProperty ("validationSummary", validationSummary);
+    if (! discoveryReconciliation.isVoid())
+        result->setProperty ("discoveryReconciliation", discoveryReconciliation);
     return response;
 }
 
@@ -922,6 +935,8 @@ juce::var LocusQAudioProcessor::loadCalibrationProfileFromUI (const juce::var& o
 
         if (profile->hasProperty ("validationSummary"))
             result->setProperty ("validationSummary", profile->getProperty ("validationSummary"));
+        if (profile->hasProperty ("discoveryReconciliation"))
+            result->setProperty ("discoveryReconciliation", profile->getProperty ("discoveryReconciliation"));
     }
 
     return response;

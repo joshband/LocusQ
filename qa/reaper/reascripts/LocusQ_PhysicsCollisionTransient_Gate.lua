@@ -16,9 +16,10 @@ local NONINTERACTIVE = os.getenv("LQ_REAPER_NONINTERACTIVE") == "1"
 local STATUS_JSON = os.getenv("LQ_REAPER_STATUS_JSON") or ""
 local REQUIRE_LOCUSQ = os.getenv("LQ_REAPER_REQUIRE_LOCUSQ") ~= "0"
 
-local SETTLE_DEFERS = 45
+local SETTLE_DEFERS = 60
 local COLLISION_DEFERS = 90
-local THROW_PULSE_DEFERS = 2
+local RESET_PULSE_DEFERS = 6
+local THROW_PULSE_DEFERS = 12
 local COLLISION_THRESHOLD = 0.005
 local GAIN_DELTA_THRESHOLD = 0.05
 local DECAY_DELTA_THRESHOLD = 0.03
@@ -44,6 +45,12 @@ local PARAM_NAMES = {
   phys_spring_enable = "Spring Enable",
   phys_out_transient_0 = "Emitter 1 Physics Transient",
   phys_out_transient_1 = "Emitter 2 Physics Transient",
+  phys_out_transient_2 = "Emitter 3 Physics Transient",
+  phys_out_transient_3 = "Emitter 4 Physics Transient",
+  phys_out_transient_4 = "Emitter 5 Physics Transient",
+  phys_out_transient_5 = "Emitter 6 Physics Transient",
+  phys_out_transient_6 = "Emitter 7 Physics Transient",
+  phys_out_transient_7 = "Emitter 8 Physics Transient",
 }
 
 local log_lines = {}
@@ -143,8 +150,9 @@ end
 local function get_transient_peak(contexts)
   local peak = 0.0
   for _, ctx in ipairs(contexts) do
-    peak = math.max(peak, get_normalized(ctx, "phys_out_transient_0"))
-    peak = math.max(peak, get_normalized(ctx, "phys_out_transient_1"))
+    for slot = 0, 7 do
+      peak = math.max(peak, get_normalized(ctx, "phys_out_transient_" .. slot))
+    end
   end
   return peak
 end
@@ -236,7 +244,7 @@ local function run_collision_scenario(contexts, gain_scale, decay_ms, done)
     if settle < SETTLE_DEFERS then
       if settle == 0 then
         for _, ctx in ipairs(contexts) do set_bool(ctx, "phys_reset", true) end
-      elseif settle == 1 then
+      elseif settle == RESET_PULSE_DEFERS then
         for _, ctx in ipairs(contexts) do set_bool(ctx, "phys_reset", false) end
       end
       settle = settle + 1
