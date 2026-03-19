@@ -240,11 +240,17 @@ local function tick()
     log("Gate B names: " .. tostring(gate_b)
         .. (gate_b and "" or (" — missing: " .. table.concat(missing, ", "))))
 
-    -- ── Gate C: "Mode" is at index 0 (Global group first) ─────────────────
+    -- ── Gate C: "Mode" is at index 0 (VST3) or index 1 (AU) ──────────────
+    -- JUCE's AU wrapper inserts a host-side bypass parameter at index 0,
+    -- shifting all user params by 1.  VST3 handles bypass via a separate
+    -- native mechanism, so Mode lands at index 0 there.
     local mode_idx = name_to_idx["Mode"]
-    local gate_c = (mode_idx == 0)
-    log(string.format("Gate C flat_order: %s (Mode idx=%s, expected 0)",
-                      tostring(gate_c), tostring(mode_idx)))
+    local is_au = (PREFERRED_FX:sub(1, 2) == "AU")
+    local expected_mode_idx = is_au and 1 or 0
+    local gate_c = (mode_idx == expected_mode_idx)
+    log(string.format("Gate C flat_order: %s (Mode idx=%s, expected %d, format=%s)",
+                      tostring(gate_c), tostring(mode_idx),
+                      expected_mode_idx, is_au and "AU" or "VST3"))
 
     -- ── Gate D: Renderer after Emitter/Identity ("Master Gain" > "Color") ─
     local color_idx       = name_to_idx["Color"]
