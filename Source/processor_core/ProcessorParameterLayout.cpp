@@ -585,6 +585,26 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "choro_path_walk_seed", 1 }, "Walk Seed", 0, 65535, 0));
 
+    // ==================== EMITTER: CHOREOGRAPHY — BEAT-SYNC (CL-P4) ====================
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "choro_beat_enable", 1 }, "Beat Sync Enable", false));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_beat_division", 1 }, "Beat Division",
+        juce::StringArray { "Whole", "Half", "Quarter", "Eighth", "Sixteenth" }, 2));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_beat_mode", 1 }, "Beat Mode",
+        juce::StringArray { "Snap", "Glide", "Teleport" }, 0));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_teleport_dip_db", 1 }, "Teleport Dip Depth",
+        juce::NormalisableRange<float> (-60.0f, 0.0f), -18.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_teleport_decay_ms", 1 }, "Teleport Decay",
+        juce::NormalisableRange<float> (1.0f, 2000.0f, 0.0f, 0.4f), 100.0f));
+
     // ==================== EMITTER: IDENTITY ====================
     addParameter (emitterIdentityGroup, std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "emit_color", 1 }, "Color", 0, 15, 0));

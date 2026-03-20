@@ -18,10 +18,9 @@ void ChoreographyWorker::compute (float dt, int numEmitters) noexcept
         return;
 
     // =========================================================================
-    // CL-P2: Formation System — compute per-slot positions + spread delta.
+    // CL-P2: Formation System — advance morph phase.
     // =========================================================================
 
-    // Advance morph phase.
     if (morphLoop)
     {
         morphPhase += morphRate * dt * morphDir;
@@ -44,11 +43,36 @@ void ChoreographyWorker::compute (float dt, int numEmitters) noexcept
         morphPhase = std::min (morphPhase + morphRate * dt, 1.0f);
     }
 
-    // Run the formation geometry.
-    formationSystem.compute (formationParams, numEmitters, morphPhase);
+    // =========================================================================
+    // CL-P4: Beat-Sync System — detect beat boundaries; update morph; gain-dip.
+    // Beat runs after CL-P2 morph advance so it can further modify morphPhase.
+    // =========================================================================
 
-    // Publish formation position offsets and spread delta per emitter.
-    const float sd = formationSystem.getSpreadDelta();
+    float beatGainFactor = 1.0f;   // multiplicative [0..1]; 1.0 = no change
+
+    if (beatEnabled)
+    {
+        const double ppq     = transportPpq.load     (std::memory_order_relaxed);
+        const double bpm     = transportBpm.load     (std::memory_order_relaxed);
+        const bool   playing = transportPlaying.load (std::memory_order_relaxed);
+
+        const BeatSyncSystem::TickResult beat =
+            beatSyncSystem.compute (beatParams, ppq, bpm, playing, dt);
+
+        beatGainFactor = beat.gainDelta;
+
+        if (beat.beatFired)
+        {
+            if (beat.morphJump)
+                morphPhase = beat.morphTarget;
+            else
+                morphPhase = std::clamp (morphPhase + beat.morphStep, 0.0f, 1.0f);
+        }
+    }
+
+    // Run formation geometry once with the fully-resolved morphPhase.
+    formationSystem.compute (formationParams, numEmitters, morphPhase);
+    const float sdUpdated = formationSystem.getSpreadDelta();
 
     // =========================================================================
     // CL-P3: Path System — compute shared path position + velocity.
@@ -63,7 +87,10 @@ void ChoreographyWorker::compute (float dt, int numEmitters) noexcept
         offsets[static_cast<std::size_t> (i)].position    = { formPos.x + pathPos.x,
                                                                 formPos.y + pathPos.y,
                                                                 formPos.z + pathPos.z };
-        offsets[static_cast<std::size_t> (i)].spreadDelta = sd;
+        offsets[static_cast<std::size_t> (i)].spreadDelta = sdUpdated;
         offsets[static_cast<std::size_t> (i)].velocity    = pathVel;
+        // gainDelta: convert multiplicative [0..1] to additive dip [0..1]
+        // (0 = no dip, 1 = muted; consumer applies as: gain * (1 - gainDelta)).
+        offsets[static_cast<std::size_t> (i)].gainDelta   = 1.0f - beatGainFactor;
     }
 }

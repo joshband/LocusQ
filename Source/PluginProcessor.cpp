@@ -1603,6 +1603,13 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     choroPathWalkBoundsParam  = rawParam ("choro_path_walk_bounds");
     choroPathWalkSeedParam    = rawParam ("choro_path_walk_seed");
 
+    // CL-P4: Beat-sync raw param inits
+    choroBeatEnableParam      = rawParam ("choro_beat_enable");
+    choroBeatDivisionParam    = rawParam ("choro_beat_division");
+    choroBeatModeParam        = rawParam ("choro_beat_mode");
+    choroTeleportDipDbParam   = rawParam ("choro_teleport_dip_db");
+    choroTeleportDecayMsParam = rawParam ("choro_teleport_decay_ms");
+
     emitGainParam = rawParam ("emit_gain");
     emitSpreadParam = rawParam ("emit_spread");
     emitDirectivityParam = rawParam ("emit_directivity");
@@ -2151,6 +2158,24 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                     buffer.getArrayOfReadPointers(),
                     buffer.getNumChannels(),
                     buffer.getNumSamples());
+
+                // CL-P4: forward DAW transport info to ChoreographyWorker (atomic stores;
+                // no DAW callback on audio thread — playhead reads are always synchronous).
+                {
+                    double ppq = 0.0, bpm = 120.0;
+                    bool   playing = false;
+                    if (auto* ph = getPlayHead())
+                    {
+                        juce::AudioPlayHead::CurrentPositionInfo pos;
+                        if (ph->getCurrentPosition (pos))
+                        {
+                            ppq     = pos.ppqPosition;
+                            bpm     = pos.bpm;
+                            playing = pos.isPlaying;
+                        }
+                    }
+                    physicsWorker.getChoreographyWorker().setTransportInfo (ppq, bpm, playing);
+                }
 
                 // Publish spatial state
                 const auto emitterStartTicks = juce::Time::getHighResolutionTicks();
@@ -2848,7 +2873,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     float sizeUniform = loadParam (sizeUniformParam);
     std::optional<TimelinePoint3D> formationPosition;
     bool teleportTriggeredThisBlock = false;
-    auto teleportBeatDivision = std::optional<BeatDivision> {};
+    auto teleportBeatDivision = std::optional<TimelineBeatDivision> {};
     auto transportBpm = std::optional<double> {};
     const auto blockDurationSeconds = (currentSampleRate > 0.0)
         ? static_cast<double> (numSamplesInBlock) / currentSampleRate
@@ -2880,7 +2905,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
                     && transportSnapshot->bpm.has_value()
                     && *transportSnapshot->bpm > 1.0e-6)
                 {
-                    const auto beatDivision = keyframeTimeline.getPreferredBeatDivision().value_or (BeatDivision::beat);
+                    const auto beatDivision = keyframeTimeline.getPreferredBeatDivision().value_or (beatDivisionFromString ("beat"));
                     const auto quantizedPpq = quantizePpqToBeatDivision (*transportSnapshot->ppqPosition,
                                                                          beatDivision);
                     playbackSeconds = (quantizedPpq * 60.0) / *transportSnapshot->bpm;
@@ -3075,6 +3100,13 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         cw.setPathWalkStep    (loadParam (choroPathWalkStepParam));
         cw.setPathWalkBounds  (loadParam (choroPathWalkBoundsParam));
         cw.setPathWalkSeed    (static_cast<int> (std::lround (loadParam (choroPathWalkSeedParam))));
+
+        // CL-P4: propagate beat-sync params to the ChoreographyWorker each block.
+        cw.setBeatEnabled     (loadParam (choroBeatEnableParam)      > 0.5f);
+        cw.setBeatDivision    (static_cast<int> (std::lround (loadParam (choroBeatDivisionParam))));
+        cw.setBeatMode        (static_cast<int> (std::lround (loadParam (choroBeatModeParam))));
+        cw.setTeleportDipDb   (loadParam (choroTeleportDipDbParam));
+        cw.setTeleportDecayMs (loadParam (choroTeleportDecayMsParam));
     }
 
     const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();

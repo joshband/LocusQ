@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioRingBuffer.h"
+#include "BeatSyncSystem.h"
 #include "FormationSystem.h"
 #include "PathSystem.h"
 #include "SceneGraph.h"
@@ -41,12 +42,16 @@ struct ChoreographyOffset
  *   - getOffset()                — PhysicsWorker thread only (valid after compute() returns).
  *   - setEnabled()               — any thread (atomic store).
  *   - setFormation*() setters    — audio thread only (called from publishEmitterState()).
+ *   - setPath*() setters         — audio thread only (called from publishEmitterState()).
+ *   - setBeat*() / setTransport* — audio thread only (called from publishEmitterState()).
  *   - pushAudioBlock()           — audio thread only (single producer into AudioRingBuffer).
  *
  * Phase history:
  *   CL-P1: infrastructure (AudioRingBuffer, choro_enable gate, zero-offset bypass).
  *   CL-P2: FormationSystem integrated; morph animation; spread delta.
  *   CL-P3: PathSystem integrated; 6 analytical path types; velocity Doppler hook.
+ *   CL-P4: BeatSyncSystem integrated; beat-boundary detection; snap/glide/teleport;
+ *           teleport gain-dip envelope; 16-step pattern sequencer.
  */
 class ChoreographyWorker
 {
@@ -119,6 +124,27 @@ public:
     void setPathWalkSeed    (int   v) noexcept { pathParams.walkSeed    = std::clamp (v, 0, 65535); }
 
     //==========================================================================
+    // Beat-sync param setters (audio thread — called from publishEmitterState())
+    // CL-P4: beat-boundary detection; snap/glide/teleport; gain-dip envelope; step sequencer.
+
+    void setBeatEnabled      (bool  v) noexcept { beatEnabled              = v; }
+    void setBeatDivision     (int   v) noexcept { beatParams.division      = static_cast<BeatDivision> (std::clamp (v, 0, 4)); }
+    void setBeatMode         (int   v) noexcept { beatParams.mode          = static_cast<BeatMode>     (std::clamp (v, 0, 2)); }
+    void setTeleportDipDb    (float v) noexcept { beatParams.dipDb         = std::clamp (v, -60.0f, 0.0f); }
+    void setTeleportDecayMs  (float v) noexcept { beatParams.decayMs       = std::max (1.0f, v); }
+
+    //==========================================================================
+    // Transport info setters (audio thread — called from processBlock())
+    // Stored atomically; read on PhysicsWorker thread in compute().
+
+    void setTransportInfo (double ppqPosition, double bpm, bool isPlaying) noexcept
+    {
+        transportPpq.store     (ppqPosition, std::memory_order_relaxed);
+        transportBpm.store     (bpm,         std::memory_order_relaxed);
+        transportPlaying.store (isPlaying,   std::memory_order_relaxed);
+    }
+
+    //==========================================================================
     // Worker-thread interface
 
     /** Compute per-emitter choreography offsets for this tick.
@@ -173,6 +199,17 @@ private:
     // Written by audio thread (setPath*), read by worker thread (compute()).
     PathSystem pathSystem {};
     PathParams pathParams {};
+
+    // CL-P4: Beat-sync system + params + transport state.
+    // beatParams written by audio thread (setBeat*); transport atomics written
+    // by audio thread (setTransportInfo); all read by worker thread in compute().
+    bool          beatEnabled = false;
+    BeatSyncParams beatParams {};
+    BeatSyncSystem beatSyncSystem {};
+
+    std::atomic<double> transportPpq     { 0.0 };
+    std::atomic<double> transportBpm     { 120.0 };
+    std::atomic<bool>   transportPlaying { false };
 
     static const ChoreographyOffset kZeroOffset;
 };

@@ -10,9 +10,14 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-21T12:00:00Z | BL-113 CL-P4 BeatSyncSystem | PASS | `BeatSyncSystem.h/.cpp: beat-boundary detection, teleport gain-dip, 16-step sequencer; 5 APVTS params; playhead transport wired; CMakeLists probes updated; build clean; RT non_allowlisted=0` |
 | 2026-03-21T11:00:00Z | BL-113 CL-P3 PathSystem | PASS | `PathSystem.h/.cpp: 6 path types, velocity Doppler hook; 23 APVTS params registered and wired; CMakeLists probes updated; build clean (all targets); RT non_allowlisted=0` |
 | 2026-03-21T10:00:00Z | BL-113 CL-P2 FormationSystem | PASS | `FormationSystem.h/.cpp: 7 types (Line/Arc/Circle/Grid/Spiral/SphereSurface/Custom), morph animation, spread delta; 16 APVTS params registered and wired; PhysicsWorker active-emitter count; build clean; RT non_allowlisted=0; docs freshness PASS` |
 | 2026-03-20T12:00:00Z | BL-113 CL-P1 ChoreographyWorker infrastructure | PASS | `AudioRingBuffer.h + ChoreographyWorker.h/.cpp created; PhysicsWorker tick integration; choro_enable APVTS wired; build clean; RT audit non_allowlisted=0; docs freshness PASS` |
+| 2026-03-20T20:41:04Z | BL-108 bundled transport-contract proof packet | PASS | `BL-108 parent wrapper now bundles BL-106 host-facing physics proof, BL-031 deterministic transport proof, and the scoped BL-108 visual packet in one replayable artifact at TestEvidence/bl108_host_visible_proof_20260320T204104Z/` |
+| 2026-03-20T19:23:33Z | BL-108 bundled host-visible proof packet | PASS | `New parent wrapper now packages BL-106 host-facing physics evidence and the scoped BL-108 viewport proof into one replayable packet at TestEvidence/bl108_host_visible_proof_20260320T192333Z/` |
+| 2026-03-20T19:11:24Z | BL-108 selection HUD truth slice E | PASS | `BL-108 analytical HUD now exposes bridged coupling, density, boundary-mask state, and tempo; packetized proof lane stayed green with UI-P1-108E, and the standalone build recovered after wiring BeatSyncSystem.cpp into CMake` |
+| 2026-03-20T19:07:30Z | BL-108 collision cue slice | PASS | `Production foundation now turns bridged collisionMask/collisionEnergy into a bounded impact cue inside the existing physics surface, and the packetized BL-108 proof lane stayed green with UI-P1-108D` |
 | 2026-03-20T18:59:49Z | BL-108 packetized visual proof lane | PASS | `qa-bl108-physics-reactive-visual-proof-mac.sh now produces a machine-readable standalone proof packet with passing BL-108 scoped selftest and standalone smoke artifacts` |
 | 2026-03-20T18:25:40Z | BL-108 beat-sync quadrant slice C | PASS | `Native transport beat phase now drives the amber 6->9 quadrant, sweep dot, and bounded beat/downbeat atmosphere cues in the production viewport; dedicated BL-108 selftest and standalone smoke both stayed green` |
 | 2026-03-20T07:06:40Z | BL-108 selftest recovery slice B | PASS | `Dedicated BL-108 selftest now passes after replacing the direct->open fallback with bounded direct bootstrap retries and making the physics ring assertion deterministic against synthetic projected positions; standalone smoke stayed green` |
@@ -78,6 +83,9 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T19:23:33Z | BL-108 bundled host-visible proof packet | PASS | `TestEvidence/bl108_host_visible_proof_20260320T192333Z/ now packages the BL-106 host-visible physics sub-packet and the current scoped BL-108 visual sub-packet under one parent wrapper` |
+| 2026-03-20T19:11:24Z | BL-108 selection HUD truth slice E | PASS | `TestEvidence/bl108_visual_proof_20260320T191124Z/ now proves UI-P1-108E: the selected emitter shows Couple, Density, Boundary, and Tempo from bridged BL-108 telemetry` |
+| 2026-03-20T19:07:30Z | BL-108 collision cue slice | PASS | `TestEvidence/bl108_visual_proof_20260320T190730Z/ now proves the bounded collision impact cue with the new UI-P1-108D check, while standalone smoke stayed green in TestEvidence/standalone_ui_smoke_20260320T190737Z/` |
 | 2026-03-20T18:59:49Z | BL-108 packetized visual proof lane | PASS | `TestEvidence/bl108_visual_proof_20260320T185949Z/ now captures the replayable BL-108 standalone proof contract with status.tsv, validation_matrix.tsv, and summary.md` |
 | 2026-03-20T18:25:40Z | BL-108 beat-sync quadrant slice C | PASS | `Dedicated BL-108 selftest now proves both the physics quadrant and the beat-sync quadrant in TestEvidence/locusq_production_p0_selftest_20260320T182540Z.json, and standalone smoke stayed green in TestEvidence/standalone_ui_smoke_20260320T182552Z/` |
 | 2026-03-20T07:06:40Z | BL-108 selftest recovery slice B | PASS | `Dedicated BL-108 selftest now passes in TestEvidence/locusq_production_p0_selftest_20260320T070640Z.json, and the standalone smoke regression rerun stayed green in TestEvidence/standalone_ui_smoke_20260320T070653Z/` |

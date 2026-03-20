@@ -206,6 +206,18 @@ Last Modified Date: 2026-03-21
 | `choro_path_walk_bounds` | Walk Bounds | Float | 0.1 – 20.0 | 5.0 | m | Half-width of axis-aligned bounding box; walk position is clamped per axis. |
 | `choro_path_walk_seed` | Walk Seed | Int | 0 – 65535 | 42 | — | PRNG seed; changing the seed resets the walk position and re-seeds the RNG. |
 
+### Choreography Lab — Beat-Sync (CL-P4)
+
+All params pending BL-114 for WebView surface.
+
+| Parameter ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:---|:---|:---|:---|:---|:---|
+| `choro_beat_enable` | Beat Sync Enable | Bool | — | false | — | Master enable for beat-sync choreography sub-system. When off, BeatSyncSystem produces no beat events and no gain-dip. |
+| `choro_beat_division` | Beat Division | Enum | Whole / Half / Quarter / Eighth / Sixteenth | Quarter | — | Grid quantization unit. Whole = 4 PPQ, Half = 2 PPQ, Quarter = 1 PPQ, Eighth = 0.5 PPQ, Sixteenth = 0.25 PPQ. |
+| `choro_beat_mode` | Beat Mode | Enum | Snap / Glide / Teleport | Snap | — | Behavior on beat boundary. Snap: immediate formation step (no gain change). Glide: interpolate (future). Teleport: instant jump + gain-dip envelope. |
+| `choro_teleport_dip_db` | Teleport Dip Depth | Float | −60.0 – 0.0 | −18.0 | dB | Gain reduction depth on Teleport beat. Only active when `choro_beat_mode = Teleport`. Negative values only; clipped to [−60, 0]. |
+| `choro_teleport_decay_ms` | Teleport Decay | Float | 1.0 – 2000.0 | 100.0 | ms | One-pole recovery time for the Teleport gain-dip envelope. Gain recovers from dip toward 1.0 with τ = decayMs/1000. |
+
 ### Emitter Identity
 
 | ID | Name | Type | Range | Default | Unit | Notes |

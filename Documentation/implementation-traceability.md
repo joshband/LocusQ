@@ -1378,6 +1378,18 @@ Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreo
 
 Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P3 block). Velocity computed as `(pos − lastPos) / dt` for Doppler hook; exposed via `ChoreographyOffset.velocity`.
 
+## Choreography Lab Parameters (BL-113 CL-P4)
+
+| Parameter ID | Group | Implementation Surface | UI Surface | Notes |
+|:---|:---|:---|:---|:---|
+| `choro_beat_enable` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setBeatEnabled()` | Pending BL-114 | Bool. Master enable for BeatSyncSystem. When false, no beat events and no gain-dip. |
+| `choro_beat_division` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setBeatDivision()` | Pending BL-114 | Choice 0–4 (Whole/Half/Quarter/Eighth/Sixteenth). Grid quantization unit in PPQ. |
+| `choro_beat_mode` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setBeatMode()` | Pending BL-114 | Choice 0–2 (Snap/Glide/Teleport). Behavior triggered on beat boundary crossing. |
+| `choro_teleport_dip_db` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setTeleportDipDb()` | Pending BL-114 | Float −60.0–0.0 dB. Gain reduction on Teleport beat. Active only when mode=Teleport. |
+| `choro_teleport_decay_ms` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setTeleportDecayMs()` | Pending BL-114 | Float 1.0–2000.0 ms. One-pole gain recovery time; τ = decayMs/1000. |
+
+Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P4 block). Transport state (PPQ position, BPM, isPlaying) read from JUCE playhead in `processBlock()` and stored to `ChoreographyWorker` atomics; read on PhysicsWorker thread in `compute()`.
+
 ## Notes
 
 - Room chain order in renderer: emitter spatialization -> `EarlyReflections` -> `FDNReverb` -> speaker delay/trim -> master gain/output.

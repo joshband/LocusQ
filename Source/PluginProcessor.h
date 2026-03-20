@@ -574,6 +574,13 @@ private:
     std::atomic<float>* choroPathWalkBoundsParam  = nullptr;
     std::atomic<float>* choroPathWalkSeedParam    = nullptr;
 
+    // CL-P4: Beat-sync raw param pointers
+    std::atomic<float>* choroBeatEnableParam      = nullptr;
+    std::atomic<float>* choroBeatDivisionParam    = nullptr;
+    std::atomic<float>* choroBeatModeParam        = nullptr;
+    std::atomic<float>* choroTeleportDipDbParam   = nullptr;
+    std::atomic<float>* choroTeleportDecayMsParam = nullptr;
+
     std::atomic<float>* emitGainParam = nullptr;
     std::atomic<float>* emitSpreadParam = nullptr;
     std::atomic<float>* emitDirectivityParam = nullptr;
