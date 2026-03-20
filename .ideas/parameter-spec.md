@@ -2,7 +2,7 @@ Title: LocusQ Parameter Specification
 Document Type: Parameter Specification
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-20
 
 # LocusQ - Parameter Specification
 
@@ -149,6 +149,12 @@ Last Modified Date: 2026-03-18
 | `anim_loop` | Loop Animation | Bool | On / Off | Off | — | Loop internal keyframe sequence |
 | `anim_speed` | Animation Speed | Float | 0.1 – 10.0 | 1.0 | x | Playback rate multiplier for internal timeline |
 | `anim_sync` | Transport Sync | Bool | On / Off | On | — | Sync internal timeline to DAW transport |
+
+### Choreography Lab (CL-P1 — infrastructure gate)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `choro_enable` | Choreography Enable | Bool | On / Off | Off | — | Master enable for Choreography Lab (ADR-0020 Layer 3). When off, ChoreographyWorker produces zero offsets and behaviour is identical to the pre-choreography baseline. CL-P2+ params added per phase. |
 
 ### Emitter Identity
 

@@ -64,6 +64,13 @@ enum class RegistrationTransitionFallbackReason : int
     ReleaseIncomplete = 6
 };
 
+struct TransportTimelineSyncSnapshot
+{
+    double timeSeconds = 0.0;
+    std::optional<double> ppqPosition;
+    std::optional<double> bpm;
+};
+
 //==============================================================================
 /**
  * LocusQ - Quadraphonic 3D Spatial Audio Tool
@@ -441,6 +448,66 @@ private:
     std::array<std::atomic<float>, kPhysicsDAWSlotCount> physTransientHostPublished {};
     std::array<std::atomic<bool>, kPhysicsDAWSlotCount> physTransientHostDirty {};
     std::array<float, kPhysicsDAWSlotCount> physTransientHostMirrorState {};
+    std::atomic<float>* physDebugActiveSlotParam = nullptr;
+    std::atomic<float>* physDebugActiveEmittersParam = nullptr;
+    std::atomic<float>* physDebugCoordinatedWorkerParam = nullptr;
+    std::atomic<float>* physDebugBoidsDensityParam = nullptr;
+    std::atomic<float>* physDebugWorkerSlotActiveParam = nullptr;
+    std::atomic<float>* physDebugWorkerBoidsActiveParam = nullptr;
+    std::atomic<float>* physDebugBoidsGroupSizeParam = nullptr;
+    std::atomic<float>* physDebugWorkerPosXParam = nullptr;
+    std::atomic<float>* physDebugWorkerPosYParam = nullptr;
+    std::atomic<float>* physDebugWorkerPosZParam = nullptr;
+    std::atomic<float>* physDebugAlignNeighborsParam = nullptr;
+    std::atomic<float>* physDebugCohNeighborsParam = nullptr;
+    juce::RangedAudioParameter* physDebugActiveSlotNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugActiveEmittersNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugCoordinatedWorkerNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugBoidsDensityNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugWorkerSlotActiveNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugWorkerBoidsActiveNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugBoidsGroupSizeNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugWorkerPosXNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugWorkerPosYNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugWorkerPosZNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugAlignNeighborsNotifyTarget = nullptr;
+    juce::RangedAudioParameter* physDebugCohNeighborsNotifyTarget = nullptr;
+    std::atomic<float> physDebugActiveSlotPending { -1.0f };
+    std::atomic<float> physDebugActiveSlotPublished { -1.0f };
+    std::atomic<bool> physDebugActiveSlotDirty { false };
+    std::atomic<float> physDebugActiveEmittersPending { 0.0f };
+    std::atomic<float> physDebugActiveEmittersPublished { 0.0f };
+    std::atomic<bool> physDebugActiveEmittersDirty { false };
+    std::atomic<float> physDebugCoordinatedWorkerPending { 0.0f };
+    std::atomic<float> physDebugCoordinatedWorkerPublished { 0.0f };
+    std::atomic<bool> physDebugCoordinatedWorkerDirty { false };
+    std::atomic<float> physDebugBoidsDensityPending { 0.0f };
+    std::atomic<float> physDebugBoidsDensityPublished { 0.0f };
+    std::atomic<bool> physDebugBoidsDensityDirty { false };
+    std::atomic<float> physDebugWorkerSlotActivePending { 0.0f };
+    std::atomic<float> physDebugWorkerSlotActivePublished { 0.0f };
+    std::atomic<bool> physDebugWorkerSlotActiveDirty { false };
+    std::atomic<float> physDebugWorkerBoidsActivePending { 0.0f };
+    std::atomic<float> physDebugWorkerBoidsActivePublished { 0.0f };
+    std::atomic<bool> physDebugWorkerBoidsActiveDirty { false };
+    std::atomic<float> physDebugBoidsGroupSizePending { 0.0f };
+    std::atomic<float> physDebugBoidsGroupSizePublished { 0.0f };
+    std::atomic<bool> physDebugBoidsGroupSizeDirty { false };
+    std::atomic<float> physDebugWorkerPosXPending { 0.0f };
+    std::atomic<float> physDebugWorkerPosXPublished { 0.0f };
+    std::atomic<bool> physDebugWorkerPosXDirty { false };
+    std::atomic<float> physDebugWorkerPosYPending { 0.0f };
+    std::atomic<float> physDebugWorkerPosYPublished { 0.0f };
+    std::atomic<bool> physDebugWorkerPosYDirty { false };
+    std::atomic<float> physDebugWorkerPosZPending { 0.0f };
+    std::atomic<float> physDebugWorkerPosZPublished { 0.0f };
+    std::atomic<bool> physDebugWorkerPosZDirty { false };
+    std::atomic<float> physDebugAlignNeighborsPending { 0.0f };
+    std::atomic<float> physDebugAlignNeighborsPublished { 0.0f };
+    std::atomic<bool> physDebugAlignNeighborsDirty { false };
+    std::atomic<float> physDebugCohNeighborsPending { 0.0f };
+    std::atomic<float> physDebugCohNeighborsPublished { 0.0f };
+    std::atomic<bool> physDebugCohNeighborsDirty { false };
     std::atomic<float>* rendPhysRateParam = nullptr;
     std::atomic<float>* rendPhysPauseParam = nullptr;
     std::atomic<float>* rendPhysWallsParam = nullptr;
@@ -462,6 +529,7 @@ private:
     std::atomic<float>* animLoopParam = nullptr;
     std::atomic<float>* animSpeedParam = nullptr;
     std::atomic<float>* animSyncParam = nullptr;
+    std::atomic<float>* choroEnableParam = nullptr;   // CL-P1
     std::atomic<float>* emitGainParam = nullptr;
     std::atomic<float>* emitSpreadParam = nullptr;
     std::atomic<float>* emitDirectivityParam = nullptr;
@@ -535,7 +603,7 @@ private:
     std::atomic<bool> keyframeTimelinePublishedLooping { false };
     std::atomic<float> keyframeTimelinePublishedPlaybackRate { 1.0f };
     void initialiseDefaultKeyframeTimeline (KeyframeTimeline& timeline) const;
-    std::optional<double> getTransportTimeSeconds() const;
+    std::optional<TransportTimelineSyncSnapshot> getTransportTimelineSyncSnapshot() const;
     void publishKeyframeTimelineStateToRtLocked();
     void syncPendingKeyframeTimelineForAudioThread() noexcept;
     void publishKeyframeTimelinePlaybackState (const KeyframeTimeline& timeline) noexcept;

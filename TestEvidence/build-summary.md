@@ -10,6 +10,11 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T12:00:00Z | BL-113 CL-P1 ChoreographyWorker infrastructure | PASS | `AudioRingBuffer.h + ChoreographyWorker.h/.cpp created; PhysicsWorker tick integration; choro_enable APVTS wired; build clean; RT audit non_allowlisted=0; docs freshness PASS` |
+| 2026-03-20T01:57:02Z | BL-107 bridge-truth brightness slice | PASS | `Production foundation now consumes a native emitter brightness field from the scene snapshot, and the atmosphere responds to bridged brightness alongside color, RMS, gain, and collision state` |
+| 2026-03-20T01:51:19Z | BL-107 viewport truth-wiring slice B2 | PASS | `Production foundation now reads scene gain as actual dB and tints the atmosphere from emitter color plus live RMS/collision state; targeted BL-107 selftest and standalone smoke both stayed green` |
+| 2026-03-20T01:50:33Z | BL-107 bridge-truth RMS slice | PASS | `Production foundation energy now resolves from native emitter rms instead of a neutral fallback, and the dedicated BL-107 selftest still passes with an explicit HUD energy assertion` |
+| 2026-03-20T01:45:02Z | BL-107 targeted viewport foundation selftest lane | PASS | `LOCUSQ_UI_SELFTEST_SCOPE=bl107 now proves the production foundation scaffold exists, the ATM/ANA layer toggles behave, the analytical HUD follows selection truthfully, and the layer hides outside supported modes` |
 | 2026-03-20T01:35:00Z | BL-112 Choreography Lab authority and parameter contract — Done closeout sync | PASS | `T0 docs lane; namespace + traceability gate frozen; production-candidate/lab-only boundary explicit; docs freshness PASS` |
 | 2026-03-20T01:32:00Z | BL-111 three-mode UI consistency and overflow audit — Done closeout sync | PASS | `docs freshness PASS; backlog index, status.json, build-summary, validation-trend synchronized; runbook moved to done/` |
 | 2026-03-20T00:06:14Z | BL-107 production viewport foundation scaffold slice B1 | PASS_WITH_WARNING | `Shipping viewport now includes the atmosphere canvas, ATM/ANA layer toggles, base state-ring overlay, and selection HUD scaffold; standalone smoke and canonical selftest stayed green, but targeted BL-107 selftest assertions are still not wired` |
@@ -64,6 +69,10 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T01:57:02Z | BL-107 bridge-truth brightness slice | PASS | `Production foundation now consumes a native emitter brightness field from the scene snapshot, and the atmosphere responds to bridged brightness alongside color, RMS, gain, and collision state` |
+| 2026-03-20T01:51:19Z | BL-107 viewport truth-wiring slice B2 | PASS | `Production foundation now reads scene gain as actual dB and tints the atmosphere from emitter color plus live RMS/collision state; targeted BL-107 selftest and standalone smoke both stayed green` |
+| 2026-03-20T01:50:33Z | BL-107 bridge-truth RMS slice | PASS | `Production foundation energy now resolves from native emitter rms instead of a neutral fallback, and the dedicated BL-107 selftest still passes with an explicit HUD energy assertion` |
+| 2026-03-20T01:45:02Z | BL-107 targeted viewport foundation selftest lane | PASS | `LOCUSQ_UI_SELFTEST_SCOPE=bl107 now proves the production foundation scaffold exists, the ATM/ANA layer toggles behave, the analytical HUD follows selection truthfully, and the layer hides outside supported modes` |
 | 2026-03-20T00:01:50Z | BL-111 renderer authority polish slice E | PASS | `Renderer authority card got a final typography/spacing polish; canonical selftest and standalone smoke both stayed green` |
 | 2026-03-19T23:56:56Z | BL-111 calibrate evidence closeout capture | PASS | `Canonical selftest stayed green with selftest_final_mode=calibrate, and the fresh launch-size CALIBRATE capture closes the last missing proof gap for BL-111` |
 | 2026-03-19T23:47:26Z | BL-111 renderer authority condensation slice D | PASS_WITH_WARNING | `Renderer authority card is materially calmer after moving lower-detail status copy behind disclosure; smoke and selftest stayed green, but BL-111 still needs one fresh CALIBRATE capture before full closeout` |

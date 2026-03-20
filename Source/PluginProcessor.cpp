@@ -715,13 +715,15 @@ constexpr std::array<const char*, 35> kEmitterPresetParameterIds
     "anim_enable", "anim_mode", "anim_loop", "anim_speed", "anim_sync"
 };
 
-constexpr std::array<const char*, 5> kCurveNames
+constexpr std::array<const char*, 7> kCurveNames
 {
     "linear",
     "easeIn",
     "easeOut",
     "easeInOut",
-    "step"
+    "step",
+    "glide",
+    "teleport"
 };
 
 constexpr std::array<const char*, 4> kChoreographyPackIds
@@ -1273,6 +1275,29 @@ float computeMonoRmsLinear (const float* samples, int numSamples) noexcept
     return static_cast<float> (std::sqrt (sumSquares / static_cast<double> (numSamples)));
 }
 
+float computeMonoBrightness (const float* samples, int numSamples) noexcept
+{
+    if (samples == nullptr || numSamples <= 1)
+        return 0.0f;
+
+    double sumAbs = 0.0;
+    double sumDeltaAbs = 0.0;
+    auto previous = static_cast<double> (samples[0]);
+    sumAbs += std::abs (previous);
+
+    for (int i = 1; i < numSamples; ++i)
+    {
+        const auto current = static_cast<double> (samples[i]);
+        sumAbs += std::abs (current);
+        sumDeltaAbs += std::abs (current - previous);
+        previous = current;
+    }
+
+    const auto denom = juce::jmax (1.0e-9, sumAbs);
+    const auto normalized = juce::jlimit (0.0, 1.0, (sumDeltaAbs / denom) * 0.5);
+    return static_cast<float> (normalized);
+}
+
 struct AuditionPhysicsReactiveInput
 {
     bool active = false;
@@ -1482,6 +1507,31 @@ LocusQAudioProcessor::LocusQAudioProcessor()
         physTransientHostMirrorState[i] = 0.0f;
     }
 
+    physDebugActiveSlotParam = apvts.getRawParameterValue ("phys_dbg_active_slot");
+    physDebugActiveEmittersParam = apvts.getRawParameterValue ("phys_dbg_active_emitters");
+    physDebugCoordinatedWorkerParam = apvts.getRawParameterValue ("phys_dbg_coordinated_worker");
+    physDebugBoidsDensityParam = apvts.getRawParameterValue ("phys_dbg_boids_density");
+    physDebugWorkerSlotActiveParam = apvts.getRawParameterValue ("phys_dbg_worker_slot_active");
+    physDebugWorkerBoidsActiveParam = apvts.getRawParameterValue ("phys_dbg_worker_boids_active");
+    physDebugBoidsGroupSizeParam = apvts.getRawParameterValue ("phys_dbg_boids_group_size");
+    physDebugWorkerPosXParam = apvts.getRawParameterValue ("phys_dbg_worker_pos_x");
+    physDebugWorkerPosYParam = apvts.getRawParameterValue ("phys_dbg_worker_pos_y");
+    physDebugWorkerPosZParam = apvts.getRawParameterValue ("phys_dbg_worker_pos_z");
+    physDebugAlignNeighborsParam = apvts.getRawParameterValue ("phys_dbg_align_neighbors");
+    physDebugCohNeighborsParam = apvts.getRawParameterValue ("phys_dbg_coh_neighbors");
+    physDebugActiveSlotNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_active_slot"));
+    physDebugActiveEmittersNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_active_emitters"));
+    physDebugCoordinatedWorkerNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_coordinated_worker"));
+    physDebugBoidsDensityNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_boids_density"));
+    physDebugWorkerSlotActiveNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_worker_slot_active"));
+    physDebugWorkerBoidsActiveNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_worker_boids_active"));
+    physDebugBoidsGroupSizeNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_boids_group_size"));
+    physDebugWorkerPosXNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_worker_pos_x"));
+    physDebugWorkerPosYNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_worker_pos_y"));
+    physDebugWorkerPosZNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_worker_pos_z"));
+    physDebugAlignNeighborsNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_align_neighbors"));
+    physDebugCohNeighborsNotifyTarget = dynamic_cast<juce::RangedAudioParameter*> (apvts.getParameter ("phys_dbg_coh_neighbors"));
+
     auto rawParam = [this] (const char* paramId) -> std::atomic<float>*
     {
         return apvts.getRawParameterValue (paramId);
@@ -1508,6 +1558,7 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     animLoopParam = rawParam ("anim_loop");
     animSpeedParam = rawParam ("anim_speed");
     animSyncParam = rawParam ("anim_sync");
+    choroEnableParam = rawParam ("choro_enable");   // CL-P1
     emitGainParam = rawParam ("emit_gain");
     emitSpreadParam = rawParam ("emit_spread");
     emitDirectivityParam = rawParam ("emit_directivity");
@@ -1711,6 +1762,71 @@ void LocusQAudioProcessor::handleAsyncUpdate()
         parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
         physTransientHostPublished[slot].store (value, std::memory_order_release);
     }
+
+    auto publishDebugValue = [] (std::atomic<bool>& dirty,
+                                 std::atomic<float>& pending,
+                                 std::atomic<float>& published,
+                                 juce::RangedAudioParameter* parameter)
+    {
+        if (! dirty.exchange (false, std::memory_order_acq_rel))
+            return;
+
+        if (parameter == nullptr)
+            return;
+
+        const auto value = pending.load (std::memory_order_acquire);
+        parameter->setValueNotifyingHost (parameter->convertTo0to1 (value));
+        published.store (value, std::memory_order_release);
+    };
+
+    publishDebugValue (physDebugActiveSlotDirty,
+                       physDebugActiveSlotPending,
+                       physDebugActiveSlotPublished,
+                       physDebugActiveSlotNotifyTarget);
+    publishDebugValue (physDebugActiveEmittersDirty,
+                       physDebugActiveEmittersPending,
+                       physDebugActiveEmittersPublished,
+                       physDebugActiveEmittersNotifyTarget);
+    publishDebugValue (physDebugCoordinatedWorkerDirty,
+                       physDebugCoordinatedWorkerPending,
+                       physDebugCoordinatedWorkerPublished,
+                       physDebugCoordinatedWorkerNotifyTarget);
+    publishDebugValue (physDebugBoidsDensityDirty,
+                       physDebugBoidsDensityPending,
+                       physDebugBoidsDensityPublished,
+                       physDebugBoidsDensityNotifyTarget);
+    publishDebugValue (physDebugWorkerSlotActiveDirty,
+                       physDebugWorkerSlotActivePending,
+                       physDebugWorkerSlotActivePublished,
+                       physDebugWorkerSlotActiveNotifyTarget);
+    publishDebugValue (physDebugWorkerBoidsActiveDirty,
+                       physDebugWorkerBoidsActivePending,
+                       physDebugWorkerBoidsActivePublished,
+                       physDebugWorkerBoidsActiveNotifyTarget);
+    publishDebugValue (physDebugBoidsGroupSizeDirty,
+                       physDebugBoidsGroupSizePending,
+                       physDebugBoidsGroupSizePublished,
+                       physDebugBoidsGroupSizeNotifyTarget);
+    publishDebugValue (physDebugWorkerPosXDirty,
+                       physDebugWorkerPosXPending,
+                       physDebugWorkerPosXPublished,
+                       physDebugWorkerPosXNotifyTarget);
+    publishDebugValue (physDebugWorkerPosYDirty,
+                       physDebugWorkerPosYPending,
+                       physDebugWorkerPosYPublished,
+                       physDebugWorkerPosYNotifyTarget);
+    publishDebugValue (physDebugWorkerPosZDirty,
+                       physDebugWorkerPosZPending,
+                       physDebugWorkerPosZPublished,
+                       physDebugWorkerPosZNotifyTarget);
+    publishDebugValue (physDebugAlignNeighborsDirty,
+                       physDebugAlignNeighborsPending,
+                       physDebugAlignNeighborsPublished,
+                       physDebugAlignNeighborsNotifyTarget);
+    publishDebugValue (physDebugCohNeighborsDirty,
+                       physDebugCohNeighborsPending,
+                       physDebugCohNeighborsPublished,
+                       physDebugCohNeighborsNotifyTarget);
 
     updateHostDisplay();
 }
@@ -1982,6 +2098,12 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             {
                 // Publish audio buffer pointer for renderer to consume
                 sceneGraph.getSlot (activeEmitterSlot).setAudioBuffer (
+                    buffer.getArrayOfReadPointers(),
+                    buffer.getNumChannels(),
+                    buffer.getNumSamples());
+
+                // CL-P1: feed audio ring buffer for ChoreographyWorker feature extraction.
+                physicsWorker.getChoreographyWorker().pushAudioBlock (
                     buffer.getArrayOfReadPointers(),
                     buffer.getNumChannels(),
                     buffer.getNumSamples());
@@ -2604,22 +2726,38 @@ bool LocusQAudioProcessor::copyPublishedBoidsHostDebugSnapshot (BoidsHostDebugSn
 }
 #endif
 
-std::optional<double> LocusQAudioProcessor::getTransportTimeSeconds() const
+std::optional<TransportTimelineSyncSnapshot> LocusQAudioProcessor::getTransportTimelineSyncSnapshot() const
 {
     if (auto* playHead = getPlayHead())
     {
         if (const auto position = playHead->getPosition())
         {
+            TransportTimelineSyncSnapshot snapshot;
+            if (const auto ppqPosition = position->getPpqPosition())
+                snapshot.ppqPosition = *ppqPosition;
+
+            if (const auto bpm = position->getBpm())
+                snapshot.bpm = *bpm;
+
             if (const auto timeSeconds = position->getTimeInSeconds())
-                return *timeSeconds;
+            {
+                snapshot.timeSeconds = *timeSeconds;
+                return snapshot;
+            }
 
             if (const auto samplePosition = position->getTimeInSamples())
-                return static_cast<double> (*samplePosition) / juce::jmax (1.0, currentSampleRate);
-
-            if (const auto ppq = position->getPpqPosition())
             {
-                if (const auto bpm = position->getBpm(); bpm && *bpm > 1.0e-6)
-                    return (*ppq * 60.0) / *bpm;
+                snapshot.timeSeconds = static_cast<double> (*samplePosition) / juce::jmax (1.0, currentSampleRate);
+                return snapshot;
+            }
+
+            if (snapshot.ppqPosition.has_value())
+            {
+                if (snapshot.bpm.has_value() && *snapshot.bpm > 1.0e-6)
+                {
+                    snapshot.timeSeconds = (*snapshot.ppqPosition * 60.0) / *snapshot.bpm;
+                    return snapshot;
+                }
             }
         }
     }
@@ -2664,6 +2802,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     float posY = loadParam (posYParam);
     float posZ = loadParam (posZParam);
     float sizeUniform = loadParam (sizeUniformParam);
+    std::optional<TimelinePoint3D> formationPosition;
 
     const bool animationEnabled = loadParam (animEnableParam) > 0.5f;
     const bool internalAnimation = animationEnabled
@@ -2681,10 +2820,22 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         bool advancedFromTransport = false;
         if (loadParam (animSyncParam) > 0.5f)
         {
-            if (const auto transportTimeSeconds = getTransportTimeSeconds())
+            if (const auto transportSnapshot = getTransportTimelineSyncSnapshot())
             {
-                const auto playbackSeconds =
-                    (*transportTimeSeconds) * static_cast<double> (keyframeTimeline.getPlaybackRate());
+                auto playbackSeconds = transportSnapshot->timeSeconds;
+
+                if (keyframeTimeline.hasBeatSyncCurves()
+                    && transportSnapshot->ppqPosition.has_value()
+                    && transportSnapshot->bpm.has_value()
+                    && *transportSnapshot->bpm > 1.0e-6)
+                {
+                    const auto beatDivision = keyframeTimeline.getPreferredBeatDivision().value_or (BeatDivision::beat);
+                    const auto quantizedPpq = quantizePpqToBeatDivision (*transportSnapshot->ppqPosition,
+                                                                         beatDivision);
+                    playbackSeconds = (quantizedPpq * 60.0) / *transportSnapshot->bpm;
+                }
+
+                playbackSeconds *= static_cast<double> (keyframeTimeline.getPlaybackRate());
                 keyframeTimeline.setCurrentTimeSeconds (playbackSeconds);
                 advancedFromTransport = true;
             }
@@ -2698,7 +2849,10 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             keyframeTimeline.advance (blockDurationSeconds);
         }
 
-        if (coordMode < 0.5f)
+        formationPosition = keyframeTimeline.resolveFormationPositionAtCurrentTime (activeEmitterSlot);
+        const auto proceduralPathPosition = keyframeTimeline.resolveProceduralPathPositionAtCurrentTime();
+
+        if (! formationPosition.has_value() && coordMode < 0.5f)
         {
             if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosAzimuth))
                 azimuthDeg = *value;
@@ -2707,7 +2861,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosDistance))
                 distance = *value;
         }
-        else
+        else if (! formationPosition.has_value())
         {
             if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosX))
                 posX = *value;
@@ -2715,6 +2869,13 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
                 posY = *value;
             if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackPosZ))
                 posZ = *value;
+        }
+
+        if (proceduralPathPosition.has_value())
+        {
+            posX = proceduralPathPosition->x;
+            posY = proceduralPathPosition->z;
+            posZ = proceduralPathPosition->y;
         }
 
         if (const auto value = keyframeTimeline.evaluateTrackAtCurrentTime (kTrackSizeUniform))
@@ -2725,7 +2886,13 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
     Vec3 basePosition;
 
-    if (coordMode < 0.5f) // Spherical
+    if (formationPosition.has_value())
+    {
+        basePosition.x = formationPosition->x;
+        basePosition.y = formationPosition->y;
+        basePosition.z = formationPosition->z;
+    }
+    else if (coordMode < 0.5f) // Spherical
     {
         const float azimuthRad = azimuthDeg * juce::MathConstants<float>::pi / 180.0f;
         const float elevationRad = elevationDeg * juce::MathConstants<float>::pi / 180.0f;
@@ -2772,6 +2939,10 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
     const bool physicsEnabled = loadParam (physEnableParam) > 0.5f;
     data.physicsEnabled = physicsEnabled;
+
+    // CL-P1: propagate choro_enable to the ChoreographyWorker each block.
+    const bool choroEnabled = loadParam (choroEnableParam) > 0.5f;
+    physicsWorker.getChoreographyWorker().setEnabled (choroEnabled);
 
     const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();
     physicsEngine.setUpdateRateIndex (physicsRateIndex);
@@ -3143,6 +3314,105 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
             // gainTransient bypasses freeze state - one-shot bursts always flow through
         }
     }
+
+    if (physDebugActiveSlotParam != nullptr)
+        physDebugActiveSlotParam->store (static_cast<float> (activeEmitterSlot));
+    if (physDebugActiveEmittersParam != nullptr)
+        physDebugActiveEmittersParam->store (static_cast<float> (sceneGraph.getActiveEmitterCount()));
+    if (physDebugCoordinatedWorkerParam != nullptr)
+        physDebugCoordinatedWorkerParam->store (coordinatedWorkerActive ? 1.0f : 0.0f);
+
+    const bool workerSlotActive = physicsWorker.isSlotActive (activeEmitterSlot);
+    const bool workerBoidsActive = boidsSystem.isInActiveGroup (activeEmitterSlot);
+    const float boidsGroupSize = static_cast<float> (boidsSystem.getGroupSizeForEmitter (activeEmitterSlot));
+    const auto workerStateForDebug = physicsWorker.getEmitterState (activeEmitterSlot);
+    const float alignNeighbors = static_cast<float> (boidsSystem.getAlignNeighborCount (activeEmitterSlot));
+    const float cohNeighbors = static_cast<float> (boidsSystem.getCohNeighborCount (activeEmitterSlot));
+    const auto boidsDensity = juce::jlimit (0.0f, 1.0f, boidsSystem.getFlockDensity (activeEmitterSlot));
+    if (physDebugBoidsDensityParam != nullptr)
+        physDebugBoidsDensityParam->store (boidsDensity);
+    if (physDebugWorkerSlotActiveParam != nullptr)
+        physDebugWorkerSlotActiveParam->store (workerSlotActive ? 1.0f : 0.0f);
+    if (physDebugWorkerBoidsActiveParam != nullptr)
+        physDebugWorkerBoidsActiveParam->store (workerBoidsActive ? 1.0f : 0.0f);
+    if (physDebugBoidsGroupSizeParam != nullptr)
+        physDebugBoidsGroupSizeParam->store (boidsGroupSize);
+    if (physDebugWorkerPosXParam != nullptr)
+        physDebugWorkerPosXParam->store (workerStateForDebug.position.x);
+    if (physDebugWorkerPosYParam != nullptr)
+        physDebugWorkerPosYParam->store (workerStateForDebug.position.y);
+    if (physDebugWorkerPosZParam != nullptr)
+        physDebugWorkerPosZParam->store (workerStateForDebug.position.z);
+    if (physDebugAlignNeighborsParam != nullptr)
+        physDebugAlignNeighborsParam->store (alignNeighbors);
+    if (physDebugCohNeighborsParam != nullptr)
+        physDebugCohNeighborsParam->store (cohNeighbors);
+
+    auto queueDebugHostMirror = [this] (float value,
+                                        std::atomic<float>& pending,
+                                        std::atomic<float>& published,
+                                        std::atomic<bool>& dirty)
+    {
+        const auto lastPublished = published.load (std::memory_order_acquire);
+        const bool changed = std::abs (value - lastPublished) >= kPhysicsHostMirrorNotifyEpsilon
+                          || ((value <= kPhysicsHostMirrorNotifyEpsilon)
+                              != (lastPublished <= kPhysicsHostMirrorNotifyEpsilon));
+        if (! changed)
+            return;
+
+        pending.store (value, std::memory_order_release);
+        dirty.store (true, std::memory_order_release);
+        triggerAsyncUpdate();
+    };
+
+    queueDebugHostMirror (static_cast<float> (activeEmitterSlot),
+                          physDebugActiveSlotPending,
+                          physDebugActiveSlotPublished,
+                          physDebugActiveSlotDirty);
+    queueDebugHostMirror (static_cast<float> (sceneGraph.getActiveEmitterCount()),
+                          physDebugActiveEmittersPending,
+                          physDebugActiveEmittersPublished,
+                          physDebugActiveEmittersDirty);
+    queueDebugHostMirror (coordinatedWorkerActive ? 1.0f : 0.0f,
+                          physDebugCoordinatedWorkerPending,
+                          physDebugCoordinatedWorkerPublished,
+                          physDebugCoordinatedWorkerDirty);
+    queueDebugHostMirror (boidsDensity,
+                          physDebugBoidsDensityPending,
+                          physDebugBoidsDensityPublished,
+                          physDebugBoidsDensityDirty);
+    queueDebugHostMirror (workerSlotActive ? 1.0f : 0.0f,
+                          physDebugWorkerSlotActivePending,
+                          physDebugWorkerSlotActivePublished,
+                          physDebugWorkerSlotActiveDirty);
+    queueDebugHostMirror (workerBoidsActive ? 1.0f : 0.0f,
+                          physDebugWorkerBoidsActivePending,
+                          physDebugWorkerBoidsActivePublished,
+                          physDebugWorkerBoidsActiveDirty);
+    queueDebugHostMirror (boidsGroupSize,
+                          physDebugBoidsGroupSizePending,
+                          physDebugBoidsGroupSizePublished,
+                          physDebugBoidsGroupSizeDirty);
+    queueDebugHostMirror (workerStateForDebug.position.x,
+                          physDebugWorkerPosXPending,
+                          physDebugWorkerPosXPublished,
+                          physDebugWorkerPosXDirty);
+    queueDebugHostMirror (workerStateForDebug.position.y,
+                          physDebugWorkerPosYPending,
+                          physDebugWorkerPosYPublished,
+                          physDebugWorkerPosYDirty);
+    queueDebugHostMirror (workerStateForDebug.position.z,
+                          physDebugWorkerPosZPending,
+                          physDebugWorkerPosZPublished,
+                          physDebugWorkerPosZDirty);
+    queueDebugHostMirror (alignNeighbors,
+                          physDebugAlignNeighborsPending,
+                          physDebugAlignNeighborsPublished,
+                          physDebugAlignNeighborsDirty);
+    queueDebugHostMirror (cohNeighbors,
+                          physDebugCohNeighborsPending,
+                          physDebugCohNeighborsPublished,
+                          physDebugCohNeighborsDirty);
 
 #if defined (LOCUSQ_TESTING) && LOCUSQ_TESTING
     {

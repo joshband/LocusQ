@@ -347,6 +347,9 @@ target_sources(LocusQ
         Source/PhysicsEngine.h
         Source/KeyframeTimeline.cpp
         Source/KeyframeTimeline.h
+        Source/AudioRingBuffer.h
+        Source/ChoreographyWorker.h
+        Source/ChoreographyWorker.cpp
 )
 
 # SofaHrtfLoader.h/.cpp are both isolated to the SOFA feature block.
@@ -2519,6 +2522,44 @@ if(BUILD_LOCUSQ_QA)
 
     message(STATUS "LocusQ QA: Target 'locusq_fir_truthfulness_probe' created")
 
+    # ── TL-P1 timeline track-type regression probe ───────────────────────────
+    juce_add_console_app(locusq_timeline_track_type_probe PRODUCT_NAME "LocusQ Timeline Track Type Probe")
+    juce_generate_juce_header(locusq_timeline_track_type_probe)
+
+    target_sources(locusq_timeline_track_type_probe
+        PRIVATE
+            qa/timeline_track_type_probe_main.cpp
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+    )
+
+    target_include_directories(locusq_timeline_track_type_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    target_compile_definitions(locusq_timeline_track_type_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+    )
+
+    target_link_libraries(locusq_timeline_track_type_probe
+        PRIVATE
+            juce::juce_core
+            juce::juce_events
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    message(STATUS "LocusQ QA: Target 'locusq_timeline_track_type_probe' created")
+
     # ── ctest registration ────────────────────────────────────────────────────
     # Register the three lightweight probes (no PluginProcessor / Steam Audio
     # dependency) so `ctest --test-dir <build>` provides real plugin-side signal
@@ -2551,5 +2592,11 @@ if(BUILD_LOCUSQ_QA)
     )
     set_tests_properties(locusq_fir_truthfulness_probe PROPERTIES LABELS "locusq_probe")
 
-    message(STATUS "LocusQ QA: ctest targets registered: locusq_physics_probe, locusq_physics_tier_a_probe, locusq_physics_daw_automation_probe, locusq_fir_truthfulness_probe")
+    add_test(
+        NAME locusq_timeline_track_type_probe
+        COMMAND locusq_timeline_track_type_probe
+    )
+    set_tests_properties(locusq_timeline_track_type_probe PROPERTIES LABELS "locusq_probe")
+
+    message(STATUS "LocusQ QA: ctest targets registered: locusq_physics_probe, locusq_physics_tier_a_probe, locusq_physics_daw_automation_probe, locusq_fir_truthfulness_probe, locusq_timeline_track_type_probe")
 endif()

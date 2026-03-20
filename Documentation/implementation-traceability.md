@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-03-20
 
 # LocusQ Implementation Traceability
 
@@ -1317,6 +1317,14 @@ Split-brain authority gap closed (2026-03-19): `PhysicsEngine::step()` guard add
 | `locusq_physics_runtime_collision_transient_probe` | Production path — collision burst | PASS | `gainDeltaBridge=0.236..0.249`, `gainDeltaScene=0.245..0.258`, `decayLateDeltaBridge=0.065..0.146` |
 | `scripts/reaper-phys-collision-transient-gate-mac.sh` | REAPER host — collision burst | PASS | `low_peak_transient=0.026`, `high_peak_transient=0.260`, `gate_b_gain_scale=true`, `gate_c_decay=true`, `gate_d_visible=true` |
 | `scripts/reaper-phys-daw-auto-gate-mac.sh` | REAPER host — DAW automation | READY TO RUN | Code gates verified (2026-03-19); parameter registration, freeze logic, LIVE→FROZEN snapshot guard, gainTransient bypass, AsyncUpdater RT safety confirmed via code review |
+
+## Choreography Lab Parameters (BL-113 CL-P1)
+
+| Parameter ID | Group | Implementation Surface | UI Surface | Notes |
+|:---|:---|:---|:---|:---|
+| `choro_enable` | `emitter_choreography` | `Source/processor_core/ProcessorParameterLayout.cpp`; `Source/PluginProcessor.cpp` `publishEmitterState` (APVTS → `physicsWorker.getChoreographyWorker().setEnabled()`); `Source/PluginProcessor.cpp` `processBlock` Emitter branch (audio push) | Pending BL-114 WebView controls | Bool; ADR-0020 Layer 3 master enable. When false, `ChoreographyWorker::compute()` produces zero offsets and physics baseline is unchanged. |
+
+Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P1; additional `choro_*` and `bake_*` params added per phase per `.ideas/parameter-spec.md`).
 
 ## Notes
 

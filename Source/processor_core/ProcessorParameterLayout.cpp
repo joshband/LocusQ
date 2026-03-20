@@ -31,6 +31,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     auto emitterAudioGroup = makeGroup ("emitter_audio", "Audio");
     auto emitterPhysicsGroup = makeGroup ("emitter_physics", "Physics");
     auto emitterAnimationGroup = makeGroup ("emitter_animation", "Animation");
+    auto emitterChoreographyGroup = makeGroup ("emitter_choreography", "Choreography");
     auto emitterIdentityGroup = makeGroup ("emitter_identity", "Identity");
 
     auto rendererGroup = makeGroup ("renderer", "Renderer");
@@ -339,6 +340,66 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
             label + " Physics Freeze", false));
     }
 
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_active_slot", 1 },
+        "Physics Debug Active Slot",
+        juce::NormalisableRange<float> (-1.0f, 31.0f, 1.0f), -1.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_active_emitters", 1 },
+        "Physics Debug Active Emitters",
+        juce::NormalisableRange<float> (0.0f, 32.0f, 1.0f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_coordinated_worker", 1 },
+        "Physics Debug Coordinated Worker",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_boids_density", 1 },
+        "Physics Debug Boids Density",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_worker_slot_active", 1 },
+        "Physics Debug Worker Slot Active",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_worker_boids_active", 1 },
+        "Physics Debug Worker Boids Active",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_boids_group_size", 1 },
+        "Physics Debug Boids Group Size",
+        juce::NormalisableRange<float> (0.0f, 64.0f, 1.0f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_worker_pos_x", 1 },
+        "Physics Debug Worker Pos X",
+        juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_worker_pos_y", 1 },
+        "Physics Debug Worker Pos Y",
+        juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_worker_pos_z", 1 },
+        "Physics Debug Worker Pos Z",
+        juce::NormalisableRange<float> (-25.0f, 25.0f, 0.01f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_align_neighbors", 1 },
+        "Physics Debug Align Neighbors",
+        juce::NormalisableRange<float> (0.0f, 64.0f, 1.0f), 0.0f));
+
+    addParameter (emitterPhysicsGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "phys_dbg_coh_neighbors", 1 },
+        "Physics Debug Coh Neighbors",
+        juce::NormalisableRange<float> (0.0f, 64.0f, 1.0f), 0.0f));
+
     // ==================== EMITTER: ANIMATION ====================
     addParameter (emitterAnimationGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "anim_enable", 1 }, "Animation Enable", false));
@@ -356,6 +417,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
 
     addParameter (emitterAnimationGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "anim_sync", 1 }, "Transport Sync", true));
+
+    // ==================== EMITTER: CHOREOGRAPHY (CL-P1) ====================
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "choro_enable", 1 }, "Choreography Enable", false));
 
     // ==================== EMITTER: IDENTITY ====================
     addParameter (emitterIdentityGroup, std::make_unique<juce::AudioParameterInt> (
@@ -661,6 +726,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     emitterGroup->addChild (std::move (emitterAudioGroup));
     emitterGroup->addChild (std::move (emitterPhysicsGroup));
     emitterGroup->addChild (std::move (emitterAnimationGroup));
+    emitterGroup->addChild (std::move (emitterChoreographyGroup));
     emitterGroup->addChild (std::move (emitterIdentityGroup));
 
     rendererGroup->addChild (std::move (rendererMasterGroup));

@@ -2,6 +2,7 @@
 
 #include "AttractorSystem.h"
 #include "BoidsSystem.h"
+#include "ChoreographyWorker.h"
 #include "CollisionSystem.h"
 #include "PhysicsEngine.h"
 #include "PhysicsDSPBridge.h"
@@ -133,12 +134,13 @@ public:
     //==========================================================================
     // Subsystem accessors — direct access for APVTS wiring
 
-    AttractorSystem&      getAttractorSystem()   { return attractorSystem; }
-    SpringSystem&         getSpringSystem()      { return springSystem; }
-    TurbulenceSystem&     getTurbulenceSystem()  { return turbulenceSystem; }
-    AngularPhysicsSystem& getAngularSystem()     { return angularSystem; }
-    BoidsSystem&          getBoidsSystem()       { return boidsSystem; }
-    CollisionSystem&      getCollisionSystem()   { return collisionSystem; }  // P6
+    AttractorSystem&      getAttractorSystem()      { return attractorSystem; }
+    SpringSystem&         getSpringSystem()         { return springSystem; }
+    TurbulenceSystem&     getTurbulenceSystem()     { return turbulenceSystem; }
+    AngularPhysicsSystem& getAngularSystem()        { return angularSystem; }
+    BoidsSystem&          getBoidsSystem()          { return boidsSystem; }
+    CollisionSystem&      getCollisionSystem()      { return collisionSystem; }   // P6
+    ChoreographyWorker&   getChoreographyWorker()   { return choreographyWorker; }
 
     //==========================================================================
     // Per-emitter mass override — P6
@@ -362,6 +364,10 @@ private:
      *      to engines; collision energy published to DSP bridge. */
     void tick (float dt)
     {
+        // CL-P1: Compute choreography offsets before any per-emitter work
+        //        (ADR-0020 step 3; zero offsets in P1, subsystems added in CL-P2+).
+        choreographyWorker.compute (dt);
+
         // P4: Consume one-shot angular triggers once for the whole tick so all
         //     emitters receive the same throw/reset in the same simulation step.
         const bool  angThrowThisTick   = angularSystem.consumeThrow();
@@ -471,6 +477,16 @@ private:
                 slot.interactionZ.load (std::memory_order_acquire)
             };
 
+            // CL-P1: Compose rest pose with choreography offset (ADR-0020 Layer 3).
+            // When choro_enable=false all offsets are zero — no behavioural change.
+            const auto& choroOffset = choreographyWorker.getOffset (i);
+            const Vec3 composedRestPos
+            {
+                restPos.x + choroOffset.position.x,
+                restPos.y + choroOffset.position.y,
+                restPos.z + choroOffset.position.z
+            };
+
             if (! slot.restInitialized)
             {
                 slot.previousRestPos = restPos;
@@ -547,11 +563,11 @@ private:
             const Vec3 attractorForce = attractorSystem.computeNetForce (
                 i, currentPos, currentVel, currentMass);
 
-            // P3: Spring restoring force
+            // P3: Spring restoring force (targets composedRestPos: APVTS + Layer 3)
             Vec3 springForce {};
             if (springSystem.isEnabled())
                 springForce = springSystem.computeForce (
-                    i, currentPos, currentVel, currentMass, restPos, dt);
+                    i, currentPos, currentVel, currentMass, composedRestPos, dt);
 
             // P3: Turbulence stochastic force
             const Vec3 turbForce = turbulenceSystem.computeForce (i, currentMass, dt);
@@ -564,7 +580,7 @@ private:
             const Vec3 containmentForce = computeContainmentForce (
                 currentPos,
                 currentVel,
-                restPos,
+                composedRestPos,
                 currentMass,
                 coordinatedAuthority,
                 coordinatedActiveCount);
@@ -687,9 +703,11 @@ private:
                 boidsSystem.consumeBreakupEvent (i);
 
                 // Sum all spread contributions and clamp to [0..1]
+                // CL-P1: choroOffset.spreadDelta is 0 until CL-P2+ subsystems run.
                 const float totalSpread = juce::jlimit (0.0f, 1.0f,
                                               attractorSpread + springSpread
-                                              + turbSpread + boidsSpread);
+                                              + turbSpread + boidsSpread
+                                              + choroOffset.spreadDelta);
 
                 // P6: Collision energy → gainTransient (max with attractor crossing)
                 const float collisionGainTransient = collisionSystem.isEnabled()
@@ -1067,7 +1085,8 @@ private:
     TurbulenceSystem     turbulenceSystem {};
     AngularPhysicsSystem angularSystem {};
     BoidsSystem          boidsSystem {};
-    CollisionSystem      collisionSystem {};   // P6
+    CollisionSystem      collisionSystem {};      // P6
+    ChoreographyWorker   choreographyWorker {};   // CL-P1
     PhysicsDSPBridge*    dspBridge = nullptr;
 
     // Per-emitter previous position for crossing detection

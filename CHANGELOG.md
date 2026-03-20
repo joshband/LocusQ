@@ -22,6 +22,7 @@ Operational snapshot:
 
 ### Added
 
+- BL-113 CL-P1: ChoreographyWorker infrastructure — `AudioRingBuffer` (SPSC lock-free ring, 4096×2 pre-allocated), `ChoreographyWorker` (ADR-0020 Layer 3 colocated in PhysicsWorker tick), `ChoreographyOffset` per-emitter additive struct; `composedRestPos` wiring in spring/containment forces; `choro_enable` APVTS param registered, wired, and traced; audio ring push in Emitter mode; build clean, RT audit non_allowlisted=0.
 - BL-112: Choreography Lab authority and parameter contract accepted — `choro_*`/`bake_*` namespace frozen; traceability gate (parameter-spec + implementation-traceability updates required before implementation claims advance); production-candidate (BL-113/BL-114) vs lab-only (BL-115) promotion boundary explicit; BL-113..BL-116 unblocked.
 - BL-111: Three-mode UI consistency and overflow audit complete — defect matrix captured for CALIBRATE/EMITTER/RENDERER at launch size; five fix slices landed (CALIBRATE acknowledgment coupling, shared help triggers, RENDERER authority condensation, disclosure rhythm, renderer polish); canonical selftest and standalone smoke stayed green throughout.
 
