@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-20 (BL-106 moved to Done; BL-107..BL-116 added as Open; total 104/121 Done; active P1 blocked: BL-060, BL-067)
+Last Modified Date: 2026-03-20 (BL-111 + BL-112 moved to Done; total 107/125 Done; active P1 blocked: BL-060, BL-067)
 
 # LocusQ Master Backlog Index
 
@@ -190,12 +190,16 @@ Immediate wave summary:
 | 75 | BL-108 | Physics-reactive atmosphere and state ring | P2 | Open | E | BL-107, BL-102 (Done), BL-106 (Done) | BL-110 | [bl-108](bl-108-physics-reactive-atmosphere-and-state-ring.md) |
 | 76 | BL-109 | Choreography-reactive atmosphere and timeline state ring | P2 | Open | E | BL-107, BL-094 (Done) | — | [bl-109](bl-109-choreography-reactive-atmosphere-and-timeline-state-ring.md) |
 | 77 | BL-110 | Cross-instance ghost emitters and IPC trust contract | P3 | Open | E | BL-107, BL-102 (Done) | — | [bl-110](bl-110-cross-instance-ghost-emitters-and-ipc-trust-contract.md) |
-| 78 | BL-111 | Three-mode UI consistency and overflow audit | P1 | Open | C | BL-090 (Done), BL-093 (Done), BL-094 (Done) | BL-107 quality signoff | [bl-111](bl-111-three-mode-ui-consistency-and-overflow-audit.md) |
-| 79 | BL-112 | Choreography Lab authority and parameter contract | P1 | Open | E | BL-094 (Done) | BL-113, BL-114, BL-115, BL-116 | [bl-112](bl-112-choreography-lab-authority-and-parameter-contract.md) |
+| 78 | BL-111 | Three-mode UI consistency and overflow audit | P1 | **Done** (2026-03-20: defect matrix captured; CALIBRATE/EMITTER/RENDERER fixes landed across slices B–E; canonical selftest + standalone smoke stayed green; renderer authority card polish complete) | C | BL-090 (Done), BL-093 (Done), BL-094 (Done) | BL-107 quality signoff | [bl-111](done/bl-111-three-mode-ui-consistency-and-overflow-audit.md) |
+| 79 | BL-112 | Choreography Lab authority and parameter contract | P1 | **Done** (2026-03-20: namespace + traceability gate frozen; production-candidate/lab-only boundary explicit; BL-113..BL-116 unblocked) | E | BL-094 (Done) | BL-113, BL-114, BL-115, BL-116 | [bl-112](done/bl-112-choreography-lab-authority-and-parameter-contract.md) |
 | 80 | BL-113 | Choreography worker foundation and production motion systems | P1 | Open | E | BL-112 | BL-114, BL-115, BL-116 | [bl-113](bl-113-choreography-worker-foundation-and-production-motion-systems.md) |
 | 81 | BL-114 | Choreography Lab WebView controls and overlay integration | P2 | Open | C | BL-112, BL-113, BL-109, BL-111 | BL-116 UI evidence readiness | [bl-114](bl-114-choreography-lab-webview-controls-and-overlay-integration.md) |
 | 82 | BL-115 | Choreography Lab audio-reactive and coordination modes | P3 | Open | E | BL-112, BL-113 | future promotion of lab-only choreography modes | [bl-115](bl-115-choreography-lab-audio-reactive-and-coordination-modes.md) |
 | 83 | BL-116 | Choreography Lab validation and bake proof matrix | P1 | Open | G | BL-113, BL-114 | production or lab promotion claims for the new choreography program | [bl-116](bl-116-choreography-lab-validation-and-bake-proof-matrix.md) |
+| 84 | BL-117 | Timeline extension authority and graduation contract | P1 | Open | E | shipped Timeline baseline, ADR-0020 | BL-118, BL-119, BL-120 | [bl-117](bl-117-timeline-extension-authority-and-graduation-contract.md) |
+| 85 | BL-118 | Timeline track type and beat-sync runtime extensions | P1 | Open | E | BL-117, BL-113 | BL-119, BL-120 | [bl-118](bl-118-timeline-track-type-and-beat-sync-runtime-extensions.md) |
+| 86 | BL-119 | Timeline bake import and WebView editor integration | P2 | Open | C | BL-117, BL-118, BL-114 | BL-120 UI/editor proof readiness | [bl-119](bl-119-timeline-bake-import-and-webview-editor-integration.md) |
+| 87 | BL-120 | Timeline extension validation and host proof matrix | P1 | Open | G | BL-118, BL-119 | production claims for the Timeline extensions | [bl-120](bl-120-timeline-extension-validation-and-host-proof-matrix.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 

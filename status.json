@@ -6,7 +6,7 @@
   "complexity_score": 5,
   "created_at": "2026-02-17T12:00:00Z",
   "last_modified": "2026-03-20",
-  "notes": "BL-082 BL-083 BL-084 BL-096 BL-097 Done \u2014 authority sync complete 2026-03-20; BL-106 physics DAW automation closeout accepted on 2026-03-20; remaining active blockers are BL-060 participant sessions and BL-067 signing/real host execution",
+  "notes": "BL-112 Done 2026-03-20 — choreography lab authority contract frozen (namespace/traceability gate + production-candidate/lab-only boundary); BL-111 Done 2026-03-20 — three-mode UI consistency audit complete (defect matrix + 5 fix slices + canonical selftest/smoke green); BL-082 BL-083 BL-084 BL-096 BL-097 Done — authority sync complete 2026-03-20; BL-106 physics DAW automation closeout accepted on 2026-03-20; remaining active blockers are BL-060 participant sessions and BL-067 signing/real host execution",
   "bl086_ci_composite_action_status": "done_2026-03-19_harness_commit_9bb2ec8_contract_11of11_execute_3of3",
   "bl086_ci_composite_action_harness_commit": "9bb2ec8",
   "bl086_ci_composite_action_script": "scripts/qa-bl086-ci-composite-action-mac.sh",
@@ -573,6 +573,12 @@
       "status": "complete",
       "completed_at": "2026-03-20T03:05:00Z",
       "notes": "Mapped `.ideas/choreography-lab-spec.md` and `.ideas/choreography-lab-impl-plan.md` into one canonical execution packet plus five open backlog lanes: BL-112 authority and parameter contract, BL-113 runtime foundation plus production motion systems, BL-114 WebView controls and overlays, BL-115 lab-only audio-reactive and coordination modes, and BL-116 validation plus bake proof matrix. This planning sync explicitly records that the choreography idea pair is mature enough for bounded execution planning, but no runtime or promotion evidence is claimed yet. Validation: backlog export/check, backlog plain-language/redundancy checks, docs freshness, and `jq empty status.json`."
+    },
+    {
+      "phase": "planning_timeline_extension_backlog_20260320",
+      "status": "complete",
+      "completed_at": "2026-03-20T03:40:00Z",
+      "notes": "Mapped `.ideas/timeline-spec.md` and `.ideas/timeline-impl-plan.md` into one canonical execution packet plus four open backlog lanes: BL-117 extension authority and graduation contract, BL-118 runtime track-type and beat-sync extensions, BL-119 bake import plus WebView editor integration, and BL-120 validation plus host proof matrix. This planning sync explicitly records that the shipped Timeline baseline stays historical while the new extension program is treated as choreography-graduation work with separate proof ownership. Validation: backlog export/check, backlog plain-language/redundancy checks, docs freshness, and `jq empty status.json`."
     }
   ],
   "validation": {
@@ -2753,15 +2759,15 @@
   "physics_daw_automation_p0_selftest_status": "pass_2026-03-18_standalone_production_selftest",
   "physics_daw_automation_p0_selftest_evidence": "TestEvidence/locusq_production_p0_selftest_20260318T223926Z.json",
   "bl082_runner_app_library_status": "Done",
-  "bl082_runner_app_library_evidence": "TestEvidence/bl082_*/status.tsv \u2014 contract+execute PASS 2026-03-20",
+  "bl082_runner_app_library_evidence": "TestEvidence/bl082_*/status.tsv — contract+execute PASS 2026-03-20",
   "bl083_runtime_config_contract_status": "Done",
-  "bl083_runtime_config_contract_evidence": "TestEvidence/bl083_*/status.tsv \u2014 contract+execute PASS 2026-03-20",
+  "bl083_runtime_config_contract_evidence": "TestEvidence/bl083_*/status.tsv — contract+execute PASS 2026-03-20",
   "bl084_profiling_contract_status": "Done",
-  "bl084_profiling_contract_evidence": "TestEvidence/bl084_*/status.tsv \u2014 contract+execute PASS 2026-03-20",
+  "bl084_profiling_contract_evidence": "TestEvidence/bl084_*/status.tsv — contract+execute PASS 2026-03-20",
   "bl032_source_modularization_status": "Done",
-  "bl032_source_modularization_evidence": "TestEvidence/bl032_structure_guardrails_20260319T210942Z/status.tsv \u2014 13/13 PASS; PluginProcessor.cpp 3395 <= 3600; RT audit non_allowlisted=0; 2026-03-19",
+  "bl032_source_modularization_evidence": "TestEvidence/bl032_structure_guardrails_20260319T210942Z/status.tsv — 13/13 PASS; PluginProcessor.cpp 3395 <= 3600; RT audit non_allowlisted=0; 2026-03-19",
   "bl020_confidence_masking_status": "Done",
-  "bl020_confidence_masking_evidence": "TestEvidence/bl020_confidence_masking_closeout_20260319T212342Z/status.tsv \u2014 contract 3/3 PASS; 2026-03-19",
+  "bl020_confidence_masking_evidence": "TestEvidence/bl020_confidence_masking_closeout_20260319T212342Z/status.tsv — contract 3/3 PASS; 2026-03-19",
   "bl021_room_story_overlays_status": "Done",
   "ui_selftest_visual_evidence_contract_status": "complete_tested_2026-03-19_shared_selftest_now_reports_truthful_visual_capture_fallbacks_and_canonical_docs_define_cross_platform_machine_readable_behavior",
   "ui_selftest_visual_evidence_contract_validation": "bash -n scripts/standalone-ui-selftest-production-p0-mac.sh; ./scripts/qa-bl103-renderer-registry-mac.sh --execute --runs 1; jq empty status.json",
@@ -2780,5 +2786,13 @@
   "bl115_choreography_lab_lab_modes_runbook": "Documentation/backlog/bl-115-choreography-lab-audio-reactive-and-coordination-modes.md",
   "bl116_choreography_lab_validation_runbook": "Documentation/backlog/bl-116-choreography-lab-validation-and-bake-proof-matrix.md",
   "choreography_lab_backlog_sync_20260320_status": "complete_not_tested_execution_packet_and_bl112_bl116_open_runbooks_authored",
-  "choreography_lab_backlog_sync_20260320_validation": "./scripts/export-backlog-summaries.py; ./scripts/export-backlog-summaries.py --check; ./scripts/validate-backlog-plain-language.sh; ./scripts/validate-backlog-redundancy.py; ./scripts/validate-docs-freshness.sh; jq empty status.json"
+  "choreography_lab_backlog_sync_20260320_validation": "./scripts/export-backlog-summaries.py; ./scripts/export-backlog-summaries.py --check; ./scripts/validate-backlog-plain-language.sh; ./scripts/validate-backlog-redundancy.py; ./scripts/validate-docs-freshness.sh; jq empty status.json",
+  "timeline_extension_execution_packet_20260320_report": "Documentation/plans/2026-03-20-timeline-extension-execution-packet.md",
+  "timeline_extension_execution_packet_20260320_status": "complete_not_tested_execution_packet",
+  "bl117_timeline_extension_authority_runbook": "Documentation/backlog/bl-117-timeline-extension-authority-and-graduation-contract.md",
+  "bl118_timeline_extension_runtime_runbook": "Documentation/backlog/bl-118-timeline-track-type-and-beat-sync-runtime-extensions.md",
+  "bl119_timeline_extension_ui_runbook": "Documentation/backlog/bl-119-timeline-bake-import-and-webview-editor-integration.md",
+  "bl120_timeline_extension_validation_runbook": "Documentation/backlog/bl-120-timeline-extension-validation-and-host-proof-matrix.md",
+  "timeline_extension_backlog_sync_20260320_status": "complete_not_tested_execution_packet_and_bl117_bl120_open_runbooks_authored",
+  "timeline_extension_backlog_sync_20260320_validation": "./scripts/export-backlog-summaries.py; ./scripts/export-backlog-summaries.py --check; ./scripts/validate-backlog-plain-language.sh; ./scripts/validate-backlog-redundancy.py; ./scripts/validate-docs-freshness.sh; jq empty status.json"
 }

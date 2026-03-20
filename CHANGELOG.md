@@ -20,6 +20,11 @@ Operational snapshot:
 - BL-020: Confidence/masking overlay contract — deterministic combinedConfidence formula, fallback codes, and degradation policy confirmed; QA lane 3/3 PASS
 - BL-021: Room-story overlay contract — five modes, degraded/stale-hold states, additive composite policy confirmed; QA lane 3/3 PASS
 
+### Added
+
+- BL-112: Choreography Lab authority and parameter contract accepted — `choro_*`/`bake_*` namespace frozen; traceability gate (parameter-spec + implementation-traceability updates required before implementation claims advance); production-candidate (BL-113/BL-114) vs lab-only (BL-115) promotion boundary explicit; BL-113..BL-116 unblocked.
+- BL-111: Three-mode UI consistency and overflow audit complete — defect matrix captured for CALIBRATE/EMITTER/RENDERER at launch size; five fix slices landed (CALIBRATE acknowledgment coupling, shared help triggers, RENDERER authority condensation, disclosure rhythm, renderer polish); canonical selftest and standalone smoke stayed green throughout.
+
 ### Changed
 
 - BL-106 is now fully closed out:

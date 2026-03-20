@@ -10,6 +10,17 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T01:35:00Z | BL-112 Choreography Lab authority and parameter contract — Done closeout sync | PASS | `T0 docs lane; namespace + traceability gate frozen; production-candidate/lab-only boundary explicit; docs freshness PASS` |
+| 2026-03-20T01:32:00Z | BL-111 three-mode UI consistency and overflow audit — Done closeout sync | PASS | `docs freshness PASS; backlog index, status.json, build-summary, validation-trend synchronized; runbook moved to done/` |
+| 2026-03-20T00:06:14Z | BL-107 production viewport foundation scaffold slice B1 | PASS_WITH_WARNING | `Shipping viewport now includes the atmosphere canvas, ATM/ANA layer toggles, base state-ring overlay, and selection HUD scaffold; standalone smoke and canonical selftest stayed green, but targeted BL-107 selftest assertions are still not wired` |
+| 2026-03-20T00:01:50Z | BL-111 renderer authority polish slice E | PASS | `Renderer authority card got a final typography/spacing polish; canonical selftest and standalone smoke both stayed green` |
+| 2026-03-19T23:56:56Z | BL-111 calibrate evidence closeout capture | PASS | `Canonical selftest stayed green with selftest_final_mode=calibrate, and the fresh launch-size CALIBRATE capture closes the last missing proof gap for BL-111` |
+| 2026-03-19T23:47:26Z | BL-111 renderer authority condensation slice D | PASS_WITH_WARNING | `Renderer authority card is materially calmer after moving lower-detail status copy behind disclosure; smoke and selftest stayed green, but BL-111 still needs one fresh CALIBRATE capture before full closeout` |
+| 2026-03-19T23:35:00Z | BL-111 reassessment pass | PASS_WITH_WARNING | `Fresh emitter/renderer review says F5 and F6 are effectively resolved; F2 still feels dense; F3 needs one fresh calibrate capture before closeout` |
+| 2026-03-19T23:31:49Z | BL-111 visual rhythm and disclosure fix slice C | PASS | `CALIBRATE first-screen density reduced; EMITTER support rhythm normalized; standalone smoke and selftest stayed green` |
+| 2026-03-19T23:26:29Z | BL-111 standalone smoke harness rerun | PASS | `All 6 standalone smoke probes pass after updating the emitter-label field coordinates` |
+| 2026-03-19T23:21:00Z | BL-111 standalone selftest recovery rerun | PASS | `Canonical production selftest recovered; UI-P1-026E profile CRUD lane now passes` |
+| 2026-03-19T23:23:18Z | BL-111 standalone smoke rerun | PASS_WITH_WARNING | `Renderer/emitter/timeline checks still pass; only UI-05 emit-label automation probe remains red` |
 | 2026-03-19T23:05:50Z | BL-111 post-fix standalone rerun | PASS_WITH_WARNING | `Smoke lane shows renderer/emitter/timeline proof; selftest aborted before result` |
 | 2026-03-19T22:59:39Z | BL-111 three-mode UI consistency fix slice B | PASS | `UI shell fixes landed; capture rerun still needed` |
 | 2026-03-20T02:20:00Z | BL-111 three-mode UI consistency audit slice A | PASS | `Defect matrix captured; implementation next` |
@@ -53,6 +64,13 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T00:01:50Z | BL-111 renderer authority polish slice E | PASS | `Renderer authority card got a final typography/spacing polish; canonical selftest and standalone smoke both stayed green` |
+| 2026-03-19T23:56:56Z | BL-111 calibrate evidence closeout capture | PASS | `Canonical selftest stayed green with selftest_final_mode=calibrate, and the fresh launch-size CALIBRATE capture closes the last missing proof gap for BL-111` |
+| 2026-03-19T23:47:26Z | BL-111 renderer authority condensation slice D | PASS_WITH_WARNING | `Renderer authority card is materially calmer after moving lower-detail status copy behind disclosure; smoke and selftest stayed green, but BL-111 still needs one fresh CALIBRATE capture before full closeout` |
+| 2026-03-19T23:31:49Z | BL-111 visual rhythm and disclosure fix slice C | PASS | `CALIBRATE first-screen density reduced; EMITTER support rhythm normalized; standalone smoke and selftest stayed green` |
+| 2026-03-19T23:26:29Z | BL-111 standalone smoke harness rerun | PASS | `All 6 standalone smoke probes pass after updating the emitter-label field coordinates` |
+| 2026-03-19T23:21:00Z | BL-111 standalone selftest recovery rerun | PASS | `Canonical production selftest recovered; UI-P1-026E profile CRUD lane now passes` |
+| 2026-03-19T23:23:18Z | BL-111 standalone smoke rerun | PASS_WITH_WARNING | `Renderer/emitter/timeline checks still pass; only UI-05 emit-label automation probe remains red` |
 | 2026-03-19T23:05:50Z | BL-111 post-fix standalone rerun | PASS_WITH_WARNING | `Smoke lane shows renderer/emitter/timeline proof; selftest aborted before result` |
 | 2026-03-19T22:59:39Z | BL-111 three-mode UI consistency fix slice B | PASS | `UI shell fixes landed; capture rerun still needed` |
 | 2026-03-20T02:20:00Z | BL-111 three-mode UI consistency audit slice A | PASS | `Defect matrix captured; implementation next` |

@@ -2,9 +2,9 @@
   "schema_version": "locusq-backlog-summary-v1",
   "source": "Documentation/backlog",
   "counts": {
-    "total": 121,
-    "open": 17,
-    "done": 104
+    "total": 125,
+    "open": 18,
+    "done": 107
   },
   "items": [
     {
@@ -1682,7 +1682,7 @@
     {
       "id": "BL-088",
       "title": "BL-088 HostRunner Plugin Backends (VST3/AU) \u2014 audio-dsp-qa-harness",
-      "state_bucket": "open",
+      "state_bucket": "done",
       "status": "Done-candidate",
       "priority": "P2",
       "track": "G - Tooling / Governance",
@@ -1696,7 +1696,7 @@
       "where": "",
       "plain_language_summary": "BL-088 in plain terms: implement concrete VST3 and AU host backends for the HostRunner skeleton in audio-dsp-qa-harness so plugins can run format-native validation inside the harness framework rather than relying only on external host/pluginval wrappers. Current state: Done-candidate. The dependency gate from BL-082/BL-083/BL-084 is cleared, contract checks are green, the local execute lane passes in mock/live-guarded mode, and a real LocusQ VST3 live scenario now passes through both the repo smoke path and the guarded harness live-test path. Owner confirmation is still required before the authoritative Done/archive transition.",
       "objective": "Implement two concrete HostRunner backends in audio-dsp-qa-harness:",
-      "runbook_path": "Documentation/backlog/bl-088-hostrunner-plugin-backends.md"
+      "runbook_path": "Documentation/backlog/done/bl-088-hostrunner-plugin-backends.md"
     },
     {
       "id": "BL-089",
@@ -2062,8 +2062,8 @@
     {
       "id": "BL-111",
       "title": "BL-111: Three-Mode UI Consistency and Overflow Audit",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "**Done** (2026-03-20)",
       "priority": "P1",
       "track": "",
       "depends_on": "BL-090 (Done), BL-093 (Done), BL-094 (Done)",
@@ -2076,13 +2076,13 @@
       "where": "",
       "plain_language_summary": "BL-111 gives CALIBRATE, EMITTER, and RENDERER one focused visual QA lane. The goal is to catch and fix the specific problems users feel at launch size: overlapping text, clipped content, awkward wrapping, inconsistent helper surfaces, and mode-to-mode visual drift.",
       "objective": "Audit and tighten the three top-level plugin modes at real launch sizes. This is a product-fit and usability lane, not a broad redesign.",
-      "runbook_path": "Documentation/backlog/bl-111-three-mode-ui-consistency-and-overflow-audit.md"
+      "runbook_path": "Documentation/backlog/done/bl-111-three-mode-ui-consistency-and-overflow-audit.md"
     },
     {
       "id": "BL-112",
       "title": "BL-112: Choreography Lab Authority and Parameter Contract",
-      "state_bucket": "open",
-      "status": "Open",
+      "state_bucket": "done",
+      "status": "**Done** (2026-03-20)",
       "priority": "P1",
       "track": "",
       "depends_on": "BL-094 (Done)",
@@ -2095,7 +2095,7 @@
       "where": "",
       "plain_language_summary": "BL-112 turns the choreography idea pair into canonical execution authority. It freezes the namespace, acceptance gates, and backlog ownership for the new Choreography Lab program before runtime work begins.",
       "objective": "Freeze the authority contract for the new Choreography Lab program. That includes the choro_* and bake_* namespace posture, the ADR-0020 placement rule, the BL-094 containment boundary, and the split between production-candidate and lab-only phases.",
-      "runbook_path": "Documentation/backlog/bl-112-choreography-lab-authority-and-parameter-contract.md"
+      "runbook_path": "Documentation/backlog/done/bl-112-choreography-lab-authority-and-parameter-contract.md"
     },
     {
       "id": "BL-113",
@@ -2172,6 +2172,82 @@
       "plain_language_summary": "BL-116 owns the test and testing program for the new Choreography Lab bundle. It turns the planned acceptance gates into deterministic replay, host timing, bake-accuracy, and visual-evidence obligations before any promotion claim is trusted.",
       "objective": "Make choreography claims evidence-backed. That includes runtime correctness, host-visible beat timing, bake reconstruction accuracy, UI truth surfaces, and honest replay-tier reporting.",
       "runbook_path": "Documentation/backlog/bl-116-choreography-lab-validation-and-bake-proof-matrix.md"
+    },
+    {
+      "id": "BL-117",
+      "title": "BL-117: Timeline Extension Authority and Graduation Contract",
+      "state_bucket": "open",
+      "status": "Open",
+      "priority": "P1",
+      "track": "",
+      "depends_on": "existing shipped Timeline baseline, ADR-0020",
+      "blocks": "BL-118, BL-119, BL-120",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-117 freezes the authority and graduation contract for the new Timeline extension program. It keeps the shipped Timeline baseline historical while defining how choreography graduation work enters the backlog cleanly.",
+      "objective": "Freeze the authority contract for Timeline extension work. That includes shipped-baseline boundaries, choreography graduation prerequisites, and anim_* parameter traceability rules for extension phases.",
+      "runbook_path": "Documentation/backlog/bl-117-timeline-extension-authority-and-graduation-contract.md"
+    },
+    {
+      "id": "BL-118",
+      "title": "BL-118: Timeline Track Type and Beat-Sync Runtime Extensions",
+      "state_bucket": "open",
+      "status": "Open",
+      "priority": "P1",
+      "track": "",
+      "depends_on": "BL-117, BL-113",
+      "blocks": "BL-119, BL-120",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-118 owns the runtime half of the Timeline extension program. It covers the track-type infrastructure refactor plus Formation Track, Procedural Path Track, and Beat-Sync Step Mode.",
+      "objective": "Implement the runtime extension path for the new Timeline features while preserving the shipped audio-thread safety and double-buffer guarantees.",
+      "runbook_path": "Documentation/backlog/bl-118-timeline-track-type-and-beat-sync-runtime-extensions.md"
+    },
+    {
+      "id": "BL-119",
+      "title": "BL-119: Timeline Bake Import and WebView Editor Integration",
+      "state_bucket": "open",
+      "status": "Open",
+      "priority": "P2",
+      "track": "",
+      "depends_on": "BL-117, BL-118, BL-114",
+      "blocks": "BL-120 UI/editor proof readiness",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-119 turns the runtime Timeline extensions into an editor-facing production surface. It owns bake provenance, BAKE presentation, and the WebView editor work for the new track types.",
+      "objective": "Expose the Timeline extensions in the shipping editor without weakening provenance, editability, or truthful UI behavior.",
+      "runbook_path": "Documentation/backlog/bl-119-timeline-bake-import-and-webview-editor-integration.md"
+    },
+    {
+      "id": "BL-120",
+      "title": "BL-120: Timeline Extension Validation and Host Proof Matrix",
+      "state_bucket": "open",
+      "status": "Open",
+      "priority": "P1",
+      "track": "",
+      "depends_on": "BL-118, BL-119",
+      "blocks": "production claims for the Timeline extensions",
+      "who": "",
+      "what": "",
+      "why": "",
+      "how": "",
+      "when": "",
+      "where": "",
+      "plain_language_summary": "BL-120 owns the test and testing program for the Timeline extensions. It turns the spec\u2019s extension acceptance gates into deterministic runtime, host timing, bake fidelity, and editor-proof obligations.",
+      "objective": "Make the Timeline extension claims evidence-backed. That includes runtime correctness, choreography parity, host-visible beat timing, bake fidelity, and truthful editor behavior.",
+      "runbook_path": "Documentation/backlog/bl-120-timeline-extension-validation-and-host-proof-matrix.md"
     },
     {
       "id": "HX-01",
