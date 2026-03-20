@@ -1576,6 +1576,33 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     choroFormMorphRateParam     = rawParam ("choro_formation_morph_rate");
     choroFormMorphLoopParam     = rawParam ("choro_formation_morph_loop");
     choroFormMorphPingpongParam = rawParam ("choro_formation_morph_pingpong");
+
+    // CL-P3: Path system raw param inits
+    choroPathTypeParam        = rawParam ("choro_path_type");
+    choroPathPeriodParam      = rawParam ("choro_path_period");
+    choroPathSpeedParam       = rawParam ("choro_path_speed");
+    choroPathLissFreqAParam   = rawParam ("choro_path_liss_freq_a");
+    choroPathLissFreqBParam   = rawParam ("choro_path_liss_freq_b");
+    choroPathLissFreqCParam   = rawParam ("choro_path_liss_freq_c");
+    choroPathLissAmpXParam    = rawParam ("choro_path_liss_amp_x");
+    choroPathLissAmpYParam    = rawParam ("choro_path_liss_amp_y");
+    choroPathLissAmpZParam    = rawParam ("choro_path_liss_amp_z");
+    choroPathLissPhaseParam   = rawParam ("choro_path_liss_phase");
+    choroPathOrbitRxParam     = rawParam ("choro_path_orbit_rx");
+    choroPathOrbitRzParam     = rawParam ("choro_path_orbit_rz");
+    choroPathOrbitHeightParam = rawParam ("choro_path_orbit_height");
+    choroPathPendLengthParam  = rawParam ("choro_path_pend_length");
+    choroPathPendAmpParam     = rawParam ("choro_path_pend_amp");
+    choroPathPendPlaneParam   = rawParam ("choro_path_pend_plane");
+    choroPathFig8ScaleParam   = rawParam ("choro_path_fig8_scale");
+    choroPathFig8PlaneParam   = rawParam ("choro_path_fig8_plane");
+    choroPathHelixRadiusParam = rawParam ("choro_path_helix_radius");
+    choroPathHelixPitchParam  = rawParam ("choro_path_helix_pitch");
+    choroPathHelixDirParam    = rawParam ("choro_path_helix_dir");
+    choroPathWalkStepParam    = rawParam ("choro_path_walk_step");
+    choroPathWalkBoundsParam  = rawParam ("choro_path_walk_bounds");
+    choroPathWalkSeedParam    = rawParam ("choro_path_walk_seed");
+
     emitGainParam = rawParam ("emit_gain");
     emitSpreadParam = rawParam ("emit_spread");
     emitDirectivityParam = rawParam ("emit_directivity");
@@ -3022,6 +3049,32 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         cw.setFormationMorphRate  (loadParam (choroFormMorphRateParam));
         cw.setFormationMorphLoop      (loadParam (choroFormMorphLoopParam)      > 0.5f);
         cw.setFormationMorphPingpong  (loadParam (choroFormMorphPingpongParam)  > 0.5f);
+
+        // CL-P3: propagate path params to the ChoreographyWorker each block.
+        cw.setPathType        (static_cast<int> (std::lround (loadParam (choroPathTypeParam))));
+        cw.setPathPeriod      (loadParam (choroPathPeriodParam));
+        cw.setPathSpeed       (loadParam (choroPathSpeedParam));
+        cw.setPathLissFreqA   (loadParam (choroPathLissFreqAParam));
+        cw.setPathLissFreqB   (loadParam (choroPathLissFreqBParam));
+        cw.setPathLissFreqC   (loadParam (choroPathLissFreqCParam));
+        cw.setPathLissAmpX    (loadParam (choroPathLissAmpXParam));
+        cw.setPathLissAmpY    (loadParam (choroPathLissAmpYParam));
+        cw.setPathLissAmpZ    (loadParam (choroPathLissAmpZParam));
+        cw.setPathLissPhase   (loadParam (choroPathLissPhaseParam));
+        cw.setPathOrbitRx     (loadParam (choroPathOrbitRxParam));
+        cw.setPathOrbitRz     (loadParam (choroPathOrbitRzParam));
+        cw.setPathOrbitHeight (loadParam (choroPathOrbitHeightParam));
+        cw.setPathPendLength  (loadParam (choroPathPendLengthParam));
+        cw.setPathPendAmp     (loadParam (choroPathPendAmpParam));
+        cw.setPathPendPlane   (static_cast<int> (std::lround (loadParam (choroPathPendPlaneParam))));
+        cw.setPathFig8Scale   (loadParam (choroPathFig8ScaleParam));
+        cw.setPathFig8Plane   (static_cast<int> (std::lround (loadParam (choroPathFig8PlaneParam))));
+        cw.setPathHelixRadius (loadParam (choroPathHelixRadiusParam));
+        cw.setPathHelixPitch  (loadParam (choroPathHelixPitchParam));
+        cw.setPathHelixDir    (static_cast<int> (std::lround (loadParam (choroPathHelixDirParam))));
+        cw.setPathWalkStep    (loadParam (choroPathWalkStepParam));
+        cw.setPathWalkBounds  (loadParam (choroPathWalkBoundsParam));
+        cw.setPathWalkSeed    (static_cast<int> (std::lround (loadParam (choroPathWalkSeedParam))));
     }
 
     const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();

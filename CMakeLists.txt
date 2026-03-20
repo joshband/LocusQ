@@ -352,6 +352,8 @@ target_sources(LocusQ
         Source/ChoreographyWorker.cpp
         Source/FormationSystem.h
         Source/FormationSystem.cpp
+        Source/PathSystem.h
+        Source/PathSystem.cpp
 )
 
 # SofaHrtfLoader.h/.cpp are both isolated to the SOFA feature block.
@@ -575,6 +577,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     enable_qa_harness(
@@ -706,6 +711,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_bl018_profile_probe
@@ -865,6 +873,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_attractor_probe
@@ -986,6 +997,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_boundary_probe
@@ -1107,6 +1121,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_soft_boundary_probe
@@ -1228,6 +1245,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_collision_probe
@@ -1349,6 +1369,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_boids_probe
@@ -1470,6 +1493,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_boids_host_debug_probe
@@ -1591,6 +1617,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_interaction_probe
@@ -1712,6 +1741,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_spring_turbulence_probe
@@ -1833,6 +1865,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_angular_probe
@@ -1954,6 +1989,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_orbit_probe
@@ -2075,6 +2113,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_mass_override_probe
@@ -2196,6 +2237,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_attractor_crossing_probe
@@ -2317,6 +2361,9 @@ if(BUILD_LOCUSQ_QA)
             Source/PhysicsEngine.h
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_runtime_collision_transient_probe
@@ -2418,6 +2465,13 @@ if(BUILD_LOCUSQ_QA)
             Source/AngularPhysicsSystem.h
             Source/BoidsSystem.h
             Source/CollisionSystem.h
+            Source/AudioRingBuffer.h
+            Source/ChoreographyWorker.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.h
+            Source/FormationSystem.cpp
+            Source/PathSystem.h
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_physics_tier_a_probe
@@ -2533,6 +2587,9 @@ if(BUILD_LOCUSQ_QA)
             qa/timeline_track_type_probe_main.cpp
             Source/KeyframeTimeline.cpp
             Source/KeyframeTimeline.h
+            Source/ChoreographyWorker.cpp
+            Source/FormationSystem.cpp
+            Source/PathSystem.cpp
     )
 
     target_include_directories(locusq_timeline_track_type_probe

@@ -177,6 +177,35 @@ Last Modified Date: 2026-03-21
 | `choro_formation_morph_loop` | Formation Morph Loop | Bool | On / Off | Off | — | When On, morphPhase wraps continuously. When Off, morphPhase clamps at 1.0. |
 | `choro_formation_morph_pingpong` | Formation Morph Pingpong | Bool | On / Off | Off | — | When On (requires Loop=On), morphPhase reverses at 0.0 and 1.0 boundaries creating pulse animation. |
 
+### Choreography Lab — Procedural Paths (CL-P3)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `choro_path_type` | Path Type | Enum | Lissajous / Orbit / Pendulum / Figure Eight / Helix / Random Walk | Orbit | — | Active procedural path type. Path position is additive on the formation offset. When `choro_enable=Off` path is bypassed. |
+| `choro_path_period` | Path Period | Float | 0.1 – 60.0 | 4.0 | s | Base period shared by Lissajous (base ω = 2π/period), Orbit, Figure Eight, and Helix. Pendulum ignores this (ω = √(g/L)). |
+| `choro_path_speed` | Path Speed | Float | 0.1 – 10.0 | 1.0 | x | Time multiplier applied to all path types. Speed=2 runs all paths at 2× rate. |
+| `choro_path_liss_freq_a` | Lissajous Freq A | Float | 1.0 – 8.0 | 2.0 | — | Frequency ratio a (x-axis): x = Ax·sin(a·ω·t + δ). |
+| `choro_path_liss_freq_b` | Lissajous Freq B | Float | 1.0 – 8.0 | 3.0 | — | Frequency ratio b (y-axis): y = Ay·sin(b·ω·t). |
+| `choro_path_liss_freq_c` | Lissajous Freq C | Float | 1.0 – 8.0 | 1.0 | — | Frequency ratio c (z-axis): z = Az·sin(c·ω·t). |
+| `choro_path_liss_amp_x` | Lissajous Amp X | Float | 0.0 – 10.0 | 3.0 | m | X amplitude for Lissajous. |
+| `choro_path_liss_amp_y` | Lissajous Amp Y | Float | 0.0 – 10.0 | 0.0 | m | Y amplitude for Lissajous. |
+| `choro_path_liss_amp_z` | Lissajous Amp Z | Float | 0.0 – 10.0 | 3.0 | m | Z amplitude for Lissajous. |
+| `choro_path_liss_phase` | Lissajous Phase | Float | 0.0 – 360.0 | 90.0 | deg | Phase offset δ applied to the x term of the Lissajous formula. |
+| `choro_path_orbit_rx` | Orbit Radius X | Float | 0.1 – 20.0 | 3.0 | m | Semi-axis X of elliptical orbit. |
+| `choro_path_orbit_rz` | Orbit Radius Z | Float | 0.1 – 20.0 | 3.0 | m | Semi-axis Z of elliptical orbit. |
+| `choro_path_orbit_height` | Orbit Height | Float | -10.0 – 10.0 | 0.0 | m | Fixed Y offset of orbit centre from rest pose. |
+| `choro_path_pend_length` | Pendulum Length | Float | 0.1 – 20.0 | 3.0 | m | Pendulum arm length; controls natural frequency ω = √(9.81/L). |
+| `choro_path_pend_amp` | Pendulum Amplitude | Float | 0.0 – 180.0 | 45.0 | deg | Max swing angle. Position = L·sin(ampRad)·cos(ωt). |
+| `choro_path_pend_plane` | Pendulum Plane | Enum | XZ / XY / YZ | XZ | — | Plane in which the pendulum swings. |
+| `choro_path_fig8_scale` | Figure Eight Scale | Float | 0.1 – 20.0 | 3.0 | m | Amplitude of figure-eight lemniscate (Lissajous 2:1 at 90° phase). |
+| `choro_path_fig8_plane` | Figure Eight Plane | Enum | XZ / XY / YZ | XZ | — | Plane of the figure-eight curve. |
+| `choro_path_helix_radius` | Helix Radius | Float | 0.1 – 20.0 | 2.0 | m | Circle radius of the helix. |
+| `choro_path_helix_pitch` | Helix Pitch | Float | 0.01 – 5.0 | 1.0 | m | Y excursion per revolution (triangle-wave; continuous and bounded). |
+| `choro_path_helix_dir` | Helix Direction | Enum | Up / Down | Up | — | Phase sign of Y triangle-wave component: Up = +pitch, Down = −pitch. |
+| `choro_path_walk_step` | Walk Step Size | Float | 0.001 – 0.5 | 0.02 | m/tick | Random displacement magnitude per physics tick (per axis). |
+| `choro_path_walk_bounds` | Walk Bounds | Float | 0.1 – 20.0 | 5.0 | m | Half-width of axis-aligned bounding box; walk position is clamped per axis. |
+| `choro_path_walk_seed` | Walk Seed | Int | 0 – 65535 | 42 | — | PRNG seed; changing the seed resets the walk position and re-seeds the RNG. |
+
 ### Emitter Identity
 
 | ID | Name | Type | Range | Default | Unit | Notes |

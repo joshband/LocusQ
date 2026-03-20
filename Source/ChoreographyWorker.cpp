@@ -47,12 +47,23 @@ void ChoreographyWorker::compute (float dt, int numEmitters) noexcept
     // Run the formation geometry.
     formationSystem.compute (formationParams, numEmitters, morphPhase);
 
-    // Publish position offsets and spread delta per emitter.
+    // Publish formation position offsets and spread delta per emitter.
     const float sd = formationSystem.getSpreadDelta();
+
+    // =========================================================================
+    // CL-P3: Path System — compute shared path position + velocity.
+    // =========================================================================
+
+    const Vec3 pathPos = pathSystem.compute (pathParams, dt);
+    const Vec3 pathVel = pathSystem.getLastVelocity();
 
     for (int i = 0; i < numEmitters && i < kMaxEmitters; ++i)
     {
-        offsets[static_cast<std::size_t> (i)].position    = formationSystem.getSlotPosition (i);
+        const Vec3 formPos = formationSystem.getSlotPosition (i);
+        offsets[static_cast<std::size_t> (i)].position    = { formPos.x + pathPos.x,
+                                                                formPos.y + pathPos.y,
+                                                                formPos.z + pathPos.z };
         offsets[static_cast<std::size_t> (i)].spreadDelta = sd;
+        offsets[static_cast<std::size_t> (i)].velocity    = pathVel;
     }
 }

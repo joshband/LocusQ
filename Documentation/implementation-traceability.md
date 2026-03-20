@@ -1347,6 +1347,37 @@ Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreo
 | `choro_formation_morph_loop` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationMorphLoop()` | Pending BL-114 | Bool. Wraps morph phase continuously when On. |
 | `choro_formation_morph_pingpong` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationMorphPingpong()` | Pending BL-114 | Bool. Reverses morph direction at 0/1 boundaries when On. |
 
+## Choreography Lab Parameters (BL-113 CL-P3)
+
+| Parameter ID | Group | Implementation Surface | UI Surface | Notes |
+|:---|:---|:---|:---|:---|
+| `choro_path_type` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathType()` | Pending BL-114 | Choice 0–5 (Lissajous/Orbit/Pendulum/FigureEight/Helix/RandomWalk). |
+| `choro_path_period` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathPeriod()` | Pending BL-114 | Float 0.1–60.0 s. Shared period for Lissajous/Orbit/FigureEight/Helix. |
+| `choro_path_speed` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathSpeed()` | Pending BL-114 | Float 0.1–10.0 (time multiplier). Scales all path time advancement. |
+| `choro_path_liss_freq_a` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissFreqA()` | Pending BL-114 | Float 1.0–8.0. Lissajous X-axis frequency ratio. |
+| `choro_path_liss_freq_b` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissFreqB()` | Pending BL-114 | Float 1.0–8.0. Lissajous Y-axis frequency ratio. |
+| `choro_path_liss_freq_c` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissFreqC()` | Pending BL-114 | Float 1.0–8.0. Lissajous Z-axis frequency ratio. |
+| `choro_path_liss_amp_x` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissAmpX()` | Pending BL-114 | Float 0.0–10.0 m. Lissajous X amplitude. |
+| `choro_path_liss_amp_y` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissAmpY()` | Pending BL-114 | Float 0.0–10.0 m. Lissajous Y amplitude. |
+| `choro_path_liss_amp_z` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissAmpZ()` | Pending BL-114 | Float 0.0–10.0 m. Lissajous Z amplitude. |
+| `choro_path_liss_phase` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathLissPhase()` | Pending BL-114 | Float 0.0–360.0 deg. Lissajous slot-0 phase offset. |
+| `choro_path_orbit_rx` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathOrbitRx()` | Pending BL-114 | Float 0.1–20.0 m. Orbit X-axis radius. |
+| `choro_path_orbit_rz` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathOrbitRz()` | Pending BL-114 | Float 0.1–20.0 m. Orbit Z-axis radius. |
+| `choro_path_orbit_height` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathOrbitHeight()` | Pending BL-114 | Float −10.0–10.0 m. Orbit static Y offset. |
+| `choro_path_pend_length` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathPendLength()` | Pending BL-114 | Float 0.1–20.0 m. Pendulum arm length (ω = √(g/L)). |
+| `choro_path_pend_amp` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathPendAmp()` | Pending BL-114 | Float 0.0–180.0 deg. Pendulum max swing angle. |
+| `choro_path_pend_plane` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathPendPlane()` | Pending BL-114 | Choice 0–2 (XZ/XY/YZ). Plane of pendulum swing. |
+| `choro_path_fig8_scale` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathFig8Scale()` | Pending BL-114 | Float 0.1–20.0 m. Figure-eight scale radius. |
+| `choro_path_fig8_plane` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathFig8Plane()` | Pending BL-114 | Choice 0–2 (XZ/XY/YZ). Plane of figure-eight. |
+| `choro_path_helix_radius` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathHelixRadius()` | Pending BL-114 | Float 0.1–20.0 m. Helix circular radius. |
+| `choro_path_helix_pitch` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathHelixPitch()` | Pending BL-114 | Float 0.01–5.0 m/rev. Helix vertical rise per revolution. |
+| `choro_path_helix_dir` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathHelixDir()` | Pending BL-114 | Choice 0–1 (Up/Down). Helix Y travel direction (triangle-wave bounded). |
+| `choro_path_walk_step` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathWalkStep()` | Pending BL-114 | Float 0.001–0.5 m/tick. RandomWalk per-tick max displacement. |
+| `choro_path_walk_bounds` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathWalkBounds()` | Pending BL-114 | Float 0.1–20.0 m. RandomWalk symmetric XYZ boundary. |
+| `choro_path_walk_seed` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setPathWalkSeed()` | Pending BL-114 | Int 0–65535. XorShift32 PRNG seed for RandomWalk. |
+
+Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P3 block). Velocity computed as `(pos − lastPos) / dt` for Doppler hook; exposed via `ChoreographyOffset.velocity`.
+
 ## Notes
 
 - Room chain order in renderer: emitter spatialization -> `EarlyReflections` -> `FDNReverb` -> speaker delay/trim -> master gain/output.

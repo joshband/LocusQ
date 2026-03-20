@@ -2,6 +2,7 @@
 
 #include "AudioRingBuffer.h"
 #include "FormationSystem.h"
+#include "PathSystem.h"
 #include "SceneGraph.h"
 
 #include <algorithm>
@@ -45,6 +46,7 @@ struct ChoreographyOffset
  * Phase history:
  *   CL-P1: infrastructure (AudioRingBuffer, choro_enable gate, zero-offset bypass).
  *   CL-P2: FormationSystem integrated; morph animation; spread delta.
+ *   CL-P3: PathSystem integrated; 6 analytical path types; velocity Doppler hook.
  */
 class ChoreographyWorker
 {
@@ -86,6 +88,35 @@ public:
     void setFormationMorphRate (float v) noexcept { morphRate                   = std::clamp (v, 0.01f, 10.0f); }
     void setFormationMorphLoop (bool  v) noexcept { morphLoop                   = v; }
     void setFormationMorphPingpong(bool v) noexcept { morphPingpong             = v; }
+
+    //==========================================================================
+    // Path param setters (audio thread — called from publishEmitterState())
+    // CL-P3: 6 analytical path types; velocity Doppler hook.
+
+    void setPathType        (int   v) noexcept { pathParams.type        = static_cast<PathType>  (std::clamp (v, 0, 5)); }
+    void setPathPeriod      (float v) noexcept { pathParams.period      = std::clamp (v, 0.1f, 60.0f); }
+    void setPathSpeed       (float v) noexcept { pathParams.speed       = std::clamp (v, 0.1f, 10.0f); }
+    void setPathLissFreqA   (float v) noexcept { pathParams.lissFreqA   = std::clamp (v, 1.0f, 8.0f); }
+    void setPathLissFreqB   (float v) noexcept { pathParams.lissFreqB   = std::clamp (v, 1.0f, 8.0f); }
+    void setPathLissFreqC   (float v) noexcept { pathParams.lissFreqC   = std::clamp (v, 1.0f, 8.0f); }
+    void setPathLissAmpX    (float v) noexcept { pathParams.lissAmpX    = std::max (0.0f, v); }
+    void setPathLissAmpY    (float v) noexcept { pathParams.lissAmpY    = std::max (0.0f, v); }
+    void setPathLissAmpZ    (float v) noexcept { pathParams.lissAmpZ    = std::max (0.0f, v); }
+    void setPathLissPhase   (float v) noexcept { pathParams.lissPhase   = std::clamp (v, 0.0f, 360.0f); }
+    void setPathOrbitRx     (float v) noexcept { pathParams.orbitRx     = std::max (0.1f, v); }
+    void setPathOrbitRz     (float v) noexcept { pathParams.orbitRz     = std::max (0.1f, v); }
+    void setPathOrbitHeight (float v) noexcept { pathParams.orbitHeight = v; }
+    void setPathPendLength  (float v) noexcept { pathParams.pendLength  = std::max (0.1f, v); }
+    void setPathPendAmp     (float v) noexcept { pathParams.pendAmp     = std::clamp (v, 0.0f, 180.0f); }
+    void setPathPendPlane   (int   v) noexcept { pathParams.pendPlane   = static_cast<PathPlane> (std::clamp (v, 0, 2)); }
+    void setPathFig8Scale   (float v) noexcept { pathParams.fig8Scale   = std::max (0.1f, v); }
+    void setPathFig8Plane   (int   v) noexcept { pathParams.fig8Plane   = static_cast<PathPlane> (std::clamp (v, 0, 2)); }
+    void setPathHelixRadius (float v) noexcept { pathParams.helixRadius = std::max (0.1f, v); }
+    void setPathHelixPitch  (float v) noexcept { pathParams.helixPitch  = std::max (0.01f, v); }
+    void setPathHelixDir    (int   v) noexcept { pathParams.helixDir    = static_cast<HelixDir> (std::clamp (v, 0, 1)); }
+    void setPathWalkStep    (float v) noexcept { pathParams.walkStep    = std::clamp (v, 0.001f, 0.5f); }
+    void setPathWalkBounds  (float v) noexcept { pathParams.walkBounds  = std::max (0.1f, v); }
+    void setPathWalkSeed    (int   v) noexcept { pathParams.walkSeed    = std::clamp (v, 0, 65535); }
 
     //==========================================================================
     // Worker-thread interface
@@ -137,6 +168,11 @@ private:
     float morphDir      = 1.0f;    // +1.0 or -1.0 (ping-pong direction)
     bool  morphLoop     = false;
     bool  morphPingpong = false;
+
+    // CL-P3: Path system + params.
+    // Written by audio thread (setPath*), read by worker thread (compute()).
+    PathSystem pathSystem {};
+    PathParams pathParams {};
 
     static const ChoreographyOffset kZeroOffset;
 };

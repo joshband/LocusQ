@@ -483,6 +483,108 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "choro_formation_morph_pingpong", 1 }, "Formation Morph Pingpong", false));
 
+    // ==================== EMITTER: CHOREOGRAPHY — PROCEDURAL PATHS (CL-P3) ====================
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_path_type", 1 }, "Path Type",
+        juce::StringArray { "Lissajous", "Orbit", "Pendulum", "Figure Eight", "Helix", "Random Walk" }, 1));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_period", 1 }, "Path Period",
+        juce::NormalisableRange<float> (0.1f, 60.0f, 0.0f, 0.5f), 4.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_speed", 1 }, "Path Speed",
+        juce::NormalisableRange<float> (0.1f, 10.0f, 0.0f, 0.5f), 1.0f));
+
+    // Lissajous params
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_freq_a", 1 }, "Lissajous Freq A",
+        juce::NormalisableRange<float> (1.0f, 8.0f, 1.0f), 3.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_freq_b", 1 }, "Lissajous Freq B",
+        juce::NormalisableRange<float> (1.0f, 8.0f, 1.0f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_freq_c", 1 }, "Lissajous Freq C",
+        juce::NormalisableRange<float> (1.0f, 8.0f, 1.0f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_amp_x", 1 }, "Lissajous Amp X",
+        juce::NormalisableRange<float> (0.0f, 10.0f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_amp_y", 1 }, "Lissajous Amp Y",
+        juce::NormalisableRange<float> (0.0f, 10.0f), 0.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_amp_z", 1 }, "Lissajous Amp Z",
+        juce::NormalisableRange<float> (0.0f, 10.0f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_liss_phase", 1 }, "Lissajous Phase",
+        juce::NormalisableRange<float> (0.0f, 360.0f), 0.0f));
+
+    // Orbit params
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_orbit_rx", 1 }, "Orbit Radius X",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.5f), 3.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_orbit_rz", 1 }, "Orbit Radius Z",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.5f), 3.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_orbit_height", 1 }, "Orbit Height",
+        juce::NormalisableRange<float> (-10.0f, 10.0f), 0.0f));
+
+    // Pendulum params
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_pend_length", 1 }, "Pendulum Length",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.5f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_pend_amp", 1 }, "Pendulum Amplitude",
+        juce::NormalisableRange<float> (0.0f, 180.0f), 45.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_path_pend_plane", 1 }, "Pendulum Plane",
+        juce::StringArray { "XZ", "XY", "YZ" }, 0));
+
+    // Figure Eight params
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_fig8_scale", 1 }, "Figure Eight Scale",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.5f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_path_fig8_plane", 1 }, "Figure Eight Plane",
+        juce::StringArray { "XZ", "XY", "YZ" }, 0));
+
+    // Helix params
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_helix_radius", 1 }, "Helix Radius",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.5f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_helix_pitch", 1 }, "Helix Pitch",
+        juce::NormalisableRange<float> (0.01f, 5.0f, 0.0f, 0.5f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_path_helix_dir", 1 }, "Helix Direction",
+        juce::StringArray { "Up", "Down" }, 0));
+
+    // Random Walk params
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_walk_step", 1 }, "Walk Step Size",
+        juce::NormalisableRange<float> (0.001f, 0.5f, 0.0f, 0.5f), 0.05f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_path_walk_bounds", 1 }, "Walk Bounds",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.5f), 5.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterInt> (
+        juce::ParameterID { "choro_path_walk_seed", 1 }, "Walk Seed", 0, 65535, 0));
+
     // ==================== EMITTER: IDENTITY ====================
     addParameter (emitterIdentityGroup, std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "emit_color", 1 }, "Color", 0, 15, 0));

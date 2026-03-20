@@ -10,8 +10,14 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-21T11:00:00Z | BL-113 CL-P3 PathSystem | PASS | `PathSystem.h/.cpp: 6 path types, velocity Doppler hook; 23 APVTS params registered and wired; CMakeLists probes updated; build clean (all targets); RT non_allowlisted=0` |
 | 2026-03-21T10:00:00Z | BL-113 CL-P2 FormationSystem | PASS | `FormationSystem.h/.cpp: 7 types (Line/Arc/Circle/Grid/Spiral/SphereSurface/Custom), morph animation, spread delta; 16 APVTS params registered and wired; PhysicsWorker active-emitter count; build clean; RT non_allowlisted=0; docs freshness PASS` |
 | 2026-03-20T12:00:00Z | BL-113 CL-P1 ChoreographyWorker infrastructure | PASS | `AudioRingBuffer.h + ChoreographyWorker.h/.cpp created; PhysicsWorker tick integration; choro_enable APVTS wired; build clean; RT audit non_allowlisted=0; docs freshness PASS` |
+| 2026-03-20T18:59:49Z | BL-108 packetized visual proof lane | PASS | `qa-bl108-physics-reactive-visual-proof-mac.sh now produces a machine-readable standalone proof packet with passing BL-108 scoped selftest and standalone smoke artifacts` |
+| 2026-03-20T18:25:40Z | BL-108 beat-sync quadrant slice C | PASS | `Native transport beat phase now drives the amber 6->9 quadrant, sweep dot, and bounded beat/downbeat atmosphere cues in the production viewport; dedicated BL-108 selftest and standalone smoke both stayed green` |
+| 2026-03-20T07:06:40Z | BL-108 selftest recovery slice B | PASS | `Dedicated BL-108 selftest now passes after replacing the direct->open fallback with bounded direct bootstrap retries and making the physics ring assertion deterministic against synthetic projected positions; standalone smoke stayed green` |
+| 2026-03-20T06:37:54Z | BL-108 physics ring activation slice A | PARTIAL | `Physics atmosphere bloom plus physics quadrant segment landed in the production viewport and standalone smoke stayed green, but the new dedicated bl108 selftest aborted before writing a result payload` |
+| 2026-03-20T06:27:12Z | BL-107 bridge-truth onset slice | PASS | `Production foundation now consumes bridged audition-reactive onset and renders bounded transient rings plus an Attack readout without crossing into BL-108 segment semantics` |
 | 2026-03-20T06:07:46Z | BL-107 bridge-truth motion slice | PASS | `Production foundation now derives motion/force from bridged velocity and force vectors, and the base state ring plus selection HUD respond without crossing into BL-108 segment semantics` |
 | 2026-03-20T02:02:00Z | BL-107 visual packet assembly | PASS | `Dedicated before/after visual packet now links the scaffold, truth-wiring, and native brightness slices so BL-107 review no longer depends on raw smoke folders alone` |
 | 2026-03-20T01:57:02Z | BL-107 bridge-truth brightness slice | PASS | `Production foundation now consumes a native emitter brightness field from the scene snapshot, and the atmosphere responds to bridged brightness alongside color, RMS, gain, and collision state` |
@@ -72,6 +78,11 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T18:59:49Z | BL-108 packetized visual proof lane | PASS | `TestEvidence/bl108_visual_proof_20260320T185949Z/ now captures the replayable BL-108 standalone proof contract with status.tsv, validation_matrix.tsv, and summary.md` |
+| 2026-03-20T18:25:40Z | BL-108 beat-sync quadrant slice C | PASS | `Dedicated BL-108 selftest now proves both the physics quadrant and the beat-sync quadrant in TestEvidence/locusq_production_p0_selftest_20260320T182540Z.json, and standalone smoke stayed green in TestEvidence/standalone_ui_smoke_20260320T182552Z/` |
+| 2026-03-20T07:06:40Z | BL-108 selftest recovery slice B | PASS | `Dedicated BL-108 selftest now passes in TestEvidence/locusq_production_p0_selftest_20260320T070640Z.json, and the standalone smoke regression rerun stayed green in TestEvidence/standalone_ui_smoke_20260320T070653Z/` |
+| 2026-03-20T06:37:54Z | BL-108 physics ring activation slice A | PARTIAL | `Physics atmosphere bloom plus physics quadrant segment landed in the production viewport and standalone smoke stayed green, but the new dedicated bl108 selftest aborted before writing a result payload` |
+| 2026-03-20T06:27:12Z | BL-107 bridge-truth onset slice | PASS | `Production foundation now consumes bridged audition-reactive onset and renders bounded transient rings plus an Attack readout without crossing into BL-108 segment semantics` |
 | 2026-03-20T06:07:46Z | BL-107 bridge-truth motion slice | PASS | `Production foundation now derives motion/force from bridged velocity and force vectors, and the base state ring plus selection HUD respond without crossing into BL-108 segment semantics` |
 | 2026-03-20T02:02:00Z | BL-107 visual packet assembly | PASS | `Dedicated before/after visual packet now links the scaffold, truth-wiring, and native brightness slices so BL-107 review no longer depends on raw smoke folders alone` |
 | 2026-03-20T01:57:02Z | BL-107 bridge-truth brightness slice | PASS | `Production foundation now consumes a native emitter brightness field from the scene snapshot, and the atmosphere responds to bridged brightness alongside color, RMS, gain, and collision state` |

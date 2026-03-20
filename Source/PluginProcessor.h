@@ -547,6 +547,33 @@ private:
     std::atomic<float>* choroFormMorphRateParam      = nullptr;
     std::atomic<float>* choroFormMorphLoopParam      = nullptr;
     std::atomic<float>* choroFormMorphPingpongParam  = nullptr;
+
+    // CL-P3: Path system raw param pointers
+    std::atomic<float>* choroPathTypeParam        = nullptr;
+    std::atomic<float>* choroPathPeriodParam      = nullptr;
+    std::atomic<float>* choroPathSpeedParam       = nullptr;
+    std::atomic<float>* choroPathLissFreqAParam   = nullptr;
+    std::atomic<float>* choroPathLissFreqBParam   = nullptr;
+    std::atomic<float>* choroPathLissFreqCParam   = nullptr;
+    std::atomic<float>* choroPathLissAmpXParam    = nullptr;
+    std::atomic<float>* choroPathLissAmpYParam    = nullptr;
+    std::atomic<float>* choroPathLissAmpZParam    = nullptr;
+    std::atomic<float>* choroPathLissPhaseParam   = nullptr;
+    std::atomic<float>* choroPathOrbitRxParam     = nullptr;
+    std::atomic<float>* choroPathOrbitRzParam     = nullptr;
+    std::atomic<float>* choroPathOrbitHeightParam = nullptr;
+    std::atomic<float>* choroPathPendLengthParam  = nullptr;
+    std::atomic<float>* choroPathPendAmpParam     = nullptr;
+    std::atomic<float>* choroPathPendPlaneParam   = nullptr;
+    std::atomic<float>* choroPathFig8ScaleParam   = nullptr;
+    std::atomic<float>* choroPathFig8PlaneParam   = nullptr;
+    std::atomic<float>* choroPathHelixRadiusParam = nullptr;
+    std::atomic<float>* choroPathHelixPitchParam  = nullptr;
+    std::atomic<float>* choroPathHelixDirParam    = nullptr;
+    std::atomic<float>* choroPathWalkStepParam    = nullptr;
+    std::atomic<float>* choroPathWalkBoundsParam  = nullptr;
+    std::atomic<float>* choroPathWalkSeedParam    = nullptr;
+
     std::atomic<float>* emitGainParam = nullptr;
     std::atomic<float>* emitSpreadParam = nullptr;
     std::atomic<float>* emitDirectivityParam = nullptr;
@@ -756,6 +783,7 @@ private:
     std::array<int, SpatialRenderer::NUM_SPEAKERS> lastAutoDetectedSpeakerRouting { 1, 2, 3, 4 };
     bool hasRestoredSnapshotState = false;
     bool hasSeededInitialEmitterColor = false;
+    bool pluginStateRestoreInProgress = false;
     int lastReportedCalibrationLatency = -1;  // -1 forces first-block update
     juce::int64 companionCalibrationProfileLastModifiedMs = -1;
 
