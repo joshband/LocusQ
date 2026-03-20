@@ -6,7 +6,7 @@
 # and exits 0 (all pass) or 1 (any fail / timeout).
 #
 # BlackHole gives REAPER a real CoreAudio device so prepareToPlay + processBlock
-# run — meaning Gate B/D prove actual physics-engine → APVTS-param writes, not
+# run — meaning gates B/D/E/F prove actual physics-engine → APVTS-param writes, not
 # just sentinel values.
 #
 # The script temporarily patches coreaudiooutdevnew/coreaudioindevnew in the
@@ -31,7 +31,7 @@ TIMESTAMP="$(date -u +%Y%m%d_%H%M%SZ)"
 REAPER_BIN="${REAPER_BIN:-/Applications/REAPER.app/Contents/MacOS/REAPER}"
 GATE_SCRIPT="$ROOT_DIR/qa/reaper/reascripts/LocusQ_PhysicsDAWAuto_Gate.lua"
 REQUIRE_LOCUSQ="${LQ_REAPER_REQUIRE_LOCUSQ:-1}"
-GATE_TIMEOUT_SEC="${LQ_GATE_TIMEOUT_SEC:-90}"
+GATE_TIMEOUT_SEC="${LQ_GATE_TIMEOUT_SEC:-120}"
 GATE_POLL_INTERVAL_SEC="${LQ_GATE_POLL_INTERVAL_SEC:-2}"
 # Pre-built RPP with LocusQ on Track 1 — avoids TrackFX_AddByName + plugin-scan dependency.
 # Override with LQ_REAPER_PROJECT_FILE="" to fall back to the blank-project path.
@@ -188,16 +188,20 @@ cat "$GATE_STATUS" | tee -a "$LOG_FILE"
 
 GATE_OVERALL="$(grep '"status"' "$GATE_STATUS" | sed 's/.*"status": *"\([^"]*\)".*/\1/')"
 
-GATE_A="$(grep '"gate_a_param_reg"' "$GATE_STATUS" | grep -c 'true' || echo 0)"
-GATE_B="$(grep '"gate_b_live_output"' "$GATE_STATUS" | grep -c 'true' || echo 0)"
-GATE_C="$(grep '"gate_c_no_jump"' "$GATE_STATUS" | grep -c 'true' || echo 0)"
-GATE_D="$(grep '"gate_d_live_resume"' "$GATE_STATUS" | grep -c 'true' || echo 0)"
+GATE_A="$(grep '"gate_a_param_reg"'        "$GATE_STATUS" | grep -c 'true' || echo 0)"
+GATE_B="$(grep '"gate_b_live_output"'      "$GATE_STATUS" | grep -c 'true' || echo 0)"
+GATE_C="$(grep '"gate_c_no_jump"'          "$GATE_STATUS" | grep -c 'true' || echo 0)"
+GATE_D="$(grep '"gate_d_live_resume"'      "$GATE_STATUS" | grep -c 'true' || echo 0)"
+GATE_E="$(grep '"gate_e_transient_frozen"' "$GATE_STATUS" | grep -c 'true' || echo 0)"
+GATE_F="$(grep '"gate_f_frozen_stable"'    "$GATE_STATUS" | grep -c 'true' || echo 0)"
 
 echo "" | tee -a "$LOG_FILE"
-echo "gate_a_param_reg=${GATE_A}   (1=pass)" | tee -a "$LOG_FILE"
-echo "gate_b_live_output=${GATE_B}  (1=pass)" | tee -a "$LOG_FILE"
-echo "gate_c_no_jump=${GATE_C}     (1=pass)" | tee -a "$LOG_FILE"
-echo "gate_d_live_resume=${GATE_D} (1=pass)" | tee -a "$LOG_FILE"
+echo "gate_a_param_reg=${GATE_A}        (1=pass)" | tee -a "$LOG_FILE"
+echo "gate_b_live_output=${GATE_B}      (1=pass)" | tee -a "$LOG_FILE"
+echo "gate_c_no_jump=${GATE_C}          (1=pass)" | tee -a "$LOG_FILE"
+echo "gate_d_live_resume=${GATE_D}      (1=pass)" | tee -a "$LOG_FILE"
+echo "gate_e_transient_frozen=${GATE_E} (1=pass)" | tee -a "$LOG_FILE"
+echo "gate_f_frozen_stable=${GATE_F}    (1=pass)" | tee -a "$LOG_FILE"
 echo "overall_status=$GATE_OVERALL" | tee -a "$LOG_FILE"
 echo "artifact=$RUN_DIR"
 

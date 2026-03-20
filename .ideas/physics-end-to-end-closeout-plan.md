@@ -127,8 +127,8 @@ Verify spring tether and turbulence each produce non-zero spread output in REAPE
 **Acceptance gate:**
 - [x] pluginval scan: all 32 DAW automation parameters present
 - [x] REAPER: LIVE recording lane captures non-flat spread/gain curves
-- [ ] REAPER: FROZEN lane follows drawn automation
-- [ ] REAPER: `gainTransient` pulses when frozen
+- [x] REAPER: FROZEN lane follows drawn automation
+- [x] REAPER: `gainTransient` pulses when frozen
 - [x] REAPER: automation lane display names match `physics-daw-automation-spec.md §UI Surface`
 - [x] No `setValueNotifyingHost` in `processBlock` — confirmed clean
 - [x] Code-reviewed gates logged as verified
