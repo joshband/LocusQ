@@ -1558,7 +1558,24 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     animLoopParam = rawParam ("anim_loop");
     animSpeedParam = rawParam ("anim_speed");
     animSyncParam = rawParam ("anim_sync");
-    choroEnableParam = rawParam ("choro_enable");   // CL-P1
+    choroEnableParam            = rawParam ("choro_enable");                 // CL-P1
+    // CL-P2: formation params
+    choroFormationTypeParam     = rawParam ("choro_formation_type");
+    choroFormAxisParam          = rawParam ("choro_form_axis");
+    choroFormPlaneParam         = rawParam ("choro_form_plane");
+    choroFormRadiusParam        = rawParam ("choro_form_radius");
+    choroFormSpacingParam       = rawParam ("choro_form_spacing");
+    choroFormArcAngleParam      = rawParam ("choro_form_arc_angle");
+    choroFormPhaseOffsetParam   = rawParam ("choro_form_phase_offset");
+    choroFormRowsParam          = rawParam ("choro_form_rows");
+    choroFormColsParam          = rawParam ("choro_form_cols");
+    choroFormSpacingXParam      = rawParam ("choro_form_spacing_x");
+    choroFormSpacingZParam      = rawParam ("choro_form_spacing_z");
+    choroFormTurnsParam         = rawParam ("choro_form_turns");
+    choroFormHeightRiseParam    = rawParam ("choro_form_height_rise");
+    choroFormMorphRateParam     = rawParam ("choro_formation_morph_rate");
+    choroFormMorphLoopParam     = rawParam ("choro_formation_morph_loop");
+    choroFormMorphPingpongParam = rawParam ("choro_formation_morph_pingpong");
     emitGainParam = rawParam ("emit_gain");
     emitSpreadParam = rawParam ("emit_spread");
     emitDirectivityParam = rawParam ("emit_directivity");
@@ -2803,6 +2820,12 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     float posZ = loadParam (posZParam);
     float sizeUniform = loadParam (sizeUniformParam);
     std::optional<TimelinePoint3D> formationPosition;
+    bool teleportTriggeredThisBlock = false;
+    auto teleportBeatDivision = std::optional<BeatDivision> {};
+    auto transportBpm = std::optional<double> {};
+    const auto blockDurationSeconds = (currentSampleRate > 0.0)
+        ? static_cast<double> (numSamplesInBlock) / currentSampleRate
+        : 0.0;
 
     const bool animationEnabled = loadParam (animEnableParam) > 0.5f;
     const bool internalAnimation = animationEnabled
@@ -2822,6 +2845,7 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
         {
             if (const auto transportSnapshot = getTransportTimelineSyncSnapshot())
             {
+                transportBpm = transportSnapshot->bpm;
                 auto playbackSeconds = transportSnapshot->timeSeconds;
 
                 if (keyframeTimeline.hasBeatSyncCurves()
@@ -2837,15 +2861,23 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
 
                 playbackSeconds *= static_cast<double> (keyframeTimeline.getPlaybackRate());
                 keyframeTimeline.setCurrentTimeSeconds (playbackSeconds);
+
+                if (keyframeTimeline.hasCurveAtCurrentTime (KeyframeCurve::teleport))
+                {
+                    teleportBeatDivision = keyframeTimeline.getCurveBeatDivisionAtCurrentTime (KeyframeCurve::teleport);
+                    const bool quantizedJumped = lastTimelineBeatSyncQuantizedSeconds < 0.0
+                        || std::abs (playbackSeconds - lastTimelineBeatSyncQuantizedSeconds) > 1.0e-6;
+                    teleportTriggeredThisBlock = quantizedJumped;
+                }
+
+                lastTimelineBeatSyncQuantizedSeconds = playbackSeconds;
                 advancedFromTransport = true;
             }
         }
 
         if (! advancedFromTransport)
         {
-            const auto blockDurationSeconds = (currentSampleRate > 0.0)
-                                            ? static_cast<double> (numSamplesInBlock) / currentSampleRate
-                                            : 0.0;
+            lastTimelineBeatSyncQuantizedSeconds = -1.0;
             keyframeTimeline.advance (blockDurationSeconds);
         }
 
@@ -2929,6 +2961,33 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     data.muted       = loadParam (emitMuteParam) > 0.5f;
     data.soloed      = loadParam (emitSoloParam) > 0.5f;
 
+    if (! internalAnimation)
+    {
+        lastTimelineBeatSyncQuantizedSeconds = -1.0;
+        timelineTeleportGainDip = 1.0f;
+    }
+    else
+    {
+        if (teleportTriggeredThisBlock)
+            timelineTeleportGainDip = 0.35f;
+
+        data.gain *= timelineTeleportGainDip;
+
+        auto teleportReleaseSeconds = 0.035;
+        if (teleportBeatDivision.has_value()
+            && loadParam (animSyncParam) > 0.5f
+            && transportBpm.has_value()
+            && *transportBpm > 1.0e-6)
+        {
+            teleportReleaseSeconds = juce::jlimit (0.0125,
+                                                   0.125,
+                                                   beatDivisionSeconds (*teleportBeatDivision, *transportBpm) * 0.5);
+        }
+
+        const auto releaseT = static_cast<float> (1.0 - std::exp (-blockDurationSeconds / teleportReleaseSeconds));
+        timelineTeleportGainDip += (1.0f - timelineTeleportGainDip) * juce::jlimit (0.0f, 1.0f, releaseT);
+    }
+
     const float aimAzimuth = loadParam (emitDirAzimuthParam);
     const float aimElevation = loadParam (emitDirElevationParam);
     const float aimAzimuthRad = aimAzimuth * juce::MathConstants<float>::pi / 180.0f;
@@ -2943,6 +3002,27 @@ void LocusQAudioProcessor::publishEmitterState (int numSamplesInBlock)
     // CL-P1: propagate choro_enable to the ChoreographyWorker each block.
     const bool choroEnabled = loadParam (choroEnableParam) > 0.5f;
     physicsWorker.getChoreographyWorker().setEnabled (choroEnabled);
+
+    // CL-P2: propagate formation params to the ChoreographyWorker each block.
+    {
+        auto& cw = physicsWorker.getChoreographyWorker();
+        cw.setFormationType       (static_cast<int> (std::lround (loadParam (choroFormationTypeParam))));
+        cw.setFormationAxis       (static_cast<int> (std::lround (loadParam (choroFormAxisParam))));
+        cw.setFormationPlane      (static_cast<int> (std::lround (loadParam (choroFormPlaneParam))));
+        cw.setFormationRadius     (loadParam (choroFormRadiusParam));
+        cw.setFormationSpacing    (loadParam (choroFormSpacingParam));
+        cw.setFormationArcAngle   (loadParam (choroFormArcAngleParam));
+        cw.setFormationPhaseOffset(loadParam (choroFormPhaseOffsetParam));
+        cw.setFormationRows       (loadParam (choroFormRowsParam));
+        cw.setFormationCols       (loadParam (choroFormColsParam));
+        cw.setFormationSpacingX   (loadParam (choroFormSpacingXParam));
+        cw.setFormationSpacingZ   (loadParam (choroFormSpacingZParam));
+        cw.setFormationTurns      (loadParam (choroFormTurnsParam));
+        cw.setFormationHeightRise (loadParam (choroFormHeightRiseParam));
+        cw.setFormationMorphRate  (loadParam (choroFormMorphRateParam));
+        cw.setFormationMorphLoop      (loadParam (choroFormMorphLoopParam)      > 0.5f);
+        cw.setFormationMorphPingpong  (loadParam (choroFormMorphPingpongParam)  > 0.5f);
+    }
 
     const int physicsRateIndex = sceneGraph.getPhysicsRateIndex();
     physicsEngine.setUpdateRateIndex (physicsRateIndex);

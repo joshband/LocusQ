@@ -422,6 +422,67 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
     addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterBool> (
         juce::ParameterID { "choro_enable", 1 }, "Choreography Enable", false));
 
+    // ==================== EMITTER: CHOREOGRAPHY — FORMATION (CL-P2) ====================
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_formation_type", 1 }, "Formation Type",
+        juce::StringArray { "Line", "Arc", "Circle", "Grid", "Spiral", "Sphere Surface", "Custom" }, 2));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_form_axis", 1 }, "Formation Axis",
+        juce::StringArray { "X", "Y", "Z" }, 0));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { "choro_form_plane", 1 }, "Formation Plane",
+        juce::StringArray { "XZ", "XY", "YZ" }, 0));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_radius", 1 }, "Formation Radius",
+        juce::NormalisableRange<float> (0.1f, 20.0f, 0.01f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_spacing", 1 }, "Formation Spacing",
+        juce::NormalisableRange<float> (0.1f, 5.0f, 0.01f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_arc_angle", 1 }, "Arc Angle",
+        juce::NormalisableRange<float> (0.0f, 360.0f, 0.1f), 180.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_phase_offset", 1 }, "Phase Offset",
+        juce::NormalisableRange<float> (0.0f, 360.0f, 0.1f), 0.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterInt> (
+        juce::ParameterID { "choro_form_rows", 1 }, "Grid Rows", 1, 16, 2));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterInt> (
+        juce::ParameterID { "choro_form_cols", 1 }, "Grid Cols", 1, 16, 2));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_spacing_x", 1 }, "Grid Spacing X",
+        juce::NormalisableRange<float> (0.1f, 5.0f, 0.01f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_spacing_z", 1 }, "Grid Spacing Z",
+        juce::NormalisableRange<float> (0.1f, 5.0f, 0.01f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_turns", 1 }, "Spiral Turns",
+        juce::NormalisableRange<float> (0.5f, 8.0f, 0.1f), 2.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_form_height_rise", 1 }, "Spiral Height Rise",
+        juce::NormalisableRange<float> (-5.0f, 5.0f, 0.01f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "choro_formation_morph_rate", 1 }, "Formation Morph Rate",
+        juce::NormalisableRange<float> (0.01f, 10.0f, 0.01f), 1.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "choro_formation_morph_loop", 1 }, "Formation Morph Loop", false));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { "choro_formation_morph_pingpong", 1 }, "Formation Morph Pingpong", false));
+
     // ==================== EMITTER: IDENTITY ====================
     addParameter (emitterIdentityGroup, std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "emit_color", 1 }, "Color", 0, 15, 0));

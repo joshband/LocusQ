@@ -529,7 +529,24 @@ private:
     std::atomic<float>* animLoopParam = nullptr;
     std::atomic<float>* animSpeedParam = nullptr;
     std::atomic<float>* animSyncParam = nullptr;
-    std::atomic<float>* choroEnableParam = nullptr;   // CL-P1
+    std::atomic<float>* choroEnableParam             = nullptr;  // CL-P1
+    // CL-P2: formation params
+    std::atomic<float>* choroFormationTypeParam      = nullptr;
+    std::atomic<float>* choroFormAxisParam           = nullptr;
+    std::atomic<float>* choroFormPlaneParam          = nullptr;
+    std::atomic<float>* choroFormRadiusParam         = nullptr;
+    std::atomic<float>* choroFormSpacingParam        = nullptr;
+    std::atomic<float>* choroFormArcAngleParam       = nullptr;
+    std::atomic<float>* choroFormPhaseOffsetParam    = nullptr;
+    std::atomic<float>* choroFormRowsParam           = nullptr;
+    std::atomic<float>* choroFormColsParam           = nullptr;
+    std::atomic<float>* choroFormSpacingXParam       = nullptr;
+    std::atomic<float>* choroFormSpacingZParam       = nullptr;
+    std::atomic<float>* choroFormTurnsParam          = nullptr;
+    std::atomic<float>* choroFormHeightRiseParam     = nullptr;
+    std::atomic<float>* choroFormMorphRateParam      = nullptr;
+    std::atomic<float>* choroFormMorphLoopParam      = nullptr;
+    std::atomic<float>* choroFormMorphPingpongParam  = nullptr;
     std::atomic<float>* emitGainParam = nullptr;
     std::atomic<float>* emitSpreadParam = nullptr;
     std::atomic<float>* emitDirectivityParam = nullptr;
@@ -602,6 +619,8 @@ private:
     std::atomic<double> keyframeTimelinePublishedDurationSeconds { 0.0 };
     std::atomic<bool> keyframeTimelinePublishedLooping { false };
     std::atomic<float> keyframeTimelinePublishedPlaybackRate { 1.0f };
+    double lastTimelineBeatSyncQuantizedSeconds = -1.0;
+    float timelineTeleportGainDip = 1.0f;
     void initialiseDefaultKeyframeTimeline (KeyframeTimeline& timeline) const;
     std::optional<TransportTimelineSyncSnapshot> getTransportTimelineSyncSnapshot() const;
     void publishKeyframeTimelineStateToRtLocked();

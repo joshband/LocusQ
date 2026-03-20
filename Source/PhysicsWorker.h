@@ -364,9 +364,15 @@ private:
      *      to engines; collision energy published to DSP bridge. */
     void tick (float dt)
     {
-        // CL-P1: Compute choreography offsets before any per-emitter work
-        //        (ADR-0020 step 3; zero offsets in P1, subsystems added in CL-P2+).
-        choreographyWorker.compute (dt);
+        // CL-P2: Count active emitter slots for the FormationSystem.
+        int activeEmitterCount = 0;
+        for (int i = 0; i < kMaxEmitters; ++i)
+            if (slots[static_cast<std::size_t> (i)].active.load (std::memory_order_acquire))
+                ++activeEmitterCount;
+
+        // Compute choreography offsets before any per-emitter work
+        // (ADR-0020 step 3; tick sequence from choreography-lab-impl-plan.md).
+        choreographyWorker.compute (dt, activeEmitterCount);
 
         // P4: Consume one-shot angular triggers once for the whole tick so all
         //     emitters receive the same throw/reset in the same simulation step.

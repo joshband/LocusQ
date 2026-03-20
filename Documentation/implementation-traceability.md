@@ -2,7 +2,7 @@ Title: LocusQ Implementation Traceability
 Document Type: Traceability Matrix
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-20
+Last Modified Date: 2026-03-21
 
 # LocusQ Implementation Traceability
 
@@ -1325,6 +1325,27 @@ Split-brain authority gap closed (2026-03-19): `PhysicsEngine::step()` guard add
 | `choro_enable` | `emitter_choreography` | `Source/processor_core/ProcessorParameterLayout.cpp`; `Source/PluginProcessor.cpp` `publishEmitterState` (APVTS → `physicsWorker.getChoreographyWorker().setEnabled()`); `Source/PluginProcessor.cpp` `processBlock` Emitter branch (audio push) | Pending BL-114 WebView controls | Bool; ADR-0020 Layer 3 master enable. When false, `ChoreographyWorker::compute()` produces zero offsets and physics baseline is unchanged. |
 
 Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P1; additional `choro_*` and `bake_*` params added per phase per `.ideas/parameter-spec.md`).
+
+## Choreography Lab Parameters (BL-113 CL-P2)
+
+| Parameter ID | Group | Implementation Surface | UI Surface | Notes |
+|:---|:---|:---|:---|:---|
+| `choro_formation_type` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `PluginProcessor.cpp` `publishEmitterState` → `setFormationType()` | Pending BL-114 | Choice 0–6 (Line/Arc/Circle/Grid/Spiral/SphereSurface/Custom). Loaded via `std::lround`. |
+| `choro_form_axis` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationAxis()` | Pending BL-114 | Choice 0–2 (X/Y/Z). Line axis of propagation. |
+| `choro_form_plane` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationPlane()` | Pending BL-114 | Choice 0–2 (XZ/XY/YZ). Arc and Circle formation plane. |
+| `choro_form_radius` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationRadius()` | Pending BL-114 | Float 0.1–20.0 m. Radius for Arc/Circle/Spiral/SphereSurface. |
+| `choro_form_spacing` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationSpacing()` | Pending BL-114 | Float 0.1–5.0 m. Line inter-slot spacing; Spiral inter-turn spacing. |
+| `choro_form_arc_angle` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationArcAngle()` | Pending BL-114 | Float 0.0–360.0 deg. Total arc sweep. |
+| `choro_form_phase_offset` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationPhaseOffset()` | Pending BL-114 | Float 0.0–360.0 deg. Circle slot-0 phase. |
+| `choro_form_rows` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationRows()` | Pending BL-114 | Int 1–16. Grid row count. |
+| `choro_form_cols` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationCols()` | Pending BL-114 | Int 1–16. Grid column count. |
+| `choro_form_spacing_x` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationSpacingX()` | Pending BL-114 | Float 0.1–5.0 m. Grid X spacing. |
+| `choro_form_spacing_z` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationSpacingZ()` | Pending BL-114 | Float 0.1–5.0 m. Grid Z spacing. |
+| `choro_form_turns` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationTurns()` | Pending BL-114 | Float 0.5–8.0. Spiral turns count. |
+| `choro_form_height_rise` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationHeightRise()` | Pending BL-114 | Float −5.0–5.0 m. Spiral total Y rise. |
+| `choro_formation_morph_rate` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationMorphRate()` | Pending BL-114 | Float 0.01–10.0 Hz. Morph phase advance speed. |
+| `choro_formation_morph_loop` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationMorphLoop()` | Pending BL-114 | Bool. Wraps morph phase continuously when On. |
+| `choro_formation_morph_pingpong` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `publishEmitterState` → `setFormationMorphPingpong()` | Pending BL-114 | Bool. Reverses morph direction at 0/1 boundaries when On. |
 
 ## Notes
 

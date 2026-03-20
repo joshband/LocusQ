@@ -2,7 +2,7 @@ Title: LocusQ Parameter Specification
 Document Type: Parameter Specification
 Author: APC Codex
 Created Date: 2026-02-17
-Last Modified Date: 2026-03-20
+Last Modified Date: 2026-03-21
 
 # LocusQ - Parameter Specification
 
@@ -154,7 +154,28 @@ Last Modified Date: 2026-03-20
 
 | ID | Name | Type | Range | Default | Unit | Notes |
 |:---|:-----|:-----|:------|:--------|:-----|:------|
-| `choro_enable` | Choreography Enable | Bool | On / Off | Off | — | Master enable for Choreography Lab (ADR-0020 Layer 3). When off, ChoreographyWorker produces zero offsets and behaviour is identical to the pre-choreography baseline. CL-P2+ params added per phase. |
+| `choro_enable` | Choreography Enable | Bool | On / Off | Off | — | Master enable for Choreography Lab (ADR-0020 Layer 3). When off, ChoreographyWorker produces zero offsets and behaviour is identical to the pre-choreography baseline. |
+
+### Choreography Lab — Formation Patterns (CL-P2)
+
+| ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:-----|:-----|:------|:--------|:-----|:------|
+| `choro_formation_type` | Formation Type | Enum | Line / Arc / Circle / Grid / Spiral / Sphere Surface / Custom | Circle | — | Active formation geometry. Custom produces zero offsets (placeholder; per-slot data not via APVTS). |
+| `choro_form_axis` | Formation Axis | Enum | X / Y / Z | X | — | Axis of propagation for Line formation. |
+| `choro_form_plane` | Formation Plane | Enum | XZ / XY / YZ | XZ | — | Reference plane for Arc and Circle formations. |
+| `choro_form_radius` | Formation Radius | Float | 0.1 – 20.0 | 2.0 | m | Radius for Arc, Circle, Spiral, and Sphere Surface formations. |
+| `choro_form_spacing` | Formation Spacing | Float | 0.1 – 5.0 | 1.0 | m | Inter-slot spacing for Line formation; inter-turn spacing for Spiral. |
+| `choro_form_arc_angle` | Arc Angle | Float | 0.0 – 360.0 | 180.0 | deg | Total sweep angle for Arc formation. |
+| `choro_form_phase_offset` | Phase Offset | Float | 0.0 – 360.0 | 0.0 | deg | Angular phase offset for Circle formation slot 0. |
+| `choro_form_rows` | Grid Rows | Int | 1 – 16 | 2 | — | Row count for Grid formation. |
+| `choro_form_cols` | Grid Cols | Int | 1 – 16 | 2 | — | Column count for Grid formation. |
+| `choro_form_spacing_x` | Grid Spacing X | Float | 0.1 – 5.0 | 1.0 | m | Column spacing for Grid formation. |
+| `choro_form_spacing_z` | Grid Spacing Z | Float | 0.1 – 5.0 | 1.0 | m | Row spacing for Grid formation. |
+| `choro_form_turns` | Spiral Turns | Float | 0.5 – 8.0 | 2.0 | — | Number of full turns for Spiral formation. |
+| `choro_form_height_rise` | Spiral Height Rise | Float | -5.0 – 5.0 | 1.0 | m | Total Y rise across all turns for Spiral formation. |
+| `choro_formation_morph_rate` | Formation Morph Rate | Float | 0.01 – 10.0 | 1.0 | Hz | Rate at which morphPhase advances (cycles/second). Controls expansion/collapse animation speed. |
+| `choro_formation_morph_loop` | Formation Morph Loop | Bool | On / Off | Off | — | When On, morphPhase wraps continuously. When Off, morphPhase clamps at 1.0. |
+| `choro_formation_morph_pingpong` | Formation Morph Pingpong | Bool | On / Off | Off | — | When On (requires Loop=On), morphPhase reverses at 0.0 and 1.0 boundaries creating pulse animation. |
 
 ### Emitter Identity
 

@@ -350,6 +350,8 @@ target_sources(LocusQ
         Source/AudioRingBuffer.h
         Source/ChoreographyWorker.h
         Source/ChoreographyWorker.cpp
+        Source/FormationSystem.h
+        Source/FormationSystem.cpp
 )
 
 # SofaHrtfLoader.h/.cpp are both isolated to the SOFA feature block.

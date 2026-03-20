@@ -10,7 +10,10 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-21T10:00:00Z | BL-113 CL-P2 FormationSystem | PASS | `FormationSystem.h/.cpp: 7 types (Line/Arc/Circle/Grid/Spiral/SphereSurface/Custom), morph animation, spread delta; 16 APVTS params registered and wired; PhysicsWorker active-emitter count; build clean; RT non_allowlisted=0; docs freshness PASS` |
 | 2026-03-20T12:00:00Z | BL-113 CL-P1 ChoreographyWorker infrastructure | PASS | `AudioRingBuffer.h + ChoreographyWorker.h/.cpp created; PhysicsWorker tick integration; choro_enable APVTS wired; build clean; RT audit non_allowlisted=0; docs freshness PASS` |
+| 2026-03-20T06:07:46Z | BL-107 bridge-truth motion slice | PASS | `Production foundation now derives motion/force from bridged velocity and force vectors, and the base state ring plus selection HUD respond without crossing into BL-108 segment semantics` |
+| 2026-03-20T02:02:00Z | BL-107 visual packet assembly | PASS | `Dedicated before/after visual packet now links the scaffold, truth-wiring, and native brightness slices so BL-107 review no longer depends on raw smoke folders alone` |
 | 2026-03-20T01:57:02Z | BL-107 bridge-truth brightness slice | PASS | `Production foundation now consumes a native emitter brightness field from the scene snapshot, and the atmosphere responds to bridged brightness alongside color, RMS, gain, and collision state` |
 | 2026-03-20T01:51:19Z | BL-107 viewport truth-wiring slice B2 | PASS | `Production foundation now reads scene gain as actual dB and tints the atmosphere from emitter color plus live RMS/collision state; targeted BL-107 selftest and standalone smoke both stayed green` |
 | 2026-03-20T01:50:33Z | BL-107 bridge-truth RMS slice | PASS | `Production foundation energy now resolves from native emitter rms instead of a neutral fallback, and the dedicated BL-107 selftest still passes with an explicit HUD energy assertion` |
@@ -69,6 +72,8 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-20T06:07:46Z | BL-107 bridge-truth motion slice | PASS | `Production foundation now derives motion/force from bridged velocity and force vectors, and the base state ring plus selection HUD respond without crossing into BL-108 segment semantics` |
+| 2026-03-20T02:02:00Z | BL-107 visual packet assembly | PASS | `Dedicated before/after visual packet now links the scaffold, truth-wiring, and native brightness slices so BL-107 review no longer depends on raw smoke folders alone` |
 | 2026-03-20T01:57:02Z | BL-107 bridge-truth brightness slice | PASS | `Production foundation now consumes a native emitter brightness field from the scene snapshot, and the atmosphere responds to bridged brightness alongside color, RMS, gain, and collision state` |
 | 2026-03-20T01:51:19Z | BL-107 viewport truth-wiring slice B2 | PASS | `Production foundation now reads scene gain as actual dB and tints the atmosphere from emitter color plus live RMS/collision state; targeted BL-107 selftest and standalone smoke both stayed green` |
 | 2026-03-20T01:50:33Z | BL-107 bridge-truth RMS slice | PASS | `Production foundation energy now resolves from native emitter rms instead of a neutral fallback, and the dedicated BL-107 selftest still passes with an explicit HUD energy assertion` |
