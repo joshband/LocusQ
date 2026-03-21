@@ -2,7 +2,7 @@ Title: LocusQ Changelog
 Document Type: Changelog
 Author: APC Codex
 Created Date: 2026-02-19
-Last Modified Date: 2026-03-20
+Last Modified Date: 2026-03-21
 
 # Changelog
 
@@ -22,6 +22,7 @@ Operational snapshot:
 
 ### Added
 
+- BL-113 CL-P7: BakeRecorder — auto-record choreography positions over a configured [bake_start, bake_end] PPQ range; stride downsample + greedy forward linear thinning (max positional error ≤ `bake_curve_fit_tolerance`); exports per-emitter `bake_pos_{x,y,z}_N` scalar KeyframeTracks to KeyframeTimeline via `handleAsyncUpdate()`; `tick()` runs on PhysicsWorker thread with no heap allocation; `prepare()` and `exportToTimeline()` on main thread only; 4 new APVTS params (`bake_start`, `bake_end`, `bake_kf_density`, `bake_curve_fit_tolerance`); all probe targets updated; build clean, RT non_allowlisted=0.
 - BL-113 CL-P4: BeatSyncSystem — beat-boundary detection from DAW PPQ position (playhead read → atomic store, no DAW callback on audio thread); snap/glide/teleport modes; Teleport gain-dip via one-pole exponential recovery (τ=decayMs/1000s); 16-step pattern sequencer (hold/advance/jump with morphPhase integration); 5 new APVTS params (`choro_beat_enable/division/mode`, `choro_teleport_dip_db/decay_ms`); `ChoreographyWorker.compute()` updated to run beat-sync after CL-P2 morph advance, single formation compute with fully-resolved morphPhase; all probe targets updated; build clean, RT non_allowlisted=0.
 - BL-113 CL-P3: PathSystem — 6 analytical path types (Lissajous, Orbit, Pendulum, FigureEight, Helix, RandomWalk); velocity Doppler hook via finite-difference `(pos − lastPos) / dt`; 23 new APVTS params in `emitter_choreography` group; `ChoreographyWorker.compute()` composites path position onto formation offset per emitter and exposes path velocity as `ChoreographyOffset.velocity`; all probe targets updated in CMakeLists.txt; build clean, RT non_allowlisted=0.
 - BL-113 CL-P2: FormationSystem — 7 formation geometry types (Line/Arc/Circle/Grid/Spiral/SphereSurface/Custom), morph animation (loop/pingpong at configurable Hz rate), spread delta (avgPairwiseDist/maxDist clamped [0..1]) published to `ChoreographyOffset.spreadDelta`; 16 new APVTS params in `emitter_choreography` group; PhysicsWorker tick now passes active emitter count to `compute()`; build clean, RT non_allowlisted=0.

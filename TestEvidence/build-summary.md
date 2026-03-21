@@ -2,7 +2,7 @@ Title: LocusQ Build Summary (Acceptance Closeout)
 Document Type: Build Summary
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-20
+Last Modified Date: 2026-03-21
 
 # LocusQ Build Summary (Acceptance Closeout)
 
@@ -10,9 +10,14 @@ Last Modified Date: 2026-03-20
 
 | Time (UTC) | Item | Result | Decision |
 |---|---|---|---|
+| 2026-03-21T21:09:30Z | BL-109 visual proof debug recovery | PASS | `BL-109 scoped selftest is deterministic again after isolating the synthetic timeline fixture, giving the test a dominant synthetic snapshot seq, and replacing exact live-progress equality with bounded snapshot assertions; the dedicated wrapper now passes in TestEvidence/bl109_visual_proof_20260321T210930Z/ with selftest TestEvidence/locusq_production_p0_selftest_20260321T210914Z.json and smoke TestEvidence/standalone_ui_smoke_20260321T210921Z/` |
+| 2026-03-21T20:17:48Z | BL-109 timeline event cue slice B | PASS | `Source/ui/src/index.ts now derives timeline event truth from timeline tracks plus current animation time, adds a bounded keyframe-hit flash on the 9->12 segment, and exposes Cue=Hit/Idle in the analytical HUD; the updated scoped lane passed in TestEvidence/locusq_production_p0_selftest_20260321T201748Z.json and standalone smoke stayed green in TestEvidence/standalone_ui_smoke_20260321T201748Z/` |
+| 2026-03-21T20:09:45Z | BL-109 choreography/timeline ring activation slice A | PASS | `Source/ui/src/index.ts now adds a green choreography segment in 3->6, a violet timeline segment in 9->12, a bounded choreography atmosphere bloom, and HUD rows for Pattern/Cycle/Timeline; the new scoped lane passed in TestEvidence/locusq_production_p0_selftest_20260321T200945Z.json and standalone smoke stayed green in TestEvidence/standalone_ui_smoke_20260321T200945Z/` |
+| 2026-03-21T22:00:00Z | BL-113 CL-P7 BakeRecorder | PASS | `BakeRecorder.h/.cpp: auto-record choreography positions over configured PPQ range; stride downsample + forward linear thinning; exports bake_pos_x/y/z_N scalar KeyframeTracks to KeyframeTimeline; 4 APVTS params; handleAsyncUpdate() export+re-arm loop; tick() called in ChoreographyWorker::compute() — no heap allocation; CMakeLists probes updated (BakeRecorder.h/.cpp added to all probe targets + physics_tier_a_probe); build clean; RT non_allowlisted=0` |
 | 2026-03-21T12:00:00Z | BL-113 CL-P4 BeatSyncSystem | PASS | `BeatSyncSystem.h/.cpp: beat-boundary detection, teleport gain-dip, 16-step sequencer; 5 APVTS params; playhead transport wired; CMakeLists probes updated; build clean; RT non_allowlisted=0` |
 | 2026-03-21T11:00:00Z | BL-113 CL-P3 PathSystem | PASS | `PathSystem.h/.cpp: 6 path types, velocity Doppler hook; 23 APVTS params registered and wired; CMakeLists probes updated; build clean (all targets); RT non_allowlisted=0` |
 | 2026-03-21T10:00:00Z | BL-113 CL-P2 FormationSystem | PASS | `FormationSystem.h/.cpp: 7 types (Line/Arc/Circle/Grid/Spiral/SphereSurface/Custom), morph animation, spread delta; 16 APVTS params registered and wired; PhysicsWorker active-emitter count; build clean; RT non_allowlisted=0; docs freshness PASS` |
+| 2026-03-20T22:19:17Z | BL-108 hosted REAPER transport UI gate | PASS | `Dedicated REAPER-hosted BL-108 beat/transport UI lane now passes in TestEvidence/reaper_bl108_host_transport_ui_gate_20260320_221912Z/ after normalizing the initial resource-provider URL and deferring the first hosted selftest navigation until the editor attaches to the host window` |
 | 2026-03-20T12:00:00Z | BL-113 CL-P1 ChoreographyWorker infrastructure | PASS | `AudioRingBuffer.h + ChoreographyWorker.h/.cpp created; PhysicsWorker tick integration; choro_enable APVTS wired; build clean; RT audit non_allowlisted=0; docs freshness PASS` |
 | 2026-03-20T20:41:04Z | BL-108 bundled transport-contract proof packet | PASS | `BL-108 parent wrapper now bundles BL-106 host-facing physics proof, BL-031 deterministic transport proof, and the scoped BL-108 visual packet in one replayable artifact at TestEvidence/bl108_host_visible_proof_20260320T204104Z/` |
 | 2026-03-20T19:23:33Z | BL-108 bundled host-visible proof packet | PASS | `New parent wrapper now packages BL-106 host-facing physics evidence and the scoped BL-108 viewport proof into one replayable packet at TestEvidence/bl108_host_visible_proof_20260320T192333Z/` |
@@ -372,6 +377,9 @@ Last Modified Date: 2026-03-20
 
 The original long-form build summary is preserved in the archive copy above.
 Use this file for current governance snapshots and the archive file for full historical detail.
+
+[2026-03-21] BL-109 hosted choreography gate PASS: REAPER-hosted proof now passes after the emitter timeline compact/tight host-layout fix. The shell now reacts to short host windows, keeps all four timeline lanes visible at `1200x800`, and the hosted BL-109 lane proves `UI-P1-109A/B/C` in `TestEvidence/reaper_bl109_host_choreography_ui_gate_20260321_212942Z/`.
+[2026-03-21] BL-109 visual packet ready: `Documentation/reports/2026-03-21-bl109-choreography-reactive-visual-packet.md` now packages the strongest standalone and hosted evidence for activation, timeline cue truth, broadened choreography field, replayable standalone proof, and the REAPER-hosted gate.
 
 [2026-03-19] C1 authority migration: dual-integration assertion added; 5 legacy paths confirmed zeroed for coordinated emitters (gravity, interaction, wall-collision, throw, reset); PhysicsEngine standalone guard added to suppress integration when worker owns authority; runtime probe build deps confirmed clean.
 [2026-03-19] C3 gate 1: phys_out_spread_mod_N registered for all 8 slots in ProcessorParameterLayout.cpp — VERIFIED (code review)

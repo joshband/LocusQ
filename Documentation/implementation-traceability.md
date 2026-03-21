@@ -1390,6 +1390,17 @@ Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreo
 
 Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P4 block). Transport state (PPQ position, BPM, isPlaying) read from JUCE playhead in `processBlock()` and stored to `ChoreographyWorker` atomics; read on PhysicsWorker thread in `compute()`.
 
+## Choreography Lab Parameters (BL-113 CL-P7)
+
+| Parameter ID | Group | Implementation Surface | UI Surface | Notes |
+|:---|:---|:---|:---|:---|
+| `bake_start` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `handleAsyncUpdate` → `BakeRecorder::prepare()` | Pending BL-116 | Float 0.0–1000.0 PPQ. Transport position where auto-record begins. |
+| `bake_end` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `handleAsyncUpdate` → `BakeRecorder::prepare()` | Pending BL-116 | Float 0.0–1000.0 PPQ. Transport position where capture stops and export fires. |
+| `bake_kf_density` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `handleAsyncUpdate` → `BakeRecorder::prepare()` | Pending BL-116 | Float 0.5–100.0 kf/s. Target keyframe density after stride downsample; post-thinning density may be lower. |
+| `bake_curve_fit_tolerance` | `emitter_choreography` | `ProcessorParameterLayout.cpp`; `handleAsyncUpdate` → `BakeRecorder::prepare()` | Pending BL-116 | Float 0.001–1.0 m. Max positional error for linear thinning pass. |
+
+Registration source: `Source/processor_core/ProcessorParameterLayout.cpp` choreography group (CL-P7 block). BakeRecorder owned by `ChoreographyWorker`; `tick()` called in `compute()` on PhysicsWorker thread (no allocation, captures to pre-allocated buffer). `prepare()` and `exportToTimeline()` called from main thread in `handleAsyncUpdate()`. Export writes `bake_pos_x_N`, `bake_pos_y_N`, `bake_pos_z_N` scalar tracks (KeyframeTrackType::value) per active emitter into `keyframeTimelineState`, then pushes to RT triple-buffer via `publishKeyframeTimelineStateToRtLocked()`.
+
 ## Notes
 
 - Room chain order in renderer: emitter spatialization -> `EarlyReflections` -> `FDNReverb` -> speaker delay/trim -> master gain/output.

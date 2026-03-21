@@ -605,6 +605,23 @@ juce::AudioProcessorValueTreeState::ParameterLayout LocusQAudioProcessor::create
         juce::ParameterID { "choro_teleport_decay_ms", 1 }, "Teleport Decay",
         juce::NormalisableRange<float> (1.0f, 2000.0f, 0.0f, 0.4f), 100.0f));
 
+    // CL-P7: Bake to Timeline
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "bake_start", 1 }, "Bake Start",
+        juce::NormalisableRange<float> (0.0f, 1000.0f), 0.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "bake_end", 1 }, "Bake End",
+        juce::NormalisableRange<float> (0.0f, 1000.0f), 8.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "bake_kf_density", 1 }, "Keyframe Density",
+        juce::NormalisableRange<float> (0.5f, 100.0f, 0.0f, 0.5f), 10.0f));
+
+    addParameter (emitterChoreographyGroup, std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "bake_curve_fit_tolerance", 1 }, "Curve Fit Tolerance",
+        juce::NormalisableRange<float> (0.001f, 1.0f, 0.0f, 0.3f), 0.01f));
+
     // ==================== EMITTER: IDENTITY ====================
     addParameter (emitterIdentityGroup, std::make_unique<juce::AudioParameterInt> (
         juce::ParameterID { "emit_color", 1 }, "Color", 0, 15, 0));

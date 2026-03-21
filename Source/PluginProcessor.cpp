@@ -1610,6 +1610,14 @@ LocusQAudioProcessor::LocusQAudioProcessor()
     choroTeleportDipDbParam   = rawParam ("choro_teleport_dip_db");
     choroTeleportDecayMsParam = rawParam ("choro_teleport_decay_ms");
 
+    // CL-P7: Bake to Timeline raw param inits
+    bakeStartParam             = rawParam ("bake_start");
+    bakeEndParam               = rawParam ("bake_end");
+    bakeKfDensityParam         = rawParam ("bake_kf_density");
+    bakeCurveFitToleranceParam = rawParam ("bake_curve_fit_tolerance");
+
+    bakeParamsDirty = true;
+
     emitGainParam = rawParam ("emit_gain");
     emitSpreadParam = rawParam ("emit_spread");
     emitDirectivityParam = rawParam ("emit_directivity");
@@ -1878,6 +1886,53 @@ void LocusQAudioProcessor::handleAsyncUpdate()
                        physDebugCohNeighborsPending,
                        physDebugCohNeighborsPublished,
                        physDebugCohNeighborsNotifyTarget);
+
+    // CL-P7: bake export — consume completed capture and write to timeline.
+    {
+        auto& bakeRec = physicsWorker.getChoreographyWorker().getBakeRecorder();
+
+        if (bakeRec.isExportReady())
+        {
+            const juce::ScopedLock timelineLock (keyframeTimelineStateLock);
+            bakeRec.exportToTimeline (keyframeTimelineState);
+            publishKeyframeTimelineStateToRtLocked();
+            bakeRec.resetToIdle();
+            bakeParamsDirty = true;   // re-arm for next pass
+        }
+
+        // Detect param changes (compare against last prepared params).
+        if (bakeStartParam && bakeEndParam && bakeKfDensityParam && bakeCurveFitToleranceParam)
+        {
+            const float s = bakeStartParam->load (std::memory_order_relaxed);
+            const float e = bakeEndParam->load (std::memory_order_relaxed);
+            const float k = bakeKfDensityParam->load (std::memory_order_relaxed);
+            const float t = bakeCurveFitToleranceParam->load (std::memory_order_relaxed);
+            if (s != lastBakeParams.startPPQ || e != lastBakeParams.endPPQ
+                || k != lastBakeParams.kfDensity || t != lastBakeParams.tolerance)
+                bakeParamsDirty = true;
+        }
+
+        // Prepare (or re-arm) the BakeRecorder when params have changed and not recording.
+        if (bakeParamsDirty && ! bakeRec.isRecording())
+        {
+            BakeRecorder::BakeParams p;
+            if (bakeStartParam)            p.startPPQ  = bakeStartParam->load (std::memory_order_relaxed);
+            if (bakeEndParam)              p.endPPQ    = bakeEndParam->load (std::memory_order_relaxed);
+            if (bakeKfDensityParam)        p.kfDensity = bakeKfDensityParam->load (std::memory_order_relaxed);
+            if (bakeCurveFitToleranceParam)p.tolerance = bakeCurveFitToleranceParam->load (std::memory_order_relaxed);
+
+            const auto bpm        = lastKnownBpm.load (std::memory_order_relaxed);
+            const auto numEm      = lastKnownNumEmitters.load (std::memory_order_relaxed);
+            const auto rateIndex  = sceneGraph.getPhysicsRateIndex();
+            // PhysicsEngine rates: 0=30, 1=60, 2=120, 3=240 Hz.
+            static constexpr float kPhysRates[] = { 30.0f, 60.0f, 120.0f, 240.0f };
+            const auto physHz = kPhysRates[static_cast<std::size_t> (juce::jlimit (0, 3, rateIndex))];
+
+            physicsWorker.getChoreographyWorker().prepareBake (p, bpm, physHz, numEm);
+            lastBakeParams = p;
+            bakeParamsDirty = false;
+        }
+    }
 
     updateHostDisplay();
 }
@@ -2175,7 +2230,16 @@ void LocusQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                         }
                     }
                     physicsWorker.getChoreographyWorker().setTransportInfo (ppq, bpm, playing);
+                    // CL-P7: update last-known BPM for use in handleAsyncUpdate() → prepareBake().
+                    lastKnownBpm.store (bpm, std::memory_order_relaxed);
                 }
+
+                // CL-P7: update active emitter count for prepareBake().
+                lastKnownNumEmitters.store (sceneGraph.getActiveEmitterCount(), std::memory_order_relaxed);
+
+                // CL-P7: signal handleAsyncUpdate when a bake export is ready.
+                if (physicsWorker.getChoreographyWorker().getBakeRecorder().isExportReady())
+                    triggerAsyncUpdate();
 
                 // Publish spatial state
                 const auto emitterStartTicks = juce::Time::getHighResolutionTicks();

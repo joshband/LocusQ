@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioRingBuffer.h"
+#include "BakeRecorder.h"
 #include "BeatSyncSystem.h"
 #include "FormationSystem.h"
 #include "PathSystem.h"
@@ -52,6 +53,8 @@ struct ChoreographyOffset
  *   CL-P3: PathSystem integrated; 6 analytical path types; velocity Doppler hook.
  *   CL-P4: BeatSyncSystem integrated; beat-boundary detection; snap/glide/teleport;
  *           teleport gain-dip envelope; 16-step pattern sequencer.
+ *   CL-P7: BakeRecorder integrated; auto-records choreography positions over a
+ *           configured PPQ range; exports per-emitter position KeyframeTracks.
  */
 class ChoreographyWorker
 {
@@ -134,6 +137,20 @@ public:
     void setTeleportDecayMs  (float v) noexcept { beatParams.decayMs       = std::max (1.0f, v); }
 
     //==========================================================================
+    // Bake param preparation (main thread — called from handleAsyncUpdate())
+    // CL-P7: delegates to BakeRecorder::prepare(); safe when isRecording() is false.
+
+    void prepareBake (const BakeRecorder::BakeParams& p,
+                      double bpm,
+                      float physRateHz,
+                      int numEmitters) noexcept
+    {
+        bakeRecorder.prepare (p, bpm, physRateHz, numEmitters);
+    }
+
+    BakeRecorder& getBakeRecorder() noexcept { return bakeRecorder; }
+
+    //==========================================================================
     // Transport info setters (audio thread — called from processBlock())
     // Stored atomically; read on PhysicsWorker thread in compute().
 
@@ -206,6 +223,10 @@ private:
     bool          beatEnabled = false;
     BeatSyncParams beatParams {};
     BeatSyncSystem beatSyncSystem {};
+
+    // CL-P7: Bake-to-timeline position recorder.
+    // prepare() called from main thread; tick() called from worker thread in compute().
+    BakeRecorder bakeRecorder {};
 
     std::atomic<double> transportPpq     { 0.0 };
     std::atomic<double> transportBpm     { 120.0 };

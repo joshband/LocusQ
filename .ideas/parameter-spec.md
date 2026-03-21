@@ -218,6 +218,17 @@ All params pending BL-114 for WebView surface.
 | `choro_teleport_dip_db` | Teleport Dip Depth | Float | −60.0 – 0.0 | −18.0 | dB | Gain reduction depth on Teleport beat. Only active when `choro_beat_mode = Teleport`. Negative values only; clipped to [−60, 0]. |
 | `choro_teleport_decay_ms` | Teleport Decay | Float | 1.0 – 2000.0 | 100.0 | ms | One-pole recovery time for the Teleport gain-dip envelope. Gain recovers from dip toward 1.0 with τ = decayMs/1000. |
 
+### Choreography Lab — Bake to Timeline (CL-P7)
+
+All params pending BL-116 for WebView surface.
+
+| Parameter ID | Name | Type | Range | Default | Unit | Notes |
+|:---|:---|:---|:---|:---|:---|:---|
+| `bake_start` | Bake Start | Float | 0.0 – 1000.0 | 0.0 | PPQ | Transport PPQ position where bake capture begins. Auto-armed: recording starts when DAW transport enters this position. |
+| `bake_end` | Bake End | Float | 0.0 – 1000.0 | 8.0 | PPQ | Transport PPQ position where bake capture ends. Capture stops and export is triggered when PPQ reaches this position or transport stops. |
+| `bake_kf_density` | Keyframe Density | Float | 0.5 – 100.0 | 10.0 | kf/s | Target keyframe rate after decimation. Actual density may be lower after linear thinning removes redundant keyframes within tolerance. |
+| `bake_curve_fit_tolerance` | Curve Fit Tolerance | Float | 0.001 – 1.0 | 0.01 | m | Maximum allowed positional error during linear thinning. Keyframes are removed only if linear interpolation from neighbours stays within this distance (metres). |
+
 ### Emitter Identity
 
 | ID | Name | Type | Range | Default | Unit | Notes |

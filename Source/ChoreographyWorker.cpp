@@ -93,4 +93,15 @@ void ChoreographyWorker::compute (float dt, int numEmitters) noexcept
         // (0 = no dip, 1 = muted; consumer applies as: gain * (1 - gainDelta)).
         offsets[static_cast<std::size_t> (i)].gainDelta   = 1.0f - beatGainFactor;
     }
+
+    // =========================================================================
+    // CL-P7: BakeRecorder — capture positions after all offset fields are set.
+    // =========================================================================
+
+    {
+        const double ppq     = transportPpq.load     (std::memory_order_relaxed);
+        const double bpm     = transportBpm.load     (std::memory_order_relaxed);
+        const bool   playing = transportPlaying.load (std::memory_order_relaxed);
+        bakeRecorder.tick (offsets.data(), numEmitters, ppq, bpm, playing);
+    }
 }

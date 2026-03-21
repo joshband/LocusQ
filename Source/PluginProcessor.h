@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include "BakeRecorder.h"
 #include "VisualTokenScheduler.h"
 #include "SceneGraph.h"
 #include "SpatialRenderer.h"
@@ -580,6 +581,18 @@ private:
     std::atomic<float>* choroBeatModeParam        = nullptr;
     std::atomic<float>* choroTeleportDipDbParam   = nullptr;
     std::atomic<float>* choroTeleportDecayMsParam = nullptr;
+
+    // CL-P7: Bake to Timeline raw param pointers
+    std::atomic<float>* bakeStartParam            = nullptr;
+    std::atomic<float>* bakeEndParam              = nullptr;
+    std::atomic<float>* bakeKfDensityParam        = nullptr;
+    std::atomic<float>* bakeCurveFitToleranceParam= nullptr;
+
+    // CL-P7: Bake state tracking (main thread only)
+    std::atomic<double> lastKnownBpm         { 120.0 };
+    std::atomic<int>    lastKnownNumEmitters { 1 };
+    BakeRecorder::BakeParams lastBakeParams  {};
+    bool bakeParamsDirty = true;
 
     std::atomic<float>* emitGainParam = nullptr;
     std::atomic<float>* emitSpreadParam = nullptr;
