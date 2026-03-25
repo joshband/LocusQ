@@ -1,5 +1,0 @@
-run_index	mode_id	delay_note_divisor	requires_runaway_guard	deterministic_transport_recall	result	detail
-1	delay	4	yes	yes	PASS	mode contract row present
-1	echo_ping_pong	3	yes	yes	PASS	mode contract row present
-1	looper	1	yes	yes	PASS	mode contract row present
-1	frippertronics	1	yes	yes	PASS	mode contract row present

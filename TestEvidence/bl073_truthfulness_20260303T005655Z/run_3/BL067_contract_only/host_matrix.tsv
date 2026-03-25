@@ -1,4 +1,0 @@
-host	availability	probe	result	failure_taxonomy	detail
-Logic Pro	missing	path_probe	BLOCKED	host_binary_missing	Logic Pro not installed at /Applications/Logic Pro.app
-GarageBand	missing	path_probe	BLOCKED	host_binary_missing	GarageBand not installed at /Applications/GarageBand.app
-MainStage	missing	path_probe	BLOCKED	host_binary_missing	MainStage not installed at /Applications/MainStage.app

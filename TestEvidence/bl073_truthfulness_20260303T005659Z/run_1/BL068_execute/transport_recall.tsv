@@ -1,3 +1,0 @@
-run_index	transport_case	recall_token_a	recall_token_b	deterministic	result	detail
-1	session_recall_loop_position	675330418	675330418	yes	PASS	identical transport snapshot reproduced identical token
-1	transport_start_quantized	2368111842	2599794111	yes	PASS	token changed when overdub generation advanced

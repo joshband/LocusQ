@@ -1,4 +1,0 @@
-run_index	rt_exit	total_hits	allowlisted_hits	non_allowlisted	result	detail	artifact
-1	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T211113Z/run_1/rt_audit_raw.tsv
-2	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T211113Z/run_2/rt_audit_raw.tsv
-3	0	8	8	0	PASS	rt_exit=0;non_allowlisted=0;total_hits=8	/Users/artbox/Documents/Repos/LocusQ/TestEvidence/bl076_spatial_renderer_20260306T211113Z/run_3/rt_audit_raw.tsv

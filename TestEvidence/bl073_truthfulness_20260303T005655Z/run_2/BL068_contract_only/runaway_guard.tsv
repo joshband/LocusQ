@@ -1,5 +1,0 @@
-run_index	guard_check	requested_feedback	clamped_feedback	finite_output_guard	result	detail
-1	feedback_mid	0.500000	0.500000	yes	PASS	feedback bounded and finite
-1	feedback_soft_near_limit	0.930000	0.929250	yes	PASS	feedback bounded and finite
-1	feedback_above_ceiling	1.200000	0.967500	yes	PASS	feedback bounded and finite
-1	non_finite_output_guard	nan	0.000000	yes	PASS	non-finite guard contract exported

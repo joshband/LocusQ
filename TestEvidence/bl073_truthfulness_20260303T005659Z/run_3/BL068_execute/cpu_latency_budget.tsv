@@ -1,3 +1,0 @@
-run_index	profile	cpu_budget_pct	latency_budget_samples	result	note
-1	44k1_baseline	8.0	64	PASS	44.1kHz baseline budget within realtime envelope
-1	192k_stress	18.0	256	PASS	192k stress budget remains bounded for deterministic replay

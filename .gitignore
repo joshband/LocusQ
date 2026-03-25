@@ -76,10 +76,17 @@ TestEvidence/appium_source.xml
 TestEvidence/appium_accessibility_probe/
 TestEvidence/appium_ui_regression_*/
 TestEvidence/manual_click_probe_*/
+TestEvidence/manual_button_probe_*/
+TestEvidence/manual_button_probe_bundle_*/
+TestEvidence/focus_click_probe_*/
+TestEvidence/cliclick_probe_*/
+TestEvidence/cliclick_dropdown_compare_*/
+TestEvidence/mode_switch_probe_*/
 TestEvidence/standalone_ui_smoke_*/
 TestEvidence/standalone_ui_smoke_stage1_*/
 TestEvidence/ui_debug_*/
 TestEvidence/ui_pr_gate_*/
+TestEvidence/ui_selftest_visual_evidence_fallbacks_*/
 TestEvidence/stage13_acceptance_sweep_*/
 TestEvidence/stage16a_scenario_validation_*/
 TestEvidence/*_20??????T??????Z/
@@ -91,6 +98,8 @@ TestEvidence/*_20??????T??????Z.json
 TestEvidence/*_20??????T??????Z.png
 TestEvidence/*_20??????T??????Z_status.tsv
 TestEvidence/*_exit_code.txt
+TestEvidence/*.window.png
+TestEvidence/*.focus.png
 TestEvidence/pluginval_blocked_note.txt
 TestEvidence/thread-contracts.tsv
 TestEvidence/thread-heartbeats.tsv
@@ -105,7 +114,7 @@ TestEvidence/archive/*.zip
 Documentation/Calibration POC/*.zip
 
 # Tool scratch dirs (non-canonical generated outputs)
-docs/
+/docs/
 output/
 .playwright-cli/
 .superpowers/

@@ -1,5 +1,0 @@
-lane	probe	result	failure_taxonomy	detail
-AUv3_vs_AU	contract_regex	PASS	none	AUv3_vs_AU contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md
-AUv3_vs_VST3	contract_regex	PASS	none	AUv3_vs_VST3 contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md
-AUv3_vs_CLAP	contract_regex	PASS	none	AUv3_vs_CLAP contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/plans/bl-067-auv3-app-extension-lifecycle-and-host-validation-spec-2026-03-01.md
-host_name_branching_contract	contract_regex	PASS	none	host_name_branching_contract contract text found in /Users/artbox/Documents/Repos/LocusQ-bl073-verify/Documentation/adr/ADR-0017-auv3-app-extension-boundary-and-lifecycle-contract.md

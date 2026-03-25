@@ -1,8 +1,0 @@
-run_index	rule_id	scope	result	matches	detail	artifact
-1	BL076-DM-001	SpatialRendererTypes.h	PASS	0	types module does not depend on SceneGraph	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
-1	BL076-DM-002	SpatialRendererTypes.h	PASS	0	types module does not include Steam runtime headers	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
-1	BL076-DM-003	SpatialRendererTypes.h	PASS	0	types module avoids headphone DSP implementation dependencies	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialRendererTypes.h
-1	BL076-DM-004	SpatialProfileRouter.h	PASS	0	router module avoids Steam runtime headers	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
-1	BL076-DM-005	SpatialProfileRouter.h	PASS	0	router module avoids headphone DSP implementation dependencies	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
-1	BL076-DM-006	SpatialProfileRouter.h	PASS	>=1	router module includes extracted type contracts	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer/SpatialProfileRouter.h
-1	BL076-DM-007	Source/spatial_renderer/*	PASS	0	extracted module files avoid SceneGraph include edge	/Users/artbox/Documents/Repos/LocusQ/Source/spatial_renderer
