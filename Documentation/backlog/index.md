@@ -2,7 +2,7 @@ Title: LocusQ Master Backlog Index
 Document Type: Backlog Index
 Author: APC Codex
 Created Date: 2026-02-23
-Last Modified Date: 2026-03-20 (BL-111 + BL-112 moved to Done; total 107/125 Done; active P1 blocked: BL-060, BL-067)
+Last Modified Date: 2026-03-26 (added BL-121 room calibration planning lane; active P1 blocked: BL-060, BL-067)
 
 # LocusQ Master Backlog Index
 
@@ -200,6 +200,7 @@ Immediate wave summary:
 | 85 | BL-118 | Timeline track type and beat-sync runtime extensions | P1 | Open | E | BL-117, BL-113 | BL-119, BL-120 | [bl-118](bl-118-timeline-track-type-and-beat-sync-runtime-extensions.md) |
 | 86 | BL-119 | Timeline bake import and WebView editor integration | P2 | Open | C | BL-117, BL-118, BL-114 | BL-120 UI/editor proof readiness | [bl-119](bl-119-timeline-bake-import-and-webview-editor-integration.md) |
 | 87 | BL-120 | Timeline extension validation and host proof matrix | P1 | Open | G | BL-118, BL-119 | production claims for the Timeline extensions | [bl-120](bl-120-timeline-extension-validation-and-host-proof-matrix.md) |
+| 88 | BL-121 | Companion room calibration and device-assisted room estimation | P2 | Open | E | BL-058 (Done), BL-096 (Done), BL-101 (Done) | future room-aware calibration and rendering follow-ons | [bl-121](bl-121-companion-room-calibration-and-device-assisted-room-estimation.md) |
 
 ## Priority and Parallel Session Safety (Codex + Claude)
 
