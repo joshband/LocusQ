@@ -1,0 +1,20 @@
+{
+  "suite": "locusq_bake_recorder_probe",
+  "passed": true,
+  "replays": 3,
+  "checks": [
+    {"name": "prepare_state", "passed": true, "detail": "recorder is prepared before transport enters range"},
+    {"name": "paused_in_range_no_record", "passed": true, "detail": "an in-range tick does not record while transport is paused"},
+    {"name": "outside_range_no_record", "passed": true, "detail": "pre-range tick leaves recorder prepared"},
+    {"name": "recording_state", "passed": true, "detail": "in-range transport ticks enter recording state"},
+    {"name": "done_state", "passed": true, "detail": "end-of-range tick marks export ready"},
+    {"name": "track_schema", "passed": true, "detail": "two emitters export exactly six named position tracks"},
+    {"name": "endpoint_preservation", "passed": true, "detail": "first and last captured samples survive export"},
+    {"name": "ordered_keyframe_times", "passed": true, "detail": "keyframe times are strictly ordered inside the bake window"},
+    {"name": "raw_capture_tolerance", "passed": true, "detail": "max interpolation error=0.038627 tolerance=0.050000"},
+    {"name": "idempotent_export", "passed": true, "detail": "re-export replaces tracks without increasing track count"},
+    {"name": "tick_allocation_free", "passed": true, "detail": "ordinary heap allocation count remains zero across worker-thread ticks"},
+    {"name": "reset_and_rebake", "passed": true, "detail": "reset permits a second bake that replaces prior track values"},
+    {"name": "json_artifact_ready", "passed": true, "detail": "machine-readable result path is writable"}
+  ]
+}

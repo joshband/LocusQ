@@ -3,6 +3,7 @@
 #include "AudioRingBuffer.h"
 #include "BakeRecorder.h"
 #include "BeatSyncSystem.h"
+#include "ChoreographyOffset.h"
 #include "FormationSystem.h"
 #include "PathSystem.h"
 #include "SceneGraph.h"
@@ -11,24 +12,6 @@
 #include <array>
 #include <atomic>
 #include <cmath>
-
-//==============================================================================
-/**
- * ChoreographyOffset - per-emitter generative contribution for one worker tick.
- *
- * All fields are additive on the composed rest pose (ADR-0020 Layer 3):
- *   position    — added to the APVTS + Timeline rest pose before physics integration.
- *   spreadDelta — additive spread contribution clamped to [0..1] before EmitterSlot write.
- *   gainDelta   — additive gain contribution (e.g. teleport dip envelope) [0..1].
- *   velocity    — path velocity forwarded as Doppler source.
- */
-struct ChoreographyOffset
-{
-    Vec3  position    {};           // additive position offset (metres)
-    float spreadDelta = 0.0f;      // additive spread contribution
-    float gainDelta   = 0.0f;      // additive gain contribution
-    Vec3  velocity    {};           // path velocity (Doppler source)
-};
 
 //==============================================================================
 /**

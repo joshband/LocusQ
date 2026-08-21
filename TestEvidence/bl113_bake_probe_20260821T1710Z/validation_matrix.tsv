@@ -1,0 +1,7 @@
+step	command	result	exit_code	artifact_path
+01_direct_compile	g++ -std=c++20 -O2 probe and production sources with JUCE 8.0.7 core	PASS	0	qa/bake_recorder_probe_main.cpp
+02_probe_replay_1	locusq_bake_recorder_probe --json-output qa_output/locusq_bake_recorder_probe_result.json	PASS	0	TestEvidence/bl113_bake_probe_20260821T1710Z/probe_result.json
+03_probe_replay_2	locusq_bake_recorder_probe --json-output qa_output/locusq_bake_recorder_probe_result.json	PASS	0	TestEvidence/bl113_bake_probe_20260821T1710Z/probe_result.json
+04_probe_replay_3	locusq_bake_recorder_probe --json-output qa_output/locusq_bake_recorder_probe_result.json	PASS	0	TestEvidence/bl113_bake_probe_20260821T1710Z/probe_result.json
+05_json_parse	python3 -m json.tool probe_result.json	PASS	0	TestEvidence/bl113_bake_probe_20260821T1710Z/probe_result.json
+06_cmake_configure	cmake -S . -B build_bake_probe -DBUILD_LOCUSQ_BAKE_RECORDER_PROBE=ON	BLOCKED	1	TestEvidence/bl113_bake_probe_20260821T1710Z/summary.md
