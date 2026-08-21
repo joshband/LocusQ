@@ -1,0 +1,6 @@
+check_id	result	detail	artifact
+BL113-BAKE-COMPILE	PASS	BakeRecorder, KeyframeTimeline, and probe compiled with GCC 13.3 and JUCE 8.0.7	qa/bake_recorder_probe_main.cpp
+BL113-BAKE-REPLAY	PASS	13/13 checks passed across 3 deterministic replays	TestEvidence/bl113_bake_probe_20260821T1710Z/probe_result.json
+BL113-BAKE-JSON	PASS	machine-readable result parsed successfully	TestEvidence/bl113_bake_probe_20260821T1710Z/probe_result.json
+BL113-BAKE-CMAKE	BLOCKED	configure reached JUCE juceaide bootstrap but local image lacks X11 development headers	CMakeLists.txt
+lane_result	PASS_WITH_ENVIRONMENT_BLOCKER	probe behavior passed; canonical CMake/CTest replay remains pending in a provisioned build environment	TestEvidence/bl113_bake_probe_20260821T1710Z/summary.md

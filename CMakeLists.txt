@@ -506,6 +506,9 @@ endif()
 # cmake -DBUILD_LOCUSQ_QA=ON ..
 # ============================================
 option(BUILD_LOCUSQ_QA "Build LocusQ QA harness test executable" OFF)
+option(BUILD_LOCUSQ_BAKE_RECORDER_PROBE
+       "Build the standalone BL-113 BakeRecorder deterministic probe"
+       OFF)
 
 if(BUILD_LOCUSQ_QA)
     # ── Locate the harness-owned QA integration module ───────────────────
@@ -2634,50 +2637,6 @@ if(BUILD_LOCUSQ_QA)
 
     message(STATUS "LocusQ QA: Target 'locusq_fir_truthfulness_probe' created")
 
-    # ── TL-P1 timeline track-type regression probe ───────────────────────────
-    juce_add_console_app(locusq_timeline_track_type_probe PRODUCT_NAME "LocusQ Timeline Track Type Probe")
-    juce_generate_juce_header(locusq_timeline_track_type_probe)
-
-    target_sources(locusq_timeline_track_type_probe
-        PRIVATE
-            qa/timeline_track_type_probe_main.cpp
-            Source/KeyframeTimeline.cpp
-            Source/KeyframeTimeline.h
-            Source/ChoreographyWorker.cpp
-            Source/FormationSystem.cpp
-            Source/PathSystem.cpp
-            Source/BeatSyncSystem.cpp
-        Source/BakeRecorder.h
-        Source/BakeRecorder.cpp
-    )
-
-    target_include_directories(locusq_timeline_track_type_probe
-        PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/qa
-            Source
-    )
-
-    target_compile_definitions(locusq_timeline_track_type_probe
-        PRIVATE
-            LOCUSQ_TESTING=1
-            JUCE_WEB_BROWSER=0
-            JUCE_USE_CURL=0
-            JUCE_VST3_CAN_REPLACE_VST2=0
-            _USE_MATH_DEFINES=1
-    )
-
-    target_link_libraries(locusq_timeline_track_type_probe
-        PRIVATE
-            juce::juce_core
-            juce::juce_events
-        PUBLIC
-            juce::juce_recommended_config_flags
-            juce::juce_recommended_warning_flags
-    )
-
-    message(STATUS "LocusQ QA: Target 'locusq_timeline_track_type_probe' created")
-
     # ── ctest registration ────────────────────────────────────────────────────
     # Register the three lightweight probes (no PluginProcessor / Steam Audio
     # dependency) so `ctest --test-dir <build>` provides real plugin-side signal
@@ -2710,11 +2669,57 @@ if(BUILD_LOCUSQ_QA)
     )
     set_tests_properties(locusq_fir_truthfulness_probe PROPERTIES LABELS "locusq_probe")
 
-    add_test(
-        NAME locusq_timeline_track_type_probe
-        COMMAND locusq_timeline_track_type_probe
-    )
-    set_tests_properties(locusq_timeline_track_type_probe PROPERTIES LABELS "locusq_probe")
+    message(STATUS "LocusQ QA: ctest targets registered: locusq_physics_probe, locusq_physics_tier_a_probe, locusq_physics_daw_automation_probe, locusq_fir_truthfulness_probe")
+endif()
 
-    message(STATUS "LocusQ QA: ctest targets registered: locusq_physics_probe, locusq_physics_tier_a_probe, locusq_physics_daw_automation_probe, locusq_fir_truthfulness_probe, locusq_timeline_track_type_probe")
+# BL-113's deterministic BakeRecorder probe is deliberately independent from
+# the external QA harness.  It can be built alone in a clean checkout, while a
+# full BUILD_LOCUSQ_QA build includes it automatically.
+if(BUILD_LOCUSQ_BAKE_RECORDER_PROBE OR BUILD_LOCUSQ_QA)
+    juce_add_console_app(locusq_bake_recorder_probe PRODUCT_NAME "LocusQ Bake Recorder Probe")
+    juce_generate_juce_header(locusq_bake_recorder_probe)
+
+    target_sources(locusq_bake_recorder_probe
+        PRIVATE
+            qa/bake_recorder_probe_main.cpp
+            Source/ChoreographyOffset.h
+            Source/KeyframeTimeline.cpp
+            Source/KeyframeTimeline.h
+            Source/BakeRecorder.h
+            Source/BakeRecorder.cpp
+    )
+
+    target_include_directories(locusq_bake_recorder_probe
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/qa
+            Source
+    )
+
+    target_compile_definitions(locusq_bake_recorder_probe
+        PRIVATE
+            LOCUSQ_TESTING=1
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+            _USE_MATH_DEFINES=1
+    )
+
+    target_link_libraries(locusq_bake_recorder_probe
+        PRIVATE
+            juce::juce_core
+        PUBLIC
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_warning_flags
+    )
+
+    enable_testing()
+    add_test(
+        NAME locusq_bake_recorder_probe
+        COMMAND locusq_bake_recorder_probe
+                --json-output "${CMAKE_BINARY_DIR}/qa_output/locusq_bake_recorder_probe_result.json"
+    )
+    set_tests_properties(locusq_bake_recorder_probe PROPERTIES LABELS "locusq_probe;bl113")
+
+    message(STATUS "LocusQ QA: Target and ctest 'locusq_bake_recorder_probe' created")
 endif()

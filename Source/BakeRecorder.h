@@ -115,9 +115,11 @@ private:
     //==========================================================================
     // Decimation helper
 
-    /** Downsample and linearly thin a position axis track.
+    /** Adaptively decimate a position axis track.
      *  vals[0..numSamples-1]: raw capture at physRateHz.
-     *  Returns a sparse Keyframe vector with max interp error ≤ tolerance. */
+     *  kfDensity seeds the target keyframe spacing; extra keyframes are inserted
+     *  when needed so interpolation against every raw sample stays within
+     *  tolerance. */
     static std::vector<float> decimateTrackToKeyframeTimes (const float* vals,
                                                              int numSamples,
                                                              double physRateHz,

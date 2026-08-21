@@ -1,11 +1,12 @@
 #include "BakeRecorder.h"
 
-#include "ChoreographyWorker.h"
+#include "ChoreographyOffset.h"
 #include "KeyframeTimeline.h"
 
 #include <juce_core/juce_core.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cmath>
 #include <cstring>
 
@@ -114,11 +115,11 @@ void BakeRecorder::exportToTimeline (KeyframeTimeline& timeline)
                 vals, n, physRateHz_, kfDensity_, tolerance_,
                 recordStartSeconds_, times);
 
-            KeyframeTrack track (trackId, KeyframeTrackType::value);
+            KeyframeTrack track (trackId);
             std::vector<Keyframe> kfs;
             kfs.reserve (times.size());
             for (std::size_t i = 0; i < times.size(); ++i)
-                kfs.push_back ({ times[i], decimated[i], KeyframeCurve::linear, TimelineBeatDivision::beat });
+                kfs.push_back ({ times[i], decimated[i], KeyframeCurve::linear });
             track.setKeyframes (std::move (kfs));
             timeline.addOrReplaceTrack (std::move (track));
         };
@@ -146,81 +147,65 @@ std::vector<float> BakeRecorder::decimateTrackToKeyframeTimes (
     if (numSamples <= 0)
         return outVals;
 
-    // Step 1: stride downsample to approximately kfDensity Hz.
+    // Seed the result at approximately kfDensity Hz.  Density is a target,
+    // not a hard cap: intervals are refined below when the raw capture would
+    // otherwise exceed the requested interpolation tolerance.
     const int stride = std::max (1, static_cast<int> (physRateHz / static_cast<double> (kfDensity)));
 
-    std::vector<double> times;
-    std::vector<float>  sampled;
-    times.reserve (static_cast<std::size_t> (numSamples / stride + 2));
-    sampled.reserve (times.capacity());
+    std::vector<int> selectedIndices;
+    selectedIndices.reserve (static_cast<std::size_t> (numSamples / stride + 2));
 
     for (int i = 0; i < numSamples; i += stride)
-    {
-        times.push_back  (startTimeSeconds + i / physRateHz);
-        sampled.push_back (vals[i]);
-    }
+        selectedIndices.push_back (i);
 
-    // Always include the final sample.
+    if (selectedIndices.back() != numSamples - 1)
+        selectedIndices.push_back (numSamples - 1);
+
+    // Refine every seeded segment until interpolation against the original
+    // capture—not merely the strided samples—satisfies the tolerance contract.
+    for (std::size_t segment = 0; segment + 1 < selectedIndices.size();)
     {
-        const int lastStridedIdx = ((numSamples - 1) / stride) * stride;
-        if (lastStridedIdx != numSamples - 1)
+        const int left  = selectedIndices[segment];
+        const int right = selectedIndices[segment + 1];
+        const int span  = right - left;
+
+        float maxError = 0.0f;
+        int maxErrorIndex = -1;
+
+        if (span > 1)
         {
-            times.push_back  (startTimeSeconds + (numSamples - 1) / physRateHz);
-            sampled.push_back (vals[numSamples - 1]);
-        }
-    }
-
-    const int m = static_cast<int> (times.size());
-
-    if (m <= 2)
-    {
-        outTimes = times;
-        return sampled;
-    }
-
-    // Step 2: greedy forward linear thinning.
-    // Extend a segment from 'segStart' as far right as possible while keeping
-    // all skipped samples within tolerance of the linear interpolation.
-    outTimes.reserve (static_cast<std::size_t> (m));
-    outVals.reserve  (static_cast<std::size_t> (m));
-
-    outTimes.push_back (times[0]);
-    outVals.push_back  (sampled[0]);
-    int segStart = 0;
-
-    for (int i = 1; i < m - 1; ++i)
-    {
-        // Tentatively extend segment to i+1.
-        const double t0 = times[segStart];
-        const float  v0 = sampled[segStart];
-        const double t1 = times[i + 1];
-        const float  v1 = sampled[i + 1];
-        const double dt = t1 - t0;
-
-        bool canExtend = true;
-        if (dt > 0.0)
-        {
-            for (int j = segStart + 1; j <= i; ++j)
+            for (int i = left + 1; i < right; ++i)
             {
-                const float interp = v0 + static_cast<float> ((times[j] - t0) / dt) * (v1 - v0);
-                if (std::abs (sampled[j] - interp) > tolerance)
+                const float alpha = static_cast<float> (i - left) / static_cast<float> (span);
+                const float interpolated = vals[left] + alpha * (vals[right] - vals[left]);
+                const float error = std::abs (vals[i] - interpolated);
+
+                if (error > maxError)
                 {
-                    canExtend = false;
-                    break;
+                    maxError = error;
+                    maxErrorIndex = i;
                 }
             }
         }
 
-        if (! canExtend)
+        if (maxErrorIndex >= 0 && maxError > tolerance)
         {
-            outTimes.push_back (times[i]);
-            outVals.push_back  (sampled[i]);
-            segStart = i;
+            selectedIndices.insert (selectedIndices.begin() + static_cast<std::ptrdiff_t> (segment + 1),
+                                    maxErrorIndex);
+            continue;
         }
+
+        ++segment;
     }
 
-    outTimes.push_back (times[static_cast<std::size_t> (m - 1)]);
-    outVals.push_back  (sampled[static_cast<std::size_t> (m - 1)]);
+    outTimes.reserve (selectedIndices.size());
+    outVals.reserve  (selectedIndices.size());
+
+    for (const int sampleIndex : selectedIndices)
+    {
+        outTimes.push_back (startTimeSeconds + sampleIndex / physRateHz);
+        outVals.push_back (vals[sampleIndex]);
+    }
 
     return outVals;
 }

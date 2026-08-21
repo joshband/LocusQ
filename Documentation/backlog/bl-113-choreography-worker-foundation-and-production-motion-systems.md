@@ -2,7 +2,7 @@ Title: BL-113 Choreography Worker Foundation and Production Motion Systems
 Document Type: Backlog Runbook
 Author: APC Codex
 Created Date: 2026-03-20
-Last Modified Date: 2026-03-20
+Last Modified Date: 2026-08-21
 
 # BL-113: Choreography Worker Foundation and Production Motion Systems
 
@@ -61,9 +61,9 @@ Draft-only by default.
 | Item | Status | Updated | Where | Remaining |
 |---|---|---|---|---|
 | Authority and sequencing packet | `[DONE]` | 2026-03-20 | BL-112 + execution packet | none |
-| Worker/runtime foundation | `[IN PROGRESS]` | 2026-03-20 | `Source/ChoreographyWorker.h/.cpp`, `Source/AudioRingBuffer.h`, `Source/PhysicsWorker.h` — CL-P1 infrastructure: worker + ring buffer + tick integration + `choro_enable` APVTS param + traceability | CL-P2..P4 subsystems remaining |
-| Production-candidate systems | `[QUEUED]` | 2026-03-20 | formation/path/beat-sync/bake runtime files | blocked on runtime foundation |
-| Deterministic proof | `[QUEUED]` | 2026-03-20 | targeted probes and tests | owned later with BL-116 |
+| Worker/runtime foundation | `[DONE]` | 2026-03-21 | `Source/ChoreographyWorker.h/.cpp`, `Source/AudioRingBuffer.h`, `Source/PhysicsWorker.h` | none in BL-113 |
+| Production-candidate systems | `[DONE]` | 2026-03-21 | `Source/FormationSystem*`, `Source/PathSystem*`, `Source/BeatSyncSystem*`, `Source/BakeRecorder*` | runtime proof remains |
+| Deterministic proof | `[IN PROGRESS]` | 2026-08-21 | `locusq_bake_recorder_probe`; `TestEvidence/bl113_bake_probe_20260821T1710Z/` | run the CMake/CTest lane in a fully provisioned build environment; formation/path/beat proof remains separate |
 
 ## Objective
 
@@ -125,7 +125,8 @@ That means one colocated choreography compute path, no second `EmitterSlot` writ
 |---|---|---|---|
 | BL113-CONFIGURE | Automated | `cmake -S . -B build_local` | exit 0 |
 | BL113-BUILD | Automated | `cmake --build build_local --config Release --target LocusQ_Standalone -j 8` | exit 0 |
-| BL113-CTEST | Automated | `ctest --test-dir build_local --output-on-failure -R "test_suite|qa_runner_app|physics|timeline|choreography"` | targeted choreography and integration lanes pass once authored |
+| BL113-BAKE-PROBE | Automated | `cmake -S . -B build_bake_probe -DBUILD_LOCUSQ_BAKE_RECORDER_PROBE=ON && cmake --build build_bake_probe --target locusq_bake_recorder_probe && ctest --test-dir build_bake_probe --output-on-failure -R locusq_bake_recorder_probe` | all lifecycle, schema, timing, raw-tolerance, idempotency, rebake, and worker-tick allocation checks pass |
+| BL113-CTEST | Automated | `ctest --test-dir build_local --output-on-failure -R "test_suite|qa_runner_app|physics|timeline|choreography|bake"` | targeted choreography and integration lanes pass once authored |
 | BL113-RT-AUDIT | Automated | `./scripts/rt-safety-audit.sh` | no new non-allowlisted RT violations |
 | BL113-DOCS | Automated | `./scripts/validate-docs-freshness.sh`, `jq empty status.json` | exit 0 |
 
