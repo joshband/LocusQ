@@ -64,19 +64,19 @@ package; v1/v2 were dead weight, not history anyone builds from.
 
 ---
 
-## Batch C — Consolidate the CMake physics-probe duplication
+## Batch C — Consolidate the CMake physics-probe duplication ✅ DONE (2026-09-04, pending CI confirmation)
 
-**Risk: medium — touches the build file everyone depends on.** Do this as
-its own PR, verified by a full local build, not folded into a docs/archive
-batch.
+**Risk: medium — touches the build file everyone depends on.**
 
 | Action | Detail |
 |---|---|
-| REFACTOR | Replace the 19 near-identical `juce_add_console_app` probe blocks (`CMakeLists.txt:815-2699`) with one parametrized CMake function taking probe name + source list. |
-| FIX | Remove the duplicate `Source/BeatSyncSystem.cpp` entry in the main target's `target_sources` (`CMakeLists.txt:352,356`). |
-| DECIDE | Register more of the ~20 QA probe targets with `ctest` (currently only 5 of ~20 are, `CMakeLists.txt:2681-2719`) — or confirm the "may depend on runtime libraries not present everywhere" reasoning still holds per-probe. |
+| **Correction on execution:** | Only **14** of the ~19-20 probe blocks (not all of them) share the full heavy pattern worth deduplicating — verified by programmatic pairwise diffing, not eyeballing. The other 6 ("Group B": `locusq_physics_probe`, `locusq_physics_tier_a_probe`, `locusq_physics_daw_automation_probe`, `locusq_fir_truthfulness_probe`, `locusq_timeline_track_type_probe`, and `locusq_qa` itself) have genuinely different, smaller source lists and no Steam Audio guard/`JucePlugin_*` macros — folding them into the same helper would have silently changed their behavior. Left untouched. |
+| DONE | Replaced the 14 "Group A" blocks with one `locusq_add_qa_probe(target product_name main_cpp)` function + 14 one-line calls. |
+| DONE | Removed the duplicate `Source/BeatSyncSystem.cpp` entry in the main `LocusQ` target's `target_sources` (was line 318, out of place before `FormationSystem.h`; the correctly `.h`-paired occurrence stays). |
+| FLAGGED, not fixed | `locusq_qa`'s own `target_sources` has the *same* duplicate-file bug for `Source/BakeRecorder.h`/`.cpp` — out of the scope given (main target's `BeatSyncSystem.cpp` specifically). Separate follow-up decision. |
+| NOT changed | `ctest` registration (still exactly the same 5 Group-B targets) — confirmed untouched by construction, the replaced spans don't overlap it. |
 
-**Verification:** clean configure + build on both the CI-supported OSes; confirm all 20 probe binaries still produce identical output/behavior to pre-refactor (diff a captured run before/after).
+**Result:** 2684 → 1058 lines (−1626, ~61%). Verified before applying: current file matched the draft's assumed line numbers exactly (untouched since the audit). Verified after applying: exactly 1 `function()`/`endfunction()` pair, all 14 call sites present with unique target names, `ctest` block byte-identical, `locusq_physics_probe` (Group B) untouched, balanced parens/quotes across the whole file (structural check). No JUCE build environment available in this session to run a real `cmake` configure — **CI (`qa-critical` job on the open PR) is the real verification**, pending.
 
 ---
 
