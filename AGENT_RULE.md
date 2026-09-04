@@ -2,7 +2,7 @@ Title: APC Agent Rule Contract
 Document Type: Rule
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-09-04
 
 # AGENT_RULE.md
 
@@ -20,9 +20,16 @@ Do not edit those copies directly. After editing this file, sync both copies wit
 1. User request
 2. Safety and correctness
 3. `AGENTS.md` routing rules
-4. This file
-5. Active workflow and skill instructions
-6. Existing repository conventions
+4. This file (`AGENT_RULE.md`) — canonical for behavior, quality, phase, and validation rules
+5. The active per-agent-surface contract (`CLAUDE.md` for Claude, `CODEX.md` for Codex) — for agent-specific routing/response-shape detail not covered by this file; it does not restate and never overrides this file's rules
+6. Active workflow and skill instructions
+7. Existing repository conventions
+
+`CLAUDE.md`, `CODEX.md`, and `AGENTS.md` must not restate the rules in this
+file; where they currently point back here (Priority Order, phase
+discipline, backlog automation, the framework gate, spec/invariant/ADR
+handling, validation vocabulary, troubleshooting), that pointer is
+authoritative and this file's fuller wording governs.
 
 ## Routing Contract
 - Slash commands and natural-language intent map through `AGENTS.md`.

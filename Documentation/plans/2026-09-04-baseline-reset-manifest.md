@@ -112,32 +112,40 @@ longer exist.
 
 ---
 
-## Batch F — Skill catalog consolidation
+## Batch F — Skill catalog consolidation — ⏸ SKIPPED (2026-09-04, by decision)
 
-**Risk: low — additive-safe, but changes agent-facing routing, so verify
-triggering still works.**
+**Correction on execution:** the "Risk: low" label above was wrong. All 37
+`.claude/skills/*` files are legitimate thin routers (not bloat — real
+content lives once in `.codex/skills/`), and the 10 "alias" names
+(`skill_debug`, `skill_impl`, etc.) are used as **canonical identifiers**
+in 20+ live files — `SKILLS.md`, `AGENTS.md`, `CLAUDE.md`, `CODEX.md`,
+backlog docs, and an ADR — not just convenience redirects. Deleting them
+requires a synchronized multi-file rename, not a simple cleanup.
 
-| Action | Detail |
-|---|---|
-| FOLD | The 10 alias-router skills in `.claude/skills/` (`skill_debug`, `skill_design`, `skill_docs`, `skill_dream`, `skill_impl`, `skill_plan`, `skill_ship`, `skill_test`, plus the `juce-webview`/`juce-webview-windows`/`skill_design_webview` 3-way split) into their real targets — either delete the alias and rely on the target skill's own description matching, or fold the routing into `SKILLS.md`'s existing matrix instead of one file per alias. |
-| MERGE | Single-ticket skills (`auv3-plugin-lifecycle`, `clap-plugin-lifecycle`, `headtracking-companion-runtime`, `hrtf-rendering-validation-lab`, `perceptual-listening-harness`, `apple-spatial-companion-platform`) into broader domain skills (e.g. one `plugin-format-lifecycle` skill covering AUv3+CLAP, one `spatial-audio-validation` skill covering HRTF/perceptual/companion validation) — keep the specific BL-### knowledge as content *inside* the merged skill, not as the skill's identity. |
-| BUDGET | Cap `.codex/skills/*/SKILL.md` at ~150-250 always-loaded lines; move anything longer to a referenced doc loaded on demand. |
-
-**Verification:** exercise a handful of real trigger phrases per merged skill against the description text to confirm routing still works before deleting the originals.
+**Decision: skip.** The alias files are cheap (15 lines each) and not
+actually harmful; the original framing that this was easy low-risk
+cleanup was wrong. Revisit only if the skill catalog grows further. The
+single-ticket-skill merge proposals (`auv3-plugin-lifecycle` +
+`clap-plugin-lifecycle` -> `plugin-format-lifecycle`,
+`hrtf-rendering-validation-lab` + `perceptual-listening-harness` ->
+`spatial-audio-validation`) and a found stray dead file
+(`.codex/skills/skill_design_webview/SKILL_OLD.md`) remain in the draft
+at `/tmp/.../scratchpad/batch-f-skills-draft.md` if revisited later, but
+were not applied.
 
 ---
 
-## Batch G — Governance-doc de-duplication
+## Batch G — Governance-doc de-duplication ✅ DONE (2026-09-04)
 
 **Risk: low.**
 
 | Action | Detail |
 |---|---|
-| KEEP canonical | `AGENT_RULE.md` (already the declared source of truth, and its sync to `.codex/rules/agent.md` / `.claude/rules/agent.md` is confirmed byte-identical — no drift to fix). |
-| THIN | `CLAUDE.md`, `CODEX.md`, `AGENTS.md` — reduce each to routing/pointer content specific to that agent surface, removing restated priority-order/phase-discipline/validation-vocabulary text that's already in `AGENT_RULE.md`. |
-| LICENSE | Add a root `LICENSE` file and confirm JUCE licensing mode (GPLv3 vs. commercial) in a visible place — currently absent entirely, which is a real gap for a project fetching the Steam Audio SDK and depending on JUCE. |
+| DONE | Thinned `CLAUDE.md` (117→93 lines), `CODEX.md` (77→69), `AGENTS.md` (131→112) — restated sections (Priority Order, phase discipline, backlog automation, framework gate, spec/ADR handling, validation vocabulary, troubleshooting) replaced with pointers to `AGENT_RULE.md`. Agent-surface-specific content (Codex reasoning tiers, Claude's Output/Quality Contracts, path listings, slash-command routing table) kept in full per a conservative section-by-section comparison — nothing cut without a specific matching `AGENT_RULE.md` section. |
+| **Gap found and fixed:** | `AGENT_RULE.md`'s own Priority Order never ranked `CLAUDE.md`/`CODEX.md`/`AGENTS.md` against each other, despite declaring itself canonical over them — the two files being thinned had *independently drifted* restatements (both omitted "Safety and correctness" as a tier). Fixed in `AGENT_RULE.md` itself: added an explicit rank for "the active per-agent-surface contract (CLAUDE.md/CODEX.md)" between AGENT_RULE.md and workflow/skill instructions, plus a line stating that pointers in the other three files are authoritative back to this file. Synced to `.codex/rules/agent.md` and `.claude/rules/agent.md` per the file's own sync command — diff-confirmed identical. |
+| DEFERRED, by decision | Root `LICENSE` file / JUCE licensing mode — explicitly skipped. This is a business decision (commercial vs. open-source distribution, which determines whether a paid JUCE commercial license is required instead of GPLv3) that doesn't belong inside a documentation cleanup pass. Still an open item — see "Explicitly out of scope" below. |
 
-**Verification:** none beyond a read-through confirming no rule is lost, only de-duplicated.
+**Verification:** section-by-section comparison of every `##` heading in all three files against `AGENT_RULE.md`, applied only where a specific matching section existed; line counts confirmed exactly matching the draft's predictions post-edit; sync diff-confirmed identical.
 
 ---
 
@@ -146,3 +154,5 @@ triggering still works.**
 - **BoidsSystem / AttractorSystem / CollisionSystem / Choreography Lab** — contradicts the shipped V1 creative brief per the DSP audit, but keep-vs-cut is a product decision, not a cleanup. Tracked separately.
 - **Sanitizer (ASan/TSan/UBSan) integration, Windows CI runner addition, companion `swift test` wiring** — these are new CI capability, not archival; tracked as their own follow-up work once Batch A-G land, so the baseline is stable before adding new gates on top of it.
 - **PhysicsEngine/PhysicsWorker consolidation, processor_core/processor_bridge cleanup** — real-time code changes requiring the physics acceptance suite; separate PRs per the original audit's Phase 3.
+- **Root `LICENSE` file / JUCE licensing mode** — deferred by explicit decision on 2026-09-04 (see Batch G). Business decision (commercial vs. open-source, GPLv3 vs. paid JUCE commercial license), not something a cleanup pass should decide. Still open.
+- **Skill catalog alias-name rename** (Batch F) — skipped by explicit decision on 2026-09-04. Reclassified from "low risk" to "load-bearing in 20+ files" during drafting; not worth the risk for a purely cosmetic gain. Draft with the reclassification and the (still-available) single-ticket-skill merge proposals lives at `/tmp/claude-0/-home-user-LocusQ/57687359-7ef9-5fff-89f2-9e143addc7a6/scratchpad/batch-f-skills-draft.md` (session-local scratch path, not committed to the repo).

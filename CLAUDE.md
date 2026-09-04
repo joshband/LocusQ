@@ -2,33 +2,24 @@ Title: LocusQ Claude Contract
 Document Type: Agent Contract
 Author: APC Codex
 Created Date: 2026-02-18
-Last Modified Date: 2026-03-18
+Last Modified Date: 2026-09-04
 
 # CLAUDE.md
 
 ## Purpose
 Claude-specific operating contract for the standalone `LocusQ` repository.
-Use this file for behavior and quality rules. Use `AGENTS.md` for routing.
+Use this file for Claude-surface specifics (skill routing, loading sequence, response shaping). Use `AGENTS.md` for routing and `AGENT_RULE.md` for the canonical behavior/quality rules — this file does not restate those.
 
 ## Priority Order
-1. User request.
-2. `AGENTS.md`.
-3. This file.
-4. Workflow and skill files under `.codex/`.
-5. Existing code conventions.
-
-If directives conflict, preserve build/test stability, phase discipline, and state/evidence contract integrity.
+See `AGENT_RULE.md` (Priority Order) for the canonical instruction hierarchy — this file does not restate it.
 
 ## Default Mode
 - Execute directly with minimal, targeted edits.
-- Prefer repository scripts and workflow contracts over ad-hoc commands.
 - Do not revert unrelated user changes.
-- Validate with the smallest meaningful checks first.
+- See `AGENT_RULE.md` (Build and Validation) for script-preference and smallest-check-first validation ordering — this file does not restate them.
 
 ## Required Loading Sequence
-1. `.codex/rules/agent.md`
-2. Selected file in `.codex/workflows/`
-3. Referenced skill file in `.codex/skills/`
+See `AGENT_RULE.md` (Required Load Sequence) — this file does not restate it.
 
 ## Automatic Skill Selection
 - Automatically load skills when:
@@ -53,25 +44,16 @@ Claude must consider the full repo skill catalog, not only the short list above.
 Canonical paths and triggers: `SKILLS.md` and `Documentation/skill-selection-matrix.md`.
 
 ## Phase Discipline
-- Enforce one phase at a time.
-- Read `status.json` before phase work.
-- Update `status.json` as phase state changes.
-- Do not auto-advance to the next phase.
-- Stop after completing the requested command output.
+See `AGENT_RULE.md` (Routing Contract, State Contract) for phase-at-a-time enforcement, `status.json` read/update timing, and the no-auto-advance rule — this file does not restate them.
 
 ## Backlog Automation
-- Backlog automation is draft-only unless the user explicitly approves a promotion flow: scripts may run T1/T2/T3 lanes and prepare packets or proposed status updates, but owner confirmation is required before promotion or archive transitions become authoritative.
+See `AGENT_RULE.md` (Routing Contract) for the draft-only backlog automation rule — this file does not restate it.
 
 ## Framework Discipline
-`ui_framework` in `status.json` is binding:
-- `visage`: do not generate WebView-only UI implementation.
-- `webview`: generate WebView-compatible UI paths and integration.
-- `pending`: block framework-specific implementation until planning resolves it.
+See `AGENT_RULE.md` (Framework Gate) for the binding `ui_framework` behavior — this file does not restate it.
 
 ## Spec/Invariant/ADR Discipline
-- Treat `.ideas/architecture.md`, `.ideas/parameter-spec.md`, `.ideas/plan.md`, `Documentation/invariants.md`, and `Documentation/adr/*.md` as normative references.
-- Do not ship code that conflicts with documented invariants or ADR decisions.
-- If a change must override an invariant/ADR, record the decision in a new ADR before closing the task.
+See `AGENT_RULE.md` (Spec/Invariant/ADR Contract) — this file does not restate it.
 
 ## Expected Project Layout
 Keep work inside:
@@ -100,18 +82,12 @@ For non-trivial tasks, use this response shape:
 For simple tasks, use one short paragraph or up to three bullets.
 
 ## Validation Rules
-- Run targeted checks first; broaden only if needed.
-- If checks are skipped, state exactly why.
-- Report status as one of: `tested`, `partially tested`, `not tested`.
+See `AGENT_RULE.md` (Build and Validation) for check-ordering and the `tested` / `partially tested` / `not tested` vocabulary — this file does not restate them.
 
 ## Troubleshooting Rules
-- Check known issues first: `.codex/troubleshooting/known-issues.yaml`.
-- Reuse documented fixes when a match exists.
-- If an issue is new and persistent, document it in troubleshooting artifacts.
+See `AGENT_RULE.md` (Troubleshooting Contract) — this file does not restate it.
 
 ## Documentation Hygiene
 - Keep this file aligned with `AGENTS.md` and `.codex/workflows/*`.
 - When workflow/skill behavior changes, update this file in the same change set.
-- Enforce markdown metadata (`Title`, `Document Type`, `Author`, `Created Date`, `Last Modified Date`) for human-authored docs in root, `.codex/`, `.claude/`, `.ideas/`, `Design/`, `Documentation/`, and `TestEvidence/`.
-- Treat skill/runtime markdown under `.codex/skills/`, `.claude/skills/`, `.codex/workflows/`, `.claude/workflows/`, `.codex/rules/`, and `.claude/rules/` as runtime-standard surfaces; exclude them from normal documentation-hygiene and `skill_docs` passes unless explicitly requested.
-- Track validation snapshots/trends in `TestEvidence/build-summary.md` and `TestEvidence/validation-trend.md`.
+- See `AGENT_RULE.md` (Documentation Contract) for metadata requirements, the skill/runtime markdown exemption, and validation-log locations — this file does not restate them.
