@@ -80,18 +80,18 @@ batch.
 
 ---
 
-## Batch D — Prune TestEvidence
+## Batch D — Prune TestEvidence ✅ DONE (2026-09-04)
 
 **Risk: low.** Evidence is a historical record, not live state; nothing
 reads these dirs at runtime.
 
 | Action | Detail |
 |---|---|
-| KEEP | `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md` (curated summaries — but see Batch F, these have re-bloated once already and need a budget, not just a one-time trim). |
-| ARCHIVE → `Documentation/archive/2026-09-04-baseline-reset/test-evidence/` | All timestamped run dirs under `TestEvidence/` **except** the single most recent dir per BL-item prefix. (72 dirs today; expect this to cut it to roughly the number of distinct BL items with evidence, likely ~40-50.) |
-| DECIDE | Whether "most recent per BL item" or "most recent per BL item that is still an open/active item" is the right retention rule — closed items arguably don't need even one dir kept live. |
+| KEPT | `TestEvidence/build-summary.md`, `TestEvidence/validation-trend.md`, `README.md`, and 44 singleton/most-recent-per-lane run dirs. |
+| ARCHIVED → `Documentation/archive/2026-09-04-baseline-reset/test-evidence/` | 22 of 27 older-duplicate timestamped run dirs. |
+| **Correction on execution:** | 5 of the original 27 candidates were NOT archived — each is individually cited by exact path as the sole evidence for a distinct test mode/phase (contract vs. execute, T1 vs. T2) in a live doc or `status.json` field, not a stale duplicate. Re-classified as "keep" instead of updating their citations. Full list in `Documentation/archive/2026-09-04-baseline-reset/README.md`. |
 
-**Verification:** none needed beyond confirming no script or workflow references a specific archived path by name (`grep -r "TestEvidence/<dirname>"` before archiving each).
+**Verification:** every one of the 22 moved paths independently grep-checked (`status.json`, `Documentation/`, `scripts/`, `.github/`) with zero live references found; one soft reference from inside an already-archived legacy doc was accepted as low-priority.
 
 ---
 
