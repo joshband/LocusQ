@@ -68,10 +68,6 @@ message(STATUS "LocusQ: Building for ${PLUGIN_FORMATS}")
 message(STATUS "LocusQ: WebView backend: ${WEBVIEW_BACKEND}")
 message(STATUS "LocusQ: AUv3 format gate: ${LOCUSQ_ENABLE_AUV3}")
 
-# ============================================
-# UI DEBUG/POC MODE
-# ============================================
-option(LOCUSQ_UI_POC "Load focused WebView POC UI by default" OFF)
 option(LOCUSQ_ENABLE_STEAM_AUDIO "Enable Steam Audio headphone backend integration hook" OFF)
 option(LOCUSQ_ENABLE_CLAP "Enable CLAP target generation via clap-juce-extensions" OFF)
 option(LOCUS_HEAD_TRACKING "Enable BL-017 head-tracking companion bridge receiver integration" OFF)
@@ -235,37 +231,6 @@ if(TARGET locusq_webui_typecheck)
         COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target locusq_webui_typecheck
     )
     set_tests_properties(locusq_webui_typecheck PROPERTIES LABELS "locusq_webui")
-endif()
-
-# POC and incremental stage assets — only included when LOCUSQ_UI_POC is ON.
-# Keeps release binaries lean by excluding ~24 unused HTML/JS files.
-if(LOCUSQ_UI_POC)
-    list(APPEND LOCUSQ_WEBUI_SOURCES
-        Source/ui/public/poc/index_poc.html
-        Source/ui/public/poc/js/poc_ui.js
-        Source/ui/public/incremental/index_stage2.html
-        Source/ui/public/incremental/js/stage2_ui.js
-        Source/ui/public/incremental/index_stage3.html
-        Source/ui/public/incremental/js/stage3_ui.js
-        Source/ui/public/incremental/index_stage4.html
-        Source/ui/public/incremental/js/stage4_ui.js
-        Source/ui/public/incremental/index_stage5.html
-        Source/ui/public/incremental/js/stage5_ui.js
-        Source/ui/public/incremental/index_stage6.html
-        Source/ui/public/incremental/js/stage6_ui.js
-        Source/ui/public/incremental/index_stage7.html
-        Source/ui/public/incremental/js/stage7_ui.js
-        Source/ui/public/incremental/index_stage8.html
-        Source/ui/public/incremental/js/stage8_ui.js
-        Source/ui/public/incremental/index_stage9.html
-        Source/ui/public/incremental/js/stage9_ui.js
-        Source/ui/public/incremental/index_stage10.html
-        Source/ui/public/incremental/js/stage10_ui.js
-        Source/ui/public/incremental/index_stage11.html
-        Source/ui/public/incremental/js/stage11_ui.js
-        Source/ui/public/incremental/index_stage12.html
-        Source/ui/public/incremental/js/stage12_ui.js
-    )
 endif()
 
 juce_add_binary_data(LocusQ_WebUI
@@ -464,7 +429,6 @@ target_compile_definitions(LocusQ
         JUCE_WEB_BROWSER=1
         JUCE_VST3_CAN_REPLACE_VST2=0
         _USE_MATH_DEFINES=1
-        LOCUSQ_UI_POC_DEFAULT=$<IF:$<BOOL:${LOCUSQ_UI_POC}>,1,0>
         LOCUSQ_ENABLE_AUV3=$<IF:$<BOOL:${LOCUSQ_ENABLE_AUV3}>,1,0>
         LOCUSQ_ENABLE_CLAP=$<IF:$<BOOL:${LOCUSQ_ENABLE_CLAP}>,1,0>
         LOCUSQ_ENABLE_STEAM_AUDIO=$<IF:$<BOOL:${LOCUSQ_ENABLE_STEAM_AUDIO}>,1,0>
