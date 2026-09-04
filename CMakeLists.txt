@@ -104,11 +104,18 @@ if(LOCUSQ_ENABLE_CLAP)
     elseif(LOCUSQ_CLAP_FETCH)
         include(FetchContent)
         message(STATUS "LocusQ: fetching clap-juce-extensions (${LOCUSQ_CLAP_JUCE_EXTENSIONS_TAG})")
+        # GIT_SHALLOW must stay off here: LOCUSQ_CLAP_JUCE_EXTENSIONS_TAG pins an
+        # exact commit, not a branch/tag name. CMake's shallow-clone path clones
+        # only the current default-branch tip and then checks out the pinned SHA
+        # from that shallow history - once upstream's default branch has moved on
+        # past the pinned commit, that SHA's tree is simply absent from the
+        # shallow clone and checkout fails ("unable to read tree <sha>"),
+        # regardless of whether the commit itself still exists upstream (it does).
+        # A full (non-shallow) clone always has the pinned commit's history.
         FetchContent_Declare(
             locusq_clap_juce_extensions
             GIT_REPOSITORY https://github.com/free-audio/clap-juce-extensions.git
             GIT_TAG ${LOCUSQ_CLAP_JUCE_EXTENSIONS_TAG}
-            GIT_SHALLOW TRUE
             GIT_SUBMODULES "clap-libs/clap;clap-libs/clap-helpers"
             GIT_SUBMODULES_RECURSE TRUE
         )
