@@ -146,6 +146,23 @@ inline SofaHrirResult loadSofaFile (const std::string& path, int targetSampleRat
         return result;
     }
 
+    // firLength is read straight out of the file's own metadata by libmysofa
+    // and reported even when err == MYSOFA_OK; a corrupted or hostile .sofa
+    // file can hand back a bogus value (<=0, or absurdly large) with a
+    // nominally successful open. getHrir() allocates two std::vector<float>
+    // sized to firLength on every lookup, so an unvalidated value here is a
+    // path to a huge/failed allocation from file content alone. Real HRTF
+    // filters run to a few thousand taps at most; this bound is generous
+    // enough for any legitimate SOFA file while rejecting garbage values.
+    constexpr int kMaxSaneFirLength = 65536;
+    if (result.firLength <= 0 || result.firLength > kMaxSaneFirLength)
+    {
+        mysofa_close (easy);
+        result.firLength = 0;
+        // Leave result.valid = false; caller may log this as a malformed file.
+        return result;
+    }
+
     result.handle.reset (easy);
     result.valid = true;
     return result;
