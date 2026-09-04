@@ -47,21 +47,20 @@ Git history preserves all of it.
 
 ---
 
-## Batch B — Archive superseded design packages
+## Batch B — Archive superseded design packages ✅ DONE (2026-09-04)
 
 **Risk: low.** `Design/HANDOFF.md` already names v3 as the sole approved
-package; v1/v2 are dead weight, not history anyone builds from.
+package; v1/v2 were dead weight, not history anyone builds from.
 
 | Action | Path | Why |
 |---|---|---|
-| ARCHIVE → `Documentation/archive/2026-09-04-baseline-reset/design-v1-v2/` | `Design/v1-style-guide.md`, `Design/v1-ui-spec.md`, `Design/v1-test.html` | Superseded by v3 per `Design/HANDOFF.md`. |
-| ARCHIVE → same | `Design/v2-style-guide.md`, `Design/v2-ui-spec.md`, `Design/v2-test.html` | Same. |
-| KEEP | `Design/v3-*`, `Design/HANDOFF.md`, `Design/index.html` | Canonical, current. |
-| FIX reference | `.codex/skills/design/SKILL.md` | Still points at v2 — repoint to v3. |
-| FIX reference | `.codex/workflows/design.md` | Same. |
-| FIX reference | `.ideas/physics-simulation-impl-plan.md` | Same. |
+| ARCHIVED → `Documentation/archive/2026-09-04-baseline-reset/design-v1-v2/` | `Design/v1-style-guide.md`, `Design/v1-ui-spec.md`, `Design/v1-test.html` | Superseded by v3 per `Design/HANDOFF.md`. |
+| ARCHIVED → same | `Design/v2-style-guide.md`, `Design/v2-ui-spec.md`, `Design/v2-test.html` | Same. |
+| KEPT | `Design/v3-*`, `Design/HANDOFF.md`, `Design/index.html` | Canonical, current. |
+| ~~FIX reference~~ | `.codex/skills/design/SKILL.md`, `.codex/workflows/design.md` | **Correction on execution:** these only describe the design skill's own "always do v1→v2→v3" iteration process for *future* tasks — not path references to these specific files. No fix needed. |
+| ~~FIX reference~~ | `.ideas/physics-simulation-impl-plan.md` | **Correction on execution:** the actual match was `Design/physics-v1-ui-spec.md` / `Design/physics-v1-style-guide.md` — different, never-created files, unrelated to this archival. Left alone. |
 
-**Verification:** grep for `Design/v1`, `Design/v2`, `v1-ui-spec`, `v2-ui-spec`, `v1-style-guide`, `v2-style-guide` across the repo after the fix — zero hits outside the archive folder itself.
+**Verification:** confirmed no build/script/source reference to `Design/v1`/`Design/v2` before moving; `git mv` used to preserve history; archive documented in `Documentation/archive/2026-09-04-baseline-reset/README.md`.
 
 ---
 
