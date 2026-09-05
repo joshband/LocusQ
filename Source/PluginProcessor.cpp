@@ -3,7 +3,6 @@
 #include "processor_core/ProcessorParameterReaders.h"
 #include "processor_bridge/ProcessorBridgeUtilities.h"
 #include "shared_contracts/BridgeStatusContract.h"
-#include "shared_contracts/CalibrationRegistry.h"
 #include "shared_contracts/ConfidenceMaskingContract.h"
 #include "shared_contracts/HeadphoneCalibrationContract.h"
 #include "shared_contracts/HeadphoneVerificationContract.h"

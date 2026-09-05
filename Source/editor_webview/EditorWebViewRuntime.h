@@ -18,7 +18,6 @@ struct RuntimeConfig
     bool selfTestBl009Enabled = false;
     bool selfTestBl011Enabled = false;
     bool selfTestStrictGestureEnabled = false;
-    bool useIncrementalUi = false;
     juce::String selfTestScope;
     int selfTestTimeoutTicks = 600;
 };
@@ -64,19 +63,6 @@ inline RuntimeConfig makeRuntimeConfig()
     config.selfTestStrictGestureEnabled = readFeatureFlag ("LOCUSQ_UI_SELFTEST_STRICT_GESTURE");
     config.selfTestScope = readSelfTestScope();
 
-    if (const auto* variant = std::getenv ("LOCUSQ_UI_VARIANT"))
-    {
-        const auto value = juce::String (variant).trim().toLowerCase();
-        if (value == "incremental" || value == "stage12")
-            config.useIncrementalUi = true;
-        else if (value == "production" || value == "index")
-            config.useIncrementalUi = false;
-    }
-    else
-    {
-        config.useIncrementalUi = config.selfTestEnabled;
-    }
-
     if (config.selfTestScope.isNotEmpty())
         config.selfTestTimeoutTicks = 1200; // ~40s @ 30Hz
     else if (config.selfTestBl009Enabled || config.selfTestBl011Enabled)
@@ -85,19 +71,16 @@ inline RuntimeConfig makeRuntimeConfig()
     return config;
 }
 
-inline juce::String getInitialUiResourcePath (const RuntimeConfig& config)
+inline juce::String getInitialUiResourcePath (const RuntimeConfig&)
 {
-    return config.useIncrementalUi ? "/incremental/index.html"
-                                   : "/index.html";
+    return "/index.html";
 }
 
-inline juce::String getStandaloneWindowTitle (const RuntimeConfig& config)
+inline juce::String getStandaloneWindowTitle (const RuntimeConfig&)
 {
-    const auto uiLabel = config.useIncrementalUi ? "incremental-stage12"
-                                                  : "production-ui";
     return juce::String (JucePlugin_Name)
         + " v" + juce::String (JucePlugin_VersionString)
-        + " [" + uiLabel + "]";
+        + " [production-ui]";
 }
 
 inline juce::String makeInitialUrl (const RuntimeConfig& config)
@@ -618,165 +601,6 @@ inline std::optional<juce::WebBrowserComponent::Resource> getResource (const juc
         resourceSize = BinaryData::check_native_interop_jsSize;
         mimeType = "text/javascript";
     }
-#if LOCUSQ_UI_POC_DEFAULT
-    else if (path == "poc/index.html")
-    {
-        resourceData = BinaryData::index_poc_html;
-        resourceSize = BinaryData::index_poc_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/index.html")
-    {
-        resourceData = BinaryData::index_stage12_html;
-        resourceSize = BinaryData::index_stage12_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage1.html")
-    {
-        resourceData = BinaryData::index_poc_html;
-        resourceSize = BinaryData::index_poc_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage2.html")
-    {
-        resourceData = BinaryData::index_stage2_html;
-        resourceSize = BinaryData::index_stage2_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage3.html")
-    {
-        resourceData = BinaryData::index_stage3_html;
-        resourceSize = BinaryData::index_stage3_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage4.html")
-    {
-        resourceData = BinaryData::index_stage4_html;
-        resourceSize = BinaryData::index_stage4_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage5.html")
-    {
-        resourceData = BinaryData::index_stage5_html;
-        resourceSize = BinaryData::index_stage5_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage6.html")
-    {
-        resourceData = BinaryData::index_stage6_html;
-        resourceSize = BinaryData::index_stage6_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage7.html")
-    {
-        resourceData = BinaryData::index_stage7_html;
-        resourceSize = BinaryData::index_stage7_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage8.html")
-    {
-        resourceData = BinaryData::index_stage8_html;
-        resourceSize = BinaryData::index_stage8_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage9.html")
-    {
-        resourceData = BinaryData::index_stage9_html;
-        resourceSize = BinaryData::index_stage9_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage10.html")
-    {
-        resourceData = BinaryData::index_stage10_html;
-        resourceSize = BinaryData::index_stage10_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage11.html")
-    {
-        resourceData = BinaryData::index_stage11_html;
-        resourceSize = BinaryData::index_stage11_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/stage12.html")
-    {
-        resourceData = BinaryData::index_stage12_html;
-        resourceSize = BinaryData::index_stage12_htmlSize;
-        mimeType = "text/html";
-    }
-    else if (path == "incremental/js/stage2_ui.js")
-    {
-        resourceData = BinaryData::stage2_ui_js;
-        resourceSize = BinaryData::stage2_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage3_ui.js")
-    {
-        resourceData = BinaryData::stage3_ui_js;
-        resourceSize = BinaryData::stage3_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage4_ui.js")
-    {
-        resourceData = BinaryData::stage4_ui_js;
-        resourceSize = BinaryData::stage4_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage5_ui.js")
-    {
-        resourceData = BinaryData::stage5_ui_js;
-        resourceSize = BinaryData::stage5_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage6_ui.js")
-    {
-        resourceData = BinaryData::stage6_ui_js;
-        resourceSize = BinaryData::stage6_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage7_ui.js")
-    {
-        resourceData = BinaryData::stage7_ui_js;
-        resourceSize = BinaryData::stage7_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage8_ui.js")
-    {
-        resourceData = BinaryData::stage8_ui_js;
-        resourceSize = BinaryData::stage8_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage9_ui.js")
-    {
-        resourceData = BinaryData::stage9_ui_js;
-        resourceSize = BinaryData::stage9_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage10_ui.js")
-    {
-        resourceData = BinaryData::stage10_ui_js;
-        resourceSize = BinaryData::stage10_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage11_ui.js")
-    {
-        resourceData = BinaryData::stage11_ui_js;
-        resourceSize = BinaryData::stage11_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "incremental/js/stage12_ui.js")
-    {
-        resourceData = BinaryData::stage12_ui_js;
-        resourceSize = BinaryData::stage12_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-    else if (path == "poc/js/poc_ui.js")
-    {
-        resourceData = BinaryData::poc_ui_js;
-        resourceSize = BinaryData::poc_ui_jsSize;
-        mimeType = "text/javascript";
-    }
-#endif
-
 #if JUCE_DEBUG
     if (resourceData != nullptr)
         DBG ("  -> FOUND (" + juce::String (resourceSize) + " bytes)");

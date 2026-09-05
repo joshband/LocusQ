@@ -3,6 +3,10 @@ name: LocusQ QA Harness
 on:
   workflow_dispatch:
   pull_request:
+    # Default types (opened/synchronize/reopened) plus labeled/unlabeled, so
+    # applying the needs-reliability-gate label to an existing PR (with no
+    # new commit) still triggers a run that can pick it up.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [ main ]
 
@@ -64,10 +68,78 @@ jobs:
           path: qa_output/rt_safety/
           retention-days: 14
 
+  changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code_changed: ${{ steps.diff.outputs.code_changed }}
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine whether code paths changed
+        id: diff
+        run: |
+          set -euo pipefail
+
+          BASE_SHA=""
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          # Debug: show what GitHub Actions provided
+          echo "Event: ${GITHUB_EVENT_NAME}, Base SHA: ${BASE_SHA}"
+
+          # No usable base (workflow_dispatch, brand-new branch, first push):
+          # can't compute a diff, so don't risk under-running - treat as changed.
+          if [[ -z "${BASE_SHA}" || "${BASE_SHA}" == "0000000000000000000000000000000000000000" ]] \
+             || ! git cat-file -e "${BASE_SHA}" 2>/dev/null; then
+            echo "No usable base SHA for diffing - treating as code-changed."
+            echo "code_changed=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          CHANGED_FILES="$(git diff --name-only "${BASE_SHA}" HEAD)"
+          echo "Changed files vs ${BASE_SHA}:"
+          echo "${CHANGED_FILES}"
+          echo "---"
+
+          # Paths that can affect a compiled build or the QA harness itself.
+          # Anything else (Documentation/, .codex/, .claude/, TestEvidence/,
+          # Design/, root markdown, etc.) skips the macOS build/format jobs.
+          CODE_CHANGED="false"
+
+          # Check for code-affecting paths using multiple conditions for robustness
+          if echo "${CHANGED_FILES}" | grep -qE '^Source/'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^CMakeLists\.txt$'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^qa/'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^third_party/'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^scripts/rt-safety-audit\.sh$'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^scripts/rt-safety-allowlist\.txt$'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/qa_harness\.yml$'; then
+            CODE_CHANGED="true"
+          fi
+
+          echo "Code changed result: ${CODE_CHANGED}"
+          echo "code_changed=${CODE_CHANGED}" >> "${GITHUB_OUTPUT}"
+
   qa-format-clap:
     name: QA Format CLAP (macOS)
     runs-on: macos-latest
-    needs: rt-safety-audit
+    needs: [rt-safety-audit, changes]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || needs.changes.outputs.code_changed != 'false'
     timeout-minutes: 30
 
     steps:
@@ -92,14 +164,23 @@ jobs:
           set -euo pipefail
           mkdir -p qa_output/format_clap
 
+          echo "=== CMAKE ENVIRONMENT ===" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "CMake version: $(cmake --version | head -1)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "C compiler: $(which cc) - $(cc --version | head -1)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "CXX compiler: $(which c++) - $(c++ --version | head -1)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "JUCE_DIR: ${GITHUB_WORKSPACE}/JUCE" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "JUCE exists: $(test -d "${GITHUB_WORKSPACE}/JUCE" && echo yes || echo NO)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "=== CMAKE CONFIGURE ===" | tee -a qa_output/format_clap/cmake_configure.log
+
           cmake -S . -B build-format-clap \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DLOCUSQ_ENABLE_CLAP=ON \
             -DLOCUSQ_CLAP_FETCH=ON \
-            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" | tee qa_output/format_clap/cmake_configure.log
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" 2>&1 | tee -a qa_output/format_clap/cmake_configure.log
 
-          cmake --build build-format-clap --config Release --target LocusQ_CLAP -j 4 | tee qa_output/format_clap/cmake_build.log
+          echo "=== CMAKE BUILD ===" | tee -a qa_output/format_clap/cmake_build.log
+          cmake --build build-format-clap --config Release --target LocusQ_CLAP -j 4 2>&1 | tee -a qa_output/format_clap/cmake_build.log
 
           CLAP_PATH="./build-format-clap/LocusQ_artefacts/Release/CLAP/LocusQ.clap"
           if [[ ! -d "${CLAP_PATH}" ]]; then
@@ -132,7 +213,8 @@ jobs:
   qa-format-auv3:
     name: QA Format AUv3 (macOS)
     runs-on: macos-latest
-    needs: rt-safety-audit
+    needs: [rt-safety-audit, changes]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || needs.changes.outputs.code_changed != 'false'
     timeout-minutes: 35
 
     steps:
@@ -157,19 +239,27 @@ jobs:
           set -euo pipefail
           mkdir -p qa_output/format_auv3
 
+          echo "=== CMAKE ENVIRONMENT ===" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "CMake version: $(cmake --version | head -1)" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "Xcode version: $(xcodebuild -version | head -1)" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "JUCE_DIR: ${GITHUB_WORKSPACE}/JUCE" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "JUCE exists: $(test -d "${GITHUB_WORKSPACE}/JUCE" && echo yes || echo NO)" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "=== CMAKE CONFIGURE ===" | tee -a qa_output/format_auv3/cmake_configure.log
+
           cmake -S . -B build-format-auv3 \
             -G Xcode \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DLOCUSQ_ENABLE_AUV3=ON \
-            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" | tee qa_output/format_auv3/cmake_configure.log
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" 2>&1 | tee -a qa_output/format_auv3/cmake_configure.log
 
+          echo "=== XCODEBUILD ===" | tee -a qa_output/format_auv3/xcodebuild.log
           xcodebuild \
             -project build-format-auv3/LocusQ.xcodeproj \
             -scheme LocusQ_AUv3 \
             -configuration Release \
             -destination "generic/platform=macOS" \
             CODE_SIGNING_ALLOWED=NO \
-            build | tee qa_output/format_auv3/xcodebuild.log
+            build 2>&1 | tee -a qa_output/format_auv3/xcodebuild.log
 
           AUV3_PATH="./build-format-auv3/LocusQ_artefacts/Release/AUv3/LocusQ.appex"
           if [[ ! -d "${AUV3_PATH}" ]]; then
@@ -205,7 +295,8 @@ jobs:
 
   qa-critical:
     name: QA Critical (${{ matrix.os }})
-    needs: rt-safety-audit
+    needs: [rt-safety-audit, changes]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || needs.changes.outputs.code_changed != 'false'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -356,7 +447,18 @@ jobs:
   qa-bl029-reliability-gate:
     name: BL-029 Reliability Gate (macOS)
     runs-on: macos-latest
-    needs: qa-critical
+    needs: [rt-safety-audit, changes, qa-critical]
+    # 90 minutes is too expensive to run on every PR push, so this is opt-in:
+    # always on main/workflow_dispatch, otherwise only when a reviewer applies
+    # the "needs-reliability-gate" label. `always()` overrides the default
+    # needs-based skip so this can still run when qa-critical itself was
+    # skipped (e.g. a labelled PR with no code changes) - it still requires
+    # qa-critical to not have actively failed.
+    if: |
+      always() &&
+      needs.rt-safety-audit.result == 'success' &&
+      (needs.qa-critical.result == 'success' || needs.qa-critical.result == 'skipped') &&
+      (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'needs-reliability-gate'))
     timeout-minutes: 90
 
     steps:

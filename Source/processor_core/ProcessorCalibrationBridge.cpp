@@ -1,6 +1,5 @@
 #include "../PluginProcessor.h"
 #include "../processor_bridge/ProcessorBridgeUtilities.h"
-#include "../shared_contracts/CalibrationRegistry.h"
 #include "ProcessorConstants.h"
 #include "ProcessorParameterReaders.h"
 

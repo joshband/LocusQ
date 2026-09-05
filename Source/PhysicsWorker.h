@@ -52,6 +52,13 @@ struct WorkerEmitterState
  * - All simulation state is written on the worker thread.
  * - Readers (audio thread, DSP bridge) only call getEmitterState() and
  *   getTickCount() — both lock-free.
+ * - registerEngine()/unregisterEngine() may be called from any non-worker
+ *   thread, including the audio thread (PluginProcessor calls these every
+ *   block). `engines` is therefore std::atomic<PhysicsEngine*> per slot: this
+ *   worker's tick() runs on a single thread shared across every open plugin
+ *   instance (see PhysicsSharedRuntime), so an unsynchronized pointer here
+ *   could let one instance's tick observe another instance's already-freed
+ *   PhysicsEngine after it unregisters/destroys it.
  * - No heap allocation occurs after prepare().
  */
 class PhysicsWorker : private juce::Thread
@@ -118,13 +125,13 @@ public:
     void registerEngine (int index, PhysicsEngine* engine)
     {
         if (index < 0 || index >= kMaxEmitters) return;
-        engines[static_cast<std::size_t>(index)] = engine;
+        engines[static_cast<std::size_t>(index)].store (engine, std::memory_order_release);
     }
 
     void unregisterEngine (int index)
     {
         if (index < 0 || index >= kMaxEmitters) return;
-        engines[static_cast<std::size_t>(index)] = nullptr;
+        engines[static_cast<std::size_t>(index)].store (nullptr, std::memory_order_release);
         attractorSystem.resetTargetRadii(index);
     }
 
@@ -418,7 +425,7 @@ private:
                 cPos = cBuf.position;
                 cVel = cBuf.velocity;
 
-                PhysicsEngine* cEngine = engines[static_cast<std::size_t> (i)];
+                PhysicsEngine* cEngine = engines[static_cast<std::size_t> (i)].load (std::memory_order_acquire);
                 if (cEngine != nullptr)
                 {
                     const auto ces = cEngine->getState();
@@ -440,7 +447,7 @@ private:
             float sceneElasticity = 0.7f;
             for (int i = 0; i < kMaxEmitters; ++i)
             {
-                PhysicsEngine* eng = engines[static_cast<std::size_t> (i)];
+                PhysicsEngine* eng = engines[static_cast<std::size_t> (i)].load (std::memory_order_acquire);
                 if (eng != nullptr && slots[static_cast<std::size_t> (i)].active.load (std::memory_order_acquire))
                 {
                     sceneElasticity = eng->getElasticity();
@@ -455,7 +462,7 @@ private:
         for (int i = 0; i < kMaxEmitters; ++i)
         {
             const auto& slot = slots[static_cast<std::size_t> (i)];
-            PhysicsEngine* engine = engines[static_cast<std::size_t> (i)];
+            PhysicsEngine* engine = engines[static_cast<std::size_t> (i)].load (std::memory_order_acquire);
             if (slot.active.load (std::memory_order_acquire) && engine != nullptr && ! engine->isStandaloneMode())
                 ++coordinatedActiveCount;
         }
@@ -534,7 +541,7 @@ private:
             //------------------------------------------------------------------
             // P2: Attractor force injection via registered PhysicsEngine
             //------------------------------------------------------------------
-            PhysicsEngine* engine = engines[static_cast<std::size_t> (i)];
+            PhysicsEngine* engine = engines[static_cast<std::size_t> (i)].load (std::memory_order_acquire);
 
             Vec3 currentPos = state.position;
             Vec3 currentVel = state.velocity;
@@ -1084,7 +1091,18 @@ private:
 
     //==========================================================================
     std::array<EmitterSlot, kMaxEmitters> slots {};
-    std::array<PhysicsEngine*, kMaxEmitters> engines {};  // nullable, non-owning
+
+    // Nullable, non-owning. Written from the caller's thread (registerEngine/
+    // unregisterEngine — today called from the audio thread on every block,
+    // see PluginProcessor::publishEmitterState) while read every tick by this
+    // worker's own thread, which is a single runtime shared across all open
+    // plugin instances (PhysicsSharedRuntime). Must be atomic: a plain pointer
+    // here previously let the worker thread observe a stale, already-freed
+    // PhysicsEngine* when one instance unregistered/destroyed its engine while
+    // another instance's tick was in flight. std::atomic<T*> is lock-free on
+    // every supported target (a genuine, non-aspirational lock-free type,
+    // unlike SharedPtrAtomicContract's shared_ptr specialization).
+    std::array<std::atomic<PhysicsEngine*>, kMaxEmitters> engines {};
 
     AttractorSystem      attractorSystem {};
     SpringSystem         springSystem {};
