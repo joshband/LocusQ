@@ -1,6 +1,8 @@
 # LocusQ - Quadraphonic 3D Spatial Audio Tool
 # WebView-based UI with Three.js 3D visualization
 # Cross-platform: Windows (VST3), macOS (VST3/AU), Linux (VST3/LV2)
+#
+# CI: Re-triggering format validation for CLAP/AUv3 fixes verification
 
 cmake_minimum_required(VERSION 3.22)
 project(LocusQ VERSION 1.0.0 LANGUAGES C CXX)
