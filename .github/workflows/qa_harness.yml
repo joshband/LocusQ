@@ -114,10 +114,25 @@ jobs:
           # Anything else (Documentation/, .codex/, .claude/, TestEvidence/,
           # Design/, root markdown, etc.) skips the macOS build/format jobs.
           CODE_CHANGED="false"
-          if echo "${CHANGED_FILES}" | grep -qE '^(Source/|CMakeLists\.txt$|qa/|third_party/|scripts/rt-safety-audit\.sh$|scripts/rt-safety-allowlist\.txt$|\.github/workflows/qa_harness\.yml$)'; then
+
+          # Check for code-affecting paths using multiple conditions for robustness
+          if echo "${CHANGED_FILES}" | grep -qE '^Source/'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^CMakeLists\.txt$'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^qa/'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^third_party/'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^scripts/rt-safety-audit\.sh$'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^scripts/rt-safety-allowlist\.txt$'; then
+            CODE_CHANGED="true"
+          elif echo "${CHANGED_FILES}" | grep -qE '^\.github/workflows/qa_harness\.yml$'; then
             CODE_CHANGED="true"
           fi
-          echo "Pattern match result: ${CODE_CHANGED}"
+
+          echo "Code changed result: ${CODE_CHANGED}"
           echo "code_changed=${CODE_CHANGED}" >> "${GITHUB_OUTPUT}"
 
   qa-format-clap:
