@@ -9,11 +9,16 @@
 # call sites (all the same atomic-store-then-notify pattern above) matched it anymore,
 # which was failing HX-06 RT Safety Static Audit in CI on main independent of any
 # specific feature change. Same rationale as above applies to all 5.
-Source/PluginProcessor.cpp:2242:MESSAGE_THREAD_CALL
-Source/PluginProcessor.cpp:3502:MESSAGE_THREAD_CALL
-Source/PluginProcessor.cpp:3519:MESSAGE_THREAD_CALL
-Source/PluginProcessor.cpp:3533:MESSAGE_THREAD_CALL
-Source/PluginProcessor.cpp:3594:MESSAGE_THREAD_CALL
+# 2026-09-05: Re-pointed again, -1 line each — removing the dead
+# shared_contracts/CalibrationRegistry.h #include shifted every line below it.
+# This allowlist format is inherently one edit away from going stale again;
+# see the baseline-reset manifest (Batch H follow-up) for the tracked
+# suggestion to key it on function/pattern context instead of raw line numbers.
+Source/PluginProcessor.cpp:2241:MESSAGE_THREAD_CALL
+Source/PluginProcessor.cpp:3501:MESSAGE_THREAD_CALL
+Source/PluginProcessor.cpp:3518:MESSAGE_THREAD_CALL
+Source/PluginProcessor.cpp:3532:MESSAGE_THREAD_CALL
+Source/PluginProcessor.cpp:3593:MESSAGE_THREAD_CALL
 Source/CalibrationEngine.h:113:HEAP_ALLOC
 Source/CalibrationEngine.h:133:HEAP_ALLOC
 Source/PhysicsEngine.h:30:HEAP_ALLOC
