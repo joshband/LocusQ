@@ -164,14 +164,23 @@ jobs:
           set -euo pipefail
           mkdir -p qa_output/format_clap
 
+          echo "=== CMAKE ENVIRONMENT ===" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "CMake version: $(cmake --version | head -1)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "C compiler: $(which cc) - $(cc --version | head -1)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "CXX compiler: $(which c++) - $(c++ --version | head -1)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "JUCE_DIR: ${GITHUB_WORKSPACE}/JUCE" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "JUCE exists: $(test -d "${GITHUB_WORKSPACE}/JUCE" && echo yes || echo NO)" | tee -a qa_output/format_clap/cmake_configure.log
+          echo "=== CMAKE CONFIGURE ===" | tee -a qa_output/format_clap/cmake_configure.log
+
           cmake -S . -B build-format-clap \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DLOCUSQ_ENABLE_CLAP=ON \
             -DLOCUSQ_CLAP_FETCH=ON \
-            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" | tee qa_output/format_clap/cmake_configure.log
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" 2>&1 | tee -a qa_output/format_clap/cmake_configure.log
 
-          cmake --build build-format-clap --config Release --target LocusQ_CLAP -j 4 | tee qa_output/format_clap/cmake_build.log
+          echo "=== CMAKE BUILD ===" | tee -a qa_output/format_clap/cmake_build.log
+          cmake --build build-format-clap --config Release --target LocusQ_CLAP -j 4 2>&1 | tee -a qa_output/format_clap/cmake_build.log
 
           CLAP_PATH="./build-format-clap/LocusQ_artefacts/Release/CLAP/LocusQ.clap"
           if [[ ! -d "${CLAP_PATH}" ]]; then
@@ -230,19 +239,27 @@ jobs:
           set -euo pipefail
           mkdir -p qa_output/format_auv3
 
+          echo "=== CMAKE ENVIRONMENT ===" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "CMake version: $(cmake --version | head -1)" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "Xcode version: $(xcodebuild -version | head -1)" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "JUCE_DIR: ${GITHUB_WORKSPACE}/JUCE" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "JUCE exists: $(test -d "${GITHUB_WORKSPACE}/JUCE" && echo yes || echo NO)" | tee -a qa_output/format_auv3/cmake_configure.log
+          echo "=== CMAKE CONFIGURE ===" | tee -a qa_output/format_auv3/cmake_configure.log
+
           cmake -S . -B build-format-auv3 \
             -G Xcode \
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DLOCUSQ_ENABLE_AUV3=ON \
-            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" | tee qa_output/format_auv3/cmake_configure.log
+            -DJUCE_DIR="${GITHUB_WORKSPACE}/JUCE" 2>&1 | tee -a qa_output/format_auv3/cmake_configure.log
 
+          echo "=== XCODEBUILD ===" | tee -a qa_output/format_auv3/xcodebuild.log
           xcodebuild \
             -project build-format-auv3/LocusQ.xcodeproj \
             -scheme LocusQ_AUv3 \
             -configuration Release \
             -destination "generic/platform=macOS" \
             CODE_SIGNING_ALLOWED=NO \
-            build | tee qa_output/format_auv3/xcodebuild.log
+            build 2>&1 | tee -a qa_output/format_auv3/xcodebuild.log
 
           AUV3_PATH="./build-format-auv3/LocusQ_artefacts/Release/AUv3/LocusQ.appex"
           if [[ ! -d "${AUV3_PATH}" ]]; then
