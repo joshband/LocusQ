@@ -3,6 +3,10 @@ name: LocusQ QA Harness
 on:
   workflow_dispatch:
   pull_request:
+    # Default types (opened/synchronize/reopened) plus labeled/unlabeled, so
+    # applying the needs-reliability-gate label to an existing PR (with no
+    # new commit) still triggers a run that can pick it up.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [ main ]
 
@@ -64,10 +68,58 @@ jobs:
           path: qa_output/rt_safety/
           retention-days: 14
 
+  changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code_changed: ${{ steps.diff.outputs.code_changed }}
+
+    steps:
+      - name: Checkout LocusQ
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine whether code paths changed
+        id: diff
+        run: |
+          set -euo pipefail
+
+          BASE_SHA=""
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          # No usable base (workflow_dispatch, brand-new branch, first push):
+          # can't compute a diff, so don't risk under-running - treat as changed.
+          if [[ -z "${BASE_SHA}" || "${BASE_SHA}" == "0000000000000000000000000000000000000000" ]] \
+             || ! git cat-file -e "${BASE_SHA}" 2>/dev/null; then
+            echo "No usable base SHA for diffing - treating as code-changed."
+            echo "code_changed=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          CHANGED_FILES="$(git diff --name-only "${BASE_SHA}" HEAD)"
+          echo "Changed files vs ${BASE_SHA}:"
+          echo "${CHANGED_FILES}"
+
+          # Paths that can affect a compiled build or the QA harness itself.
+          # Anything else (Documentation/, .codex/, .claude/, TestEvidence/,
+          # Design/, root markdown, etc.) skips the macOS build/format jobs.
+          if echo "${CHANGED_FILES}" | grep -qE '^(Source/|CMakeLists\.txt$|qa/|third_party/|scripts/rt-safety-audit\.sh$|scripts/rt-safety-allowlist\.txt$|\.github/workflows/qa_harness\.yml$)'; then
+            echo "code_changed=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "code_changed=false" >> "${GITHUB_OUTPUT}"
+          fi
+
   qa-format-clap:
     name: QA Format CLAP (macOS)
     runs-on: macos-latest
-    needs: rt-safety-audit
+    needs: [rt-safety-audit, changes]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || needs.changes.outputs.code_changed == 'true'
     timeout-minutes: 30
 
     steps:
@@ -132,7 +184,8 @@ jobs:
   qa-format-auv3:
     name: QA Format AUv3 (macOS)
     runs-on: macos-latest
-    needs: rt-safety-audit
+    needs: [rt-safety-audit, changes]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || needs.changes.outputs.code_changed == 'true'
     timeout-minutes: 35
 
     steps:
@@ -205,7 +258,8 @@ jobs:
 
   qa-critical:
     name: QA Critical (${{ matrix.os }})
-    needs: rt-safety-audit
+    needs: [rt-safety-audit, changes]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || needs.changes.outputs.code_changed == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -356,7 +410,18 @@ jobs:
   qa-bl029-reliability-gate:
     name: BL-029 Reliability Gate (macOS)
     runs-on: macos-latest
-    needs: qa-critical
+    needs: [rt-safety-audit, changes, qa-critical]
+    # 90 minutes is too expensive to run on every PR push, so this is opt-in:
+    # always on main/workflow_dispatch, otherwise only when a reviewer applies
+    # the "needs-reliability-gate" label. `always()` overrides the default
+    # needs-based skip so this can still run when qa-critical itself was
+    # skipped (e.g. a labelled PR with no code changes) - it still requires
+    # qa-critical to not have actively failed.
+    if: |
+      always() &&
+      needs.rt-safety-audit.result == 'success' &&
+      (needs.qa-critical.result == 'success' || needs.qa-critical.result == 'skipped') &&
+      (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'needs-reliability-gate'))
     timeout-minutes: 90
 
     steps:

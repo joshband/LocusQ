@@ -149,6 +149,29 @@ were not applied.
 
 ---
 
+## Batch H — CI cost/speed: gate macOS jobs on changed paths ✅ DONE (2026-09-05)
+
+**Risk: low — additive gating only, no job's actual steps changed.** Not
+part of the original 7-batch plan; added after direct evidence from this
+session's own commits.
+
+**Trigger:** nearly every commit pushed while executing Batches A-G
+(a one-line allowlist fix, TestEvidence moves, markdown-only governance
+edits) ran the **full macOS gauntlet** unconditionally: `qa-format-clap`
+(30min), `qa-format-auv3` (35min), the macOS leg of `qa-critical`, and the
+**90-minute** `qa-bl029-reliability-gate` — roughly 3+ hours of macOS
+runner time per push, none of which could possibly be affected by those
+changes.
+
+| Action | Detail |
+|---|---|
+| ADDED | A `changes` job (`.github/workflows/qa_harness.yml`) that diffs the PR/push against its base SHA and outputs `code_changed`, matching on `Source/`, `CMakeLists.txt`, `qa/`, `third_party/`, the RT-safety script/allowlist, or the workflow file itself. No usable base SHA (workflow_dispatch, a brand-new branch) defaults to `true` rather than under-running. |
+| GATED | `qa-format-clap`, `qa-format-auv3`, and both legs of `qa-critical` now require `code_changed == 'true'` OR the event being `workflow_dispatch` OR the ref being `main` — i.e. every PR still gets full validation the moment it touches code, but a docs/process-only commit no longer spends macOS minutes at all. |
+| MOVED (per decision) | `qa-bl029-reliability-gate` (90 min) is no longer on every PR at all — now `main` push / `workflow_dispatch` / a `needs-reliability-gate` label applied to the PR. Uses `always()` in its `if:` to still run correctly when `qa-critical` itself was skipped (e.g. a labelled docs-only PR), while still refusing to run if `qa-critical` actively failed. |
+| FIXED (needed for the label path) | Added `labeled`/`unlabeled` to the `pull_request` trigger's `types:` — otherwise applying the label to an already-open PR wouldn't re-trigger the workflow at all. |
+
+**Verification:** YAML parses (`python3 -c "import yaml; yaml.safe_load(...)"`), all 8 job names present. Real behavioral verification is CI itself, on both a docs-only push (should skip all 4 heavy jobs) and a `Source/`-touching push (should run them) — pending, since the fix landed at the end of the session.
+
 ## Explicitly out of scope for this manifest
 
 - **BoidsSystem / AttractorSystem / CollisionSystem / Choreography Lab** — contradicts the shipped V1 creative brief per the DSP audit, but keep-vs-cut is a product decision, not a cleanup. Tracked separately.
